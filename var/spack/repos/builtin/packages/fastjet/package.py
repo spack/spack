@@ -55,16 +55,77 @@ class Fastjet(AutotoolsPackage):
     version("2.3.1", sha256="16c32b420e1aa7d0b6fecddd980ea0f2b7e3c2c66585e06f0eb3142677ab6ccf")
     version("2.3.0", sha256="e452fe4a9716627bcdb726cfb0917f46a7ac31f6006330a6ccc1abc43d9c2d53")
     # older version use .tar instead of .tar.gz extension, to be added
-
+    
+    plugins_ = (
+        "SISCone",
+        "CDFCones",
+        "PxCone",
+        "D0RunIICone",
+        "NestedDefs",
+        "TrackJet",
+        "ATLASCone",
+        "CMSIterativeCone",
+        "EECambridge",
+        "Jade",
+        "D0RunICone",
+        "GridJet",
+    )
+        
     variant("shared", default=True, description="Builds a shared version of the library")
-    variant("auto-ptr", default=False, description="Use auto_ptr")
+    variant("auto-ptr", default=False, description="Use auto_ptr")  
     variant("atlas", default=False, description="Patch to make random generator thread_local")
+
+        variant(
+	"plugins",
+        values=disjoint_sets(("all",), ("allcxx",), plugins_)
+        .prohibit_empty_set()
+        .with_default("all"),
+        description="List of plugins to build. allcxx is all minus PxCone.",
+    )
+
+    variant("python", default=False, description="Enable the python interface")
+    variant(
+	"monolithic",
+        default=True,
+        description="Build all the (compiled) plugins in a single lib",
+    )
+    variant(
+	"thread-safety",
+        default="no",
+        values=("full", "limited", "no"),
+        description="Enable thread safety. Full thread safety causes noticable "
+        + "performance penalty.",
+        when="@3.4.0:"
+    )
 
     patch("atlas.patch", when="+atlas", level=0)
 
+    extends("python", when="+python")
+
     def configure_args(self):
-        extra_args = ["--enable-allplugins"]
+        extra_args = []
         extra_args += self.enable_or_disable("shared")
         extra_args += self.enable_or_disable("auto-ptr")
+        extra_args += self.enable_or_disable("monolithic")
+
+        if self.spec.satisfies("plugins=all"):
+            extra_args.append("--enable-allplugins")
+        elif self.spec.satisfies("plugins=allcxx"):
+            extra_args.append("--enable-allcxxplugins")
+        else:
+            extra_args.append("--disable-allplugins")
+            for plugin in self.spec.variants["plugins"].value:
+                extra_args.append("--enable-" + plugin.lower())
+
+        if self.spec.satisfies("+python"):
+            extra_args.append("--enable-pyext")
+
+        if self.spec.satisfies("thread-safety=no"):
+            extra_args.append("--disable-limited-thread-safety")
+            extra_args.append("--disable-thread-safety")
+        elif self.spec.satisfies("thread-safety=limited"):
+            extra_args.append("--enable-limited-thread-safety")
+        else:
+            extra_args.append("--enable-thread-safety")
 
         return extra_args
