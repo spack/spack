@@ -163,7 +163,9 @@ spack:
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
   - dealii +cuda cuda_arch=80
   - ecp-data-vis-sdk +cuda cuda_arch=80
-    +adios2 +ascent +hdf5 +vtkm +zfp
+    +adios2 +hdf5 +vtkm +zfp
+    # Removing ascent because Dray is hung in CI.
+    # +ascent
   - flecsi +cuda cuda_arch=80
   - flux-core +cuda
   - ginkgo +cuda cuda_arch=80
