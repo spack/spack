@@ -17,7 +17,6 @@ if is_windows:
     import subprocess
 
     from win32file import CreateHardLink
-    import subprocess
 
 
 def symlink(real_path, link_path):
@@ -60,12 +59,8 @@ def symlink(real_path, link_path):
             link_path = os.path.abspath(link_path)
         # os.symlink will fail if link exists, emulate the behavior here
         if exists(link_path):
-<<<<<<< HEAD
-            raise OSError(errno.EEXIST, "Link exists: %s" % (link_path))
-=======
             raise OSError(errno.EEXIST, "Link exists: %s"
                 % (link_path))
->>>>>>> 44cd312d32... Updating symlink so that view tests can pass on windows
         else:
             mkNonsymbolicLink(real_path, link_path)
             if not os.path.exists(link_path):
@@ -75,31 +70,17 @@ def symlink(real_path, link_path):
 
 def islink(path):
     return os.path.islink(path) or isjunction(path) or ishardlink(path)
-<<<<<<< HEAD
 
 
-=======
-
-
->>>>>>> 44cd312d32... Updating symlink so that view tests can pass on windows
 def mkNonsymbolicLink(path, link):
     if os.path.isdir(path):
         print("[symlink] Making a junction for directory")
         try:
-<<<<<<< HEAD
             cmd = ["cmd", "/C", "mklink", "/J", link, path]
             result = subprocess.check_output(cmd).decode()
             print("[symlink] Result: " + result)
             if "Junction created" not in result:
                 raise OSError(errno.EEXIST, "Link exists: %s" % (link))
-=======
-            cmd = ['cmd','/C','mklink','/J',link,path]
-            result = subprocess.check_output(cmd).decode()
-            print("[symlink] Result: " + result)
-            if "Junction created" not in result:
-                raise OSError(errno.EEXIST, "Link exists: %s"
-                % (link))
->>>>>>> 44cd312d32... Updating symlink so that view tests can pass on windows
         except subprocess.CalledProcessError as e:
             print("Junction failed with error: " + str(e))
     if os.path.isfile(path):
@@ -150,15 +131,9 @@ def ishardlink(path):
         return False
 
     try:
-<<<<<<< HEAD
         cmd = ["fsutil", "hardlink", "list", path]
         ret = subprocess.check_output(cmd)
         lines = ret.decode().splitlines()
-=======
-        cmd=['fsutil','hardlink','list',path]
-        ret=subprocess.check_output(cmd)
-        lines=ret.decode().splitlines()
->>>>>>> 44cd312d32... Updating symlink so that view tests can pass on windows
         # We expect output of fsutil call to have at least two lines
         # if the path is a hardlink
         if len(lines) == 1:
@@ -174,29 +149,6 @@ def ishardlink(path):
         print("[symlink] Check on hardlink failed with error: " + str(e))
         return False
 
-<<<<<<< HEAD
-
-def isjunction(path):
-    """
-    Determines if a path is a windows junction.
-    """
-    if not is_windows:
-        return False
-
-    if os.path.islink(path):
-        return False
-
-    import ctypes.wintypes
-
-    GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW
-    GetFileAttributes.argtypes = (ctypes.wintypes.LPWSTR,)
-    GetFileAttributes.restype = ctypes.wintypes.DWORD
-
-    INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
-    FILE_ATTRIBUTE_REPARSE_POINT = 0x400
-    res = GetFileAttributes(path)
-    return res != INVALID_FILE_ATTRIBUTES and bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
-=======
 
 def isjunction(path):
     """
@@ -219,4 +171,3 @@ def isjunction(path):
     res = GetFileAttributes(path)
     return res != INVALID_FILE_ATTRIBUTES and bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
 
->>>>>>> 44cd312d32... Updating symlink so that view tests can pass on windows
