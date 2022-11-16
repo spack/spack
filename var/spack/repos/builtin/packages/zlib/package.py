@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
+# Although zlib comes with a configure script, it does not use Autotools
+# The AutotoolsPackage causes zlib to fail to build with PGI
 import glob
 import os
 
