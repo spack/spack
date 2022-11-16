@@ -283,18 +283,35 @@ package_https_directives = AuditClass(
 
 
 @package_directives
-def _check_build_test_callbacks(pkgs, error_cls):
-    """Ensure stand-alone test method is not included in build-time callbacks"""
+def _check_test_callbacks(pkgs, error_cls):
+    """Ensure stand-alone test method is not included in test callbacks."""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
-        test_callbacks = pkg_cls.build_time_test_callbacks
-
-        if test_callbacks and "test" in test_callbacks:
-            msg = '{0} package contains "test" method in ' "build_time_test_callbacks"
-            instr = 'Remove "test" from: [{0}]'.format(", ".join(test_callbacks))
-            errors.append(error_cls(msg.format(pkg_name), [instr]))
-
+        buildsystem_variant, _ = pkg_cls.variants["build_system"]
+        buildsystem_names = [getattr(x, "value", x) for x in buildsystem_variant.values]
+        builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in buildsystem_names]
+        module = pkg_cls.module
+        for builder_cls_name in builder_cls_names:
+            builder_cls = getattr(module, builder_cls_name, False)
+            if builder_cls:
+                for methods_list in ("build_time_test_callbacks", "install_time_test_callbacks"):
+                    if "test" in getattr(builder_cls, methods_list, ()):
+                        msg = "Builder '{}' defined in '{}' for package '{}'"
+                        "contains 'test' method in '{}'"
+                        instr = "Remove 'test' from '{}' in '{}'"
+                        errors.append(
+                            error_cls(
+                                msg.format(
+                                    builder_cls_name, module.__name__, pkg_name, methods_list
+                                ),
+                                [
+                                    instr.format(
+                                        methods_list, ".".join([module.__name__, builder_cls_name])
+                                    )
+                                ],
+                            )
+                        )
     return errors
 
 
