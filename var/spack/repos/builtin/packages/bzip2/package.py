@@ -148,7 +148,7 @@ class Bzip2(Package, SourcewarePackage):
                     symlink(lib3, libname)
 
         # These files won't be in a Windows installation
-        if sys.platform != 'win32':
+        if not self.spec.satisfies('platform=windows'):
             with working_dir(prefix.bin):
                 force_remove('bunzip2', 'bzcat')
                 symlink('bzip2', 'bunzip2')

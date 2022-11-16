@@ -51,10 +51,9 @@ class Sqlite(AutotoolsPackage):
     variant('dynamic_extensions', default=True, description='Support loadable extensions')
     variant('rtree', default=True, description='Build with Rtree module')
 
-    # This isn't ideal but since we don't have a "not" style syntax we have to condition
-    # the depends_on based on the actual platform vs. the spec's platform
-    depends_on('readline')
-    depends_on('zlib')
+    if not self.spec.satisfies('platform=windows'):
+        depends_on('readline')
+        depends_on('zlib')
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts("+fts", when="@:3.25")
