@@ -31,6 +31,8 @@ class Qt(Package):
 
     phases = ["configure", "build", "install"]
 
+    version("5.15.7", sha256="8a71986676a3f37a198a9113acedbfd5bc5606a459b6b85816d951458adbe9a0")
+    version("5.15.6", sha256="ebc77d27934b70b25b3dc34fbec7c4471eb451848e891c42b32409ea30fe309f")
     version("5.15.5", sha256="5a97827bdf9fd515f43bc7651defaf64fecb7a55e051c79b8f80510d0e990f06")
     version("5.15.4", sha256="615ff68d7af8eef3167de1fd15eac1b150e1fd69d1e2f4239e54447e7797253b")
     version("5.15.3", sha256="b7412734698a87f4a0ae20751bab32b1b07fdc351476ad8e35328dbe10efdedb")
