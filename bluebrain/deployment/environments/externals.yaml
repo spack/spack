@@ -77,7 +77,7 @@ spack:
     - nvhpc@21.11
     - nvhpc@22.2
     - nvhpc@22.3
-    - arm-forge
+    - arm-forge+accept-eula
     - apptainer
     - bison
     - blender
