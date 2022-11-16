@@ -106,7 +106,8 @@ spack:
     - git
     - git-lfs
     - glew
-    - gmsh+metis~mpi+oce+openmp+shared
+   # TODO: why do we try to build 4.7.1?
+   #- gmsh+metis~mpi+oce+openmp+shared
     - graphviz
     - hdf5~mpi@1.10.7
     - help2man
