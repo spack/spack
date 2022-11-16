@@ -41,7 +41,7 @@ spack:
           - python
           - singularityce
           - snakemake
-          - stat
+         #- stat
           - totalview
           - valgrind
           - virtualgl
@@ -140,7 +140,7 @@ spack:
     - singularityce
     - snakemake
     - sqlite
-    - stat
+   #- stat
     - totalview
     - valgrind~mpi
     - virtualgl
