@@ -33,14 +33,20 @@ class Herwig3(AutotoolsPackage):
     depends_on("python", type=("build", "run"))
     depends_on("gsl")
     depends_on("fastjet")
-    depends_on("vbfnlo@3:")
+    depends_on("vbfnlo@3:", when="+vbfnlo")
     depends_on("madgraph5amc")
-    depends_on("njet")
-    depends_on("py-gosam", when="^python@2.7.0:2.7")
+    depends_on("njet", when="+njet")
+    depends_on("py-gosam")
     depends_on("gosam-contrib")
-    depends_on("openloops")
+
+    # OpenLoops fail to build on PPC64: error: detected recursion whilst expanding macro "vector"
+    depends_on("openloops", when="target=aarch64:")
+    depends_on("openloops", when="target=x86_64:")
 
     force_autoreconf = True
+
+    variant("vbfnlo", default=True, description="Use VBFNLO")
+    variant("njet", default=True, description="Use NJet")
 
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
@@ -55,13 +61,15 @@ class Herwig3(AutotoolsPackage):
             "--with-madgraph=" + self.spec["madgraph5amc"].prefix,
             "--with-openloops=" + self.spec["openloops"].prefix,
             "--with-gosam-contrib=" + self.spec["gosam-contrib"].prefix,
-            "--with-njet=" + self.spec["njet"].prefix,
-            "--with-vbfnlo=" + self.spec["vbfnlo"].prefix,
             "--with-evtgen=" + self.spec["evtgen"].prefix,
+            "--with-gosam=" + self.spec["gosam"].prefix,
         ]
 
-        if self.spec.satisfies("^python@2.7.0:2.7"):
-            args.append("--with-gosam=" + self.spec["gosam"].prefix)
+        if self.spec.satisfies("+njet"):
+            args.append("--with-njet=" + self.spec["njet"].prefix)
+
+        if self.spec.satisfies("+vbfnlo"):
+            args.append("--with-vbfnlo=" + self.spec["vbfnlo"].prefix)
 
         return args
 
