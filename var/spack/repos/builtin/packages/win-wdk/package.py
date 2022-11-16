@@ -67,13 +67,13 @@ class WinWdk(Package):
     # need one to one dep on SDK per https://github.com/MicrosoftDocs/windows-driver-docs/issues/1550
     # additionally, the WDK needs to be paired with a version of the Windows SDK
     # as per https://learn.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk#download-icon-step-2-install-windows-11-version-22h2-sdk
-    depends_on("win-sdk@10.0.19041.0", when="@10.0.19041")
-    depends_on("win-sdk@10.0.18362.0", when="@10.0.18362")
-    depends_on("win-sdk@10.0.17763.0", when="@10.0.17763")
-    depends_on("win-sdk@10.0.17134.0", when="@10.0.17134")
-    depends_on("win-sdk@10.0.16299.0", when="@10.0.16299")
-    depends_on("win-sdk@10.0.15063.0", when="@10.0.15063")
-    depends_on("win-sdk@10.0.14393.0", when="@10.0.14393")
+    depends_on("win-sdk@10.0.19041", when="@10.0.19041")
+    depends_on("win-sdk@10.0.18362", when="@10.0.18362")
+    depends_on("win-sdk@10.0.17763", when="@10.0.17763")
+    depends_on("win-sdk@10.0.17134", when="@10.0.17134")
+    depends_on("win-sdk@10.0.16299", when="@10.0.16299")
+    depends_on("win-sdk@10.0.15063", when="@10.0.15063")
+    depends_on("win-sdk@10.0.14393", when="@10.0.14393")
 
     for plat in ["linux", "darwin", "cray"]:
         conflicts("platform=%s" % plat)
@@ -126,9 +126,9 @@ class WinWdk(Package):
                 Executable("wdksetup.exe")(*install_args)
             except ProcessError as pe:
                 reg = winreg.WindowsRegistryView(
-            "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
-            root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
-            )
+                    "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
+                    root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+                )
                 if not reg:
                     # No Kits are available, failure was genuine
                     raise pe
@@ -136,4 +136,9 @@ class WinWdk(Package):
                     versions = [str(subkey) for subkey in reg.get_subkeys()]
                     versions = ",".join(versions) if len(versions) > 1 else versions[0]
                     plural = "s" if len(versions) > 1 else ""
-                    raise InstallError("Cannot install WDK version %s. Version%s %s already present on system. Please run `spack external find win-wdk` to use the WDK" % (self.version, plural, versions))
+                    raise InstallError(
+                        "Cannot install WDK version %s. "
+                        "Version%s %s already present on system."
+                        "Please run `spack external find win-wdk` to use the WDK"
+                        % (self.version, plural, versions)
+                    )

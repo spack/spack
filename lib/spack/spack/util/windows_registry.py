@@ -7,9 +7,9 @@
 Utility module for dealing with Windows Registry.
 """
 
-from contextlib import contextmanager
 import os
 import sys
+from contextlib import contextmanager
 
 from llnl.util import tty
 
@@ -95,6 +95,7 @@ class RegistryKey(object):
 
 class _HKEY_CONSTANT(RegistryKey):
     """Subclass of RegistryKey to represent the prebaked, always open registry HKEY constants"""
+
     def __init__(self, hkey_constant):
         hkey_name = hkey_constant
         self._handle = None
@@ -127,6 +128,7 @@ class HKEY(object):
     the registry that is already open. The system defines predefined keys
     that are always open. Predefined keys help an application navigate in
     the registry."""
+
     HKEY_CLASSES_ROOT = _HKEY_CONSTANT("HKEY_CLASSES_ROOT")
     HKEY_CURRENT_USER = _HKEY_CONSTANT("HKEY_CURRENT_USER")
     HKEY_USERS = _HKEY_CONSTANT("HKEY_USERS")
