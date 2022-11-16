@@ -2189,7 +2189,7 @@ def find_all_shared_libraries(root, recursive=False):
     Returns:
         List of all libraries found in ``root`` and subdirectories.
     """
-    return find_libraries('*', root=root, recursive=recursive)
+    return find_libraries('*', root=root, shared=True, recursive=recursive)
 
 
 def find_all_static_libraries(root, recursive=False):
@@ -2220,11 +2220,15 @@ def find_all_libraries(root, recursive=False):
         find_all_static_libraries(root, recursive=recursive)
 
 
-class WindowsRuntimePath:
+class WindowsSimulatedRuntimePath(object):
     """ Class representing Windows filesystem rpath analog
 
-    rpath is established for each library that a package's
-    executables or libraries require dynamic linking to.
+    One instance of this class is associated with a package (only on Windows)
+    For each lib/binary directory in an associated package, this class introduces
+    a symlink to any/all dependent libraries/binaries. This includes the packages
+    own bin/lib directories, meaning the libraries are linked to the bianry directory
+    and vis versa.
+
 
     """
     def __init__(self, package, link_install_prefix=True):
@@ -2237,23 +2241,22 @@ class WindowsRuntimePath:
                 root
         """
         self.pkg = package
-        self._addl_rpaths = []
+        self._addl_rpaths = set()
         self.link_install_prefix = link_install_prefix
-        self._internal_links
+        self._internal_links = set()
 
     @property
     def link_dest(self):
         """
-        Set of directories where package binaries are located. Symlinks
-        to libraries/binaries on which this package depends
+        Set of directories where package binaries/libraries are located.
         """
         pkg_libs = set(self.pkg.libs.directories)\
             if hasattr(self.pkg, 'libs') else set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
-        return pkg_libs | set(self.internal_links)
+        return pkg_libs | set((self.pkg.prefix.bin)) | self.internal_links
 
     @property.setter
     def internal_links(self, *dest):
-        self._internal_links.extend(dest)
+        self._internal_links = self._internal_links | set(dest)
 
     @property
     def internal_links(self):
@@ -2261,7 +2264,7 @@ class WindowsRuntimePath:
         linking that would need to be established within the package itself. Useful for links
         against extension modules/build time executables/internal linkage
         """
-        return set(self._internal_links)
+        return self._internal_links
 
     @property
     def link_targets(self):
@@ -2287,8 +2290,7 @@ class WindowsRuntimePath:
         Args:
             *paths (str): arbitrary number of paths to be added to runtime linking
         """
-        for pth in paths:
-            self._addl_rpaths.append(pth)
+        self._addl_rpaths = self._addl_rpaths | set(paths)
 
     def establish_runtime_link(self):
         """

@@ -96,7 +96,9 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 
 is_windows = sys.platform == "win32"
 
+<<<<<<< HEAD
 
+<<<<<<< HEAD
 def deprecated_version(pkg, version):
     """Return True if the version is deprecated, False otherwise.
 
@@ -114,6 +116,10 @@ def deprecated_version(pkg, version):
     return False
 
 
+=======
+=======
+>>>>>>> 2d73a5b990 (Review update)
+>>>>>>> cc5d7b516f (Review update)
 def preferred_version(pkg):
     """
     Returns a sorted list of the preferred versions of the package.
@@ -699,10 +705,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self._fetch_time = 0.0
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.win_rpath = fsys.WindowsSimulatedRPath(self)
 =======
         self.win_rpath = fsys.WindowsRuntimePath(self)
 >>>>>>> 8c9c042425 (Implementation additions)
+=======
+        self.win_rpath = fsys.WindowsSimulatedRuntimePath(self)
+>>>>>>> 2d73a5b990 (Review update)
 
         if self.is_extension:
             pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
