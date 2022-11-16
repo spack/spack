@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import spack.platforms.cray
 
 from spack.package import *
 
@@ -48,7 +49,7 @@ class Libfabric(AutotoolsPackage):
     version("1.4.2", sha256="5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5")
 
     fabrics = (
-        "cxi",
+        conditional("cxi", when=spack.platforms.cray.slingshot_network()),
         "efa",
         "gni",
         "mlx",
