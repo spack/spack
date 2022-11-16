@@ -23,6 +23,8 @@ class Libxml2(AutotoolsPackage):
             return url.format(version.up_to(2), version)
         return "http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(version)
 
+    version("2.10.3", sha256="5d2cc3d78bec3dbe212a9d7fa629ada25a7da928af432c93060ff5c17ee28a9c")
+    version("2.10.2", sha256="d240abe6da9c65cb1900dd9bf3a3501ccf88b3c2a1cb98317d03f272dda5b265")
     version("2.10.1", sha256="21a9e13cc7c4717a6c36268d0924f92c3f67a1ece6b7ff9d588958a6db9fb9d8")
     version("2.9.14", sha256="60d74a257d1ccec0475e749cba2f21559e48139efba6ff28224357c7c798dfee")
     version("2.9.13", sha256="276130602d12fe484ecc03447ee5e759d0465558fbc9d6bd144e3745306ebf0e")
@@ -43,7 +45,11 @@ class Libxml2(AutotoolsPackage):
     depends_on("xz")
 
     # avoid cycle dependency for concretizer
-    depends_on("python+shared~libxml2", when="+python")
+    depends_on("python@3:3.9+shared~libxml2", when="@2.10.1+python")
+    depends_on("python+shared~libxml2", when="@2.10.2:+python")
+    # A note about python versions: libxml 2.10.1 (and presumably earlier) has
+    # a bug in its configure script that fails to properly parse python
+    # version strings with more than one character for the minor version.
     extends(
         "python",
         when="+python",
