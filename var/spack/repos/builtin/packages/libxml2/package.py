@@ -45,7 +45,7 @@ class Libxml2(AutotoolsPackage):
     depends_on("xz")
 
     # avoid cycle dependency for concretizer
-    depends_on("python@3:3.9+shared~libxml2", when="@2.10.1+python")
+    depends_on("python@3:3.9+shared~libxml2", when="@:2.10.1+python")
     depends_on("python+shared~libxml2", when="@2.10.2:+python")
     # A note about python versions: libxml 2.10.1 (and presumably earlier) has
     # a bug in its configure script that fails to properly parse python
