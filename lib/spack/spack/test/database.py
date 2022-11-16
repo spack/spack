@@ -20,7 +20,7 @@ except ImportError:
     _use_uuid = False
     pass
 
-from jsonschema import validate
+import jsonschema
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -456,7 +456,7 @@ def test_005_db_exists(database):
 
     with open(index_file) as fd:
         index_object = json.load(fd)
-        validate(index_object, schema)
+        jsonschema.validate(index_object, schema)
 
 
 def test_010_all_install_sanity(database):
@@ -750,7 +750,7 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.db._index_path, "r") as f:
         db_obj = json.loads(f.read())
 
-    validate(db_obj, schema)
+    jsonschema.validate(db_obj, schema)
 
     s = spack.spec.Spec("externaltool")
     s.concretize()

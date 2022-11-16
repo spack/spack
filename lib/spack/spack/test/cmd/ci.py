@@ -9,8 +9,8 @@ import os
 import shutil
 import sys
 
+import jsonschema
 import pytest
-from jsonschema import ValidationError, validate
 
 from llnl.util.filesystem import mkdirp, working_dir
 
@@ -1313,7 +1313,7 @@ spack:
             index_path = os.path.join(buildcache_path, "index.json")
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
-                validate(index_object, db_idx_schema)
+                jsonschema.validate(index_object, db_idx_schema)
 
             # Now that index is regenerated, validate "buildcache list" output
             buildcache_list_output = buildcache_cmd("list", output=str)
@@ -1325,7 +1325,7 @@ spack:
                     spec_json_path = os.path.join(buildcache_path, file_name)
                     with open(spec_json_path) as json_fd:
                         json_object = Spec.extract_json_from_clearsig(json_fd.read())
-                        validate(json_object, specfile_schema)
+                        jsonschema.validate(json_object, specfile_schema)
 
             logs_dir = working_dir.join("logs_dir")
             if not os.path.exists(logs_dir.strpath):
@@ -1630,7 +1630,7 @@ spack:
             index_path = os.path.join(buildcache_path, "index.json")
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
-                validate(index_object, db_idx_schema)
+                jsonschema.validate(index_object, db_idx_schema)
 
 
 def test_ci_generate_bootstrap_prune_dag(
@@ -1911,21 +1911,21 @@ def test_ensure_only_one_temporary_storage():
 
     # User can specify "enable-artifacts-buildcache" (boolean)
     yaml_obj = syaml.load(gitlab_ci_template.format(enable_artifacts))
-    validate(yaml_obj, gitlab_ci_schema)
+    jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
     # User can also specify "temporary-storage-url-prefix" (string)
     yaml_obj = syaml.load(gitlab_ci_template.format(temp_storage))
-    validate(yaml_obj, gitlab_ci_schema)
+    jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
     # However, specifying both should fail to validate
     yaml_obj = syaml.load(gitlab_ci_template.format(specify_both))
-    with pytest.raises(ValidationError):
-        validate(yaml_obj, gitlab_ci_schema)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
     # Specifying neither should be fine too, as neither of these properties
     # should be required
     yaml_obj = syaml.load(gitlab_ci_template.format(specify_neither))
-    validate(yaml_obj, gitlab_ci_schema)
+    jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
 
 def test_ci_generate_temp_storage_url(
