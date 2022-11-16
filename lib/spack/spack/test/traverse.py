@@ -369,15 +369,13 @@ def test_traverse_topo_nodes(abstract_specs_toposort):
 
     def test_topo(roots, direction="children"):
         # Ensure the invariant that all parents of specs[i] are in specs[0:i]
-        ordered = list(
+        specs = list(
             traverse.traverse_nodes(roots, order="topo", cover="nodes", direction=direction)
         )
         reverse = "parents" if direction == "children" else "children"
-        for i in range(len(ordered)):
-            parents = ordered[i].traverse(
-                order="pre", cover="nodes", direction=reverse, root=False
-            )
-            assert set(list(parents)).issubset(set(ordered[:i]))
+        for i in range(len(specs)):
+            parents = specs[i].traverse(cover="nodes", direction=reverse, root=False)
+            assert set(list(parents)).issubset(set(specs[:i]))
 
     # Traverse forward from roots A and E and a non-root D
     test_topo([nodes["D"], nodes["E"], nodes["A"]], direction="children")
