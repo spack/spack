@@ -83,6 +83,9 @@ STATUS_DEQUEUED = "dequeued"
 #: queue invariants).
 STATUS_REMOVED = "removed"
 
+is_windows = sys.platform == "win32"
+is_osx = sys.platform == "darwin"
+
 
 class InstallAction(object):
     #: Don't perform an install
@@ -165,7 +168,9 @@ def _do_fake_install(pkg):
     if not pkg.name.startswith("lib"):
         library = "lib" + library
 
-    dso_suffix = ".dylib" if sys.platform == "darwin" else ".so"
+    plat_shared = ".dll" if is_windows else ".so"
+    plat_static = ".lib" if is_windows else ".a"
+    dso_suffix = ".dylib" if is_osx else plat_shared
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
@@ -180,7 +185,7 @@ def _do_fake_install(pkg):
 
     # Install fake shared and static libraries
     fs.mkdirp(pkg.prefix.lib)
-    for suffix in [dso_suffix, ".a"]:
+    for suffix in [dso_suffix, plat_static]:
         fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
 
     # Install fake man page
@@ -1271,6 +1276,7 @@ class PackageInstaller(object):
         try:
             self._setup_install_dir(pkg)
 
+            import pdb; pdb.set_trace()
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
             spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(

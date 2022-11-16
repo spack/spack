@@ -2257,7 +2257,7 @@ class WindowsSimulatedRuntimePath(object):
         else:
             pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
 
-        return pkg_libs | set((self.pkg.prefix.bin)) | self.internal_links
+        return pkg_libs | set([self.pkg.prefix.bin]) | self.internal_links
 
     @property
     def internal_links(self):
@@ -2280,9 +2280,9 @@ class WindowsSimulatedRuntimePath(object):
 
         dependent_libs = []
         for path in self.pkg.rpath:
-            dependent_libs.extend(list(find_all_shared_libraries(path)))
+            dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
         for extra_path in self._addl_rpaths:
-            dependent_libs.extend(list(find_all_shared_libraries(extra_path)))
+            dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
         return set(dependent_libs)
 
     def include_additional_runtime_paths(self, *paths):
@@ -2302,10 +2302,6 @@ class WindowsSimulatedRuntimePath(object):
         (sym)link packages to runtime dependencies based on RPath configuration for
         Windows heuristics
         """
-        # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
-        # install a symlink to each dependent library
-        for link in itertools.product(self.link_dest, self.link_targets):
-            symlink(link[0], link[1])
         # from build_environment.py:463
         # The top-level package is always RPATHed. It hasn't been installed yet
         # so the RPATHs are added unconditionally
