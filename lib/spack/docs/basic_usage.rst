@@ -1244,8 +1244,8 @@ For example, for the ``stackstart`` variant:
 
 .. code-block:: sh
 
-    mpileaks stackstart=4    # variant will be propagated to dependencies
-    mpileaks stackstart==4   # only mpileaks will have this variant value
+    mpileaks stackstart==4   # variant will be propagated to dependencies
+    mpileaks stackstart=4    # only mpileaks will have this variant value
 
 ^^^^^^^^^^^^^^
 Compiler Flags
