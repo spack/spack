@@ -231,7 +231,7 @@ class Boost(Package, WindowsPackage):
     conflicts("context-impl=fcontext", when="@:1.65.0")
     conflicts("context-impl=ucontext", when="@:1.65.0")
     conflicts("context-impl=winfib", when="@:1.65.0")
-
+=
     # Coroutine, Context, Fiber, etc., are not straightforward.
     conflicts("+context", when="@:1.50")  # Context since 1.51.0.
     conflicts("cxxstd=98", when="+context")  # Context requires >=C++11.
@@ -656,15 +656,12 @@ class Boost(Package, WindowsPackage):
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
+        bootstrap = Executable('./bootstrap.sh')
+
         bootstrap_options = ['--prefix=%s' % prefix]
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
-        if self.spec.satisfies('platform=windows'):
-            bootstrap = Executable('./bootstrap.bat')
-            bootstrap(*bootstrap_options)
-        else:
-            bootstrap = Executable('./bootstrap.sh')
-            bootstrap(*bootstrap_options) 
+        bootstrap(*bootstrap_options)
 
         # strip the toolchain to avoid double include errors (intel) or
         # user-config being overwritten (again intel, but different boost version)
@@ -676,8 +673,6 @@ class Boost(Package, WindowsPackage):
 
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
-        if self.spec.satisfies('platform=windows'):
-            b2name = 'b2.exe' if spec.satisfies('@1.47:') else 'bjam.exe'
 
         b2 = Executable(b2name)
         jobs = make_jobs
