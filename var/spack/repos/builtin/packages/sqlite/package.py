@@ -44,17 +44,21 @@ class Sqlite(AutotoolsPackage):
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
-    variant('functions', default=False, when='+dynamic_extensions',
-            description='Provide mathematical and string extension functions for SQL '
-                        'queries using the loadable extensions mechanism')
-    variant('fts', default=True, description='Include fts4 and fts5 support')
-    variant('column_metadata', default=True, description='Build with COLUMN_METADATA')
-    variant('dynamic_extensions', default=True, description='Support loadable extensions')
-    variant('rtree', default=True, description='Build with Rtree module')
+    variant(
+        "functions",
+        default=False,
+        when="+dynamic_extensions",
+        description="Provide mathematical and string extension functions for SQL "
+        "queries using the loadable extensions mechanism",
+    )
+    variant("fts", default=True, description="Include fts4 and fts5 support")
+    variant("column_metadata", default=True, description="Build with COLUMN_METADATA")
+    variant("dynamic_extensions", default=True, description="Support loadable extensions")
+    variant("rtree", default=True, description="Build with Rtree module")
 
-    if not sys.platform == 'win32':
-        depends_on('readline')
-        depends_on('zlib')
+    if not sys.platform == "win32":
+        depends_on("readline")
+        depends_on("zlib")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts("+fts", when="@:3.25")
@@ -202,22 +206,21 @@ class Sqlite(AutotoolsPackage):
         return args
 
     def configure(self, spec, prefix):
-        if not self.spec.satisfies('platform=windows'):
+        if not self.spec.satisfies("platform=windows"):
             super(Sqlite, self).configure(spec, prefix)
 
     def build(self, spec, prefix):
-        if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')
+        if self.spec.satisfies("platform=windows"):
+            nmake = Executable("nmake.exe")
             print(self.configure_flag_args)
-            nmake('CC = \"%s\"' % os.environ.get('SPACK_CC'),
-                  'Makefile.msc')
+            nmake('CC = "%s"' % os.environ.get("SPACK_CC"), "Makefile.msc")
         else:
             super(Sqlite, self).build(spec, prefix)
 
     def install(self, spec, prefix):
-        if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')
-            nmake('install')
+        if self.spec.satisfies("platform=windows"):
+            nmake = Executable("nmake.exe")
+            nmake("install")
         else:
             super(Sqlite, self).install(spec, prefix)
 

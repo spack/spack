@@ -436,7 +436,7 @@ class Boost(Package):
                 return toolset
 
         # fallback to gcc if no toolset found
-        return 'gcc'
+        return "gcc"
 
     def bjam_python_line(self, spec):
         # avoid "ambiguous key" error
@@ -454,11 +454,11 @@ class Boost(Package):
         boost_toolset_id = self.determine_toolset(spec)
 
         # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
-        if spec.satisfies('%arm') or spec.satisfies('%fj'):
-            options.append('--with-toolset=gcc')
+        if spec.satisfies("%arm") or spec.satisfies("%fj"):
+            options.append("--with-toolset=gcc")
         else:
-            options.append('--with-toolset=%s' % boost_toolset_id)
-        options.append("--with-libraries=%s" % ','.join(with_libs))
+            options.append("--with-toolset=%s" % boost_toolset_id)
+        options.append("--with-libraries=%s" % ",".join(with_libs))
 
         if "+python" in spec:
             options.append("--with-python=%s" % spec["python"].command.path)
@@ -471,8 +471,7 @@ class Boost(Package):
         with open("user-config.jam", "w") as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
-                                                   spack_cxx))
+            f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
 
             if "+mpi" in spec:
                 # Use the correct mpi compiler.  If the compiler options are
@@ -551,16 +550,14 @@ class Boost(Package):
 
         options.extend(["link=%s" % ",".join(link_types), "--layout=%s" % layout])
 
-        if not spec.satisfies('@:1.75 %intel'):
+        if not spec.satisfies("@:1.75 %intel"):
             # When building any version >= 1.76, the toolset must be specified.
             # Earlier versions could not specify Intel as the toolset
             # as that was considered to be redundant/conflicting with
             # --with-toolset in bootstrap.
             # (although it is not currently known if 1.76 is the earliest
             # version that requires specifying the toolset for Intel)
-            options.extend([
-                'toolset=%s' % self.determine_toolset(spec)
-            ])
+            options.extend(["toolset=%s" % self.determine_toolset(spec)])
 
         # Other C++ flags.
         cxxflags = []
@@ -656,9 +653,9 @@ class Boost(Package):
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
-        bootstrap = Executable('./bootstrap.sh')
+        bootstrap = Executable("./bootstrap.sh")
 
-        bootstrap_options = ['--prefix=%s' % prefix]
+        bootstrap_options = ["--prefix=%s" % prefix]
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         bootstrap(*bootstrap_options)
@@ -672,7 +669,7 @@ class Boost(Package):
         )
 
         # b2 used to be called bjam, before 1.47 (sigh)
-        b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
+        b2name = "./b2" if spec.satisfies("@1.47:") else "./bjam"
 
         b2 = Executable(b2name)
         jobs = make_jobs
@@ -681,9 +678,9 @@ class Boost(Package):
             jobs = 64
 
         b2_options = [
-            '-j', '%s' % jobs,
-            '--user-config=%s' % os.path.join(
-                self.stage.source_path, 'user-config.jam')
+            "-j",
+            "%s" % jobs,
+            "--user-config=%s" % os.path.join(self.stage.source_path, "user-config.jam"),
         ]
 
         threading_opts = self.determine_b2_options(spec, b2_options)

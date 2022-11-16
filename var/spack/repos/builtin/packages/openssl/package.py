@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
-class Openssl(Package):   # Uses Fake Autotools, should subclass Package
+class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust,
     commercial-grade, and full-featured toolkit for the Transport
     Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
@@ -420,7 +420,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # (e.g. gcc) will not accept them.
         filter_file(r"-arch x86_64", "", "Makefile")
 
-        if spec.satisfies('platform=windows'):
+        if spec.satisfies("platform=windows"):
             host_make = nmake
         else:
             host_make = make

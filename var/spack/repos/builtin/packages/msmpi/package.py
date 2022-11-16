@@ -10,20 +10,25 @@ class Msmpi(Package):
     """A Windows-specced build of MPICH provided directly by
     Microsoft Support Team
     """
-    homepage = 'https://www.microsoft.com/en-us/download/default.aspx'
-    maintainers = ['jpopelar']
 
-    version('10.0', sha256='7dae13797627726f67fab9c1d251aec2df9ecd25939984645ec05748bdffd396', extension='exe')
+    homepage = "https://www.microsoft.com/en-us/download/default.aspx"
+    maintainers = ["jpopelar"]
 
-    provides('mpi')
+    version(
+        "10.0",
+        sha256="7dae13797627726f67fab9c1d251aec2df9ecd25939984645ec05748bdffd396",
+        extension="exe",
+    )
 
-    conflicts('platform=linux')
-    conflicts('platform=darwin')
-    conflicts('platform=cray')
+    provides("mpi")
+
+    conflicts("platform=linux")
+    conflicts("platform=darwin")
+    conflicts("platform=cray")
 
     def url_for_version(self, version):
-        return 'https://download.microsoft.com/download/A/E/0/AE002626-9D9D-448D-8197-1EA510E297CE/msmpisetup.exe'
+        return "https://download.microsoft.com/download/A/E/0/AE002626-9D9D-448D-8197-1EA510E297CE/msmpisetup.exe"
 
     def install(self, spec, prefix):
-        installer = Executable('msmpisetup.exe')
+        installer = Executable("msmpisetup.exe")
         installer()

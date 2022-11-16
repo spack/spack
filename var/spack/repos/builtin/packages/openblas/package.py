@@ -214,7 +214,7 @@ class Openblas(MakefilePackage):
         # unclear whether setting `-j N` externally was supported before 0.3
         return self.spec.version >= Version("0.3.0")
 
-    @run_before('edit')
+    @run_before("edit")
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
@@ -427,49 +427,45 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = ['libs', 'netlib']
+        targets = ["libs", "netlib"]
 
         # Build shared if variant is set.
-        if '+shared' in self.spec:
-            targets += ['shared']
+        if "+shared" in self.spec:
+            targets += ["shared"]
 
         return self.make_defs + targets
 
-    @run_after('build')
+    @run_after("build")
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('tests', *self.make_defs, parallel=False)
+        make("tests", *self.make_defs, parallel=False)
 
     @property
     def install_targets(self):
         make_args = [
-            'install',
-            'PREFIX={0}'.format(self.prefix),
+            "install",
+            "PREFIX={0}".format(self.prefix),
         ]
         return make_args + self.make_defs
 
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
         spec = self.spec
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.
-        source_file = join_path(os.path.dirname(self.module.__file__),
-                                'test_cblas_dgemm.c')
-        blessed_file = join_path(os.path.dirname(self.module.__file__),
-                                 'test_cblas_dgemm.output')
+        source_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.c")
+        blessed_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.output")
 
-        include_flags = spec['openblas'].headers.cpp_flags
-        link_flags = spec['openblas'].libs.ld_flags
-        if self.compiler.name == 'intel':
-            link_flags += ' -lifcore'
-        if self.spec.satisfies('threads=pthreads'):
-            link_flags += ' -lpthread'
-        if spec.satisfies('threads=openmp'):
-            link_flags += ' -lpthread ' + self.compiler.openmp_flag
+        include_flags = spec["openblas"].headers.cpp_flags
+        link_flags = spec["openblas"].libs.ld_flags
+        if self.compiler.name == "intel":
+            link_flags += " -lifcore"
+        if self.spec.satisfies("threads=pthreads"):
+            link_flags += " -lpthread"
+        if spec.satisfies("threads=openmp"):
+            link_flags += " -lpthread " + self.compiler.openmp_flag
 
-        output = compile_c_and_execute(
-            source_file, [include_flags], link_flags.split()
-        )
+        output = compile_c_and_execute(source_file, [include_flags], link_flags.split())
         compare_output_file(output, blessed_file)

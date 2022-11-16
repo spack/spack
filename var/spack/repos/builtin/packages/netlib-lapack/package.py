@@ -105,10 +105,10 @@ class NetlibLapack(CMakePackage):
     provides("blas", when="~external-blas")
     provides("lapack")
 
-    depends_on('blas', when='+external-blas')
-    depends_on('netlib-xblas+fortran+plain_blas', when='+xblas')
-    depends_on('python@2.7:', type='test')
-    depends_on('cmake@3.15:')
+    depends_on("blas", when="+external-blas")
+    depends_on("netlib-xblas+fortran+plain_blas", when="+xblas")
+    depends_on("python@2.7:", type="test")
+    depends_on("cmake@3.15:")
 
     # We need to run every phase twice in order to get static and shared
     # versions of the libraries. When ~shared, we run the default
@@ -143,16 +143,9 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ["libblas"],
-            ("c", "fortran"): [
-                "libcblas",
-                "libblas",
-            ],
-            ("c",): [
-                "libcblas",
-            ],
-            ("fortran",): [
-                "libblas",
-            ],
+            ("c", "fortran"): ["libcblas", "libblas",], 
+            ("c",): ["libcblas",], 
+            ("fortran",): ["libblas",], 
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
@@ -164,16 +157,9 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ["liblapack"],
-            ("c", "fortran"): [
-                "liblapacke",
-                "liblapack",
-            ],
-            ("c",): [
-                "liblapacke",
-            ],
-            ("fortran",): [
-                "liblapack",
-            ],
+            ("c", "fortran"): ["liblapacke", "liblapack",], 
+            ("c",): ["liblapacke",], 
+            ("fortran",): ["liblapack",], 
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]

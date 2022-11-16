@@ -195,14 +195,14 @@ class Hdf5(CMakePackage):
         multi=False,
     )
 
-    if sys.platform != 'win32':
-        depends_on('mpi', when='+mpi')
-    depends_on('java', type=('build', 'run'), when='+java')
+    if sys.platform != "win32":
+        depends_on("mpi", when="+mpi")
+    depends_on("java", type=("build", "run"), when="+java")
     # numactl does not currently build on darwin
-    if sys.platform != 'darwin' and sys.platform != 'win32':
-        depends_on('numactl', when='+mpi+fortran')
-        depends_on('szip', when='+szip')
-    depends_on('zlib@1.1.2:')
+    if sys.platform != "darwin" and sys.platform != "win32":
+        depends_on("numactl", when="+mpi+fortran")
+        depends_on("szip", when="+szip")
+    depends_on("zlib@1.1.2:")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     depends_on("pkgconfig", type="run")
@@ -409,11 +409,7 @@ class Hdf5(CMakePackage):
                 "libhdf5_java",
                 "libhdf5",
             ],
-            ("cxx", "hl"): [
-                "libhdf5_hl_cpp",
-                "libhdf5_hl",
-                "libhdf5",
-            ],
+            ("cxx", "hl"): ["libhdf5_hl_cpp", "libhdf5_hl", "libhdf5",], 
             ("fortran", "hl"): [
                 "libhdf5_hl_fortran",
                 "libhdf5_hl_f90cstub",
@@ -422,29 +418,11 @@ class Hdf5(CMakePackage):
                 "libhdf5_f90cstub",
                 "libhdf5",
             ],
-            ("hl",): [
-                "libhdf5_hl",
-                "libhdf5",
-            ],
-            ("cxx", "fortran"): [
-                "libhdf5_fortran",
-                "libhdf5_f90cstub",
-                "libhdf5_cpp",
-                "libhdf5",
-            ],
-            ("cxx",): [
-                "libhdf5_cpp",
-                "libhdf5",
-            ],
-            ("fortran",): [
-                "libhdf5_fortran",
-                "libhdf5_f90cstub",
-                "libhdf5",
-            ],
-            ("java",): [
-                "libhdf5_java",
-                "libhdf5",
-            ],
+            ("hl",): ["libhdf5_hl", "libhdf5",], 
+            ("cxx", "fortran"): ["libhdf5_fortran", "libhdf5_f90cstub", "libhdf5_cpp", "libhdf5",], 
+            ("cxx",): ["libhdf5_cpp", "libhdf5",], 
+            ("fortran",): ["libhdf5_fortran", "libhdf5_f90cstub", "libhdf5",], 
+            ("java",): ["libhdf5_java", "libhdf5",], 
         }
 
         # Turn the query into the appropriate key
@@ -497,17 +475,18 @@ class Hdf5(CMakePackage):
             self.define_from_variant("HDF5_BUILD_TOOLS", "tools"),
         ]
 
-        api = spec.variants['api'].value
-        if sys.platform == 'win32' and self.spec.satisfies('+staticmt'):
-            args.append(self.define('CMAKE_POLICY_DEFAULT_CMP0091', 'NEW'))
-            args.append(self.define('CMAKE_MSVC_RUNTIME_LIBRARY',
-                                    "MultiThreaded$<$<CONFIG:Debug>:Debug>"))
+        api = spec.variants["api"].value
+        if sys.platform == "win32" and self.spec.satisfies("+staticmt"):
+            args.append(self.define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW"))
+            args.append(
+                self.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+            )
 
-        if api != 'default':
-            args.append(self.define('DEFAULT_API_VERSION', api))
+        if api != "default":
+            args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if '+mpi' in spec and sys.platform != 'win32':
-            args.append(self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc))
+        if "+mpi" in spec and sys.platform != "win32":
+            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
 
             if "+cxx" in self.spec:
                 args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
@@ -535,8 +514,8 @@ class Hdf5(CMakePackage):
         if self.spec.satisfies("@1.8.21:1.8.22,1.10.2:1.10.7,1.12.0+mpi"):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
-                if sys.platform != 'win32':
-                    symlink('h5cc', 'h5pcc')
+                if sys.platform != "win32":
+                    symlink("h5cc", "h5pcc")
 
         # The same as for 'h5pcc'. However, the CMake installation produces the
         # Fortran compiler wrapper called 'h5fc' only starting versions 1.8.22,

@@ -11,7 +11,7 @@ from sys import platform as _platform
 
 from llnl.util import lang
 
-is_windows = _platform == 'win32'
+is_windows = _platform == "win32"
 
 
 def symlink(real_path, link_path):
