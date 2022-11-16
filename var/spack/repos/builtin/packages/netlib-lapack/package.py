@@ -143,9 +143,16 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ["libblas"],
-            ("c", "fortran"): ["libcblas", "libblas", ],
-            ("c",): ["libcblas", ],
-            ("fortran",): ["libblas", ],
+            ("c", "fortran"): [
+                "libcblas",
+                "libblas",
+            ],
+            ("c",): [
+                "libcblas",
+            ],
+            ("fortran",): [
+                "libblas",
+            ],
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
@@ -157,9 +164,16 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ["liblapack"],
-            ("c", "fortran"): ["liblapacke", "liblapack", ],
-            ("c",): ["liblapacke", ],
-            ("fortran",): ["liblapack", ],
+            ("c", "fortran"): [
+                "liblapacke",
+                "liblapack",
+            ],
+            ("c",): [
+                "liblapacke",
+            ],
+            ("fortran",): [
+                "liblapack",
+            ],
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
