@@ -39,6 +39,7 @@ spack:
         - mpileaks
         - lmod
         - macsio@1.1+scr^scr@2.0.0~fortran^silo~fortran^hdf5~fortran
+        - libtree
       - ['%gcc@7.5.0']
   - gcc_old_packages:
     - zlib%gcc@6.5.0
