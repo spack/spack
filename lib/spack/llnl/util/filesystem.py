@@ -2252,11 +2252,11 @@ class WindowsSimulatedRuntimePath(object):
         """
         Set of directories where package binaries/libraries are located.
         """
-        pkg_libs = (
-            set(self.pkg.libs.directories)
-            if hasattr(self.pkg, "libs")
-            else set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
-        )
+        if hasattr(self.pkg, 'libs') and self.pkg.libs:
+            pkg_libs = set(self.pkg.libs.directories)
+        else:
+            pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
+
         return pkg_libs | set((self.pkg.prefix.bin)) | self.internal_links
 
     @property
