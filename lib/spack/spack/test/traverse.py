@@ -25,64 +25,109 @@ def create_dag(nodes, edges):
 
 @pytest.fixture()
 def abstract_specs_dtuse():
-    nodes = [
-        "dtbuild1",
-        "dtbuild2",
-        "dtbuild3",
-        "dtlink1",
-        "dtlink2",
-        "dtlink3",
-        "dtlink4",
-        "dtlink5",
-        "dtrun1",
-        "dtrun2",
-        "dtrun3",
-        "dttop",
-        "dtuse",
-    ]
-    edges = [
-        ("dtbuild1", "dtbuild2", ("build")),
-        ("dtbuild1", "dtlink2", ("build", "link")),
-        ("dtbuild1", "dtrun2", ("run")),
-        ("dtlink1", "dtlink3", ("build", "link")),
-        ("dtlink3", "dtbuild2", ("build")),
-        ("dtlink3", "dtlink4", ("build", "link")),
-        ("dtrun1", "dtlink5", ("build", "link")),
-        ("dtrun1", "dtrun3", ("run")),
-        ("dtrun3", "dtbuild3", ("build")),
-        ("dttop", "dtbuild1", ("build",)),
-        ("dttop", "dtlink1", ("build", "link")),
-        ("dttop", "dtrun1", ("run")),
-        ("dtuse", "dttop", ("build", "link")),
-    ]
-    return create_dag(nodes, edges)
+    return create_dag(
+        nodes=[
+            "dtbuild1",
+            "dtbuild2",
+            "dtbuild3",
+            "dtlink1",
+            "dtlink2",
+            "dtlink3",
+            "dtlink4",
+            "dtlink5",
+            "dtrun1",
+            "dtrun2",
+            "dtrun3",
+            "dttop",
+            "dtuse",
+        ],
+        edges=[
+            ("dtbuild1", "dtbuild2", ("build")),
+            ("dtbuild1", "dtlink2", ("build", "link")),
+            ("dtbuild1", "dtrun2", ("run")),
+            ("dtlink1", "dtlink3", ("build", "link")),
+            ("dtlink3", "dtbuild2", ("build")),
+            ("dtlink3", "dtlink4", ("build", "link")),
+            ("dtrun1", "dtlink5", ("build", "link")),
+            ("dtrun1", "dtrun3", ("run")),
+            ("dtrun3", "dtbuild3", ("build")),
+            ("dttop", "dtbuild1", ("build",)),
+            ("dttop", "dtlink1", ("build", "link")),
+            ("dttop", "dtrun1", ("run")),
+            ("dtuse", "dttop", ("build", "link")),
+        ],
+    )
 
 
 @pytest.fixture()
 def abstract_specs_dt_diamond():
-    nodes = ["dt-diamond", "dt-diamond-left", "dt-diamond-right", "dt-diamond-bottom"]
-    edges = [
-        ("dt-diamond", "dt-diamond-left", ("build", "link")),
-        ("dt-diamond", "dt-diamond-right", ("build", "link")),
-        ("dt-diamond-right", "dt-diamond-bottom", ("build", "link", "run")),
-        ("dt-diamond-left", "dt-diamond-bottom", ("build")),
-    ]
-    return create_dag(nodes, edges)
+    return create_dag(
+        nodes=["dt-diamond", "dt-diamond-left", "dt-diamond-right", "dt-diamond-bottom"],
+        edges=[
+            ("dt-diamond", "dt-diamond-left", ("build", "link")),
+            ("dt-diamond", "dt-diamond-right", ("build", "link")),
+            ("dt-diamond-right", "dt-diamond-bottom", ("build", "link", "run")),
+            ("dt-diamond-left", "dt-diamond-bottom", ("build")),
+        ],
+    )
 
 
 @pytest.fixture()
 def abstract_specs_chain():
     # Chain a -> b -> c -> d with skip connections
     # from a -> c and a -> d.
-    nodes = ["chain-a", "chain-b", "chain-c", "chain-d"]
-    edges = [
-        ("chain-a", "chain-b", ("build", "link")),
-        ("chain-b", "chain-c", ("build", "link")),
-        ("chain-c", "chain-d", ("build", "link")),
-        ("chain-a", "chain-c", ("build", "link")),
-        ("chain-a", "chain-d", ("build", "link")),
-    ]
-    return create_dag(nodes, edges)
+    return create_dag(
+        nodes=["chain-a", "chain-b", "chain-c", "chain-d"],
+        edges=[
+            ("chain-a", "chain-b", ("build", "link")),
+            ("chain-b", "chain-c", ("build", "link")),
+            ("chain-c", "chain-d", ("build", "link")),
+            ("chain-a", "chain-c", ("build", "link")),
+            ("chain-a", "chain-d", ("build", "link")),
+        ],
+    )
+
+
+@pytest.mark.parametrize("direction", ("children", "parents"))
+@pytest.mark.parametrize("deptype", ("all", ("link", "build"), ("run", "link")))
+def test_all_orders_traverse_the_same_nodes(direction, deptype, abstract_specs_dtuse):
+    # Test whether all graph traversal methods visit the same set of vertices.
+    # When testing cover=nodes, the traversal methods may reach the same vertices
+    # through different edges, so we're using traverse_nodes here to only verify the
+    # vertices.
+    #
+    # NOTE: root=False currently means "yield nodes discovered at depth > 0",
+    # meaning that depth first search will yield dtlink5 as it is first found through
+    # dtuse, whereas breadth first search considers dtlink5 at depth 0 and does not
+    # yield it since it is a root. Therefore, we only use root=True.
+    # (The inconsistency cannot be resolved by making root=False mean "don't yield
+    # vertices without in-edges", since this is not how it's used; it's typically used
+    # as "skip the input specs".)
+    specs = [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]
+    kwargs = {"root": True, "direction": direction, "deptype": deptype, "cover": "nodes"}
+
+    def nodes(order):
+        s = traverse.traverse_nodes(specs, order=order, **kwargs)
+        return sorted(list(s))
+
+    assert nodes("pre") == nodes("post") == nodes("breadth") == nodes("topo")
+
+
+@pytest.mark.parametrize("direction", ("children", "parents"))
+@pytest.mark.parametrize("root", (True, False))
+@pytest.mark.parametrize("deptype", ("all", ("link", "build"), ("run", "link")))
+def test_all_orders_traverse_the_same_edges(direction, root, deptype, abstract_specs_dtuse):
+    # Test whether all graph traversal methods visit the same set of edges.
+    # All edges should be returned, including the artificial edges to the input
+    # specs when root=True.
+    specs = [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]
+    kwargs = {"root": root, "direction": direction, "deptype": deptype, "cover": "edges"}
+
+    def edges(order):
+        s = traverse.traverse_edges(specs, order=order, **kwargs)
+        return sorted(list(s))
+
+    assert edges("pre") == edges("post") == edges("breadth") == edges("topo")
 
 
 def test_breadth_first_traversal(abstract_specs_dtuse):
