@@ -21,7 +21,8 @@ import spack.config
         (["wrong-variant-in-depends-on"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a GitHub patch URL without full_index=1
         (["invalid-github-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
-        # This package's package class sets a legacy attribute that should be defined in a builder class.
+        # This package's package class sets a legacy attribute that should
+        # be defined in a builder class.
         (["legacy-attributes"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone 'test' method in build-time callbacks
         (["fail-test-audit"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
