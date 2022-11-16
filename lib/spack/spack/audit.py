@@ -298,6 +298,27 @@ def _check_build_test_callbacks(pkgs, error_cls):
 
 
 @package_directives
+def _check_legacy_attributes(pkgs, error_cls):
+    """Ensure legacy attributes are not defined in package classes."""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        buildsystem_variant, _ = pkg_cls.variants["build_system"]
+        buildsystem_names = [getattr(x, "value", x) for x in buildsystem_variant.values]
+        builder_classes = [spack.builder.BUILDER_CLS[x] for x in buildsystem_names]
+        legacy_attributes = set()
+        for builder_class in builder_classes:
+            legacy_attributes.update(getattr(builder_class, "legacy_attributes", ()))
+        for legacy_attribute in legacy_attributes:
+            if (hasattr(pkg_cls, legacy_attribute)):
+                msg = "Package '{}' sets the legacy attribute '{}'"
+                instr = "Move {} to an appropriate builder class"
+                errors.append(error_cls(msg.format(pkg_name, legacy_attribute),
+                                        [instr.format(legacy_attribute)]))
+    return errors
+
+
+@package_directives
 def _check_patch_urls(pkgs, error_cls):
     """Ensure that patches fetched from GitHub have stable sha256 hashes."""
     github_patch_url_re = (
