@@ -880,12 +880,7 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
     store_path.remove(rec=1)
-<<<<<<< HEAD
     copy_tree(str(store_cache), str(store_path))
-=======
-    # copy_tree(str(store_cache), str(store_path))
-    store_cache.copy(store_path, mode=True, stat=True)
->>>>>>> e43f1c914c (Updating conftest, fixing a syntax error in hdf5)
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
 
 

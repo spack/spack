@@ -20,7 +20,7 @@ from sys import platform as _platform
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, symlink
 
 from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
@@ -2138,12 +2138,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         shared_ext = "so"
 
     # Construct the right suffix for the library
-    if is_windows:
-        if shared:
-            suffixes = ["dll"]
-        else:
-            suffixes = ["lib"]
-    elif shared:
+    if shared:
         # Used on both Linux and macOS
         suffixes = [shared_ext]
         if sys.platform == "darwin":
@@ -2181,151 +2176,6 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
 
 
 def find_all_shared_libraries(root, recursive=False):
-    """Convenience function that returns the list of all shared libraries found
-    in the directory passed as argument.
-
-    Args:
-        root (str): directory where to look recursively for library files
-        recursive (bool):
-    Returns:
-        List of all libraries found in ``root`` and subdirectories.
-    """
-    return find_libraries("*", root=root, shared=True, recursive=recursive)
-
-
-def find_all_static_libraries(root, recursive=False):
-    """Convenience function that returns the list of all static libraries found
-    in the directory passed as argument.
-
-    Args:
-        root (str): directory where to look recursively for library files
-        recursive (bool):
-    Returns:
-        List of all libraries found in ``root`` and subdirectories.
-    """
-    return find_libraries("*", root=root, shared=False, recursive=recursive)
-
-
-def find_all_libraries(root, recursive=False):
-    """Convenience function that returns the list of all libraries found
-    in the directory passed as argument.
-
-    Args:
-        root (str): directory where to look recursively for library files
-        recursive (bool):
-    Returns:
-        List of all libraries found in ``root`` and subdirectories.
-    """
-
-    return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(
-        root, recursive=recursive
-    )
-
-
-class WindowsSimulatedRuntimePath(object):
-    """Class representing Windows filesystem rpath analog
-
-    One instance of this class is associated with a package (only on Windows)
-    For each lib/binary directory in an associated package, this class introduces
-    a symlink to any/all dependent libraries/binaries. This includes the packages
-    own bin/lib directories, meaning the libraries are linked to the bianry directory
-    and vis versa.
-
-
-    """
-
-    def __init__(self, package, link_install_prefix=True):
-        """
-        Args:
-            package (spack.package_base.PackageBase): Package requiring links
-            link_install_prefix (bool): Link against package's own install or stage root.
-                Packages that run their own executables during build and require rpaths to
-                the build directory during build time require this option. Default: install
-                root
-        """
-        self.pkg = package
-        self._addl_rpaths = set()
-        self.link_install_prefix = link_install_prefix
-        self._internal_links = set()
-
-    @property
-    def link_dest(self):
-        """
-        Set of directories where package binaries/libraries are located.
-        """
-        if hasattr(self.pkg, "libs") and self.pkg.libs:
-            pkg_libs = set(self.pkg.libs.directories)
-        else:
-            pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
-
-        return pkg_libs | set([self.pkg.prefix.bin]) | self.internal_links
-
-    @property
-    def internal_links(self):
-        """
-        linking that would need to be established within the package itself. Useful for links
-        against extension modules/build time executables/internal linkage
-        """
-        return self._internal_links
-
-    def add_internal_links(self, *dest):
-        """
-        Incorporate additional paths into the rpath (sym)linking scheme.
-
-        Paths provided to this method are linked against by a package's libraries
-        and libraries found at these paths are linked against a package's binaries.
-        (i.e. /site-packages -> /bin and /bin -> /site-packages)
-
-        Specified paths should be outside of a package's lib, lib64, and bin
-        directories.
-        """
-        self._internal_links = self._internal_links | set(*dest)
-
-    @property
-    def link_targets(self):
-        """
-        Set of libraries this package needs to link against during runtime
-        These packages will each be symlinked into the packages lib and binary dir
-        """
-
-        dependent_libs = []
-        for path in self.pkg.rpath:
-            dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
-        for extra_path in self._addl_rpaths:
-            dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
-        return set(dependent_libs)
-
-    def include_additional_runtime_paths(self, *paths):
-        """
-        Add libraries found at the root of provided paths to runtime linking
-
-        These are libraries found outside of the typical scope of rpath linking
-        that require manual inclusion in a runtime linking scheme
-
-        Args:
-            *paths (str): arbitrary number of paths to be added to runtime linking
-        """
-        self._addl_rpaths = self._addl_rpaths | set(paths)
-
-    def establish_runtime_link(self):
-        """
-        (sym)link packages to runtime dependencies based on RPath configuration for
-        Windows heuristics
-        """
-        # from build_environment.py:463
-        # The top-level package is always RPATHed. It hasn't been installed yet
-        # so the RPATHs are added unconditionally
-
-        # this naively symlinks from lib to bin and bin to lib etc
-        # in the future could be more nuanced and internal links handled
-        # by package attributes
-        for link in itertools.product(self.link_dest, repeat=2):
-            if link[0] != link[1]:
-                self_link_targets = find_all_shared_libraries(link[1])
-                for target in self_link_targets:
-                    symlink(link[0], target)
-
-def find_all_shared_libraries(root, recursive=False, runtime=True):
     """Convenience function that returns the list of all shared libraries found
     in the directory passed as argument.
 
