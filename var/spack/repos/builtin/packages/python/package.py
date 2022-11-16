@@ -18,7 +18,7 @@ from llnl.util.filesystem import (
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
 )
-from llnl.util.lang import dedupe, match_predicate
+from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
@@ -370,6 +370,9 @@ class Python(Package):
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if not is_windows:
         depends_on("pkgconfig@0.9.0:", type="build")
@@ -405,6 +408,7 @@ class Python(Package):
         depends_on("tcl", when="+tkinter")
         depends_on("uuid", when="+uuid")
         depends_on("tix", when="+tix")
+        depends_on("libxcrypt", when="+crypt")
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -559,6 +563,14 @@ class Python(Package):
                 variants += "+tix"
             except ProcessError:
                 variants += "~tix"
+
+        # Some modules are platform-dependent
+        if not self.spec.satisfies("platform=windows"):
+            try:
+                python("-c", "import crypt", error=os.devnull)
+                variants += "+crypt"
+            except ProcessError:
+                variants += "~crypt"
 
         return variants
 
@@ -1017,6 +1029,10 @@ class Python(Package):
                 else:
                     self.command("-c", "import Tix")
 
+            # Ensure that crypt module works
+            if "+crypt" in spec:
+                self.command("-c", "import crypt")
+
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -1401,10 +1417,6 @@ config.update(get_paths())
             return path.replace(prefix, "")
         return os.path.join("include", "python{}".format(self.version.up_to(2)))
 
-    @property
-    def easy_install_file(self):
-        return join_path(self.purelib, "easy-install.pth")
-
     def setup_run_environment(self, env):
         env.prepend_path("CPATH", os.pathsep.join(self.spec["python"].headers.directories))
 
@@ -1525,108 +1537,6 @@ config.update(get_paths())
         if dependent_spec.package.is_extension:
             mkdirp(module.python_platlib)
             mkdirp(module.python_purelib)
-
-    # ========================================================================
-    # Handle specifics of activating and deactivating python modules.
-    # ========================================================================
-
-    def python_ignore(self, ext_pkg, args):
-        """Add some ignore files to activate/deactivate args."""
-        ignore_arg = args.get("ignore", lambda f: False)
-
-        # Always ignore easy-install.pth, as it needs to be merged.
-        patterns = [r"(site|dist)-packages/easy-install\.pth$"]
-
-        # Ignore pieces of setuptools installed by other packages.
-        # Must include directory name or it will remove all site*.py files.
-        if ext_pkg.name != "py-setuptools":
-            patterns.extend(
-                [
-                    r"bin/easy_install[^/]*$",
-                    r"(site|dist)-packages/setuptools[^/]*\.egg$",
-                    r"(site|dist)-packages/setuptools\.pth$",
-                    r"(site|dist)-packages/site[^/]*\.pyc?$",
-                    r"(site|dist)-packages/__pycache__/site[^/]*\.pyc?$",
-                ]
-            )
-        if ext_pkg.name != "py-pygments":
-            patterns.append(r"bin/pygmentize$")
-        if ext_pkg.name != "py-numpy":
-            patterns.append(r"bin/f2py[0-9.]*$")
-
-        return match_predicate(ignore_arg, patterns)
-
-    def write_easy_install_pth(self, exts, prefix=None):
-        if not prefix:
-            prefix = self.prefix
-
-        paths = []
-        unique_paths = set()
-
-        for ext in sorted(exts.values()):
-            easy_pth = join_path(ext.prefix, self.easy_install_file)
-
-            if not os.path.isfile(easy_pth):
-                continue
-
-            with open(easy_pth) as f:
-                for line in f:
-                    line = line.rstrip()
-
-                    # Skip lines matching these criteria
-                    if not line:
-                        continue
-                    if re.search(r"^(import|#)", line):
-                        continue
-                    if ext.name != "py-setuptools" and re.search(r"setuptools.*egg$", line):
-                        continue
-
-                    if line not in unique_paths:
-                        unique_paths.add(line)
-                        paths.append(line)
-
-        main_pth = join_path(prefix, self.easy_install_file)
-
-        if not paths:
-            if os.path.isfile(main_pth):
-                os.remove(main_pth)
-
-        else:
-            with open(main_pth, "w") as f:
-                f.write("import sys; sys.__plen = len(sys.path)\n")
-                for path in paths:
-                    f.write("{0}\n".format(path))
-                f.write(
-                    "import sys; new=sys.path[sys.__plen:]; "
-                    "del sys.path[sys.__plen:]; "
-                    "p=getattr(sys,'__egginsert',0); "
-                    "sys.path[p:p]=new; "
-                    "sys.__egginsert = p+len(new)\n"
-                )
-
-    def activate(self, ext_pkg, view, **args):
-        ignore = self.python_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Python, self).activate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        exts[ext_pkg.name] = ext_pkg.spec
-
-        self.write_easy_install_pth(exts, prefix=view.get_projection_for_spec(self.spec))
-
-    def deactivate(self, ext_pkg, view, **args):
-        args.update(ignore=self.python_ignore(ext_pkg, args))
-
-        super(Python, self).deactivate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        # Make deactivate idempotent
-        if ext_pkg.name in exts:
-            del exts[ext_pkg.name]
-            self.write_easy_install_pth(exts, prefix=view.get_projection_for_spec(self.spec))
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
