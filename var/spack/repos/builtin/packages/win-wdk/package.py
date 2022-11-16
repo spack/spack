@@ -8,6 +8,7 @@ import glob
 import os
 import re
 
+import spack.util.windows_registry as winreg
 from spack.package import *
 
 
@@ -83,7 +84,7 @@ class WinWdk(Package):
         WDK is a set of drivers that we would like to
         be discoverable externally by Spack.
         The lib does not provide the WDK
-        version so we derive from the exe path
+        version so we derive from the lib path
         """
         version_match_pat = re.compile(r"[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]")
         ver_str = re.search(version_match_pat, lib)
@@ -109,9 +110,6 @@ class WinWdk(Package):
         """WGL download is named by fetch based on name derived from Link redirection
         This name is not properly formated so that Windows understands it as an executable
         We rename so as to allow Windows to run the WGL installer"""
-        import pdb
-
-        pdb.set_trace()
         installer = glob.glob(os.path.join(self.stage.source_path, "linkid=**"))
         if len(installer) > 1:
             raise RuntimeError(
@@ -124,4 +122,18 @@ class WinWdk(Package):
     def install(self, spec, prefix):
         install_args = ["/features", "+", "/quiet", "/installpath", self.prefix]
         with working_dir(self.stage.source_path):
-            Executable("wdksetup.exe")(*install_args)
+            try:
+                Executable("wdksetup.exe")(*install_args)
+            except ProcessError as pe:
+                reg = winreg.WindowsRegistryView(
+            "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
+            root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+            )
+                if not reg:
+                    # No Kits are available, failure was genuine
+                    raise pe
+                else:
+                    versions = [str(subkey) for subkey in reg.get_subkeys()]
+                    versions = ",".join(versions) if len(versions) > 1 else versions[0]
+                    plural = "s" if len(versions) > 1 else ""
+                    raise InstallError("Cannot install WDK version %s. Version%s %s already present on system. Please run `spack external find win-wdk` to use the WDK" % (self.version, plural, versions))

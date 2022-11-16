@@ -108,7 +108,7 @@ def _spec_is_valid(spec):
 
 
 def path_to_dict(search_paths):
-    """Return dictionary[path]:file from list of paths"""
+    """Return dictionary[fullpath]: basename from list of paths"""
     path_to_lib = {}
     # Reverse order of search directories so that a lib in the first
     # entry overrides later entries
@@ -298,11 +298,11 @@ class WindowsKitExternalPaths(object):
 
     @staticmethod
     def find_windows_kit_reg_installed_roots_paths():
-        reg = spack.util.windows_registry.WindowsRegistry(
+        reg = spack.util.windows_registry.WindowsRegistryView(
             "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
-            root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+            root_key=spack.util.windows_registry.HKEY.HKEY_LOCAL_MACHINE,
         )
-        if not reg.reg:
+        if not reg:
             # couldn't find key, return empty list
             return []
         return WindowsKitExternalPaths.find_windows_kit_lib_paths(
@@ -311,12 +311,12 @@ class WindowsKitExternalPaths(object):
 
     @staticmethod
     def find_windows_kit_reg_sdk_paths():
-        reg = spack.util.windows_registry.WindowsRegistry(
+        reg = spack.util.windows_registry.WindowsRegistryView(
             "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows\\v%s.0"
             % WindowsKitExternalPaths.plat_major_ver,
-            root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+            root_key=spack.util.windows_registry.HKEY.HKEY_LOCAL_MACHINE,
         )
-        if not reg.reg:
+        if not reg:
             # couldn't find key, return empty list
             return []
         return WindowsKitExternalPaths.find_windows_kit_lib_paths(
