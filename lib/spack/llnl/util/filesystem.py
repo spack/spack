@@ -2267,9 +2267,20 @@ class WindowsSimulatedRuntimePath(object):
         """
         return self._internal_links
 
-    @internal_links.setter
-    def internal_links(self, *dest):
-        self._internal_links = self._internal_links | set(dest)
+
+    def add_internal_links(self, *dest):
+        """
+        Incorporate additional paths into the rpath (sym)linking scheme.
+
+        Paths provided to this method are linked against by a package's libraries
+        and libraries found at these paths are linked against a package's binaries.
+        (i.e. /site-packages -> /bin and /bin -> /site-packages)
+
+        Specified paths should be outside of a package's lib, lib64, and bin
+        directories.
+        """
+        self._internal_links = self._internal_links | set(*dest)
+
 
     @property
     def link_targets(self):
