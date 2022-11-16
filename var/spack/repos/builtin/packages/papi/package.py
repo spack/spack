@@ -31,6 +31,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     git = "https://bitbucket.org/icl/papi/src/master/"
 
     version("master", branch="master")
+    version("7.0.0", sha256="799dcc317a47da96beaeed445812ecb6ae49df7c0504a4569797c1f7d74c4fd2")
     version("6.0.0.1", sha256="3cd7ed50c65b0d21d66e46d0ba34cd171178af4bbf9d94e693915c1aca1e287f")
     version("6.0.0", sha256="3442709dae3405c2845b304c06a8b15395ecf4f3899a89ceb4d715103cb4055f")
     version("5.7.0", sha256="d1a3bb848e292c805bc9f29e09c27870e2ff4cda6c2fba3b7da8b4bba6547589")
