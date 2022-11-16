@@ -140,7 +140,6 @@ class WindowsRPath(object):
     def win_add_library_dependent(self):
         """Return extra set of directories that require linking for package
 
-<<<<<<< HEAD
         This method should be overridden by packages that produce
         binaries/libraries/python extension modules/etc that are installed into
         directories outside a package's `bin`, `lib`, and `lib64` directories,
@@ -163,19 +162,14 @@ class WindowsRPath(object):
         """
         return []
 
-=======
->>>>>>> ed6d05a794 (Restoring to develop after merge confs)
     def windows_establish_runtime_linkage(self):
         """Establish RPATH on Windows
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
         if is_windows:
-<<<<<<< HEAD
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
-=======
->>>>>>> ed6d05a794 (Restoring to develop after merge confs)
             self.win_rpath.establish_link()
 
 
