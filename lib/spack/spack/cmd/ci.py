@@ -570,8 +570,6 @@ def ci_rebuild(args):
             "-o",
             "Makefile",
             "--use-buildcache=package:never,dependencies:only",
-            "--make-target-prefix",
-            "ci",
             slash_hash,  # limit to spec we're building
         ],
         [
@@ -588,7 +586,7 @@ def ci_rebuild(args):
             "SPACK_COLOR=always",
             "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
             "-j$(nproc)",
-            "ci/.install-deps/{}".format(job_spec.dag_hash()),
+            "install-deps/{}".format(job_spec.dag_hash()),
         ],
         spack_cmd + ["install"] + root_install_args,
     ]
