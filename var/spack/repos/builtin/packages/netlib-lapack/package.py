@@ -5,7 +5,6 @@
 import spack.build_systems.cmake
 
 from spack.package import *
-from spack.build_systems.windows_variants import WindowsPackage
 
 
 class NetlibLapack(CMakePackage):

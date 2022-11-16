@@ -10,7 +10,6 @@ import sys
 import llnl.util.tty as tty
 
 from spack.build_systems.windows_variants import WindowsPackage
-
 from spack.package import *
 
 
