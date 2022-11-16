@@ -2189,7 +2189,7 @@ def find_all_shared_libraries(root, recursive=False):
     Returns:
         List of all libraries found in ``root`` and subdirectories.
     """
-    return find_libraries('*', root=root, shared=True, recursive=recursive)
+    return find_libraries("*", root=root, shared=True, recursive=recursive)
 
 
 def find_all_static_libraries(root, recursive=False):
@@ -2202,7 +2202,7 @@ def find_all_static_libraries(root, recursive=False):
     Returns:
         List of all libraries found in ``root`` and subdirectories.
     """
-    return find_libraries('*', root=root, shared=False, recursive=recursive)
+    return find_libraries("*", root=root, shared=False, recursive=recursive)
 
 
 def find_all_libraries(root, recursive=False):
@@ -2216,12 +2216,13 @@ def find_all_libraries(root, recursive=False):
         List of all libraries found in ``root`` and subdirectories.
     """
 
-    return find_all_shared_libraries(root, recursive=recursive) +\
-        find_all_static_libraries(root, recursive=recursive)
+    return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(
+        root, recursive=recursive
+    )
 
 
 class WindowsSimulatedRuntimePath(object):
-    """ Class representing Windows filesystem rpath analog
+    """Class representing Windows filesystem rpath analog
 
     One instance of this class is associated with a package (only on Windows)
     For each lib/binary directory in an associated package, this class introduces
@@ -2231,6 +2232,7 @@ class WindowsSimulatedRuntimePath(object):
 
 
     """
+
     def __init__(self, package, link_install_prefix=True):
         """
         Args:
@@ -2250,8 +2252,11 @@ class WindowsSimulatedRuntimePath(object):
         """
         Set of directories where package binaries/libraries are located.
         """
-        pkg_libs = set(self.pkg.libs.directories)\
-            if hasattr(self.pkg, 'libs') else set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
+        pkg_libs = (
+            set(self.pkg.libs.directories)
+            if hasattr(self.pkg, "libs")
+            else set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
+        )
         return pkg_libs | set((self.pkg.prefix.bin)) | self.internal_links
 
     @property
@@ -2302,8 +2307,8 @@ class WindowsSimulatedRuntimePath(object):
         for link in itertools.product(self.link_dest, self.link_targets):
             symlink(link[0], link[1])
         # from build_environment.py:463
-            # The top-level package is always RPATHed. It hasn't been installed yet
-            # so the RPATHs are added unconditionally
+        # The top-level package is always RPATHed. It hasn't been installed yet
+        # so the RPATHs are added unconditionally
 
         # this naively symlinks from lib to bin and bin to lib etc
         # in the future could be more nuanced and internal links handled

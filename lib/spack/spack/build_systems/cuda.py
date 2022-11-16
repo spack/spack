@@ -6,7 +6,7 @@
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.multimethod import when
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase
 
 
 class CudaPackage(PackageBase):
