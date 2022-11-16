@@ -10,7 +10,6 @@ from os.path import exists, join
 from sys import platform as _platform
 
 from llnl.util import lang
-from spack.util.executable import Executable
 
 is_windows = _platform == 'win32'
 
@@ -52,7 +51,6 @@ def _win32_junction(path, link):
         path = os.path.join(parent, path)
         path = os.path.abspath(path)
 
-    CreateHardLing(link, path)
 
 @lang.memoized
 def _win32_can_symlink():

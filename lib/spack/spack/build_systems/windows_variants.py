@@ -7,7 +7,7 @@ from spack.directives import variant
 from spack.package import Package
 
 
-class WindowsPackage(Package):
+class MSVCPackage(Package):
     """Auxiliary class for managing Windows-specific variants of
     packages. This class establishes three major variants for use in
     individual package.py scripts:
@@ -24,4 +24,4 @@ class WindowsPackage(Package):
 
     variant('staticmt', default=False,
             description="Build static version with static runtime libraries",
-            when='platform=windows')
+            when='%msvc')
