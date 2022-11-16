@@ -2239,6 +2239,7 @@ class WindowsRuntimePath:
         self.pkg = package
         self._addl_rpaths = []
         self.link_install_prefix = link_install_prefix
+        self._internal_links
 
     @property
     def link_dest(self):
@@ -2246,7 +2247,13 @@ class WindowsRuntimePath:
         Set of directories where package binaries are located. Symlinks
         to libraries/binaries on which this package depends
         """
-        return set(self.pkg.libs.directories) & set(self.internal_links)
+        pkg_libs = set(self.pkg.libs.directories)\
+            if hasattr(self.pkg, 'libs') else set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
+        return pkg_libs | set(self.internal_links)
+
+    @property.setter
+    def internal_links(self, *dest):
+        self._internal_links.extend(dest)
 
     @property
     def internal_links(self):
@@ -2254,7 +2261,7 @@ class WindowsRuntimePath:
         linking that would need to be established within the package itself. Useful for links
         against extension modules/build time executables/internal linkage
         """
-        return set(self.pkg.extension_libs)
+        return set(self._internal_links)
 
     @property
     def link_targets(self):

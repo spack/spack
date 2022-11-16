@@ -162,6 +162,22 @@ class WindowsRPath(object):
         """
         return []
 
+    def establish_internal_linkage(self, *dest):
+        """ Denote a package component not included in the
+        binary install directories defined by a package that requires
+        linking to the packages dependencies or the package binaries themselves
+
+        A good example of this is a python extension module that requires dynamic
+        linking to it's dependent C++ binary, and similar dependency chains
+        """
+        self.win_rpath.interal_links = dest
+
+    def add_search_paths(self, *path):
+        """ Add additional rpaths that are not implicitly included in the search
+        scheme
+        """
+        self.win_rpath.include_additional_runtime_paths(*path)
+
     def windows_establish_runtime_linkage(self):
         """Establish RPATH on Windows
 
@@ -316,7 +332,6 @@ class DetectablePackageMeta(object):
 class PackageMeta(
     spack.builder.PhaseCallbacksMeta,
     DetectablePackageMeta,
-    WindowsRPathMeta,
     spack.directives.DirectiveMeta,
     spack.multimethod.MultiMethodMeta,
 ):
@@ -658,10 +673,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: TestSuite instance used to manage smoke/install tests for one or more
     #: specs.
     test_suite = None
-
-    # On Windows, concept of rpath does not exist, after install
-    # establish runtime linkage via Windows Runtime link object
-    run_after('install')(PackageMeta.windows_establish_runtime_linkage)
 
     def __init__(self, spec):
         # this determines how the package should be built.
