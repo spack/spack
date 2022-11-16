@@ -111,24 +111,17 @@ class CoverEdgesVisitor(object):
 
 
 class TopoVisitor(object):
-    """Visitor that can be used in depth-first search to generate
-    a topological ordered list of vertices (we keep track of edges).
+    """Visitor that can be used in depth-first traversal to generate
+    a topologically ordered list of edges (in-edges before out-edges).
 
     Algorithm based on "Section 22.4: Topological sort", Introduction to Algorithms
     (2001, 2nd edition) by Cormen, Thomas H.; Leiserson, Charles E.; Rivest, Ronald L.;
     Stein, Clifford.
 
-    The algorithm in plain English: realize that (1) we only append a vertex A before
-    traversing all possible paths to any descendant B (that means A is always appended
-    to reverse_order after all its descendants) and (2) while following paths from
-    A -> B, we push B to reverse_order the first time it is reached, and guarantee its
-    ancestors are always appended and its descendants are not (on the first path
-    this is thanks to backtracking, on any other path we do not follow B as its
-    already seen.)
-
-    The neat thing about this algorithm is that it can operate on an immutable DAG,
-    it doesn't require marking or popping edges, and it works in linear time (in
-    vertices and edges).
+    Summary of the algorithm: append each edge to a list in depth-first post-order,
+    and don't follow edges to nodes already seen. This ensures that for each node all
+    out-edges appear before all in-edges. This list can be reversed to produce a
+    topological ordering.
     """
 
     def __init__(self, visitor, key=id, root=True, all_edges=False):
@@ -137,9 +130,8 @@ class TopoVisitor(object):
             visitor: visitor that implements accept(), pre(), post() and neighbors()
             key: uniqueness key for nodes
             root (bool): Whether to include the root node.
-            all_edges (bool): when False, list ever node once in topo order.
-                when True, list every edge once in topo order (incoming edges before
-                outgoing edges).
+            all_edges (bool): when False, collect only one in-edge per reachable node.
+                when True, collect all reachable edges.
         """
         self.visited = set()
         self.visitor = visitor
@@ -168,7 +160,9 @@ class TopoVisitor(object):
     def neighbors(self, item):
         return self.visitor.neighbors(item)
 
-    def get_ordered_items(self):
+    @property
+    def edges(self):
+        """Return edges in topological order (in-edges precede out-edges)."""
         return list(reversed(self.reverse_order))
 
 
@@ -295,7 +289,7 @@ def traverse_depth_first_with_visitor(edges, visitor):
 
     Arguments:
         edges (list): List of EdgeAndDepth instances
-        visitor: class instance implementing accept(), pre() and neigbors()
+        visitor: class instance implementing accept(), pre(), post() and neighbors()
     """
     for edge in edges:
         if not visitor.accept(edge):
@@ -372,12 +366,28 @@ def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
 def traverse_edges_topo(
     specs, direction="children", deptype="all", key=id, root=True, all_edges=False
 ):
+    """
+    Returns a list of edges where ordered in topo order, in the sense that all
+    in-edges of a vertex appear before all out-edges. By default with direction=children
+    edges are directed from dependent to dependency. With directions=parents, the edges
+    are directed from dependency to dependent.
+
+    Arguments:
+        specs (list): List of root specs (considered to be depth 0)
+        direction (str): ``children`` (edges are directed from dependent to dependency)
+            or ``parents`` (edges are flipped / directed from dependency to dependent)
+        deptype (str or tuple): allowed dependency types
+        key: function that takes a spec and outputs a key for uniqueness test.
+        root (bool): Yield the root nodes themselves
+        all_edges (bool): When ``False`` only one in-edge per node is returned, when
+            ``True`` all reachable edges are returned.
+    """
     visitor = BaseVisitor(deptype)
     if direction == "parents":
         visitor = ReverseVisitor(visitor, deptype)
     visitor = TopoVisitor(visitor, key=key, root=root, all_edges=all_edges)
     traverse_depth_first_with_visitor(with_artificial_edges(specs), visitor)
-    return visitor.get_ordered_items()
+    return visitor.edges
 
 
 # High-level API: traverse_edges, traverse_nodes, traverse_tree.
@@ -447,9 +457,10 @@ def traverse_edges(
         return traverse_depth_first_edges_generator(
             root_edges, visitor, order == "post", root, depth
         )
+    elif order == "breadth":
+        return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
 
-    # Breadth-first
-    return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
+    raise ValueError("Unknown order {}".format(order))
 
 
 def traverse_nodes(
