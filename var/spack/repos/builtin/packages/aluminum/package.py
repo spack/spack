@@ -5,6 +5,7 @@
 
 import os
 
+import spack.platforms.cray
 from spack.package import *
 
 
@@ -53,13 +54,13 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     variant("rccl", default=False, description="Builds with support for RCCL communication lib")
     variant(
         "ofi_libfabric_plugin",
-        default=True,
+        default=spack.platforms.cray.slingshot_network(),
         when="+rccl",
         description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
     )
     variant(
         "ofi_libfabric_plugin",
-        default=True,
+        default=spack.platforms.cray.slingshot_network(),
         when="+nccl",
         description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
     )

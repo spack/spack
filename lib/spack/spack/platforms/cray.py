@@ -36,6 +36,10 @@ _ex_craype_dir = "/opt/cray/pe/cpe"
 _xc_craype_dir = "/opt/cray/pe/cdt"
 
 
+def slingshot_network():
+    return os.path.exists("/lib64/libcxi.so")
+
+
 def _target_name_from_craype_target_name(name):
     return _craype_name_to_target_name.get(name, name)
 
