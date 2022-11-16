@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.windows_variants import WindowsPackage
 
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
@@ -56,6 +57,8 @@ class Zlib(MakefilePackage, Package):
     patch("w_patch.patch", when="@1.2.11%cce")
     patch("configure-cc.patch", when="@1.2.12")
 
+    depends_on('cmake@3.15:')
+
     @property
     def libs(self):
         shared = "+shared" in self.spec
@@ -90,6 +93,16 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironmen
         install_tree["include"] = [compose_src_path("zlib.h"), compose_src_path("zconf.h")]
         # Windows path seps are fine here as this method is Windows specific.
         install_tree["share\\man\\man3"] = [compose_src_path("zlib.3")]
+
+    def cmake_args(self):
+        args = ['-DBUILD_SHARED_LIBS:BOOL=' +
+                ('ON' if self._building_shared else 'OFF')]
+
+        if self.spec.satisfies('+staticmt'):
+            args.append(self.define('CMAKE_POLICY_DEFAULT_CMP0091', 'NEW'))
+            args.append(self.define('CMAKE_MSVC_RUNTIME_LIBRARY',
+                                    "MultiThreaded$<$<CONFIG:Debug>:Debug>"))
+        return args
 
         def installtree(dst, tree):
             for inst_dir in tree:
