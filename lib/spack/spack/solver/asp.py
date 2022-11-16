@@ -1017,8 +1017,10 @@ class SpackSolverSetup(object):
                 values = [variant.default]
 
             for value in sorted(values):
-                self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
-                if hasattr(value, "when"):
+                if getattr(value, "when", True) is not True:  # when=True means unconditional
+                    if value.when is False:
+                        continue
+
                     required = spack.spec.Spec("{0}={1}".format(name, value))
                     imposed = spack.spec.Spec(value.when)
                     imposed.name = pkg.name
@@ -1028,6 +1030,7 @@ class SpackSolverSetup(object):
                         name=pkg.name,
                         msg="%s variant %s value %s when %s" % (pkg.name, name, value, when),
                     )
+                self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))
