@@ -58,7 +58,7 @@ class PyScipy(PythonPackage):
     version("0.15.0", sha256="0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1")
 
     # TODO: remove once pip build supports BLAS/LAPACK specification
-    # https://github.com/FFY00/meson-python/pull/122
+    # https://github.com/mesonbuild/meson-python/pull/167
     depends_on("py-build", when="@1.9:", type="build")
 
     depends_on("py-meson-python@0.9:", when="@1.9.2:", type="build")
@@ -126,6 +126,11 @@ class PyScipy(PythonPackage):
     # Meson adds this flag for all Python extensions which include Fortran code.
     conflicts("%oneapi", when="@1.9:")
 
+    # FIXME: mysterious build issues with MKL
+    conflicts("^intel-mkl", when="@1.9:")
+    conflicts("^intel-oneapi-mkl", when="@1.9:")
+    conflicts("^intel-parallel-studio", when="@1.9:")
+
     # https://github.com/scipy/scipy/issues/12860
     patch(
         "https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd",
@@ -181,11 +186,12 @@ class PyScipy(PythonPackage):
             self.spec["py-numpy"].package.setup_build_environment(env)
 
     # TODO: remove once pip build supports BLAS/LAPACK specification
-    # https://github.com/FFY00/meson-python/pull/122
+    # https://github.com/mesonbuild/meson-python/pull/167
     @when("@1.9:")
     def install(self, spec, prefix):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
+        # FIXME: MKL support doesn't work, why?
         if (
             spec["blas"].name == "intel-mkl"
             or spec["blas"].name == "intel-parallel-studio"
