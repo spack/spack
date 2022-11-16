@@ -6,14 +6,6 @@
 import glob
 import os
 
-from spack.build_systems.windows_variants import WindowsPackage
-
-
-# Although zlib comes with a configure script, it does not use Autotools
-# The AutotoolsPackage causes zlib to fail to build with PGI
-import glob
-import os
-
 import spack.build_systems.generic
 import spack.build_systems.makefile
 from spack.package import *
