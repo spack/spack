@@ -120,6 +120,7 @@ class MesonBuilder(BaseBuilder):
         of package writers.
         """
         # standard Meson arguments
+
         std_meson_args = MesonBuilder.std_args(self.pkg)
         std_meson_args += getattr(self, "meson_flag_args", [])
         return std_meson_args
@@ -183,6 +184,8 @@ class MesonBuilder(BaseBuilder):
     def meson(self, pkg, spec, prefix):
         """Run ``meson`` in the build directory"""
         options = [os.path.abspath(self.root_mesonlists_dir)]
+        if self.spec["meson"].satisfies("@0.64:"):
+            options.insert(0, "setup")
         options += self.std_meson_args
         options += self.meson_args()
         with fs.working_dir(self.build_directory, create=True):
