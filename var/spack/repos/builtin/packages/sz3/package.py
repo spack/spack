@@ -43,7 +43,7 @@ class Sz3(CMakePackage):
         ]
 
     def test(self):
-        if self.spec.satisifes("@3.1.7:"):
+        if self.spec.satisfies("@:3.1.6"):
             print("smoke tests are only supported on 3.1.7 and later, skipping")
             return
 
