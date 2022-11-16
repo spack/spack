@@ -111,7 +111,8 @@ class CoverEdgesVisitor(object):
 
 
 class TopoVisitor(object):
-    """Visitor that can be used in depth-first traversal to generate
+    """Visitor that can be used in :py:func:`depth-first traversal
+    <spack.traverse.traverse_depth_first_with_visitor>` to generate
     a topologically ordered list of edges (in-edges before out-edges).
 
     Algorithm based on "Section 22.4: Topological sort", Introduction to Algorithms
