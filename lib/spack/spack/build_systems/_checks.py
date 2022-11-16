@@ -87,11 +87,11 @@ def ensure_build_dependencies_or_raise(spec, dependencies, error_msg):
     )
 
     for dep in missing_deps:
-        msg += "    depends_on('{0}', type='build', when='@{1} {2}')\n".format(
+        msg += '    depends_on("{0}", type="build", when="@{1} {2}")\n'.format(
             dep, spec.version, "build_system=autotools"
         )
 
-    msg += "\nUpdate the version (when='@{0}') as needed.".format(spec.version)
+    msg += '\nUpdate the version (when="@{0}") as needed.'.format(spec.version)
     raise RuntimeError(msg)
 
 
