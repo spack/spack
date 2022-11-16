@@ -19,8 +19,7 @@ class PyIsal(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@51:", type="build")
-    depends_on("py-wheel", type="build")
-    depends_on("automake", type="build")
-    depends_on("autoconf", type="build")
-    depends_on("libtool", type="build")
-    depends_on("nasm", type="build")
+    depends_on("libisal")
+
+    def setup_build_environment(self, env):
+        env.set("PYTHON_ISAL_LINK_DYNAMIC", "true")
