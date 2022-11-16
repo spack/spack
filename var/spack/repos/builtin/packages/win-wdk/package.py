@@ -13,7 +13,9 @@ from spack.package import *
 
 
 class WinWdk(Package):
-
+    """
+    Windows Driver Kit development package
+    """
     homepage = "https://learn.microsoft.com/en-us/windows-hardware/drivers/"
 
     # The wdk has many libraries and executables. Record one for detection purposes
