@@ -27,7 +27,6 @@ class RPhyloseq(RPackage):
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r@3.4.0:", type=("build", "run"), when="@1.22.3")
     depends_on("r-ade4@1.7-4:", type=("build", "run"))
-    depends_on("r-ade4@1.7-4:", type=("build", "run"), when="@1.42.0:")
     depends_on("r-ape@3.4:", type=("build", "run"))
     depends_on("r-ape@5.0:", type=("build", "run"), when="@1.22.3:")
     depends_on("r-biobase", type=("build", "run"))
