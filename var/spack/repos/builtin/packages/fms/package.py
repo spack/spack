@@ -84,6 +84,7 @@ class Fms(CMakePackage):
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("mpi")
+    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
     depends_on("libyaml", when="+yaml")
 
     # DH* 20220602
