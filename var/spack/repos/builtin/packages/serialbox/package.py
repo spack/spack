@@ -56,7 +56,7 @@ class Serialbox(CMakePackage):
 
     # pp_ser fails to process source files containing Unicode character with
     # Python 3 (https://github.com/GridTools/serialbox/pull/249):
-    patch("ppser_py3.patch", when="@2.2.1:")
+    patch("ppser_py3.patch", when="@2.2.0:")
 
     # NAG patches:
     patch("nag/interface.patch", when="@2.0.1:%nag+fortran")
