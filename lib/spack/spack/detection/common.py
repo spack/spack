@@ -389,7 +389,8 @@ def compute_windows_user_path_for_package(pkg):
 
     return [
         os.path.join(user, app_data, name)
-        for app_data, name in list(itertools.product(
-            user_appdata_install_stubs, (pkg.name, pkg.name.capitalize())
-        )) + [pkg.name, pkg.name.capitalize()]
+        for app_data, name in list(
+            itertools.product(user_appdata_install_stubs, (pkg.name, pkg.name.capitalize()))
+        )
+        + [pkg.name, pkg.name.capitalize()]
     ]

@@ -14,9 +14,9 @@ import spack.compiler
 import spack.operating_systems.windows_os
 import spack.platforms
 import spack.util.executable
-from spack.version import Version
 from spack.compiler import Compiler
 from spack.error import SpackError
+from spack.version import Version
 
 avail_fc_version = set()  # type: Set[str]
 fc_path = dict()  # type: Dict[str, str]
