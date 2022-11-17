@@ -24,3 +24,7 @@ os_compatible("ubuntu18.10", "ubuntu18.04").
 %EL8
 os_compatible("rhel8", "rocky8").
 os_compatible("rhel8", "almalinux8").
+os_compatible("rocky8", "rhel8").
+os_compatible("almalinux8", "rhel8").
+os_compatible("almalinux8", "rocky8").
+os_compatible("rocky8", "almalinux8").
