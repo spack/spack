@@ -5,10 +5,12 @@ spack:
     tcl:
       whitelist:
         - brayns
+        - py-brayns
         - brion+python
         - meshball
         - ultraliser
   specs:
     - brayns%gcc ^ospray%intel ^intel-tbb%intel
+    - py-brayns
     - brion +python
     - ultraliser ^hdf5~mpi
