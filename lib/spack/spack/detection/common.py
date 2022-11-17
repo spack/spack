@@ -386,11 +386,9 @@ def compute_windows_user_path_for_package(pkg):
     app_data = "AppData"
     app_data_locations = ["Local", "Roaming"]
     user_appdata_install_stubs = [os.path.join(app_data, x) for x in app_data_locations]
-
     return [
         os.path.join(user, app_data, name)
         for app_data, name in list(
             itertools.product(user_appdata_install_stubs, (pkg.name, pkg.name.capitalize()))
         )
-        + [pkg.name, pkg.name.capitalize()]
-    ]
+    ] + [os.path.join(user, name) for name in (pkg.name, pkg.name.capitalize())]
