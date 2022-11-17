@@ -420,11 +420,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         # (e.g. gcc) will not accept them.
         filter_file(r"-arch x86_64", "", "Makefile")
 
-        if spec.satisfies("+dynamic"):
-            # This variant only makes sense for Windows
-            if spec.satisfies("platform=windows"):
-                filter_file(r"MT", "MD", "makefile")
-
         if spec.satisfies("platform=windows"):
             host_make = nmake
         else:

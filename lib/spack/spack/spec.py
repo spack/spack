@@ -1089,7 +1089,7 @@ def _libs_default_handler(descriptor, spec, cls):
     home = getattr(spec.package, "home")
 
     # Avoid double 'lib' for packages whose names already start with lib
-    if not name.startswith("lib"):
+    if not name.startswith("lib") and not spec.satisfies("platform=windows"):
         name = "lib" + name
 
     # If '+shared' search only for shared library; if '~shared' search only for
