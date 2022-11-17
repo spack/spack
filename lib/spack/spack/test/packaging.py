@@ -28,7 +28,7 @@ import spack.util.gpg
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    file_is_relocatable,
+    ensure_binary_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
     macho_make_paths_relative,
@@ -206,7 +206,7 @@ def test_unsafe_relocate_text(tmpdir):
         with open(filename, "r") as script:
             for line in script:
                 assert new_dir in line
-        assert file_is_relocatable(os.path.realpath(filename))
+        ensure_binary_is_relocatable(os.path.realpath(filename))
     # Remove cached binary specs since we deleted the mirror
     bindist._cached_specs = set()
 
