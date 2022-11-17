@@ -20,6 +20,7 @@ class RFactominer(RPackage):
 
     cran = "FactoMineR"
 
+    version("2.6", sha256="81261608c097b863e004a0c6cdc4bdfd6e7bf49c6ec20e211233eda2e5268f75")
     version("2.4", sha256="b9e3adce9a66b4daccc85fa67cb0769d6be230beeb126921b386ccde5db2e851")
     version("1.42", sha256="4cd9efb3681767c3bd48ddc3504ebead1493fcbbc0a9f759a00955b16c3481fa")
     version("1.41", sha256="a9889d69e298b8a01e8d0a5a54260730e742c95681e367d759829aad9a8740c0")
@@ -31,14 +32,17 @@ class RFactominer(RPackage):
 
     depends_on("r@3.0.0:", type=("build", "run"))
     depends_on("r@3.5.0:", type=("build", "run"), when="@2.4:")
+    depends_on("r@4.0:", type=("build", "run"), when="@2.6:")
     depends_on("r-car", type=("build", "run"))
     depends_on("r-cluster", type=("build", "run"))
     depends_on("r-dt", type=("build", "run"), when="@2.4:")
     depends_on("r-ellipse", type=("build", "run"))
+    depends_on("r-emmeans", type=("build", "run"), when="@2.6:")
     depends_on("r-flashclust", type=("build", "run"))
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-leaps", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))
+    depends_on("r-multcompview", type=("build", "run"), when="@2.6:")
     depends_on("r-scatterplot3d", type=("build", "run"))
     depends_on("r-ggplot2", type=("build", "run"), when="@2.4:")
     depends_on("r-ggrepel", type=("build", "run"), when="@2.4:")

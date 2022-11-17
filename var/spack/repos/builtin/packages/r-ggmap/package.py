@@ -16,6 +16,7 @@ class RGgmap(RPackage):
 
     cran = "ggmap"
 
+    version("3.0.1", sha256="fc824b547f1fd0b52b6fbd18a82fe6f29f97b1f592e2c61baf4686ddfd47e35d")
     version("3.0.0", sha256="96c24ffdc0710d0633ac4721d599d2c06f43a29c59d1e85c94ff0af30dfdb58d")
     version("2.6.2", sha256="4e9cf53ab108fc70805d971dadb69b26fe67ea289c23c38adf6e30b198379d90")
     version("2.6.1", sha256="fc450ef422005fc7d2018a34f6b410fbdf80824f9ed60351d91205c413585a57")
@@ -25,7 +26,6 @@ class RGgmap(RPackage):
     depends_on("r-rgooglemaps", type=("build", "run"))
     depends_on("r-png", type=("build", "run"))
     depends_on("r-plyr", type=("build", "run"))
-    depends_on("r-rjson", type=("build", "run"))
     depends_on("r-jpeg", type=("build", "run"))
     depends_on("r-digest", type=("build", "run"))
     depends_on("r-scales", type=("build", "run"))
@@ -38,8 +38,12 @@ class RGgmap(RPackage):
     depends_on("r-magrittr", type=("build", "run"), when="@3.0.0:")
     depends_on("r-tibble", type=("build", "run"), when="@3.0.0:")
     depends_on("r-tidyr", type=("build", "run"), when="@3.0.0:")
+    depends_on("r-cli", type=("build", "run"), when="@3.0.1:")
+    depends_on("r-rlang", type=("build", "run"), when="@3.0.1:")
 
     depends_on("r-proto", type=("build", "run"), when="@:2.6.2")
     depends_on("r-reshape2", type=("build", "run"), when="@:2.6.2")
     depends_on("r-mapproj", type=("build", "run"), when="@:2.6.2")
     depends_on("r-geosphere", type=("build", "run"), when="@:2.6.2")
+    depends_on("r-rjson", type=("build", "run"))
+    depends_on("r-rjson", when="@:3.0.0")

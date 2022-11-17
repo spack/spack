@@ -2,12 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from llnl.util.compat import Mapping
+import collections.abc
 
 get_job_name = lambda needs_entry: (
     needs_entry.get("job")
-    if (isinstance(needs_entry, Mapping) and needs_entry.get("artifacts", True))
+    if (isinstance(needs_entry, collections.abc.Mapping) and needs_entry.get("artifacts", True))
     else needs_entry
     if isinstance(needs_entry, str)
     else None
@@ -15,7 +14,7 @@ get_job_name = lambda needs_entry: (
 
 
 def convert_job(job_entry):
-    if not isinstance(job_entry, Mapping):
+    if not isinstance(job_entry, collections.abc.Mapping):
         return job_entry
 
     needs = job_entry.get("needs")

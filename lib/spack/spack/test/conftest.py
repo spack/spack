@@ -55,6 +55,16 @@ from spack.util.web import FetchError
 is_windows = sys.platform == "win32"
 
 
+def ensure_configuration_fixture_run_before(request):
+    """Ensure that fixture mutating the configuration run before the one where
+    the function is called.
+    """
+    if "config" in request.fixturenames:
+        request.getfixturevalue("config")
+    if "mutable_config" in request.fixturenames:
+        request.getfixturevalue("mutable_config")
+
+
 #
 # Return list of shas for latest two git commits in local spack repo
 #
@@ -118,7 +128,14 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path):
 
     def commit(message):
         global commit_counter
-        git("commit", "--date", "2020-01-%02d 12:0:00 +0300" % commit_counter, "-am", message)
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
         commit_counter += 1
 
     with working_dir(repo_path):
@@ -536,18 +553,28 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install):
+def mock_packages(mock_repo_path, mock_pkg_install, request):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
+    ensure_configuration_fixture_run_before(request)
     with spack.repo.use_repositories(mock_repo_path) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path):
+def mutable_mock_repo(mock_repo_path, request):
     """Function-scoped mock packages, for tests that need to modify them."""
+    ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.Repo(spack.paths.mock_packages_path)
     with spack.repo.use_repositories(mock_repo) as mock_repo_path:
         yield mock_repo_path
+
+
+@pytest.fixture()
+def mock_custom_repository(tmpdir, mutable_mock_repo):
+    """Create a custom repository with a single package "c" and return its path."""
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
+    builder.add_package("c")
+    return builder.root
 
 
 @pytest.fixture(scope="session")
@@ -562,6 +589,16 @@ def linux_os():
         name, version = current_os.name, current_os.version
     LinuxOS = collections.namedtuple("LinuxOS", ["name", "version"])
     return LinuxOS(name=name, version=version)
+
+
+@pytest.fixture
+def ensure_debug(monkeypatch):
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
+
+    yield
+
+    tty.set_debug(current_debug_level)
 
 
 @pytest.fixture(autouse=is_windows, scope="session")
@@ -1606,7 +1643,7 @@ def mock_executable(tmpdir):
     """
     import jinja2
 
-    shebang = "#!/bin/bash\n" if not is_windows else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if not is_windows else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
@@ -1769,3 +1806,73 @@ def mock_spider_configs(mock_config_data, monkeypatch):
 @pytest.fixture(scope="function")
 def mock_tty_stdout(monkeypatch):
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+
+@pytest.fixture
+def prefix_like():
+    return "package-0.0.0.a1-hashhashhashhashhashhashhashhash"
+
+
+@pytest.fixture()
+def prefix_tmpdir(tmpdir, prefix_like):
+    return tmpdir.mkdir(prefix_like)
+
+
+@pytest.fixture()
+def binary_with_rpaths(prefix_tmpdir):
+    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
+    paths are encoded with `$ORIGIN` prepended.
+    """
+
+    def _factory(rpaths, message="Hello world!"):
+        source = prefix_tmpdir.join("main.c")
+        source.write(
+            """
+        #include <stdio.h>
+        int main(){{
+            printf("{0}");
+        }}
+        """.format(
+                message
+            )
+        )
+        gcc = spack.util.executable.which("gcc")
+        executable = source.dirpath("main.x")
+        # Encode relative RPATHs using `$ORIGIN` as the root prefix
+        rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
+        rpath_str = ":".join(rpaths)
+        opts = [
+            "-Wl,--disable-new-dtags",
+            "-Wl,-rpath={0}".format(rpath_str),
+            str(source),
+            "-o",
+            str(executable),
+        ]
+        gcc(*opts)
+        return executable
+
+    return _factory
+
+
+@pytest.fixture(scope="session")
+def concretized_specs_cache():
+    """Cache for mock concrete specs"""
+    return {}
+
+
+@pytest.fixture
+def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+    """Return the default mock concretization of a spec literal, obtained using the mock
+    repository and the mock configuration.
+
+    This fixture is unsafe to call in a test when either the default configuration or mock
+    repository are not used or have been modified.
+    """
+
+    def _func(spec_str, tests=False):
+        key = spec_str, tests
+        if key not in concretized_specs_cache:
+            concretized_specs_cache[key] = spack.spec.Spec(spec_str).concretized(tests=tests)
+        return concretized_specs_cache[key].copy()
+
+    return _func

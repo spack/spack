@@ -22,6 +22,10 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    maintainers = ["mwkrentel"]
+
+    version("0.188", sha256="fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff")
+    version("0.187", sha256="e70b0dfbe610f90c4d1fe0d71af142a4e25c3c4ef9ebab8d2d72b65159d454c8")
     version("0.186", sha256="7f6fb9149b1673d38d9178a0d3e0fb8a1ec4f53a9f4c2ff89469609879641177")
     version("0.185", sha256="dc8d3e74ab209465e7f568e1b3bb9a5a142f8656e2b57d10049a73da2ae6b5a6")
     version("0.184", sha256="87e7d1d7f0333815dd1f62135d047a4dc4082068f361452f357997c11360644b")
@@ -43,13 +47,19 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # Libraries for reading compressed DWARF sections.
     variant("bzip2", default=False, description="Support bzip2 compressed sections.")
     variant("xz", default=False, description="Support xz (lzma) compressed sections.")
+    variant("zstd", default=False, description="Support zstd compressed sections.", when="@0.182:")
 
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
 
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
-    variant("debuginfod", default=False, description="Enable libdebuginfod support.")
+    variant(
+        "debuginfod",
+        default=False,
+        description="Enable libdebuginfod support.",
+        when="@0.179:",
+    )
 
     # elfutils-0.185-static-inline.patch
     # elflint.c (buffer_left): Mark as 'inline' to avoid external linkage failure.
@@ -61,6 +71,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     depends_on("bzip2", type="link", when="+bzip2")
     depends_on("xz", type="link", when="+xz")
+    depends_on("zstd", type="link", when="+zstd")
     depends_on("zlib", type="link")
     depends_on("gettext", when="+nls")
     depends_on("m4", type="build")
@@ -73,7 +84,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     depends_on("curl@7.29.0:", type="link", when="+debuginfod")
 
     conflicts("%gcc@7.2.0:", when="@0.163")
-    conflicts("+debuginfod", when="@:0.178")
 
     provides("elf@1")
 
@@ -106,6 +116,8 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
             args.append("--with-lzma=%s" % spec["xz"].prefix)
         else:
             args.append("--without-lzma")
+
+        args.extend(self.with_or_without("zstd", activation_value="prefix"))
 
         # zlib is required
         args.append("--with-zlib=%s" % spec["zlib"].prefix)

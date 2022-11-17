@@ -66,7 +66,7 @@ fi
 # where it seems that otherwise the configuration file might not be located by subprocesses
 # in some, not better specified, cases.
 if [[ "$UNIT_TEST_COVERAGE" == "true" ]]; then
-  $(which spack) unit-test -x --verbose --cov --cov-config=pyproject.toml
+  $(which spack) unit-test -x --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml
 else
   $(which spack) unit-test -x --verbose
 fi
@@ -74,7 +74,3 @@ fi
 
 
 bash "$QA_DIR/test-env-cfg.sh"
-
-# Delete the symlink going from ./lib/spack/docs/_spack_root back to
-# the initial directory, since it causes ELOOP errors with codecov/actions@2
-rm lib/spack/docs/_spack_root

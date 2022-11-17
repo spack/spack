@@ -15,10 +15,13 @@ from spack.package import *
 
 
 class Seacas(CMakePackage):
-    """The SEACAS Project contains the Exodus and IOSS libraries and a
-    collection of applications which create, query, modify, or
-    translate exodus databases.  Default is to build the exodus and
-    IOSS libraries and the io_shell, io_info, io_modify, struc_to_unstruc apps.
+    """The SEACAS Project contains the Exodus and IOSS I/O libraries
+    and a collection of applications which create, query, modify, or
+    translate Exodus databases.  Exodus is a finite element mesh and
+    results database file format.
+
+    Default is to build the Exodus and IOSS libraries and the
+    io_shell, io_info, io_modify, struc_to_unstruc apps.
     """
 
     homepage = "https://sandialabs.github.io/seacas/"
@@ -28,6 +31,9 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version("master", branch="master")
+    version(
+        "2022-10-14", sha256="cde91e7561d2352045d669a25bdf46a604d85ed1ea7f3f5028004455e4ce9d56"
+    )
     version(
         "2022-05-16", sha256="22ff67045d730a2c7d5394c9034e44a2033cc82a461574f93d899e9aa713d4ae"
     )
@@ -123,23 +129,31 @@ class Seacas(CMakePackage):
     variant("x11", default=True, description="Compile with X11")
 
     # ###################### Dependencies ##########################
+    depends_on("cmake@3.17:", type="build")
+    depends_on("mpi", when="+mpi")
+
+    # Always depends on netcdf-c
     depends_on("netcdf-c@4.8.0:+mpi+parallel-netcdf", when="+mpi")
     depends_on("netcdf-c@4.8.0:~mpi", when="~mpi")
     depends_on("hdf5+hl~mpi", when="~mpi")
-    depends_on("cgns@4.2.0:+mpi+scoping", when="+cgns +mpi")
-    depends_on("cgns@4.2.0:~mpi+scoping", when="+cgns ~mpi")
-    depends_on("fmt@8.1.0:", when="@2022-03-04:")
+
+    depends_on("fmt@8.1.0:", when="@2022-03-04:2022-05-16")
+    depends_on("fmt@9.1.0:", when="@2022-10-14")
+    depends_on("matio", when="+matio")
+    depends_on("libx11", when="+x11")
+
+    with when("+cgns"):
+        depends_on("cgns@4.2.0:+mpi+scoping", when="+mpi")
+        depends_on("cgns@4.2.0:~mpi+scoping", when="~mpi")
 
     with when("+adios2"):
         depends_on("adios2@master")
         depends_on("adios2~mpi", when="~mpi")
         depends_on("adios2+mpi", when="+mpi")
 
-    depends_on("matio", when="+matio")
     with when("+metis"):
         depends_on("metis+int64+real64")
         depends_on("parmetis+int64", when="+mpi")
-    depends_on("libx11", when="+x11")
 
     # The Faodel TPL is only supported in seacas@2021-04-05:
     depends_on("faodel@1.2108.1:+mpi", when="+faodel +mpi")
@@ -150,11 +164,6 @@ class Seacas(CMakePackage):
         msg="The Faodel TPL is only compatible with @2021-04-05 and later.",
     )
 
-    # MPI related dependencies
-    depends_on("mpi", when="+mpi")
-
-    depends_on("cmake@3.1:", type="build")
-
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.lib)
 
@@ -163,187 +172,185 @@ class Seacas(CMakePackage):
         from_variant = self.define_from_variant
         define = self.define
 
+        if self.spec.satisfies("@2022-10-14:"):
+            project_name_base = "Seacas"
+        else:
+            project_name_base = "SEACASProj"
+
         options = []
 
         # #################### Base Settings #######################
 
+        options.extend(
+            [
+                define(project_name_base + "_ENABLE_TESTS", True),
+                define(project_name_base + "_ENABLE_CXX11", True),
+                define(project_name_base + "_ENABLE_Kokkos", False),
+                define(project_name_base + "_HIDE_DEPRECATED_CODE", False),
+                from_variant("CMAKE_INSTALL_RPATH_USE_LINK_PATH", "shared"),
+                from_variant("BUILD_SHARED_LIBS", "shared"),
+                from_variant("SEACASExodus_ENABLE_THREADSAFE", "thread_safe"),
+                from_variant("SEACASIoss_ENABLE_THREADSAFE", "thread_safe"),
+                from_variant("TPL_ENABLE_X11", "x11"),
+                from_variant(project_name_base + "_ENABLE_Fortran", "fortran"),
+            ]
+        )
+
+        options.append(from_variant("TPL_ENABLE_MPI", "mpi"))
         if "+mpi" in spec:
             options.extend(
                 [
-                    "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
-                    "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
-                    "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
-                    "-DTPL_ENABLE_MPI:BOOL=ON",
-                    "-DMPI_BASE_DIR:PATH=%s" % spec["mpi"].prefix,
+                    define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
+                    define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
+                    define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
+                    define("MPI_BASE_DIR", spec["mpi"].prefix),
                 ]
             )
-        else:
-            "-DTPL_ENABLE_MPI:BOOL=OFF"
-
-        options.extend(
-            [
-                "-DSEACASProj_ENABLE_TESTS:BOOL=ON",
-                "-DSEACASProj_ENABLE_CXX11:BOOL=ON",
-                from_variant("CMAKE_INSTALL_RPATH_USE_LINK_PATH", "shared"),
-                from_variant("BUILD_SHARED_LIBS", "shared"),
-                "-DSEACASProj_ENABLE_Kokkos:BOOL=OFF",
-                "-DSEACASProj_HIDE_DEPRECATED_CODE:BOOL=OFF",
-                from_variant("SEACASExodus_ENABLE_THREADSAFE", "thread_safe"),
-                from_variant("SEACASIoss_ENABLE_THREADSAFE", "thread_safe"),
-                from_variant("SEACASProj_ENABLE_Fortran", "fortran"),
-                from_variant("TPL_ENABLE_X11", "x11"),
-            ]
-        )
 
         # ########## What applications should be built #############
         # Check whether they want everything; if so, do the easy way...
         if "+applications" in spec and "+legacy" in spec:
             options.extend(
                 [
-                    "-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=ON",
-                    "-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON",
-                    "-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON",
+                    define(project_name_base + "_ENABLE_ALL_PACKAGES", True),
+                    define(project_name_base + "_ENABLE_ALL_OPTIONAL_PACKAGES", True),
+                    define(project_name_base + "_ENABLE_SECONDARY_TESTED_CODE", True),
                 ]
             )
+
         else:
             # Don't want everything; handle the subsets:
             options.extend(
                 [
-                    "-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=OFF",
-                    "-DSEACASProj_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=OFF",
-                    "-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=OFF",
-                    "-DSEACASProj_ENABLE_SEACASIoss:BOOL=ON",
-                    "-DSEACASProj_ENABLE_SEACASExodus:BOOL=ON",
-                    from_variant("SEACASProj_ENABLE_SEACASExodus_for", "fortran"),
-                    from_variant("SEACASProj_ENABLE_SEACASExoIIv2for32", "fortran"),
+                    define(project_name_base + "_ENABLE_ALL_PACKAGES", False),
+                    define(project_name_base + "_ENABLE_ALL_OPTIONAL_PACKAGES", False),
+                    define(project_name_base + "_ENABLE_SECONDARY_TESTED_CODE", False),
+                    define(project_name_base + "_ENABLE_SEACASIoss", True),
+                    define(project_name_base + "_ENABLE_SEACASExodus", True),
+                    from_variant(project_name_base + "_ENABLE_SEACASExodus_for", "fortran"),
+                    from_variant(project_name_base + "_ENABLE_SEACASExoIIv2for32", "fortran"),
                 ]
             )
 
             if "+applications" in spec:
-                options.extend(
-                    [
-                        "-DSEACASProj_ENABLE_SEACASAprepro:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASAprepro_lib:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASConjoin:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASCpup:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASEjoin:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASEpu:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASExo2mat:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASExo_format:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASExodiff:BOOL=ON",
-                        from_variant("SEACASProj_ENABLE_SEACASExplore", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASGrepos", "fortran"),
-                        "-DSEACASProj_ENABLE_SEACASMat2exo:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASNas2exo:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASNemslice:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASNemspread:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASSlice:BOOL=ON",
-                        "-DSEACASProj_ENABLE_SEACASZellij:BOOL=ON",
-                    ]
-                )
+                # C / C++ applications
+                for app in (
+                    "Aprepro",
+                    "Aprepro_lib",
+                    "Conjoin",
+                    "Cpup",
+                    "Ejoin",
+                    "Epu",
+                    "Exo2mat",
+                    "Exo_format",
+                    "Exodiff",
+                    "Mat2exo",
+                    "Nas2exo",
+                    "Nemslice",
+                    "Nemspread",
+                    "Slice",
+                    "Zellij",
+                ):
+                    options.append(define(project_name_base + "_ENABLE_SEACAS" + app, True))
+                # Fortran-based applications
+                for app in ("Explore", "Grepos"):
+                    options.append(
+                        from_variant(project_name_base + "_ENABLE_SEACAS" + app, "fortran")
+                    )
 
             if "+legacy" in spec:
-                options.extend(
-                    [
-                        define("SEACASProj_ENABLE_SEACASNemesis", True),
-                        from_variant("SEACASProj_ENABLE_SEACASAlgebra", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASBlot", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASEx1ex2v2", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASEx2ex1v2", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASExomatlab", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASExotec2", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASExotxt", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASFastq", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASGen3D", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASGenshell", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASGjoin", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASMapvar", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASMapvar-kd", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASNumbers", "fortran"),
-                        from_variant("SEACASProj_ENABLE_SEACASTxtexo", "fortran"),
-                    ]
-                )
+                # Legacy applications -- all are fortran-based except Nemesis
+                options.append(define(project_name_base + "_ENABLE_SEACASNemesis", True))
+
+                for app in (
+                    "Algebra",
+                    "Blot",
+                    "Ex1ex2v2",
+                    "Ex2ex1v2",
+                    "Exomatlab",
+                    "Exotec2",
+                    "Exotxt",
+                    "Fastq",
+                    "Gen3D",
+                    "Genshell",
+                    "Gjoin",
+                    "Mapvar",
+                    "Mapvar-kd",
+                    "Numbers",
+                    "Txtexo",
+                ):
+                    options.append(
+                        from_variant(project_name_base + "_ENABLE_SEACAS" + app, "fortran")
+                    )
 
         # ##################### Dependencies ##########################
         # Always need NetCDF-C
         options.extend(
             [
-                "-DTPL_ENABLE_Netcdf:BOOL=ON",
-                "-DNetCDF_ROOT:PATH=%s" % spec["netcdf-c"].prefix,
+                define("TPL_ENABLE_Netcdf", True),
+                define("NetCDF_ROOT", spec["netcdf-c"].prefix),
             ]
         )
 
         if "+parmetis" in spec:
             options.extend(
                 [
-                    "-DTPL_ENABLE_METIS:BOOL=ON",
-                    "-DMETIS_LIBRARY_DIRS=%s" % spec["metis"].prefix.lib,
-                    "-DMETIS_LIBRARY_NAMES=metis",
-                    "-DTPL_METIS_INCLUDE_DIRS=%s" % spec["metis"].prefix.include,
-                    "-DTPL_ENABLE_ParMETIS:BOOL=ON",
-                    "-DParMETIS_LIBRARY_DIRS=%s;%s"
-                    % (spec["parmetis"].prefix.lib, spec["metis"].prefix.lib),
-                    "-DParMETIS_LIBRARY_NAMES=parmetis;metis",
-                    "-DTPL_ParMETIS_INCLUDE_DIRS=%s;%s"
-                    % (spec["parmetis"].prefix.include, spec["metis"].prefix.include),
+                    define("TPL_ENABLE_METIS", True),
+                    define("METIS_LIBRARY_DIRS", spec["metis"].prefix.lib),
+                    define("METIS_LIBRARY_NAMES", "metis"),
+                    define("TPL_METIS_INCLUDE_DIRS", spec["metis"].prefix.include),
+                    define("TPL_ENABLE_ParMETIS", True),
+                    define(
+                        "ParMETIS_LIBRARY_DIRS",
+                        [spec["parmetis"].prefix.lib, spec["metis"].prefix.lib],
+                    ),
+                    define("ParMETIS_LIBRARY_NAMES", ["parmetis", "metis"]),
+                    define(
+                        "TPL_ParMETIS_INCLUDE_DIRS",
+                        [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
+                    ),
                 ]
             )
         elif "+metis" in spec:
             options.extend(
                 [
-                    "-DTPL_ENABLE_METIS:BOOL=ON",
-                    "-DMETIS_LIBRARY_DIRS=%s" % spec["metis"].prefix.lib,
-                    "-DMETIS_LIBRARY_NAMES=metis",
-                    "-DTPL_METIS_INCLUDE_DIRS=%s" % spec["metis"].prefix.include,
-                    "-DTPL_ENABLE_ParMETIS:BOOL=OFF",
+                    define("TPL_ENABLE_METIS", True),
+                    define("METIS_LIBRARY_DIRS", spec["metis"].prefix.lib),
+                    define("METIS_LIBRARY_NAMES", "metis"),
+                    define("TPL_METIS_INCLUDE_DIRS", spec["metis"].prefix.include),
+                    define("TPL_ENABLE_ParMETIS", False),
                 ]
             )
         else:
             options.extend(
                 [
-                    "-DTPL_ENABLE_METIS:BOOL=OFF",
-                    "-DTPL_ENABLE_ParMETIS:BOOL=OFF",
+                    define("TPL_ENABLE_METIS", False),
+                    define("TPL_ENABLE_ParMETIS", False),
                 ]
             )
 
+        options.append(from_variant("TPL_ENABLE_Matio", "matio"))
         if "+matio" in spec:
-            options.extend(
-                ["-DTPL_ENABLE_Matio:BOOL=ON", "-DMatio_ROOT:PATH=%s" % spec["matio"].prefix]
-            )
-        else:
-            options.extend(["-DTPL_ENABLE_Matio:BOOL=OFF"])
+            options.append(define("Matio_ROOT", spec["matio"].prefix))
 
+        options.append(from_variant("TPL_ENABLE_CGNS", "cgns"))
         if "+cgns" in spec:
-            options.extend(
-                [
-                    "-DTPL_ENABLE_CGNS:BOOL=ON",
-                    "-DCGNS_ROOT:PATH=%s" % spec["cgns"].prefix,
-                ]
-            )
-        else:
-            options.extend(["-DTPL_ENABLE_CGNS:BOOL=OFF"])
+            options.append(define("CGNS_ROOT", spec["cgns"].prefix))
 
         options.append(from_variant("TPL_ENABLE_Faodel", "faodel"))
-
         for pkg in ("Faodel", "BOOST"):
             if pkg.lower() in spec:
                 options.append(define(pkg + "_ROOT", spec[pkg.lower()].prefix))
 
+        options.append(from_variant("TPL_ENABLE_ADIOS2", "adios2"))
         if "+adios2" in spec:
-            options.extend(
-                [
-                    "-DTPL_ENABLE_ADIOS2:BOOL=ON",
-                    "-DADIOS2_ROOT:PATH=%s" % spec["adios2"].prefix,
-                ]
-            )
-        else:
-            options.extend(["-DTPL_ENABLE_ADIOS2:BOOL=OFF"])
+            options.append(define("ADIOS2_ROOT", spec["adios2"].prefix))
 
         # ################# RPath Handling ######################
         if sys.platform == "darwin" and macos_version() >= Version("10.12"):
             # use @rpath on Sierra due to limit of dynamic loader
-            options.append("-DCMAKE_MACOSX_RPATH:BOOL=ON")
+            options.append(define("CMAKE_MACOSX_RPATH", True))
         else:
-            options.append("-DCMAKE_INSTALL_NAME_DIR:PATH=%s" % self.prefix.lib)
+            options.append(define("CMAKE_INSTALL_NAME_DIR", self.prefix.lib))
 
         return options

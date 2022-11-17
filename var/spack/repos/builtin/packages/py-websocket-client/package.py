@@ -13,6 +13,7 @@ class PyWebsocketClient(PythonPackage):
     homepage = "https://github.com/websocket-client/websocket-client.git"
     pypi = "websocket-client/websocket-client-0.57.0.tar.gz"
 
+    version("1.4.1", sha256="f9611eb65c8241a67fb373bef040b3cf8ad377a9f6546a12b620b6511e8ea9ef")
     version("1.2.1", sha256="8dfb715d8a992f5712fff8c843adae94e22b22a99b2c5e6b0ec4a1a981cc4e0d")
     version(
         "0.57.0",
@@ -32,6 +33,7 @@ class PyWebsocketClient(PythonPackage):
 
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@1.2.1:")
+    depends_on("python@3.7:", type=("build", "run"), when="@1.4.1:")
     depends_on("py-setuptools", type="build")
     depends_on("py-six", type=("build", "run"), when="@:1.2.0")
     depends_on("py-backports-ssl-match-hostname", when="^python@2.6:2.7.9", type=("build", "run"))

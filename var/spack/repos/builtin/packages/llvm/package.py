@@ -36,6 +36,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version("main", branch="main")
+    version("15.0.4", sha256="e24b4d3bf7821dcb1c901d1e09096c1f88fb00095c5a6ef893baab4836975e52")
+    version("15.0.3", sha256="8ac8e4c0982bf236526d737d385db5e1e66543ab217a9355d54159659eae3774")
     version("15.0.2", sha256="dc11d35e60ab61792baa607dff080c993b39de23fb93b3d3369ba15b0601c307")
     version("15.0.1", sha256="20bccb964e39f604fdc16d1258f94d2053fbdcdab2b2f6d5e20e6095ec403c00")
     version("15.0.0", sha256="36d83cd84e1caf2bcfda1669c029e2b949adb9860cff01e7d3246ac2348b11ae")
@@ -721,17 +723,7 @@ class Llvm(CMakePackage, CudaPackage):
         cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "omp_tsan"))
 
         if self.compiler.name == "gcc":
-            compiler = Executable(self.compiler.cc)
-            gcc_output = compiler("-print-search-dirs", output=str, error=str)
-
-            for line in gcc_output.splitlines():
-                if line.startswith("install:"):
-                    # Get path and strip any whitespace
-                    # (causes oddity with ancestor)
-                    gcc_prefix = line.split(":")[1].strip()
-                    gcc_prefix = ancestor(gcc_prefix, 4)
-                    break
-            cmake_args.append(define("GCC_INSTALL_PREFIX", gcc_prefix))
+            cmake_args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
         if self.spec.satisfies("~code_signing platform=darwin"):
             cmake_args.append(define("LLDB_USE_SYSTEM_DEBUGSERVER", True))
