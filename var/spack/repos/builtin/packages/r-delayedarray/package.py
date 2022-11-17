@@ -20,6 +20,7 @@ class RDelayedarray(RPackage):
 
     bioc = "DelayedArray"
 
+    version("0.24.0", commit="68ee3d0626c234ee1e9248a6cb95b901e4b3ad90")
     version("0.22.0", commit="4a5afd117b189b40bd409c7aff60e09d41797472")
     version("0.20.0", commit="829b52916ec54bb4f1a3c6f06c9955f3e28b3592")
     version("0.16.1", commit="c95eba771ad3fee1b49ec38c51cd8fd1486feadc")
@@ -37,6 +38,7 @@ class RDelayedarray(RPackage):
     depends_on("r-biocgenerics@0.27.1:", type=("build", "run"), when="@0.8.0:")
     depends_on("r-biocgenerics@0.31.5:", type=("build", "run"), when="@0.16.1:")
     depends_on("r-biocgenerics@0.37.0:", type=("build", "run"), when="@0.20.1:")
+    depends_on("r-biocgenerics@0.43.4:", type=("build", "run"), when="@0.24.0:")
     depends_on("r-matrixgenerics@1.1.3:", type=("build", "run"), when="@0.16.1:")
     depends_on("r-s4vectors@0.14.3:", type=("build", "run"))
     depends_on("r-s4vectors@0.15.3:", type=("build", "run"), when="@0.4.1:")

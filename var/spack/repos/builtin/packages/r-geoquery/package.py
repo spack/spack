@@ -16,6 +16,7 @@ class RGeoquery(RPackage):
 
     bioc = "GEOquery"
 
+    version("2.66.0", commit="00a954e9f8223607b43cf112943ab575d03a0eb6")
     version("2.64.2", commit="e9b7f075a4a6a952660443ca93ed392d7a4fd6d7")
     version("2.62.2", commit="1966c108fe8a58ac39ef53c3c452fd160efa526e")
     version("2.58.0", commit="6332ca3791ddcfb233b9ad75b5904b3d60f49b93")

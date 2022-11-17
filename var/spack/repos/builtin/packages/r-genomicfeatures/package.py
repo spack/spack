@@ -20,6 +20,7 @@ class RGenomicfeatures(RPackage):
 
     bioc = "GenomicFeatures"
 
+    version("1.50.2", commit="4fc9120ceed9ff59f390c8bbdbd79b212ee35b84")
     version("1.48.4", commit="06e37dc1847d49d91391264caec877ed33abf359")
     version("1.48.3", commit="b0ddea0e101e3861928f3ad353348df047d90382")
     version("1.46.4", commit="d3ab6fd069624904ce7fcdf75dad884473f97975")
@@ -41,6 +42,7 @@ class RGenomicfeatures(RPackage):
     depends_on("r-genomeinfodb@1.13.1:", type=("build", "run"), when="@1.30.3:")
     depends_on("r-genomeinfodb@1.15.4:", type=("build", "run"), when="@1.32.3:")
     depends_on("r-genomeinfodb@1.25.7:", type=("build", "run"), when="@1.42.1:")
+    depends_on("r-genomeinfodb@1.34.1:", type=("build", "run"), when="@1.50.2:")
     depends_on("r-genomicranges@1.27.6:", type=("build", "run"))
     depends_on("r-genomicranges@1.29.14:", type=("build", "run"), when="@1.30.3:")
     depends_on("r-genomicranges@1.31.17:", type=("build", "run"), when="@1.32.3:")

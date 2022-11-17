@@ -15,6 +15,7 @@ class RChipseq(RPackage):
 
     maintainers = ["dorton21"]
 
+    version("1.48.0", commit="9c78296001b6dd4102318879c8504dac70015822")
     version("1.46.0", commit="76b00397cd117d5432158f50fc1032d50485bd24")
     version("1.44.0", commit="b64d0d28e9fcf0fdab9a7f9c521baf729426a594")
     version("1.40.0", commit="84bcbc0b7ad732730b5989a308f1624a6a358df1")

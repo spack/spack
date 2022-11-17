@@ -13,6 +13,7 @@ class RRoc(RPackage):
 
     bioc = "ROC"
 
+    version("1.74.0", commit="982ad4d3606b19b8460e8a8af7cfe7c30b83f9b9")
     version("1.72.0", commit="c5d083b01314280dd43eb4cddd8a7fde8b5dce18")
     version("1.70.0", commit="44fd639958b9b1be4f8f731dc2be9dd91b2fa632")
     version("1.66.0", commit="62701ee41f48f99d15344127384fa032db69486f")

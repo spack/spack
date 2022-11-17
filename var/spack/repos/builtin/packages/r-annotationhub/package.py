@@ -20,6 +20,7 @@ class RAnnotationhub(RPackage):
 
     bioc = "AnnotationHub"
 
+    version("3.6.0", commit="3315a73b7803a92412ed18209dd37b378195b86f")
     version("3.4.0", commit="e74e54ca44f50c2c15c60f8620e3d1721f8f5b6d")
     version("3.2.1", commit="ad1dfe86f0b0ea4711cc9cdb89e073e8794ec9aa")
     version("2.22.0", commit="3ab7dceebbc31ac14ca931f66c662cf9538b7d0a")

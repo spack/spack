@@ -19,6 +19,7 @@ class RGosemsim(RPackage):
 
     bioc = "GOSemSim"
 
+    version("2.24.0", commit="ed7334f3cf3ac7ce5be76003934c29b598089f4d")
     version("2.22.0", commit="fd74aeba2371ebf9db0595cf18674441bdac9618")
     version("2.20.0", commit="fa82442aaa4ad1a8dacc05ee2c54f5e5e770a794")
     version("2.16.1", commit="92f1d567f3584fe488f434abce87c2e1950081c0")

@@ -14,6 +14,7 @@ class RCategory(RPackage):
 
     bioc = "Category"
 
+    version("2.64.0", commit="b512cbeb22fc50a2f6d767a2eef356fb143a974e")
     version("2.62.0", commit="0fe801c0c443aebd5d4cefa8c30e4e7d0931b673")
     version("2.60.0", commit="55210d8c539474954d18cf913a219dce883eac2e")
     version("2.56.0", commit="ad478caa9d693dbc2770608e79dd852375b9a223")

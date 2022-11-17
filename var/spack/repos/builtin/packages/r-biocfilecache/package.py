@@ -16,6 +16,7 @@ class RBiocfilecache(RPackage):
 
     bioc = "BiocFileCache"
 
+    version("2.6.0", commit="f5b8368c1402b15e8db8eab59217f1176e902e6f")
     version("2.4.0", commit="2c00eee40d95fddad223f115f959b09e1a14f75d")
     version("2.2.1", commit="cc912123408803193bf37395f4d18baa8dcd6f47")
     version("1.14.0", commit="cdcde4b59ae73dda12aa225948dbd0a058d9be6d")

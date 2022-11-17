@@ -18,6 +18,7 @@ class RAffyrnadegradation(RPackage):
 
     bioc = "AffyRNADegradation"
 
+    version("1.44.0", commit="63881f41fc67cc7322b189446dcffb4e1060e303")
     version("1.42.0", commit="5775f41f538b3c8ee4d07d38cec1b49c548cebe6")
     version("1.40.0", commit="8539a91ee464d692a267bb17c91dc1ef9a231f41")
     version("1.36.0", commit="89662b93076659db2967a526899184c12c156bc5")

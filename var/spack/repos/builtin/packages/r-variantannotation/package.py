@@ -14,6 +14,7 @@ class RVariantannotation(RPackage):
 
     bioc = "VariantAnnotation"
 
+    version("1.44.0", commit="2e7e0a3b7c1918c0d64170dc7c173a636d3764f4")
     version("1.42.1", commit="d1121696c76c189d6b4df9914806bf585a495845")
     version("1.40.0", commit="50ead7cb60cedf3c053853fab92d9f104f9f85bd")
     version("1.36.0", commit="9918bd19a2e6f89e5edc5fe03c8812f500bb3e19")
@@ -62,6 +63,7 @@ class RVariantannotation(RPackage):
     depends_on("r-genomicfeatures@1.27.4:", type=("build", "run"))
     depends_on("r-genomicfeatures@1.31.3:", type=("build", "run"), when="@1.26.1:")
     depends_on("r-rhtslib", type=("build", "run"), when="@1.30.1:")
+    depends_on("r-rhtslib@1.99.3:", type=("build", "run"), when="@1.44.0:")
     depends_on("gmake", type="build")
 
     # Not listed but needed

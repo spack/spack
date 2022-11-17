@@ -14,6 +14,7 @@ class RBsseq(RPackage):
 
     bioc = "bsseq"
 
+    version("1.34.0", commit="98239c07d74e1362c7ba2a3bf4f6119830fc95dc")
     version("1.32.0", commit="a0c1eacbc479c57bd836e885e162c28bbe08e115")
     version("1.30.0", commit="7eb5223e9ee02fd08a52be56eaa9316a67c0d66b")
     version("1.26.0", commit="fae32292687625012a2938a48c93df55ad4257b5")

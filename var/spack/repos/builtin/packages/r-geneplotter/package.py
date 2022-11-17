@@ -13,6 +13,7 @@ class RGeneplotter(RPackage):
 
     bioc = "geneplotter"
 
+    version("1.76.0", commit="4eb6a787d0c66110ec9a7d34fc76b64030fbde5d")
     version("1.74.0", commit="ca819565829eac7a9a98e3cafafd6c06a466fddf")
     version("1.72.0", commit="57a1d830ba7844fda5236af0153d5b5587634f96")
     version("1.68.0", commit="f1fea7e468fb24fdfa93ef4493600a4d8d183f69")

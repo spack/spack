@@ -15,6 +15,7 @@ class RA4classif(RPackage):
 
     bioc = "a4Classif"
 
+    version("1.46.0", commit="96794183a76ab7da7a1863ccd421640254447af5")
     version("1.44.0", commit="df0fce781f9bc480a1159d958c9a63c314a9ed01")
     version("1.42.0", commit="820854a7ca9ed0c295479a25b7e3375c6d01d0b5")
     version("1.38.0", commit="c4d058813efb835774813b2d69c52912162f8e75")

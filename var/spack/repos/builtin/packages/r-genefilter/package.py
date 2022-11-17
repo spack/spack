@@ -13,6 +13,7 @@ class RGenefilter(RPackage):
 
     bioc = "genefilter"
 
+    version("1.80.0", commit="14fbc2d776916e572583e3c268ea9ba60ed60a9a")
     version("1.78.0", commit="2f574388971641d3a71858f5c34606c04fcd2ba2")
     version("1.76.0", commit="8d630fd25f0d2a4101e05e123c3959591203a7ea")
     version("1.72.1", commit="b01b00a766982ef7d80b90a252085c8c4f085e1b")

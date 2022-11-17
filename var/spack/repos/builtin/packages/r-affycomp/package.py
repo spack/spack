@@ -14,6 +14,7 @@ class RAffycomp(RPackage):
 
     bioc = "affycomp"
 
+    version("1.74.0", commit="1160d6395f23085456938ba2bd38fb45597fc92f")
     version("1.72.0", commit="c52baea98b80abd4a99380ac9d4b68ef91869d40")
     version("1.70.0", commit="487f6775975092475581a6c02ddb27590559cf07")
     version("1.66.0", commit="388d01af8b1e6ab11051407f77d0206512df8424")

@@ -15,6 +15,7 @@ class RAnnotationfilter(RPackage):
 
     bioc = "AnnotationFilter"
 
+    version("1.22.0", commit="c9fea4a829ce9419b6e0af987915b2d469358597")
     version("1.20.0", commit="2818aff6502fd6fe819521cd8d97695ef6f9198e")
     version("1.18.0", commit="60a9b666d7362d7ed5c357fd4a5d2744d8598c20")
     version("1.14.0", commit="6ee3a13ed93a535ed452cbc8c118151a2cbb732c")

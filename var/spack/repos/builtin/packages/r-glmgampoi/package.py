@@ -16,14 +16,18 @@ class RGlmgampoi(RPackage):
 
     bioc = "glmGamPoi"
 
+    version("1.10.0", commit="048e17384209fc07031e09875ec6eea35e90ef46")
     version("1.8.0", commit="b723d61e05c1ad50a3cf6a6393ec3d97adc7edb4")
 
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-delayedmatrixstats", type=("build", "run"))
     depends_on("r-matrixstats", type=("build", "run"))
+    depends_on("r-matrixgenerics", type=("build", "run"), when="@1.10.0:")
     depends_on("r-delayedarray", type=("build", "run"))
     depends_on("r-hdf5array", type=("build", "run"))
     depends_on("r-summarizedexperiment", type=("build", "run"))
+    depends_on("r-singlecellexperiment", type=("build", "run"), when="@1.10.0:")
     depends_on("r-biocgenerics", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"), when="@1.10.0:")
     depends_on("r-rcpparmadillo", type=("build", "run"))
     depends_on("r-beachmat", type=("build", "run"))

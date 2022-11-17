@@ -15,6 +15,7 @@ class RAneufinder(RPackage):
 
     bioc = "AneuFinder"
 
+    version("1.26.0", commit="7cd59a1e24c6512f2e4fcbe2c53a0d3cd2d06217")
     version("1.24.0", commit="4c6906eee514eba3e8ac159654a6953e37a99bba")
     version("1.22.0", commit="ea0beb3d827c2dd4bc56708a839a93c55304918b")
     version("1.18.0", commit="76ec9af947f97212084ca478e8e82f9e0eb79de9")

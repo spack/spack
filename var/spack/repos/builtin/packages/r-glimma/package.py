@@ -17,6 +17,7 @@ class RGlimma(RPackage):
 
     bioc = "Glimma"
 
+    version("2.8.0", commit="09cec82e9af9c6775192570f8c28f050c0df08ac")
     version("2.6.0", commit="23220d9b90476059aab035b5de11b7ce04b331c8")
     version("2.4.0", commit="caa270e44ec6994035d2e915c0f68a14ccbb58db")
     version("2.0.0", commit="40bebaa79e8c87c5686cff7285def4461c11bca9")
