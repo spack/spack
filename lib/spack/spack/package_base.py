@@ -1262,7 +1262,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
 
         # TODO: allow more than one active extendee.
         if deps:
-            assert len(deps) == 1
+            assert len(set(deps)) == 1
             return deps[0]
 
         # if the spec is concrete already, then it extends something
