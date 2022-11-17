@@ -5,11 +5,12 @@ spack:
       tcl:
         include:
           - brayns
+          - py-brayns
           - brion+python
           - meshball
           - ultraliser
   specs:
-   #- brayns +brion
-   #- brayns@1.1.0 +brion+net ^brion@3.3.1
+    - brayns
+    - py-brayns
     - brion +python
    #- ultraliser ^hdf5~mpi
