@@ -88,10 +88,6 @@ class Herwig3(AutotoolsPackage):
 
     def build(self, spec, prefix):
         make()
-        with working_dir("MatrixElement/FxFx"):
-            make()
 
     def install(self, spec, prefix):
         make("install")
-        with working_dir("MatrixElement/FxFx"):
-            make("install")
