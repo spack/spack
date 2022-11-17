@@ -65,6 +65,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.util.cpus import cpus_available
+from spack.util.string import plural
 
 #: Dict from section names -> schema for that section
 section_schemas = {
@@ -1367,19 +1368,25 @@ def fetch_remote_configs(url, dest_dir, skip_existing=True):
     existing_files = os.listdir(dest_dir) if os.path.isdir(dest_dir) else []
 
     paths = []
+    staged_configs = collections.defaultdict(list)
     for config_url in config_links:
-        basename = os.path.basename(config_url)
+        dirname, basename = os.path.split(config_url)
         if skip_existing and basename in existing_files:
-            tty.warn(
-                "Will not fetch configuration from {0} since a version already"
-                "exists in {1}".format(config_url, dest_dir)
-            )
             path = os.path.join(dest_dir, basename)
+            staged_configs[dirname].append(basename)
         else:
             path = _fetch_file(config_url)
 
         if path:
             paths.append(path)
+
+    if tty.is_debug() and staged_configs:
+        for url_dirname, basenames in staged_configs.items():
+            tty.debug(
+                "Will not fetch {0} from {1} since already staged: {2}".format(
+                    plural(len(basenames), "configuration file"), url_dirname, ", ".join(basenames)
+                )
+            )
 
     if paths:
         return dest_dir if len(paths) > 1 else paths[0]
