@@ -41,6 +41,7 @@ spack:
           - python
           - singularityce
           - snakemake
+         # BlueBrain TODO: re-enable and fix
          #- stat
           - totalview
           - valgrind
@@ -106,7 +107,7 @@ spack:
     - git
     - git-lfs
     - glew
-   # TODO: why do we try to build 4.7.1?
+   # BlueBrain TODO: why do we try to build 4.7.1?
    #- gmsh+metis~mpi+oce+openmp+shared
     - graphviz
     - hdf5~mpi@1.10.7
@@ -140,6 +141,7 @@ spack:
     - singularityce
     - snakemake
     - sqlite
+   # BlueBrain TODO: re-enable and fix
    #- stat
     - totalview
     - valgrind~mpi
