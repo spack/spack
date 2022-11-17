@@ -42,7 +42,7 @@ class RDelayedmatrixstats(RPackage):
     depends_on("r-matrixstats@0.60.0:", type=("build", "run"), when="@1.16.0:")
     depends_on("r-sparsematrixstats", type=("build", "run"), when="@1.12.2:")
     depends_on("r-matrix", type=("build", "run"))
-    depends_on("r-matrix@1.5.0:", type=("build", "run"), when="@1.18.1:")
+    depends_on("r-matrix@1.5-0:", type=("build", "run"), when="@1.18.1:")
     depends_on("r-matrix@1.5-0:", type=("build", "run"), when="@1.20.0:")
     depends_on("r-s4vectors", type=("build", "run"))
     depends_on("r-s4vectors@0.17.5:", type=("build", "run"), when="@1.2.0:")
