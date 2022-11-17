@@ -5,8 +5,6 @@
 import functools
 import warnings
 
-import six
-
 import archspec.cpu
 
 import llnl.util.tty as tty
@@ -24,7 +22,7 @@ def _ensure_other_is_target(method):
 
     @functools.wraps(method)
     def _impl(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             other = Target(other)
 
         if not isinstance(other, Target):
@@ -95,7 +93,7 @@ class Target(object):
     def from_dict_or_value(dict_or_value):
         # A string here represents a generic target (like x86_64 or ppc64) or
         # a custom micro-architecture
-        if isinstance(dict_or_value, six.string_types):
+        if isinstance(dict_or_value, str):
             return Target(dict_or_value)
 
         # TODO: From a dict we actually retrieve much more information than
