@@ -565,7 +565,7 @@ class Python(Package):
                 variants += "~tix"
 
         # Some modules are platform-dependent
-        if not self.spec.satisfies("platform=windows"):
+        if not is_windows:
             try:
                 python("-c", "import crypt", error=os.devnull)
                 variants += "+crypt"
