@@ -99,9 +99,12 @@ class _HKEY_CONSTANT(RegistryKey):
     def __init__(self, hkey_constant):
         hkey_name = hkey_constant
         self._handle = None
-        # because we can't referene winreg yet, handle is none for now
+        # This class is instantiated at module import time
+        # on non Windows platforms, winreg would not have been
+        # imported. For this reason we can't reference winreg yet,
+        # so handle is none for now to avoid invalid references to a module.
         # _handle provides a workaround to prevent null references to self.handle
-        # when coupled with the handle property
+        # when coupled with the handle property.
         super(_HKEY_CONSTANT, self).__init__(hkey_name, None)
 
     def _get_hkey(self, key):
