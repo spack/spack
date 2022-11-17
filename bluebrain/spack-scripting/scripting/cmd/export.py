@@ -133,7 +133,7 @@ def export(parser, args):
             continue
 
         mod = cls(spec, 'default') if cls else None
-        if mod and not mod.conf.blacklisted:
+        if mod and not mod.conf.excluded:
             if os.path.exists(mod.layout.filename):
                 externality["modules"] = [str(mod.layout.use_name)]
             else:
