@@ -1,0 +1,36 @@
+diff --git a/miniapps/common/makefile b/miniapps/common/makefile
+index 12506bf8b..681d9e83c 100644
+--- a/miniapps/common/makefile
++++ b/miniapps/common/makefile
+@@ -31,10 +31,12 @@ MFEM_LIB_FILE = mfem_is_not_built
+ ifneq (clean,$(MAKECMDGOALS))
+    -include $(CONFIG_MK)
+ 
+-   ifeq ($(MFEM_USE_CUDA)$(MFEM_USE_HIP),NONO)
+-      XLINKER = $(CXX_XLINKER)
+-   else ifeq ($(MFEM_USE_CUDA),YES)
++   ifeq ($(MFEM_USE_CUDA),YES)
+       XLINKER = $(CUDA_XLINKER)
++   else ifeq ($(MFEM_USE_HIP),YES)
++      XLINKER = $(HIP_XLINKER)
++   else
++      XLINKER = $(CXX_XLINKER)
+    endif
+ 
+    BUILD_REAL_DIR = $(realpath .)
+diff --git a/miniapps/hooke/makefile b/miniapps/hooke/makefile
+index 7687a7eb3..6c5c2b24d 100644
+--- a/miniapps/hooke/makefile
++++ b/miniapps/hooke/makefile
+@@ -29,6 +29,11 @@ HOOKE_OBJ = $(HOOKE_SRC:.cpp=.o)
+ 
+ SEQ_MINIAPPS =
+ PAR_MINIAPPS = hooke
++# The hooke miniapp crashes the AMD HIP compiler, so for now we disable it
++# when HIP is enabled:
++ifeq ($(MFEM_USE_HIP),YES)
++   PAR_MINIAPPS =
++endif
+ ifeq ($(MFEM_USE_MPI),NO)
+    MINIAPPS = $(SEQ_MINIAPPS)
+ else

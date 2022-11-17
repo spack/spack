@@ -14,6 +14,8 @@ class RCar(RPackage):
 
     cran = "car"
 
+    version("3.1-1", sha256="8fc55815eed7e46a32b54da9e0bfa4b74a8d082d73d896e3372f2a413b6bd2bc")
+    version("3.1-0", sha256="bd52b4eaea46ce828fccd93445301d06ebd265e2ffff796064875a8c0f0aea21")
     version("3.0-13", sha256="d35ae8da80284c9e4471ff13e7100c3cdc1809fd06f813cd223a3958e29e47eb")
     version("3.0-12", sha256="b899a6efae3842a90a2349d381dbcf4b4ed36bd03108ebe7380e81120e457302")
     version("3.0-11", sha256="b32c927206f515631ff276dbb337b0f22e9b2d851f4abb1d2c272e534c19542c")
@@ -32,8 +34,10 @@ class RCar(RPackage):
     depends_on("r-nnet", type=("build", "run"))
     depends_on("r-pbkrtest@0.4-4:", type=("build", "run"))
     depends_on("r-quantreg", type=("build", "run"))
-    depends_on("r-maptools", type=("build", "run"), when="@3.0:")
     depends_on("r-rio", type=("build", "run"), when="@3.0:3.0-11")
     depends_on("r-lme4", type=("build", "run"), when="@3.0:")
     depends_on("r-lme4@1.1-27.1:", type=("build", "run"), when="@3.0-11:")
     depends_on("r-nlme", type=("build", "run"), when="@3.0:")
+    depends_on("r-scales", type=("build", "run"), when="@3.1-1:")
+    depends_on("r-maptools", type=("build", "run"), when="@3.0:")
+    depends_on("r-maptools", when="@:3.1-0")

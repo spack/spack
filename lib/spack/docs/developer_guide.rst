@@ -149,11 +149,9 @@ grouped by functionality.
 Package-related modules
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-:mod:`spack.package`
-  Contains the :class:`~spack.package_base.Package` class, which
-  is the superclass for all packages in Spack.  Methods on ``Package``
-  implement all phases of the :ref:`package lifecycle
-  <package-lifecycle>` and manage the build process.
+:mod:`spack.package_base`
+  Contains the :class:`~spack.package_base.PackageBase` class, which
+  is the superclass for all packages in Spack.
 
 :mod:`spack.util.naming`
   Contains functions for mapping between Spack package names,

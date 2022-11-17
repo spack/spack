@@ -16,6 +16,8 @@ class RPcapp(RPackage):
 
     cran = "pcaPP"
 
+    version("2.0-3", sha256="1aac554f039753bf9d026090e47d66b82bf3f1f75479ed0adefa3f7bbb55d603")
+    version("2.0-2", sha256="a18b66974e0bfa5af6505acd777d04fd605b32f06009073488ee2f44280bb54b")
     version("2.0-1", sha256="9690e2f263162452d5a14bd8c52264cb70b317d30907411af4e5b6df4086121a")
     version("1.9-74", sha256="50837b434d67e4b5fcec34c689a9e30c7a9fb94c561b39f24e68a1456ff999b6")
     version("1.9-73", sha256="ca4566b0babfbe83ef9418283b08a12b3420dc362f93c6562f265df7926b53fc")

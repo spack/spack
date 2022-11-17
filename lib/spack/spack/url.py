@@ -25,11 +25,10 @@ This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
+import io
 import os
 import re
-
-from six import StringIO
-from six.moves.urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
@@ -874,7 +873,7 @@ def color_url(path, **kwargs):
     vends = [vo + vl - 1 for vo in voffs]
 
     nerr = verr = 0
-    out = StringIO()
+    out = io.StringIO()
     for i in range(len(path)):
         if i == vs:
             out.write("@c")

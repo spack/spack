@@ -9,11 +9,12 @@ from spack.package import *
 class UtilLinuxUuid(AutotoolsPackage):
     """Util-linux is a suite of essential utilities for any Linux system."""
 
-    homepage = "https://github.com/karelzak/util-linux"
+    homepage = "https://github.com/util-linux/util-linux"
     url = "https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-2.29.2.tar.gz"
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
+    version("2.38.1", sha256="0820eb8eea90408047e3715424bc6be771417047f683950fecb4bdd2e2cbbc6e")
     version("2.37.4", sha256="c8b7b4fa541f974cc32c1c6559d9bfca33651020a456ad6ee5fc9b0cacd00151")
     version("2.36.2", sha256="f5dbe79057e7d68e1a46fc04083fc558b26a49499b1b3f50e4f4893150970463")
     version("2.36", sha256="82942cd877a989f6d12d4ce2c757fb67ec53d8c5cd9af0537141ec5f84a2eea3")

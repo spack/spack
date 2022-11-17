@@ -29,10 +29,8 @@ import os.path
 import re
 import shutil
 import sys
+import urllib.parse
 from typing import List, Optional  # novm
-
-import six
-import six.moves.urllib.parse as urllib_parse
 
 import llnl.util
 import llnl.util.filesystem as fs
@@ -322,7 +320,7 @@ class URLFetchStrategy(FetchStrategy):
             # This must be skipped on Windows due to URL encoding
             # of ':' characters on filepaths on Windows
             if sys.platform != "win32" and url.startswith("file://"):
-                path = urllib_parse.quote(url[len("file://") :])
+                path = urllib.parse.quote(url[len("file://") :])
                 url = "file://" + path
             urls.append(url)
 
@@ -620,7 +618,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         patterns = kwargs.get("exclude", None)
         if patterns is not None:
-            if isinstance(patterns, six.string_types):
+            if isinstance(patterns, str):
                 patterns = [patterns]
             for p in patterns:
                 tar.add_default_arg("--exclude=%s" % p)
@@ -865,7 +863,12 @@ class GitFetchStrategy(VCSFetchStrategy):
                 repo_name = get_single_file(".")
                 if self.stage:
                     self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
+                shutil.copytree(repo_name, dest, symlinks=True)
+                shutil.rmtree(
+                    repo_name,
+                    ignore_errors=False,
+                    onerror=fs.readonly_file_handler(ignore_errors=True),
+                )
 
             with working_dir(dest):
                 checkout_args = ["checkout", commit]
@@ -1602,7 +1605,7 @@ def from_url_scheme(url, *args, **kwargs):
     in the given url."""
 
     url = kwargs.get("url", url)
-    parsed_url = urllib_parse.urlparse(url, scheme="file")
+    parsed_url = urllib.parse.urlparse(url, scheme="file")
 
     scheme_mapping = kwargs.get("scheme_mapping") or {
         "file": "url",

@@ -76,6 +76,11 @@ class Wonton(CMakePackage):
     depends_on("kokkos +openmp", when="+kokkos +openmp")
     depends_on("kokkos +cuda", when="+kokkos +cuda")
 
+    # Wonton-provided CMake config files contain some settings that
+    # can break host codes; these patches fix that
+    patch("fix-cmake-config.patch", when="@1.2.0:1.3.3")
+    patch("fix-cmake-config-r3d.patch", when="@1.3.0:1.3.3")
+
     def cmake_args(self):
         options = []
         if "+mpi" in self.spec:

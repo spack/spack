@@ -5,9 +5,9 @@
 
 .. _mavenpackage:
 
-------------
-MavenPackage
-------------
+-----
+Maven
+-----
 
 Apache Maven is a general-purpose build system that does not rely
 on Makefiles to build software. It is designed for building and
@@ -17,7 +17,7 @@ managing and Java-based project.
 Phases
 ^^^^^^
 
-The ``MavenPackage`` base class comes with the following phases:
+The ``MavenBuilder`` and ``MavenPackage`` base classes come with the following phases:
 
 #. ``build`` - compile code and package into a JAR file
 #. ``install`` - copy to installation prefix

@@ -21,6 +21,7 @@ class RLava(RPackage):
 
     cran = "lava"
 
+    version("1.7.0", sha256="3078da69f3828812bcd093acc2d1cd2c8cbc8480d81da222ae49a55bcb2e5e24")
     version("1.6.10", sha256="7a88f8a885872e2abb3011c446e9e1c4884cd4dbe6ab4cfe9207538e5560232e")
     version("1.6.8.1", sha256="6d243fc86c67c78ff4763502d84ff2f0889c2e55d1a59afefb7a762887473ffa")
     version("1.6.6", sha256="7abc84dd99cce450a45ac4f232812cde3a322e432da3472f43b057fb5c59ca59")

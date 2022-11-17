@@ -5,9 +5,9 @@
 
 .. _bundlepackage:
 
--------------
-BundlePackage
--------------
+------
+Bundle
+------
 
 ``BundlePackage`` represents a set of packages that are expected to work well
 together, such as a collection of commonly used software libraries.  The

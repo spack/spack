@@ -12,6 +12,7 @@ class PyGitpython(PythonPackage):
     homepage = "https://gitpython.readthedocs.org"
     pypi = "GitPython/GitPython-3.1.12.tar.gz"
 
+    version("3.1.27", sha256="1c885ce809e8ba2d88a29befeb385fcea06338d3640712b59ca623c220bb5704")
     version("3.1.24", sha256="df83fdf5e684fef7c6ee2c02fc68a5ceb7e7e759d08b694088d0cacb4eba59e5")
     version("3.1.23", sha256="aaae7a3bfdf0a6db30dc1f3aeae47b71cd326d86b936fe2e158aa925fdf1471c")
     version("3.1.22", sha256="e1589f27c3cd1f33b22db1df194201b5abca6b4cc5450f13f9c371e099c1b24f")
@@ -49,5 +50,8 @@ class PyGitpython(PythonPackage):
         "py-typing-extensions@3.7.4.0:", type=("build", "run"), when="@3.1.16: ^python@:3.7"
     )
     depends_on(
-        "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.19: ^python@:3.10"
+        "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.19:3.1.26 ^python@:3.10"
+    )
+    depends_on(
+        "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.27: ^python@:3.7"
     )

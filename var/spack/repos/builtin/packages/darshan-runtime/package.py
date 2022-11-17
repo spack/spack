@@ -63,35 +63,21 @@ class DarshanRuntime(AutotoolsPackage):
     depends_on("m4", type="build", when="@3.4.0:")
 
     variant("mpi", default=True, description="Compile with MPI support")
-    variant("hdf5", default=False, description="Compile with HDF5 module")
-    variant("apmpi", default=False, description="Compile with AutoPerf MPI module")
+    variant("hdf5", default=False, description="Compile with HDF5 module", when="@3.2:")
+    variant("apmpi", default=False, description="Compile with AutoPerf MPI module", when="@3.3:")
     variant(
         "apmpi_sync",
         default=False,
         description="Compile with AutoPerf MPI module (with collective synchronization timing)",
+        when="@3.3:",
     )
-    variant("apxc", default=False, description="Compile with AutoPerf XC module")
+    variant("apxc", default=False, description="Compile with AutoPerf XC module", when="@3.3:")
     variant(
         "scheduler",
         default="NONE",
         description="queue system scheduler JOB ID",
         values=("NONE", "cobalt", "pbs", "sge", "slurm"),
         multi=False,
-    )
-
-    conflicts(
-        "+hdf5", when="@:3.1.8", msg="+hdf5 variant only available starting from version 3.2.0"
-    )
-    conflicts(
-        "+apmpi", when="@:3.2.1", msg="+apmpi variant only available starting from version 3.3.0"
-    )
-    conflicts(
-        "+apmpi_sync",
-        when="@:3.2.1",
-        msg="+apmpi variant only available starting from version 3.3.0",
-    )
-    conflicts(
-        "+apxc", when="@:3.2.1", msg="+apxc variant only available starting from version 3.3.0"
     )
 
     @property

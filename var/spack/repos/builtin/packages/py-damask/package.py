@@ -16,6 +16,9 @@ class PyDamask(PythonPackage):
     maintainers = ["MarDiehl"]
 
     version(
+        "3.0.0-alpha7", sha256="442b06b824441293e72ff91b211a555c5d497aedf62be1c4332c426558b848a4"
+    )
+    version(
         "3.0.0-alpha6", sha256="de6748c285558dec8f730c4301bfa56b4078c130ff80e3095faf76202f8d2109"
     )
     version(
@@ -34,5 +37,7 @@ class PyDamask(PythonPackage):
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
+
+    patch("setup.patch", when="@3.0.0-alpha7")
 
     build_directory = "python"

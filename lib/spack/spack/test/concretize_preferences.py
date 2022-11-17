@@ -103,23 +103,16 @@ class TestConcretizePreferences(object):
         update_packages("multivalue-variant", "variants", "foo=bar")
         assert_variant_values("multivalue-variant foo=*", foo=("bar",))
 
-    def test_preferred_compilers(self):
+    @pytest.mark.parametrize(
+        "compiler_str,spec_str",
+        [("gcc@4.5.0", "mpileaks"), ("clang@12.0.0", "mpileaks"), ("gcc@4.5.0", "openmpi")],
+    )
+    def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""
-        # Need to make sure the test uses an available compiler
-        compiler_list = spack.compilers.all_compiler_specs()
-        assert compiler_list
-
-        # Try the first available compiler
-        compiler = str(compiler_list[0])
-        update_packages("mpileaks", "compiler", [compiler])
-        spec = concretize("mpileaks")
-        assert spec.compiler == spack.spec.CompilerSpec(compiler)
-
-        # Try the last available compiler
-        compiler = str(compiler_list[-1])
-        update_packages("mpileaks", "compiler", [compiler])
-        spec = concretize("mpileaks os=redhat6")
-        assert spec.compiler == spack.spec.CompilerSpec(compiler)
+        spec = spack.spec.Spec(spec_str)
+        update_packages(spec.name, "compiler", [compiler_str])
+        spec.concretize()
+        assert spec.compiler == spack.spec.CompilerSpec(compiler_str)
 
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
@@ -171,6 +164,53 @@ class TestConcretizePreferences(object):
         update_packages("all", "providers", {"mpi": ["zmpi"]})
         spec = concretize("mpileaks")
         assert "zmpi" in spec
+
+    def test_config_set_pkg_property_url(self, mutable_mock_repo):
+        """Test setting an existing attribute in the package class"""
+        update_packages(
+            "mpileaks",
+            "package_attributes",
+            {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
+        )
+        spec = concretize("mpileaks")
+        assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+
+        update_packages("mpileaks", "package_attributes", {})
+        spec = concretize("mpileaks")
+        assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
+
+    def test_config_set_pkg_property_new(self, mutable_mock_repo):
+        """Test that you can set arbitrary attributes on the Package class"""
+        conf = syaml.load_config(
+            """\
+mpileaks:
+  package_attributes:
+    v1: 1
+    v2: true
+    v3: yesterday
+    v4: "true"
+    v5:
+      x: 1
+      y: 2
+    v6:
+    - 1
+    - 2
+"""
+        )
+        spack.config.set("packages", conf, scope="concretize")
+
+        spec = concretize("mpileaks")
+        assert spec.package.v1 == 1
+        assert spec.package.v2 is True
+        assert spec.package.v3 == "yesterday"
+        assert spec.package.v4 == "true"
+        assert dict(spec.package.v5) == {"x": 1, "y": 2}
+        assert list(spec.package.v6) == [1, 2]
+
+        update_packages("mpileaks", "package_attributes", {})
+        spec = concretize("mpileaks")
+        with pytest.raises(AttributeError):
+            spec.package.v1
 
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
@@ -336,6 +376,23 @@ mpi:
         )
         spack.config.set("packages", conf, scope="concretize")
         spec = Spec("libelf")
+        assert not spack.package_prefs.is_spec_buildable(spec)
+
+        spec = Spec("mpich")
+        assert spack.package_prefs.is_spec_buildable(spec)
+
+    def test_buildable_false_virtual_true_pacakge(self):
+        conf = syaml.load_config(
+            """\
+mpi:
+  buildable: false
+mpich:
+  buildable: true
+"""
+        )
+        spack.config.set("packages", conf, scope="concretize")
+
+        spec = Spec("zmpi")
         assert not spack.package_prefs.is_spec_buildable(spec)
 
         spec = Spec("mpich")

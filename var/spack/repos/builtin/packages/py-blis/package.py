@@ -18,3 +18,7 @@ class PyBlis(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.15:", type=("build", "run"))
+
+    def setup_build_environment(self, env):
+        env.set("BLIS_COMPILER", spack_cc)
+        env.set("BLIS_ARCH", "generic")

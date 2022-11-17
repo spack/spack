@@ -13,6 +13,7 @@ class PyFlitCore(PythonPackage):
     pypi = "flit-core/flit_core-3.3.0.tar.gz"
     maintainers = ["takluyver"]
 
+    version("3.7.1", sha256="14955af340c43035dbfa96b5ee47407e377ee337f69e70f73064940d27d0a44f")
     version("3.6.0", sha256="5892962ab8b8ea945835b3a288fe9dd69316f1903d5288c3f5cafdcdd04756ad")
     version("3.5.1", sha256="3083720351a6cb00e0634a1ec0e26eae7b273174c3c6c03d5b597a14203b282e")
     version("3.5.0", sha256="2db800d33ff41e4c6e7c1b594666cb2a11553024106655272c7245933b1d75bd")
@@ -23,10 +24,12 @@ class PyFlitCore(PythonPackage):
     version("3.0.0", sha256="a465052057e2d6d957e6850e9915245adedfc4fd0dd5737d0791bf3132417c2d")
     version("2.3.0", sha256="a50bcd8bf5785e3a7d95434244f30ba693e794c5204ac1ee908fc07c4acdbf80")
 
-    # Dependencies listed in flit_core/build_thyself.py
+    # pyproject.toml
     depends_on("python@3.6:", when="@3.4:", type=("build", "run"))
     depends_on("python@3.4:", when="@3:", type=("build", "run"))
     depends_on("python@2.7,3.4:", type=("build", "run"))
+
+    # flit_core/build_thyself.py
     depends_on("py-tomli", when="@3.4:3.5", type="run")
     depends_on("py-toml", when="@3.1:3.3", type="run")
     depends_on("py-pytoml", when="@:3.0", type="run")

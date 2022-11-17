@@ -5,9 +5,9 @@
 
 .. _makefilepackage:
 
----------------
-MakefilePackage
----------------
+--------
+Makefile
+--------
 
 The most primitive build system a package can use is a plain Makefile.
 Makefiles are simple to write for small projects, but they usually
@@ -18,7 +18,7 @@ variables.
 Phases
 ^^^^^^
 
-The ``MakefilePackage`` base class comes with 3 phases:
+The ``MakefileBuilder`` and ``MakefilePackage`` base classes come with 3 phases:
 
 #. ``edit`` - edit the Makefile
 #. ``build`` - build the project

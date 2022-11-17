@@ -16,6 +16,8 @@ class RShiny(RPackage):
 
     cran = "shiny"
 
+    version("1.7.3", sha256="b8ca9a39fa69ea9b270a7e9037198d95122c79bd493b865d909d343dd3523ada")
+    version("1.7.2", sha256="23b5bfee8d597b4147e07c89391a735361cd9f69abeecfd9bd38a14d35fe6252")
     version("1.7.1", sha256="c03b2056fb41430352c7c0e812bcc8632e6ec4caef077d2f7633512d91721d00")
     version("1.5.0", sha256="23cb8bfa448389c256efdab75e7e8d3ff90e5de66264c4ab02df322fb4298e9e")
     version("1.3.2", sha256="28b851ae6c196ca845f6e815c1379247595ac123a4faa10a16533d1a9ce0c24f")
@@ -29,6 +31,7 @@ class RShiny(RPackage):
     depends_on("r-jsonlite@0.9.16:", type=("build", "run"))
     depends_on("r-xtable", type=("build", "run"))
     depends_on("r-fontawesome@0.2.1:", type=("build", "run"), when="@1.7.1:")
+    depends_on("r-fontawesome@0.4.0:", type=("build", "run"), when="@1.7.3:")
     depends_on("r-htmltools@0.3.6:", type=("build", "run"))
     depends_on("r-htmltools@0.4.0.9003:", type=("build", "run"), when="@1.5.0:")
     depends_on("r-htmltools@0.5.2:", type=("build", "run"), when="@1.7.1:")

@@ -14,6 +14,7 @@ class RHaven(RPackage):
 
     cran = "haven"
 
+    version("2.5.1", sha256="9f40462097a0b1cf3831bca493851fe4a6b3570d957a775ca81940f241c50a70")
     version("2.5.0", sha256="b580311bc1b28efc6b123e29a331282b9f7eb552c485f4e5cacab39fe534aff4")
     version("2.4.3", sha256="95b70f47e77792bed4312441787299d2e3e27d79a176f0638a37e5301b93295f")
     version("2.3.1", sha256="6eee9f3297aab4cae2e4a4181ea65af933eacee2a2fb40af5b2ecf06f1bb9e0d")

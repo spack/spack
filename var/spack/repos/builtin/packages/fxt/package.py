@@ -32,6 +32,8 @@ class Fxt(AutotoolsPackage):
         description="Increase the value of FXT_MAX_PARAMS (to allow longer task names).",
     )
 
+    variant("static", default=False, description="Compile as a static library")
+
     depends_on("gawk", type="build")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -55,6 +57,13 @@ class Fxt(AutotoolsPackage):
                     "Neither configure nor autogen.sh script exist.\
                 FxT Cannot configure."
                 )
+
+    def configure_args(self):
+        spec = self.spec
+        config_args = []
+        if spec.satisfies("+static"):
+            config_args.extend(["--enable-static=yes", "--enable-shared=no"])
+        return config_args
 
     def flag_handler(self, name, flags):
         if name == "cflags":

@@ -2,19 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import re
-import sys
-from typing import List
 
+import spack.build_systems.autotools
+import spack.build_systems.nmake
 from spack.package import *
 
-is_windows = sys.platform == "win32"
 
-
-class Ruby(Package):
+class Ruby(AutotoolsPackage, NMakePackage):
     """A dynamic, open source programming language with a focus on
-    simplicity and productivity."""
+    simplicity and productivity.
+    """
 
     maintainers = ["Kerilk"]
 
@@ -33,24 +31,25 @@ class Ruby(Package):
     version("2.5.3", sha256="9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c")
     version("2.2.0", sha256="7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc")
 
-    if not is_windows:
-        variant("openssl", default=True, description="Enable OpenSSL support")
-        variant("readline", default=False, description="Enable Readline support")
-        depends_on("pkgconfig", type=("build"))
-        depends_on("libffi")
-        depends_on("libx11", when="@:2.3")
-        depends_on("tcl", when="@:2.3")
-        depends_on("tk", when="@:2.3")
-        depends_on("readline", when="+readline")
-        depends_on("zlib")
-        with when("+openssl"):
-            depends_on("openssl@:1")
-            depends_on("openssl@:1.0", when="@:2.3")
+    build_system("autotools", "nmake", default="autotools")
+
+    for _platform_condition in ("platform=linux", "platform=darwin", "platform=cray"):
+        with when(_platform_condition):
+            variant("openssl", default=True, description="Enable OpenSSL support")
+            variant("readline", default=False, description="Enable Readline support")
+            depends_on("pkgconfig", type="build")
+            depends_on("libffi")
+            depends_on("libx11", when="@:2.3")
+            depends_on("tcl", when="@:2.3")
+            depends_on("tk", when="@:2.3")
+            depends_on("readline", when="+readline")
+            depends_on("zlib")
+            with when("+openssl"):
+                depends_on("openssl@:1")
+                depends_on("openssl@:1.0", when="@:2.3")
 
     extendable = True
-    phases = ["configure", "build", "install"]
-    build_targets = []  # type: List[str]
-    install_targets = ["install"]
+
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
     # TODO: add check for this and warn user
@@ -82,28 +81,6 @@ class Ruby(Package):
         url = "https://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
-    def configure_args(self):
-        args = []
-        if "+openssl" in self.spec:
-            args.append("--with-openssl-dir=%s" % self.spec["openssl"].prefix)
-        if "+readline" in self.spec:
-            args.append("--with-readline-dir=%s" % self.spec["readline"].prefix)
-        if "^tk" in self.spec:
-            args.append("--with-tk=%s" % self.spec["tk"].prefix)
-        if self.spec.satisfies("%fj"):
-            args.append("--disable-dtrace")
-        return args
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        # TODO: do this only for actual extensions.
-        # Set GEM_PATH to include dependent gem directories
-        for d in dependent_spec.traverse(deptype=("build", "run", "test"), root=True):
-            if d.package.extends(self.spec):
-                env.prepend_path("GEM_PATH", d.prefix)
-
-        # The actual installation path for this gem
-        env.set("GEM_HOME", dependent_spec.prefix)
-
     def setup_dependent_run_environment(self, env, dependent_spec):
         for d in dependent_spec.traverse(deptype=("run"), root=True):
             if d.package.extends(self.spec):
@@ -122,31 +99,31 @@ class Ruby(Package):
         module.gem = Executable(self.prefix.bin.gem)
         module.rake = Executable(self.prefix.bin.rake)
 
-    def configure(self, spec, prefix):
-        with working_dir(self.stage.source_path, create=True):
-            if is_windows:
-                Executable("win32\\configure.bat")("--prefix=%s" % self.prefix)
-            else:
-                options = getattr(self, "configure_flag_args", [])
-                options += ["--prefix={0}".format(prefix)]
-                options += self.configure_args()
-                configure(*options)
 
-    def build(self, spec, prefix):
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                nmake()
-            else:
-                params = ["V=1"]
-                params += self.build_targets
-                make(*params)
+class SetupEnvironment(object):
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # TODO: do this only for actual extensions.
+        # Set GEM_PATH to include dependent gem directories
+        for d in dependent_spec.traverse(deptype=("build", "run", "test"), root=True):
+            if d.package.extends(self.spec):
+                env.prepend_path("GEM_PATH", d.prefix)
 
-    def install(self, spec, prefix):
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                nmake("install")
-            else:
-                make(*self.install_targets)
+        # The actual installation path for this gem
+        env.set("GEM_HOME", dependent_spec.prefix)
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
+    def configure_args(self):
+        args = []
+        if "+openssl" in self.spec:
+            args.append("--with-openssl-dir=%s" % self.spec["openssl"].prefix)
+        if "+readline" in self.spec:
+            args.append("--with-readline-dir=%s" % self.spec["readline"].prefix)
+        if "^tk" in self.spec:
+            args.append("--with-tk=%s" % self.spec["tk"].prefix)
+        if self.spec.satisfies("%fj"):
+            args.append("--disable-dtrace")
+        return args
 
     @run_after("install")
     def post_install(self):
@@ -158,7 +135,7 @@ class Ruby(Package):
         """
         if self.spec.satisfies("+openssl"):
             rubygems_updated_cert_path = join_path(
-                self.stage.source_path, "rubygems-updated-ssl-cert", "GlobalSignRootCA.pem"
+                self.pkg.stage.source_path, "rubygems-updated-ssl-cert", "GlobalSignRootCA.pem"
             )
             rubygems_certs_path = join_path(
                 self.spec.prefix.lib,
@@ -171,11 +148,19 @@ class Ruby(Package):
 
         rbconfig = find(self.prefix, "rbconfig.rb")[0]
         filter_file(
-            r'^(\s*CONFIG\["CXX"\]\s*=\s*).*', r'\1"{0}"'.format(self.compiler.cxx), rbconfig
+            r'^(\s*CONFIG\["CXX"\]\s*=\s*).*', r'\1"{0}"'.format(self.pkg.compiler.cxx), rbconfig
         )
         filter_file(
-            r'^(\s*CONFIG\["CC"\]\s*=\s*).*', r'\1"{0}"'.format(self.compiler.cc), rbconfig
+            r'^(\s*CONFIG\["CC"\]\s*=\s*).*', r'\1"{0}"'.format(self.pkg.compiler.cc), rbconfig
         )
         filter_file(
-            r'^(\s*CONFIG\["MJIT_CC"\]\s*=\s*).*', r'\1"{0}"'.format(self.compiler.cc), rbconfig
+            r'^(\s*CONFIG\["MJIT_CC"\]\s*=\s*).*',
+            r'\1"{0}"'.format(self.pkg.compiler.cc),
+            rbconfig,
         )
+
+
+class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder, SetupEnvironment):
+    def edit(self, pkg, spec, prefix):
+        with working_dir(self.pkg.stage.source_path, create=True):
+            Executable("win32\\configure.bat")("--prefix=%s" % self.prefix)

@@ -15,17 +15,22 @@ def dav_sdk_depends_on(spec, when=None, propagate=None):
     # ie. A +c ~b -> A
     spec = Spec(spec).name
 
-    if "+" in when and len(when.split()) == 1:
-        when_not = when.replace("+", "~")
-        # If the package is in the spec tree then it must
-        # be enabled in the SDK.
-        conflicts(when_not, "^" + spec)
+    # If the package is in the spec tree then it must be enabled in the SDK.
+    if "+" in when:
+        _when_variants = when.strip("+").split("+")
+        if any(tok in when for tok in ["~", "="]):
+            tty.error("Bad token in when clause, only positive boolean tokens allowed")
+
+        for variant in _when_variants:
+            conflicts("~" + variant, when="^" + spec)
 
     # Skip if there is nothing to propagate
     if not propagate:
         return
 
-    # Map the propagated variants to the dependency variant
+    # Map the propagated variants to the dependency variant.  Some packages may need
+    # overrides to propagate a dependency as something else, e.g., {"visit": "libsim"}.
+    # Most call-sites will just use a list.
     if not type(propagate) is dict:
         propagate = dict([(v, v) for v in propagate])
 
@@ -57,10 +62,10 @@ def exclude_variants(variants, exclude):
 class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     """ECP Data & Vis SDK"""
 
-    homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
+    homepage = "https://ecp-data-vis-sdk.github.io/"
 
     tags = ["ecp"]
-    maintainers = ["chuckatkins", "kwryankrattiger"]
+    maintainers = ["kwryankrattiger", "svenevs"]
 
     version("1.0")
 
@@ -99,7 +104,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on(
         "adios2+shared+mpi+python+blosc+sst+ssc+dataman",
         when="+adios2",
-        propagate=["hdf5", "sz", "zfp", "fortran"],
+        propagate=["cuda", "hdf5", "sz", "zfp", "fortran"] + cuda_arch_variants,
     )
 
     dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan", propagate=["hdf5"])
@@ -108,6 +113,18 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
     dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
+    # hdf5-vfd-gds needs cuda@11.7.1 or later, only enable when 11.7.1+ available.
+    depends_on(
+        "hdf5-vfd-gds@1.0.2:",
+        when="+cuda+hdf5^cuda@11.7.1:",
+    )
+    for cuda_arch in cuda_arch_variants:
+        depends_on(
+            "hdf5-vfd-gds@1.0.2: {0}".format(cuda_arch),
+            when="+cuda+hdf5 {0} ^cuda@11.7.1:".format(cuda_arch),
+        )
+    conflicts("~cuda", when="^hdf5-vfd-gds@1.0.2:")
+    conflicts("~hdf5", when="^hdf5-vfd-gds@1.0.2:")
 
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 

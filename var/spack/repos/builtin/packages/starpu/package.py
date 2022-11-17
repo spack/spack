@@ -25,11 +25,12 @@ class Starpu(AutotoolsPackage):
     """
 
     homepage = "https://starpu.gitlabpages.inria.fr/"
-    url = "https://files.inria.fr/starpu/starpu-1.3.9/starpu-1.3.9.tar.gz"
+    url = "https://files.inria.fr/starpu/starpu-1.3.10/starpu-1.3.10.tar.gz"
     git = "https://gitlab.inria.fr/starpu/starpu.git"
 
     maintainers = ["nfurmento", "sthibaul"]
 
+    version("1.3.10", sha256="757cd9a54f53751d37364965ac36102461a85df3a50b776447ac0acc0e1e2612")
     version("1.3.9", sha256="73adf2a5d25b04023132cfb1a8d9293b356354af7d1134e876122a205128d241")
     version("1.3.8", sha256="d35a27b219af8e7973888ebbff728ec0112ae9cda88d6b79c4cc7a1399b4d052")
     version("1.3.7", sha256="1d7e01567fbd4a66b7e563626899374735e37883226afb96c8952fea1dab77c2")
@@ -69,6 +70,8 @@ class Starpu(AutotoolsPackage):
     variant("simgrid", default=False, description="Enable SimGrid support")
     variant("simgridmc", default=False, description="Enable SimGrid model checker support")
     variant("examples", default=True, description="Enable Examples")
+    variant("papi", default=False, description="Enable PAPI support", when="@master:")
+    variant("blocking", default=False, description="Enable blocking drivers support")
 
     depends_on("pkgconfig", type="build")
     depends_on("autoconf", type="build")
@@ -80,13 +83,17 @@ class Starpu(AutotoolsPackage):
     depends_on("mpi", when="+mpi~simgrid")
     depends_on("cuda", when="+cuda~simgrid")
     depends_on("fxt", when="+fxt")
+    depends_on("fxt+static", when="+fxt+simgrid+mpi")
     depends_on("simgrid", when="+simgrid")
     depends_on("simgrid+smpi", when="+simgrid+mpi")
     depends_on("simgrid+mc", when="+simgridmc")
+    depends_on("papi", when="+papi")
 
     conflicts(
         "+shared", when="+mpi+simgrid", msg="Simgrid MPI cannot be built with a shared library"
     )
+
+    conflicts("+papi", when="+simgrid")
 
     def autoreconf(self, spec, prefix):
         if not os.path.isfile("./configure"):
@@ -124,6 +131,8 @@ class Starpu(AutotoolsPackage):
                 "--%s-build-examples" % ("enable" if "+examples" in spec else "disable"),
                 "--%s-fortran" % ("enable" if "+fortran" in spec else "disable"),
                 "--%s-openmp" % ("enable" if "+openmp" in spec else "disable"),
+                "--%s-blocking-drivers" % ("enable" if "+blocking" in spec else "disable"),
+                "--%s-papi" % ("enable" if "+papi" in spec else "disable"),
                 "--%s-opencl"
                 % ("disable" if "~opencl" in spec or "+simgrid" in spec else "enable"),
                 "--%s-cuda" % ("disable" if "~cuda" in spec or "+simgrid" in spec else "enable"),

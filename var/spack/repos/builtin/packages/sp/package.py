@@ -14,7 +14,12 @@ class Sp(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-sp"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-sp/archive/refs/tags/v2.3.3.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "edwardhartnett", "Hang-Lei-NOAA"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "edwardhartnett",
+        "Hang-Lei-NOAA",
+    ]
 
     version("2.3.3", sha256="c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f")
 

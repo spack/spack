@@ -13,9 +13,11 @@ from spack.package import *
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
 
-    homepage = "http://mumps.enseeiht.fr"
-    url = "http://mumps.enseeiht.fr/MUMPS_5.3.5.tar.gz"
+    homepage = "https://graal.ens-lyon.fr/MUMPS/index.php"
+    url = "https://graal.ens-lyon.fr/MUMPS/MUMPS_5.5.1.tar.gz"
 
+    version("5.5.1", sha256="1abff294fa47ee4cfd50dfd5c595942b72ebfcedce08142a75a99ab35014fa15")
+    version("5.5.0", sha256="e54d17c5e42a36c40607a03279e0704d239d71d38503aab68ef3bfe0a9a79c13")
     version("5.4.1", sha256="93034a1a9fe0876307136dcde7e98e9086e199de76f1c47da822e7d4de987fa8")
     version("5.4.0", sha256="c613414683e462da7c152c131cebf34f937e79b30571424060dd673368bbf627")
     version("5.3.5", sha256="e5d665fdb7043043f0799ae3dbe3b37e5b200d1ab7a6f7b2a4e463fd89507fa4")
@@ -68,7 +70,8 @@ class Mumps(Package):
     # The following patches src/Makefile to fix some dependency
     # issues in lib[cdsz]mumps.so
     patch("mumps.src-makefile.5.2.patch", when="@5.2.0 +shared")
-    patch("mumps.src-makefile.5.3.patch", when="@5.3.0: +shared")
+    patch("mumps.src-makefile.5.3.patch", when="@5.3.0:5.4.1 +shared")
+    patch("mumps.src-makefile.5.5.patch", when="@5.5.0: +shared")
 
     conflicts("+parmetis", when="~mpi", msg="You cannot use the parmetis variant without mpi")
     conflicts("+parmetis", when="~metis", msg="You cannot use the parmetis variant without metis")

@@ -70,7 +70,7 @@ def rewire_node(spec, explicit):
         for rel_path in manifest.get("text_to_relocate", [])
     ]
     if text_to_relocate:
-        relocate.relocate_text(files=text_to_relocate, prefixes=prefix_to_prefix)
+        relocate.unsafe_relocate_text(files=text_to_relocate, prefixes=prefix_to_prefix)
 
     bins_to_relocate = [
         os.path.join(tempdir, spec.dag_hash(), rel_path)
@@ -97,7 +97,7 @@ def rewire_node(spec, explicit):
                 spec.build_spec.prefix,
                 spec.prefix,
             )
-        relocate.relocate_text_bin(binaries=bins_to_relocate, prefixes=prefix_to_prefix)
+        relocate.unsafe_relocate_text_bin(binaries=bins_to_relocate, prefixes=prefix_to_prefix)
     # Copy package into place, except for spec.json (because spec.json
     # describes the old spec and not the new spliced spec).
     shutil.copytree(

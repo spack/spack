@@ -49,6 +49,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     version("develop", branch="master")
 
     version(
+        "4.5.0",
+        sha256="4f201bec02fc5460a902596697b6c1deb7b15ac57c71f615b2ab4a8eb65665f7",
+        url="https://bit.ly/mfem-4-5",
+        extension="tar.gz",
+    )
+
+    version(
         "4.4.0",
         sha256="37250dbef6e97b16dc9ab50973e8d68bc165bb4afcdaf91b3b72c8972c87deef",
         url="https://bit.ly/mfem-4-4",
@@ -171,7 +178,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         "libunwind", default=False, description="Enable backtrace on error support using Libunwind"
     )
     variant("fms", default=False, when="@4.3.0:", description="Enable FMS I/O support")
-    # TODO: SIMD, Ginkgo, ADIOS2, HiOp, MKL CPardiso, Axom/Sidre
+    variant("ginkgo", default=False, when="@4.3.0:", description="Enable Ginkgo support")
+    variant("hiop", default=False, when="@4.4.0:", description="Enable HiOp support")
+    # TODO: SIMD, ADIOS2, MKL CPardiso, Axom/Sidre
     variant(
         "timer",
         default="auto",
@@ -229,6 +238,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts("^mpich@4:", when="@:4.3+mpi")
 
     depends_on("mpi", when="+mpi")
+    depends_on("hipsparse", when="@4.4.0:+rocm")
     depends_on("hypre@2.10.0:2.13", when="@:3.3+mpi")
     depends_on("hypre@:2.20.0", when="@3.4:4.2+mpi")
     depends_on("hypre@:2.23.0", when="@4.3.0+mpi")
@@ -256,11 +266,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("sundials@2.7.0+mpi+hypre", when="@:3.3.0+sundials+mpi")
     depends_on("sundials@2.7.0:", when="@3.3.2:+sundials~mpi")
     depends_on("sundials@2.7.0:+mpi+hypre", when="@3.3.2:+sundials+mpi")
-    depends_on("sundials@5.0.0:5", when="@4.0.1-xsdk:+sundials~mpi")
-    depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.0.1-xsdk:+sundials+mpi")
+    depends_on("sundials@5.0.0:5", when="@4.0.1-xsdk:4.4+sundials~mpi")
+    depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.0.1-xsdk:4.4+sundials+mpi")
+    depends_on("sundials@5.0.0:", when="@4.5.0:+sundials~mpi")
+    depends_on("sundials@5.0.0:+mpi+hypre", when="@4.5.0:+sundials+mpi")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "sundials@5.4.0:5+cuda cuda_arch={0}".format(sm_),
+            "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
             when="@4.2.0:+sundials+cuda cuda_arch={0}".format(sm_),
         )
     depends_on("pumi", when="+pumi~shared")
@@ -320,6 +332,29 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("conduit@0.3.1:,master:", when="+conduit")
     depends_on("conduit+mpi", when="+conduit+mpi")
     depends_on("libfms@0.2.0:", when="+fms")
+    depends_on("ginkgo@1.4.0:", when="+ginkgo")
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on(
+            "ginkgo+cuda cuda_arch={0}".format(sm_),
+            when="+ginkgo+cuda cuda_arch={0}".format(sm_),
+        )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "ginkgo+rocm amdgpu_target={0}".format(gfx),
+            when="+ginkgo+rocm amdgpu_target={0}".format(gfx),
+        )
+    depends_on("hiop@0.4.6:~mpi", when="+hiop~mpi")
+    depends_on("hiop@0.4.6:+mpi", when="+hiop+mpi")
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on(
+            "hiop+cuda cuda_arch={0}".format(sm_),
+            when="+hiop+cuda cuda_arch={0}".format(sm_),
+        )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "hiop+rocm amdgpu_target={0}".format(gfx),
+            when="+hiop+rocm amdgpu_target={0}".format(gfx),
+        )
 
     # The MFEM 4.0.0 SuperLU interface fails when using hypre@2.16.0 and
     # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
@@ -394,17 +429,24 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.2-petsc-3.15.0.patch", when="@4.2.0+petsc ^petsc@3.15.0:")
     patch("mfem-4.3-hypre-2.23.0.patch", when="@4.3.0")
     patch("mfem-4.3-cusparse-11.4.patch", when="@4.3.0+cuda")
-
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
     # https://github.com/mfem/mfem/pull/1043 for the bugfix contributed
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
+    patch("mfem-4.5.patch", when="@4.5.0")
+
     phases = ["configure", "build", "install"]
 
     def setup_build_environment(self, env):
         env.unset("MFEM_DIR")
         env.unset("MFEM_BUILD_DIR")
+        # Workaround for changes made by the 'kokkos-nvcc-wrapper' package
+        # which can be a dependency e.g. through PETSc that uses Kokkos:
+        if "^kokkos-nvcc-wrapper" in self.spec:
+            env.set("MPICH_CXX", spack_cxx)
+            env.set("OMPI_CXX", spack_cxx)
+            env.set("MPICXX_CXX", spack_cxx)
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
@@ -488,6 +530,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 mfem_mpiexec = "jsrun"
                 mfem_mpiexec_np = "-p"
+        elif "FLUX_JOB_ID" in os.environ:
+            mfem_mpiexec = "flux mini run"
+            mfem_mpiexec_np = "-n"
 
         metis5_str = "NO"
         if ("+metis" in spec) and spec["metis"].satisfies("@5:"):
@@ -530,10 +575,31 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "MFEM_USE_CEED=%s" % yes_no("+libceed"),
             "MFEM_USE_UMPIRE=%s" % yes_no("+umpire"),
             "MFEM_USE_FMS=%s" % yes_no("+fms"),
+            "MFEM_USE_GINKGO=%s" % yes_no("+ginkgo"),
+            "MFEM_USE_HIOP=%s" % yes_no("+hiop"),
             "MFEM_MPIEXEC=%s" % mfem_mpiexec,
             "MFEM_MPIEXEC_NP=%s" % mfem_mpiexec_np,
             "MFEM_USE_EXCEPTIONS=%s" % yes_no("+exceptions"),
         ]
+
+        # Determine C++ standard to use:
+        cxxstd = None
+        if self.spec.satisfies("@4.0.0:"):
+            cxxstd = "11"
+        if self.spec.satisfies("^raja@2022.03.0:"):
+            cxxstd = "14"
+        if self.spec.satisfies("^umpire@2022.03.0:"):
+            cxxstd = "14"
+        if self.spec.satisfies("^sundials@6.4.0:"):
+            cxxstd = "14"
+        if self.spec.satisfies("^ginkgo"):
+            cxxstd = "14"
+        cxxstd_flag = None
+        if cxxstd:
+            if "+cuda" in spec:
+                cxxstd_flag = "-std=c++" + cxxstd
+            else:
+                cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
 
         cxxflags = spec.compiler_flags["cxxflags"]
 
@@ -557,15 +623,15 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     "-x=cu --expt-extended-lambda -arch=sm_%s" % cuda_arch,
                     "-ccbin %s" % (spec["mpi"].mpicxx if "+mpi" in spec else env["CXX"]),
                 ]
-            if self.spec.satisfies("@4.0.0:"):
-                if "+cuda" in spec:
-                    cxxflags.append("-std=c++11")
-                else:
-                    cxxflags.append(self.compiler.cxx11_flag)
+            if cxxstd_flag:
+                cxxflags.append(cxxstd_flag)
             # The cxxflags are set by the spack c++ compiler wrapper. We also
             # set CXXFLAGS explicitly, for clarity, and to properly export the
             # cxxflags in the variable MFEM_CXXFLAGS in config.mk.
             options += ["CXXFLAGS=%s" % " ".join(cxxflags)]
+
+        elif cxxstd_flag:
+            options += ["BASE_FLAGS=%s" % cxxstd_flag]
 
         # Treat any 'CXXFLAGS' in the environment as extra c++ flags which are
         # handled through the 'CPPFLAGS' makefile variable in MFEM. Also, unset
@@ -589,9 +655,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "+cuda" in hypre:
                 hypre_gpu_libs = " -lcusparse -lcurand"
             elif "+rocm" in hypre:
-                hypre_gpu_libs = " " + ld_flags_from_dirs(
-                    [env["ROCM_PATH"] + "/lib"], ["rocsparse", "rocrand"]
-                )
+                hypre_rocm_libs = LibraryList([])
+                if "^rocsparse" in hypre:
+                    hypre_rocm_libs += hypre["rocsparse"].libs
+                if "^rocrand" in hypre:
+                    hypre_rocm_libs += hypre["rocrand"].libs
+                hypre_gpu_libs = " " + ld_flags_from_library_list(hypre_rocm_libs)
             options += [
                 "HYPRE_OPT=-I%s" % hypre.prefix.include,
                 "HYPRE_LIB=%s%s" % (ld_flags_from_library_list(all_hypre_libs), hypre_gpu_libs),
@@ -804,6 +873,33 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_libs = LibraryList([])
+            # To use a C++ compiler that supports -xhip flag one can use
+            # something like this:
+            #   options += [
+            #       "HIP_CXX=%s" % (spec["mpi"].mpicxx if "+mpi" in spec else spack_cxx),
+            #       "HIP_FLAGS=-xhip --offload-arch=%s" % amdgpu_target,
+            #   ]
+            #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
+            if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
+                hipsparse = spec["hipsparse"]
+                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_libs += hipsparse.libs
+                # Note: MFEM's defaults.mk wants to find librocsparse.* in
+                # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
+                # external HIP, or the prefix of rocsparse (which is a
+                # dependency of hipsparse) when using Spack-built HIP.
+                if spec["hip"].external:
+                    options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
+                else:
+                    options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "%cce" in spec:
+                # We assume the proper Cray CCE module (cce) is loaded:
+                craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
+                hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_libs:
+                options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
         if "+occa" in spec:
             options += [
@@ -812,12 +908,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ]
 
         if "+raja" in spec:
-            raja_opt = "-I%s" % spec["raja"].prefix.include
-            if spec["raja"].satisfies("^camp"):
-                raja_opt += " -I%s" % spec["camp"].prefix.include
+            raja = spec["raja"]
+            raja_opt = "-I%s" % raja.prefix.include
+            raja_lib = find_libraries(
+                "libRAJA", raja.prefix, shared=("+shared" in raja), recursive=True
+            )
+            if raja.satisfies("^camp"):
+                camp = raja["camp"]
+                raja_opt += " -I%s" % camp.prefix.include
+                raja_lib += find_optional_library("libcamp", camp.prefix)
             options += [
                 "RAJA_OPT=%s" % raja_opt,
-                "RAJA_LIB=%s" % ld_flags_from_dirs([spec["raja"].prefix.lib], ["RAJA"]),
+                "RAJA_LIB=%s" % ld_flags_from_library_list(raja_lib),
             ]
 
         if "+amgx" in spec:
@@ -895,6 +997,24 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "FMS_LIB=%s" % ld_flags_from_library_list(libfms.libs),
             ]
 
+        if "+ginkgo" in spec:
+            ginkgo = spec["ginkgo"]
+            options += [
+                "GINKGO_DIR=%s" % ginkgo.prefix,
+                "GINKGO_BUILD_TYPE=%s" % ginkgo.variants["build_type"].value,
+            ]
+
+        if "+hiop" in spec:
+            hiop = spec["hiop"]
+            hiop_libs = hiop.libs
+            hiop_libs += spec["lapack"].libs + spec["blas"].libs
+            if "^magma" in hiop:
+                hiop_libs += hiop["magma"].libs
+            options += [
+                "HIOP_OPT=-I%s" % hiop.prefix.include,
+                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
+            ]
+
         make("config", *options, parallel=False)
         make("info", parallel=False)
 
@@ -927,7 +1047,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             with working_dir("config"):
                 os.rename("config.mk", "config.mk.orig")
                 copy(str(self.config_mk), "config.mk")
+                # Add '/mfem' to MFEM_INC_DIR for miniapps that include directly
+                # headers like "general/forall.hpp":
+                filter_file("(MFEM_INC_DIR.*)$", "\\1/mfem", "config.mk")
                 shutil.copystat("config.mk.orig", "config.mk")
+                # TODO: miniapps linking to libmfem-common.* will not work.
 
         prefix_share = join_path(prefix, "share", "mfem")
 

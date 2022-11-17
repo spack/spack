@@ -11,6 +11,8 @@ import sys
 import py
 import pytest
 
+from llnl.util.filesystem import join_path, visit_directory_tree
+
 import spack.binary_distribution as bindist
 import spack.config
 import spack.hooks.sbang as sbang
@@ -20,6 +22,7 @@ import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
+from spack.binary_distribution import get_buildfile_manifest
 from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
@@ -97,12 +100,12 @@ def config_directory(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def default_config(tmpdir_factory, config_directory, monkeypatch, install_mockery_mutable_config):
+def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutable_config):
     # This fixture depends on install_mockery_mutable_config to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
     # install_mockery_mutable_config
-    mutable_dir = tmpdir_factory.mktemp("mutable_config").join("tmp")
+    mutable_dir = tmpdir.mkdir("mutable_config").join("tmp")
     config_directory.copy(mutable_dir)
 
     cfg = spack.config.Configuration(
@@ -113,7 +116,7 @@ def default_config(tmpdir_factory, config_directory, monkeypatch, install_mocker
     )
 
     spack.config.config, old_config = cfg, spack.config.config
-
+    spack.config.config.set("repos", [spack.paths.mock_packages_path])
     # This is essential, otherwise the cache will create weird side effects
     # that will compromise subsequent tests if compilers.yaml is modified
     monkeypatch.setattr(spack.compilers, "_cache_config_file", [])
@@ -453,10 +456,11 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     # Update index
     buildcache_cmd("update-index", "-d", mirror_dir.strpath)
 
-    # Check dependency not in buildcache
-    cache_list = buildcache_cmd("list", "--allarch")
-    assert "libdwarf" in cache_list
-    assert "libelf" not in cache_list
+    with spack.config.override("config:binary_index_ttl", 0):
+        # Check dependency not in buildcache
+        cache_list = buildcache_cmd("list", "--allarch")
+        assert "libdwarf" in cache_list
+        assert "libelf" not in cache_list
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):
@@ -632,3 +636,57 @@ def test_FetchCacheError_pretty_printing_single():
     assert "Multiple errors" not in str_e
     assert "RuntimeError: Oops!" in str_e
     assert str_e.rstrip() == str_e
+
+
+def test_build_manifest_visitor(tmpdir):
+    dir = "directory"
+    file = os.path.join("directory", "file")
+
+    with tmpdir.as_cwd():
+        # Create a file inside a directory
+        os.mkdir(dir)
+        with open(file, "wb") as f:
+            f.write(b"example file")
+
+        # Symlink the dir
+        os.symlink(dir, "symlink_to_directory")
+
+        # Symlink the file
+        os.symlink(file, "symlink_to_file")
+
+        # Hardlink the file
+        os.link(file, "hardlink_of_file")
+
+        # Hardlinked symlinks: seems like this is only a thing on Linux,
+        # on Darwin the symlink *target* is hardlinked, on Linux the
+        # symlink *itself* is hardlinked.
+        if sys.platform.startswith("linux"):
+            os.link("symlink_to_file", "hardlink_of_symlink_to_file")
+            os.link("symlink_to_directory", "hardlink_of_symlink_to_directory")
+
+    visitor = bindist.BuildManifestVisitor()
+    visit_directory_tree(str(tmpdir), visitor)
+
+    # We de-dupe hardlinks of files, so there should really be just one file
+    assert len(visitor.files) == 1
+
+    # We do not de-dupe symlinks, cause it's unclear how to update symlinks
+    # in-place, preserving inodes.
+    if sys.platform.startswith("linux"):
+        assert len(visitor.symlinks) == 4  # includes hardlinks of symlinks.
+    else:
+        assert len(visitor.symlinks) == 2
+
+    with tmpdir.as_cwd():
+        assert not any(os.path.islink(f) or os.path.isdir(f) for f in visitor.files)
+        assert all(os.path.islink(f) for f in visitor.symlinks)
+
+
+def test_text_relocate_if_needed(install_mockery, mock_fetch, monkeypatch, capfd):
+    spec = Spec("needs-text-relocation").concretized()
+    install_cmd(str(spec))
+
+    manifest = get_buildfile_manifest(spec)
+    assert join_path("bin", "exe") in manifest["text_to_relocate"]
+    assert join_path("bin", "otherexe") not in manifest["text_to_relocate"]
+    assert join_path("bin", "secretexe") not in manifest["text_to_relocate"]

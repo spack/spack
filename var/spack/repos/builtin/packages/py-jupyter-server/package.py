@@ -14,6 +14,8 @@ class PyJupyterServer(PythonPackage):
     homepage = "https://github.com/jupyter-server/jupyter_server"
     pypi = "jupyter_server/jupyter_server-1.9.0.tar.gz"
 
+    version("1.21.0", sha256="d0adca19913a3763359be7f0b8c2ea8bfde356f4b8edd8e3149d7d0fbfaa248b")
+    version("1.18.1", sha256="2b72fc595bccae292260aad8157a0ead8da2c703ec6ae1bb7b36dbad0e267ea7")
     version("1.17.0", sha256="7b3aa524790ab0da64f06dfe0b2af149d0a3f59aad71fdedcf1d8bae6508018c")
     version("1.13.5", sha256="9e3e9717eea3bffab8cfb2ff330011be6c8bbd9cdae5b71cef169fcece2f19d3")
     version("1.11.2", sha256="c1f32e0c1807ab2de37bf70af97a36b4436db0bc8af3124632b1f4441038bf95")
@@ -30,9 +32,9 @@ class PyJupyterServer(PythonPackage):
     # depends_on('py-jupyter-packaging@0.9:0', when='@1.6.2:', type='build')
     depends_on("py-pre-commit", when="@1.16:", type="build")
     depends_on("py-setuptools", type="build")
+
     depends_on("py-anyio@3.1.0:3", type=("build", "run"))
     depends_on("py-argon2-cffi", type=("build", "run"))
-    depends_on("py-ipython-genutils", when="@:1.15", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-jupyter-client@6.1.12:", when="@1.16:", type=("build", "run"))
     depends_on("py-jupyter-client@6.1.1:", type=("build", "run"))
@@ -45,8 +47,8 @@ class PyJupyterServer(PythonPackage):
     depends_on("py-packaging", when="@1.13.2:", type=("build", "run"))
     depends_on("py-prometheus-client", type=("build", "run"))
     # for windows depends_on pywinpty@:1, when='@1.13.2:'
+    # py-pywinpty is not in spack and requires the build system maturin
     depends_on("py-pyzmq@17:", type=("build", "run"))
-    depends_on("py-requests-unixsocket", when="@:1.11.1", type=("build", "run"))
     depends_on("py-send2trash", type=("build", "run"))
     depends_on("py-terminado@0.8.3:", type=("build", "run"))
     depends_on("py-tornado@6.1:", type=("build", "run"))
@@ -54,3 +56,7 @@ class PyJupyterServer(PythonPackage):
     depends_on("py-traitlets@5:", when="@1.13.3:", type=("build", "run"))
     depends_on("py-traitlets@4.2.1:", type=("build", "run"))
     depends_on("py-websocket-client", type=("build", "run"))
+
+    # old
+    depends_on("py-ipython-genutils", when="@:1.15", type=("build", "run"))
+    depends_on("py-requests-unixsocket", when="@:1.11.1", type=("build", "run"))

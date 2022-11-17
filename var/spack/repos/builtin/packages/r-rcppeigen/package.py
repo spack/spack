@@ -25,6 +25,7 @@ class RRcppeigen(RPackage):
 
     cran = "RcppEigen"
 
+    version("0.3.3.9.3", sha256="5873a47fd6587d916f86119ab140c6736abf80ac45d06ff1c9d198708e7d1c76")
     version("0.3.3.9.2", sha256="2547e794d5a6fb8d9fbadf19e64afa0bcf413cc69ecf3f428995fa5a0fced493")
     version("0.3.3.9.1", sha256="8a0486249b778a4275a1168fc89fc7fc49c2bb031cb14b50a50089acae7fe962")
     version("0.3.3.5.0", sha256="e5c6af17770c5f57b7cf2fba04ad1a519901b446e8138bfff221952458207f05")
@@ -35,3 +36,4 @@ class RRcppeigen(RPackage):
 
     depends_on("r-matrix@1.1-0:", type=("build", "run"))
     depends_on("r-rcpp@0.11.0:", type=("build", "run"))
+    depends_on("r@3.6.0:", type=("build", "run"), when="@0.3.3.9.3:")

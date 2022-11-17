@@ -2,11 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 
 
-class Libtree(MakefilePackage):
+class Libtree(MakefilePackage, CMakePackage):
     """ldd as a tree"""
 
     homepage = "https://github.com/haampie/libtree"
@@ -35,6 +36,10 @@ class Libtree(MakefilePackage):
     version("1.0.4", sha256="b15a54b6f388b8bd8636e288fcb581029f1e65353660387b0096a554ad8e9e45")
     version("1.0.3", sha256="67ce886c191d50959a5727246cdb04af38872cd811c9ed4e3822f77a8f40b20b")
 
+    build_system(
+        conditional("cmake", when="@:2"), conditional("makefile", when="@3:"), default="makefile"
+    )
+
     def url_for_version(self, version):
         if version < Version("2.0.0"):
             return (
@@ -45,13 +50,8 @@ class Libtree(MakefilePackage):
 
         return "https://github.com/haampie/libtree/archive/refs/tags/v{0}.tar.gz".format(version)
 
-    # Version 3.x (Makefile)
-    @when("@3:")
-    def install(self, spec, prefix):
-        make("install", "PREFIX=" + prefix)
-
     # Version 2.x and earlier (CMake)
-    with when("@:2"):
+    with when("build_system=cmake"):
         variant("chrpath", default=False, description="Use chrpath for deployment")
         variant("strip", default=False, description="Use binutils strip for deployment")
         variant(
@@ -70,23 +70,19 @@ class Libtree(MakefilePackage):
     depends_on("cxxopts", when="@2.0.0:2", type="build")
     depends_on("elfio@:3.9", when="@2.0.0:2", type="build")
 
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        tests_enabled = "ON" if self.run_tests else "OFF"
+        tests_enabled = "ON" if self.pkg.run_tests else "OFF"
         if self.spec.satisfies("@2.0:"):
             tests_define = "LIBTREE_BUILD_TESTS"
         else:
             tests_define = "BUILD_TESTING"
 
-        return [CMakePackage.define(tests_define, tests_enabled)]
+        return [self.define(tests_define, tests_enabled)]
 
-    @when("@:2")
-    def edit(self, spec, prefix):
-        options = CMakePackage._std_args(self) + self.cmake_args()
-        options.append(self.stage.source_path)
-        with working_dir(self.build_directory):
-            cmake(*options)
 
-    @when("@:2")
-    def check(self):
-        with working_dir(self.build_directory):
-            ctest("--output-on-failure")
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+    @property
+    def install_targets(self):
+        return ["install", "PREFIX=" + self.prefix]

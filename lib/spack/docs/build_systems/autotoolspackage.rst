@@ -5,9 +5,9 @@
 
 .. _autotoolspackage:
 
-----------------
-AutotoolsPackage
-----------------
+---------
+Autotools
+---------
 
 Autotools is a GNU build system that provides a build-script generator.
 By running the platform-independent ``./configure`` script that comes
@@ -17,7 +17,7 @@ with the package, you can generate a platform-dependent Makefile.
 Phases
 ^^^^^^
 
-The ``AutotoolsPackage`` base class comes with the following phases:
+The ``AutotoolsBuilder`` and ``AutotoolsPackage`` base classes come with the following phases:
 
 #. ``autoreconf`` - generate the configure script
 #. ``configure`` - generate the Makefiles

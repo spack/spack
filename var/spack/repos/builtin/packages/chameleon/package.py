@@ -54,8 +54,11 @@ class Chameleon(CMakePackage, CudaPackage):
         depends_on("starpu~cuda", when="~cuda")
         depends_on("starpu+cuda", when="+cuda")
         with when("+simgrid"):
+            depends_on("simgrid+msg")
             depends_on("starpu+simgrid")
             depends_on("starpu+mpi~shared+simgrid", when="+mpi")
+            conflicts("^simgrid@:3.31", when="@:1.1.0")
+            conflicts("+shared", when="+simgrid")
         with when("~simgrid"):
             depends_on("mpi", when="+mpi")
             depends_on("cuda", when="+cuda")
@@ -90,9 +93,9 @@ class Chameleon(CMakePackage, CudaPackage):
         if spec.satisfies("+mpi +simgrid"):
             args.extend(
                 [
-                    self.define("MPI_C_COMPILER", self.spec["simgrid"].smpicc),
-                    self.define("MPI_CXX_COMPILER", self.spec["simgrid"].smpicxx),
-                    self.define("MPI_Fortran_COMPILER", self.spec["simgrid"].smpifc),
+                    self.define("CMAKE_C_COMPILER", self.spec["simgrid"].smpicc),
+                    self.define("CMAKE_CXX_COMPILER", self.spec["simgrid"].smpicxx),
+                    self.define("CMAKE_Fortran_COMPILER", self.spec["simgrid"].smpifc),
                 ]
             )
 

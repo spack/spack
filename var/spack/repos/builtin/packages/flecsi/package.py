@@ -125,7 +125,6 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on("hpx@1.3.0 cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
     depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
-    depends_on("lanl-cmake-modules", when="@2.1.1:")
 
     # Propagate cuda_arch requirement to dependencies
     cuda_arch_list = ("60", "70", "75", "80")
@@ -155,7 +154,6 @@ class Flecsi(CMakePackage, CudaPackage):
     # FleCSI@2: no longer supports flecstan
     conflicts("+flecstan", when="@2.0:")
     # FleCSI@2: integrates cinch and no longer depends on external installs
-    #   Except for lanl-cmake-modules as of 2.1.1: but that has no submodule
     conflicts("+external_cinch", when="@2.0:")
     # Current FleCSI@:1.4 releases do not support kokkos, omp, or cuda
     conflicts("+kokkos", when="@:1.4.99")

@@ -12,6 +12,7 @@ class PyWrapt(PythonPackage):
     homepage = "https://github.com/GrahamDumpleton/wrapt"
     pypi = "wrapt/wrapt-1.11.2.tar.gz"
 
+    version("1.14.1", sha256="380a85cf89e0e69b7cfbe2ea9f765f004ff419f34194018a6827ac0e3edfed4d")
     version("1.13.3", sha256="1fea9cd438686e6682271d36f3481a9f3636195578bab9ca3382e2f5f01fc185")
     version("1.12.1", sha256="b62ffa81fb85f4332a4f609cab4ac40709470da05643a082ec1eb88e6d9b97d7")
     version("1.11.2", sha256="565a021fd19419476b9362b05eeaa094178de64f8361e44468f9e9d7843901e1")

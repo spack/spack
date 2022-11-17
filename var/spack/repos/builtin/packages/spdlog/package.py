@@ -12,6 +12,7 @@ class Spdlog(CMakePackage):
     homepage = "https://github.com/gabime/spdlog"
     url = "https://github.com/gabime/spdlog/archive/v0.9.0.tar.gz"
 
+    version("1.10.0", sha256="697f91700237dbae2326b90469be32b876b2b44888302afbc7aceb68bcfe8224")
     version("1.9.2", sha256="6fff9215f5cb81760be4cc16d033526d1080427d236e86d70bb02994f85e3d38")
     version("1.9.1", sha256="9a452cfa24408baccc9b2bc2d421d68172a7630c99e9504a14754be840d31a62")
     version("1.9.0", sha256="9ad181d75aaedbf47c8881e7b947a47cac3d306997e39de24dba60db633e70a7")
@@ -44,13 +45,18 @@ class Spdlog(CMakePackage):
     version("0.9.0", sha256="bbbe5a855c8b309621352921d650449eb2f741d35d55ec50fb4d8122ddfb8f01")
 
     variant("shared", default=True, description="Build shared libraries (v1.4.0+)")
+    variant(
+        "fmt_external",
+        default=False,
+        description="Build using external fmt libraries instead of bundled one",
+    )
 
     depends_on("cmake@3.2:", when="@:1.7.0", type="build")
     depends_on("cmake@3.10:", when="@1.8.0:", type="build")
 
-    depends_on("fmt@5.3:")
-    depends_on("fmt@7:", when="@1.7:")
-    depends_on("fmt@8:", when="@1.9:")
+    depends_on("fmt@5.3:", when="+fmt_external")
+    depends_on("fmt@7:", when="@1.7: +fmt_external")
+    depends_on("fmt@8:", when="@1.9: +fmt_external")
 
     def cmake_args(self):
         args = []
@@ -59,7 +65,7 @@ class Spdlog(CMakePackage):
             args.extend(
                 [
                     self.define_from_variant("SPDLOG_BUILD_SHARED", "shared"),
-                    self.define("SPDLOG_FMT_EXTERNAL", "ON"),
+                    self.define_from_variant("SPDLOG_FMT_EXTERNAL", "fmt_external"),
                     # tests and examples
                     self.define("SPDLOG_BUILD_TESTS", self.run_tests),
                     self.define("SPDLOG_BUILD_EXAMPLE", self.run_tests),

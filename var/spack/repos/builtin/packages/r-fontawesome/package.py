@@ -17,6 +17,8 @@ class RFontawesome(RPackage):
 
     cran = "fontawesome"
 
+    version("0.4.0", sha256="760a0bc5b50ddbce1160b123f3b3d76342167519d75641dc2c5b952fa8d4242f")
+    version("0.3.0", sha256="4deefcf4d4580d84213f863351c2a23c39adbd2f8762d7477ec2faa8235a1a31")
     version("0.2.2", sha256="572db64d1b3c9be301935e0ca7baec69f3a6e0aa802e23f1f224b3724259df64")
 
     depends_on("r@3.3.0:", type=("build", "run"))

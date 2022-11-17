@@ -19,6 +19,9 @@ class Clhep(CMakePackage):
 
     maintainers = ["drbenmorgan"]
 
+    version("2.4.6.0", sha256="e8d16debb84ced28e40e9ae84789cf5a0adad45f9213fbac3ce7583e06caa7b1")
+    version("2.4.5.4", sha256="983fb4ea1fe423217fe9debc709569495a62a3b4540eb790d557c5a34dffbbb6")
+    version("2.4.5.3", sha256="45f63eeb097f02fe67b86a7dadbf10d409b401c28a1a3e172db36252c3097c13")
     version("2.4.5.1", sha256="2517c9b344ad9f55974786ae6e7a0ef8b22f4abcbf506df91194ea2299ce3813")
     version("2.4.4.0", sha256="5df78c11733a091da9ae5a24ce31161d44034dd45f20455587db85f1ca1ba539")
     version("2.4.1.3", sha256="27c257934929f4cb1643aa60aeaad6519025d8f0a1c199bc3137ad7368245913")
@@ -57,9 +60,18 @@ class Clhep(CMakePackage):
     depends_on("cmake@2.8.12.2:", when="@2.2.0.4:2.3.0.0", type="build")
     depends_on("cmake@3.2:", when="@2.3.0.1:", type="build")
 
+    variant("cms", default=False, description="Apply CMS-specific changes")
+
     root_cmakelists_dir = "CLHEP"  # Extra directory layer.
 
+    patch("clhep-cms.patch", when="+cms", level=0)
+
     def patch(self):
+        # Patched line removed since 2.3.2.2
+        # https://gitlab.cern.ch/CLHEP/CLHEP/-/commit/5da6830d69c71dc178632f7f5121a3a00e379f94
+        if self.spec.satisfies("@2.3.2.2:"):
+            return
+
         filter_file(
             "SET CMP0042 OLD",
             "SET CMP0042 NEW",

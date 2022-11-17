@@ -18,6 +18,7 @@ class Pflotran(AutotoolsPackage):
     maintainers = ["ghammond86", "balay"]
 
     version("develop")
+    version("4.0.1", commit="fd351a49b687e27f46eae92e9259156eea74897d")  # tag v4.0.1
     version("3.0.2", commit="9e07f416a66b0ad304c720b61aa41cba9a0929d5")  # tag v3.0.2
     version("xsdk-0.6.0", commit="46e14355c1827c057f2e1b3e3ae934119ab023b2")
     version("xsdk-0.5.0", commit="98a959c591b72f73373febf5f9735d2c523b4c20")
@@ -27,6 +28,7 @@ class Pflotran(AutotoolsPackage):
     depends_on("mpi")
     depends_on("hdf5@1.8.12:+mpi+fortran+hl")
     depends_on("petsc@main:+hdf5+metis", when="@develop")
+    depends_on("petsc@3.18:+hdf5+metis", when="@4.0.1")
     depends_on("petsc@3.16:+hdf5+metis", when="@3.0.2")
     depends_on("petsc@3.14:+hdf5+metis", when="@xsdk-0.6.0")
     depends_on("petsc@3.12:+hdf5+metis", when="@xsdk-0.5.0")
@@ -36,3 +38,8 @@ class Pflotran(AutotoolsPackage):
     @property
     def parallel(self):
         return self.spec.satisfies("@xsdk-0.4.0:")
+
+    def flag_handler(self, name, flags):
+        if "%gcc@10:" in self.spec and name == "fflags":
+            flags.append("-fallow-argument-mismatch")
+        return flags, None, None

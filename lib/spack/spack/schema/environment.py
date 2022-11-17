@@ -5,6 +5,7 @@
 """Schema for environment modifications. Meant for inclusion in other
 schemas.
 """
+import collections.abc
 
 array_of_strings_or_num = {
     "type": "array",
@@ -39,15 +40,13 @@ def parse(config_obj):
         config_obj: a configuration dictionary conforming to the
             schema definition for environment modifications
     """
-    from llnl.util.compat import Sequence
-
     import spack.util.environment as ev
 
     env = ev.EnvironmentModifications()
     for command, variable in config_obj.items():
         # Distinguish between commands that take only a name as argument
         # (e.g. unset) and commands that take a name and a value.
-        if isinstance(variable, Sequence):
+        if isinstance(variable, collections.abc.Sequence):
             for name in variable:
                 getattr(env, command)(name)
         else:

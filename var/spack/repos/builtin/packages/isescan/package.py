@@ -11,8 +11,9 @@ class Isescan(Package):
     genome and metagenome"""
 
     homepage = "https://github.com/xiezhq/ISEScan"
-    url = "https://github.com/xiezhq/ISEScan/archive/v1.7.2.1.tar.gz"
+    url = "https://github.com/xiezhq/ISEScan/archive/refs/tags/v1.7.2.1.tar.gz"
 
+    version("1.7.2.3", sha256="90ef6bc660e471347f65864bd3563f769ed4b79b1a932195f353c5e86351ab05")
     version("1.7.2.1", sha256="b971a3e86a8cddaa4bcd520ba9e75425bbe93190466f81a3791ae0cb4baf5e5d")
 
     depends_on("python@3.3.3:", type="run")

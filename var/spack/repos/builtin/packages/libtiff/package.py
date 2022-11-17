@@ -3,10 +3,34 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
+VARIANTS = [
+    # Internal codecs
+    "ccitt",
+    "packbits",
+    "lzw",
+    "thunder",
+    "next",
+    "logluv",
+    # External codecs
+    "zlib",
+    "libdeflate",
+    "pixarlog",
+    "jpeg",
+    "old-jpeg",
+    "jpeg12",
+    "jbig",
+    "lerc",
+    "lzma",
+    "zstd",
+    "webp",
+]
 
-class Libtiff(AutotoolsPackage):
+
+class Libtiff(CMakePackage, AutotoolsPackage):
     """LibTIFF - Tag Image File Format (TIFF) Library and Utilities."""
 
     homepage = "http://www.simplesystems.org/libtiff/"
@@ -23,19 +47,42 @@ class Libtiff(AutotoolsPackage):
     version("4.0.8", sha256="59d7a5a8ccd92059913f246877db95a2918e6c04fb9d43fd74e5c3390dac2910")
     version("4.0.7", sha256="9f43a2cfb9589e5cecaa66e16bf87f814c945f22df7ba600d63aac4632c4f019")
     version("4.0.6", sha256="4d57a50907b510e3049a4bba0d7888930fdfc16ce49f1bf693e5b6247370d68c")
+    version("4.0.5", sha256="e25eaa83ed7fab43ddd278b9b14d91a406a4b674cedc776adb95535f897f309c")
+    version("4.0.4", sha256="8cb1d90c96f61cdfc0bcf036acc251c9dbe6320334da941c7a83cfe1576ef890")
     version("3.9.7", sha256="f5d64dd4ce61c55f5e9f6dc3920fbe5a41e02c2e607da7117a35eb5c320cef6a")
 
-    variant("zlib", default=False, description="Enable Zlib usage")
-    variant("libdeflate", default=False, description="Enable libdeflate usage")
-    variant("pixarlog", default=False, description="Enable support for Pixar log-format algorithm")
-    variant("jpeg", default=False, description="Enable IJG JPEG library usage")
-    variant("old-jpeg", default=False, description="Enable support for Old JPEG compression")
-    variant("jpeg12", default=False, description="Enable libjpeg 8/12bit dual mode")
-    variant("jbig", default=False, description="Enable JBIG-KIT usage")
-    variant("lerc", default=False, description="Enable liblerc usage")
-    variant("lzma", default=False, description="Enable liblzma usage")
-    variant("zstd", default=False, description="Enable libzstd usage")
-    variant("webp", default=False, description="Enable libwebp usage")
+    # Internal codecs
+    variant("ccitt", default=True, description="support for CCITT Group 3 & 4 algorithms")
+    variant("packbits", default=True, description="support for Macintosh PackBits algorithm")
+    variant("lzw", default=True, description="support for LZW algorithm")
+    variant("thunder", default=True, description="support for ThunderScan 4-bit RLE algorithm")
+    variant("next", default=True, description="support for NeXT 2-bit RLE algorithm")
+    variant("logluv", default=True, description="support for LogLuv high dynamic range algorithm")
+
+    # External codecs
+    variant("zlib", default=True, description="use zlib")
+    variant("libdeflate", default=False, description="use libdeflate", when="@4.2:")
+    variant("pixarlog", default=False, description="support for Pixar log-format algorithm")
+    variant("jpeg", default=True, description="use libjpeg")
+    variant("old-jpeg", default=False, description="support for Old JPEG compression")
+    variant("jpeg12", default=False, description="enable libjpeg 8/12-bit dual mode", when="@4:")
+    variant("jbig", default=False, description="use ISO JBIG compression")
+    variant("lerc", default=False, description="use libLerc", when="@4.3:")
+    variant("lzma", default=False, description="use liblzma", when="@4:")
+    variant("zstd", default=False, description="use libzstd", when="@4.0.10:")
+    variant("webp", default=False, description="use libwebp", when="@4.0.10:")
+
+    build_system(
+        conditional("cmake", when="@4.0.5:"),
+        "autotools",
+        default="cmake",
+    )
+
+    with when("build_system=cmake"):
+        depends_on("cmake@3.9:", when="@4.3:", type="build")
+        depends_on("cmake@2.8.11:", when="@4.0.10:4.2", type="build")
+        depends_on("cmake@2.8.9:", when="@4.0.6:4.0.9", type="build")
+        depends_on("cmake@3:", when="@4.0.5", type="build")
 
     depends_on("zlib", when="+zlib")
     depends_on("zlib", when="+pixarlog")
@@ -47,14 +94,8 @@ class Libtiff(AutotoolsPackage):
     depends_on("libwebp", when="+webp")
 
     conflicts("+libdeflate", when="~zlib")
-    conflicts("+libdeflate", when="@:4.1")
     conflicts("+jpeg12", when="~jpeg")
-    conflicts("+jpeg12", when="@:3")
     conflicts("+lerc", when="~zlib")
-    conflicts("+lerc", when="@:4.2")
-    conflicts("+lzma", when="@:3")
-    conflicts("+zstd", when="@:4.0.9")
-    conflicts("+webp", when="@:4.0.9")
 
     # 4.3.0 contains a bug that breaks the build on case-sensitive filesystems when
     # using a C++20-capable compiler (commonly the case on macOS). Not an easy way to
@@ -69,22 +110,21 @@ class Libtiff(AutotoolsPackage):
                 'vl_cv_prog_cc_warnings="-Wall -W"', 'vl_cv_prog_cc_warnings="-Wall"', "configure"
             )
 
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        args = [self.define_from_variant(var) for var in VARIANTS]
+
+        # Remove empty strings
+        args = [arg for arg in args if arg]
+
+        return args
+
+
+class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         args = []
-        args += self.enable_or_disable("zlib")
-        if self.spec.satisfies("@4.2:"):
-            args += self.enable_or_disable("libdeflate")
-        args += self.enable_or_disable("pixarlog")
-        args += self.enable_or_disable("jpeg")
-        args += self.enable_or_disable("old-jpeg")
-        if self.spec.satisfies("@4:"):
-            args += self.enable_or_disable("jpeg12")
-        args += self.enable_or_disable("jbig")
-        if self.spec.satisfies("@4.3:"):
-            args += self.enable_or_disable("lerc")
-        if self.spec.satisfies("@4:"):
-            args += self.enable_or_disable("lzma")
-        if self.spec.satisfies("@4.0.10:"):
-            args += self.enable_or_disable("zstd")
-            args += self.enable_or_disable("webp")
+        for var in VARIANTS:
+            args.extend(self.enable_or_disable(var))
+
         return args

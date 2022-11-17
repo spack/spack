@@ -10,7 +10,6 @@ parsing environment modules.
 import os
 import re
 import subprocess
-import sys
 
 import llnl.util.tty as tty
 
@@ -50,10 +49,7 @@ def module(*args, **kwargs):
 
         # Update os.environ with new dict
         os.environ.clear()
-        if sys.version_info >= (3, 2):
-            os.environb.update(environ)  # novermin
-        else:
-            os.environ.update(environ)
+        os.environb.update(environ)  # novermin
 
     else:
         # Simply execute commands that don't change state and return output

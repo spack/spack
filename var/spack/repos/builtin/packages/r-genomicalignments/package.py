@@ -16,6 +16,7 @@ class RGenomicalignments(RPackage):
 
     bioc = "GenomicAlignments"
 
+    version("1.32.1", commit="2553580d0b8a8a5fd7835c1446616b39f707b8a9")
     version("1.32.0", commit="7a660a914a04e2eb0758082b6f64c4124a887ef3")
     version("1.30.0", commit="2d2c5fce3529c2962fdcefd736d8b7f7c0ec2d54")
     version("1.26.0", commit="6c74c74ee53efcd880171126366fee4bd72357bc")

@@ -5,9 +5,9 @@
 
 .. _octavepackage:
 
--------------
-OctavePackage
--------------
+------
+Octave
+------
 
 Octave has its own build system for installing packages.
 
@@ -15,7 +15,7 @@ Octave has its own build system for installing packages.
 Phases
 ^^^^^^
 
-The ``OctavePackage`` base class has a single phase:
+The ``OctaveBuilder`` and ``OctavePackage`` base classes have a single phase:
 
 #. ``install`` - install the package
 

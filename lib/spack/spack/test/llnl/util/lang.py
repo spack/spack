@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import re
 import sys
 from datetime import datetime, timedelta
 from textwrap import dedent
@@ -116,6 +117,14 @@ def test_pretty_string_to_date(format, pretty_string):
     t1 = datetime.strptime(pretty_string, format)
     t2 = llnl.util.lang.pretty_string_to_date(pretty_string, now)
     assert t1 == t2
+
+
+def test_pretty_seconds():
+    assert llnl.util.lang.pretty_seconds(2.1) == "2.100s"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000) == "2.100ms"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000) == "2.100us"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000) == "2.100ns"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000 / 10) == "0.210ns"
 
 
 def test_match_predicate():
@@ -299,22 +308,25 @@ def test_grouped_exception():
     top-level raised TypeError: ok"""
     )
 
+    full_message = h.grouped_message(with_tracebacks=True)
+    no_line_numbers = re.sub(r"line [0-9]+,", "line xxx,", full_message)
+
     assert (
-        h.grouped_message(with_tracebacks=True)
+        no_line_numbers
         == dedent(
             """\
     due to the following failures:
     inner method raised ValueError: wow!
       File "{0}", \
-line 290, in test_grouped_exception
+line xxx, in test_grouped_exception
         inner()
       File "{0}", \
-line 287, in inner
+line xxx, in inner
         raise ValueError("wow!")
 
     top-level raised TypeError: ok
       File "{0}", \
-line 293, in test_grouped_exception
+line xxx, in test_grouped_exception
         raise TypeError("ok")
     """
         ).format(__file__)

@@ -16,6 +16,9 @@ class PyFonttools(PythonPackage):
     homepage = "https://github.com/fonttools/fonttools"
     pypi = "fonttools/fonttools-4.28.1.zip"
 
+    skip_modules = ["fontTools.ufoLib"]
+
+    version("4.37.3", sha256="f32ef6ec966cf0e7d2aa88601fed2e3a8f2851c26b5db2c80ccc8f82bee4eedc")
     version("4.31.2", sha256="236b29aee6b113e8f7bee28779c1230a86ad2aac9a74a31b0aedf57e7dfb62a4")
     version("4.29.1", sha256="2b18a172120e32128a80efee04cff487d5d140fe7d817deb648b2eee023a40e4")
     version("4.28.1", sha256="8c8f84131bf04f3b1dcf99b9763cec35c347164ab6ad006e18d2f99fcab05529")
@@ -24,11 +27,3 @@ class PyFonttools(PythonPackage):
     depends_on("python@3.7:", when="@4.28:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
-    @property
-    def import_modules(self):
-        modules = super(__class__, self).import_modules
-
-        ignored_imports = ["fontTools.ufoLib"]
-
-        return [i for i in modules if not any(map(i.startswith, ignored_imports))]

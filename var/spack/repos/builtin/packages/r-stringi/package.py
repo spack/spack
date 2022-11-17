@@ -20,6 +20,7 @@ class RStringi(RPackage):
 
     cran = "stringi"
 
+    version("1.7.8", sha256="538918b1cd6ed1d8a2dd5ab146ba800a088e99f93c52dcd82615b6e127478b1c")
     version("1.7.6", sha256="0ea3d5afec5701977ff53de9afbaceb53b00aa34f5fb641cadc1eeb7759119ec")
     version("1.6.2", sha256="3a151dd9b982696370ac8df3920afe462f8abbd4e41b479ff8b66cfd7b602dae")
     version("1.5.3", sha256="224f1e8dedc962a676bc2e1f53016f6a129a0a38aa0f35daf6dece62ff714010")

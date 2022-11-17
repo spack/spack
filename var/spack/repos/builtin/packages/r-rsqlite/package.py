@@ -15,6 +15,7 @@ class RRsqlite(RPackage):
 
     cran = "RSQLite"
 
+    version("2.2.18", sha256="62196adb62ad8ec73ddce573e5391686e9359566e365b123ac4f299809944bea")
     version("2.2.14", sha256="2ae36a875ebc02497985b2ad9ddc6a5434f576e2ab25769580749d9e4f3b607c")
     version("2.2.10", sha256="06aeff33902082ef1ebd5378cd0927df7922aaf377c78acfdd8f34f2888800a8")
     version("2.2.9", sha256="4423f1fea179ecd1c09b0b52bfb684983a27de82d5807590b5fc723697d5bb1c")

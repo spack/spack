@@ -135,13 +135,15 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         options += self.with_or_without("mpi")
 
         # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
-        simd_features = ["vsx", "sse", "avx", "avx2", "avx512", "sve128", "sve256", "sve512"]
+        # Don't include vsx; as of 2022.05 it fails (reported upstream).
+        # Altivec SSE intrinsics are used anyway.
+        simd_features = ["sse", "avx", "avx2", "avx512", "sve128", "sve256", "sve512"]
 
         for feature in simd_features:
             msg = "--enable-{0}" if feature in spec.target else "--disable-{0}"
             options.append(msg.format(feature))
 
-        if spec.target.family == "aarch64":
+        if spec.target.family != "x86_64":
             options.append("--disable-sse-assembly")
 
         if "%aocc" in spec:

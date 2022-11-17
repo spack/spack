@@ -12,10 +12,8 @@ import re
 import socket
 import time
 import xml.sax.saxutils
-
-from six import iteritems, text_type
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import HTTPHandler, Request, build_opener
+from urllib.parse import urlencode
+from urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -158,7 +156,7 @@ class CDash(Reporter):
                 if cdash_phase not in phases_encountered:
                     phases_encountered.append(cdash_phase)
                 report_data[cdash_phase]["loglines"].append(
-                    text_type("{0} output for {1}:".format(cdash_phase, package["name"]))
+                    str("{0} output for {1}:".format(cdash_phase, package["name"]))
                 )
             elif cdash_phase:
                 report_data[cdash_phase]["loglines"].append(xml.sax.saxutils.escape(line))
@@ -289,7 +287,7 @@ class CDash(Reporter):
         # Generate a report for this package.
         # The first line just says "Testing package name-hash"
         report_data["test"]["loglines"].append(
-            text_type("{0} output for {1}:".format("test", package["name"]))
+            str("{0} output for {1}:".format("test", package["name"]))
         )
         for line in package["stdout"].splitlines()[1:]:
             report_data["test"]["loglines"].append(xml.sax.saxutils.escape(line))
@@ -502,7 +500,7 @@ class CDash(Reporter):
     def finalize_report(self):
         if self.buildIds:
             tty.msg("View your build results here:")
-            for package_name, buildid in iteritems(self.buildIds):
+            for package_name, buildid in self.buildIds.items():
                 # Construct and display a helpful link if CDash responded with
                 # a buildId.
                 build_url = self.cdash_upload_url

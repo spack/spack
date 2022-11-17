@@ -17,6 +17,7 @@ class RFda(RPackage):
 
     cran = "fda"
 
+    version("6.0.5", sha256="14445776fc65284cd6cae98e5b4dd14c2626d96db5f78c0fcc6aabce5419b8f1")
     version("6.0.3", sha256="205814b9812664e8201221f99e0e8391aa49dba2ae287dc404c57c0c492477d3")
     version("5.5.1", sha256="dcaa2f6ae226d35855bc79c6967f60d45404b984c0afaec215b139c4b8dea23a")
 

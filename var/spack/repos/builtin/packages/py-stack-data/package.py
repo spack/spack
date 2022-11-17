@@ -13,6 +13,7 @@ class PyStackData(PythonPackage):
     homepage = "http://github.com/alexmojaki/stack_data"
     pypi = "stack_data/stack_data-0.2.0.tar.gz"
 
+    version("0.5.0", sha256="715c8855fbf5c43587b141e46cc9d9339cc0d1f8d6e0f98ed0d01c6cb974e29f")
     version("0.2.0", sha256="45692d41bd633a9503a5195552df22b583caf16f0b27c4e58c98d88c8b648e12")
 
     depends_on("py-setuptools@44:", type="build")

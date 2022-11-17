@@ -724,10 +724,9 @@ extends vs. depends_on
 
 This is very similar to the naming dilemma above, with a slight twist.
 As mentioned in the :ref:`Packaging Guide <packaging_extensions>`,
-``extends`` and ``depends_on`` are very similar, but ``extends`` adds
-the ability to *activate* the package. Activation involves symlinking
-everything in the installation prefix of the package to the installation
-prefix of Python. This allows the user to import a Python module without
+``extends`` and ``depends_on`` are very similar, but ``extends`` ensures
+that the extension and extendee share the same prefix in views.
+This allows the user to import a Python module without
 having to add that module to ``PYTHONPATH``.
 
 When deciding between ``extends`` and ``depends_on``, the best rule of
@@ -735,7 +734,7 @@ thumb is to check the installation prefix. If Python libraries are
 installed to ``<prefix>/lib/pythonX.Y/site-packages``, then you
 should use ``extends``. If Python libraries are installed elsewhere
 or the only files that get installed reside in ``<prefix>/bin``, then
-don't use ``extends``, as symlinking the package wouldn't be useful.
+don't use ``extends``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Alternatives to Spack

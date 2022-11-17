@@ -18,6 +18,7 @@ class PyXgboost(PythonPackage):
     maintainers = ["adamjstewart"]
     import_modules = ["xgboost"]
 
+    version("1.6.2", sha256="e1f5c91ba88cf8edb409d7fd2ca150dcd80b6f2115587d87365f0c10b2d4f009")
     version("1.6.1", sha256="24072028656f3428e7b8aabf77340ece057f273e41f7f85d67ccaefb7454bb18")
     version("1.5.2", sha256="404dc09dca887ef5a9bc0268f882c54b33bfc16ac365a859a11e7b24d49da387")
     version("1.3.3", sha256="397051647bb837915f3ff24afc7d49f7fca57630ffd00fb5ef66ae2a0881fb43")
@@ -29,7 +30,7 @@ class PyXgboost(PythonPackage):
     variant("dask", default=False, description="Enables Dask extensions for distributed training.")
     variant("plotting", default=False, description="Enables tree and importance plotting.")
 
-    for ver in ["1.3.3", "1.5.2", "1.6.1"]:
+    for ver in ["1.3.3", "1.5.2", "1.6.1", "1.6.2"]:
         depends_on("xgboost@" + ver, when="@" + ver)
 
     depends_on("python@3.7:", when="@1.6:", type=("build", "run"))

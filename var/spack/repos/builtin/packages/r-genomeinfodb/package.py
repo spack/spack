@@ -17,6 +17,7 @@ class RGenomeinfodb(RPackage):
 
     bioc = "GenomeInfoDb"
 
+    version("1.32.4", commit="69df6a5a10027fecf6a6d1c8298f3f686b990d8f")
     version("1.32.2", commit="2e40af38f00ee86d2c83d140e234c1349baa27de")
     version("1.30.1", commit="bf8b385a2ffcecf9b41e581794056f267895863d")
     version("1.26.2", commit="96dd27a7e3ef476790b1475aab50dbbed7df67a2")

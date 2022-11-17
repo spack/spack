@@ -429,7 +429,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
         from_variant = self.define_from_variant
 
         python = spec["python"]
@@ -582,17 +582,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
                 cmake_args.append("-DLIBOMP_USE_ARGOBOTS=ON")
 
         if self.compiler.name == "gcc":
-            compiler = Executable(self.compiler.cc)
-            gcc_output = compiler("-print-search-dirs", output=str, error=str)
-
-            for line in gcc_output.splitlines():
-                if line.startswith("install:"):
-                    # Get path and strip any whitespace
-                    # (causes oddity with ancestor)
-                    gcc_prefix = line.split(":")[1].strip()
-                    gcc_prefix = ancestor(gcc_prefix, 4)
-                    break
-            cmake_args.append(define("GCC_INSTALL_PREFIX", gcc_prefix))
+            cmake_args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
         # if spec.satisfies("platform=cray") or spec.satisfies("platform=linux"):
         #     cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
@@ -612,7 +602,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     @run_after("install")
     def post_install(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
 
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
         if "+cuda ~omp_as_runtime" in self.spec:

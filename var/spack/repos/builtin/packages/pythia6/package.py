@@ -153,4 +153,6 @@ class Pythia6(CMakePackage):
 
     def cmake_args(self):
         args = ["-DPYTHIA6_VERSION={0}".format(self.version.dotted)]
+        if self.spec.satisfies("platform=darwin"):
+            args.append(self.define("CMAKE_MACOSX_RPATH", True))
         return args

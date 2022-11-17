@@ -25,6 +25,7 @@ class Ninja(Package):
 
     version("kitware", branch="features-for-fortran", git="https://github.com/Kitware/ninja.git")
     version("master", branch="master")
+    version("1.11.1", sha256="31747ae633213f1eda3842686f83c2aa1412e0f5691d1c14dbbcc67fe7400cea")
     version("1.11.0", sha256="3c6ba2e66400fe3f1ae83deb4b235faf3137ec20bd5b08c29bfc368db143e4c6")
     version("1.10.2", sha256="ce35865411f0490368a8fc383f29071de6690cbadc27704734978221f25e2bed")
     version("1.10.1", sha256="a6b6f7ac360d4aabd54e299cc1d8fa7b234cd81b9401693da21221c62569a23e")
@@ -35,6 +36,7 @@ class Ninja(Package):
     version("1.6.0", sha256="b43e88fb068fe4d92a3dfd9eb4d19755dae5c33415db2e9b7b61b4659009cde7")
 
     depends_on("python", type="build")
+    depends_on("re2c@0.11.3:", type="build")
 
     phases = ["configure", "install"]
 
@@ -78,4 +80,5 @@ class Ninja(Package):
         module.ninja = MakeExecutable(
             which_string(name, path=[self.spec.prefix.bin], required=True),
             determine_number_of_jobs(parallel=self.parallel),
+            supports_jobserver=self.spec.version == ver("kitware"),
         )

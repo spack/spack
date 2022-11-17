@@ -17,7 +17,12 @@ class Ip2(CMakePackage):
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-ip2"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-ip2/archive/refs/tags/v1.1.2.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "Hang-Lei-NOAA", "edwardhartnett"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "edwardhartnett",
+    ]
 
     version("1.1.2", sha256="73c6beec8fd463ec7ccba3633d8c5d53d385c43d507367efde918c2db0af42ab")
 

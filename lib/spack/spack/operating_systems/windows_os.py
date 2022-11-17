@@ -7,7 +7,6 @@ import glob
 import os
 import platform
 import subprocess
-import sys
 
 from spack.error import SpackError
 from spack.version import Version
@@ -34,9 +33,7 @@ class WindowsOs(OperatingSystem):
     root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
     if root:
         try:
-            extra_args = {}
-            if sys.version_info[:3] >= (3, 6, 0):
-                extra_args = {"encoding": "mbcs", "errors": "strict"}
+            extra_args = {"encoding": "mbcs", "errors": "strict"}
             paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
                 [
                     os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
@@ -48,10 +45,8 @@ class WindowsOs(OperatingSystem):
                     "-products",
                     "*",
                 ],
-                **extra_args
+                **extra_args,
             ).strip()
-            if (3, 0) <= sys.version_info[:2] <= (3, 5):
-                paths = paths.decode()
             vs_install_paths = paths.split("\n")
             msvc_paths = [os.path.join(path, "VC", "Tools", "MSVC") for path in vs_install_paths]
             for p in msvc_paths:

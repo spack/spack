@@ -18,7 +18,7 @@ args = ["strings", "file"]
 if sys.platform == "darwin":
     args.extend(["/usr/bin/clang++", "install_name_tool"])
 else:
-    args.extend(["/usr/bin/g++", "patchelf"])
+    args.extend(["g++", "patchelf"])
 
 
 @pytest.mark.requires_executables(*args)

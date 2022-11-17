@@ -19,6 +19,7 @@ class RMgcv(RPackage):
 
     cran = "mgcv"
 
+    version("1.8-41", sha256="2f7a030fe2be75edef6bd96147df46c2262f3cdc44c383d8f82b401df44fe690")
     version("1.8-40", sha256="dbe627266c3b339232e2d4228d5370ba88c86540319e6891d161242efba7e4a5")
     version("1.8-38", sha256="cd12ed5787d6fdcead34e782e48b62b3f9efd523616c906e2da77bd9c142ddbb")
     version("1.8-33", sha256="98cb7bac928e2c9564091a9af31e5d309305c6c5fcf96e8429c08925fe6f2bf4")

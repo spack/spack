@@ -44,7 +44,7 @@ def activate_header(env, shell, prompt=None):
         # TODO: prompt
     else:
         if "color" in os.getenv("TERM", "") and prompt:
-            prompt = colorize("@G{%s}" % prompt, color=True)
+            prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
 
         cmds += "export SPACK_ENV=%s;\n" % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"

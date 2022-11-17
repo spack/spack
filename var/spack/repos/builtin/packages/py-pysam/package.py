@@ -13,6 +13,7 @@ class PyPysam(PythonPackage):
     homepage = "https://github.com/pysam-developers/pysam"
     pypi = "pysam/pysam-0.14.1.tar.gz"
 
+    version("0.19.1", sha256="dee403cbdf232170c1e11cc24c76e7dd748fc672ad38eb0414f3b9d569b1448f")
     version("0.18.0", sha256="1d6d49a0b3c626fae410a93d4c80583a8b5ddaacc9b46a080b250dbcebd30a59")
     version("0.15.3", sha256="a98dd0a164aa664b1ab30a36f653752f00e93c13deeb66868597f4b2a30f7265")
     version("0.15.2", sha256="d049efd91ed5b1af515aa30280bc9cb46a92ddd15d546c9b21ee68a6ed4055d9")

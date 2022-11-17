@@ -4,11 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import sys
 
 import jsonschema
 import jsonschema.exceptions
-import six
 
 import llnl.util.tty as tty
 
@@ -98,7 +96,7 @@ def spec_from_entry(entry):
                 continue
 
             # Value could be a list (of strings), boolean, or string
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 variant_strs.append("{0}={1}".format(name, value))
             else:
                 try:
@@ -163,21 +161,14 @@ def entries_to_specs(entries):
 
 
 def read(path, apply_updates):
-    if sys.version_info >= (3, 0):
-        decode_exception_type = json.decoder.JSONDecodeError
-    else:
-        decode_exception_type = ValueError
-
+    decode_exception_type = json.decoder.JSONDecodeError
     try:
         with open(path, "r") as json_file:
             json_data = json.load(json_file)
 
         jsonschema.validate(json_data, manifest_schema)
     except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
-        raise six.raise_from(
-            ManifestValidationError("error parsing manifest JSON:", str(e)),
-            e,
-        )
+        raise ManifestValidationError("error parsing manifest JSON:", str(e)) from e
 
     specs = entries_to_specs(json_data["specs"])
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))

@@ -12,6 +12,7 @@ class PyJupyterCore(PythonPackage):
     homepage = "https://jupyter-core.readthedocs.io/"
     pypi = "jupyter-core/jupyter_core-4.6.0.tar.gz"
 
+    version("4.11.1", sha256="2e5f244d44894c4154d06aeae3419dd7f1b0ef4494dc5584929b398c61cfd314")
     version("4.9.2", sha256="d69baeb9ffb128b8cd2657fcf2703f89c769d1673c851812119e3a2a0e93ad9a")
     version("4.7.1", sha256="79025cb3225efcd36847d0840f3fc672c0abd7afd0de83ba8a1d3837619122b4")
     version("4.6.3", sha256="394fd5dd787e7c8861741880bdf8a00ce39f95de5d18e579c74b882522219e7e")
@@ -29,9 +30,11 @@ class PyJupyterCore(PythonPackage):
     version("4.0.1", sha256="7c165f7de7a063596f8be1bcfc86e9ba6897e38baf24e8510514690963600122")
     version("4.0.0", sha256="9025208cdfc40718c7e3ab62b5e17aacf68e3fc66e34ff21fe032d553620122a")
 
+    depends_on("python@3.7:", when="@4.11.1:", type=("build", "run"))
     depends_on("python@3.6:", when="@4.7:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@4.6.2:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", when="@:4.9.2", type=("build", "run"))
+    depends_on("py-hatchling@1.4:", when="@4.11.1:", type="build")
     depends_on("py-traitlets", type=("build", "run"))
     # additional pywin32>=1.0 dependency for windows

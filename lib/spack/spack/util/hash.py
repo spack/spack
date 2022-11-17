@@ -5,7 +5,6 @@
 
 import base64
 import hashlib
-import sys
 
 import spack.util.crypto
 
@@ -14,10 +13,7 @@ def b32_hash(content):
     """Return the b32 encoded sha1 hash of the input string as a string."""
     sha = hashlib.sha1(content.encode("utf-8"))
     b32_hash = base64.b32encode(sha.digest()).lower()
-
-    if sys.version_info[0] >= 3:
-        b32_hash = b32_hash.decode("utf-8")
-
+    b32_hash = b32_hash.decode("utf-8")
     return b32_hash
 
 

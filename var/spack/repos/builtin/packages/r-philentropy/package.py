@@ -20,6 +20,7 @@ class RPhilentropy(RPackage):
 
     cran = "philentropy"
 
+    version("0.7.0", sha256="ce72e2327aee80aeeb630caa33be6a35e4f2b8a7491842d8c21099b9c43584b7")
     version("0.6.0", sha256="138acf2aedab17c9d367def378e35c8aba80d9e786284b2866955cea1c24eeb6")
     version("0.5.0", sha256="b39e9a825458f3377e23b2a133180566780e89019e9d22a6a5b7ca87c49c412f")
     version("0.4.0", sha256="bfd30bf5635aab6a82716299a87d44cf96c7ab7f4ee069843869bcc85c357127")

@@ -2,12 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Test environment internals without CLI"""
+import io
 import sys
 
 import pytest
-from six import StringIO
 
 import spack.environment as ev
 import spack.spec
@@ -79,7 +78,7 @@ env:
 
 
 def test_env_change_spec_in_definition(tmpdir, mock_packages, config, mutable_mock_env_path):
-    initial_yaml = StringIO(_test_matrix_yaml)
+    initial_yaml = io.StringIO(_test_matrix_yaml)
     e = ev.create("test", initial_yaml)
     e.concretize()
     e.write()
@@ -96,7 +95,7 @@ def test_env_change_spec_in_definition(tmpdir, mock_packages, config, mutable_mo
 def test_env_change_spec_in_matrix_raises_error(
     tmpdir, mock_packages, config, mutable_mock_env_path
 ):
-    initial_yaml = StringIO(_test_matrix_yaml)
+    initial_yaml = io.StringIO(_test_matrix_yaml)
     e = ev.create("test", initial_yaml)
     e.concretize()
     e.write()

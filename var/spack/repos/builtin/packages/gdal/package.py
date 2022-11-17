@@ -6,11 +6,13 @@
 import os
 import sys
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 from spack.util.environment import filter_system_paths
 
 
-class Gdal(CMakePackage):
+class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     """GDAL: Geospatial Data Abstraction Library.
 
     GDAL is a translator library for raster and vector geospatial data formats that
@@ -28,6 +30,8 @@ class Gdal(CMakePackage):
 
     maintainers = ["adamjstewart"]
 
+    version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
+    version("3.5.3", sha256="d32223ddf145aafbbaec5ccfa5dbc164147fb3348a3413057f9b1600bb5b3890")
     version("3.5.2", sha256="0874dfdeb9ac42e53c37be4184b19350be76f0530e1f4fa8004361635b9030c2")
     version("3.5.1", sha256="d12c30a9eacdeaab493c0d1c9f88eb337c9cbb5bb40744c751bdd5a5af166ab6")
     version("3.5.0", sha256="d49121e5348a51659807be4fb866aa840f8dbec4d1acba6d17fdefa72125bfc9")
@@ -83,13 +87,18 @@ class Gdal(CMakePackage):
         default=False,
         description="Speed up computations related to the Thin Plate Spline transformer",
     )
-    variant("arrow", default=False, when="@3.5:", description="Required for Arrow driver")
+    variant(
+        "arrow", default=False, when="build_system=cmake", description="Required for Arrow driver"
+    )
+    variant(
+        "basisu", default=False, when="@3.6:", description="Required for BASISU and KTX2 drivers"
+    )
     variant("blosc", default=False, when="@3.4:", description="Required for Zarr driver")
-    variant("brunsli", default=True, when="@3.4:", description="Required for MRF driver")
+    variant("brunsli", default=False, when="@3.4:", description="Required for MRF driver")
     variant("bsb", default=False, when="@:2", description="Required for BSB driver")
     variant("cfitsio", default=False, description="Required for FITS driver")
     variant("crnlib", default=False, description="Required for DDS driver")
-    variant("curl", default=False, description="Required for network access")
+    variant("curl", default=True, description="Required for network access")
     variant("cryptopp", default=False, when="@2.1:", description="Required for EEDAI driver")
     variant("deflate", default=False, when="@3.2:", description="Required for Deflate compression")
     variant("dods", default=False, when="@:3.4", description="Required for DODS driver")
@@ -119,7 +128,7 @@ class Gdal(CMakePackage):
     variant("jxl", default=False, when="@3.4:", description="Required for JPEGXL driver")
     variant("kdu", default=False, description="Required for JP2KAK and JPIPKAK drivers")
     variant("kea", default=False, description="Required for KEA driver")
-    variant("lerc", default=True, when="@2.4:", description="Required for LERC compression")
+    variant("lerc", default=False, when="@2.4:", description="Required for LERC compression")
     variant("libcsf", default=False, description="Required for PCRaster driver")
     variant("libkml", default=False, description="Required for LIBKML driver")
     variant("liblzma", default=False, description="Required for Zarr driver")
@@ -136,23 +145,41 @@ class Gdal(CMakePackage):
         "mrsid_lidar", default=False, when="@:3.4", description="Required for MrSID/MG4 driver"
     )
     variant(
-        "mssql_ncli", default=False, when="@3.5:", description="Required for MSSQLSpatial driver"
+        "mssql_ncli",
+        default=False,
+        when="build_system=cmake",
+        description="Required for MSSQLSpatial driver",
     )
     variant(
-        "mssql_odbc", default=False, when="@3.5:", description="Required for MSSQLSpatial driver"
+        "mssql_odbc",
+        default=False,
+        when="build_system=cmake",
+        description="Required for MSSQLSpatial driver",
     )
     variant("mysql", default=False, description="Required for MySQL driver")
     variant("netcdf", default=False, description="Required for NetCDF driver")
     variant("odbc", default=False, description="Required for many OGR drivers")
-    variant("odbccpp", default=False, when="@3.5:", description="Required for SAP HANA driver")
+    variant(
+        "odbccpp",
+        default=False,
+        when="build_system=cmake",
+        description="Required for SAP HANA driver",
+    )
     variant("ogdi", default=False, description="Required for OGDI driver")
-    variant("opencad", default=False, when="@3.5:", description="Required for CAD driver")
+    variant(
+        "opencad", default=False, when="build_system=cmake", description="Required for CAD driver"
+    )
     variant("opencl", default=False, description="Required to accelerate warping computations")
     variant("openexr", default=False, when="@3.1:", description="Required for EXR driver")
     variant("openjpeg", default=False, description="Required for JP2OpenJPEG driver")
     variant("openssl", default=False, when="@2.3:", description="Required for EEDAI driver")
     variant("oracle", default=False, description="Required for OCI and GeoRaster drivers")
-    variant("parquet", default=False, when="@3.5:", description="Required for Parquet driver")
+    variant(
+        "parquet",
+        default=False,
+        when="build_system=cmake",
+        description="Required for Parquet driver",
+    )
     variant("pcidsk", default=False, description="Required for PCIDSK driver")
     variant(
         "pcre", default=False, description="Required for REGEXP operator in drivers using SQLite3"
@@ -166,9 +193,10 @@ class Gdal(CMakePackage):
         default=False,
         description="Required for PostgreSQL and PostGISRaster drivers",
     )
+    variant("qb3", default=False, when="@3.6:", description="Required for MRF driver")
     variant(
         "qhull",
-        default=True,
+        default=False,
         when="@2.1:",
         description="Used for linear interpolation of gdal_grid",
     )
@@ -194,14 +222,25 @@ class Gdal(CMakePackage):
     # Language bindings
     variant("python", default=False, description="Build Python bindings")
     variant("java", default=False, description="Build Java bindings")
-    variant("csharp", default=False, when="@3.5:", description="Build C# bindings")
+    variant("csharp", default=False, when="build_system=cmake", description="Build C# bindings")
     variant("perl", default=False, when="@:3.4", description="Build Perl bindings")
     variant("php", default=False, when="@:2.3", description="Build PHP bindings")
 
+    # Build system
+    build_system(
+        conditional("cmake", when="@3.5:"),
+        conditional("autotools", when="@:3.5"),
+        default="cmake",
+    )
+
+    with when("build_system=cmake"):
+        depends_on("cmake@3.9:", type="build")
+        depends_on("ninja", type="build")
+
+    with when("build_system=autotools"):
+        depends_on("gmake", type="build")
+
     # Required dependencies
-    depends_on("cmake@3.9:", when="@3.5:", type="build")
-    depends_on("ninja", when="@3.5:", type="build")
-    depends_on("gmake", when="@:3.4", type="build")
     depends_on("pkgconfig@0.25:", type="build")
     depends_on("proj@6:", when="@3:")
     depends_on("proj@:6", when="@2.5:2")
@@ -221,6 +260,7 @@ class Gdal(CMakePackage):
     depends_on("blas", when="+armadillo")
     depends_on("lapack", when="+armadillo")
     depends_on("arrow", when="+arrow")
+    # depends_on("basis-universal", when="+basisu")
     depends_on("c-blosc", when="+blosc")
     depends_on("brunsli", when="+brunsli")
     # depends_on('bsb', when='+bsb')
@@ -294,6 +334,7 @@ class Gdal(CMakePackage):
     depends_on("poppler@:0.71", when="@:2.4 +poppler")
     depends_on("poppler@:21", when="@:3.4.1 +poppler")
     depends_on("postgresql", when="+postgresql")
+    depends_on("qb3", when="+qb3")
     depends_on("qhull", when="+qhull")
     depends_on("qhull@2015:", when="@3.5:+qhull")
     depends_on("qhull@:2020.1", when="@:3.3+qhull")
@@ -392,29 +433,11 @@ class Gdal(CMakePackage):
         sha256="9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce",
     )
 
-    generator = "Ninja"
     executables = ["^gdal-config$"]
 
     @classmethod
     def determine_version(cls, exe):
         return Executable(exe)("--version", output=str, error=str).rstrip()
-
-    @property
-    def import_modules(self):
-        modules = ["osgeo"]
-        if self.spec.satisfies("@3.3:"):
-            modules.append("osgeo_utils")
-        else:
-            modules.append("osgeo.utils")
-        return modules
-
-    @when("@:3.4")
-    def setup_build_environment(self, env):
-        # Needed to install Python bindings to GDAL installation
-        # prefix instead of Python installation prefix.
-        # See swig/python/GNUmakefile for more details.
-        env.set("PREFIX", self.prefix)
-        env.set("DESTDIR", "/")
 
     def setup_run_environment(self, env):
         if "+java" in self.spec:
@@ -437,6 +460,10 @@ class Gdal(CMakePackage):
         if "+java platform=darwin" in self.spec:
             filter_file("linux", "darwin", "swig/java/java.opt", string=True)
 
+
+class CMakeBuilder(CMakeBuilder):
+    generator = "Ninja"
+
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         args = [
@@ -451,6 +478,7 @@ class Gdal(CMakePackage):
             # Optional dependencies
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
+            self.define_from_variant("GDAL_USE_BASISU", "basisu"),
             self.define_from_variant("GDAL_USE_BLOSC", "blosc"),
             self.define_from_variant("GDAL_USE_BRUNSLI", "brunsli"),
             self.define_from_variant("GDAL_USE_CFITSIO", "cfitsio"),
@@ -505,6 +533,7 @@ class Gdal(CMakePackage):
             self.define_from_variant("GDAL_USE_PODOFO", "podofo"),
             self.define_from_variant("GDAL_USE_POPPLER", "poppler"),
             self.define_from_variant("GDAL_USE_POSTGRESQL", "postgresql"),
+            self.define_from_variant("GDAL_USE_LIBQB3", "qb3"),
             self.define_from_variant("GDAL_USE_QHULL", "qhull"),
             self.define_from_variant("GDAL_USE_RASDAMAN", "rasdaman"),
             self.define_from_variant("GDAL_USE_RASTERLITE2", "rasterlite2"),
@@ -528,11 +557,20 @@ class Gdal(CMakePackage):
 
         return args
 
+
+class AutotoolsBuilder(AutotoolsBuilder):
+    def setup_build_environment(self, env):
+        # Needed to install Python bindings to GDAL installation
+        # prefix instead of Python installation prefix.
+        # See swig/python/GNUmakefile for more details.
+        env.set("PREFIX", self.prefix)
+        env.set("DESTDIR", "/")
+
     def with_or_without(self, name, variant=None, package=None, attribute=None):
         if not variant:
             variant = name
 
-        if variant not in self.variants:
+        if variant not in self.pkg.variants:
             msg = '"{}" is not a variant of "{}"'
             raise KeyError(msg.format(variant, self.name))
 
@@ -684,49 +722,26 @@ class Gdal(CMakePackage):
 
         return args
 
-    @when("@:3.4")
-    def cmake(self, spec, prefix):
-        configure(*self.configure_args())
-
-    @when("@:3.4")
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
         make()
         if "+java" in spec:
             with working_dir("swig/java"):
                 make()
 
-    @when("@:3.4")
     def check(self):
         # no top-level test target
         if "+java" in self.spec:
             with working_dir("swig/java"):
                 make("test")
 
-    @when("@:3.4")
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         make("install")
         if "+java" in spec:
             with working_dir("swig/java"):
                 make("install")
                 install("*.jar", prefix)
 
-    @run_after("install")
-    def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if self.spec.satisfies("@:3.4 platform=darwin"):
+        if self.spec.satisfies("platform=darwin"):
             fix_darwin_install_name(self.prefix.lib)
-
-    def test(self):
-        """Attempts to import modules of the installed package."""
-
-        if "+python" in self.spec:
-            # Make sure we are importing the installed modules,
-            # not the ones in the source directory
-            for module in self.import_modules:
-                self.run_test(
-                    self.spec["python"].command.path,
-                    ["-c", "import {0}".format(module)],
-                    purpose="checking import of {0}".format(module),
-                    work_dir="spack-test",
-                )

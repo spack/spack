@@ -16,6 +16,7 @@ class Alquimia(CMakePackage):
     maintainers = ["smolins", "balay"]
 
     version("develop")
+    version("1.0.10", commit="b2c11b6cde321f4a495ef9fcf267cb4c7a9858a0")  # tag v.1.0.10
     version("1.0.9", commit="2ee3bcfacc63f685864bcac2b6868b48ad235225")  # tag v.1.0.9
     version("xsdk-0.6.0", commit="9a0aedd3a927d4d5e837f8fd18b74ad5a78c3821")
     version("xsdk-0.5.0", commit="8397c3b00a09534c5473ff3ab21f0e32bb159380")
@@ -26,6 +27,7 @@ class Alquimia(CMakePackage):
 
     depends_on("mpi")
     depends_on("hdf5")
+    depends_on("pflotran@4.0.1", when="@1.0.10")
     depends_on("pflotran@3.0.2", when="@1.0.9")
     depends_on("pflotran@xsdk-0.6.0", when="@xsdk-0.6.0")
     depends_on("pflotran@xsdk-0.5.0", when="@xsdk-0.5.0")
@@ -35,6 +37,15 @@ class Alquimia(CMakePackage):
     depends_on("petsc@3.10.0:3.10", when="@xsdk-0.4.0")
     depends_on("petsc@3.8.0:3.8", when="@xsdk-0.3.0")
     depends_on("petsc@3.10:", when="@develop")
+
+    @when("@1.0.10")
+    def patch(self):
+        filter_file(
+            "use iso_[cC]_binding",
+            "use, intrinsic :: iso_c_binding",
+            "alquimia/c_f_interface_module.F90",
+            "alquimia/alquimia_fortran_interface_mod.F90",
+        )
 
     def cmake_args(self):
         spec = self.spec

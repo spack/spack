@@ -16,6 +16,7 @@ class PyScikitLearn(PythonPackage):
     maintainers = ["adamjstewart"]
 
     version("master", branch="master")
+    version("1.1.3", sha256="bef51978a51ec19977700fe7b86aecea49c825884f3811756b74a3b152bb4e35")
     version("1.1.2", sha256="7c22d1305b16f08d57751a4ea36071e2215efb4c09cb79183faa4e8e82a3dbf8")
     version("1.1.1", sha256="3e77b71e8e644f86c8b5be7f1c285ef597de4c384961389ee3e9ca36c445b256")
     version("1.1.0", sha256="80f9904f5b1356adfc32406725dd94c8cc9c8d265047d98390033a6c238cbb29")

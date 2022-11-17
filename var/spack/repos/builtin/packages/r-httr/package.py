@@ -15,6 +15,7 @@ class RHttr(RPackage):
 
     cran = "httr"
 
+    version("1.4.4", sha256="41d82523f3ee260d409a7b5ae4136190cbc5aecbc270b40ed7064f83e7f5435d")
     version("1.4.3", sha256="9a8613fa96173ac910c021391af1ced4d0609169049c802cf7cdfe1c40897c6a")
     version("1.4.2", sha256="462bed6ed0d92f811d5df4d294336025f1dbff357286999d9269bfd9c20b1ef9")
     version("1.4.1", sha256="675c7e07bbe82c48284ee1ab929bb14a6e653abae2860d854dc41a3c028de156")

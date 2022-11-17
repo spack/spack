@@ -13,6 +13,7 @@ class RScatterpie(RPackage):
 
     cran = "scatterpie"
 
+    version("0.1.8", sha256="a6ccc63a8be63fa113704cf5d4893c1ec1b75d3081ab971bd70e650e708872a0")
     version("0.1.7", sha256="3f7807519cfe135066ca79c8d8a09b59da9aa6d8aaee5e9aff40cca3d0bebade")
     version("0.1.5", sha256="e13237b7effc302acafc1c9b520b4904e55875f4a3b804f653eed2940ca08840")
 

@@ -2,15 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 
 from llnl.util import tty
 
+import spack.build_systems.cmake
+import spack.build_systems.generic
 from spack.package import *
 
 
-class Superlu(CMakePackage):
+class Superlu(CMakePackage, Package):
     """SuperLU is a general purpose library for the direct solution of large,
     sparse, nonsymmetric systems of linear equations on high performance
     machines. SuperLU is designed for sequential machines."""
@@ -36,9 +37,12 @@ class Superlu(CMakePackage):
         url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.2.tar.gz",
     )
 
+    build_system(
+        conditional("cmake", when="@5:"), conditional("autotools", when="@:4"), default="cmake"
+    )
+
     variant("pic", default=True, description="Build with position independent code")
 
-    depends_on("cmake", when="@5:", type="build")
     depends_on("blas")
     conflicts(
         "@:5.2.1",
@@ -48,76 +52,7 @@ class Superlu(CMakePackage):
 
     test_requires_compiler = True
 
-    # CMake installation method
-    def cmake_args(self):
-        if self.version > Version("5.2.1"):
-            _blaslib_key = "enable_internal_blaslib"
-        else:
-            _blaslib_key = "enable_blaslib"
-        args = [
-            self.define(_blaslib_key, False),
-            self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),
-            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
-            self.define("enable_tests", self.run_tests),
-        ]
-
-        return args
-
     # Pre-cmake installation method
-    @when("@:4")
-    def cmake(self, spec, prefix):
-        """Use autotools before version 5"""
-        config = []
-
-        # Define make.inc file
-        config.extend(
-            [
-                "PLAT       = _x86_64",
-                "SuperLUroot = %s" % self.stage.source_path,
-                # 'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu$(PLAT).a',
-                "SUPERLULIB = $(SuperLUroot)/lib/libsuperlu_{0}.a".format(self.spec.version),
-                "BLASDEF    = -DUSE_VENDOR_BLAS",
-                "BLASLIB    = {0}".format(spec["blas"].libs.ld_flags),
-                # or BLASLIB      = -L/usr/lib64 -lblas
-                "TMGLIB     = libtmglib.a",
-                "LIBS       = $(SUPERLULIB) $(BLASLIB)",
-                "ARCH       = ar",
-                "ARCHFLAGS  = cr",
-                "RANLIB     = {0}".format("ranlib" if which("ranlib") else "echo"),
-                "CC         = {0}".format(env["CC"]),
-                "FORTRAN    = {0}".format(env["FC"]),
-                "LOADER     = {0}".format(env["CC"]),
-                "CDEFS      = -DAdd_",
-            ]
-        )
-
-        if "+pic" in spec:
-            config.extend(
-                [
-                    # Use these lines instead when pic_flag capability arrives
-                    "CFLAGS     = -O3 {0}".format(self.compiler.cc_pic_flag),
-                    "NOOPTS     = {0}".format(self.compiler.cc_pic_flag),
-                    "FFLAGS     = -O2 {0}".format(self.compiler.f77_pic_flag),
-                    "LOADOPTS   = {0}".format(self.compiler.cc_pic_flag),
-                ]
-            )
-        else:
-            config.extend(
-                ["CFLAGS     = -O3", "NOOPTS     = ", "FFLAGS     = -O2", "LOADOPTS   = "]
-            )
-
-        # Write configuration options to make.inc file
-        with open("make.inc", "w") as inc:
-            for option in config:
-                inc.write("{0}\n".format(option))
-
-        make(parallel=False)
-
-        # Install manually
-        install_tree("lib", prefix.lib)
-        mkdir(prefix.include)
-        install(join_path("SRC", "*.h"), prefix.include)
-
     examples_src_dir = "EXAMPLE"
     make_hdr_file = "make.inc"
 
@@ -221,3 +156,67 @@ class Superlu(CMakePackage):
             return
 
         self.run_superlu_test(test_dir, exe, args)
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        if self.pkg.version > Version("5.2.1"):
+            _blaslib_key = "enable_internal_blaslib"
+        else:
+            _blaslib_key = "enable_blaslib"
+        args = [
+            self.define(_blaslib_key, False),
+            self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+            self.define("enable_tests", self.pkg.run_tests),
+        ]
+        return args
+
+
+class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+    def install(self, pkg, spec, prefix):
+        """Use autotools before version 5"""
+        # Define make.inc file
+        config = [
+            "PLAT       = _x86_64",
+            "SuperLUroot = %s" % self.pkg.stage.source_path,
+            # 'SUPERLULIB = $(SuperLUroot)/lib/libsuperlu$(PLAT).a',
+            "SUPERLULIB = $(SuperLUroot)/lib/libsuperlu_{0}.a".format(self.pkg.spec.version),
+            "BLASDEF    = -DUSE_VENDOR_BLAS",
+            "BLASLIB    = {0}".format(spec["blas"].libs.ld_flags),
+            # or BLASLIB      = -L/usr/lib64 -lblas
+            "TMGLIB     = libtmglib.a",
+            "LIBS       = $(SUPERLULIB) $(BLASLIB)",
+            "ARCH       = ar",
+            "ARCHFLAGS  = cr",
+            "RANLIB     = {0}".format("ranlib" if which("ranlib") else "echo"),
+            "CC         = {0}".format(env["CC"]),
+            "FORTRAN    = {0}".format(env["FC"]),
+            "LOADER     = {0}".format(env["CC"]),
+            "CDEFS      = -DAdd_",
+        ]
+
+        if "+pic" in spec:
+            config.extend(
+                [
+                    # Use these lines instead when pic_flag capability arrives
+                    "CFLAGS     = -O3 {0}".format(self.pkg.compiler.cc_pic_flag),
+                    "NOOPTS     = {0}".format(self.pkg.compiler.cc_pic_flag),
+                    "FFLAGS     = -O2 {0}".format(self.pkg.compiler.f77_pic_flag),
+                    "LOADOPTS   = {0}".format(self.pkg.compiler.cc_pic_flag),
+                ]
+            )
+        else:
+            config.extend(
+                ["CFLAGS     = -O3", "NOOPTS     = ", "FFLAGS     = -O2", "LOADOPTS   = "]
+            )
+
+        with open("make.inc", "w") as inc:
+            for option in config:
+                inc.write("{0}\n".format(option))
+
+        make(parallel=False)
+
+        install_tree("lib", prefix.lib)
+        mkdir(prefix.include)
+        install(join_path("SRC", "*.h"), prefix.include)

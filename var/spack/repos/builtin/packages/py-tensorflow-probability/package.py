@@ -21,6 +21,7 @@ class PyTensorflowProbability(Package):
 
     maintainers = ["aweits"]
 
+    version("0.18.0", sha256="f4852c0fea9117333ccb868f7a2ca75aecf5dd765dc39fd4ee5f8ab6fe87e909")
     version("0.12.1", sha256="1fe89e85fd053bf36e8645a5a1a53b729bc254cf1516bc224fcbd1e4ff50083a")
     version(
         "0.8.0",
@@ -33,20 +34,23 @@ class PyTensorflowProbability(Package):
     depends_on("py-wheel", type="build")
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-six@1.10.0:", type=("build", "run"))
+    # required_packages.py
+    depends_on("py-absl-py", when="@0.18:", type=("build", "run"))
+    depends_on("py-six@1.10:", type=("build", "run"))
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
     depends_on("py-decorator", type=("build", "run"))
+    depends_on("py-cloudpickle@1.3:", when="@0.12:", type=("build", "run"))
+    depends_on("py-cloudpickle@1.1.1", when="@0.8", type=("build", "run"))
+    depends_on("py-gast@0.3.2:", when="@0.12:", type=("build", "run"))
+    depends_on("py-gast@0.2", when="@0.8", type=("build", "run"))
+    depends_on("py-dm-tree", when="@0.12:", type=("build", "run"))
 
-    depends_on("py-tensorflow@1.14:", type=("build", "run"), when="@0.8.0")
-    depends_on("py-gast@0.2.0:0.2", type=("build", "run"), when="@0.8.0")
-    depends_on("py-cloudpickle@1.1.1", type=("build", "run"), when="@0.8.0")
+    # tensorflow_probability/python/__init__.py
+    depends_on("py-tensorflow@2.10:", when="@0.18:", type=("build", "run"))
+    depends_on("py-tensorflow@2.4:", when="@0.12:", type=("build", "run"))
+    depends_on("py-tensorflow@1.14:", when="@0.8:", type=("build", "run"))
 
-    depends_on("py-tensorflow@2.4:", type=("build", "run"), when="@0.12.0:")
-    depends_on("py-cloudpickle@1.3:", type=("build", "run"), when="@0.12.0:")
-    depends_on("py-gast@0.3.2:", type=("build", "run"), when="@0.12.0:")
-    depends_on("py-dm-tree", type=("build", "run"), when="@0.12.0:")
-
-    depends_on("bazel@3.2.0:", type="build")
+    depends_on("bazel@3.2:", type="build")
 
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")

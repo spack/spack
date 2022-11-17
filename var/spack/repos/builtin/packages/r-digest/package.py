@@ -28,6 +28,7 @@ class RDigest(RPackage):
 
     cran = "digest"
 
+    version("0.6.30", sha256="7b8059943be7dba6053268dfcc229de1bb0b55db497b2943541a6abace076aa7")
     version("0.6.29", sha256="792c1f14a4c8047745152f5e45ce7351978af8d770c29d2ea39c7acd5d619cd9")
     version("0.6.28", sha256="4a328c75e95f8522fc07390d1dd00c19fb643f558e761a8aed04f99c1dc7db00")
     version("0.6.27", sha256="f485f75122907da24c41d4a62c91a232f0c371befd2f77e973342a1bef00253f")

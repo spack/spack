@@ -19,8 +19,14 @@ class Orca(Package):
 
     homepage = "https://cec.mpg.de"
     url = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
+    maintainers = ["snehring"]
     manual_download = True
 
+    version(
+        "5.0.3",
+        sha256="b8b9076d1711150a6d6cb3eb30b18e2782fa847c5a86d8404b9339faef105043",
+        url="file://{0}/orca_5_0_3_linux_x86-64_shared_openmpi411.tar.xz".format(os.getcwd()),
+    )
     version(
         "4.2.1",
         sha256="9bbb3bfdca8220b417ee898b27b2885508d8c82799adfa63dde9e72eab49a6b2",
@@ -37,10 +43,10 @@ class Orca(Package):
         expand=False,
     )
 
-    depends_on("zstd", type="build")
+    depends_on("zstd", when="@:4.2.1", type="build")
 
     # Map Orca version with the required OpenMPI version
-    openmpi_versions = {"4.0.1.2": "2.0.2", "4.2.0": "3.1.4", "4.2.1": "3.1.4"}
+    openmpi_versions = {"4.0.1.2": "2.0.2", "4.2.0": "3.1.4", "4.2.1": "3.1.4", "5.0.3": "4.1.2"}
     for orca_version, openmpi_version in openmpi_versions.items():
         depends_on(
             "openmpi@{0}".format(openmpi_version), type="run", when="@{0}".format(orca_version)
@@ -51,20 +57,21 @@ class Orca(Package):
         return out.format(os.getcwd(), version.underscored, self.openmpi_versions[version.string])
 
     def install(self, spec, prefix):
-        # we have to extract the archive ourself
-        # fortunately it's just full of a bunch of binaries
-
-        vername = os.path.basename(self.stage.archive_file).split(".")[0]
-
-        zstd = which("zstd")
-        zstd("-d", self.stage.archive_file, "-o", vername + ".tar")
-
-        tar = which("tar")
-        tar("-xvf", vername + ".tar")
-
-        # there are READMEs in there but they don't hurt anyone
         mkdirp(prefix.bin)
-        install_tree(vername, prefix.bin)
+
+        if self.spec.satisfies("@:4.2.1"):
+            vername = os.path.basename(self.stage.archive_file).split(".")[0]
+
+            zstd = which("zstd")
+            zstd("-d", self.stage.archive_file, "-o", vername + ".tar")
+
+            tar = which("tar")
+            tar("-xvf", vername + ".tar")
+
+            # there are READMEs in there but they don't hurt anyone
+            install_tree(vername, prefix.bin)
+        else:
+            install_tree(".", prefix.bin)
 
         # Check "mpirun" usability when building against OpenMPI
         # with Slurm scheduler and add a "mpirun" wrapper that
@@ -72,3 +79,6 @@ class Orca(Package):
         if "^openmpi ~legacylaunchers schedulers=slurm" in self.spec:
             mpirun_srun = join_path(os.path.dirname(__file__), "mpirun_srun.sh")
             install(mpirun_srun, prefix.bin.mpirun)
+
+    def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)

@@ -1,0 +1,11 @@
+--- damask.orig/python/setup.cfg	2022-10-10 11:34:22.934631052 +0200
++++ damask/python/setup.cfg	2022-10-10 11:54:32.197194977 +0200
+@@ -6,7 +6,7 @@
+ url = https://damask.mpie.de
+ description = DAMASK processing tools
+ long_description = Pre- and post-processing tools for DAMASK
+-license: AGPL3
++license = AGPL3
+ classifiers =
+     Intended Audience :: Science/Research
+     Topic :: Scientific/Engineering

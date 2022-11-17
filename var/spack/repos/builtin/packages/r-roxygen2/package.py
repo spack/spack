@@ -16,6 +16,7 @@ class RRoxygen2(RPackage):
 
     cran = "roxygen2"
 
+    version("7.2.1", sha256="d2f0342591dc2b561fad8f6cf6fb3001e5e0bdd02be68bb2c6315f6bb82cda21")
     version("7.2.0", sha256="2ebfcfd567b9db6c606c6d42be1645b4e987f987995a2ad8954fa963a519448b")
     version("7.1.2", sha256="b3693d1eb57bb1c27134447ea7f64c353c085dd2237af7cfacc75fca3d2fc5fd")
     version("7.1.1", sha256="bdc55ded037d4366f4d25a0d69e880dacc0fa22bee20f595d45855eef8548861")

@@ -5,9 +5,9 @@
 
 .. _sippackage:
 
-----------
-SIPPackage
-----------
+---
+SIP
+---
 
 SIP is a tool that makes it very easy to create Python bindings for C and C++
 libraries. It was originally developed to create PyQt, the Python bindings for
@@ -22,7 +22,7 @@ provides support functions to the automatically generated code.
 Phases
 ^^^^^^
 
-The ``SIPPackage`` base class comes with the following phases:
+The ``SIPBuilder`` and ``SIPPackage`` base classes come with the following phases:
 
 #. ``configure`` - configure the package
 #. ``build`` - build the package

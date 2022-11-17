@@ -23,11 +23,10 @@ class MtMetis(CMakePackage):
     variant("shared", default=True, description="Enable build of shared libraries")
 
     def cmake_args(self):
-        define = CMakePackage.define
         cmake_args = [
-            define("DOMLIB_PATH", "domlib"),
-            define("WILDRIVER_PATH", "wildriver"),
-            define("METIS_PATH", "metis"),
+            self.define("DOMLIB_PATH", "domlib"),
+            self.define("WILDRIVER_PATH", "wildriver"),
+            self.define("METIS_PATH", "metis"),
             self.define_from_variant("SHARED", "shared"),
         ]
         return cmake_args

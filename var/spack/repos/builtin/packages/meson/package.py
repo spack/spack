@@ -18,6 +18,8 @@ class Meson(PythonPackage):
 
     maintainers = ["eli-schwartz", "michaelkuhn"]
 
+    version("0.64.0", sha256="6477993d781b6efea93091616a6d6a0766c0e026076dbeb11249bf1c9b49a347")
+    version("0.63.3", sha256="7c516c2099b762203e8a0a22412aa465b7396e6f9b1ab728bad6e6db44dc2659")
     version("0.63.2", sha256="023a3f7c74e68991154c3205a6975705861eedbf8130e013d15faa1df1af216e")
     version("0.63.1", sha256="f355829f0e8c714423f03a06604c04c216d4cbe3586f3154cb2181076b19207a")
     version("0.62.2", sha256="97108f4d9bb16bc758c44749bd25ec7d42c6a762961efbed8b7589a2a3551ea6")
@@ -65,13 +67,13 @@ class Meson(PythonPackage):
     patch("rpath-0.49.patch", when="@0.49:0.53")
     patch("rpath-0.54.patch", when="@0.54:0.55")
     patch("rpath-0.56.patch", when="@0.56:0.57")
-    patch("rpath-0.58.patch", when="@0.58:")
-    # Help meson recognize Intel OneAPI compilers
-    patch(
-        "https://patch-diff.githubusercontent.com/raw/mesonbuild/meson/pull/9850.patch?full_index=1",
-        sha256="9c874726ce0a06922580d3e3d6adbe74e5144b3a661ef1059f32c9c1bc478b65",
-        when="@0.60.0:",
-    )
+    patch("rpath-0.58.patch", when="@0.58:0.63")
+    patch("rpath-0.64.patch", when="@0.64:")
+
+    # Intel OneAPI compiler support
+    # https://github.com/mesonbuild/meson/pull/10909
+    # https://github.com/mesonbuild/meson/pull/9850
+    patch("oneapi.patch", when="@0.62:0.63 %oneapi")
 
     executables = ["^meson$"]
 

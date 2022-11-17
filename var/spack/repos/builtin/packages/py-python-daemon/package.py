@@ -21,6 +21,7 @@ class PyPythonDaemon(PythonPackage):
 
     pypi = "python-daemon/python-daemon-2.0.5.tar.gz"
 
+    version("2.3.1", sha256="15c2c5e2cef563e0a5f98d542b77ba59337380b472975d2b2fd6b8c4d5cf46ca")
     version("2.3.0", sha256="bda993f1623b1197699716d68d983bb580043cf2b8a66a01274d9b8297b0aeaf")
     version("2.0.5", sha256="afde4fa433d94d007206ee31a0941d55b5eb232a5422b670aad628547b46bf68")
 

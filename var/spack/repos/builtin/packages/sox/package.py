@@ -18,7 +18,6 @@ class Sox(AutotoolsPackage):
 
     depends_on("bzip2")
     depends_on("flac")
-    depends_on("id3lib")
     depends_on("libvorbis")
     depends_on("opus")
     depends_on("lame", when="+mp3")

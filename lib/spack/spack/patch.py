@@ -271,12 +271,13 @@ class UrlPatch(Patch):
         return data
 
 
-def from_dict(dictionary):
+def from_dict(dictionary, repository=None):
     """Create a patch from json dictionary."""
+    repository = repository or spack.repo.path
     owner = dictionary.get("owner")
     if "owner" not in dictionary:
         raise ValueError("Invalid patch dictionary: %s" % dictionary)
-    pkg_cls = spack.repo.path.get_pkg_class(owner)
+    pkg_cls = repository.get_pkg_class(owner)
 
     if "url" in dictionary:
         return UrlPatch(
@@ -329,7 +330,7 @@ class PatchCache(object):
 
     """
 
-    def __init__(self, data=None):
+    def __init__(self, repository, data=None):
         if data is None:
             self.index = {}
         else:
@@ -337,9 +338,11 @@ class PatchCache(object):
                 raise IndexError("invalid patch index; try `spack clean -m`")
             self.index = data["patches"]
 
+        self.repository = repository
+
     @classmethod
-    def from_json(cls, stream):
-        return PatchCache(sjson.load(stream))
+    def from_json(cls, stream, repository):
+        return PatchCache(repository=repository, data=sjson.load(stream))
 
     def to_json(self, stream):
         sjson.dump({"patches": self.index}, stream)
@@ -349,7 +352,7 @@ class PatchCache(object):
 
         Arguments:
             sha256 (str): sha256 hash to look up
-            pkg (spack.package_base.Package): Package object to get patch for.
+            pkg (spack.package_base.PackageBase): Package object to get patch for.
 
         We build patch objects lazily because building them requires that
         we have information about the package's location in its repo.
@@ -375,7 +378,7 @@ class PatchCache(object):
         # because it's the index key)
         patch_dict = dict(patch_dict)
         patch_dict["sha256"] = sha256
-        return from_dict(patch_dict)
+        return from_dict(patch_dict, repository=self.repository)
 
     def update_package(self, pkg_fullname):
         # remove this package from any patch entries that reference it.
@@ -397,8 +400,8 @@ class PatchCache(object):
             del self.index[sha256]
 
         # update the index with per-package patch indexes
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_fullname)
-        partial_index = self._index_patches(pkg_cls)
+        pkg_cls = self.repository.get_pkg_class(pkg_fullname)
+        partial_index = self._index_patches(pkg_cls, self.repository)
         for sha256, package_to_patch in partial_index.items():
             p2p = self.index.setdefault(sha256, {})
             p2p.update(package_to_patch)
@@ -410,7 +413,7 @@ class PatchCache(object):
             p2p.update(package_to_patch)
 
     @staticmethod
-    def _index_patches(pkg_class):
+    def _index_patches(pkg_class, repository):
         index = {}
 
         # Add patches from the class
@@ -425,7 +428,7 @@ class PatchCache(object):
             for cond, dependency in conditions.items():
                 for pcond, patch_list in dependency.patches.items():
                     for patch in patch_list:
-                        dspec_cls = spack.repo.path.get_pkg_class(dependency.spec.name)
+                        dspec_cls = repository.get_pkg_class(dependency.spec.name)
                         patch_dict = patch.to_dict()
                         patch_dict.pop("sha256")  # save some space
                         index[patch.sha256] = {dspec_cls.fullname: patch_dict}

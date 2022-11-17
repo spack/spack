@@ -21,6 +21,7 @@ class NetcdfFortran(AutotoolsPackage):
 
     maintainers = ["skosukhin", "WardF"]
 
+    version("4.6.0", sha256="198bff6534cc85a121adc9e12f1c4bc53406c403bda331775a1291509e7b2f23")
     version("4.5.4", sha256="0a19b26a2b6e29fab5d29d7d7e08c24e87712d09a5cafeea90e16e0a2ab86b81")
     version("4.5.3", sha256="123a5c6184336891e62cf2936b9f2d1c54e8dee299cfd9d2c1a1eb05dd668a74")
     version("4.5.2", sha256="b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa")
@@ -61,6 +62,8 @@ class NetcdfFortran(AutotoolsPackage):
     # Parallel builds do not work in the fortran directory. This patch is
     # derived from https://github.com/Unidata/netcdf-fortran/pull/211
     patch("no_parallel_build.patch", when="@4.5.2")
+
+    filter_compiler_wrappers("nf-config", relative_root="bin")
 
     def flag_handler(self, name, flags):
         if name == "cflags":

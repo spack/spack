@@ -8,8 +8,6 @@ from __future__ import print_function
 import argparse
 import sys
 
-from six import iteritems
-
 import llnl.util.tty as tty
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
@@ -138,13 +136,13 @@ def compiler_info(args):
                 print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
             if c.flags:
                 print("\tflags:")
-                for flag, flag_value in iteritems(c.flags):
+                for flag, flag_value in c.flags.items():
                     print("\t\t%s = %s" % (flag, flag_value))
             if len(c.environment) != 0:
                 if len(c.environment.get("set", {})) != 0:
                     print("\tenvironment:")
                     print("\t    set:")
-                    for key, value in iteritems(c.environment["set"]):
+                    for key, value in c.environment["set"].items():
                         print("\t        %s = %s" % (key, value))
             if c.extra_rpaths:
                 print("\tExtra rpaths:")

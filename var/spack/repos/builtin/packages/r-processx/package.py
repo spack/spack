@@ -18,6 +18,8 @@ class RProcessx(RPackage):
 
     cran = "processx"
 
+    version("3.8.0", sha256="9270d9d26c4314151062801a5c1fc57556b4fcb41dbf3558cb5bd230b18ffb0b")
+    version("3.7.0", sha256="de6a8d4135fc53ec35043fbaf6b000dc9597719345595d8479662a39dad55ed3")
     version("3.5.3", sha256="679629fa56ec185d4fd52ade5b699c78a2a0e875acdf57555b31bc62111f342a")
     version("3.5.2", sha256="ed6f2d1047461c6061e6ed58fb6de65a289b56009867892abad76c6bba46fc2b")
     version("3.4.5", sha256="e368103aa6a6894bfa8e78b12a25598464bcd2c19a8b6334f24ee397db13bb14")

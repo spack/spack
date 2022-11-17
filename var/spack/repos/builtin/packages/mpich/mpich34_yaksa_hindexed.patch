@@ -1,0 +1,131 @@
+--- a/modules/yaksa/src/frontend/types/yaksa_blkindx.c
++++ b/modules/yaksa/src/frontend/types/yaksa_blkindx.c
+@@ -74,7 +74,7 @@ int yaksi_type_create_hindexed_block(int count, int blocklength, const intptr_t
+     if (intype->is_contig && ((outtype->ub - outtype->lb) == outtype->size)) {
+         outtype->is_contig = true;
+         for (int i = 1; i < count; i++) {
+-            if (array_of_displs[i] <= array_of_displs[i - 1]) {
++            if (array_of_displs[i] != array_of_displs[i - 1] + intype->extent * blocklength) {
+                 outtype->is_contig = false;
+                 break;
+             }
+--- a/modules/yaksa/src/frontend/types/yaksa_indexed.c
++++ b/modules/yaksa/src/frontend/types/yaksa_indexed.c
+@@ -44,8 +44,12 @@ int yaksi_type_create_hindexed(int count, const int *array_of_blocklengths,
+     outtype->alignment = intype->alignment;
+ 
+     int is_set;
++    intptr_t last_ub;
++    int is_noncontig;
+     is_set = 0;
+-    for (int idx = 0; idx < count; idx++) {
++    last_ub = 0;
++    is_noncontig = 0;
++    for (intptr_t idx = 0; idx < count; idx++) {
+         if (array_of_blocklengths[idx] == 0)
+             continue;
+ 
+@@ -60,6 +64,11 @@ int yaksi_type_create_hindexed(int count, const int *array_of_blocklengths,
+             ub = array_of_displs[idx] + intype->ub;
+         }
+ 
++        if (idx > 0 && lb != last_ub) {
++            is_noncontig = 1;
++        }
++        last_ub = ub;
++
+         intptr_t true_lb = lb - intype->lb + intype->true_lb;
+         intptr_t true_ub = ub - intype->ub + intype->true_ub;
+ 
+@@ -90,26 +99,8 @@ int yaksi_type_create_hindexed(int count, const int *array_of_blocklengths,
+     outtype->u.hindexed.child = intype;
+ 
+     /* detect if the outtype is contiguous */
+-    if (intype->is_contig && ((outtype->ub - outtype->lb) == outtype->size)) {
++    if (!is_noncontig && intype->is_contig && (outtype->ub - outtype->lb) == outtype->size) {
+         outtype->is_contig = true;
+-
+-        int left = 0;
+-        while (array_of_blocklengths[left] == 0)
+-            left++;
+-        int right = left + 1;
+-        while (right < count && array_of_blocklengths[right] == 0)
+-            right++;
+-        while (right < count) {
+-            if (array_of_displs[right] <= array_of_displs[left]) {
+-                outtype->is_contig = false;
+-                break;
+-            } else {
+-                left = right;
+-                right++;
+-                while (right < count && array_of_blocklengths[right] == 0)
+-                    right++;
+-            }
+-        }
+     } else {
+         outtype->is_contig = false;
+     }
+--- a/modules/yaksa/src/frontend/types/yaksa_struct.c
++++ b/modules/yaksa/src/frontend/types/yaksa_struct.c
+@@ -42,9 +42,13 @@ int yaksi_type_create_struct(int count, const int *array_of_blocklengths,
+     }
+ 
+     int is_set;
++    intptr_t last_ub;
++    int is_noncontig;
+     is_set = 0;
++    last_ub = 0;
++    is_noncontig = 0;
+     outtype->alignment = 0;
+-    for (int idx = 0; idx < count; idx++) {
++    for (intptr_t idx = 0; idx < count; idx++) {
+         if (array_of_blocklengths[idx] == 0)
+             continue;
+ 
+@@ -61,6 +65,12 @@ int yaksi_type_create_struct(int count, const int *array_of_blocklengths,
+ 
+         intptr_t true_lb = lb - array_of_intypes[idx]->lb + array_of_intypes[idx]->true_lb;
+         intptr_t true_ub = ub - array_of_intypes[idx]->ub + array_of_intypes[idx]->true_ub;
++
++        if (idx > 0 && true_lb != last_ub) {
++            is_noncontig = 1;
++        }
++        last_ub = true_ub;
++
+         int tree_depth = array_of_intypes[idx]->tree_depth;
+         if (outtype->alignment < array_of_intypes[idx]->alignment)
+             outtype->alignment = array_of_intypes[idx]->alignment;
+@@ -94,7 +104,7 @@ int yaksi_type_create_struct(int count, const int *array_of_blocklengths,
+     outtype->extent = outtype->ub - outtype->lb;
+ 
+     /* detect if the outtype is contiguous */
+-    if ((outtype->ub - outtype->lb) == outtype->size) {
++    if (!is_noncontig && (outtype->ub - outtype->lb) == outtype->size) {
+         outtype->is_contig = true;
+ 
+         for (int i = 0; i < count; i++) {
+@@ -103,24 +113,6 @@ int yaksi_type_create_struct(int count, const int *array_of_blocklengths,
+                 break;
+             }
+         }
+-
+-        int left = 0;
+-        while (array_of_blocklengths[left] == 0)
+-            left++;
+-        int right = left + 1;
+-        while (right < count && array_of_blocklengths[right] == 0)
+-            right++;
+-        while (right < count) {
+-            if (array_of_displs[right] <= array_of_displs[left]) {
+-                outtype->is_contig = false;
+-                break;
+-            } else {
+-                left = right;
+-                right++;
+-                while (right < count && array_of_blocklengths[right] == 0)
+-                    right++;
+-            }
+-        }
+     } else {
+         outtype->is_contig = false;
+     }

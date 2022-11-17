@@ -22,6 +22,7 @@ class RNfactors(RPackage):
 
     cran = "nFactors"
 
+    version("2.4.1.1", sha256="bb376621d870c52ac9c29bfe4d22f71ffc5a9885a3996be3e032fe30c46cfe21")
     version("2.4.1", sha256="028eb4ebd42a29f6a01297d728c7e353cabb37b46701639b4a52f17ba25a3eb6")
 
     depends_on("r@3.5.0:", type=("build", "run"))

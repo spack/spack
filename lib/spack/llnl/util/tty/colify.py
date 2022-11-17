@@ -8,10 +8,9 @@ Routines for printing columnar output.  See ``colify()`` for more information.
 """
 from __future__ import division, unicode_literals
 
+import io
 import os
 import sys
-
-from six import StringIO, text_type
 
 from llnl.util.tty import terminal_size
 from llnl.util.tty.color import cextra, clen
@@ -134,7 +133,7 @@ def colify(elts, **options):
         )
 
     # elts needs to be an array of strings so we can count the elements
-    elts = [text_type(elt) for elt in elts]
+    elts = [str(elt) for elt in elts]
     if not elts:
         return (0, ())
 
@@ -232,7 +231,7 @@ def colify_table(table, **options):
 def colified(elts, **options):
     """Invokes the ``colify()`` function but returns the result as a string
     instead of writing it to an output string."""
-    sio = StringIO()
+    sio = io.StringIO()
     options["output"] = sio
     colify(elts, **options)
     return sio.getvalue()

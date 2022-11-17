@@ -14,6 +14,7 @@ class LibgpgError(AutotoolsPackage):
 
     maintainers = ["alalazo"]
 
+    version("1.46", sha256="b7e11a64246bbe5ef37748de43b245abd72cfcd53c9ae5e7fc5ca59f1c81268d")
     version("1.45", sha256="570f8ee4fb4bff7b7495cff920c275002aea2147e9a1d220c068213267f80a26")
     version("1.44", sha256="8e3d2da7a8b9a104dd8e9212ebe8e0daf86aa838cc1314ba6bc4de8f2d8a1ff9")
     version("1.43", sha256="a9ab83ca7acc442a5bd846a75b920285ff79bdb4e3d34aa382be88ed2c3aebaf")
@@ -31,8 +32,11 @@ class LibgpgError(AutotoolsPackage):
     patch("awk-5.patch", when="@1.36^gawk@5:")
 
     def configure_args(self):
-        return [
+        args = [
             "--enable-static",
             "--enable-shared",
             "--enable-tests" if self.run_tests else "--disable-tests",
         ]
+        if self.spec.satisfies("@1.46:"):
+            args.append("--enable-install-gpg-error-config")
+        return args

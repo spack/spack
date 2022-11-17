@@ -17,6 +17,11 @@ class PySetuptools(Package):
     maintainers = ["adamjstewart"]
 
     version(
+        "65.5.0",
+        sha256="f62ea9da9ed6289bfe868cd6845968a2c854d1427f8548d52cae02a42b4f0356",
+        expand=False,
+    )
+    version(
         "65.0.0",
         sha256="fe9a97f68b064a6ddd4bacfb0b4b93a4c65a556d97ce906255540439d0c35cef",
         expand=False,
@@ -29,6 +34,11 @@ class PySetuptools(Package):
     version(
         "63.0.0",
         sha256="045aec56a3eee5c82373a70e02db8b6da9a10f7faf61ff89a14ab66c738ed370",
+        expand=False,
+    )
+    version(
+        "62.6.0",
+        sha256="c1848f654aea2e3526d17fc3ce6aeaa5e7e24e66e645b5be2171f3f6b4e5a178",
         expand=False,
     )
     version(
@@ -168,11 +178,11 @@ class PySetuptools(Package):
     )
 
     extends("python")
-    depends_on("python@3.7:", type=("build", "run"), when="@59.7:")
-    depends_on("python@3.6:", type=("build", "run"), when="@51:")
-    depends_on("python@3.5:", type=("build", "run"), when="@45:50")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@44")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:43")
+    depends_on("python@3.7:", when="@59.7:", type=("build", "run"))
+    depends_on("python@3.6:", when="@51:", type=("build", "run"))
+    depends_on("python@3.5:", when="@45:50", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.5:", when="@44", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@:43", type=("build", "run"))
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):

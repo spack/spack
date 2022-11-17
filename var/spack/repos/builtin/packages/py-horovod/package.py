@@ -17,6 +17,8 @@ class PyHorovod(PythonPackage, CudaPackage):
     maintainers = ["adamjstewart", "aweits", "tgaddair"]
 
     version("master", branch="master", submodules=True)
+    version("0.26.1", tag="v0.26.1", submodules=True)
+    version("0.26.0", tag="v0.26.0", submodules=True)
     version("0.25.0", tag="v0.25.0", submodules=True)
     version("0.24.3", tag="v0.24.3", submodules=True)
     version("0.24.2", tag="v0.24.2", submodules=True)
@@ -86,6 +88,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@:0.19")
     depends_on("py-dataclasses", type=("build", "run"), when="@0.20: ^python@:3.6")
+    depends_on("py-packaging", type=("build", "run"), when="@0.26:")
 
     # Framework dependencies
     depends_on("py-tensorflow@1.1.0:", type=("build", "link", "run"), when="frameworks=tensorflow")
@@ -115,6 +118,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     )
     depends_on("py-petastorm@0.9.8:", type=("build", "run"), when="frameworks=spark @0.21.1:")
     depends_on("py-petastorm@0.11:", type=("build", "run"), when="frameworks=spark @0.22:")
+    depends_on("py-petastorm@0.12:", type=("build", "run"), when="frameworks=spark @0.26:")
     depends_on("py-pyarrow@0.15.0:", type=("build", "run"), when="frameworks=spark")
     depends_on("py-pyspark@2.3.2:", type=("build", "run"), when="frameworks=spark ^python@:3.7")
     depends_on("py-pyspark@3.0.0:", type=("build", "run"), when="frameworks=spark ^python@3.8:")
@@ -122,6 +126,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-fsspec@2021.07:", type=("build", "run"), when="frameworks=spark @0.24.2:")
     depends_on("py-ray", type=("build", "run"), when="frameworks=ray")
     depends_on("py-aioredis@:1", type=("build", "run"), when="frameworks=ray @0.23:")
+    depends_on("py-google-api-core@:2.8", type=("build", "run"), when="frameworks=ray @0.26:")
 
     # Controller dependencies
     depends_on("mpi", when="controllers=mpi")

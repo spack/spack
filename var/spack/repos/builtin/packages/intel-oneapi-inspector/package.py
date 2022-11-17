@@ -28,6 +28,12 @@ class IntelOneapiInspector(IntelOneApiPackage):
 
     if platform.system() == "Linux":
         version(
+            "2022.3.1",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19005/l_inspector_oneapi_p_2022.3.1.15318_offline.sh",
+            sha256="62aa2abf6928c0f4fc60ccfb69375297f823c183aea2519d7344e09c9734c1f8",
+            expand=False,
+        )
+        version(
             "2022.3.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18924/l_inspector_oneapi_p_2022.3.0.8706_offline.sh",
             sha256="c239b93769afae0ef5f7d3b8584d739bf4a839051bd428f1e6be3e8ca5d4aefa",

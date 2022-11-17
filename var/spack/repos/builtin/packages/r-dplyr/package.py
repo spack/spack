@@ -14,6 +14,7 @@ class RDplyr(RPackage):
 
     cran = "dplyr"
 
+    version("1.0.10", sha256="3ab639f627b4e439052df18f193f0ccab223225a4ae2ff8c18aba4f9807e0f2b")
     version("1.0.9", sha256="e2e1f7312618b4e32ada9a1da79cef32eaec12acd408c973a6b069c6be4fb46b")
     version("1.0.7", sha256="d2fe3aedbce02fdddce09a8a80f85f5918a9d1f15f792ad4a98f254959d7123d")
     version("1.0.3", sha256="28a1a9d87e99154d4d1542ef9da9fd70f869a173dc9709f4583a5770bae58441")
@@ -33,7 +34,6 @@ class RDplyr(RPackage):
     depends_on("r@3.2.0:", type=("build", "run"), when="@0.8.1:")
     depends_on("r@3.3.0:", type=("build", "run"), when="@1.0.3:")
     depends_on("r@3.4.0:", type=("build", "run"), when="@1.0.9:")
-    depends_on("r-ellipsis", type=("build", "run"), when="@1.0.3:")
     depends_on("r-generics", type=("build", "run"), when="@1.0.3:")
     depends_on("r-glue@1.3.0:", type=("build", "run"))
     depends_on("r-glue@1.3.2:", type=("build", "run"), when="@1.0.3:")
@@ -61,3 +61,5 @@ class RDplyr(RPackage):
     depends_on("r-rcpp@1.0.1:", type=("build", "run"), when="@:0.8.3")
     depends_on("r-bh", type=("build", "run"), when="@:0.8.3")
     depends_on("r-plogr@0.2.0:", type=("build", "run"), when="@0.7.0:0.8.3")
+    depends_on("r-ellipsis", type=("build", "run"), when="@1.0.3:")
+    depends_on("r-ellipsis", when="@:1.0.9")

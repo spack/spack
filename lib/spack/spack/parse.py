@@ -8,8 +8,6 @@ import re
 import shlex
 import sys
 
-from six import string_types
-
 import spack.error
 import spack.util.path as sp
 
@@ -147,7 +145,7 @@ class Parser(object):
             sys.exit(1)
 
     def setup(self, text):
-        if isinstance(text, string_types):
+        if isinstance(text, str):
             # shlex does not handle Windows path
             # separators, so we must normalize to posix
             text = sp.convert_to_posix_path(text)

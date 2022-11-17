@@ -27,6 +27,7 @@ class Boost(Package):
     maintainers = ["hainest"]
 
     version("develop", branch="develop", submodules=True)
+    version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
     version("1.79.0", sha256="475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39")
     version("1.78.0", sha256="8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc")
     version("1.77.0", sha256="fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854")
@@ -43,10 +44,6 @@ class Boost(Package):
     version("1.66.0", sha256="5721818253e6a0989583192f96782c4a98eb6204965316df9f5ad75819225ca9")
     version("1.65.1", sha256="9807a5d16566c57fd74fb522764e0b134a8bbe6b6e8967b83afefd30dcd3be81")
     version("1.65.0", sha256="ea26712742e2fb079c2a566a31f3266973b76e38222b9f88b387e3c8b2f9902c")
-    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
-    #       +python and +mpi, there seem to be errors with out-of-date
-    #       API calls from mpi/python.
-    #       See: https://github.com/spack/spack/issues/3963
     version("1.64.0", sha256="7bcc5caace97baa948931d712ea5f37038dbb1c5d89b43ad4def4ed7cb683332")
     version("1.63.0", sha256="beae2529f759f6b3bf3f4969a19c2e9d6f0c503edcb2de4a61d1428519fcb3b0")
     version("1.62.0", sha256="36c96b0f6155c98404091d8ceb48319a28279ca0333fba1ad8611eb90afb2ca0")
@@ -244,6 +241,13 @@ class Boost(Package):
     conflicts("cxxstd=98", when="+fiber")  # Fiber requires >=C++11.
     conflicts("~context", when="+fiber")  # Fiber requires Context.
 
+    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
+    #       +python and +mpi, there seem to be errors with out-of-date
+    #       API calls from mpi/python.
+    #       See: https://github.com/spack/spack/issues/3963
+    conflicts("@1.64.0", when="+python", msg="Errors with out-of-date API calls from Python")
+    conflicts("@1.64.0", when="+mpi", msg="Errors with out-of-date API calls from MPI")
+
     conflicts("+taggedlayout", when="+versionedlayout")
     conflicts("+numpy", when="~python")
 
@@ -260,6 +264,10 @@ class Boost(Package):
     # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
     # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
     conflicts("%gcc", when="@:1.76 +system platform=darwin")
+
+    # Boost 1.80 does not build with the Intel oneapi compiler
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
+    conflicts("%oneapi", when="@1.80")
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")

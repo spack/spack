@@ -2,10 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import io
 import sys
-
-import six
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
@@ -20,7 +18,7 @@ level = "long"
 
 
 def report_tags(category, tags):
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
 
     if isatty:
@@ -88,7 +86,7 @@ def tags(parser, args):
         return
 
     # Report packages associated with tags
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
 
     tags = args.tag if args.tag else available_tags

@@ -16,6 +16,7 @@ class Nix(AutotoolsPackage):
 
     homepage = "https://nixos.org/nix"
     url = "https://github.com/NixOS/nix/archive/2.3.15.zip"
+    maintainers = ["charmoniumq"]
 
     version("2.3.15", sha256="7bf04e47960e7895655ad40461f2cf8038b97e98165672db7a7ac1990fc77a22")
     version("2.2.1", sha256="b591664dd1b04a8f197407d445799ece41140a3117bcbdf8e3c5e94cd3f59854")
@@ -109,7 +110,7 @@ class Nix(AutotoolsPackage):
 
     @run_after("install")
     def installcheck_clean(self):
-        if self.test_path:
+        if hasattr(self, "test_path") and self.test_path:
             for (root, dirs, files) in os.walk(self.test_path, topdown=True):
                 os.chmod(root, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
             remove_linked_tree(self.test_path)

@@ -21,6 +21,7 @@ class RRcurl(RPackage):
 
     cran = "RCurl"
 
+    version("1.98-1.9", sha256="f28d4871675ec3d2b45fb5d36f7647f546f81121510954c3ad24fdec1643cec5")
     version("1.98-1.6", sha256="6cb56864ac043195b658bbdb345518d561507d84ccd60362866e970c2f71d1a2")
     version("1.98-1.5", sha256="73187c9a039188ffdc255fb7fa53811a6abfb31e6375a51eae8c763b37dd698d")
     version("1.98-1.2", sha256="5d74a0cdc3c5684b0348b959f67039e3c2a5da2bbb6176f6800a94124895a7a8")

@@ -18,33 +18,33 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
+    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         cache: 'pip'
     - name: Install Python Packages
       run: |
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv var/spack/repos
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip six setuptools types-six click==8.0.2 'black==21.12b0' mypy isort clingo flake8
+        python3 -m pip install --upgrade pip six setuptools types-six black mypy isort clingo flake8
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -57,4 +57,4 @@ jobs:
     uses: ./.github/workflows/audit.yaml
     with:
       with_coverage: ${{ inputs.with_coverage }}
-      python_version: '3.10'
+      python_version: '3.11'

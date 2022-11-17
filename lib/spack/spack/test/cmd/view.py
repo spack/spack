@@ -10,8 +10,8 @@ import pytest
 
 import spack.util.spack_yaml as s_yaml
 from spack.main import SpackCommand
+from spack.spec import Spec
 
-activate = SpackCommand("activate")
 extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
@@ -134,44 +134,7 @@ def test_view_extension(tmpdir, mock_packages, mock_archive, mock_fetch, config,
     assert "extension1@1.0" in all_installed
     assert "extension1@2.0" in all_installed
     assert "extension2@1.0" in all_installed
-    global_activated = extensions("--show", "activated", "extendee")
-    assert "extension1@1.0" not in global_activated
-    assert "extension1@2.0" not in global_activated
-    assert "extension2@1.0" not in global_activated
-    view_activated = extensions("--show", "activated", "-v", viewpath, "extendee")
-    assert "extension1@1.0" in view_activated
-    assert "extension1@2.0" not in view_activated
-    assert "extension2@1.0" not in view_activated
     assert os.path.exists(os.path.join(viewpath, "bin", "extension1"))
-
-
-def test_view_extension_projection(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
-    install("extendee@1.0")
-    install("extension1@1.0")
-    install("extension1@2.0")
-    install("extension2@1.0")
-
-    viewpath = str(tmpdir.mkdir("view"))
-    view_projection = {"all": "{name}-{version}"}
-    projection_file = create_projection_file(tmpdir, view_projection)
-    view("symlink", viewpath, "--projection-file={0}".format(projection_file), "extension1@1.0")
-
-    all_installed = extensions("--show", "installed", "extendee")
-    assert "extension1@1.0" in all_installed
-    assert "extension1@2.0" in all_installed
-    assert "extension2@1.0" in all_installed
-    global_activated = extensions("--show", "activated", "extendee")
-    assert "extension1@1.0" not in global_activated
-    assert "extension1@2.0" not in global_activated
-    assert "extension2@1.0" not in global_activated
-    view_activated = extensions("--show", "activated", "-v", viewpath, "extendee")
-    assert "extension1@1.0" in view_activated
-    assert "extension1@2.0" not in view_activated
-    assert "extension2@1.0" not in view_activated
-
-    assert os.path.exists(os.path.join(viewpath, "extendee-1.0", "bin", "extension1"))
 
 
 def test_view_extension_remove(
@@ -184,10 +147,6 @@ def test_view_extension_remove(
     view("remove", viewpath, "extension1@1.0")
     all_installed = extensions("--show", "installed", "extendee")
     assert "extension1@1.0" in all_installed
-    global_activated = extensions("--show", "activated", "extendee")
-    assert "extension1@1.0" not in global_activated
-    view_activated = extensions("--show", "activated", "-v", viewpath, "extendee")
-    assert "extension1@1.0" not in view_activated
     assert not os.path.exists(os.path.join(viewpath, "bin", "extension1"))
 
 
@@ -216,48 +175,39 @@ def test_view_extension_conflict_ignored(
         assert fin.read() == "1.0"
 
 
-def test_view_extension_global_activation(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
-    install("extendee")
-    install("extension1@1.0")
-    install("extension1@2.0")
-    install("extension2@1.0")
-    viewpath = str(tmpdir.mkdir("view"))
-    view("symlink", viewpath, "extension1@1.0")
-    activate("extension1@2.0")
-    activate("extension2@1.0")
-    all_installed = extensions("--show", "installed", "extendee")
-    assert "extension1@1.0" in all_installed
-    assert "extension1@2.0" in all_installed
-    assert "extension2@1.0" in all_installed
-    global_activated = extensions("--show", "activated", "extendee")
-    assert "extension1@1.0" not in global_activated
-    assert "extension1@2.0" in global_activated
-    assert "extension2@1.0" in global_activated
-    view_activated = extensions("--show", "activated", "-v", viewpath, "extendee")
-    assert "extension1@1.0" in view_activated
-    assert "extension1@2.0" not in view_activated
-    assert "extension2@1.0" not in view_activated
-    assert os.path.exists(os.path.join(viewpath, "bin", "extension1"))
-    assert not os.path.exists(os.path.join(viewpath, "bin", "extension2"))
-
-
-def test_view_extendee_with_global_activations(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
-    install("extendee")
-    install("extension1@1.0")
-    install("extension1@2.0")
-    install("extension2@1.0")
-    viewpath = str(tmpdir.mkdir("view"))
-    activate("extension1@2.0")
-    output = view("symlink", viewpath, "extension1@1.0")
-    assert "Error: Globally activated extensions cannot be used" in output
-
-
 def test_view_fails_with_missing_projections_file(tmpdir):
     viewpath = str(tmpdir.mkdir("view"))
     projection_file = os.path.join(str(tmpdir), "nonexistent")
     with pytest.raises(SystemExit):
         view("symlink", "--projection-file", projection_file, viewpath, "foo")
+
+
+@pytest.mark.parametrize("with_projection", [False, True])
+@pytest.mark.parametrize("cmd", ["symlink", "copy"])
+def test_view_files_not_ignored(
+    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery, cmd, with_projection
+):
+    spec = Spec("view-not-ignored").concretized()
+    pkg = spec.package
+    pkg.do_install()
+    pkg.assert_installed(spec.prefix)
+
+    install("view-dir-file")  # Arbitrary package to add noise
+
+    viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
+
+    if with_projection:
+        proj = str(tmpdir.join("proj.yaml"))
+        with open(proj, "w") as f:
+            f.write('{"projections":{"all":"{name}"}}')
+        prefix_in_view = os.path.join(viewpath, "view-not-ignored")
+        args = ["--projection-file", proj]
+    else:
+        prefix_in_view = viewpath
+        args = []
+
+    view(cmd, *(args + [viewpath, "view-not-ignored", "view-dir-file"]))
+    pkg.assert_installed(prefix_in_view)
+
+    view("remove", viewpath, "view-not-ignored")
+    pkg.assert_not_installed(prefix_in_view)

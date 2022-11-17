@@ -100,7 +100,7 @@ class Postgresql(AutotoolsPackage):
                 with working_dir(os.path.join("src", subdir)):
                     make("install")
         else:
-            AutotoolsPackage.install(self, spec, prefix)
+            super(Postgresql, self).install(spec, prefix)
 
     def setup_run_environment(self, env):
         spec = self.spec

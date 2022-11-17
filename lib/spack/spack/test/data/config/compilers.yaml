@@ -130,6 +130,7 @@ compilers:
       f77: /path/to/gfortran440
       fc: /path/to/gfortran440
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: clang@3.5
     operating_system: redhat6
@@ -167,7 +168,7 @@ compilers:
     modules: 'None'
     target: x86_64
 - compiler:
-    spec: gcc@foo
+    spec: gcc@10foo
     operating_system: redhat6
     paths:
       cc: /path/to/gcc
@@ -184,5 +185,169 @@ compilers:
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
+    modules: 'None'
+    target: x86_64
+- compiler:
+    spec: clang@12.0.0
+    operating_system: {0.name}{0.version}
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: gcc@10.2.1
+    operating_system: {0.name}{0.version}
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: clang@12.0.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: gcc@10.2.1
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: gcc@10.1.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: gcc@11.1.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    flags:
+      cflags: -O0 -g
+      cxxflags: -O0 -g
+      fflags: -O0 -g
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: clang@12.2.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang35
+      cxx: /path/to/clang++35
+      f77: None
+      fc: None
+    flags:
+      cflags: -O3
+      cxxflags: -O3
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: gcc@10foo
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: clang@12.0.0
+    operating_system: {0.name}{0.version}
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: x86_64
+- compiler:
+    spec: gcc@10.2.1
+    operating_system: {0.name}{0.version}
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: x86_64
+- compiler:
+    spec: clang@12.0.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: x86_64
+- compiler:
+    spec: gcc@10.2.1
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: x86_64
+- compiler:
+    spec: gcc@10.1.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: x86_64
+- compiler:
+    spec: gcc@11.1.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    flags:
+      cflags: -O0 -g
+      cxxflags: -O0 -g
+      fflags: -O0 -g
+    modules: 'None'
+    target: x86_64
+- compiler:
+    spec: clang@12.2.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang35
+      cxx: /path/to/clang++35
+      f77: None
+      fc: None
+    flags:
+      cflags: -O3
+      cxxflags: -O3
     modules: 'None'
     target: x86_64

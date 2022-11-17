@@ -17,6 +17,7 @@ definition to modify the package, for example:
 
 The available directives are:
 
+  * ``build_system``
   * ``conflicts``
   * ``depends_on``
   * ``extends``
@@ -27,16 +28,14 @@ The available directives are:
   * ``version``
 
 """
+import collections.abc
 import functools
 import os.path
 import re
 from typing import List, Set  # novm
 
-import six
-
 import llnl.util.lang
 import llnl.util.tty.color
-from llnl.util.compat import Sequence
 
 import spack.error
 import spack.patch
@@ -59,13 +58,15 @@ __all__ = [
     "patch",
     "variant",
     "resource",
+    "build_system",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ["patches", "dev_path"]
 
-#: Names of possible directives. This list is populated elsewhere in the file.
-directive_names = []
+#: Names of possible directives. This list is mostly populated using the @directive decorator.
+#: Some directives leverage others and in that case are not automatically added.
+directive_names = ["build_system"]
 
 _patch_order_index = 0
 
@@ -231,10 +232,10 @@ class DirectiveMeta(type):
         """
         global directive_names
 
-        if isinstance(dicts, six.string_types):
+        if isinstance(dicts, str):
             dicts = (dicts,)
 
-        if not isinstance(dicts, Sequence):
+        if not isinstance(dicts, collections.abc.Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
 
@@ -297,7 +298,7 @@ class DirectiveMeta(type):
 
                 # ...so if it is not a sequence make it so
                 values = result
-                if not isinstance(values, Sequence):
+                if not isinstance(values, collections.abc.Sequence):
                     values = (values,)
 
                 DirectiveMeta._directives_to_be_executed.extend(values)
@@ -388,7 +389,7 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, six.string_types) else p for p in patches]
+    patches = [patch(p) if isinstance(p, str) else p for p in patches]
     assert all(callable(p) for p in patches)
 
     # this is where we actually add the dependency to this package
@@ -465,14 +466,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 @directive(("extendees", "dependencies"))
 def extends(spec, type=("build", "run"), **kwargs):
-    """Same as depends_on, but allows symlinking into dependency's
-    prefix tree.
-
-    This is for Python and other language modules where the module
-    needs to be installed into the prefix of the Python installation.
-    Spack handles this by installing modules into their own prefix,
-    but allowing ONE module version to be symlinked into a parent
-    Python install at a time, using ``spack activate``.
+    """Same as depends_on, but also adds this package to the extendee list.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
@@ -756,6 +750,17 @@ def resource(**kwargs):
         resources.append(Resource(name, fetcher, destination, placement))
 
     return _execute_resource
+
+
+def build_system(*values, **kwargs):
+    default = kwargs.get("default", None) or values[0]
+    return variant(
+        "build_system",
+        values=tuple(values),
+        description="Build systems supported by the package",
+        default=default,
+        multi=False,
+    )
 
 
 class DirectiveError(spack.error.SpackError):

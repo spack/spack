@@ -29,6 +29,8 @@ class NetcdfCxx4(AutotoolsPackage):
 
     depends_on("doxygen", when="+doc", type="build")
 
+    filter_compiler_wrappers("ncxx4-config", relative_root="bin")
+
     def flag_handler(self, name, flags):
         if name == "cflags" and "+pic" in self.spec:
             flags.append(self.compiler.cc_pic_flag)

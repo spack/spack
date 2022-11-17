@@ -112,6 +112,13 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             self.spec.compiler.version,
         )
 
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        entries = super(Chai, self).initconfig_compiler_entries()
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+        return entries
+
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super(Chai, self).initconfig_hardware_entries()

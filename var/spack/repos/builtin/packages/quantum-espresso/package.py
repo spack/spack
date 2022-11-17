@@ -2,11 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.cmake
+import spack.build_systems.generic
 from spack.package import *
 
 
-class QuantumEspresso(CMakePackage):
+class QuantumEspresso(CMakePackage, Package):
     """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the
     nanoscale. It is based on density-functional theory, plane waves, and
@@ -18,6 +19,8 @@ class QuantumEspresso(CMakePackage):
     git = "https://gitlab.com/QEF/q-e.git"
 
     maintainers = ["ye-luo", "danielecesarini", "bellenlau"]
+
+    build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
 
     version("develop", branch="develop")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")
@@ -56,10 +59,8 @@ class QuantumEspresso(CMakePackage):
         destination=".",
     )
 
-    variant("cmake", default=True, description="Builds via CMake")
-    with when("+cmake"):
+    with when("build_system=cmake"):
         depends_on("cmake@3.14.0:", type="build")
-        conflicts("@:6.7", msg="+cmake works since QE v6.8")
 
     variant("libxc", default=False, description="Uses libxc")
     depends_on("libxc@5.1.2:", when="+libxc")
@@ -72,6 +73,7 @@ class QuantumEspresso(CMakePackage):
         depends_on("amdfftw+openmp", when="^amdfftw")
         depends_on("openblas threads=openmp", when="^openblas")
         depends_on("amdblis threads=openmp", when="^amdblis")
+        depends_on("intel-mkl threads=openmp", when="^intel-mkl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
@@ -93,7 +95,7 @@ class QuantumEspresso(CMakePackage):
                     msg="bugs with NVHPCSDK from v21.11 to v22.3, OpenMP and GPU",
                 )
             # only cmake is supported
-            conflicts("~cmake", msg="Only CMake supported for GPU-enabled version")
+            conflicts("build_system=generic", msg="Only CMake supported for GPU-enabled version")
 
     # NVTX variant for profiling
     # requires linking to CUDA runtime APIs , handled by CMake
@@ -121,9 +123,10 @@ class QuantumEspresso(CMakePackage):
 
     with when("+elpa"):
         # CMake builds only support elpa without openmp
-        depends_on("elpa~openmp", when="+cmake")
-        depends_on("elpa+openmp", when="+openmp~cmake")
-        depends_on("elpa~openmp", when="~openmp~cmake")
+        depends_on("elpa~openmp", when="build_system=cmake")
+        with when("build_system=generic"):
+            depends_on("elpa+openmp", when="+openmp")
+            depends_on("elpa~openmp", when="~openmp")
         # Elpa is formally supported by @:5.4.0, but QE configure searches
         # for it in the wrong folders (or tries to download it within
         # the build directory). Instead of patching Elpa to provide the
@@ -181,12 +184,14 @@ class QuantumEspresso(CMakePackage):
         with when("@7.0.1:"):
             # when QE doesn't use hdf5 library, the converter plugin still needs it
             depends_on("hdf5@1.8.16:+hl~mpi", when="hdf5=none")
-            conflicts("~cmake", msg="QE-to-QMCPACK wave function converter requires cmake")
+            conflicts(
+                "build_system=generic", msg="QE-to-QMCPACK wave function converter requires cmake"
+            )
 
     # Enables building Electron-phonon Wannier 'epw.x' executable
     # http://epw.org.uk/Main/About
-    variant("epw", default=False, description="Builds Electron-phonon Wannier executable")
-    conflicts("~epw", when="+cmake", msg="epw cannot be turned off when using CMake")
+    variant("epw", default=True, description="Builds Electron-phonon Wannier executable")
+    conflicts("~epw", when="build_system=cmake", msg="epw cannot be turned off when using CMake")
 
     with when("+epw"):
         # The first version of Q-E to feature integrated EPW is 6.0.0,
@@ -198,8 +203,10 @@ class QuantumEspresso(CMakePackage):
         # Constraints may be relaxed as successful reports
         # of different compiler+mpi combinations arrive
 
-        # TODO: enable building EPW when ~mpi and ~cmake
-        conflicts("~mpi", when="~cmake", msg="EPW needs MPI when ~cmake")
+        # TODO: enable building EPW when ~mpi and build_system=generic
+        conflicts(
+            "~mpi", when="build_system=generic", msg="EPW needs MPI when build_system=generic"
+        )
 
         # EPW doesn't gets along well with OpenMPI 2.x.x
         conflicts("^openmpi@2.0.0:2", msg="OpenMPI version incompatible with EPW")
@@ -212,19 +219,19 @@ class QuantumEspresso(CMakePackage):
     variant(
         "environ",
         default=False,
+        when="build_system=generic",
         description="Enables support for introducing environment effects "
         "into atomistic first-principles simulations."
         "See http://quantum-environ.org/about.html",
     )
-    conflicts("+environ", when="+cmake", msg="environ doesn't work with CMake")
 
     variant(
         "gipaw",
         default=False,
+        when="build_system=generic",
         description="Builds Gauge-Including Projector Augmented-Waves executable",
     )
     with when("+gipaw"):
-        conflicts("+cmake", msg="gipaw doesn't work with CMake")
         conflicts(
             "@:6.3", msg="gipaw standard support available for QE 6.3 or grater version only"
         )
@@ -370,6 +377,8 @@ class QuantumEspresso(CMakePackage):
     # extlibs_makefile updated to work with fujitsu compilers
     patch("fj-fox.patch", when="+patch %fj")
 
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
 
@@ -400,18 +409,9 @@ class QuantumEspresso(CMakePackage):
 
         return cmake_args
 
-    @when("~cmake")
-    def cmake(self, spec, prefix):
-        print("Bypass cmake stage when building via configure")
 
-    @when("~cmake")
-    def build(self, spec, prefix):
-        print("Bypass build stage when building via configure")
-
-    @when("~cmake")
-    def install(self, spec, prefix):
-        print("Override install stage when building via configure")
-
+class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+    def install(self, pkg, spec, prefix):
         prefix_path = prefix.bin if "@:5.4.0" in spec else prefix
         options = ["-prefix={0}".format(prefix_path)]
 
@@ -577,7 +577,7 @@ class QuantumEspresso(CMakePackage):
         # can't be applied to the '+qmcpack' variant
         if spec.variants["hdf5"].value != "none":
             if spec.satisfies("@6.1.0:6.4.0") or (spec.satisfies("@6.4.1") and "+qmcpack" in spec):
-                make_inc = join_path(self.stage.source_path, "make.inc")
+                make_inc = join_path(self.pkg.stage.source_path, "make.inc")
                 zlib_libs = spec["zlib"].prefix.lib + " -lz"
                 filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
 

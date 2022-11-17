@@ -15,6 +15,7 @@ properties = {
         "additionalProperties": False,
         "properties": {
             "reuse": {"type": "boolean"},
+            "enable_node_namespace": {"type": "boolean"},
             "targets": {
                 "type": "object",
                 "properties": {

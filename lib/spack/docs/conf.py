@@ -32,14 +32,11 @@ from sphinx.parsers import RSTParser
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+link_name = os.path.abspath("_spack_root")
+if not os.path.exists(link_name):
+    os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/pytest-fallback"))
-
-if sys.version_info[0] < 3:
-    sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/yaml/lib"))
-else:
-    sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/yaml/lib3"))
-
 sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
@@ -127,6 +124,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx_design",
     "sphinxcontrib.programoutput",
 ]
 
@@ -156,8 +154,8 @@ source_encoding = "utf-8-sig"
 master_doc = "index"
 
 # General information about the project.
-project = u"Spack"
-copyright = u"2013-2021, Lawrence Livermore National Laboratory."
+project = "Spack"
+copyright = "2013-2021, Lawrence Livermore National Laboratory."
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -205,6 +203,9 @@ nitpick_ignore = [
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
+    ("py:class", "spack.build_systems._checks.BaseBuilder"),
+    # Spack classes that intersphinx is unable to resolve
+    ("py:class", "spack.version.VersionBase"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -343,7 +344,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "Spack.tex", u"Spack Documentation", u"Todd Gamblin", "manual"),
+    ("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -371,7 +372,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "spack", u"Spack Documentation", [u"Todd Gamblin"], 1)]
+man_pages = [("index", "spack", "Spack Documentation", ["Todd Gamblin"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -386,8 +387,8 @@ texinfo_documents = [
     (
         "index",
         "Spack",
-        u"Spack Documentation",
-        u"Todd Gamblin",
+        "Spack Documentation",
+        "Todd Gamblin",
         "Spack",
         "One line description of project.",
         "Miscellaneous",

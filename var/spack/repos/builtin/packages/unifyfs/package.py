@@ -39,6 +39,11 @@ class Unifyfs(AutotoolsPackage):
         default="True",
         description="Enable automatic mount/unmount in MPI_Init/Finalize",
     )
+    variant(
+        "boostsys",
+        default="False",
+        description="Have Mercury use preprocessor headers from boost dependency",
+    )
     variant("fortran", default="True", description="Build with gfortran support")
     variant("pmi", default="False", description="Enable PMI2 build options")
     variant("pmix", default="False", description="Enable PMIx build options")
@@ -53,12 +58,16 @@ class Unifyfs(AutotoolsPackage):
 
     # Required dependencies
     depends_on("gotcha@1.0.4:")
-    depends_on("mercury@1.0.1+bmi", when="@:0.9.1")
     depends_on("mochi-margo@0.4.3", when="@:0.9.1")
     depends_on("mochi-margo@0.9.6", when="@0.9.2:1.0")
     depends_on("mochi-margo@0.9.6:0.9.9", when="@develop")
     depends_on("mpi")
     depends_on("openssl@:1")
+
+    # Mochi-Margo dependencies
+    depends_on("mercury@1.0.1+bmi", when="@:0.9.1")
+    depends_on("mercury@2.1", when="^mochi-margo@0.9.6:0.9.9")
+    depends_on("mercury~boostsys", when="~boostsys")
     depends_on("libfabric fabrics=rxm,sockets,tcp", when="^mercury@2:+ofi")
 
     # Optional dependencies
@@ -88,6 +97,12 @@ class Unifyfs(AutotoolsPackage):
         if name in ("cflags", "cppflags"):
             if "-g" in flags:
                 self.debug_build = True
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi@2022.2.0:"):
+                flags.append("-Wno-error=deprecated-non-prototype")
+                flags.append("-Wno-error=unused-function")
+            if self.spec.satisfies("%gcc@4"):
+                flags.append("-std=gnu99")
         return (None, None, flags)
 
     def setup_build_environment(self, env):

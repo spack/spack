@@ -9,6 +9,7 @@ import argparse
 import os
 import re
 import sys
+from itertools import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -17,14 +18,6 @@ from llnl.util.filesystem import working_dir
 import spack.bootstrap
 import spack.paths
 from spack.util.executable import which
-
-if sys.version_info < (3, 0):
-    from itertools import izip_longest  # novm
-
-    zip_longest = izip_longest
-else:
-    from itertools import zip_longest  # novm
-
 
 description = "runs source code style checks on spack"
 section = "developer"
@@ -267,7 +260,7 @@ def run_flake8(flake8_cmd, file_list, args):
             "--config=%s" % os.path.join(spack.paths.prefix, ".flake8"),
             *chunk,
             fail_on_error=False,
-            output=str
+            output=str,
         )
         returncode |= flake8_cmd.returncode
 
@@ -375,14 +368,6 @@ def run_black(black_cmd, file_list, args):
         packed_args = black_args + tuple(chunk)
         output = black_cmd(*packed_args, fail_on_error=False, output=str, error=str)
         returncode |= black_cmd.returncode
-
-        # ignore Python 2.7 deprecation error because we already know it's deprecated.
-        output = "\n".join(
-            line
-            for line in output.split("\n")
-            if "DEPRECATION: Python 2 support will be removed" not in line
-        )
-
         rewrite_and_print_output(output, args, pat, replacement)
 
     print_tool_result("black", returncode)
@@ -400,10 +385,6 @@ def validate_toolset(arg_value):
 
 
 def style(parser, args):
-    # ensure python version is new enough
-    if sys.version_info < (3, 6):
-        tty.die("spack style requires Python 3.6 or later.")
-
     # save initial working directory for relativizing paths later
     args.initial_working_dir = os.getcwd()
 

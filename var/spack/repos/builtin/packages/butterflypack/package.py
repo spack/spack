@@ -26,6 +26,8 @@ class Butterflypack(CMakePackage):
     maintainers = ["liuyangzhuan"]
 
     version("master", branch="master")
+    version("2.2.2", sha256="73f67073e4291877f1eee19483a8a7b3c761eaf79a75805d52105ceedead85ea")
+    version("2.2.1", sha256="4cedc2896a6b368773ce4f9003aa2c0230baf56a4464a6b899a155e01406a232")
     version("2.2.0", sha256="1ce5b8461b3c4f488cee6396419e8a6f0a1bcf95254f24d7c27bfa53b391c30b")
     version("2.1.1", sha256="0d4a1ce540c84de37e4398f72ecf685ea0c4eabceba13015add5b445a4ca3a15")
     version("2.1.0", sha256="ac76cc8d431797c1a3641b23124e3de5eb8c3a3afb71c336e7ba69c6cdf150ef")
@@ -38,12 +40,16 @@ class Butterflypack(CMakePackage):
     version("1.0.0", sha256="86c5eb09a18522367d63ce2bacf67ca1c9813ef351a1443baaab3c53f0d77232")
 
     variant("shared", default=True, description="Build shared libraries")
+    variant("openmp", default=True, description="add OpenMP support")
 
     depends_on("mpi")
     depends_on("blas")
     depends_on("lapack")
     depends_on("scalapack")
     depends_on("arpack-ng")
+    depends_on("sed", type="build")
+
+    conflicts("%gcc@:7", when="@2.2.1:")
 
     # https://github.com/spack/spack/issues/31818
     patch("qopenmp-for-oneapi.patch", when="@2.1.1 %oneapi")
@@ -65,5 +71,6 @@ class Butterflypack(CMakePackage):
             "-DTPL_ARPACK_LIBRARIES=%s" % spec["arpack-ng"].libs.joined(";"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
+        args.append("-Denable_openmp=%s" % ("ON" if "+openmp" in spec else "OFF"))
 
         return args

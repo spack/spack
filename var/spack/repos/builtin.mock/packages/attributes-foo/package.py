@@ -8,7 +8,6 @@ from spack.package import *
 
 
 class AttributesFoo(BundlePackage):
-    phases = ["install"]
     version("1.0")
 
     provides("bar")

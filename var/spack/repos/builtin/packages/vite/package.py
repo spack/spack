@@ -29,13 +29,11 @@ class Vite(CMakePackage):
     variant("otf2", default=False, description="Support for OTF2 trace format")
 
     def cmake_args(self):
-        define = CMakePackage.define
-        from_variant = self.define_from_variant
         args = [
-            define("USE_QT5", True),
-            define("USE_OPENGL", True),
-            define("USE_VBO", False),
-            from_variant("VITE_ENABLE_OTF2", "otf2"),
-            from_variant("VITE_ENABLE_TAU", "tau"),
+            self.define("USE_QT5", True),
+            self.define("USE_OPENGL", True),
+            self.define("USE_VBO", False),
+            self.define_from_variant("VITE_ENABLE_OTF2", "otf2"),
+            self.define_from_variant("VITE_ENABLE_TAU", "tau"),
         ]
         return args

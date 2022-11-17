@@ -12,6 +12,7 @@ class PySetuptoolsScm(PythonPackage):
     homepage = "https://github.com/pypa/setuptools_scm"
     pypi = "setuptools_scm/setuptools_scm-4.1.2.tar.gz"
 
+    version("7.0.5", sha256="031e13af771d6f892b941adb6ea04545bbf91ebc5ce68c78aaf3fff6e1fb4844")
     version("7.0.3", sha256="cf8ab8e235bed840cd4559b658af0d8e8a70896a191bbc510ee914ec5325332d")
     version("6.3.2", sha256="a49aa8081eeb3514eb9728fa5040f2eaa962d6c6f4ec9c32f6c1fba88f88a0f2")
     version("6.0.1", sha256="d1925a69cb07e9b29416a275b9fadb009a23c148ace905b2fb220649a6c18e92")

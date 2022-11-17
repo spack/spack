@@ -27,13 +27,12 @@ class Parmmg(CMakePackage):
     variant("pic", default=True, description="Build with position independent code")
 
     def cmake_args(self):
-        define = CMakePackage.define
         args = [
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
-            define("DOWNLOAD_MMG", False),
-            define("MMG_DIR", self.spec["mmg"].prefix),
-            define("DOWNLOAD_METIS", False),
-            define("METIS_DIR", self.spec["metis"].prefix),
+            self.define("DOWNLOAD_MMG", False),
+            self.define("MMG_DIR", self.spec["mmg"].prefix),
+            self.define("DOWNLOAD_METIS", False),
+            self.define("METIS_DIR", self.spec["metis"].prefix),
         ]
 
         return args

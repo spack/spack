@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class JsonC(CMakePackage):
+class JsonC(CMakePackage, AutotoolsPackage):
     """A JSON implementation in C."""
 
     homepage = "https://github.com/json-c/json-c/wiki"
@@ -20,7 +20,13 @@ class JsonC(CMakePackage):
     version("0.12", sha256="000c01b2b3f82dcb4261751eb71f1b084404fb7d6a282f06074d3c17078b9f3f")
     version("0.11", sha256="28dfc65145dc0d4df1dfe7701ac173c4e5f9347176c8983edbfac9149494448c")
 
-    depends_on("autoconf", when="@:0.13.1", type="build")
+    build_system(
+        conditional("cmake", when="@0.14:"),
+        conditional("autotools", when="@:0.13.1"),
+        default="cmake",
+    )
+
+    depends_on("autoconf", when="build_system=autotools", type="build")
 
     parallel = False
 
@@ -32,22 +38,16 @@ class JsonC(CMakePackage):
             "Makefile.in",
         )
 
-    @when("@:0.13.1")
-    def cmake(self, spec, prefix):
-        configure_args = ["--prefix=" + prefix]
-        configure(*configure_args)
-
-    @when("@:0.13.1")
-    def build(self, spec, prefix):
-        make()
-
-    @when("@:0.13.1")
-    def install(self, spec, prefix):
-        make("install")
-
     @when("%cce@11.0.3:")
     def patch(self):
         filter_file("-Werror", "", "CMakeLists.txt")
+
+    def flag_handler(self, name, flags):
+        iflags = []
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
 
     @run_after("install")
     def darwin_fix(self):

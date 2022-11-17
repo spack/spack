@@ -13,10 +13,10 @@ class Libfabric(AutotoolsPackage):
     homepage = "https://libfabric.org/"
     url = "https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2"
     git = "https://github.com/ofiwg/libfabric.git"
-
     maintainers = ["rajachan"]
 
     version("main", branch="main")
+    version("1.16.1", sha256="53f992d33f9afe94b8a4ea3d105504887f4311cf4b68cea99a24a85fcc39193f")
     version("1.15.1", sha256="cafa3005a9dc86064de179b0af4798ad30b46b2f862fe0268db03d13943e10cd")
     version("1.15.0", sha256="70982c58eadeeb5b1ddb28413fd645e40b206618b56fbb2b18ab1e7f607c9bea")
     version("1.14.1", sha256="6cfabb94bca8e419d9015212506f5a367d077c5b11e94b9f57997ec6ca3d8aed")

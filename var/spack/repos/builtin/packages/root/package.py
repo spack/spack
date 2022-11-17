@@ -170,6 +170,12 @@ class Root(CMakePackage):
         "veccore", default=False, description="Enable support for VecCore SIMD abstraction library"
     )
     variant("vmc", default=False, description="Enable the Virtual Monte Carlo interface")
+    variant(
+        "webgui",
+        default=True,
+        description="Enable web-based UI components of ROOT",
+        when="+root7",
+    )
     variant("x", default=True, description="Enable set of graphical options")
     variant("xml", default=True, description="Enable XML parser interface")
     variant("xrootd", default=False, description="Build xrootd file server and its client")
@@ -379,8 +385,8 @@ class Root(CMakePackage):
         _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
-        _add_variant(v, f, ("root7", "webgui"), "+root7")  # for root version >= 6.18.00
-        _add_variant(v, f, ("root7", "webui"), "+root7")  # for root version <= 6.17.02
+        _add_variant(v, f, ("root7", "webgui"), "+webgui")  # for root version >= 6.18.00
+        _add_variant(v, f, ("root7", "webui"), "+webgui")  # for root version <= 6.17.02
         _add_variant(v, f, "rpath", "+rpath")
         _add_variant(v, f, "shadowpw", "+shadow")
         _add_variant(v, f, "spectrum", "+spectrum")
@@ -542,9 +548,9 @@ class Root(CMakePackage):
         # Necessary due to name change of variant (webui->webgui)
         # https://github.com/root-project/root/commit/d631c542909f2f793ca7b06abc622e292dfc4934
         if self.spec.satisfies("@:6.17.02"):
-            options.append(define_from_variant("webui", "root7"))
+            options.append(define_from_variant("webui", "webgui"))
         if self.spec.satisfies("@6.18.00:"):
-            options.append(define_from_variant("webgui", "root7"))
+            options.append(define_from_variant("webgui", "webgui"))
 
         # Some special features
         if self.spec.satisfies("@6.20.02:"):

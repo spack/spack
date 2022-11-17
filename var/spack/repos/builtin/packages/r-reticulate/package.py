@@ -17,6 +17,7 @@ class RReticulate(RPackage):
 
     cran = "reticulate"
 
+    version("1.26", sha256="3fd74823bde1b0e094db7c2bf6b40ee2501f8d724b4c35b53da95c3c588c74c5")
     version("1.25", sha256="2125af9e75939c3b7c0dc74f28f42606e816d63aa1143baf631c318ff5ff3a2c")
     version("1.24", sha256="b918c5204916601f757ad0fc629b2ae1eabab7cdf7f6aa2e219d26e506d916cc")
     version("1.23", sha256="fea04a3ff33c71f1910d65000a93c6882180ca03f8657ee118ea9e79786c36d6")

@@ -7,8 +7,7 @@ from __future__ import print_function
 
 import inspect
 import textwrap
-
-from six.moves import zip_longest
+from itertools import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -210,11 +209,11 @@ def print_maintainers(pkg):
 def print_phases(pkg):
     """output installation phases"""
 
-    if hasattr(pkg, "phases") and pkg.phases:
+    if hasattr(pkg.builder, "phases") and pkg.builder.phases:
         color.cprint("")
         color.cprint(section_title("Installation Phases:"))
         phase_str = ""
-        for phase in pkg.phases:
+        for phase in pkg.builder.phases:
             phase_str += "    {0}".format(phase)
         color.cprint(phase_str)
 

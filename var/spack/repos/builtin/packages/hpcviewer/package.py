@@ -15,28 +15,28 @@ from spack.package import *
 # tar file contains the version number.
 def viewer_url(ver, mach):
     ver2 = ("-" + ver) if ver >= "2019.08" else ""
-    return (
-        "http://hpctoolkit.org/download/hpcviewer/{0}/" "hpcviewer{1}-linux.gtk.{2}.tgz"
-    ).format(ver, ver2, mach)
+    return ("http://hpctoolkit.org/download/hpcviewer/{0}/hpcviewer{1}-linux.gtk.{2}.tgz").format(
+        ver, ver2, mach
+    )
 
 
 def trace_url(ver, mach):
     ver2 = ("-" + ver) if ver >= "2019.08" else ""
     return (
-        "http://hpctoolkit.org/download/hpcviewer/{0}/" "hpctraceviewer{1}-linux.gtk.{2}.tgz"
+        "http://hpctoolkit.org/download/hpcviewer/{0}/hpctraceviewer{1}-linux.gtk.{2}.tgz"
     ).format(ver, ver2, mach)
 
 
 def darwin_url(ver, mach):
     return (
-        "http://hpctoolkit.org/download/hpcviewer/{0}/" "hpcviewer-{0}-macosx.cocoa.{1}.zip"
+        "http://hpctoolkit.org/download/hpcviewer/{0}/hpcviewer-{0}-macosx.cocoa.{1}.zip"
     ).format(ver, mach)
 
 
 class Hpcviewer(Package):
     """Binary distribution of hpcviewer and integrated hpctraceviewer for
     the Rice HPCToolkit (Linux x86_64, ppc64le and aarch64, and MacOSX
-    x86_64).
+    x86_64 and M1/M2).
 
     Note: hpctoolkit databases are platform independent, so you don't
     need to install hpctoolkit to run the viewers and it's common to
@@ -47,7 +47,11 @@ class Hpcviewer(Package):
     maintainers = ["mwkrentel"]
 
     darwin_sha = {
+        ("2022.10", "aarch64"): "4c5b4d94d5d2d82c4e583cf2229ccfde7c74741416fdb31c94cfd13c8e940b12",
+        ("2022.10", "x86_64"): "5e7c419ee5cf5527c24f075aae1eeb246a2e54f253b140c816dccae02fc0b871",
+        ("2022.06", "aarch64"): "7536abac5159a5bdb3c662d90be94f813c91ee0ecd6646e2c52b49d37b9ac637",
         ("2022.06", "x86_64"): "bac852e97577a696d1d07f66340e60b9079b76372d3718c543055e76acf78a38",
+        ("2022.03", "aarch64"): "622ea1e589de72039d31f6ee1d09de3b0dae4b8c9f14e419e4746cf13bb5d69c",
         ("2022.03", "x86_64"): "d8d1ea959f35fced7b624996d712e8e31965fea533092d104c388f750e80909b",
         ("2022.01", "x86_64"): "75ea439af63ba3824fb270e474902246a0713d7f5914a96c1d70db13618dcf60",
         ("2021.10", "x86_64"): "0b71f2d63d99eb00fbaf9c03cf8632c198627c80e4372eeec5f20864509cbbe8",
@@ -55,6 +59,9 @@ class Hpcviewer(Package):
     }
 
     viewer_sha = {
+        ("2022.10", "aarch64"): "b6ab0d16168e67ba5de3fb0b989cba7b8a683aa5210d4ed69b5c8581ab990ea8",
+        ("2022.10", "ppc64le"): "72abc3ee923a4aae6fe75a5269210b2e92ada2c392eab70480f9950e5be18bd0",
+        ("2022.10", "x86_64"): "444e101da54b0cc79769b91ef5119d38864e15e0166575af28f3bb75d7f905ea",
         ("2022.06", "aarch64"): "2714d44be798a63bc65e36b6bd35e690a3fcd79398b1b8ddcb447cd620b64e84",
         ("2022.06", "ppc64le"): "09867257c90371cf908347cf0ee3eddb381f8481625a6a80307f7de78467ada6",
         ("2022.06", "x86_64"): "a0ef849f5c46054b4db3c9bdeb9a1812af2355749d5a3966a473b8f04a8765e9",

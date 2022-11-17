@@ -191,5 +191,10 @@ class Singularityce(SingularityBase):
     maintainers = ["alalazo"]
     version("master", branch="master")
 
+    version("3.10.3", sha256="f87d8e212ce209c5212d6faf253b97a24b5d0b6e6b17b5e58b316cdda27a332f")
+    version("3.10.2", sha256="b4f279856ea4bf28a1f34f89320c02b545d6e57d4143679920e1ac4267f540e1")
+    version("3.10.1", sha256="e3af12edc0260bc3a3a481459a3a4457de9235025e6b37288da80e3cdc011a7a")
+    version("3.10.0", sha256="5e22e6cdad66c331668f6cff4544c83917bb3db90da3cf92403a394c5bf8cc8f")
+    version("3.9.9", sha256="1381433d64138c08e93ffacdfb4844e82c2288f1e39a9d2c631a1c4021381f2a")
     version("3.9.1", sha256="1ba3bb1719a420f48e9b0a6afdb5011f6c786d0f107ef272528c632fff9fd153")
     version("3.8.0", sha256="5fa2c0e7ef2b814d8aa170826b833f91e5031a85d85cd1292a234e6c55da1be1")

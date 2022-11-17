@@ -8,7 +8,6 @@ import os
 import shutil
 import sys
 import tempfile
-import warnings
 
 import llnl.util.tty as tty
 
@@ -258,19 +257,6 @@ def setup_parser(subparser):
     )
     savespecfile.set_defaults(func=save_specfile_fn)
 
-    # Copy buildcache from some directory to another mirror url
-    copy = subparsers.add_parser("copy", help=copy_fn.__doc__)
-    copy.add_argument(
-        "--base-dir", default=None, help="Path to mirror directory (root of existing buildcache)"
-    )
-    copy.add_argument(
-        "--spec-file",
-        default=None,
-        help=("Path to spec json or yaml file representing buildcache entry to" + " copy"),
-    )
-    copy.add_argument("--destination-url", default=None, help="Destination mirror url")
-    copy.set_defaults(func=copy_fn)
-
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
     sync.add_argument(
@@ -468,7 +454,7 @@ def check_fn(args):
 
     if not specs:
         tty.msg("No specs provided, exiting.")
-        sys.exit(0)
+        return
 
     for spec in specs:
         spec.concretize()
@@ -481,9 +467,10 @@ def check_fn(args):
 
     if not configured_mirrors:
         tty.msg("No mirrors provided, exiting.")
-        sys.exit(0)
+        return
 
-    sys.exit(bindist.check_specs_against_mirrors(configured_mirrors, specs, args.output_file))
+    if bindist.check_specs_against_mirrors(configured_mirrors, specs, args.output_file) == 1:
+        sys.exit(1)
 
 
 def download_fn(args):
@@ -493,11 +480,11 @@ def download_fn(args):
     least one of the required buildcache components."""
     if not args.spec and not args.spec_file:
         tty.msg("No specs provided, exiting.")
-        sys.exit(0)
+        return
 
     if not args.path:
         tty.msg("No download path provided, exiting")
-        sys.exit(0)
+        return
 
     spec = _concrete_spec_from_args(args)
     result = bindist.download_single_spec(spec, args.path)
@@ -545,80 +532,6 @@ def save_specfile_fn(args):
     save_dependency_specfiles(
         root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format
     )
-
-    sys.exit(0)
-
-
-def copy_fn(args):
-    """Copy a buildcache entry and all its files from one mirror, given as
-    '--base-dir', to some other mirror, specified as '--destination-url'.
-    The specific buildcache entry to be copied from one location to the
-    other is identified using the '--spec-file' argument."""
-    # TODO: Remove after v0.18.0 release
-    msg = (
-        '"spack buildcache copy" is deprecated and will be removed from '
-        "Spack starting in v0.19.0"
-    )
-    warnings.warn(msg)
-
-    if not args.spec_file:
-        tty.msg("No spec yaml provided, exiting.")
-        sys.exit(1)
-
-    if not args.base_dir:
-        tty.msg("No base directory provided, exiting.")
-        sys.exit(1)
-
-    if not args.destination_url:
-        tty.msg("No destination mirror url provided, exiting.")
-        sys.exit(1)
-
-    dest_url = args.destination_url
-
-    if dest_url[0:7] != "file://" and dest_url[0] != "/":
-        tty.msg('Only urls beginning with "file://" or "/" are supported ' + "by buildcache copy.")
-        sys.exit(1)
-
-    try:
-        with open(args.spec_file, "r") as fd:
-            spec = Spec.from_yaml(fd.read())
-    except Exception as e:
-        tty.debug(e)
-        tty.error("Unable to concrectize spec from yaml {0}".format(args.spec_file))
-        sys.exit(1)
-
-    dest_root_path = dest_url
-    if dest_url[0:7] == "file://":
-        dest_root_path = dest_url[7:]
-
-    build_cache_dir = bindist.build_cache_relative_path()
-
-    tarball_rel_path = os.path.join(build_cache_dir, bindist.tarball_path_name(spec, ".spack"))
-    tarball_src_path = os.path.join(args.base_dir, tarball_rel_path)
-    tarball_dest_path = os.path.join(dest_root_path, tarball_rel_path)
-
-    specfile_rel_path = os.path.join(build_cache_dir, bindist.tarball_name(spec, ".spec.json"))
-    specfile_src_path = os.path.join(args.base_dir, specfile_rel_path)
-    specfile_dest_path = os.path.join(dest_root_path, specfile_rel_path)
-
-    specfile_rel_path_yaml = os.path.join(
-        build_cache_dir, bindist.tarball_name(spec, ".spec.yaml")
-    )
-    specfile_src_path_yaml = os.path.join(args.base_dir, specfile_rel_path)
-    specfile_dest_path_yaml = os.path.join(dest_root_path, specfile_rel_path)
-
-    # Make sure directory structure exists before attempting to copy
-    os.makedirs(os.path.dirname(tarball_dest_path))
-
-    # Now copy the specfile and tarball files to the destination mirror
-    tty.msg("Copying {0}".format(tarball_rel_path))
-    shutil.copyfile(tarball_src_path, tarball_dest_path)
-
-    tty.msg("Copying {0}".format(specfile_rel_path))
-    shutil.copyfile(specfile_src_path, specfile_dest_path)
-
-    tty.msg("Copying {0}".format(specfile_rel_path_yaml))
-    shutil.copyfile(specfile_src_path_yaml, specfile_dest_path_yaml)
 
 
 def copy_buildcache_file(src_url, dest_url, local_path=None):
