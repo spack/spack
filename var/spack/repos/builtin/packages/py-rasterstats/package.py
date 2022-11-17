@@ -7,9 +7,9 @@ from spack.package import *
 
 
 class PyRasterstats(PythonPackage):
-    """rasterstats is a Python module for summarizing geospatial raster datasets 
-    based on vector geometries. It includes functions for zonal statistics and 
-    interpolated point queries. The command-line interface allows for easy 
+    """rasterstats is a Python module for summarizing geospatial raster datasets
+    based on vector geometries. It includes functions for zonal statistics and
+    interpolated point queries. The command-line interface allows for easy
     interperability with other GeoJSON tools."""
 
     homepage = "https://github.com/perrygeo/python-rasterstats"
