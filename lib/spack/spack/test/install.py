@@ -252,7 +252,7 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
     # The order should be maintained
     phases = [x["name"] for x in times["phases"]]
-    assert phases == ["one", "two", "three", "install"]
+    assert phases == ["stage", "one", "two", "three", "install"]
     assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 

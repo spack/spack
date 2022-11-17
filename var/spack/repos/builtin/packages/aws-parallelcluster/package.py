@@ -13,7 +13,7 @@ class AwsParallelcluster(PythonPackage):
     tool to deploy and manage HPC clusters in the AWS cloud."""
 
     homepage = "https://github.com/aws/aws-parallelcluster"
-    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.7.tar.gz"
+    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.8.tar.gz"
 
     maintainers = [
         "charlesg3",
@@ -26,6 +26,7 @@ class AwsParallelcluster(PythonPackage):
         "lukeseawalker",
     ]
 
+    version("2.11.8", sha256="acf33f48f8e48b0bc7be20f539d61baa1e27248765ba355df753bdfca4abd3cb")
     version("2.11.7", sha256="f7c51cf1c94787f56e0661e39860ecc9275efeacc88716b7c9f14053ec7fbd35")
     version("2.11.6", sha256="4df4bcf966f523bcdf5b4f68ed0ef347eebae70a074cd098b15bc8a6be27217c")
     version("2.11.5", sha256="7499f88387cbe2cb73f9fddeee3363117f7ef1524d6a73e77bb07900040baebb")
@@ -58,7 +59,8 @@ class AwsParallelcluster(PythonPackage):
 
     depends_on("py-configparser@3.5.0:3.8.1", when="^python@:2", type=("build", "run"))
 
-    depends_on("py-tabulate@0.8.3:0.8.9", when="@2.11:", type=("build", "run"))
+    depends_on("py-tabulate@0.8.3:0.8.10", when="@2.11: ^python@:2,3.5:3.9", type=("build", "run"))
+    depends_on("py-tabulate@0.8.8:0.8.10", when="@2.11: ^python@3.10:", type=("build", "run"))
     depends_on("py-tabulate@0.8.2:0.8.3", when="@:2.8", type=("build", "run"))
     depends_on("py-tabulate@0.8.5", when="@2.9: ^python@3.0:3.4", type=("build", "run"))
     depends_on("py-tabulate@0.8.2:0.8.7", when="@2.9: ^python@:2,3.5:", type=("build", "run"))

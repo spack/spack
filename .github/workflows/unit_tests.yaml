@@ -11,28 +11,38 @@ concurrency:
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.6.15', '3.7', '3.8', '3.9', '3.10', '3.11']
+        os: [ubuntu-latest]
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
         - python-version: '3.11'
+          os: ubuntu-latest
           concretizer: original
+          on_develop: ${{ github.ref == 'refs/heads/develop' }}
+        - python-version: '3.6'
+          os: ubuntu-20.04
+          concretizer: clingo
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
         exclude:
         - python-version: '3.7'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.8'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.9'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.10'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
 
@@ -49,20 +59,11 @@ jobs:
           # Needed for unit tests
           sudo apt-get -y install \
               coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
-              patchelf cmake bison libbison-dev kcov
+              cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-xdist 
-          # Install pytest-cov only on recent Python, to avoid stalling on Python 2.7 due
-          # to bugs on an unmaintained version of the package when used with xdist.
-          if [[ ${{ matrix.python-version }} != "2.7" ]]; then
-            pip install --upgrade pytest-cov
-          fi
-          # ensure style checks are not skipped in unit tests for python >= 3.6
-          # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
-          if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
-              pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click==8.0.4" "black<=21.12b0"
-          fi
+          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-xdist pytest-cov
+          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -75,6 +76,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           spack bootstrap disable spack-install
+          spack bootstrap now
           spack -v solve zlib
     - name: Run unit tests
       env:
@@ -158,10 +160,7 @@ jobs:
     - name: Install System packages
       run: |
           sudo apt-get -y update
-          # Needed for unit tests
-          sudo apt-get -y install \
-              coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
-              patchelf kcov
+          sudo apt-get -y install coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build kcov
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools pytest codecov coverage[toml] pytest-cov clingo pytest-xdist

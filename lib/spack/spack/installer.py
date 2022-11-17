@@ -279,11 +279,10 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
-def _print_timer(pre, pkg_id, fetch, build, total):
-    tty.msg(
-        "{0} Successfully installed {1}".format(pre, pkg_id),
-        "Fetch: {0}.  Build: {1}.  Total: {2}.".format(_hms(fetch), _hms(build), _hms(total)),
-    )
+def _print_timer(pre, pkg_id, timer):
+    phases = ["{}: {}.".format(p.capitalize(), _hms(timer.duration(p))) for p in timer.phases]
+    phases.append("Total: {}".format(_hms(timer.duration())))
+    tty.msg("{0} Successfully installed {1}".format(pre, pkg_id), "  ".join(phases))
 
 
 def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
@@ -316,13 +315,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
         return False
     t.stop()
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
-    _print_timer(
-        pre=_log_prefix(pkg.name),
-        pkg_id=pkg_id,
-        fetch=t.duration("search") + t.duration("fetch"),
-        build=t.duration("install"),
-        total=t.duration(),
-    )
+    _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec)
     return True
@@ -1918,11 +1911,15 @@ class BuildProcessInstaller(object):
     def run(self):
         """Main entry point from ``build_process`` to kick off install in child."""
 
+        self.timer.start("stage")
+
         if not self.fake:
             if not self.skip_patch:
                 self.pkg.do_patch()
             else:
                 self.pkg.do_stage()
+
+        self.timer.stop("stage")
 
         tty.debug(
             "{0} Building {1} [{2}]".format(self.pre, self.pkg_id, self.pkg.build_system_class)
@@ -1958,9 +1955,7 @@ class BuildProcessInstaller(object):
         _print_timer(
             pre=self.pre,
             pkg_id=self.pkg_id,
-            fetch=self.pkg._fetch_time,
-            build=self.timer.duration() - self.pkg._fetch_time,
-            total=self.timer.duration(),
+            timer=self.timer,
         )
         _print_installed_pkg(self.pkg.prefix)
 
