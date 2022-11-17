@@ -30,8 +30,7 @@ class SimModel(Package):
     from NeurodamusModel instead. See neurodamus-xxx packages for examples.
 
     """
-    homepage = "foo"
-    url = "bar"
+    homepage = ""
 
     variant('coreneuron',  default=False, description="Enable CoreNEURON Support")
     variant('profile',     default=False, description="Enable profiling using Tau")
@@ -39,13 +38,13 @@ class SimModel(Package):
 
     # neuron/corenrn get linked automatically when using nrnivmodl[-core]
     # Dont duplicate the link dependency (only 'build' and 'run')
-    # depends_on('neuron+mpi', type=('build', 'run'))
-    # depends_on('coreneuron', when='+coreneuron', type=('build', 'run'))
-    # depends_on('neuron+profile', when='+profile', type=('build', 'run'))
-    # depends_on('coreneuron+profile', when='+coreneuron+profile', type=('build', 'run'))
-    # depends_on('tau', when='+profile')
-    # depends_on('neuron+caliper', when='+caliper', type=('build', 'run'))
-    # depends_on('coreneuron+caliper', when='+coreneuron+caliper', type=('build', 'run'))
+    depends_on('neuron+mpi', type=('build', 'run'))
+    depends_on('coreneuron', when='+coreneuron', type=('build', 'run'))
+    depends_on('neuron+profile', when='+profile', type=('build', 'run'))
+    depends_on('coreneuron+profile', when='+coreneuron+profile', type=('build', 'run'))
+    depends_on('tau', when='+profile')
+    depends_on('neuron+caliper', when='+caliper', type=('build', 'run'))
+    depends_on('coreneuron+caliper', when='+coreneuron+caliper', type=('build', 'run'))
     depends_on('gettext', when='^neuron+binary')
 
     conflicts('^neuron~python', when='+coreneuron')
