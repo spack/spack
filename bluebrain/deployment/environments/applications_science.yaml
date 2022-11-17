@@ -40,17 +40,19 @@ spack:
       variants: ~mpi
     vtk:
       variants: ~mpi~ffmpeg~opengl2
+    py-torch:
+      variants: cuda_arch=70
   specs:
-   #- py-amici  # BSD-276
-   #- py-atlalign
-   #- py-atlannot
-   #- py-atldld
-   #- py-atlinter
-   #- py-bba-datafetch
-   #- py-bba-webexporter
-   #- py-bglibpy
-   #- py-bluepyefe
-   #- py-bluepyemodel
+    - py-amici  # BSD-276
+    - py-atlalign
+    - py-atlannot
+    - py-atldld
+    - py-atlinter
+    - py-bba-datafetch
+    - py-bba-webexporter
+    - py-bglibpy
+    - py-bluepyefe
+    - py-bluepyemodel
     - py-bluepymm
     - py-bluepyopt
     - py-bluepyparallel
