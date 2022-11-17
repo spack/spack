@@ -182,6 +182,7 @@ def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir
     """
     old_create = spack.mirror.create
     monkeypatch.setattr(spack.mirror, "create", lambda p, s: old_create(p, []))
+    monkeypatch.setattr(spack.spec.Spec, "concretized", lambda p: p)
 
     # Create the mirror in a temporary folder
     compilers = [

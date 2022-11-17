@@ -127,6 +127,7 @@ class Glib(Package):
     depends_on("uuid", when="+libmount")
     depends_on("util-linux", when="+libmount")
     depends_on("iconv")
+    depends_on("elf")  # bin/gresource
 
     # The following patch is needed for gcc-6.1
     patch("g_date_strftime.patch", when="@2.42.1")
@@ -199,6 +200,7 @@ class Glib(Package):
         else:
             args.append("-Dselinux=false")
         args.append("-Dgtk_doc=false")
+        args.append("-Dlibelf=enabled")
         return args
 
     def install(self, spec, prefix):
@@ -281,7 +283,7 @@ class Glib(Package):
         filter_file(
             "^#!/usr/bin/env @PYTHON@",
             "#!/usr/bin/env {0}".format(os.path.basename(self.spec["python"].command.path)),
-            *files
+            *files,
         )
 
     @run_before("install")

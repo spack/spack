@@ -186,11 +186,6 @@ builds_cuda=(
 
 
 builds_rocm=(
-    # NOTE: the miniapp 'hooke' crashes the HIP compiler, so it needs to be
-    #       disabled in Spack, e.g. with
-    #          filter_file("PAR_MINIAPPS = hooke", "PAR_MINIAPPS =",
-    #                      "miniapps/hooke/makefile")
-
     # hypre without rocm:
     ${mfem}'+rocm amdgpu_target='"${rocm_arch}"
 

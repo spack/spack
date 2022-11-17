@@ -16,11 +16,9 @@ import sys
 import tempfile
 import time
 import zipfile
-
-from six import iteritems, string_types
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import HTTPHandler, Request, build_opener
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -51,6 +49,7 @@ JOB_RETRY_CONDITIONS = [
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
+SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -215,7 +214,7 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
     def _remove_satisfied_deps(deps, satisfied_list):
         new_deps = {}
 
-        for key, value in iteritems(deps):
+        for key, value in deps.items():
             new_value = set([v for v in value if v not in satisfied_list])
             if new_value:
                 new_deps[key] = new_value
@@ -731,6 +730,12 @@ def generate_gitlab_ci_yaml(
         # won't fetch its index and include in our local cache.
         spack.mirror.add("ci_pr_mirror", remote_mirror_override, cfg.default_modify_scope())
 
+    shared_pr_mirror = None
+    if spack_pipeline_type == "spack_pull_request":
+        stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
+        shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
+        spack.mirror.add("ci_shared_pr_mirror", shared_pr_mirror, cfg.default_modify_scope())
+
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
         proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
@@ -805,6 +810,8 @@ def generate_gitlab_ci_yaml(
         # Clean up remote mirror override if enabled
         if remote_mirror_override:
             spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
+        if spack_pipeline_type == "spack_pull_request":
+            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
 
     all_job_names = []
     output_object = {}
@@ -1294,6 +1301,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
         }
@@ -1960,7 +1968,7 @@ def process_command(name, commands, repro_dir):
     """
     tty.debug("spack {0} arguments: {1}".format(name, commands))
 
-    if len(commands) == 0 or isinstance(commands[0], string_types):
+    if len(commands) == 0 or isinstance(commands[0], str):
         commands = [commands]
 
     # Create a string [command 1] && [command 2] && ... && [command n] with commands
