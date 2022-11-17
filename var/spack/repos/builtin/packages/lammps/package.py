@@ -211,134 +211,135 @@ class Lammps(CMakePackage, CudaPackage):
     # List of supported optional packages
     # Note: package `openmp` in this recipe is called `openmp-package`, to avoid clash
     # with the pre-existing `openmp` variant
-    supported_packages = [
-        "asphere",
-        "body",
-        "bpm",
-        "class2",
-        "colloid",
-        "compress",
-        "coreshell",
-        "dielectric",
-        "dipole",
-        "electrode",
-        "granular",
-        "intel",
-        "kspace",
-        "kokkos",
-        "latte",
-        "manybody",
-        "mc",
-        "meam",
-        "misc",
-        "mliap",
-        "ml-hdnnp",
-        "ml-iap",
-        "ml-snap",
-        "molecule",
-        "mpiio",
-        "opt",
-        "peri",
-        "plugin",
-        "poems",
-        "python",
-        "qeq",
-        "replica",
-        "rigid",
-        "shock",
-        "snap",
-        "spin",
-        "srd",
-        "voronoi",
-        "user-atc",
-        "user-adios",
-        "user-awpmd",
-        "user-bocs",
-        "user-brownian",
-        "user-cgsdk",
-        "user-colvars",
-        "user-diffraction",
-        "user-dpd",
-        "user-drude",
-        "user-eff",
-        "user-fep",
-        "user-h5md",
-        "user-hdnnp",
-        "user-intel",
-        "user-lb",
-        "user-manifold",
-        "user-meamc",
-        "user-mesodpd",
-        "user-mesont",
-        "user-mgpt",
-        "user-misc",
-        "user-mofff",
-        "user-molfile",
-        "user-netcdf",
-        "user-omp",
-        "user-phonon",
-        "user-plumed",
-        "user-ptm",
-        "user-qtb",
-        "user-reaction",
-        "user-reaxc",
-        "user-sdpd",
-        "user-smd",
-        "user-smtbq",
-        "user-sph",
-        "user-tally",
-        "user-uef",
-        "user-yaff",
-        "atc",
-        "adios",
-        "awpmd",
-        "bocs",
-        "brownian",
-        "cg-sdk",
-        "colvars",
-        "diffraction",
-        "dpd-basic",
-        "dpd-meso",
-        "dpd-react",
-        "dpd-smooth",
-        "drude",
-        "eff",
-        "extra-compute",
-        "extra-dump",
-        "extra-fix",
-        "extra-molecule",
-        "extra-pair",
-        "fep",
-        "h5md",
-        "interlayer",
-        "latboltz",
-        "machdyn",
-        "manifold",
-        "mesont",
-        "mgpt",
-        "mofff",
-        "molfile",
-        "netcdf",
-        "openmp-package",
-        "orient",
-        "phonon",
-        "plumed",
-        "ptm",
-        "qtb",
-        "reaction",
-        "reaxff",
-        "smtbq",
-        "sph",
-        "tally",
-        "uef",
-        "yaff",
-    ]
+    supported_packages = {
+        "asphere": {},
+        "body": {},
+        "bpm": {"when": "@20220504:"},
+        "class2": {},
+        "colloid": {},
+        "compress": {},
+        "coreshell": {},
+        "dielectric": {"when": "@20210702:"},
+        "dipole": {},
+        "electrode": {"when": "@20220504:"},
+        "granular": {},
+        "intel": {},
+        "kspace": {},
+        "kokkos": {},
+        "latte": {},
+        "manybody": {},
+        "mc": {},
+        "meam": {"when": "@20210728:"},
+        "misc": {},
+        "mliap": {"when": "@:20210702"},
+        "ml-iap": {"when": "@20210728:"},
+        "ml-snap": {"when": "@20210728:"},
+        "ml-hdnnp": {"when": "@20210702:"},
+        "molecule": {},
+        "mpiio": {},
+        "opt": {},
+        "peri": {},
+        "plugin": {"when": "@20210408:"},
+        "poems": {},
+        "python": {},
+        "qeq": {},
+        "replica": {},
+        "rigid": {},
+        "shock": {},
+        "snap": {"when": "@:20210702"},
+        "spin": {},
+        "srd": {},
+        "voronoi": {},
+        "user-atc": {"when": "@:20210702"},
+        "user-adios": {"when": "@:20210702"},
+        "user-awpmd": {"when": "@:20210702"},
+        "user-bocs": {"when": "@:20210702"},
+        "user-brownian": {"when": "@20210514:20210702"},
+        "user-cgsdk": {"when": "@:20210702"},
+        "user-colvars": {"when": "@:20210702"},
+        "user-diffraction": {"when": "@:20210702"},
+        "user-dpd": {"when": "@:20210702"},
+        "user-drude": {"when": "@:20210702"},
+        "user-eff": {"when": "@:20210702"},
+        "user-fep": {"when": "@:20210702"},
+        "user-hdnnp": {"when": "@20210527"},
+        "user-h5md": {"when": "@:20210702"},
+        "user-intel": {"when": "@:20210702"},
+        "user-lb": {"when": "@:20210702"},
+        "user-manifold": {"when": "@:20210702"},
+        "user-meamc": {"when": "@:20210702"},
+        "user-mesodpd": {"when": "@:20210702"},
+        "user-mesont": {"when": "@:20210702"},
+        "user-mgpt": {"when": "@:20210702"},
+        "user-misc": {"when": "@:20210702"},
+        "user-mofff": {"when": "@:20210702"},
+        "user-molfile": {"when": "@:20210702"},
+        "user-netcdf": {"when": "@:20210702"},
+        "user-omp": {"when": "@:20210702"},
+        "user-phonon": {"when": "@:20210702"},
+        "user-plumed": {"when": "@:20210702"},
+        "user-ptm": {"when": "@:20210702"},
+        "user-qtb": {"when": "@:20210702"},
+        "user-reaction": {"when": "@:20210702"},
+        "user-reaxc": {"when": "@:20210702"},
+        "user-sdpd": {"when": "@:20210702"},
+        "user-smd": {"when": "@:20210702"},
+        "user-smtbq": {"when": "@:20210702"},
+        "user-sph": {"when": "@:20210702"},
+        "user-tally": {"when": "@:20210702"},
+        "user-uef": {"when": "@:20210702"},
+        "user-yaff": {"when": "@:20210702"},
+        "atc": {"when": "@20210728:"},
+        "adios": {"when": "@20210728:"},
+        "awpmd": {"when": "@20210728:"},
+        "bocs": {"when": "@20210728:"},
+        "brownian": {"when": "@20210728:"},
+        "cg-sdk": {"when": "@20210728:"},
+        "colvars": {"when": "@20210728:"},
+        "diffraction": {"when": "@20210728:"},
+        "dpd-basic": {"when": "@20210728:"},
+        "dpd-meso": {"when": "@20210728:"},
+        "dpd-react": {"when": "@20210728:"},
+        "dpd-smooth": {"when": "@20210728:"},
+        "drude": {"when": "@20210728:"},
+        "eff": {"when": "@20210728:"},
+        "extra-compute": {"when": "@20210728:"},
+        "extra-dump": {"when": "@20210728:"},
+        "extra-fix": {"when": "@20210728:"},
+        "extra-molecule": {"when": "@20210728:"},
+        "extra-pair": {"when": "@20210728:"},
+        "fep": {"when": "@20210728:"},
+        "h5md": {"when": "@20210728:"},
+        "interlayer": {"when": "@20210728:"},
+        "latboltz": {"when": "@20210728:"},
+        "machdyn": {"when": "@20210728:"},
+        "manifold": {"when": "@20210728:"},
+        "mesont": {"when": "@20210728:"},
+        "mgpt": {"when": "@20210728:"},
+        "mofff": {"when": "@20210728:"},
+        "molfile": {"when": "@20210728:"},
+        "netcdf": {"when": "@20210728:"},
+        "openmp-package": {},
+        "orient": {"when": "@20210728:"},
+        "phonon": {"when": "@20210728:"},
+        "plumed": {"when": "@20210728:"},
+        "ptm": {"when": "@20210728:"},
+        "qtb": {"when": "@20210728:"},
+        "reaction": {"when": "@20210728:"},
+        "reaxff": {"when": "@20210728:"},
+        "smtbq": {"when": "@20210728:"},
+        "sph": {"when": "@20210728:"},
+        "tally": {"when": "@20210728:"},
+        "uef": {"when": "@20210728:"},
+        "yaff": {"when": "@20210728:"},
+    }
 
-    for pkg in supported_packages:
+    for pkg_name, pkg_options in supported_packages.items():
         variant(
-            pkg,
+            pkg_name,
             default=False,
-            description="Activate the {0} package".format(pkg.replace("-package", "")),
+            description="Activate the {} package".format(pkg_name.replace("-package", "")),
+            when=pkg_options.get("when", None),
         )
     variant("lib", default=True, description="Build the liblammps in addition to the executable")
     variant("mpi", default=True, description="Build with mpi")
@@ -439,38 +440,6 @@ class Lammps(CMakePackage, CudaPackage):
         when="@20181212:20210527",
         msg="+meam is removed between @20181212 and @20210527, use +user-meamc instead",
     )
-    conflicts(
-        "+user-meamc", when="@:20181212", msg="+user-meamc only added @20181212, use +meam instead"
-    )
-    conflicts(
-        "+user-reaction",
-        when="@:20200303",
-        msg="+user-reaction only supported for version 20200505 and later",
-    )
-    conflicts(
-        "+plugin", when="@:20210310", msg="+plugin only supported for version 20210408 and later"
-    )
-    conflicts(
-        "+user-brownian",
-        when="@:20210408",
-        msg="+user-brownian only supported for version 20210514 and later",
-    )
-    conflicts(
-        "+dielectric",
-        when="@:20210527",
-        msg="+dielectric only supported for version 20210702 and later",
-    )
-    conflicts(
-        "+dpd-basic",
-        when="@:20210527",
-        msg="+dpd-basic only supported for version 20210702 and later",
-    )
-    conflicts("+bpm", when="@:20220324", msg="+bpm only supported for version 20220504 and later")
-    conflicts(
-        "+electrode",
-        when="@:20220324",
-        msg="+electrode only supported for version 20220504 and later",
-    )
     conflicts("+electrode", when="~kspace")
     conflicts("+mliap", when="~snap")
     conflicts("+ml-iap", when="~ml-snap")
@@ -493,362 +462,6 @@ class Lammps(CMakePackage, CudaPackage):
         "+adios ~mpi",
         when="^adios2+mpi",
         msg="With +adios, mpi setting for adios2 and lammps must be the same",
-    )
-
-    # In the following, package refactoring at 2 July 2021
-    conflicts(
-        "+mliap", when="@20210702:", msg="+mliap was removed after @20210527, use +ml-iap instead"
-    )
-    conflicts("+ml-iap", when="@:20210527", msg="+ml-iap only added @20210702, use +mliap instead")
-    conflicts(
-        "+snap", when="@20210702:", msg="+snap was removed after @20210527, use +ml-snap instead"
-    )
-    conflicts(
-        "+ml-snap", when="@:20210527", msg="+ml-snap only added @20210702, use +snap instead"
-    )
-    #
-    conflicts(
-        "+user-atc",
-        when="@20210702:",
-        msg="+user-atc was removed after @20210527, use +atc instead",
-    )
-    conflicts("+atc", when="@:20210527", msg="+atc only added @20210702, use +user-atc instead")
-    conflicts(
-        "+user-adios",
-        when="@20210702:",
-        msg="+user-adios was removed after @20210527, use +adios instead",
-    )
-    conflicts(
-        "+adios", when="@:20210527", msg="+adios only added @20210702, use +user-adios instead"
-    )
-    conflicts(
-        "+user-awpmd",
-        when="@20210702:",
-        msg="+user-awpmd was removed after @20210527, use +awpmd instead",
-    )
-    conflicts(
-        "+awpmd", when="@:20210527", msg="+awpmd only added @20210702, use +user-awpmd instead"
-    )
-    conflicts(
-        "+user-bocs",
-        when="@20210702:",
-        msg="+user-bocs was removed after @20210527, use +bocs instead",
-    )
-    conflicts("+bocs", when="@:20210527", msg="+bocs only added @20210702, use +user-bocs instead")
-    conflicts(
-        "+user-brownian",
-        when="@20210702:",
-        msg="+user-brownian was removed after @20210527, use +brownian instead",
-    )
-    conflicts(
-        "+brownian",
-        when="@:20210527",
-        msg="+brownian only added @20210702, use +user-brownian instead",
-    )
-    conflicts(
-        "+user-cgsdk",
-        when="@20210702:",
-        msg="+user-cgsdk was removed after @20210527, use +cg-sdk instead",
-    )
-    conflicts(
-        "+cg-sdk", when="@:20210527", msg="+cg-sdk only added @20210702, use +user-cgsdk instead"
-    )
-    conflicts(
-        "+user-colvars",
-        when="@20210702:",
-        msg="+user-colvars was removed after @20210527, use +colvars instead",
-    )
-    conflicts(
-        "+colvars",
-        when="@:20210527",
-        msg="+colvars only added @20210702, use +user-colvars instead",
-    )
-    conflicts(
-        "+user-diffraction",
-        when="@20210702:",
-        msg="+user-diffraction was removed after @20210527, use +diffraction instead",
-    )
-    conflicts(
-        "+diffraction",
-        when="@:20210527",
-        msg="+diffraction only added @20210702, use +user-diffraction instead",
-    )
-    conflicts(
-        "+user-dpd",
-        when="@20210702:",
-        msg="+user-dpd was removed after @20210527, use +dpd-react instead",
-    )
-    conflicts(
-        "+dpd-react",
-        when="@:20210527",
-        msg="+dpd-react only added @20210702, use +user-dpd instead",
-    )
-    conflicts(
-        "+user-drude",
-        when="@20210702:",
-        msg="+user-drude was removed after @20210527, use +drude instead",
-    )
-    conflicts(
-        "+drude", when="@:20210527", msg="+drude only added @20210702, use +user-drude instead"
-    )
-    conflicts(
-        "+user-eff",
-        when="@20210702:",
-        msg="+user-eff was removed after @20210527, use +eff instead",
-    )
-    conflicts("+eff", when="@:20210527", msg="+eff only added @20210702, use +user-eff instead")
-    conflicts(
-        "+user-fep",
-        when="@20210702:",
-        msg="+user-fep was removed after @20210527, use +fep instead",
-    )
-    conflicts("+fep", when="@:20210527", msg="+fep only added @20210702, use +user-fep instead")
-    conflicts(
-        "+user-h5md",
-        when="@20210702:",
-        msg="+user-h5md was removed after @20210527, use +h5md instead",
-    )
-    conflicts("+h5md", when="@:20210527", msg="+h5md only added @20210702, use +user-h5md instead")
-    conflicts(
-        "+user-hdnnp", when="@:20210514", msg="+user-hdnnp was introduced in version @20210527"
-    )
-    conflicts(
-        "+user-hdnnp",
-        when="@20210702:",
-        msg="+user-hdnnp was removed after @20210527, use +ml-hdnnp instead",
-    )
-    conflicts(
-        "+ml-hdnnp",
-        when="@:20210527",
-        msg="+ml-hdnnp only added @20210702, use +user-hdnnp instead",
-    )
-    conflicts(
-        "+user-intel",
-        when="@20210702:",
-        msg="+user-intel was removed after @20210527, use +intel instead",
-    )
-    conflicts(
-        "+intel", when="@:20210527", msg="+intel only added @20210702, use +user-intel instead"
-    )
-    conflicts(
-        "+user-lb",
-        when="@20210702:",
-        msg="+user-lb was removed after @20210527, use +latboltz instead",
-    )
-    conflicts(
-        "+latboltz", when="@:20210527", msg="+latboltz only added @20210702, use +user-lb instead"
-    )
-    conflicts(
-        "+user-manifold",
-        when="@20210702:",
-        msg="+user-manifold was removed after @20210527, use +manifold instead",
-    )
-    conflicts(
-        "+manifold",
-        when="@:20210527",
-        msg="+manifold only added @20210702, use +user-manifold instead",
-    )
-    conflicts(
-        "+user-meamc",
-        when="@20210702:",
-        msg="+user-meamc was removed after @20210527, use +meam instead",
-    )
-    conflicts(
-        "+user-mesodpd",
-        when="@20210702:",
-        msg="+user-mesodpd was removed after @20210527, use +dpd-meso instead",
-    )
-    conflicts(
-        "+dpd-meso",
-        when="@:20210527",
-        msg="+dpd-meso only added @20210702, use +user-mesodpd instead",
-    )
-    conflicts(
-        "+user-mesont",
-        when="@20210702:",
-        msg="+user-mesont was removed after @20210527, use +mesont instead",
-    )
-    conflicts(
-        "+mesont", when="@:20210527", msg="+mesont only added @20210702, use +user-mesont instead"
-    )
-    conflicts(
-        "+user-mgpt",
-        when="@20210702:",
-        msg="+user-mgpt was removed after @20210527, use +mgpt instead",
-    )
-    conflicts("+mgpt", when="@:20210527", msg="+mgpt only added @20210702, use +user-mgpt instead")
-    conflicts(
-        "+user-mofff",
-        when="@20210702:",
-        msg="+user-mofff was removed after @20210527, use +mofff instead",
-    )
-    conflicts(
-        "+mofff", when="@:20210527", msg="+mofff only added @20210702, use +user-mofff instead"
-    )
-    conflicts(
-        "+user-molfile",
-        when="@20210702:",
-        msg="+user-molfile was removed after @20210527, use +molfile instead",
-    )
-    conflicts(
-        "+molfile",
-        when="@:20210527",
-        msg="+molfile only added @20210702, use +user-molfile instead",
-    )
-    conflicts(
-        "+user-netcdf",
-        when="@20210702:",
-        msg="+user-netcdf was removed after @20210527, use +netcdf instead",
-    )
-    conflicts(
-        "+netcdf", when="@:20210527", msg="+netcdf only added @20210702, use +user-netcdf instead"
-    )
-    conflicts(
-        "+user-omp",
-        when="@20210702:",
-        msg="+user-omp was removed after @20210527, use +openmp-package instead",
-    )
-    conflicts(
-        "+openmp-package",
-        when="@:20210527",
-        msg="+openmp-package only added @20210702, use +user-omp instead",
-    )
-    conflicts(
-        "+user-phonon",
-        when="@20210702:",
-        msg="+user-phonon was removed after @20210527, use +phonon instead",
-    )
-    conflicts(
-        "+phonon", when="@:20210527", msg="+phonon only added @20210702, use +user-phonon instead"
-    )
-    conflicts(
-        "+user-plumed",
-        when="@20210702:",
-        msg="+user-plumed was removed after @20210527, use +plumed instead",
-    )
-    conflicts(
-        "+plumed", when="@:20210527", msg="+plumed only added @20210702, use +user-plumed instead"
-    )
-    conflicts(
-        "+user-ptm",
-        when="@20210702:",
-        msg="+user-ptm was removed after @20210527, use +ptm instead",
-    )
-    conflicts("+ptm", when="@:20210527", msg="+ptm only added @20210702, use +user-ptm instead")
-    conflicts(
-        "+user-qtb",
-        when="@20210702:",
-        msg="+user-qtb was removed after @20210527, use +qtb instead",
-    )
-    conflicts("+qtb", when="@:20210527", msg="+qtb only added @20210702, use +user-qtb instead")
-    conflicts(
-        "+user-reaction",
-        when="@20210702:",
-        msg="+user-reaction was removed after @20210527, use +reaction instead",
-    )
-    conflicts(
-        "+reaction",
-        when="@:20210527",
-        msg="+reaction only added @20210702, use +user-reaction instead",
-    )
-    conflicts(
-        "+user-reaxc",
-        when="@20210702:",
-        msg="+user-reaxc was removed after @20210527, use +reaxff instead",
-    )
-    conflicts(
-        "+reaxff", when="@:20210527", msg="+reaxff only added @20210702, use +user-reaxc instead"
-    )
-    conflicts(
-        "+user-sdpd",
-        when="@20210702:",
-        msg="+user-sdpd was removed after @20210527, use +dpd-smooth instead",
-    )
-    conflicts(
-        "+dpd-smooth",
-        when="@:20210527",
-        msg="+dpd-smooth only added @20210702, use +user-sdpd instead",
-    )
-    conflicts(
-        "+user-smd",
-        when="@20210702:",
-        msg="+user-smd was removed after @20210527, use +machdyn instead",
-    )
-    conflicts(
-        "+machdyn", when="@:20210527", msg="+machdyn only added @20210702, use +user-smd instead"
-    )
-    conflicts(
-        "+user-smtbq",
-        when="@20210702:",
-        msg="+user-smtbq was removed after @20210527, use +smtbq instead",
-    )
-    conflicts(
-        "+smtbq", when="@:20210527", msg="+smtbq only added @20210702, use +user-smtbq instead"
-    )
-    conflicts(
-        "+user-sph",
-        when="@20210702:",
-        msg="+user-sph was removed after @20210527, use +sph instead",
-    )
-    conflicts("+sph", when="@:20210527", msg="+sph only added @20210702, use +user-sph instead")
-    conflicts(
-        "+user-tally",
-        when="@20210702:",
-        msg="+user-tally was removed after @20210527, use +tally instead",
-    )
-    conflicts(
-        "+tally", when="@:20210527", msg="+tally only added @20210702, use +user-tally instead"
-    )
-    conflicts(
-        "+user-uef",
-        when="@20210702:",
-        msg="+user-uef was removed after @20210527, use +uef instead",
-    )
-    conflicts("+uef", when="@:20210527", msg="+uef only added @20210702, use +user-uef instead")
-    conflicts(
-        "+user-yaff",
-        when="@20210702:",
-        msg="+user-yaff was removed after @20210527, use +yaff instead",
-    )
-    conflicts("+yaff", when="@:20210527", msg="+yaff only added @20210702, use +user-yaff instead")
-    # In the following, package refactoring at 28 July 2021
-    conflicts(
-        "+user-misc",
-        when="@20210728:",
-        msg="+user-misc was removed after @20210702, and split over multiple packages",
-    )
-    conflicts(
-        "+extra-compute",
-        when="@:20210702",
-        msg="+extra-compute only added @20210728, use +user-misc instead",
-    )
-    conflicts(
-        "+extra-dump",
-        when="@:20210702",
-        msg="+extra-dump only added @20210728, use +user-misc instead",
-    )
-    conflicts(
-        "+extra-fix",
-        when="@:20210702",
-        msg="+extra-fix only added @20210728, use +user-misc instead",
-    )
-    conflicts(
-        "+extra-molecule",
-        when="@:20210702",
-        msg="+extra-molecule only added @20210728, use +user-misc instead",
-    )
-    conflicts(
-        "+extra-pair",
-        when="@:20210702",
-        msg="+extra-pair only added @20210728, use +user-misc instead",
-    )
-    conflicts(
-        "+interlayer",
-        when="@:20210702",
-        msg="+interlayer only added @20210728, use +user-misc instead",
-    )
-    conflicts(
-        "+orient", when="@:20210702", msg="+orient only added @20210728, use +user-misc instead"
     )
 
     patch("lib.patch", when="@20170901")
@@ -904,14 +517,13 @@ class Lammps(CMakePackage, CudaPackage):
         )
         args.append(self.define("CMAKE_TUNE_FLAGS", cmake_tune_flags))
 
-        lammps_sizes = self.spec.variants["lammps_sizes"].value
-        args.append(self.define("LAMMPS_SIZES", lammps_sizes))
+        args.append(self.define_from_variant("LAMMPS_SIZES", "lammps_sizes"))
 
         args.append(self.define_from_variant("WITH_JPEG", "jpeg"))
         args.append(self.define_from_variant("WITH_PNG", "png"))
         args.append(self.define_from_variant("WITH_FFMPEG", "ffmpeg"))
 
-        for pkg in self.supported_packages:
+        for pkg in self.supported_packages.keys():
             opt = "-D{0}_{1}".format(pkg_prefix, pkg.replace("-package", "").upper())
             if "+{0}".format(pkg) in spec:
                 args.append("{0}=ON".format(opt))
