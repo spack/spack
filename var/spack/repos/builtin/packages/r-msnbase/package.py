@@ -15,6 +15,7 @@ class RMsnbase(RPackage):
 
     bioc = "MSnbase"
 
+    version("2.24.0", commit="b96e0142c663c2cb01e92479816a503c46caa1a8")
     version("2.22.0", commit="4f6e5767eee91b2105781b494fcabcfed16eba2d")
     version("2.20.4", commit="c86ac8b341832f2b577f2153258c1abf064e6448")
     version("2.16.1", commit="4d88b4edd1af59474462b1b06ad0ec5831f3a878")
@@ -40,6 +41,7 @@ class RMsnbase(RPackage):
     depends_on("r-protgenerics@1.19.3:", type=("build", "run"), when="@2.16.1:")
     depends_on("r-protgenerics@1.25.1:", type=("build", "run"), when="@2.20.4:")
     depends_on("r-protgenerics@1.27.2:", type=("build", "run"), when="@2.22.0:")
+    depends_on("r-protgenerics@1.29.1:", type=("build", "run"), when="@2.24.0:")
     depends_on("r-mscoreutils", type=("build", "run"), when="@2.20.4:")
     depends_on("r-biocparallel", type=("build", "run"))
     depends_on("r-iranges", type=("build", "run"))
