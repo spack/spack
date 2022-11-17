@@ -95,7 +95,7 @@ class Msvc(Compiler):
     @property
     def msvc_version(self):
         """This is the VCToolset version *NOT* the actual version of the cl compiler
-        For CL version, query `Msvc.cc_version`"""
+        For CL version, query `Msvc.cl_version`"""
         return Version(re.search(Msvc.version_regex, self.cc).group(1))
 
     @property
@@ -109,7 +109,7 @@ class Msvc(Compiler):
         return "MSVC" + ver
 
     @property
-    def cc_version(self):
+    def cl_version(self):
         """Cl toolset version"""
         return spack.compiler.get_compiler_version_output(self.cc)
 
