@@ -167,9 +167,9 @@ class PyDask(PythonPackage):
         when="@2020.12.0:2021.6.1 +distributed",
     )
     depends_on(
-        "py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2:2022.10.1 +distributed"
+        "py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2 +distributed"
     )
-    depends_on("py-distributed@2022.10.2", type=("build", "run"), when="@2022.10.2: +distributed")
+    depends_on("py-distributed@2022.10.2", type=("build", "run"), when="@2022.10.2 +distributed")
 
     # Requirements for dask.diagnostics
     depends_on("py-bokeh@1.0.0:", type=("build", "run"), when="@2.0.0: +diagnostics")
