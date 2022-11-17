@@ -3525,7 +3525,7 @@ will likely contain some overriding of default builder methods:
        def cmake_args(self):
            pass
 
-   class Autotoolsbuilder(spack.build_systems.autotools.AutotoolsBuilder):
+   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
        def configure_args(self):
            pass
 
