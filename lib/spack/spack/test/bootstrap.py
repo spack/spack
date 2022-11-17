@@ -175,15 +175,15 @@ def test_nested_use_of_context_manager(mutable_config):
 def test_status_function_find_files(
     mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing
 ):
-    import spack.bootstrap.bootstrap
+    import spack.bootstrap.status
 
     if not expected_missing:
         mock_executable("foo", "echo Hello WWorld!")
 
     monkeypatch.setattr(
-        spack.bootstrap.bootstrap,
+        spack.bootstrap.status,
         "_optional_requirements",
-        lambda: [spack.bootstrap.bootstrap._required_system_executable("foo", "NOT FOUND")],
+        lambda: [spack.bootstrap.status._required_system_executable("foo", "NOT FOUND")],
     )
     monkeypatch.setenv("PATH", str(tmpdir.join("bin")))
 

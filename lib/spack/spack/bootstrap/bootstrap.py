@@ -2,24 +2,18 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function
-
 import copy
-import fnmatch
 import functools
 import json
 import os
 import os.path
-import platform
 import re
 import sys
-import sysconfig
 import uuid
 from typing import List
 
 import archspec.cpu
 
-import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import GroupedExceptionHandler
 
@@ -41,11 +35,8 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
-from .config import (
-    ensure_bootstrap_configuration,
-    spack_python_interpreter,
-    spec_for_current_python,
-)
+from .common import _executables_in_store, _python_import, _try_import_from_store
+from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -69,171 +60,6 @@ def _bootstrapper(type):
         return cls
 
     return _register
-
-
-def _try_import_from_store(module, query_spec, query_info=None):
-    """Return True if the module can be imported from an already
-    installed spec, False otherwise.
-
-    Args:
-        module: Python module to be imported
-        query_spec: spec that may provide the module
-        query_info (dict or None): if a dict is passed it is populated with the
-            command found and the concrete spec providing it
-    """
-    # If it is a string assume it's one of the root specs by this module
-    if isinstance(query_spec, str):
-        # We have to run as part of this python interpreter
-        query_spec += " ^" + spec_for_current_python()
-
-    installed_specs = spack.store.db.query(query_spec, installed=True)
-
-    for candidate_spec in installed_specs:
-        pkg = candidate_spec["python"].package
-        module_paths: List[str] = [
-            os.path.join(candidate_spec.prefix, pkg.purelib),
-            os.path.join(candidate_spec.prefix, pkg.platlib),
-        ]
-        path_before = list(sys.path)
-
-        # NOTE: try module_paths first and last, last allows an existing version in path
-        # to be picked up and used, possibly depending on something in the store, first
-        # allows the bootstrap version to work when an incompatible version is in
-        # sys.path
-        orders = [
-            module_paths + sys.path,
-            sys.path + module_paths,
-        ]
-        for path in orders:
-            sys.path = path
-            try:
-                _fix_ext_suffix(candidate_spec)
-                if _python_import(module):
-                    msg = (
-                        '[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
-                        'provides the "{0}" Python module'
-                    ).format(module, query_spec, candidate_spec.dag_hash())
-                    tty.debug(msg)
-                    if query_info is not None:
-                        query_info["spec"] = candidate_spec
-                    return True
-            except Exception as e:
-                msg = (
-                    "unexpected error while trying to import module "
-                    '"{0}" from spec "{1}" [error="{2}"]'
-                )
-                tty.warn(msg.format(module, candidate_spec, str(e)))
-            else:
-                msg = "Spec {0} did not provide module {1}"
-                tty.warn(msg.format(candidate_spec, module))
-
-        sys.path = path_before
-
-    return False
-
-
-def _fix_ext_suffix(candidate_spec):
-    """Fix the external suffixes of Python extensions on the fly for
-    platforms that may need it
-
-    Args:
-        candidate_spec (Spec): installed spec with a Python module
-            to be checked.
-    """
-    # Here we map target families to the patterns expected
-    # by pristine CPython. Only architectures with known issues
-    # are included. Known issues:
-    #
-    # [RHEL + ppc64le]: https://github.com/spack/spack/issues/25734
-    #
-    _suffix_to_be_checked = {
-        "ppc64le": {
-            "glob": "*.cpython-*-powerpc64le-linux-gnu.so",
-            "re": r".cpython-[\w]*-powerpc64le-linux-gnu.so",
-            "fmt": r"{module}.cpython-{major}{minor}m-powerpc64le-linux-gnu.so",
-        }
-    }
-
-    # If the current architecture is not problematic return
-    generic_target = archspec.cpu.host().family
-    if str(generic_target) not in _suffix_to_be_checked:
-        return
-
-    # If there's no EXT_SUFFIX (Python < 3.5) or the suffix matches
-    # the expectations, return since the package is surely good
-    ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
-    if ext_suffix is None:
-        return
-
-    expected = _suffix_to_be_checked[str(generic_target)]
-    if fnmatch.fnmatch(ext_suffix, expected["glob"]):
-        return
-
-    # If we are here it means the current interpreter expects different names
-    # than pristine CPython. So:
-    # 1. Find what we have installed
-    # 2. Create symbolic links for the other names, it they're not there already
-
-    # Check if standard names are installed and if we have to create
-    # link for this interpreter
-    standard_extensions = fs.find(candidate_spec.prefix, expected["glob"])
-    link_names = [re.sub(expected["re"], ext_suffix, s) for s in standard_extensions]
-    for file_name, link_name in zip(standard_extensions, link_names):
-        if os.path.exists(link_name):
-            continue
-        os.symlink(file_name, link_name)
-
-    # Check if this interpreter installed something and we have to create
-    # links for a standard CPython interpreter
-    non_standard_extensions = fs.find(candidate_spec.prefix, "*" + ext_suffix)
-    for abs_path in non_standard_extensions:
-        directory, filename = os.path.split(abs_path)
-        module = filename.split(".")[0]
-        link_name = os.path.join(
-            directory,
-            expected["fmt"].format(
-                module=module, major=sys.version_info[0], minor=sys.version_info[1]
-            ),
-        )
-        if os.path.exists(link_name):
-            continue
-        os.symlink(abs_path, link_name)
-
-
-def _executables_in_store(executables, query_spec, query_info=None):
-    """Return True if at least one of the executables can be retrieved from
-    a spec in store, False otherwise.
-
-    The different executables must provide the same functionality and are
-    "alternate" to each other, i.e. the function will exit True on the first
-    executable found.
-
-    Args:
-        executables: list of executables to be searched
-        query_spec: spec that may provide the executable
-        query_info (dict or None): if a dict is passed it is populated with the
-            command found and the concrete spec providing it
-    """
-    executables_str = ", ".join(executables)
-    msg = "[BOOTSTRAP EXECUTABLES {0}] Try installed specs with query '{1}'"
-    tty.debug(msg.format(executables_str, query_spec))
-    installed_specs = spack.store.db.query(query_spec, installed=True)
-    if installed_specs:
-        for concrete_spec in installed_specs:
-            bin_dir = concrete_spec.prefix.bin
-            # IF we have a "bin" directory and it contains
-            # the executables we are looking for
-            if (
-                os.path.exists(bin_dir)
-                and os.path.isdir(bin_dir)
-                and spack.util.executable.which_string(*executables, path=bin_dir)
-            ):
-                spack.util.environment.path_put_first("PATH", [bin_dir])
-                if query_info is not None:
-                    query_info["command"] = spack.util.executable.which(*executables, path=bin_dir)
-                    query_info["spec"] = concrete_spec
-                return True
-    return False
 
 
 class _BootstrapperBase(object):
@@ -584,14 +410,6 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=No
     raise RuntimeError(msg)
 
 
-def _python_import(module):
-    try:
-        __import__(module)
-    except ImportError:
-        return False
-    return True
-
-
 def _add_externals_if_missing():
     search_list = [
         # clingo
@@ -770,147 +588,6 @@ def all_root_specs(development=False):
     if development:
         specs += [isort_root_spec(), mypy_root_spec(), black_root_spec(), flake8_root_spec()]
     return specs
-
-
-def _missing(name, purpose, system_only=True):
-    """Message to be printed if an executable is not found"""
-    msg = '[{2}] MISSING "{0}": {1}'
-    if not system_only:
-        return msg.format(name, purpose, "@*y{{B}}")
-    return msg.format(name, purpose, "@*y{{-}}")
-
-
-def _required_system_executable(exes, msg):
-    """Search for an executable is the system path only."""
-    if isinstance(exes, str):
-        exes = (exes,)
-    if spack.util.executable.which_string(*exes):
-        return True, None
-    return False, msg
-
-
-def _required_python_module(module, query_spec, msg):
-    """Check if a Python module is available in the current interpreter or
-    if it can be loaded from the bootstrap store
-    """
-    if _python_import(module) or _try_import_from_store(module, query_spec):
-        return True, None
-    return False, msg
-
-
-def _required_executable(exes, query_spec, msg):
-    """Search for an executable in the system path or in the bootstrap store."""
-    if isinstance(exes, str):
-        exes = (exes,)
-    if spack.util.executable.which_string(*exes) or _executables_in_store(exes, query_spec):
-        return True, None
-    return False, msg
-
-
-def _core_requirements():
-    _core_system_exes = {
-        "make": _missing("make", "required to build software from sources"),
-        "patch": _missing("patch", "required to patch source code before building"),
-        "bash": _missing("bash", "required for Spack compiler wrapper"),
-        "tar": _missing("tar", "required to manage code archives"),
-        "gzip": _missing("gzip", "required to compress/decompress code archives"),
-        "unzip": _missing("unzip", "required to compress/decompress code archives"),
-        "bzip2": _missing("bzip2", "required to compress/decompress code archives"),
-        "git": _missing("git", "required to fetch/manage git repositories"),
-    }
-    if platform.system().lower() == "linux":
-        _core_system_exes["xz"] = _missing("xz", "required to compress/decompress code archives")
-
-    # Executables that are not bootstrapped yet
-    result = [_required_system_executable(exe, msg) for exe, msg in _core_system_exes.items()]
-    # Python modules
-    result.append(
-        _required_python_module(
-            "clingo", clingo_root_spec(), _missing("clingo", "required to concretize specs", False)
-        )
-    )
-    return result
-
-
-def _buildcache_requirements():
-    _buildcache_exes = {
-        "file": _missing("file", "required to analyze files for buildcaches"),
-        ("gpg2", "gpg"): _missing("gpg2", "required to sign/verify buildcaches", False),
-    }
-    if platform.system().lower() == "darwin":
-        _buildcache_exes["otool"] = _missing("otool", "required to relocate binaries")
-
-    # Executables that are not bootstrapped yet
-    result = [_required_system_executable(exe, msg) for exe, msg in _buildcache_exes.items()]
-
-    if platform.system().lower() == "linux":
-        result.append(
-            _required_executable(
-                "patchelf",
-                patchelf_root_spec(),
-                _missing("patchelf", "required to relocate binaries", False),
-            )
-        )
-
-    return result
-
-
-def _optional_requirements():
-    _optional_exes = {
-        "zstd": _missing("zstd", "required to compress/decompress code archives"),
-        "svn": _missing("svn", "required to manage subversion repositories"),
-        "hg": _missing("hg", "required to manage mercurial repositories"),
-    }
-    # Executables that are not bootstrapped yet
-    result = [_required_system_executable(exe, msg) for exe, msg in _optional_exes.items()]
-    return result
-
-
-def _development_requirements():
-    return [
-        _required_executable(
-            "isort", isort_root_spec(), _missing("isort", "required for style checks", False)
-        ),
-        _required_executable(
-            "mypy", mypy_root_spec(), _missing("mypy", "required for style checks", False)
-        ),
-        _required_executable(
-            "flake8", flake8_root_spec(), _missing("flake8", "required for style checks", False)
-        ),
-        _required_executable(
-            "black", black_root_spec(), _missing("black", "required for code formatting", False)
-        ),
-    ]
-
-
-def status_message(section):
-    """Return a status message to be printed to screen that refers to the
-    section passed as argument and a bool which is True if there are missing
-    dependencies.
-
-    Args:
-        section (str): either 'core' or 'buildcache' or 'optional' or 'develop'
-    """
-    pass_token, fail_token = "@*g{[PASS]}", "@*r{[FAIL]}"
-
-    # Contain the header of the section and a list of requirements
-    spack_sections = {
-        "core": ("{0} @*{{Core Functionalities}}", _core_requirements),
-        "buildcache": ("{0} @*{{Binary packages}}", _buildcache_requirements),
-        "optional": ("{0} @*{{Optional Features}}", _optional_requirements),
-        "develop": ("{0} @*{{Development Dependencies}}", _development_requirements),
-    }
-    msg, required_software = spack_sections[section]
-
-    with ensure_bootstrap_configuration():
-        missing_software = False
-        for found, err_msg in required_software():
-            if not found:
-                missing_software = True
-                msg += "\n  " + err_msg
-        msg += "\n"
-        msg = msg.format(pass_token if not missing_software else fail_token)
-    return msg, missing_software
 
 
 def bootstrapping_sources(scope=None):

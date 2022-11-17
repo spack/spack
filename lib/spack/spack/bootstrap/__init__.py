@@ -10,3 +10,4 @@ from .config import (  # noqa: F401
     spack_python_interpreter,
     store_path,
 )
+from .status import status_message  # noqa: F401
