@@ -5,6 +5,7 @@
 
 import os
 
+import spack.platforms.cray
 from spack.package import *
 
 
@@ -52,9 +53,16 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("rccl", default=False, description="Builds with support for RCCL communication lib")
     variant(
-        "ofi_rccl_plugin",
-        default=False,
-        description="Builds with support for OFI libfabric enhanced RCCL communication lib",
+        "ofi_libfabric_plugin",
+        default=spack.platforms.cray.slingshot_network(),
+        when="+rccl",
+        description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
+    )
+    variant(
+        "ofi_libfabric_plugin",
+        default=spack.platforms.cray.slingshot_network(),
+        when="+nccl",
+        description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
     )
 
     depends_on("cmake@3.21.0:", type="build", when="@1.0.1:")
@@ -68,12 +76,12 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipcub", when="@:0.1,0.6.0: +rocm")
 
     depends_on("rccl", when="+rccl")
-    depends_on("aws-ofi-rccl", when="+ofi_rccl_plugin platform=cray")
+    depends_on("aws-ofi-rccl", when="+rccl +ofi_libfabric_plugin")
+    depends_on("aws-ofi-nccl", when="+nccl +ofi_libfabric_plugin")
 
     conflicts("~cuda", when="+cuda_rma", msg="CUDA RMA support requires CUDA")
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("+nccl", when="+rccl", msg="NCCL and RCCL support are mutually exclusive")
-    conflicts("~rccl", when="+ofi_rccl_plugin", msg="libfabric enhancements require RCCL support")
 
     generator = "Ninja"
     depends_on("ninja", type="build")

@@ -20,6 +20,7 @@ class RPbdzmq(RPackage):
 
     cran = "pbdZMQ"
 
+    version("0.3-8", sha256="eded4ccf6ee54a59e06061f1c6e67a8ec36e03c6ab2318af64446d8f95505465")
     version("0.3-7", sha256="df2d2be14b2f57a64d76cdda4c01fd1c3d9aa12221c63524c01c71849df11808")
     version("0.3-6", sha256="9944c8c44221aed1dbd7763ad9ec52c0ad2611d37bee25971ca16f02e8e8c37b")
     version("0.3-4", sha256="07794bd6858e093f8b6b879ddd5ab0195449b47a41b70cab2f60603f0a53b129")

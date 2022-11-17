@@ -5,7 +5,6 @@
 
 import json
 import os.path
-import sys
 
 import jsonschema
 import pytest
@@ -87,9 +86,6 @@ def test_module_suffixes(module_suffixes_schema):
 
 
 @pytest.mark.regression("10246")
-@pytest.mark.skipif(
-    sys.version_info < (2, 7), reason="requires python2.7 or higher because of importlib"
-)
 @pytest.mark.parametrize(
     "config_name",
     ["compilers", "config", "env", "merged", "mirrors", "modules", "packages", "repos"],

@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
-
-import six
+import warnings
 
 import archspec.cpu
 
@@ -23,7 +22,7 @@ def _ensure_other_is_target(method):
 
     @functools.wraps(method)
     def _impl(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             other = Target(other)
 
         if not isinstance(other, Target):
@@ -32,6 +31,14 @@ def _ensure_other_is_target(method):
         return method(self, other)
 
     return _impl
+
+
+#: Translation table from archspec deprecated names
+_DEPRECATED_ARCHSPEC_NAMES = {
+    "graviton": "cortex_a72",
+    "graviton2": "neoverse_n1",
+    "graviton3": "neoverse_v1",
+}
 
 
 class Target(object):
@@ -45,6 +52,10 @@ class Target(object):
                 like Cray (e.g. craype-compiler)
         """
         if not isinstance(name, archspec.cpu.Microarchitecture):
+            if name in _DEPRECATED_ARCHSPEC_NAMES:
+                msg = "'target={}' is deprecated, use 'target={}' instead"
+                name, old_name = _DEPRECATED_ARCHSPEC_NAMES[name], name
+                warnings.warn(msg.format(old_name, name))
             name = archspec.cpu.TARGETS.get(name, archspec.cpu.generic_microarchitecture(name))
         self.microarchitecture = name
         self.module_name = module_name
@@ -82,7 +93,7 @@ class Target(object):
     def from_dict_or_value(dict_or_value):
         # A string here represents a generic target (like x86_64 or ppc64) or
         # a custom micro-architecture
-        if isinstance(dict_or_value, six.string_types):
+        if isinstance(dict_or_value, str):
             return Target(dict_or_value)
 
         # TODO: From a dict we actually retrieve much more information than

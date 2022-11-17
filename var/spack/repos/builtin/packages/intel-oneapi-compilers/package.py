@@ -11,6 +11,17 @@ from spack.package import *
 
 linux_versions = [
     {
+        "version": "2022.2.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19049/l_dpcpp-cpp-compiler_p_2022.2.1.16991_offline.sh",
+            "sha256": "3f0f02f9812a0cdf01922d2df9348910c6a4cb4f9dfe50fc7477a59bbb1f7173",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/18998/l_fortran-compiler_p_2022.2.1.16992_offline.sh",
+            "sha256": "64f1d1efbcdc3ac2182bec18313ca23f800d94f69758db83a1394490d9d4b042",
+        },
+    },
+    {
         "version": "2022.2.0",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/18849/l_dpcpp-cpp-compiler_p_2022.2.0.8772_offline.sh",
@@ -138,6 +149,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def component_dir(self):
         return "compiler"
 
+    @property
+    def compiler_search_prefix(self):
+        return self.prefix.compiler.join(str(self.version)).linux.bin
+
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
 
@@ -158,7 +173,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
-        # install_tree('/opt/intel/oneapi/compiler', self.prefix)
+        # install_tree("/opt/intel/oneapi/compiler", self.prefix)
 
         # install cpp
         super(IntelOneapiCompilers, self).install(spec, prefix)
@@ -182,6 +197,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 # should not be patched
                 patchelf(file, fail_on_error=False)
 
+    def write_config_file(self, flags, path, compilers):
+        for compiler in compilers:
+            p = path.join(compiler + ".cfg")
+            with open(p, "w") as f:
+                f.write(" ".join(flags))
+            set_install_permissions(p)
+
     @run_after("install")
     def extend_config_flags(self):
         # Extends compiler config files to inject additional compiler flags.
@@ -196,7 +218,12 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # TODO: it is unclear whether we should really use all elements of
         #  _ld_library_path because it looks like the only rpath that needs to be
         #  injected is self.component_prefix.linux.compiler.lib.intel64_lin.
-        flags_list = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
+        common_flags = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
+
+        # Make sure that underlying clang gets the right GCC toolchain by default
+        llvm_flags = ["--gcc-toolchain={}".format(self.compiler.prefix)]
+        classic_flags = ["-gcc-name={}".format(self.compiler.cc)]
+        classic_flags.append("-gxx-name={}".format(self.compiler.cxx))
 
         # Older versions trigger -Wunused-command-line-argument warnings whenever
         # linker flags are passed in preprocessor (-E) or compilation mode (-c).
@@ -204,23 +231,16 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # do not trigger these warnings. In some build systems these warnings can
         # cause feature detection to fail, so we silence them with -Wno-unused-...
         if self.spec.version < Version("2022.1.0"):
-            flags_list.append("-Wno-unused-command-line-argument")
+            llvm_flags.append("-Wno-unused-command-line-argument")
 
-        # Make sure that underlying clang gets the right GCC toolchain by default
-        flags_list.append("--gcc-toolchain={}".format(self.compiler.prefix))
-        flags = " ".join(flags_list)
-        for cmp in [
-            "icx",
-            "icpx",
-            "ifx",
-            join_path("intel64", "icc"),
-            join_path("intel64", "icpc"),
-            join_path("intel64", "ifort"),
-        ]:
-            cfg_file = self.component_prefix.linux.bin.join(cmp + ".cfg")
-            with open(cfg_file, "w") as f:
-                f.write(flags)
-            set_install_permissions(cfg_file)
+        self.write_config_file(
+            common_flags + llvm_flags, self.component_prefix.linux.bin, ["icx", "icpx", "ifx"]
+        )
+        self.write_config_file(
+            common_flags + classic_flags,
+            self.component_prefix.linux.bin.intel64,
+            ["icc", "icpc", "ifort"],
+        )
 
     def _ld_library_path(self):
         # Returns an iterable of directories that might contain shared runtime libraries

@@ -20,8 +20,6 @@ import os.path
 import re
 import sys
 
-import six
-
 import llnl.util.tty
 
 import spack.config
@@ -115,7 +113,7 @@ def _convert_to_iterable(single_val_or_multiple):
     x = single_val_or_multiple
     if x is None:
         return []
-    elif isinstance(x, six.string_types):
+    elif isinstance(x, str):
         return [x]
     elif isinstance(x, spack.spec.Spec):
         # Specs are iterable, but a single spec should be converted to a list
@@ -228,7 +226,7 @@ def compute_windows_program_path_for_package(pkg):
     program files location, return list of best guesses
 
     Args:
-        pkg (spack.package_base.Package): package for which
+        pkg (spack.package_base.PackageBase): package for which
                            Program Files location is to be computed
     """
     if not is_windows:
