@@ -119,6 +119,7 @@ def parse_install_tree(config_dict):
             msg = "Cannot pad %s to %s characters." % (root, padded_length)
             msg += " It is already %s characters long" % len(root)
             tty.warn(msg)
+        root = root.rstrip(os.path.sep)
     else:
         root = unpadded_root
 
