@@ -206,9 +206,24 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         provides("golang@:1.4", when="@5:")
         provides("golang@:1.6.1", when="@6:")
         provides("golang@:1.8", when="@7:")
+        provides("golang@:1.10", when="@8:")
+        provides("golang@:1.12", when="@9:")
+        provides("golang@:1.14", when="@10:")
+        provides("golang@:1.16", when="@11:")
+        provides("golang@:1.18", when="@11:")
         # GCC 4.6 added support for the Go programming language.
         # See https://gcc.gnu.org/gcc-4.6/changes.html
         conflicts("@:4.5", msg="support for Go has been added in GCC 4.6")
+        # aarch64 machines (including Macs with Apple silicon) can't use
+        # go-bootstrap because it pre-dates aarch64 support in Go. When not
+        # using an external go bootstrap go, These machines have to rely on
+        # Go support in gcc (which may require compiling a version of gcc
+        # with Go support just to satisfy this requirement).  However,
+        # there's also a bug in some versions of GCC's Go front-end that prevents
+        # these versions from properly bootstrapping Go.  (See issue #47771
+        # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
+        # at least 10.4.  On the 11.x branch, we need at least 11.3:
+        provides("go-external-or-gccgo-bootstrap", when="gcc@10.4.0:10,11.3.0:target=aarch64:")
         # Go is not supported on macOS
         conflicts("platform=darwin", msg="Go not supported on MacOS")
 
@@ -317,11 +332,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 12+
+    # aarch64/M1 is supported in GCC 11.3-12.2
     conflicts(
-        "@:11.2,11.3.1:",
+        "@:11.2,12.3:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3.0 supports macOS M1 (aarch64)",
+        msg="Only GCC 11.3-12.2 support macOS M1 (aarch64)",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -330,6 +345,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # GCC 11 requires GCC 4.8 or later (https://gcc.gnu.org/gcc-11/changes.html)
     conflicts("%gcc@:4.7", when="@11:")
+
+    # https://github.com/iains/gcc-12-branch/issues/6
+    conflicts("%apple-clang@14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -370,6 +388,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "https://raw.githubusercontent.com/Homebrew/formula-patches/22dec3fc/gcc/gcc-11.3.0-arm.diff",
             sha256="e02006b7ec917cc1390645d95735a6a866caed0dfe506d5bef742f7862cab218",
             when="@11.3.0 target=aarch64:",
+        )
+        # https://github.com/iains/gcc-12-branch
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/76677f2b/gcc/gcc-12.1.0-arm.diff",
+            sha256="a000f1d9cb1dd98c7c4ef00df31435cd5d712d2f9d037ddc044f8bf82a16cf35",
+            when="@12.1.0 target=aarch64:",
+        )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/1d184289/gcc/gcc-12.2.0-arm.diff",
+            sha256="a7843b5c6bf1401e40c20c72af69c8f6fc9754ae980bb4a5f0540220b3dcb62d",
+            when="@12.2.0 target=aarch64:",
         )
         conflicts("+bootstrap", when="@11.3.0 target=aarch64:")
 
@@ -428,7 +457,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @classproperty
     def executables(cls):
-        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc"]
+        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc", r"gccgo"]
         suffixes = [r"", r"-mp-\d+\.\d", r"-\d+\.\d", r"-\d+", r"\d\d"]
         return [r"".join(x) for x in itertools.product(names, suffixes)]
 
@@ -506,6 +535,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             elif "gcc" in basename:
                 languages.add("c")
                 compilers["c"] = exe
+            elif "gccgo" in basename:
+                languages.add("go")
+                compilers["go"] = exe
             elif "gdc" in basename:
                 languages.add("d")
                 compilers["d"] = exe
@@ -649,7 +681,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # concretization, so we'll stick to that. The other way around however can
         # result in compilation errors, when gcc@7 is built with gcc@11, and znver3
         # is taken as a the target, which gcc@7 doesn't support.
-        if "+bootstrap %gcc" in self.spec:
+        # Note we're not adding this for aarch64 because of
+        # https://github.com/spack/spack/issues/31184
+        if "+bootstrap %gcc" in self.spec and self.spec.target.family != "aarch64":
             flags += " " + self.get_common_target_flags(self.spec)
 
         if "+bootstrap" in self.spec:

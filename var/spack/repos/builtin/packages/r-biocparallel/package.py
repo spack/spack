@@ -15,6 +15,7 @@ class RBiocparallel(RPackage):
 
     bioc = "BiocParallel"
 
+    version("1.30.4", commit="1229ebe9f6d8305f9f61e562464f83f9ba86e699")
     version("1.30.2", commit="e7e109f7a94dbfbc50f926be030c7ad8c1a053db")
     version("1.28.3", commit="2f9d88ad83659939e7911d49c2d24d2cd599c7cc")
     version("1.24.1", commit="f713caa4314ec0ddeba7fe0eb599ad417efb413f")
@@ -27,4 +28,5 @@ class RBiocparallel(RPackage):
     depends_on("r@3.5.0:", type=("build", "run"), when="@1.28.3:")
     depends_on("r-futile-logger", type=("build", "run"))
     depends_on("r-snow", type=("build", "run"))
+    depends_on("r-codetools", type=("build", "run"), when="@1.30.4:")
     depends_on("r-bh", type=("build", "run"), when="@1.12.0:")

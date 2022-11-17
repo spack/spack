@@ -17,5 +17,4 @@ class RktTestingUtilLib(RacketPackage):
     depends_on("rkt-base@8.3:", type=("build", "run"), when="@8.3")
 
     racket_name = "testing-util-lib"
-    pkgs = True
     subdirectory = racket_name

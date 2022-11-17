@@ -14,6 +14,9 @@ class PyPytorchLightning(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("1.8.1", sha256="5b60e5eb84dd16ee8dc408286f0074ab475bed385b09a702d678ccbde91e4818")
+    version("1.8.0", sha256="deff9bc7978ecebc8f45e881adef65dc8d9f4554e88c3b064f80587f32ab158d")
+    version("1.7.7", sha256="27c2dd01a18db2415168e3fa3775ccb5a1fa1e2961a50439ad9365507fe9d4ae")
     version("1.7.6", sha256="93266c83f8340c100e41b3777bbab26dd2c20b4df3deccce3b8a15652326b9c8")
     version("1.7.5", sha256="a5838ae990f0eef9a894fa863be3bc1f5594d2abba7848fb21317ba3e885d7cd")
     version("1.7.4", sha256="d80df235228a8f6d6b77df4bfa34b3d667d734bd40e960bb4ca553a2746523eb")
@@ -33,9 +36,12 @@ class PyPytorchLightning(PythonPackage):
     version("1.3.8", sha256="60b0a3e464d394864dae4c8d251afa7aa453644a19bb7672f5ee400343cdf7b0")
     version("1.2.10", sha256="2d8365e30ded0c20e73ce6e5b6028478ae460b8fd33727df2275666df005a301")
 
+    # src/pytorch_lightning/__setup__.py
     depends_on("python@3.7:", when="@1.6:", type=("build", "run"))
     depends_on("python@3.6:", when="@:1.5", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+
+    # requirements/pytorch/base.txt
     depends_on("py-numpy@1.17.2:", when="@1.3:", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", when="@:1.2", type=("build", "run"))
     depends_on("py-torch@1.9:", when="@1.7:", type=("build", "run"))
@@ -48,6 +54,7 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-pyyaml@5.1:", when="@1.4:1.5", type=("build", "run"))
     depends_on("py-pyyaml@5.1:5.4.1", when="@1.3", type=("build", "run"))
     depends_on("py-pyyaml@5.1:5.3,5.5:", when="@:1.2", type=("build", "run"))
+    depends_on("py-fsspec@2021.06.1:+http", when="@1.8:", type=("build", "run"))
     depends_on("py-fsspec@2021.05.0:2021.05,2021.06.1:+http", when="@1.3:", type=("build", "run"))
     depends_on("py-fsspec@0.8.1:+http", when="@:1.2", type=("build", "run"))
     depends_on("py-tensorboard@2.9.1:", when="@1.7:", type=("build", "run"))
@@ -58,14 +65,23 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-torchmetrics@0.4.0:", when="@1.4", type=("build", "run"))
     depends_on("py-torchmetrics@0.2.0:", when="@1.3", type=("build", "run"))
     depends_on("py-torchmetrics@0.2.0", when="@:1.2", type=("build", "run"))
-    depends_on("py-pydeprecate@0.3.1:", when="@1.6.4:", type=("build", "run"))
-    depends_on("py-pydeprecate@0.3.1:0.3", when="@1.6:1.6.3", type=("build", "run"))
-    depends_on("py-pydeprecate@0.3.1", when="@1.4:1.5", type=("build", "run"))
-    depends_on("py-pydeprecate@0.3.0", when="@1.3", type=("build", "run"))
     depends_on("py-packaging@17.0:", when="@1.3:", type=("build", "run"))
     depends_on("py-packaging", when="@:1.2", type=("build", "run"))
     depends_on("py-typing-extensions@4.0.0:", when="@1.6:", type=("build", "run"))
     depends_on("py-typing-extensions", when="@1.4:1.5", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.3", when="@1.8:", type=("build", "run"))
+
+    # Historical dependencies
+    depends_on("py-lightning-lite@1.8.0", when="@1.8.0", type=("build", "run"))
     depends_on("py-future@0.17.1:", when="@:1.5", type=("build", "run"))
     depends_on("pil@:8.2,8.3.1:", when="@1.3", type=("build", "run"))
     depends_on("py-protobuf@:3.20.1", when="@1.6.4:1.6", type="build")
+    depends_on("py-pydeprecate@0.3.1:", when="@1.6.4:1.7", type=("build", "run"))
+    depends_on("py-pydeprecate@0.3.1:0.3", when="@1.6:1.6.3", type=("build", "run"))
+    depends_on("py-pydeprecate@0.3.1", when="@1.4:1.5", type=("build", "run"))
+    depends_on("py-pydeprecate@0.3.0", when="@1.3", type=("build", "run"))
+
+    # https://github.com/Lightning-AI/lightning/issues/15494
+    conflicts("^py-torch~distributed", when="@1.8.0")
+    # https://github.com/Lightning-AI/lightning/issues/10348
+    conflicts("^py-torch~distributed", when="@1.5.0:1.5.2")

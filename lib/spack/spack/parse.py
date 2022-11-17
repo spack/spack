@@ -8,8 +8,6 @@ import re
 import shlex
 import sys
 
-from six import string_types
-
 import spack.error
 import spack.util.path as sp
 
@@ -78,7 +76,9 @@ class Lexer(object):
                 break
 
         if remainder and not remainder_used:
-            raise LexError("Invalid character", word, word.index(remainder))
+            msg = "Invalid character, '{0}',".format(remainder[0])
+            msg += " in '{0}' at index {1}".format(word, word.index(remainder))
+            raise LexError(msg, word, word.index(remainder))
 
         return tokens
 
@@ -145,7 +145,7 @@ class Parser(object):
             sys.exit(1)
 
     def setup(self, text):
-        if isinstance(text, string_types):
+        if isinstance(text, str):
             # shlex does not handle Windows path
             # separators, so we must normalize to posix
             text = sp.convert_to_posix_path(text)

@@ -15,6 +15,7 @@ class RServr(RPackage):
 
     cran = "servr"
 
+    version("0.25", sha256="e6ae0d4c09e9037268b1c291c36c93ba0a74c31fe2fcb1f0652b2ae9fca5e73c")
     version("0.24", sha256="d94e1d31802ce6bbab7a5838ff94cbca8cd998237d834ff25fedf7514f41a087")
     version("0.21", sha256="3fc0da063dd04b796a49ce62bf8e69d5854679520da90cc92ee3fc0a0b2ad389")
 

@@ -5,12 +5,7 @@
 """Classes and functions to manage package tags"""
 import collections
 import copy
-import sys
-
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
+from collections.abc import Mapping
 
 import spack.error
 import spack.util.spack_json as sjson
@@ -50,8 +45,9 @@ def packages_with_tags(tags, installed, skip_empty):
 class TagIndex(Mapping):
     """Maps tags to list of packages."""
 
-    def __init__(self):
+    def __init__(self, repository):
         self._tag_dict = collections.defaultdict(list)
+        self.repository = repository
 
     @property
     def tags(self):
@@ -61,7 +57,7 @@ class TagIndex(Mapping):
         sjson.dump({"tags": self._tag_dict}, stream)
 
     @staticmethod
-    def from_json(stream):
+    def from_json(stream, repository):
         d = sjson.load(stream)
 
         if not isinstance(d, dict):
@@ -70,7 +66,7 @@ class TagIndex(Mapping):
         if "tags" not in d:
             raise TagIndexError("TagIndex data does not start with 'tags'")
 
-        r = TagIndex()
+        r = TagIndex(repository=repository)
 
         for tag, packages in d["tags"].items():
             r[tag].extend(packages)
@@ -88,7 +84,7 @@ class TagIndex(Mapping):
 
     def copy(self):
         """Return a deep copy of this index."""
-        clone = TagIndex()
+        clone = TagIndex(repository=self.repository)
         clone._tag_dict = copy.deepcopy(self._tag_dict)
         return clone
 
@@ -117,9 +113,8 @@ class TagIndex(Mapping):
 
         Args:
             pkg_name (str): name of the package to be removed from the index
-
         """
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg_cls = self.repository.get_pkg_class(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self._tag_dict.values():

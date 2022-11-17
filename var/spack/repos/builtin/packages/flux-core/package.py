@@ -20,6 +20,9 @@ class FluxCore(AutotoolsPackage):
     maintainers = ["grondo"]
 
     version("master", branch="master")
+    version("0.45.0", sha256="6550fe682c1686745e1d9c201daf18f9c57691468124565c9252d27823d2fe46")
+    version("0.44.0", sha256="6786b258657675ed573907a2a6012f68f2dd5053d7d09eb76b4e7f9943d6d466")
+    version("0.43.0", sha256="4b9816d04e8b5b248a8d5e3dac3f9822f8f89831e340f36745e01512d768597b")
     version("0.42.0", sha256="ac64055976cd7cda26e2991174b9a58048bd4fb75c5c2012023050d76c718445")
     version("0.41.0", sha256="3f3a6a8a1e7d2f326b0e684dcf70e4489076b3f52dd14480e2f33cfdaeba690a")
     version("0.40.0", sha256="b15996b6165f037e5a6c42ea277e2c1c56a4f4b6bf47334105e324dcfefbf6fa")
@@ -109,7 +112,7 @@ class FluxCore(AutotoolsPackage):
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
     depends_on("libarchive", when="@0.38.0:")
-    depends_on("ncurses@6.2", when="@0.32.0:")
+    depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
     depends_on("hwloc@1.11.1:1", when="@:0.17.0")

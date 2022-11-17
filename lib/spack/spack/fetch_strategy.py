@@ -29,10 +29,8 @@ import os.path
 import re
 import shutil
 import sys
+import urllib.parse
 from typing import List, Optional  # novm
-
-import six
-import six.moves.urllib.parse as urllib_parse
 
 import llnl.util
 import llnl.util.filesystem as fs
@@ -54,7 +52,7 @@ import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-from spack.util.compression import decompressor_for, extension
+from spack.util.compression import decompressor_for, extension_from_path
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 
@@ -322,7 +320,7 @@ class URLFetchStrategy(FetchStrategy):
             # This must be skipped on Windows due to URL encoding
             # of ':' characters on filepaths on Windows
             if sys.platform != "win32" and url.startswith("file://"):
-                path = urllib_parse.quote(url[len("file://") :])
+                path = urllib.parse.quote(url[len("file://") :])
                 url = "file://" + path
             urls.append(url)
 
@@ -338,6 +336,7 @@ class URLFetchStrategy(FetchStrategy):
         errors = []
         for url in self.candidate_urls:
             if not web_util.url_exists(url, self.curl):
+                tty.debug("URL does not exist: " + url)
                 continue
 
             try:
@@ -612,14 +611,14 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, **kwargs):
-        assert extension(destination) == "tar.gz"
+        assert extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
 
         tar = which("tar", required=True)
 
         patterns = kwargs.get("exclude", None)
         if patterns is not None:
-            if isinstance(patterns, six.string_types):
+            if isinstance(patterns, str):
                 patterns = [patterns]
             for p in patterns:
                 tar.add_default_arg("--exclude=%s" % p)
@@ -864,7 +863,12 @@ class GitFetchStrategy(VCSFetchStrategy):
                 repo_name = get_single_file(".")
                 if self.stage:
                     self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
+                shutil.copytree(repo_name, dest, symlinks=True)
+                shutil.rmtree(
+                    repo_name,
+                    ignore_errors=False,
+                    onerror=fs.readonly_file_handler(ignore_errors=True),
+                )
 
             with working_dir(dest):
                 checkout_args = ["checkout", commit]
@@ -1601,7 +1605,7 @@ def from_url_scheme(url, *args, **kwargs):
     in the given url."""
 
     url = kwargs.get("url", url)
-    parsed_url = urllib_parse.urlparse(url, scheme="file")
+    parsed_url = urllib.parse.urlparse(url, scheme="file")
 
     scheme_mapping = kwargs.get("scheme_mapping") or {
         "file": "url",

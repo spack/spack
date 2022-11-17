@@ -161,6 +161,8 @@ class Pgplot(MakefilePackage):
         install("libpgplot.a", prefix.lib)
         install("libpgplot.so", prefix.lib)
         install("grfont.dat", prefix.include)
+        mkdirp(prefix.lib + "/pgplot5")
+        install("rgb.txt", prefix.lib + "/pgplot5")
 
     @property
     def libs(self):
@@ -169,4 +171,4 @@ class Pgplot(MakefilePackage):
 
     def setup_run_environment(self, env):
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
-        env.set("PGPLOT_DIR", self.prefix)
+        env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")

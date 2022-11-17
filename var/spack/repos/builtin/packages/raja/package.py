@@ -6,7 +6,7 @@
 import socket
 
 from spack.package import *
-from spack.pkg.builtin.camp import hip_repair_options
+from spack.pkg.builtin.camp import hip_repair_cache
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -104,6 +104,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             self.spec.compiler.version,
         )
 
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        entries = super(Raja, self).initconfig_compiler_entries()
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+        return entries
+
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super(Raja, self).initconfig_hardware_entries()
@@ -125,13 +132,15 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            hip_repair_options(entries, spec)
+            hip_repair_cache(entries, spec)
+            hipcc_flags = []
+            if self.spec.satisfies("@0.14.0"):
+                hipcc_flags.append("-std=c++14")
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
+                hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
+            entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 

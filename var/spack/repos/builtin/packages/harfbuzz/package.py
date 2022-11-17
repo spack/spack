@@ -2,16 +2,22 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
+import spack.build_systems.meson
 from spack.package import *
 
 
-class Harfbuzz(MesonPackage):
+class Harfbuzz(MesonPackage, AutotoolsPackage):
     """The Harfbuzz package contains an OpenType text shaping engine."""
 
     homepage = "https://github.com/harfbuzz/harfbuzz"
     url = "https://github.com/harfbuzz/harfbuzz/releases/download/2.9.1/harfbuzz-2.9.1.tar.xz"
     git = "https://github.com/harfbuzz/harfbuzz.git"
+
+    version("5.1.0", sha256="2edb95db668781aaa8d60959d21be2ff80085f31b12053cdd660d9a50ce84f05")
+    build_system(
+        conditional("autotools", when="@:2.9"), conditional("meson", when="@3:"), default="meson"
+    )
 
     version("4.2.1", sha256="bd17916513829aeff961359a5ccebba6de2f4bf37a91faee3ac29c120e3d7ee1")
     version("4.1.0", sha256="f7984ff4241d4d135f318a93aa902d910a170a8265b7eaf93b5d9a504eed40c8")
@@ -57,6 +63,12 @@ class Harfbuzz(MesonPackage):
     )
 
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
+    variant(
+        "coretext",
+        default=False,
+        when="platform=darwin",
+        description="Enable CoreText shaper backend on macOS",
+    )
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")
@@ -92,26 +104,33 @@ class Harfbuzz(MesonPackage):
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
-
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
+    def patch(self):
+        change_sed_delimiter("@", ";", "src/Makefile.in")
+
+
+class SetupEnvironment(object):
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
+
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
     def meson_args(self):
-        args = []
+        graphite2 = "enabled" if self.pkg.spec.satisfies("+graphite2") else "disabled"
+        coretext = "enabled" if self.pkg.spec.satisfies("+coretext") else "disabled"
+        return [
+            # disable building of gtk-doc files following #9885 and #9771
+            "-Ddocs=disabled",
+            "-Dgraphite2={0}".format(graphite2),
+            "-Dcoretext={0}".format(coretext),
+        ]
 
-        # disable building of gtk-doc files following #9885 and #9771
-        args.append("-Ddocs=disabled")
-        args.append(
-            "-Dgraphite2=" + ("enabled" if self.spec.satisfies("+graphite2") else "disabled")
-        )
 
-        return args
-
-    @when("@:2.9")
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
     def configure_args(self):
         args = []
 
@@ -123,23 +142,6 @@ class Harfbuzz(MesonPackage):
         args.append("GTKDOC_MKPDF={0}".format(true))
         args.append("GTKDOC_REBASE={0}".format(true))
         args.extend(self.with_or_without("graphite2"))
+        args.extend(self.with_or_without("coretext"))
 
         return args
-
-    def patch(self):
-        change_sed_delimiter("@", ";", "src/Makefile.in")
-
-    @when("@:2.9")
-    def meson(self, spec, prefix):
-        """Run the AutotoolsPackage configure phase"""
-        configure("--prefix=" + prefix, *self.configure_args())
-
-    @when("@:2.9")
-    def build(self, spec, prefix):
-        """Run the AutotoolsPackage build phase"""
-        make()
-
-    @when("@:2.9")
-    def install(self, spec, prefix):
-        """Run the AutotoolsPackage install phase"""
-        make("install")

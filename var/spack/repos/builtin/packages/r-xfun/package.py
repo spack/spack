@@ -14,6 +14,8 @@ class RXfun(RPackage):
 
     cran = "xfun"
 
+    version("0.34", sha256="50e76c1febb988c044e44fb78e1abc1ba681173c9ff3c336f4c0ad71e6a2853d")
+    version("0.33", sha256="45fbc2d252867b69bbde64d4a4e3d2e049ad1d3a84984e9cfb242d8d1f41ee6c")
     version("0.31", sha256="d169f3e682dab0c3f2ca381f2dba9b7014a5e2ca3d6863dbae3d1bca699ef235")
     version("0.29", sha256="bf85bb7b4653d03e0730682ffe1d6d3544ac0b36989f9196b2054d356c224ef4")
     version("0.24", sha256="e3e39a95202f6db4f6de3a8b9a344074a4944a3a8a522d44971390c905e2b583")

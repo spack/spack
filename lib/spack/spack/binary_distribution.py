@@ -7,21 +7,24 @@ import codecs
 import collections
 import hashlib
 import json
+import multiprocessing.pool
 import os
 import shutil
 import sys
 import tarfile
 import tempfile
+import time
 import traceback
 import warnings
 from contextlib import closing
+from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
-from six.moves.urllib.error import HTTPError, URLError
 
+import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_tree
 
 import spack.cmd
 import spack.config as config
@@ -40,8 +43,10 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
+from spack.relocate import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
+from spack.util.executable import which
 
 _build_cache_relative_path = "build_cache"
 _build_cache_keys_relative_path = "_pgp"
@@ -67,6 +72,10 @@ class FetchCacheError(Exception):
             err = errors[0]
             self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
         super(FetchCacheError, self).__init__(self.message)
+
+
+class ListMirrorSpecsError(spack.error.SpackError):
+    """Raised when unable to retrieve list of specs from the mirror"""
 
 
 class BinaryCacheIndex(object):
@@ -104,6 +113,10 @@ class BinaryCacheIndex(object):
         # cache (_mirrors_for_spec)
         self._specs_already_associated = set()
 
+        # mapping from mirror urls to the time.time() of the last index fetch and a bool indicating
+        # whether the fetch succeeded or not.
+        self._last_fetch_times = {}
+
         # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
         # entries indicating mirrors where that concrete spec can be found.
         # Each entry is a dictionary consisting of:
@@ -136,6 +149,7 @@ class BinaryCacheIndex(object):
             self._index_file_cache = None
         self._local_index_cache = None
         self._specs_already_associated = set()
+        self._last_fetch_times = {}
         self._mirrors_for_spec = {}
 
     def _write_local_index_cache(self):
@@ -241,7 +255,6 @@ class BinaryCacheIndex(object):
                         }
                     ]
         """
-        self.regenerate_spec_cache()
         return self.find_by_hash(spec.dag_hash(), mirrors_to_check=mirrors_to_check)
 
     def find_by_hash(self, find_hash, mirrors_to_check=None):
@@ -252,6 +265,9 @@ class BinaryCacheIndex(object):
             mirrors_to_check: Optional mapping containing mirrors to check.  If
                 None, just assumes all configured mirrors.
         """
+        if find_hash not in self._mirrors_for_spec:
+            # Not found in the cached index, pull the latest from the server.
+            self.update(with_cooldown=True)
         if find_hash not in self._mirrors_for_spec:
             return None
         results = self._mirrors_for_spec[find_hash]
@@ -282,7 +298,7 @@ class BinaryCacheIndex(object):
                         "spec": new_entry["spec"],
                     }
 
-    def update(self):
+    def update(self, with_cooldown=False):
         """Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
         and none of the remote buildcache indices have changed, calling this
@@ -324,24 +340,41 @@ class BinaryCacheIndex(object):
 
         fetch_errors = []
         all_methods_failed = True
+        ttl = spack.config.get("config:binary_index_ttl", 600)
+        now = time.time()
 
         for cached_mirror_url in self._local_index_cache:
             cache_entry = self._local_index_cache[cached_mirror_url]
             cached_index_hash = cache_entry["index_hash"]
             cached_index_path = cache_entry["index_path"]
             if cached_mirror_url in configured_mirror_urls:
-                # May need to fetch the index and update the local caches
-                try:
-                    needs_regen = self._fetch_and_cache_index(
-                        cached_mirror_url, expect_hash=cached_index_hash
-                    )
-                    all_methods_failed = False
-                except FetchCacheError as fetch_error:
-                    needs_regen = False
-                    fetch_errors.extend(fetch_error.errors)
-                # The need to regenerate implies a need to clear as well.
-                spec_cache_clear_needed |= needs_regen
-                spec_cache_regenerate_needed |= needs_regen
+                # Only do a fetch if the last fetch was longer than TTL ago
+                if (
+                    with_cooldown
+                    and ttl > 0
+                    and cached_mirror_url in self._last_fetch_times
+                    and now - self._last_fetch_times[cached_mirror_url][0] < ttl
+                ):
+                    # We're in the cooldown period, don't try to fetch again
+                    # If the fetch succeeded last time, consider this update a success, otherwise
+                    # re-report the error here
+                    if self._last_fetch_times[cached_mirror_url][1]:
+                        all_methods_failed = False
+                else:
+                    # May need to fetch the index and update the local caches
+                    try:
+                        needs_regen = self._fetch_and_cache_index(
+                            cached_mirror_url, expect_hash=cached_index_hash
+                        )
+                        self._last_fetch_times[cached_mirror_url] = (now, True)
+                        all_methods_failed = False
+                    except FetchCacheError as fetch_error:
+                        needs_regen = False
+                        fetch_errors.extend(fetch_error.errors)
+                        self._last_fetch_times[cached_mirror_url] = (now, False)
+                    # The need to regenerate implies a need to clear as well.
+                    spec_cache_clear_needed |= needs_regen
+                    spec_cache_regenerate_needed |= needs_regen
             else:
                 # No longer have this mirror, cached index should be removed
                 items_to_remove.append(
@@ -350,6 +383,8 @@ class BinaryCacheIndex(object):
                         "cache_key": os.path.join(self._index_cache_root, cached_index_path),
                     }
                 )
+                if cached_mirror_url in self._last_fetch_times:
+                    del self._last_fetch_times[cached_mirror_url]
                 spec_cache_clear_needed = True
                 spec_cache_regenerate_needed = True
 
@@ -368,10 +403,12 @@ class BinaryCacheIndex(object):
                 # Need to fetch the index and update the local caches
                 try:
                     needs_regen = self._fetch_and_cache_index(mirror_url)
+                    self._last_fetch_times[mirror_url] = (now, True)
                     all_methods_failed = False
                 except FetchCacheError as fetch_error:
                     fetch_errors.extend(fetch_error.errors)
                     needs_regen = False
+                    self._last_fetch_times[mirror_url] = (now, False)
                 # Generally speaking, a new mirror wouldn't imply the need to
                 # clear the spec cache, so leave it as is.
                 if needs_regen:
@@ -618,6 +655,57 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
+class BuildManifestVisitor(BaseDirectoryVisitor):
+    """Visitor that collects a list of files and symlinks
+    that can be checked for need of relocation. It knows how
+    to dedupe hardlinks and deal with symlinks to files and
+    directories."""
+
+    def __init__(self):
+        # Save unique identifiers of files to avoid
+        # relocating hardlink files for each path.
+        self.visited = set()
+
+        # Lists of files we will check
+        self.files = []
+        self.symlinks = []
+
+    def seen_before(self, root, rel_path):
+        stat_result = os.lstat(os.path.join(root, rel_path))
+        identifier = (stat_result.st_dev, stat_result.st_ino)
+        if identifier in self.visited:
+            return True
+        else:
+            self.visited.add(identifier)
+            return False
+
+    def visit_file(self, root, rel_path, depth):
+        if self.seen_before(root, rel_path):
+            return
+        self.files.append(rel_path)
+
+    def visit_symlinked_file(self, root, rel_path, depth):
+        # Note: symlinks *can* be hardlinked, but it is unclear if
+        # symlinks can be relinked in-place (preserving inode).
+        # Therefore, we do *not* de-dupe hardlinked symlinks.
+        self.symlinks.append(rel_path)
+
+    def before_visit_dir(self, root, rel_path, depth):
+        return os.path.basename(rel_path) not in (".spack", "man")
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        # Treat symlinked directories simply as symlinks.
+        self.visit_symlinked_file(root, rel_path, depth)
+        # Never recurse into symlinked directories.
+        return False
+
+
+def file_matches(path, regex):
+    with open(path, "rb") as f:
+        contents = f.read()
+    return bool(regex.search(contents))
+
+
 def get_buildfile_manifest(spec):
     """
     Return a data structure with information about a build, including
@@ -633,57 +721,61 @@ def get_buildfile_manifest(spec):
         "link_to_relocate": [],
         "other": [],
         "binary_to_relocate_fullpath": [],
+        "hardlinks_deduped": True,
     }
 
-    exclude_list = (".spack", "man")
+    # Guard against filesystem footguns of hardlinks and symlinks by using
+    # a visitor to retrieve a list of files and symlinks, so we don't have
+    # to worry about hardlinks of symlinked dirs and what not.
+    visitor = BuildManifestVisitor()
+    root = spec.prefix
+    visit_directory_tree(root, visitor)
 
-    # Do this at during tarball creation to save time when tarball unpacked.
-    # Used by make_package_relative to determine binaries to change.
-    for root, dirs, files in os.walk(spec.prefix, topdown=True):
-        dirs[:] = [d for d in dirs if d not in exclude_list]
+    # Collect a list of prefixes for this package and it's dependencies, Spack will
+    # look for them to decide if text file needs to be relocated or not
+    prefixes = [d.prefix for d in spec.traverse(root=True, deptype="all") if not d.external]
+    prefixes.append(spack.hooks.sbang.sbang_install_path())
+    prefixes.append(str(spack.store.layout.root))
 
-        # Directories may need to be relocated too.
-        for directory in dirs:
-            dir_path_name = os.path.join(root, directory)
-            rel_path_name = os.path.relpath(dir_path_name, spec.prefix)
-            if os.path.islink(dir_path_name):
-                link = os.readlink(dir_path_name)
-                if os.path.isabs(link) and link.startswith(spack.store.layout.root):
-                    data["link_to_relocate"].append(rel_path_name)
+    # Create a giant regex that matches all prefixes
+    regex = utf8_paths_to_single_binary_regex(prefixes)
 
-        for filename in files:
-            path_name = os.path.join(root, filename)
-            m_type, m_subtype = relocate.mime_type(path_name)
-            rel_path_name = os.path.relpath(path_name, spec.prefix)
-            added = False
+    # Symlinks.
 
-            if os.path.islink(path_name):
-                link = os.readlink(path_name)
-                if os.path.isabs(link):
-                    # Relocate absolute links into the spack tree
-                    if link.startswith(spack.store.layout.root):
-                        data["link_to_relocate"].append(rel_path_name)
-                    added = True
+    # Obvious bugs:
+    #   1. relative links are not relocated.
+    #   2. paths are used as strings.
+    for rel_path in visitor.symlinks:
+        abs_path = os.path.join(root, rel_path)
+        link = os.readlink(abs_path)
+        if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+            data["link_to_relocate"].append(rel_path)
 
-            if relocate.needs_binary_relocation(m_type, m_subtype):
-                if (
-                    (
-                        m_subtype in ("x-executable", "x-sharedlib", "x-pie-executable")
-                        and sys.platform != "darwin"
-                    )
-                    or (m_subtype in ("x-mach-binary") and sys.platform == "darwin")
-                    or (not filename.endswith(".o"))
-                ):
-                    data["binary_to_relocate"].append(rel_path_name)
-                    data["binary_to_relocate_fullpath"].append(path_name)
-                    added = True
+    # Non-symlinks.
+    for rel_path in visitor.files:
+        abs_path = os.path.join(root, rel_path)
+        m_type, m_subtype = fsys.mime_type(abs_path)
 
-            if relocate.needs_text_relocation(m_type, m_subtype):
-                data["text_to_relocate"].append(rel_path_name)
-                added = True
+        if relocate.needs_binary_relocation(m_type, m_subtype):
+            # Why is this branch not part of needs_binary_relocation? :(
+            if (
+                (
+                    m_subtype in ("x-executable", "x-sharedlib", "x-pie-executable")
+                    and sys.platform != "darwin"
+                )
+                or (m_subtype in ("x-mach-binary") and sys.platform == "darwin")
+                or (not rel_path.endswith(".o"))
+            ):
+                data["binary_to_relocate"].append(rel_path)
+                data["binary_to_relocate_fullpath"].append(abs_path)
+                continue
 
-            if not added:
-                data["other"].append(path_name)
+        elif relocate.needs_text_relocation(m_type, m_subtype) and file_matches(abs_path, regex):
+            data["text_to_relocate"].append(rel_path)
+            continue
+
+        data["other"].append(abs_path)
+
     return data
 
 
@@ -697,7 +789,7 @@ def write_buildinfo_file(spec, workdir, rel=False):
     prefix_to_hash = dict()
     prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
     deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps:
+    for d in deps + spec.dependencies(deptype="run"):
         prefix_to_hash[str(d.prefix)] = d.dag_hash()
 
     # Create buildinfo data and write it to disk
@@ -710,6 +802,7 @@ def write_buildinfo_file(spec, workdir, rel=False):
     buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
     buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
     buildinfo["relocate_links"] = manifest["link_to_relocate"]
+    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
     buildinfo["prefix_to_hash"] = prefix_to_hash
     filename = buildinfo_file_name(workdir)
     with open(filename, "w") as outfile:
@@ -794,37 +887,52 @@ def sign_specfile(key, force, specfile_path):
     spack.util.gpg.sign(key, specfile_path, signed_specfile_path, clearsign=True)
 
 
-def _fetch_spec_from_mirror(spec_url):
-    s = None
-    tty.debug("fetching {0}".format(spec_url))
-    _, _, spec_file = web_util.read_from_url(spec_url)
-    spec_file_contents = codecs.getreader("utf-8")(spec_file).read()
-    # Need full spec.json name or this gets confused with index.json.
-    if spec_url.endswith(".json.sig"):
-        specfile_json = Spec.extract_json_from_clearsig(spec_file_contents)
-        s = Spec.from_dict(specfile_json)
-    elif spec_url.endswith(".json"):
-        s = Spec.from_json(spec_file_contents)
-    elif spec_url.endswith(".yaml"):
-        s = Spec.from_yaml(spec_file_contents)
-    return s
+def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_dir, concurrency):
+    """Read all the specs listed in the provided list, using thread given thread parallelism,
+        generate the index, and push it to the mirror.
 
+    Args:
+        file_list (list(str)): List of urls or file paths pointing at spec files to read
+        read_method: A function taking a single argument, either a url or a file path,
+            and which reads the spec file at that location, and returns the spec.
+        cache_prefix (str): prefix of the build cache on s3 where index should be pushed.
+        db: A spack database used for adding specs and then writing the index.
+        temp_dir (str): Location to write index.json and hash for pushing
+        concurrency (int): Number of parallel processes to use when fetching
 
-def _read_specs_and_push_index(file_list, cache_prefix, db, db_root_dir):
-    for file_path in file_list:
-        try:
-            s = _fetch_spec_from_mirror(url_util.join(cache_prefix, file_path))
-        except (URLError, web_util.SpackWebError) as url_err:
-            tty.error("Error reading specfile: {0}".format(file_path))
-            tty.error(url_err)
+    Return:
+        None
+    """
 
-        if s:
-            db.add(s, None)
-            db.mark(s, "in_buildcache", True)
+    def _fetch_spec_from_mirror(spec_url):
+        spec_file_contents = read_method(spec_url)
+
+        if spec_file_contents:
+            # Need full spec.json name or this gets confused with index.json.
+            if spec_url.endswith(".json.sig"):
+                specfile_json = Spec.extract_json_from_clearsig(spec_file_contents)
+                return Spec.from_dict(specfile_json)
+            if spec_url.endswith(".json"):
+                return Spec.from_json(spec_file_contents)
+            if spec_url.endswith(".yaml"):
+                return Spec.from_yaml(spec_file_contents)
+
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    try:
+        fetched_specs = tp.map(
+            llnl.util.lang.star(_fetch_spec_from_mirror), [(f,) for f in file_list]
+        )
+    finally:
+        tp.terminate()
+        tp.join()
+
+    for fetched_spec in fetched_specs:
+        db.add(fetched_spec, None)
+        db.mark(fetched_spec, "in_buildcache", True)
 
     # Now generate the index, compute its hash, and push the two files to
     # the mirror.
-    index_json_path = os.path.join(db_root_dir, "index.json")
+    index_json_path = os.path.join(temp_dir, "index.json")
     with open(index_json_path, "w") as f:
         db._write_to_file(f)
 
@@ -834,7 +942,7 @@ def _read_specs_and_push_index(file_list, cache_prefix, db, db_root_dir):
         index_hash = compute_hash(index_string)
 
     # Write the hash out to a local file
-    index_hash_path = os.path.join(db_root_dir, "index.json.hash")
+    index_hash_path = os.path.join(temp_dir, "index.json.hash")
     with open(index_hash_path, "w") as f:
         f.write(index_hash)
 
@@ -855,32 +963,151 @@ def _read_specs_and_push_index(file_list, cache_prefix, db, db_root_dir):
     )
 
 
-def generate_package_index(cache_prefix):
-    """Create the build cache index page.
+def _specs_from_cache_aws_cli(cache_prefix):
+    """Use aws cli to sync all the specs into a local temporary directory.
 
-    Creates (or replaces) the "index.json" page at the location given in
-    cache_prefix.  This page contains a link for each binary package (.yaml or
-    .json) under cache_prefix.
+    Args:
+        cache_prefix (str): prefix of the build cache on s3
+
+    Return:
+        List of the local file paths and a function that can read each one from the file system.
     """
+    read_fn = None
+    file_list = None
+    aws = which("aws")
+
+    def file_read_method(file_path):
+        with open(file_path) as fd:
+            return fd.read()
+
+    tmpspecsdir = tempfile.mkdtemp()
+    sync_command_args = [
+        "s3",
+        "sync",
+        "--exclude",
+        "*",
+        "--include",
+        "*.spec.json.sig",
+        "--include",
+        "*.spec.json",
+        "--include",
+        "*.spec.yaml",
+        cache_prefix,
+        tmpspecsdir,
+    ]
+
     try:
-        file_list = (
-            entry
+        tty.debug(
+            "Using aws s3 sync to download specs from {0} to {1}".format(cache_prefix, tmpspecsdir)
+        )
+        aws(*sync_command_args, output=os.devnull, error=os.devnull)
+        file_list = fsys.find(tmpspecsdir, ["*.spec.json.sig", "*.spec.json", "*.spec.yaml"])
+        read_fn = file_read_method
+    except Exception:
+        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
+        shutil.rmtree(tmpspecsdir)
+
+    return file_list, read_fn
+
+
+def _specs_from_cache_fallback(cache_prefix):
+    """Use spack.util.web module to get a list of all the specs at the remote url.
+
+    Args:
+        cache_prefix (str): Base url of mirror (location of spec files)
+
+    Return:
+        The list of complete spec file urls and a function that can read each one from its
+            remote location (also using the spack.util.web module).
+    """
+    read_fn = None
+    file_list = None
+
+    def url_read_method(url):
+        contents = None
+        try:
+            _, _, spec_file = web_util.read_from_url(url)
+            contents = codecs.getreader("utf-8")(spec_file).read()
+        except (URLError, web_util.SpackWebError) as url_err:
+            tty.error("Error reading specfile: {0}".format(url))
+            tty.error(url_err)
+        return contents
+
+    try:
+        file_list = [
+            url_util.join(cache_prefix, entry)
             for entry in web_util.list_url(cache_prefix)
             if entry.endswith(".yaml")
             or entry.endswith("spec.json")
             or entry.endswith("spec.json.sig")
-        )
+        ]
+        read_fn = url_read_method
     except KeyError as inst:
         msg = "No packages at {0}: {1}".format(cache_prefix, inst)
         tty.warn(msg)
-        return
     except Exception as err:
         # If we got some kind of S3 (access denied or other connection
         # error), the first non boto-specific class in the exception
         # hierarchy is Exception.  Just print a warning and return
         msg = "Encountered problem listing packages at {0}: {1}".format(cache_prefix, err)
         tty.warn(msg)
+
+    return file_list, read_fn
+
+
+def _spec_files_from_cache(cache_prefix):
+    """Get a list of all the spec files in the mirror and a function to
+    read them.
+
+    Args:
+        cache_prefix (str): Base url of mirror (location of spec files)
+
+    Return:
+        A tuple where the first item is a list of absolute file paths or
+        urls pointing to the specs that should be read from the mirror,
+        and the second item is a function taking a url or file path and
+        returning the spec read from that location.
+    """
+    callbacks = []
+    if cache_prefix.startswith("s3"):
+        callbacks.append(_specs_from_cache_aws_cli)
+
+    callbacks.append(_specs_from_cache_fallback)
+
+    for specs_from_cache_fn in callbacks:
+        file_list, read_fn = specs_from_cache_fn(cache_prefix)
+        if file_list:
+            return file_list, read_fn
+
+    raise ListMirrorSpecsError("Failed to get list of specs from {0}".format(cache_prefix))
+
+
+def generate_package_index(cache_prefix, concurrency=32):
+    """Create or replace the build cache index on the given mirror.  The
+    buildcache index contains an entry for each binary package under the
+    cache_prefix.
+
+    Args:
+        cache_prefix(str): Base url of binary mirror.
+        concurrency: (int): The desired threading concurrency to use when
+            fetching the spec files from the mirror.
+
+    Return:
+        None
+    """
+    try:
+        file_list, read_fn = _spec_files_from_cache(cache_prefix)
+    except ListMirrorSpecsError as err:
+        tty.error("Unabled to generate package index, {0}".format(err))
         return
+
+    if any(x.endswith(".yaml") for x in file_list):
+        msg = (
+            "The mirror in '{}' contains specs in the deprecated YAML format.\n\n\tSupport for "
+            "this format will be removed in v0.20, please regenerate the build cache with a "
+            "recent Spack\n"
+        ).format(cache_prefix)
+        warnings.warn(msg)
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
@@ -894,7 +1121,7 @@ def generate_package_index(cache_prefix):
     )
 
     try:
-        _read_specs_and_push_index(file_list, cache_prefix, db, db_root_dir)
+        _read_specs_and_push_index(file_list, read_fn, cache_prefix, db, db_root_dir, concurrency)
     except Exception as err:
         msg = "Encountered problem pushing package index to {0}: {1}".format(cache_prefix, err)
         tty.warn(msg)
@@ -1070,7 +1297,11 @@ def _build_tarball(
             tty.die(e)
 
     # create gzip compressed tarball of the install prefix
-    with closing(tarfile.open(tarfile_path, "w:gz")) as tar:
+    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
         tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
@@ -1345,6 +1576,13 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     #     the remaining mirrors, looking for one we can use.
                     tarball_stage = try_fetch(spackfile_url)
                     if tarball_stage:
+                        if ext == "yaml":
+                            msg = (
+                                "Reading {} from mirror.\n\n\tThe YAML format for buildcaches is "
+                                "deprecated and will be removed in v0.20\n"
+                            ).format(spackfile_url)
+                            warnings.warn(msg)
+
                         return {
                             "tarball_stage": tarball_stage,
                             "specfile_stage": local_specfile_stage,
@@ -1417,6 +1655,38 @@ def check_package_relocatable(workdir, spec, allow_root):
     relocate.raise_if_not_relocatable(cur_path_names, allow_root)
 
 
+def dedupe_hardlinks_if_necessary(root, buildinfo):
+    """Updates a buildinfo dict for old archives that did
+    not dedupe hardlinks. De-duping hardlinks is necessary
+    when relocating files in parallel and in-place. This
+    means we must preserve inodes when relocating."""
+
+    # New archives don't need this.
+    if buildinfo.get("hardlinks_deduped", False):
+        return
+
+    # Clearly we can assume that an inode is either in the
+    # textfile or binary group, but let's just stick to
+    # a single set of visited nodes.
+    visited = set()
+
+    # Note: we do *not* dedupe hardlinked symlinks, since
+    # it seems difficult or even impossible to relink
+    # symlinks while preserving inode.
+    for key in ("relocate_textfiles", "relocate_binaries"):
+        if key not in buildinfo:
+            continue
+        new_list = []
+        for rel_path in buildinfo[key]:
+            stat_result = os.lstat(os.path.join(root, rel_path))
+            identifier = (stat_result.st_dev, stat_result.st_ino)
+            if identifier in visited:
+                continue
+            visited.add(identifier)
+            new_list.append(rel_path)
+        buildinfo[key] = new_list
+
+
 def relocate_package(spec, allow_root):
     """
     Relocate the given package
@@ -1450,7 +1720,7 @@ def relocate_package(spec, allow_root):
     hash_to_prefix = dict()
     hash_to_prefix[spec.format("{hash}")] = str(spec.package.prefix)
     new_deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in new_deps:
+    for d in new_deps + spec.dependencies(deptype="run"):
         hash_to_prefix[d.format("{hash}")] = str(d.prefix)
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
@@ -1462,13 +1732,19 @@ def relocate_package(spec, allow_root):
         install_path = spack.hooks.sbang.sbang_install_path()
         prefix_to_prefix_text[old_sbang_install_path] = install_path
 
+    # First match specific prefix paths. Possibly the *local* install prefix
+    # of some dependency is in an upstream, so we cannot assume the original
+    # spack store root can be mapped uniformly to the new spack store root.
+    for orig_prefix, hash in prefix_to_hash.items():
+        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
+        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+
+    # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
     prefix_to_prefix_bin[old_prefix] = new_prefix
     prefix_to_prefix_text[old_layout_root] = new_layout_root
     prefix_to_prefix_bin[old_layout_root] = new_layout_root
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
-        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+
     # This is vestigial code for the *old* location of sbang. Previously,
     # sbang was a bash script, and it lived in the spack prefix. It is
     # now a POSIX script that lives in the install prefix. Old packages
@@ -1478,6 +1754,9 @@ def relocate_package(spec, allow_root):
     prefix_to_prefix_text[orig_sbang] = new_sbang
 
     tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
+
+    # Old archives maybe have hardlinks repeated.
+    dedupe_hardlinks_if_necessary(workdir, buildinfo)
 
     def is_backup_file(file):
         return file.endswith("~")
@@ -1508,7 +1787,11 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-        if "elf" in platform.binary_formats:
+        elif "elf" in platform.binary_formats and not rel:
+            # The new ELF dynamic section relocation logic only handles absolute to
+            # absolute relocation.
+            relocate.new_relocate_elf_binaries(files_to_relocate, prefix_to_prefix_bin)
+        elif "elf" in platform.binary_formats and rel:
             relocate.relocate_elf_binaries(
                 files_to_relocate,
                 old_layout_root,
@@ -1518,35 +1801,23 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-            # Relocate links to the new install prefix
-            links = [link for link in buildinfo.get("relocate_links", [])]
-            relocate.relocate_links(links, old_layout_root, old_prefix, new_prefix)
+
+        # Relocate links to the new install prefix
+        links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
+        relocate.relocate_links(links, prefix_to_prefix_bin)
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
-        relocate.relocate_text(text_names, prefix_to_prefix_text)
+        relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
-        paths_to_relocate = [old_prefix, old_layout_root]
-        paths_to_relocate.extend(prefix_to_hash.keys())
-        files_to_relocate = list(
-            filter(
-                lambda pathname: not relocate.file_is_relocatable(
-                    pathname, paths_to_relocate=paths_to_relocate
-                ),
-                map(
-                    lambda filename: os.path.join(workdir, filename),
-                    buildinfo["relocate_binaries"],
-                ),
-            )
-        )
         # relocate the install prefixes in binary files including dependencies
-        relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+        relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 
     # If we are installing back to the same location
     # relocate the sbang location if the spack directory changed
     else:
         if old_spack_prefix != new_spack_prefix:
-            relocate.relocate_text(text_names, prefix_to_prefix_text)
+            relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
@@ -1877,8 +2148,8 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
 
     results = binary_index.find_built_spec(spec, mirrors_to_check=mirrors_to_check)
 
-    # Maybe we just didn't have the latest information from the mirror, so
-    # try to fetch directly, unless we are only considering the indices.
+    # The index may be out-of-date. If we aren't only considering indices, try
+    # to fetch directly since we know where the file should be.
     if not results and not index_only:
         results = try_direct_fetch(spec, mirrors=mirrors_to_check)
         # We found a spec by the direct fetch approach, we might as well

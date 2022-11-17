@@ -13,6 +13,7 @@ class PyUrllib3(PythonPackage):
     homepage = "https://urllib3.readthedocs.io/"
     pypi = "urllib3/urllib3-1.25.6.tar.gz"
 
+    version("1.26.12", sha256="3fa96cf423e6987997fc326ae8df396db2a8b7c667747d47ddd8ecba91f4a74e")
     version("1.26.6", sha256="f57b4c16c62fa2760b7e3d97c35b255512fb6b59a259730f36ba32ce9f8e342f")
     version("1.25.9", sha256="3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527")
     version("1.25.6", sha256="9a107b99a5393caf59c7aa3c1249c16e6879447533d0887f4336dde834c7be86")
@@ -28,6 +29,7 @@ class PyUrllib3(PythonPackage):
 
     depends_on("python@2.7:2.8,3.4:", when="@:1.25", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@1.26.6", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.6:3", when="@1.26.12:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
 
@@ -36,6 +38,7 @@ class PyUrllib3(PythonPackage):
     depends_on("py-idna@2:", when="+secure")
     depends_on("py-certifi", when="+secure")
     depends_on("py-ipaddress", when="+secure ^python@2.7:2.8")
+    depends_on("py-urllib3-secure-extra", when="+secure @1.26.12:")
 
     depends_on("py-pysocks@1.5.6,1.5.8:1", when="+socks")
 

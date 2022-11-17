@@ -9,16 +9,15 @@ from spack.package import *
 
 
 class Gromacs(CMakePackage):
-    """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
-    dynamics package primarily designed for simulations of proteins, lipids
-    and nucleic acids. It was originally developed in the Biophysical
-    Chemistry department of University of Groningen, and is now maintained
-    by contributors in universities and research centers across the world.
+    """GROMACS is a molecular dynamics package primarily designed for simulations
+    of proteins, lipids and nucleic acids. It was originally developed in
+    the Biophysical Chemistry department of University of Groningen, and is now
+    maintained by contributors in universities and research centers across the world.
 
     GROMACS is one of the fastest and most popular software packages
     available and can run on CPUs as well as GPUs. It is free, open source
-    released under the GNU General Public License. Starting from version 4.6,
-    GROMACS is released under the GNU Lesser General Public License.
+    released under the GNU Lesser General Public License. Before the version 4.6,
+    GROMACS was released under the GNU General Public License.
     """
 
     homepage = "https://www.gromacs.org"
@@ -204,8 +203,9 @@ class Gromacs(CMakePackage):
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
     depends_on("cmake@3.9.6:3", type="build", when="@2020")
-    depends_on("cmake@3.13.0:3", type="build", when="@2021:")
-    depends_on("cmake@3.16.0:3", type="build", when="@master")
+    depends_on("cmake@3.13.0:3", type="build", when="@2021")
+    depends_on("cmake@3.16.3:3", type="build", when="@2022:")
+    depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
@@ -369,14 +369,13 @@ class Gromacs(CMakePackage):
         else:
             if "+cuda" in self.spec or "+opencl" in self.spec:
                 options.append("-DGMX_GPU:BOOL=ON")
+                if "+opencl" in self.spec:
+                    options.append("-DGMX_USE_OPENCL=ON")
             else:
                 options.append("-DGMX_GPU:BOOL=OFF")
 
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
-
-        if "+opencl" in self.spec:
-            options.append("-DGMX_USE_OPENCL=on")
 
         if "+lapack" in self.spec:
             options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
@@ -489,6 +488,13 @@ class Gromacs(CMakePackage):
                 )
                 options.append(
                     "-DFFTWF_LIBRARIES={0}".format(self.spec["amdfftw"].libs.joined(";"))
+                )
+            elif "^armpl-gcc" in self.spec:
+                options.append(
+                    "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["armpl-gcc"].headers.directories[0])
+                )
+                options.append(
+                    "-DFFTWF_LIBRARY={0}".format(self.spec["armpl-gcc"].libs.joined(";"))
                 )
 
         # Ensure that the GROMACS log files report how the code was patched

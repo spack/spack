@@ -3,10 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
+is_windows = sys.platform == "win32"
 
-class Re2c(AutotoolsPackage):
+
+class Re2c(Package):
     """re2c: a free and open-source lexer generator for C and C++"""
 
     homepage = "https://re2c.org/index.html"
@@ -22,6 +26,17 @@ class Re2c(AutotoolsPackage):
     version("1.3", sha256="f37f25ff760e90088e7d03d1232002c2c2672646d5844fdf8e0d51a5cd75a503")
     version("1.2.1", sha256="1a4cd706b5b966aeffd78e3cf8b24239470ded30551e813610f9cd1a4e01b817")
 
+    phases = ["configure", "build", "install"]
+
+    depends_on("cmake", when="platform=windows")
+
+    @property
+    def make_tool(self):
+        if is_windows:
+            return ninja
+        else:
+            return make
+
     def configure_args(self):
         return [
             "--disable-benchmarks",
@@ -32,3 +47,21 @@ class Re2c(AutotoolsPackage):
             "--disable-libs",  # experimental
             "--enable-golang",
         ]
+
+    def configure(self, spec, prefix):
+        with working_dir(self.stage.source_path, create=True):
+            configure("--prefix=" + prefix, *self.configure_args())
+
+    @when("platform=windows")
+    def configure(self, spec, prefix):
+        with working_dir(self.stage.source_path, create=True):
+            args = ["-G", "Ninja", "-DCMAKE_INSTALL_PREFIX=%s" % prefix]
+            cmake(*args)
+
+    def build(self, spec, prefix):
+        with working_dir(self.stage.source_path):
+            self.make_tool()
+
+    def install(self, spec, prefix):
+        with working_dir(self.stage.source_path):
+            self.make_tool("install")

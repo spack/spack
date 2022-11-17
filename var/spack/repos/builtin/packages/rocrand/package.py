@@ -16,12 +16,13 @@ class Rocrand(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
     libraries = ["librocrand"]
 
+    version("5.2.3", sha256="01eda8022fab7bafb2c457fe26a9e9c99950ed1b772ae7bf8710b23a90b56e32")
     version("5.2.1", sha256="4b2a7780f0112c12b5f307e1130e6b2c02ab984a0c1b94e9190dae38f0067600")
     version("5.2.0", sha256="ab3057e7c17a9fbe584f89ef98ec92a74d638a98d333e7d0f64daf7bc9051e38")
     version("5.1.3", sha256="4a19e1bcb60955a02a73ad64594c23886d6749afe06b0104e2b877dbe02c8d1c")
@@ -96,6 +97,12 @@ class Rocrand(CMakePackage):
 
     depends_on("googletest@1.10.0:", type="test")
 
+    # This patch ensures that libhiprand.so searches for librocrand.so in its
+    # own directory first thanks to the $ORIGIN RPATH setting. Otherwise,
+    # libhiprand.so cannot find dependency librocrand.so despite being in the
+    # same directory.
+    patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:")
+
     resource(
         name="hipRAND",
         git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
@@ -124,6 +131,7 @@ class Rocrand(CMakePackage):
         "5.1.3",
         "5.2.0",
         "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
@@ -155,7 +163,7 @@ class Rocrand(CMakePackage):
                 for lib in rocrand_libs:
                     os.symlink(join_path(rocrand_lib_path, lib), join_path(self.prefix.lib, lib))
             """Fix the rocRAND and hipRAND include path"""
-            # rocRAND installs irocrand*.h* and hiprand*.h* rocrand/include and
+            # rocRAND installs rocrand*.h* and hiprand*.h* rocrand/include and
             # hiprand/include, respectively. This confuses spack's RPATH management. We
             # fix it by adding a symlink to the header files.
             hiprand_include_path = join_path(self.prefix, "hiprand", "include")

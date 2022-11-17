@@ -66,7 +66,7 @@ class Thepeg(AutotoolsPackage):
     depends_on("hepmc3", when="hepmc=3")
     conflicts("hepmc=3", when="@:2.1", msg="HepMC3 support was added in 2.2.0")
     depends_on("fastjet", when="@2.0.0:")
-    depends_on("rivet", when="@2.0.3:")
+    depends_on("rivet", when="@2.0.3: +rivet")
     depends_on("boost +test", when="@2.1.1:")
 
     depends_on("autoconf", type="build")
@@ -76,8 +76,22 @@ class Thepeg(AutotoolsPackage):
     depends_on("zlib")
 
     variant("hepmc", default="2", values=("2", "3"), description="HepMC interface to build ")
+    variant("rivet", default=True, description="Add rivet integration")
+    variant(
+        "libs",
+        default="shared",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
 
     install_targets = ["install-strip"]
+
+    def flag_handler(self, name, flags):
+        if name in ("cxxflags", "cflags", "fflags", "cppflags"):
+            flags.append("-O2")
+
+        return (None, None, flags)
 
     def configure_args(self):
         args = ["--with-gsl=" + self.spec["gsl"].prefix, "--without-javagui"]
@@ -99,12 +113,12 @@ class Thepeg(AutotoolsPackage):
         if self.spec.satisfies("@2.0.0:"):
             args += ["--with-fastjet=" + self.spec["fastjet"].prefix]
 
-        if self.spec.satisfies("@2.0.3:"):
+        if self.spec.satisfies("@2.0.3: +rivet"):
             args += ["--with-rivet=" + self.spec["rivet"].prefix]
 
         if self.spec.satisfies("@2.1.1:"):
             args += ["--with-boost=" + self.spec["boost"].prefix]
 
-        args += ["CFLAGS=-O2", "CXXFLAGS=-O2", "FFLAGS=-O2"]
+        args += self.enable_or_disable("libs")
 
         return args

@@ -14,7 +14,6 @@ from textwrap import dedent
 from typing import List, Tuple
 
 import ruamel.yaml as yaml
-import six
 from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
@@ -30,6 +29,7 @@ import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
+import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.string
@@ -216,7 +216,7 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get("tests", False)
 
     sargs = args
-    if not isinstance(args, six.string_types):
+    if not isinstance(args, str):
         sargs = " ".join(args)
     unquoted_flags = _UnquotedFlags.extract(sargs)
 
@@ -234,7 +234,8 @@ def parse_specs(args, **kwargs):
         msg = e.message
         if e.long_message:
             msg += e.long_message
-        if unquoted_flags:
+        # Unquoted flags will be read as a variant or hash
+        if unquoted_flags and ("variant" in msg or "hash" in msg):
             msg += "\n\n"
             msg += unquoted_flags.report()
 
@@ -291,17 +292,22 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
     elif first:
         return matching_specs[0]
 
-    elif len(matching_specs) > 1:
-        format_string = "{name}{@version}{%compiler}{arch=architecture}"
-        args = ["%s matches multiple packages." % spec, "Matching packages:"]
-        args += [
-            colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string)
-            for s in matching_specs
-        ]
-        args += ["Use a more specific spec."]
-        tty.die(*args)
+    ensure_single_spec_or_die(spec, matching_specs)
 
     return matching_specs[0]
+
+
+def ensure_single_spec_or_die(spec, matching_specs):
+    if len(matching_specs) <= 1:
+        return
+
+    format_string = "{name}{@version}{%compiler}{arch=architecture}"
+    args = ["%s matches multiple packages." % spec, "Matching packages:"]
+    args += [
+        colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
+    ]
+    args += ["Use a more specific spec (e.g., prepend '/' to the hash)."]
+    tty.die(*args)
 
 
 def gray_hash(spec, length):
@@ -458,11 +464,12 @@ def display_specs(specs, args=None, **kwargs):
         # create the final, formatted versions of all specs
         formatted = []
         for spec in specs:
-            formatted.append((fmt(spec), spec))
             if deps:
-                for depth, dep in spec.traverse(root=False, depth=True):
-                    formatted.append((fmt(dep, depth), dep))
+                for depth, dep in traverse.traverse_tree([spec], depth_first=False):
+                    formatted.append((fmt(dep.spec, depth), dep.spec))
                 formatted.append(("", None))  # mark newlines
+            else:
+                formatted.append((fmt(spec), spec))
 
         # unless any of these are set, we can just colify and be done.
         if not any((deps, paths)):

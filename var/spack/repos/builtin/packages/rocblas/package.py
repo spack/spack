@@ -13,7 +13,7 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
@@ -22,6 +22,7 @@ class Rocblas(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.2.3", sha256="36f74ce53b82331a756c42f95f3138498d6f4a66f2fd370cff9ab18281bb12d5")
     version("5.2.1", sha256="6be804ba8d9e491a85063c220cd0ddbf3d13e3b481eee31041c35a938723f4c6")
     version("5.2.0", sha256="b178b7db5f0af55b21b5f744b8825f5e002daec69b4688e50df2bca2fac155bd")
     version("5.1.3", sha256="915374431db8f0cecdc2bf318a0ad33c3a8eceedc461d7a06b92ccb02b07313c")
@@ -145,6 +146,7 @@ class Rocblas(CMakePackage):
         "5.1.3",
         "5.2.0",
         "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -182,6 +184,7 @@ class Rocblas(CMakePackage):
         ("@5.1.3", "ea38f8661281a37cd81c96cc07868e3f07d2c4da"),
         ("@5.2.0", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.2.1", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
+        ("@5.2.3", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
     ]:
         resource(
             name="Tensile",
@@ -245,6 +248,11 @@ class Rocblas(CMakePackage):
                 args.append(self.define("Tensile_LIBRARY_FORMAT", "msgpack"))
             if self.spec.satisfies("@:4.2.0"):
                 arch_define_name = "Tensile_ARCHITECTURE"
+            # Restrict the number of jobs Tensile can spawn.
+            # If we don't specify otherwise, Tensile creates a job per available core,
+            # and that consumes a lot of system memory.
+            # https://github.com/ROCmSoftwarePlatform/Tensile/blob/93e10678a0ced7843d9332b80bc17ebf9a166e8e/Tensile/Parallel.py#L38
+            args.append(self.define("Tensile_CPU_THREADS", min(16, make_jobs)))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
         if "auto" not in self.spec.variants["amdgpu_target"]:

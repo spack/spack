@@ -1,0 +1,298 @@
+From 0fe10e408e2a0c470be895350e303004e0ea5906 Mon Sep 17 00:00:00 2001
+From: Yang Zongze <yangzongze@gmail.com>
+Date: Mon, 10 Oct 2022 12:56:25 +0800
+Subject: [PATCH] patch gcc unused attribute
+
+---
+ c.c        |  4 ++--
+ eiffel.c   |  2 +-
+ general.h  |  4 ++--
+ lregex.c   | 30 +++++++++++++++---------------
+ lua.c      |  2 +-
+ main.c     |  2 +-
+ options.c  | 24 ++++++++++++------------
+ parse.c    |  2 +-
+ python.c   |  2 +-
+ routines.c |  2 +-
+ 10 files changed, 37 insertions(+), 37 deletions(-)
+
+diff --git a/c.c b/c.c
+index 0cf0a14..5e31216 100644
+--- a/c.c
++++ b/c.c
+@@ -619,7 +619,7 @@ static const char *keywordString (const keywordId keyword)
+ 	return name;
+ }
+ 
+-static void __unused__ pt (tokenInfo *const token)
++static void __attribute__unused__ pt (tokenInfo *const token)
+ {
+ 	if (isType (token, TOKEN_NAME))
+ 		printf ("type: %-12s: %-13s   line: %lu\n",
+@@ -634,7 +634,7 @@ static void __unused__ pt (tokenInfo *const token)
+ 			tokenString (token->type), token->lineNumber);
+ }
+ 
+-static void __unused__ ps (statementInfo *const st)
++static void __attribute__unused__ ps (statementInfo *const st)
+ {
+ 	unsigned int i;
+ 	printf ("scope: %s   decl: %s   gotName: %s   gotParenName: %s\n",
+diff --git a/eiffel.c b/eiffel.c
+index b504ac3..e993551 100644
+--- a/eiffel.c
++++ b/eiffel.c
+@@ -803,7 +803,7 @@ static void findKeyword (tokenInfo *const token, const keywordId keyword)
+ 
+ static boolean parseType (tokenInfo *const token);
+ 
+-static void parseGeneric (tokenInfo *const token, boolean declaration __unused__)
++static void parseGeneric (tokenInfo *const token, boolean declaration __attribute__unused__)
+ {
+ 	unsigned int depth = 0;
+ #ifdef TYPE_REFERENCE_TOOL
+diff --git a/general.h b/general.h
+index 2d1d629..5195b3e 100644
+--- a/general.h
++++ b/general.h
+@@ -57,10 +57,10 @@
+  *  to prevent warnings about unused variables.
+  */
+ #if (__GNUC__ > 2  ||  (__GNUC__ == 2  &&  __GNUC_MINOR__ >= 7)) && !defined (__GNUG__)
+-# define __unused__  __attribute__((unused))
++# define __attribute__unused__  __attribute__((__unused__))
+ # define __printf__(s,f)  __attribute__((format (printf, s, f)))
+ #else
+-# define __unused__
++# define __attribute__unused__
+ # define __printf__(s,f)
+ #endif
+ 
+diff --git a/lregex.c b/lregex.c
+index 59f5df6..61b10b6 100644
+--- a/lregex.c
++++ b/lregex.c
+@@ -538,11 +538,11 @@ extern void findRegexTags (void)
+ #endif  /* HAVE_REGEX */
+ 
+ extern void addTagRegex (
+-		const langType language __unused__,
+-		const char* const regex __unused__,
+-		const char* const name __unused__,
+-		const char* const kinds __unused__,
+-		const char* const flags __unused__)
++		const langType language __attribute__unused__,
++		const char* const regex __attribute__unused__,
++		const char* const name __attribute__unused__,
++		const char* const kinds __attribute__unused__,
++		const char* const flags __attribute__unused__)
+ {
+ #ifdef HAVE_REGEX
+ 	Assert (regex != NULL);
+@@ -564,10 +564,10 @@ extern void addTagRegex (
+ }
+ 
+ extern void addCallbackRegex (
+-		const langType language __unused__,
+-		const char* const regex __unused__,
+-		const char* const flags __unused__,
+-		const regexCallback callback __unused__)
++		const langType language __attribute__unused__,
++		const char* const regex __attribute__unused__,
++		const char* const flags __attribute__unused__,
++		const regexCallback callback __attribute__unused__)
+ {
+ #ifdef HAVE_REGEX
+ 	Assert (regex != NULL);
+@@ -581,7 +581,7 @@ extern void addCallbackRegex (
+ }
+ 
+ extern void addLanguageRegex (
+-		const langType language __unused__, const char* const regex __unused__)
++		const langType language __attribute__unused__, const char* const regex __attribute__unused__)
+ {
+ #ifdef HAVE_REGEX
+ 	if (! regexBroken)
+@@ -602,7 +602,7 @@ extern void addLanguageRegex (
+ */
+ 
+ extern boolean processRegexOption (const char *const option,
+-								   const char *const parameter __unused__)
++								   const char *const parameter __attribute__unused__)
+ {
+ 	boolean handled = FALSE;
+ 	const char* const dash = strchr (option, '-');
+@@ -624,7 +624,7 @@ extern boolean processRegexOption (const char *const option,
+ 	return handled;
+ }
+ 
+-extern void disableRegexKinds (const langType language __unused__)
++extern void disableRegexKinds (const langType language __attribute__unused__)
+ {
+ #ifdef HAVE_REGEX
+ 	if (language <= SetUpper  &&  Sets [language].count > 0)
+@@ -639,8 +639,8 @@ extern void disableRegexKinds (const langType language __unused__)
+ }
+ 
+ extern boolean enableRegexKind (
+-		const langType language __unused__,
+-		const int kind __unused__, const boolean mode __unused__)
++		const langType language __attribute__unused__,
++		const int kind __attribute__unused__, const boolean mode __attribute__unused__)
+ {
+ 	boolean result = FALSE;
+ #ifdef HAVE_REGEX
+@@ -660,7 +660,7 @@ extern boolean enableRegexKind (
+ 	return result;
+ }
+ 
+-extern void printRegexKinds (const langType language __unused__, boolean indent __unused__)
++extern void printRegexKinds (const langType language __attribute__unused__, boolean indent __attribute__unused__)
+ {
+ #ifdef HAVE_REGEX
+ 	if (language <= SetUpper  &&  Sets [language].count > 0)
+diff --git a/lua.c b/lua.c
+index d385544..e90781a 100644
+--- a/lua.c
++++ b/lua.c
+@@ -37,7 +37,7 @@ static kindOption LuaKinds [] = {
+ */
+ 
+ /* for debugging purposes */
+-static void __unused__ print_string (char *p, char *q)
++static void __attribute__unused__ print_string (char *p, char *q)
+ {
+ 	for ( ; p != q; p++)
+ 		fprintf (errout, "%c", *p);
+diff --git a/main.c b/main.c
+index 79948fe..dd35f08 100644
+--- a/main.c
++++ b/main.c
+@@ -522,7 +522,7 @@ static void makeTags (cookedArgs *args)
+  *		Start up code
+  */
+ 
+-extern int main (int __unused__ argc, char **argv)
++extern int main (int __attribute__unused__ argc, char **argv)
+ {
+ 	cookedArgs *args;
+ #ifdef VMS
+diff --git a/options.c b/options.c
+index d26627f..6722746 100644
+--- a/options.c
++++ b/options.c
+@@ -730,7 +730,7 @@ static void processEtagsInclude (
+ }
+ 
+ static void processExcludeOption (
+-		const char *const option __unused__, const char *const parameter)
++		const char *const option __attribute__unused__, const char *const parameter)
+ {
+ 	const char *const fileName = parameter + 1;
+ 	if (parameter [0] == '\0')
+@@ -867,7 +867,7 @@ static void processFieldsOption (
+ }
+ 
+ static void processFilterTerminatorOption (
+-		const char *const option __unused__, const char *const parameter)
++		const char *const option __attribute__unused__, const char *const parameter)
+ {
+ 	freeString (&Option.filterTerminator);
+ 	Option.filterTerminator = stringCopy (parameter);
+@@ -930,8 +930,8 @@ static void printProgramIdentification (void)
+ }
+ 
+ static void processHelpOption (
+-		const char *const option __unused__,
+-		const char *const parameter __unused__)
++		const char *const option __attribute__unused__,
++		const char *const parameter __attribute__unused__)
+ {
+ 	printProgramIdentification ();
+ 	putchar ('\n');
+@@ -1139,8 +1139,8 @@ static void processLanguagesOption (
+ }
+ 
+ static void processLicenseOption (
+-		const char *const option __unused__,
+-		const char *const parameter __unused__)
++		const char *const option __attribute__unused__,
++		const char *const parameter __attribute__unused__)
+ {
+ 	printProgramIdentification ();
+ 	puts ("");
+@@ -1166,8 +1166,8 @@ static void processListKindsOption (
+ }
+ 
+ static void processListMapsOption (
+-		const char *const __unused__ option,
+-		const char *const __unused__ parameter)
++		const char *const __attribute__unused__ option,
++		const char *const __attribute__unused__ parameter)
+ {
+ 	if (parameter [0] == '\0' || strcasecmp (parameter, "all") == 0)
+ 	    printLanguageMaps (LANG_AUTO);
+@@ -1183,8 +1183,8 @@ static void processListMapsOption (
+ }
+ 
+ static void processListLanguagesOption (
+-		const char *const option __unused__,
+-		const char *const parameter __unused__)
++		const char *const option __attribute__unused__,
++		const char *const parameter __attribute__unused__)
+ {
+ 	printLanguageList ();
+ 	exit (0);
+@@ -1358,8 +1358,8 @@ static void processIgnoreOption (const char *const list)
+ }
+ 
+ static void processVersionOption (
+-		const char *const option __unused__,
+-		const char *const parameter __unused__)
++		const char *const option __attribute__unused__,
++		const char *const parameter __attribute__unused__)
+ {
+ 	printProgramIdentification ();
+ 	exit (0);
+diff --git a/parse.c b/parse.c
+index 0b5e2c3..3e8bfdb 100644
+--- a/parse.c
++++ b/parse.c
+@@ -376,7 +376,7 @@ extern void freeParserResources (void)
+ */
+ 
+ extern void processLanguageDefineOption (
+-		const char *const option, const char *const parameter __unused__)
++		const char *const option, const char *const parameter __attribute__unused__)
+ {
+ #ifdef HAVE_REGEX
+ 	if (parameter [0] == '\0')
+diff --git a/python.c b/python.c
+index 5fdf31b..c7ff2cb 100644
+--- a/python.c
++++ b/python.c
+@@ -135,7 +135,7 @@ static boolean isIdentifierCharacter (int c)
+  * extract all relevant information and create a tag.
+  */
+ static void makeFunctionTag (vString *const function,
+-	vString *const parent, int is_class_parent, const char *arglist __unused__)
++	vString *const parent, int is_class_parent, const char *arglist __attribute__unused__)
+ {
+ 	tagEntryInfo tag;
+ 	initTagEntry (&tag, vStringValue (function));
+diff --git a/routines.c b/routines.c
+index 83bcdcc..8b6c620 100644
+--- a/routines.c
++++ b/routines.c
+@@ -526,7 +526,7 @@ static boolean isPathSeparator (const int c)
+ 
+ #if ! defined (HAVE_STAT_ST_INO)
+ 
+-static void canonicalizePath (char *const path __unused__)
++static void canonicalizePath (char *const path __attribute__unused__)
+ {
+ #if defined (MSDOS_STYLE_PATH)
+ 	char *p;
+-- 
+2.34.1
+
