@@ -214,7 +214,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           set -ex
-          for ver in '2.7' '3.6' '3.7' '3.8' '3.9' '3.10' ; do
+          for ver in '3.6' '3.7' '3.8' '3.9' '3.10' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
             echo "Testing $ver_dir"
