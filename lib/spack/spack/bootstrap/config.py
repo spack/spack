@@ -8,7 +8,7 @@ import contextlib
 import os.path
 import sys
 
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.compilers
 import spack.config
@@ -24,6 +24,11 @@ import spack.util.path
 _REF_COUNT = 0
 
 
+def is_bootstrapping():
+    """Return True if we are in a bootstrapping context, False otherwise."""
+    return _REF_COUNT > 0
+
+
 def spec_for_current_python():
     """For bootstrapping purposes we are just interested in the Python
     minor version (all patches are ABI compatible with the same minor).
@@ -33,7 +38,7 @@ def spec_for_current_python():
       https://stackoverflow.com/a/35801395/771663
     """
     version_str = ".".join(str(x) for x in sys.version_info[:2])
-    return "python@{0}".format(version_str)
+    return f"python@{version_str}"
 
 
 def root_path():
@@ -45,7 +50,7 @@ def store_path():
     """Path to the store used for bootstrapped software"""
     enabled = spack.config.get("bootstrap:enable", True)
     if not enabled:
-        msg = "bootstrapping is currently disabled. " 'Use "spack bootstrap enable" to enable it'
+        msg = 'bootstrapping is currently disabled. Use "spack bootstrap enable" to enable it'
         raise RuntimeError(msg)
 
     return _store_path()
@@ -87,7 +92,7 @@ def ensure_bootstrap_configuration():
     times if there's nested use of it in the stack. One compelling use case
     is bootstrapping patchelf during the bootstrap of clingo.
     """
-    global _REF_COUNT
+    global _REF_COUNT  # pylint: disable=global-statement
     already_swapped = bool(_REF_COUNT)
     _REF_COUNT += 1
     try:

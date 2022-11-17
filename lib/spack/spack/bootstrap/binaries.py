@@ -34,7 +34,7 @@ from typing import List
 
 import archspec.cpu
 
-import llnl.util.tty as tty
+from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
 
 import spack.binary_distribution
@@ -44,6 +44,7 @@ import spack.environment
 import spack.modules
 import spack.paths
 import spack.platforms
+import spack.platforms.linux
 import spack.repo
 import spack.spec
 import spack.store
@@ -61,38 +62,41 @@ from .config import spack_python_interpreter, spec_for_current_python
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
 
-is_windows = sys.platform == "win32"
+IS_WINDOWS = sys.platform == "win32"
 
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
 
 
-def _bootstrapper(type):
+def _bootstrapper(bootstrapper_type):
     """Decorator to register classes implementing bootstrapping
     methods.
 
     Args:
-        type (str): string identifying the class
+        bootstrapper_type (str): string identifying the class
     """
 
     def _register(cls):
-        _bootstrap_methods[type] = cls
+        _bootstrap_methods[bootstrapper_type] = cls
         return cls
 
     return _register
 
 
-class _BootstrapperBase(object):
+class _BootstrapperBase:
     """Base class to derive types that can bootstrap software for Spack"""
 
     config_scope_name = ""
 
     def __init__(self, conf):
+        self.conf = conf
         self.name = conf["name"]
         self.url = conf["info"]["url"]
+        self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
 
     @property
     def mirror_url(self):
+        """Mirror url associated with this bootstrapper"""
         # Absolute paths
         if os.path.isabs(self.url):
             return spack.util.url.format(self.url)
@@ -106,20 +110,48 @@ class _BootstrapperBase(object):
 
     @property
     def mirror_scope(self):
+        """Mirror scope to be pushed onto the bootstrapping configuration when using
+        this bootstrapper.
+        """
         return spack.config.InternalConfigScope(
             self.config_scope_name, {"mirrors:": {self.name: self.mirror_url}}
         )
 
+    def try_import(self, module: str, abstract_spec_str: str):  # pylint: disable=unused-argument
+        """Try to import a Python module from a spec satisfying the abstract spec
+        passed as argument.
 
-@_bootstrapper(type="buildcache")
+        Args:
+            module (str): Python module name to try importing
+            abstract_spec_str (str): abstract spec that can provide the Python module
+
+        Return:
+            True if the Python module could be imported, False otherwise
+        """
+        return False
+
+    def try_search_path(self, executables, abstract_spec_str):  # pylint: disable=unused-argument
+        """Try to search some executables in the prefix of specs satisfying the abstract
+        spec passed as argument.
+
+        Args:
+            executables (list of str): executables to be found
+            abstract_spec_str (str): abstract spec that can provide the Python module
+
+        Return:
+            True if the executables are found, False otherwise
+        """
+        return False
+
+
+@_bootstrapper(bootstrapper_type="buildcache")
 class _BuildcacheBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from a buildcache."""
 
     def __init__(self, conf):
-        super(_BuildcacheBootstrapper, self).__init__(conf)
-        self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
+        super().__init__(conf)
         self.last_search = None
-        self.config_scope_name = "bootstrap_buildcache-{}".format(uuid.uuid4())
+        self.config_scope_name = f"bootstrap_buildcache-{uuid.uuid4()}"
 
     @staticmethod
     def _spec_and_platform(abstract_spec_str):
@@ -129,9 +161,6 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
         Args:
             abstract_spec_str: abstract spec string we are looking for
         """
-        # This import is local since it is needed only on Cray
-        import spack.platforms.linux
-
         # Try to install from an unsigned binary cache
         abstract_spec = spack.spec.Spec(abstract_spec_str)
         # On Cray we want to use Linux binaries if available from mirrors
@@ -140,11 +169,11 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
 
     def _read_metadata(self, package_name):
         """Return metadata about the given package."""
-        json_filename = "{0}.json".format(package_name)
+        json_filename = f"{package_name}.json"
         json_dir = self.metadata_dir
         json_path = os.path.join(json_dir, json_filename)
-        with open(json_path) as f:
-            data = json.load(f)
+        with open(json_path, encoding="utf-8") as stream:
+            data = json.load(stream)
         return data
 
     def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform):
@@ -194,8 +223,7 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
                 if python_spec is not None and python_spec not in abstract_spec:
                     continue
 
-                for pkg_name, pkg_hash, pkg_sha256 in item["binaries"]:
-                    # TODO: undo installations that didn't complete?
+                for _, pkg_hash, pkg_sha256 in item["binaries"]:
                     self._install_by_hash(pkg_hash, pkg_sha256, index, bincache_platform)
 
                 info = {}
@@ -209,7 +237,7 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
         if test_fn(query_spec=abstract_spec_str, query_info=info):
             return True
 
-        tty.info("Bootstrapping {0} from pre-built binaries".format(module))
+        tty.info(f"Bootstrapping {module} from pre-built binaries")
         abstract_spec, bincache_platform = self._spec_and_platform(
             abstract_spec_str + " ^" + spec_for_current_python()
         )
@@ -223,21 +251,19 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
             return True
 
         abstract_spec, bincache_platform = self._spec_and_platform(abstract_spec_str)
-        tty.info("Bootstrapping {0} from pre-built binaries".format(abstract_spec.name))
+        tty.info(f"Bootstrapping {abstract_spec.name} from pre-built binaries")
         data = self._read_metadata(abstract_spec.name)
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
 
 
-@_bootstrapper(type="install")
+@_bootstrapper(bootstrapper_type="install")
 class _SourceBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from sources."""
 
     def __init__(self, conf):
-        super(_SourceBootstrapper, self).__init__(conf)
-        self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
-        self.conf = conf
+        super().__init__(conf)
         self.last_search = None
-        self.config_scope_name = "bootstrap_source-{}".format(uuid.uuid4())
+        self.config_scope_name = f"bootstrap_source-{uuid.uuid4()}"
 
     def try_import(self, module, abstract_spec_str):
         info = {}
@@ -245,7 +271,7 @@ class _SourceBootstrapper(_BootstrapperBase):
             self.last_search = info
             return True
 
-        tty.info("Bootstrapping {0} from sources".format(module))
+        tty.info(f"Bootstrapping {module} from sources")
 
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
@@ -257,8 +283,10 @@ class _SourceBootstrapper(_BootstrapperBase):
             concrete_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
 
             if module == "clingo":
-                # TODO: remove when the old concretizer is deprecated
-                concrete_spec._old_concretize(deprecation_warning=False)
+                # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme
+                concrete_spec._old_concretize(  # pylint: disable=protected-access
+                    deprecation_warning=False
+                )
             else:
                 concrete_spec.concretize()
 
@@ -280,7 +308,7 @@ class _SourceBootstrapper(_BootstrapperBase):
             self.last_search = info
             return True
 
-        tty.info("Bootstrapping {0} from sources".format(abstract_spec_str))
+        tty.info(f"Bootstrapping {abstract_spec_str} from sources")
 
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
@@ -288,7 +316,9 @@ class _SourceBootstrapper(_BootstrapperBase):
 
         concrete_spec = spack.spec.Spec(abstract_spec_str)
         if concrete_spec.name == "patchelf":
-            concrete_spec._old_concretize(deprecation_warning=False)
+            concrete_spec._old_concretize(  # pylint: disable=protected-access
+                deprecation_warning=False
+            )
         else:
             concrete_spec.concretize()
 
@@ -335,33 +365,33 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         ImportError: if the module couldn't be imported
     """
     # If we can import it already, that's great
-    tty.debug("[BOOTSTRAP MODULE {0}] Try importing from Python".format(module))
+    tty.debug(f"[BOOTSTRAP MODULE {module}] Try importing from Python")
     if _python_import(module):
         return
 
     abstract_spec = abstract_spec or module
 
-    h = GroupedExceptionHandler()
+    exception_handler = GroupedExceptionHandler()
 
     for current_config in bootstrapping_sources():
-        with h.forward(current_config["name"]):
+        with exception_handler.forward(current_config["name"]):
             source_is_enabled_or_raise(current_config)
 
-            b = _make_bootstrapper(current_config)
-            if b.try_import(module, abstract_spec):
+            bootstrapper = _make_bootstrapper(current_config)
+            if bootstrapper.try_import(module, abstract_spec):
                 return
 
-    assert h, (
-        "expected at least one exception to have been raised at this point: "
-        "while bootstrapping {0}".format(module)
+    assert exception_handler, (
+        f"expected at least one exception to have been raised at this point: "
+        f"while bootstrapping {module}"
     )
-    msg = 'cannot bootstrap the "{0}" Python module '.format(module)
+    msg = f'cannot bootstrap the "{module}" Python module '
     if abstract_spec:
-        msg += 'from spec "{0}" '.format(abstract_spec)
+        msg += f'from spec "{abstract_spec}" '
     if tty.is_debug():
-        msg += h.grouped_message(with_tracebacks=True)
+        msg += exception_handler.grouped_message(with_tracebacks=True)
     else:
-        msg += h.grouped_message(with_tracebacks=False)
+        msg += exception_handler.grouped_message(with_tracebacks=False)
         msg += "\nRun `spack --debug ...` for more detailed errors"
     raise ImportError(msg)
 
@@ -393,16 +423,19 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=No
 
     executables_str = ", ".join(executables)
 
-    h = GroupedExceptionHandler()
+    exception_handler = GroupedExceptionHandler()
 
     for current_config in bootstrapping_sources():
-        with h.forward(current_config["name"]):
+        with exception_handler.forward(current_config["name"]):
             source_is_enabled_or_raise(current_config)
 
-            b = _make_bootstrapper(current_config)
-            if b.try_search_path(executables, abstract_spec):
+            bootstrapper = _make_bootstrapper(current_config)
+            if bootstrapper.try_search_path(executables, abstract_spec):
                 # Additional environment variables needed
-                concrete_spec, cmd = b.last_search["spec"], b.last_search["command"]
+                concrete_spec, cmd = (
+                    bootstrapper.last_search["spec"],
+                    bootstrapper.last_search["command"],
+                )
                 env_mods = spack.util.environment.EnvironmentModifications()
                 for dep in concrete_spec.traverse(
                     root=True, order="post", deptype=("link", "run")
@@ -415,17 +448,17 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=No
                 cmd.add_default_envmod(env_mods)
                 return cmd
 
-    assert h, (
-        "expected at least one exception to have been raised at this point: "
-        "while bootstrapping {0}".format(executables_str)
+    assert exception_handler, (
+        f"expected at least one exception to have been raised at this point: "
+        f"while bootstrapping {executables_str}"
     )
-    msg = "cannot bootstrap any of the {0} executables ".format(executables_str)
+    msg = f"cannot bootstrap any of the {executables_str} executables "
     if abstract_spec:
-        msg += 'from spec "{0}" '.format(abstract_spec)
+        msg += f'from spec "{abstract_spec}" '
     if tty.is_debug():
-        msg += h.grouped_message(with_tracebacks=True)
+        msg += exception_handler.grouped_message(with_tracebacks=True)
     else:
-        msg += h.grouped_message(with_tracebacks=False)
+        msg += exception_handler.grouped_message(with_tracebacks=False)
         msg += "\nRun `spack --debug ...` for more detailed errors"
     raise RuntimeError(msg)
 
@@ -438,15 +471,10 @@ def _add_externals_if_missing():
         # GnuPG
         spack.repo.path.get_pkg_class("gawk"),
     ]
-    if is_windows:
+    if IS_WINDOWS:
         search_list.append(spack.repo.path.get_pkg_class("winbison"))
     detected_packages = spack.detection.by_executable(search_list)
     spack.detection.update_configuration(detected_packages, scope="bootstrap")
-
-
-def is_bootstrapping():
-    global _REF_COUNT
-    return _REF_COUNT > 0
 
 
 def _root_spec(spec_str):
@@ -465,9 +493,9 @@ def _root_spec(spec_str):
         spec_str += " %gcc"
 
     target = archspec.cpu.host().family
-    spec_str += " target={0}".format(target)
+    spec_str += f" target={target}"
 
-    tty.debug("[BOOTSTRAP ROOT SPEC] {0}".format(spec_str))
+    tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")
     return spec_str
 
 
@@ -543,6 +571,7 @@ def ensure_patchelf_in_path_or_raise():
 
 
 def isort_root_spec():
+    """Return the root spec used to bootstrap isort"""
     return _root_spec("py-isort@4.3.5:")
 
 
@@ -553,6 +582,7 @@ def ensure_isort_in_path_or_raise():
 
 
 def mypy_root_spec():
+    """Return the root spec used to bootstrap mypy"""
     return _root_spec("py-mypy@0.900:")
 
 
@@ -563,6 +593,7 @@ def ensure_mypy_in_path_or_raise():
 
 
 def black_root_spec():
+    """Return the root spec used to bootstrap black"""
     return _root_spec("py-black")
 
 
@@ -574,8 +605,8 @@ def ensure_black_in_path_or_raise():
         """Ensure sutable black version."""
         try:
             output = black_cmd("--version", output=str)
-        except Exception as e:
-            tty.debug("Error getting version of %s: %s" % (black_cmd, e))
+        except Exception as exc:  # pylint: disable=broad-except
+            tty.debug(f"Error getting version of {black_cmd}: {exc}")
             return False
 
         match = re.match("black, ([^ ]+)", output)
@@ -585,10 +616,13 @@ def ensure_black_in_path_or_raise():
         black_version = spack.version.Version(match.group(1))
         return black_version.satisfies(spack.spec.Spec(root_spec).versions)
 
-    return ensure_executables_in_path_or_raise(["black"], root_spec, check_black)
+    return ensure_executables_in_path_or_raise(
+        ["black"], abstract_spec=root_spec, cmd_check=check_black
+    )
 
 
 def flake8_root_spec():
+    """Return the root spec used to bootstrap flake8"""
     return _root_spec("py-flake8")
 
 
@@ -624,7 +658,7 @@ def bootstrapping_sources(scope=None):
         current = copy.copy(entry)
         metadata_dir = spack.util.path.canonicalize_path(entry["metadata"])
         metadata_yaml = os.path.join(metadata_dir, METADATA_YAML_FILENAME)
-        with open(metadata_yaml) as f:
-            current.update(spack.util.spack_yaml.load(f))
+        with open(metadata_yaml, encoding="utf-8") as stream:
+            current.update(spack.util.spack_yaml.load(stream))
         list_of_sources.append(current)
     return list_of_sources

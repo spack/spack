@@ -2,16 +2,18 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""Common basic functions used through the spack.bootstrap package"""
 import fnmatch
 import os.path
 import re
 import sys
 import sysconfig
+import warnings
 
 import archspec.cpu
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.store
 import spack.util.environment
@@ -67,22 +69,23 @@ def _try_import_from_store(module, query_spec, query_info=None):
                 _fix_ext_suffix(candidate_spec)
                 if _python_import(module):
                     msg = (
-                        '[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
-                        'provides the "{0}" Python module'
-                    ).format(module, query_spec, candidate_spec.dag_hash())
+                        f"[BOOTSTRAP MODULE {module}] The installed spec "
+                        f'"{query_spec}/{candidate_spec.dag_hash()}" '
+                        f'provides the "{module}" Python module'
+                    )
                     tty.debug(msg)
                     if query_info is not None:
                         query_info["spec"] = candidate_spec
                     return True
-            except Exception as e:
+            except Exception as exc:  # pylint: disable=broad-except
                 msg = (
                     "unexpected error while trying to import module "
-                    '"{0}" from spec "{1}" [error="{2}"]'
+                    f'"{module}" from spec "{candidate_spec}" [error="{str(exc)}"]'
                 )
-                tty.warn(msg.format(module, candidate_spec, str(e)))
+                warnings.warn(msg)
             else:
                 msg = "Spec {0} did not provide module {1}"
-                tty.warn(msg.format(candidate_spec, module))
+                warnings.warn(msg.format(candidate_spec, module))
 
         sys.path = path_before
 

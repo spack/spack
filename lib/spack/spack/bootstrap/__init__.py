@@ -7,6 +7,7 @@
 from .binaries import *  # noqa: F403,F401
 from .config import (  # noqa: F401
     ensure_bootstrap_configuration,
+    is_bootstrapping,
     spack_python_interpreter,
     store_path,
 )
