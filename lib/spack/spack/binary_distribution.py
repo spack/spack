@@ -40,6 +40,7 @@ import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
@@ -1202,6 +1203,7 @@ def _build_tarball(
     allow_root=False,
     key=None,
     regenerate_index=False,
+    timer=spack.util.timer.NULL_TIMER,
 ):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -1261,52 +1263,68 @@ def _build_tarball(
     ):
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
-    # make a copy of the install directory to work with
+    # TODO: We generally don't want to mutate any files, but when using relative
+    # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
+    # For now, we only make a full copy of the spec prefix when in relative mode.
+    timer.start("copy")
     workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
     # install_tree copies hardlinks
     # create a temporary tarfile from prefix and exract it to workdir
     # tarfile preserves hardlinks
-    temp_tarfile_name = tarball_name(spec, ".tar")
-    temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
-    with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
-        tar.add(name="%s" % spec.prefix, arcname=".")
-    with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
-        tar.extractall(workdir)
-    os.remove(temp_tarfile_path)
+    if relative:
+        binaries_dir = workdir
+        temp_tarfile_name = tarball_name(spec, ".tar")
+        temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
+        with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
+            tar.add(name="%s" % spec.prefix, arcname=".")
+        with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
+            tar.extractall(workdir)
+        os.remove(temp_tarfile_path)
+    else:
+        binaries_dir = spec.prefix
+        mkdirp(os.path.join(workdir, ".spack"))
+    timer.stop("copy")
 
     # create info for later relocation and create tar
+    timer.start("buildinfo")
     write_buildinfo_file(spec, workdir, relative)
+    timer.stop("buildinfo")
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    if relative:
-        try:
+    timer.start("check_if_relocatable")
+    try:
+        if relative:
             make_package_relative(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            tty.die(e)
-    else:
-        try:
-            check_package_relocatable(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            tty.die(e)
+        elif not allow_root:
+            ensure_package_relocatable(workdir, binaries_dir)
+    except Exception as e:
+        shutil.rmtree(workdir)
+        shutil.rmtree(tarfile_dir)
+        shutil.rmtree(tmpdir)
+        tty.die(e)
+    timer.stop("check_if_relocatable")
 
     # create gzip compressed tarball of the install prefix
     # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
     # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
     # So we follow gzip.
-    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
-        tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
+    timer.start("compress")
+    tar_args = ["--zstd", "-cf", tarfile_path, "-C", binaries_dir, "."]
+    if workdir != binaries_dir:
+        tar_args.extend(["-C", workdir, "."])
+    which("tar")(*tar_args, env={"ZSTD_NBTHREADS": "4"})
+    # with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
+    #     tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
     # remove copy of install directory
+    timer.stop("compress")
+    timer.start("remove_workdir")
     shutil.rmtree(workdir)
+    timer.stop("remove_workdir")
 
     # get the sha256 checksum of the tarball
+    timer.start("checksum")
     checksum = checksum_tarball(tarfile_path)
 
     # add sha256 checksum to spec.json
@@ -1333,19 +1351,24 @@ def _build_tarball(
 
     with open(specfile_path, "w") as outfile:
         outfile.write(sjson.dump(spec_dict))
+    timer.stop("checksum")
 
     # sign the tarball and spec file with gpg
+    timer.start("sign")
     if not unsigned:
         key = select_signing_key(key)
         sign_specfile(key, force, specfile_path)
+    timer.stop("sign")
 
     # push tarball and signed spec json to remote mirror
+    timer.start("push")
     web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
     web_util.push_to_url(
         signed_specfile_path if not unsigned else specfile_path,
         remote_signed_specfile_path if not unsigned else remote_specfile_path,
         keep_original=False,
     )
+    timer.stop("push")
 
     tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
 
@@ -1421,7 +1444,12 @@ def push(specs, push_url, specs_kwargs=None, **kwargs):
     # TODO: distribution using a parallel pool
     for node in nodes:
         try:
+            print("Adding {}".format(node.name))
+            t = spack.util.timer.Timer()
+            kwargs["timer"] = t
             _build_tarball(node, push_url, **kwargs)
+            t.write_tty()
+            print()
         except NoOverwriteException as e:
             warnings.warn(str(e))
 
@@ -1643,16 +1671,11 @@ def make_package_relative(workdir, spec, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def check_package_relocatable(workdir, spec, allow_root):
-    """
-    Check if package binaries are relocatable.
-    Change links to placeholder links.
-    """
+def ensure_package_relocatable(workdir, binaries_dir):
+    """Check if package binaries are relocatable."""
     buildinfo = read_buildinfo_file(workdir)
-    cur_path_names = list()
-    for filename in buildinfo["relocate_binaries"]:
-        cur_path_names.append(os.path.join(workdir, filename))
-    allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
+    binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
+    relocate.ensure_binaries_are_relocatable(binaries)
 
 
 def dedupe_hardlinks_if_necessary(root, buildinfo):
@@ -1942,26 +1965,14 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     info = "old relative prefix %s\nnew relative prefix %s\nrelative rpaths %s"
     tty.debug(info % (old_relative_prefix, new_relative_prefix, rel), level=2)
 
-    # Extract the tarball into the store root, presumably on the same filesystem.
-    # The directory created is the base directory name of the old prefix.
-    # Moving the old prefix name to the new prefix location should preserve
-    # hard links and symbolic links.
-    extract_tmp = os.path.join(spack.store.layout.root, ".tmp")
-    mkdirp(extract_tmp)
-    extracted_dir = os.path.join(extract_tmp, old_relative_prefix.split(os.path.sep)[-1])
-
-    with closing(tarfile.open(tarfile_path, "r")) as tar:
-        try:
-            tar.extractall(path=extract_tmp)
-        except Exception as e:
-            _delete_staged_downloads(download_result)
-            shutil.rmtree(extracted_dir)
-            raise e
     try:
-        shutil.move(extracted_dir, spec.prefix)
+        mkdirp(spec.prefix)
+        which("tar")(
+            "--zstd", "-xf", tarfile_path, "-C", spec.prefix, ".", env={"ZSTD_NBTHREADS": "4"}
+        )
     except Exception as e:
         _delete_staged_downloads(download_result)
-        shutil.rmtree(extracted_dir)
+        shutil.rmtree(spec.prefix)
         raise e
     os.remove(tarfile_path)
     os.remove(specfile_path)
