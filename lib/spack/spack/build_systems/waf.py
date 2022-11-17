@@ -73,8 +73,8 @@ class WafBuilder(BaseBuilder):
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = (
         "build_time_test_callbacks",
-        "build_time_test_callbacks",
         "build_directory",
+        "install_time_test_callbacks",
     )
 
     # Callback names for build-time test
