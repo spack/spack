@@ -17,6 +17,7 @@ class RAnaquin(RPackage):
 
     bioc = "Anaquin"
 
+    version("2.22.0", commit="d848a9bd7bf9d1d62202cc477300bf1a65b3e36c")
     version("2.20.0", commit="61598dd3430b09b57f31d7d550ea95126a2d73c8")
     version("2.18.0", commit="c8e3df3e299c32daac0dda23cea59a18673d886b")
     version("2.14.0", commit="d0a34c931a0e72080bff91dacb37dbbe26b45386")
