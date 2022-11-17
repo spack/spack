@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import io
 import operator
 import os
 import os.path
@@ -22,8 +23,6 @@ import subprocess as sp
 import sys
 import traceback
 import warnings
-
-from six import StringIO
 
 import archspec.cpu
 
@@ -320,9 +319,9 @@ class SpackArgumentParser(argparse.ArgumentParser):
             kwargs.setdefault("required", True)
 
         sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
-        # This monkey patching is needed for Python 3.5 and 3.6, which support
+        # This monkey patching is needed for Python 3.6, which supports
         # having a required subparser but don't expose the API used above
-        if sys.version_info[:2] == (3, 5) or sys.version_info[:2] == (3, 6):
+        if sys.version_info[:2] == (3, 6):
             sp.required = True
 
         old_add_parser = sp.add_parser
@@ -388,7 +387,7 @@ def make_argument_parser(**kwargs):
             "A flexible package manager that supports multiple versions,\n"
             "configurations, platforms, and compilers."
         ),
-        **kwargs
+        **kwargs,
     )
 
     # stat names in groups of 7, for nice wrapping.
@@ -560,12 +559,6 @@ def setup_main_options(args):
     # Assign a custom function to show warnings
     warnings.showwarning = send_warning_to_tty
 
-    if sys.version_info[:2] == (2, 7):
-        warnings.warn(
-            "Python 2.7 support is deprecated and will be removed in Spack v0.20.\n"
-            "    Please move to Python 3.6 or higher."
-        )
-
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
@@ -706,7 +699,7 @@ class SpackCommand(object):
                 prepend + [self.command_name] + list(argv)
             )
 
-            out = StringIO()
+            out = io.StringIO()
             try:
                 with log_output(out):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)
@@ -1015,10 +1008,7 @@ def main(argv=None):
             raise
         sys.stderr.write("\n")
         tty.error("Keyboard interrupt.")
-        if sys.version_info >= (3, 5):
-            return signal.SIGINT.value
-        else:
-            return signal.SIGINT
+        return signal.SIGINT.value
 
     except SystemExit as e:
         if spack.config.get("config:debug") or SHOW_BACKTRACE:

@@ -15,7 +15,6 @@ install = SpackCommand("install")
 uninstall = SpackCommand("uninstall")
 deprecate = SpackCommand("deprecate")
 find = SpackCommand("find")
-activate = SpackCommand("activate")
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
@@ -87,24 +86,6 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch, install_mockery
 
     assert sorted(non_deprecated) == sorted(list(new_spec.traverse()))
     assert sorted(deprecated) == sorted(list(old_spec.traverse()))
-
-
-def test_deprecate_fails_active_extensions(
-    mock_packages, mock_archive, mock_fetch, install_mockery
-):
-    """Tests that active extensions and their extendees cannot be
-    deprecated."""
-    install("extendee")
-    install("extension1")
-    activate("extension1")
-
-    output = deprecate("-yi", "extendee", "extendee@nonexistent", fail_on_error=False)
-    assert "extension1" in output
-    assert "Deactivate extensions before deprecating" in output
-
-    output = deprecate("-yiD", "extension1", "extension1@notaversion", fail_on_error=False)
-    assert "extendee" in output
-    assert "is an active extension of" in output
 
 
 def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch, install_mockery):

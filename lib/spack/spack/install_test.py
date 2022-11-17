@@ -7,9 +7,6 @@ import hashlib
 import os
 import re
 import shutil
-import sys
-
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -163,8 +160,7 @@ class TestSuite(object):
             json_text = sjson.dump(self.to_dict())
             sha = hashlib.sha1(json_text.encode("utf-8"))
             b32_hash = base64.b32encode(sha.digest()).lower()
-            if sys.version_info[0] >= 3:
-                b32_hash = b32_hash.decode("utf-8")
+            b32_hash = b32_hash.decode("utf-8")
             self._hash = b32_hash
         return self._hash
 
@@ -436,10 +432,7 @@ class TestSuite(object):
                 test_suite._hash = content_hash
                 return test_suite
         except Exception as e:
-            raise six.raise_from(
-                sjson.SpackJSONError("error parsing JSON TestSuite:", str(e)),
-                e,
-            )
+            raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e)) from e
 
 
 def _add_msg_to_file(filename, msg):
