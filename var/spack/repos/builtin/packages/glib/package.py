@@ -19,7 +19,7 @@ class Glib(Package):
     """
 
     homepage = "https://developer.gnome.org/glib/"
-    url = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
+    url = "https://download.gnome.org/sources/glib/2.53/glib-2.53.1.tar.xz"
 
     maintainers = ["michaelkuhn"]
 
@@ -147,7 +147,7 @@ class Glib(Package):
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
-        url = "http://ftp.gnome.org/pub/gnome/sources/glib"
+        url = "https://download.gnome.org/sources/glib"
         return url + "/%s/glib-%s.tar.xz" % (version.up_to(2), version)
 
     def patch(self):
