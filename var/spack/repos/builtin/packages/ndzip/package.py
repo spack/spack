@@ -26,6 +26,8 @@ class Ndzip(CMakePackage, CudaPackage):
     variant("cuda", description="build with cuda support", default=False)
     variant("openmp", description="build with cuda support", default=False)
 
+    depends_on("boost+thread+program_options")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("NDZIP_WITH_CUDA", "cuda"),
