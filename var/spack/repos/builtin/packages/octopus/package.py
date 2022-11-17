@@ -38,6 +38,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     version("develop", branch="develop")
 
+    variant("mpi", default=True, description="Build with MPI support")
     variant("scalapack", default=False, description="Compile with Scalapack")
     variant("metis", default=False, description="Compile with METIS")
     variant("parmetis", default=False, description="Compile with ParMETIS")
@@ -60,18 +61,28 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("automake", type="build", when="@develop")
     depends_on("libtool", type="build", when="@develop")
     depends_on("m4", type="build", when="@develop")
+    depends_on("mpi", when="+mpi")
 
     depends_on("blas")
     depends_on("gsl@1.9:")
     depends_on("lapack")
+
+    # The library of exchange and correlation functionals.
     depends_on("libxc@2:2", when="@:5")
     depends_on("libxc@2:3", when="@6:7")
     depends_on("libxc@2:4", when="@8:9")
     depends_on("libxc@5.1.0:", when="@10:")
     depends_on("libxc@5.1.0:", when="@develop")
-    depends_on("mpi")
-    depends_on("fftw@3:+mpi+openmp", when="@8:9")
-    depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+    with when("+mpi"):  # list all the parallel dependencies
+        depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
+        depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+        depends_on("libvdwxc+mpi", when="+libvdwxc")
+
+    with when("~mpi"):  # list all the serial dependencies
+        depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
+        depends_on("fftw-api@3:+openmp~mpi", when="@10:")
+        depends_on("libvdwxc~mpi", when="+libvdwxc")
+
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
     depends_on("metis@5:+int64", when="+metis")
@@ -82,7 +93,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("cgal", when="+cgal")
     depends_on("pfft", when="+pfft")
     depends_on("likwid", when="+likwid")
-    depends_on("libvdwxc", when="+libvdwxc")
     depends_on("libyaml", when="+libyaml")
     depends_on("elpa", when="+elpa")
     depends_on("nlopt", when="+nlopt")
@@ -103,12 +113,25 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 "--with-lapack=%s" % lapack.ld_flags,
                 "--with-gsl-prefix=%s" % spec["gsl"].prefix,
                 "--with-libxc-prefix=%s" % spec["libxc"].prefix,
-                "CC=%s" % spec["mpi"].mpicc,
-                "FC=%s" % spec["mpi"].mpifc,
-                "--enable-mpi",
                 "--enable-openmp",
             ]
         )
+        if "+mpi" in self.spec:  # we build with MPI
+            args.extend(
+                [
+                    "--enable-mpi",
+                    "CC=%s" % self.spec["mpi"].mpicc,
+                    "FC=%s" % self.spec["mpi"].mpifc,
+                ]
+            )
+        else:
+            args.extend(
+                [
+                    "CC=%s" % self.compiler.cc,
+                    "FC=%s" % self.compiler.fc,
+                ]
+            )
+
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
         elif "^mkl" in spec:
