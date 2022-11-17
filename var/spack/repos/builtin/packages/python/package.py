@@ -565,7 +565,7 @@ class Python(Package):
                 variants += "~tix"
 
         # Some modules are platform-dependent
-        if not self.spec.satisfies("platform=windows"):
+        if not is_windows:
             try:
                 python("-c", "import crypt", error=os.devnull)
                 variants += "+crypt"
@@ -1424,12 +1424,7 @@ config.update(get_paths())
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        # If we set PYTHONHOME, we must also ensure that the corresponding
-        # python is found in the build environment. This to prevent cases
-        # where a system provided python is run against the standard libraries
-        # of a Spack built python. See issue #7128
-        env.set("PYTHONHOME", self.home)
-
+        # Ensure the current Python is first in the PATH
         path = os.path.dirname(self.command.path)
         if not is_system_path(path):
             env.prepend_path("PATH", path)
