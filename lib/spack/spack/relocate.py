@@ -934,10 +934,8 @@ def is_relocatable(spec):
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in (".spack", "man")]
         try:
-            for f in files:
-                abs_path = os.path.join(root, f)
-                if is_binary(abs_path):
-                    ensure_binary_is_relocatable(abs_path)
+            abs_paths = (os.path.join(root, f) for f in files)
+            ensure_binaries_are_relocatable(filter(is_binary, abs_paths))
         except InstallRootStringError:
             return False
 
