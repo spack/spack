@@ -93,9 +93,10 @@ while read -r line; do
         else
             for f in $(find ${INTEL_DIR} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
                 if ! grep -q "${GCC_DIR}" $f; then
-                    echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
-                    echo "-Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
-                    echo "-Xlinker -rpath=${GCC_DIR}/lib64" >> ${f}
+                    echo " -gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
+                    echo " -gxx-name=${GCC_DIR}/bin/g++" >> ${f}
+                    echo " -Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
+                    echo " -Xlinker -rpath=${GCC_DIR}/lib64" >> ${f}
                     log "updated ${f} with newer GCC"
                 fi
             done
