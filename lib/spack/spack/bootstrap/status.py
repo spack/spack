@@ -7,7 +7,7 @@ import platform
 
 import spack.util.executable
 
-from .bootstrap import (
+from .binaries import (
     black_root_spec,
     clingo_root_spec,
     flake8_root_spec,

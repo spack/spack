@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Function and classes needed to bootstrap Spack itself."""
 
-from .bootstrap import *  # noqa: F403,F401
+from .binaries import *  # noqa: F403,F401
 from .config import (  # noqa: F401
     ensure_bootstrap_configuration,
     spack_python_interpreter,

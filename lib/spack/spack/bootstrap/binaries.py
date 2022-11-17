@@ -2,6 +2,26 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""Bootstrap Spack dependencies from binaries.
+
+This module contains logic to bootstrap software required by Spack from binaries served in the
+bootstrapping mirrors. The logic is quite different from an installation done from a Spack user,
+because of the following reasons:
+
+  1. The binaries are all compiled on the same OS for a given platform (e.g. they are compiled on
+     ``centos7`` on ``linux``), but they will be installed and used on the host OS. They are also
+     targeted at the most generic architecture possible. That makes the binaries difficult to reuse
+     with other specs in an environment without ad-hoc logic.
+  2. Bootstrapping has a fallback procedure where we try to install software by default from the
+     most recent binaries, and proceed to older versions of the mirror, until we try building from
+     sources as a last resort. This allows us not to be blocked on architectures where we don't
+     have binaries readily available, but is also not compatible with the working of environments
+     (they don't have fallback procedures).
+  3. Among the binaries we have clingo, so we can't concretize that with clingo :-)
+  4. clingo, GnuPG and patchelf binaries need to be verified by sha256 sum (all the other binaries
+     we might add on top of that in principle can be verified with GPG signatures).
+"""
+
 import copy
 import functools
 import json
