@@ -2202,6 +2202,12 @@ class BuildTask(object):
 
         # Ensure key sequence-related properties are updated accordingly.
         self.attempts = 0
+
+        # Random number in [0, 1) to allow parallel installs a chance of more
+        # quickly finding the next package to install.
+        # (See the discussion in PR #33387.)
+        self.random = random.random()
+
         self._update()
 
     def __eq__(self, other):
@@ -2304,8 +2310,8 @@ class BuildTask(object):
 
     @property
     def key(self):
-        """The key is the tuple (# uninstalled dependencies, sequence)."""
-        return (self.priority, self.sequence)
+        """The key is the tuple (# uninstalled dependencies, randomizer, sequence)."""
+        return (self.priority, self.randomizer, self.sequence)
 
     def next_attempt(self, installed):
         """Create a new, updated task for the next installation attempt."""
@@ -2318,13 +2324,14 @@ class BuildTask(object):
     @property
     def priority(self):
         """The priority is based on the remaining uninstalled dependencies."""
-        priority = len(self.uninstalled_deps)
+        return len(self.uninstalled_deps)
 
-        # If there are no uninstalled dependencies then the priority should
-        # be a random number in [0, 1) to allow parallel installs a chance
-        # of more quickly finding the next package to install; otherwise,
-        # the priority will remain the number of uninstalled dependencies.
-        return random.random() if priority == 0 else priority
+    @property
+    def randomizer(self):
+        """The install-ready randomizer, which kicks in when the build task
+        is ready to be installed, and is intended to potentially help speed up
+        finding the next package to install."""
+        return self.attempts + self.random if install_priority(self.priority) else 0
 
 
 class BuildRequest(object):
