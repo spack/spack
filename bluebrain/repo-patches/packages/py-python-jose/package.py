@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,9 @@ class PyPythonJose(PythonPackage):
     Python."""
 
     homepage = "https://python-jose.readthedocs.io/en/latest"
-    pypi = "python-jose/python-jose-3.2.0.tar.gz"
+    pypi = "python-jose/python-jose-3.3.0.tar.gz"
 
-    version('3.2.0', sha256='4e4192402e100b5fb09de5a8ea6bcc39c36ad4526341c123d401e2561720335b')
+    version('3.3.0', sha256='55779b5e6ad599c6336191246e95eb2293a9ddebd555f796a65f838f07e5d78a')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pytest-runner', type='build')
