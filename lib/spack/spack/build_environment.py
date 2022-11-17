@@ -60,6 +60,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.schema.environment
+import spack.spec
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
@@ -284,7 +285,7 @@ def clean_environment():
     return env
 
 
-def set_compiler_environment_variables(pkg, env):
+def set_compiler_environment_variables(pkg, env, install_source=False):
     assert pkg.spec.concrete
     compiler = pkg.compiler
     spec = pkg.spec
@@ -358,6 +359,17 @@ def set_compiler_environment_variables(pkg, env):
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
+
+    # Inject prefix map flags when installing from sources, this ensures
+    # that debuggers automatically pick up the sources from the install
+    # dir instead of the staging dir.
+    if install_source:
+        # Map <stage src dir> -> <install dir>/shared/pkg/src
+        source_map = spec.package.compiler.prefix_map_flag(
+            spec.package.stage.source_path, os.path.join(spec.prefix, "shared", spec.name, "src")
+        )
+        if source_map:
+            inject_flags["cppflags"].append(source_map)
 
     # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():
@@ -770,7 +782,7 @@ def load_external_modules(pkg):
             load_module(external_module)
 
 
-def setup_package(pkg, dirty, context="build"):
+def setup_package(pkg, dirty, install_source=False, context="build"):
     """Execute all environment setup routines."""
     if context not in ["build", "test"]:
         raise ValueError("'context' must be one of ['build', 'test'] - got: {0}".format(context))
@@ -785,7 +797,7 @@ def setup_package(pkg, dirty, context="build"):
     # setup compilers for build contexts
     need_compiler = context == "build" or (context == "test" and pkg.test_requires_compiler)
     if need_compiler:
-        set_compiler_environment_variables(pkg, env_mods)
+        set_compiler_environment_variables(pkg, env_mods, install_source)
         set_wrapper_variables(pkg, env_mods)
 
     env_mods.extend(modifications_from_dependencies(pkg.spec, context, custom_mods_only=False))
@@ -1062,7 +1074,10 @@ def _setup_pkg_and_run(
         if not kwargs.get("fake", False):
             kwargs["unmodified_env"] = os.environ.copy()
             kwargs["env_modifications"] = setup_package(
-                pkg, dirty=kwargs.get("dirty", False), context=context
+                pkg,
+                dirty=kwargs.get("dirty", False),
+                context=context,
+                install_source=kwargs.get("install_source", False),
             )
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)

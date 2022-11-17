@@ -270,6 +270,12 @@ class Compiler(object):
     def opt_flags(self):
         return ["-O", "-O0", "-O1", "-O2", "-O3"]
 
+    def prefix_map_flag(self, old, new):
+        """When sources are relocated from the stage -> install dir
+        this flag can be injected to ensure debuggers can locate
+        sources in the new dir."""
+        return ""
+
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None  # type: str
     # Name of module used to switch versions of this compiler

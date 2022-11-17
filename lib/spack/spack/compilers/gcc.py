@@ -131,6 +131,13 @@ class Gcc(spack.compiler.Compiler):
     def fc_pic_flag(self):
         return "-fPIC"
 
+    def prefix_map_flag(self, old, new):
+        if self.real_version < ver("8"):
+            flag = "-fdebug-prefix-map={}={}"
+        else:
+            flag = "-ffile-prefix-map={}={}"
+        return flag.format(old, new)
+
     required_libs = ["libgcc", "libgfortran"]
 
     @classmethod
