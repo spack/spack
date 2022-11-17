@@ -109,10 +109,8 @@ def test_list_sources(capsys):
     assert "No method available" in output
 
 
-@pytest.mark.parametrize(
-    "command,value", [("enable", True), ("disable", False), ("trust", True), ("untrust", False)]
-)
-def test_trust_or_untrust_sources(mutable_config, command, value):
+@pytest.mark.parametrize("command,value", [("enable", True), ("disable", False)])
+def test_enable_or_disable_sources(mutable_config, command, value):
     key = "bootstrap:trusted:github-actions"
     trusted = spack.config.get(key, default=None)
     assert trusted is None
@@ -122,12 +120,12 @@ def test_trust_or_untrust_sources(mutable_config, command, value):
     assert trusted is value
 
 
-def test_trust_or_untrust_fails_with_no_method(mutable_config):
+def test_enable_or_disable_fails_with_no_method(mutable_config):
     with pytest.raises(RuntimeError, match="no bootstrapping method"):
-        _bootstrap("trust", "foo")
+        _bootstrap("enable", "foo")
 
 
-def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
+def test_enable_or_disable_fails_with_more_than_one_method(mutable_config):
     wrong_config = {
         "sources": [
             {"name": "github-actions", "metadata": "$spack/share/spack/bootstrap/github-actions"},

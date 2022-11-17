@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import stat
+import warnings
 
 import spack.error
 import spack.repo
@@ -221,6 +222,12 @@ def get_package_dir_permissions(spec):
     perms = get_package_permissions(spec)
     if perms & stat.S_IRWXG and spack.config.get("config:allow_sgid", True):
         perms |= stat.S_ISGID
+        if spec.concrete and "/afs/" in spec.prefix:
+            warnings.warn(
+                "Directory {0} seems to be located on AFS. If you"
+                " encounter errors, try disabling the allow_sgid option"
+                " using: spack config add 'config:allow_sgid:false'".format(spec.prefix)
+            )
     return perms
 
 
