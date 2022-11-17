@@ -19,9 +19,11 @@ from llnl.util.lang import memoized
 from llnl.util.symlink import symlink
 
 import spack.bootstrap
+import spack.paths
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
 
@@ -772,19 +774,17 @@ def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
             _set_elf_rpaths(new_binary, new_rpaths)
 
 
-def raise_if_not_relocatable(binaries, allow_root):
+def ensure_binaries_are_relocatable(binaries):
     """Raise an error if any binary in the list is not relocatable.
 
     Args:
         binaries (list): list of binaries to check
-        allow_root (bool): whether root dir is allowed or not in a binary
 
     Raises:
         InstallRootStringError: if the file is not relocatable
     """
     for binary in binaries:
-        if not (allow_root or file_is_relocatable(binary)):
-            raise InstallRootStringError(binary, spack.store.layout.root)
+        ensure_binary_is_relocatable(binary)
 
 
 def warn_if_link_cant_be_relocated(link, target):
@@ -933,30 +933,29 @@ def is_relocatable(spec):
     # Explore the installation prefix of the spec
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in (".spack", "man")]
-        abs_files = [os.path.join(root, f) for f in files]
-        if not all(file_is_relocatable(f) for f in abs_files if is_binary(f)):
-            # If any of the file is not relocatable, the entire
-            # package is not relocatable
+        try:
+            for f in files:
+                abs_path = os.path.join(root, f)
+                if is_binary(abs_path):
+                    ensure_binary_is_relocatable(abs_path)
+        except InstallRootStringError:
             return False
 
     return True
 
 
-def file_is_relocatable(filename, paths_to_relocate=None):
-    """Returns True if the filename passed as argument is relocatable.
+def ensure_binary_is_relocatable(filename, paths_to_relocate=None):
+    """Raises if any given or default absolute path is found in the
+    binary (apart from rpaths / load commands).
 
     Args:
         filename: absolute path of the file to be analyzed
 
-    Returns:
-        True or false
-
     Raises:
-
+        InstallRootStringError: if the binary contains an absolute path
         ValueError: if the filename does not exist or the path is not absolute
     """
-    default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
-    paths_to_relocate = paths_to_relocate or default_paths_to_relocate
+    paths_to_relocate = paths_to_relocate or [spack.store.layout.root, spack.paths.prefix]
 
     if not os.path.exists(filename):
         raise ValueError("{0} does not exist".format(filename))
@@ -987,13 +986,7 @@ def file_is_relocatable(filename, paths_to_relocate=None):
 
     for path_to_relocate in paths_to_relocate:
         if any(path_to_relocate in x for x in set_of_strings):
-            # One binary has the root folder not in the RPATH,
-            # meaning that this spec is not relocatable
-            msg = 'Found "{0}" in {1} strings'
-            tty.debug(msg.format(path_to_relocate, filename), level=2)
-            return False
-
-    return True
+            raise InstallRootStringError(filename, path_to_relocate)
 
 
 def is_binary(filename):
