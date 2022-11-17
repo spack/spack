@@ -155,9 +155,11 @@ def executable_prefix(executable_dir):
     assert os.path.isdir(executable_dir)
 
     components = executable_dir.split(os.sep)
-    if "bin" not in components:
+    # convert to lower to match Bin, BIN, bin
+    lowered_components = executable_dir.lower().split(os.sep)
+    if "bin" not in lowered_components:
         return executable_dir
-    idx = components.index("bin")
+    idx = lowered_components.index("bin")
     return os.sep.join(components[:idx])
 
 
@@ -174,9 +176,7 @@ def library_prefix(library_dir):
     assert os.path.isdir(library_dir)
 
     components = library_dir.split(os.sep)
-    # remove incidences where capital lib/bin dirs throw off prefix
-    # computation, retain original components to preserve
-    # true path
+    # covert to lowercase to match lib, LIB, Lib, etc.
     lowered_components = library_dir.lower().split(os.sep)
     if "lib64" in lowered_components:
         idx = lowered_components.index("lib64")
@@ -386,11 +386,10 @@ def compute_windows_user_path_for_package(pkg):
     app_data = "AppData"
     app_data_locations = ["Local", "Roaming"]
     user_appdata_install_stubs = [os.path.join(app_data, x) for x in app_data_locations]
-    user_appdata_install_stubs.append("")
 
     return [
         os.path.join(user, app_data, name)
-        for app_data, name in itertools.product(
+        for app_data, name in list(itertools.product(
             user_appdata_install_stubs, (pkg.name, pkg.name.capitalize())
-        )
+        )) + [pkg.name, pkg.name.capitalize()]
     ]
