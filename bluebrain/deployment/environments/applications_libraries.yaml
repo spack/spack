@@ -33,20 +33,20 @@ spack:
   specs:
     - boost+python
     - caliper+cuda cuda_arch=70
-    - gmsh+metis+mpi+oce+openmp+shared
+   #- gmsh+metis+mpi+oce+openmp+shared
     - hdf5+mpi
     - highfive+mpi
     - hypre+int64+mpi
     - metis+int64
-    - neuron+mpi~debug
-    - omega-h+trilinos
-    - omega-h+gmsh+trilinos
-    - petsc~int64+mpi
-    - petsc+int64+mpi
+   #- neuron+mpi~debug
+   #- omega-h+trilinos
+   #- omega-h+gmsh+trilinos
+   #- petsc~int64+mpi
+   #- petsc+int64+mpi
     - py-breathe
     - py-cgal-pybind
     - py-clustershell
-    - py-cmake-format
+   #- py-cmake-format
     - py-coverage
     - py-dask-mpi
     - py-docopt

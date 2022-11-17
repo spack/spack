@@ -14,13 +14,14 @@ class ModelNeocortex(SimModel):
     """
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/neocortex"
-    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/neocortex.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/neocortex.git"
+    submodules = True
 
-    version('develop', branch='master', submodules=True, clean=False)
-    version('1.1', tag='1.1', submodules=True, clean=False)
-    version('0.3', tag='0.3-1', submodules=True, clean=False)
-    version('0.2', tag='0.2', submodules=True, clean=False)
-    version('0.1', tag='0.1', submodules=True, clean=False)
+    version('develop', branch='master')
+    version('1.1', tag='1.1')
+    version('0.3', tag='0.3-1')
+    version('0.2', tag='0.2')
+    version('0.1', tag='0.1')
 
     variant('v5', default=True, description='Enable support for previous v5 circuits')
     variant('plasticity', default=False, description="Use optimized ProbAMPANMDA_EMS and ProbGABAAB_EMS")
