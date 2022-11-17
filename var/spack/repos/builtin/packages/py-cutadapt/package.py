@@ -22,16 +22,13 @@ class PyCutadapt(PythonPackage):
     version("1.13", sha256="aa9f2c1f33dc081fe94f42b1250e4382b8fb42cabbf6e70a76ff079f211d5fc0")
 
     # universal deps
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm", type="build", when="@2.0:")
-    # 4.1 deps
+    depends_on("py-setuptools@43:", type=("build", "run"))
+    depends_on("py-setuptools-scm@6.2:", type="build", when="@2.0:")
     depends_on("python@3.7:", type=("build", "run"), when="@4.1:")
+    # 4.1 deps
     depends_on("py-dnaio@0.7.1:", type=("build", "run"), when="@4.1:")
     depends_on("py-xopen@1.1:", type=("build", "run"), when="@4.1:")
     # older version deps
-    depends_on("python@2.6:", type=("build", "run"), when="@1.13")
-    depends_on("python@3.4:", type=("build", "run"), when="@2.0:2.5")
-    depends_on("python@3.5:", type=("build", "run"), when="@2.6:2.10")
     depends_on("py-xopen@0.1.1:", type=("build", "run"), when="@1.13")
     depends_on("py-xopen@0.5.0:", type=("build", "run"), when="@2.0:2.3")
     depends_on("py-xopen@0.7.3:", type=("build", "run"), when="@2.4")
