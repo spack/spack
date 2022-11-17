@@ -30,7 +30,8 @@ class SimModel(Package):
     from NeurodamusModel instead. See neurodamus-xxx packages for examples.
 
     """
-    homepage = ""
+    homepage = "foo"
+    url = "bar"
 
     variant('coreneuron',  default=False, description="Enable CoreNEURON Support")
     variant('profile',     default=False, description="Enable profiling using Tau")
@@ -38,13 +39,13 @@ class SimModel(Package):
 
     # neuron/corenrn get linked automatically when using nrnivmodl[-core]
     # Dont duplicate the link dependency (only 'build' and 'run')
-    depends_on('neuron+mpi', type=('build', 'run'))
-    depends_on('coreneuron', when='+coreneuron', type=('build', 'run'))
-    depends_on('neuron+profile', when='+profile', type=('build', 'run'))
-    depends_on('coreneuron+profile', when='+coreneuron+profile', type=('build', 'run'))
-    depends_on('tau', when='+profile')
-    depends_on('neuron+caliper', when='+caliper', type=('build', 'run'))
-    depends_on('coreneuron+caliper', when='+coreneuron+caliper', type=('build', 'run'))
+    # depends_on('neuron+mpi', type=('build', 'run'))
+    # depends_on('coreneuron', when='+coreneuron', type=('build', 'run'))
+    # depends_on('neuron+profile', when='+profile', type=('build', 'run'))
+    # depends_on('coreneuron+profile', when='+coreneuron+profile', type=('build', 'run'))
+    # depends_on('tau', when='+profile')
+    # depends_on('neuron+caliper', when='+caliper', type=('build', 'run'))
+    # depends_on('coreneuron+caliper', when='+coreneuron+caliper', type=('build', 'run'))
     depends_on('gettext', when='^neuron+binary')
 
     conflicts('^neuron~python', when='+coreneuron')
@@ -256,19 +257,6 @@ class SimModel(Package):
         for libnrnmech_name in find(self.prefix.lib, 'libnrnmech*.so',
                                     recursive=False):
             env.prepend_path('BGLIBPY_MOD_LIBRARY_PATH', libnrnmech_name)
-
-    @property
-    def name(self):
-        """Override the default implementation.
-
-        Caching the name (as done by default) for this package and its
-        descendants in the class hierarchy will mess with the build system
-        and result in no descendant packages installed.
-        """
-        name = self.module.__name__
-        if '.' in name:
-            name = name[name.rindex('.') + 1:]
-        return name
 
 
 @contextmanager
