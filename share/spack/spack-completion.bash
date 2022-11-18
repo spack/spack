@@ -403,7 +403,7 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="now status enable disable reset root list trust untrust add remove mirror"
+        SPACK_COMPREPLY="now status enable disable reset root list add remove mirror"
     fi
 }
 
@@ -448,24 +448,6 @@ _spack_bootstrap_root() {
 
 _spack_bootstrap_list() {
     SPACK_COMPREPLY="-h --help --scope"
-}
-
-_spack_bootstrap_trust() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --scope"
-    else
-        SPACK_COMPREPLY=""
-    fi
-}
-
-_spack_bootstrap_untrust() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --scope"
-    else
-        SPACK_COMPREPLY=""
-    fi
 }
 
 _spack_bootstrap_add() {
