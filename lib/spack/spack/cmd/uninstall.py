@@ -17,6 +17,7 @@ import spack.error
 import spack.package_base
 import spack.repo
 import spack.store
+import spack.traverse as traverse
 from spack.database import InstallStatuses
 
 description = "remove installed packages"
@@ -158,19 +159,22 @@ def installed_dependents(specs, env):
 
     env_hashes = set(env.all_hashes()) if env else set()
 
-    all_specs_in_db = spack.store.db.query()
+    # Ensure we stop traversal at input specs.
+    visited = set(s.dag_hash() for s in specs)
 
     for spec in specs:
-        installed = [x for x in all_specs_in_db if spec in x]
-
-        # separate installed dependents into dpts in this environment and
-        # dpts that are outside this environment
-        for dpt in installed:
-            if dpt not in specs:
-                if dpt.dag_hash() in env_hashes:
-                    active_dpts.setdefault(spec, set()).add(dpt)
-                else:
-                    outside_dpts.setdefault(spec, set()).add(dpt)
+        for dpt in traverse.traverse_nodes(
+            spec.dependents(deptype="all"),
+            direction="parents",
+            visited=visited,
+            deptype="all",
+            root=True,
+            key=lambda s: s.dag_hash(),
+        ):
+            if dpt.dag_hash() in env_hashes:
+                active_dpts.setdefault(spec, set()).add(dpt)
+            else:
+                outside_dpts.setdefault(spec, set()).add(dpt)
 
     return active_dpts, outside_dpts
 
