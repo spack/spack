@@ -76,6 +76,7 @@ class Parallelio(CMakePackage):
             args.extend(
                 [
                     define("PIO_USE_MPISERIAL", True),
+                    define("PIO_ENABLE_TESTS", False),
                     define("MPISERIAL_PATH", spec["mpi-serial"].prefix),
                 ]
             )
