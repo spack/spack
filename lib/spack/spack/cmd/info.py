@@ -241,8 +241,8 @@ def print_tests(pkg):
     # So the presence of a callback in Spack does not necessarily correspond
     # to the actual presence of built-time tests for a package.
     for callbacks, phase in [
-        (pkg.build_time_test_callbacks, "Build"),
-        (pkg.install_time_test_callbacks, "Install"),
+        (getattr(pkg, "build_time_test_callbacks", None), "Build"),
+        (getattr(pkg, "install_time_test_callbacks", None), "Install"),
     ]:
         color.cprint("")
         color.cprint(section_title("Available {0} Phase Test Methods:".format(phase)))

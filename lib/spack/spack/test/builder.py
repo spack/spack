@@ -121,3 +121,17 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
     builder = spack.builder.create(s.package)
     value = getattr(builder, method_name)()
     assert value == expected
+
+
+@pytest.mark.regression("33928")
+@pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
+@pytest.mark.disable_clean_stage_check
+def test_build_time_tests_are_executed_from_default_builder():
+    s = spack.spec.Spec("old-style-autotools").concretized()
+    builder = spack.builder.create(s.package)
+    builder.pkg.run_tests = True
+    for phase_fn in builder:
+        phase_fn.execute()
+
+    assert os.environ.get("CHECK_CALLED") == "1", "Build time tests not executed"
+    assert os.environ.get("INSTALLCHECK_CALLED") == "1", "Install time tests not executed"
