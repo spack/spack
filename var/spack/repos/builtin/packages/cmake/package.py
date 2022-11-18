@@ -179,13 +179,13 @@ class Cmake(Package):
     # a build dependency, and its libs will not interfere with others in
     # the build.
     variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
-    variant("qt", default=False, description="Enables the build of cmake-gui")
+    variant("qt", default=False, description="Enable the build of cmake-gui")
     variant(
         "doc",
         default=False,
-        description="Enables the generation of html and man page documentation",
+        description="Enable the generation of html and man page documentation",
     )
-    variant("ncurses", default=not is_windows, description="Enables the build of the ncurses gui")
+    variant("ncurses", default=not is_windows, description="Enable the build of the ncurses gui")
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(
