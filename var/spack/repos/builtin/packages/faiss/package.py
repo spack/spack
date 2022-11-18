@@ -84,7 +84,6 @@ class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
     @property
     def build_directory(self):
         return os.path.join(self.pkg.stage.path, self.build_dirname, "faiss", "python")
-        # return self.pkg.stage.source_path
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -109,7 +108,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
     def install(self, pkg, spec, prefix):
-        spack.build_systems.cmake.CMakeBuilder.install(self, pkg, spec, prefix)
+        super().install(pkg, spec, prefix)
         if "+python" in spec:
             customPip = PythonPipBuilder(pkg, self.build_dirname)
             customPip.install(pkg, spec, prefix)
