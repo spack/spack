@@ -312,7 +312,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0")
     depends_on("py-wheel@0.32:0", type=("build", "run"), when="@2.7")
     depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-wheel@0.26:", type=("build", "run"), when=":2.3")
+    depends_on("py-wheel@0.26:", type=("build", "run"), when="@:2.3")
 
     # TODO: add packages for some of these dependencies
     depends_on("mkl", when="+mkl")
