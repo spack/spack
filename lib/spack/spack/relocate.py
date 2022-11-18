@@ -27,7 +27,7 @@ import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
 
-is_macos = str(spack.platforms.real_host()) == "darwin"
+is_macos = str(spack.platforms.real_host()).lower() == "darwin"
 
 
 class InstallRootStringError(spack.error.SpackError):
@@ -562,6 +562,14 @@ def _replace_prefix_bin(filename, prefix_to_prefix):
         apply_binary_replacements(f, prefix_to_prefix)
 
 
+def macos_codesign(macho_binary):
+    codesign = executable.which("codesign")
+    if codesign:
+        codesign("--force", "--deep", "--sign", "-", macho_binary)
+    else:
+        tty.warn("codesign tool for signing relocated MacOS binaries not found")
+
+
 def relocate_macho_binaries(
     path_names,
     old_layout_root,
@@ -616,6 +624,7 @@ def relocate_macho_binaries(
             # replace the new paths with relativized paths in the new prefix
             if is_macos:
                 modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
+                macos_codesign(path_name)
             else:
                 modify_object_macholib(path_name, paths_to_paths)
         else:
@@ -628,6 +637,7 @@ def relocate_macho_binaries(
             # replace the old paths with new paths
             if is_macos:
                 modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
+                macos_codesign(path_name)
             else:
                 modify_object_macholib(path_name, paths_to_paths)
 
