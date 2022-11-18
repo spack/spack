@@ -63,7 +63,7 @@ class Qt(Package):
     variant("sql", default=True, description="Build with SQL support.")
     variant("ssl", default=True, description="Build with OpenSSL support.")
     variant("tools", default=True, description="Build tools, including Qt Designer.")
-    variant("webkit", default=False, description="Build the Webkit extension", when="@:5.6,5.16:")
+    variant("webkit", default=False, description="Build the Webkit extension")
 
     # Patches for qt@3
     patch("qt3-accept.patch", when="@3")
@@ -213,6 +213,12 @@ class Qt(Package):
             depends_on("libxrandr")
             depends_on("libxdamage")
             depends_on("gettext")
+
+    conflicts(
+        "+webkit",
+        when="@5.7:5.15",
+        msg="qtwebengine@5.7:5.15 are based on Google Chromium versions which depend on Py2",
+    )
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
