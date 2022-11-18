@@ -35,6 +35,10 @@ class Msmpi(Package):
         ver_str = re.search("[Version ([0-9.]+)]", output)
         return Version(ver_str.group(0)) if ver_str else None
 
+    def setup_build_environment(self, env):
+        ifort_root = os.path.join(*self.compiler.fc.split(os.path.sep)[:-2])
+        env.set("SPACK_IFORT", ifort_root)
+
 
 class GenericBuilder(GenericBuilder):
     def is_64bit(self):
@@ -42,15 +46,13 @@ class GenericBuilder(GenericBuilder):
 
     def build_command_line(self):
         args = ["-noLogo"]
-        # The argument may say gfortran, but spack patches MSMPI to be compatible with IFortran
-        # however that variable name proved difficult to patch, so it remians the same
         ifort_bin = self.compiler.fc
         if not ifort_bin:
             raise InstallError(
                 "Cannot install MSMPI without fortran"
                 "please select a compiler with fortran support."
             )
-        args.append("/p:GFORTRAN_BIN=%s" % os.path.dirname(ifort_bin))
+        args.append("/p:IFORT_BIN=%s" % os.path.dirname(ifort_bin))
         args.append("/p:VCToolsVersion=%s" % self.compiler.msvc_version)
         args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.spec["wdk"].version))
         args.append("/p:PlatformToolset=%s" % self.compiler.cc_version)

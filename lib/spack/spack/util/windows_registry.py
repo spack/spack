@@ -203,25 +203,25 @@ class WindowsRegistryView(object):
     def get_value(self, value_name):
         """Return registry value corresponding to provided argument (if it exists)"""
         if not self._valid_reg_check():
-            return None
+            raise RegistryError("Cannot query value from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             return self.reg.get_value(value_name)
 
     def get_subkey(self, subkey_name):
         if not self._valid_reg_check():
-            return None
+            raise RegistryError("Cannot query subkey from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             return self.reg.get_subkey(subkey_name)
 
     def get_subkeys(self):
         if not self._valid_reg_check():
-            return None
+            raise RegistryError("Cannot query subkeys from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             return self.reg.subkeys
 
     def get_values(self):
         if not self._valid_reg_check():
-            return None
+            raise RegistryError("Cannot query values from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             return self.reg.values
 
@@ -288,17 +288,13 @@ class WindowsRegistryView(object):
 
 def open_key(root, subkey):
     """Returns registry key handle derived from root and its subkey
-    root can be either a WindowsRegistry or RegistryKey object, or an existing
-    PyHKEY object. If it is the former, a RegistryKey is returned, otherwise,
-    another PyHKEY.
+    root can be either a WindowsRegistry or RegistryKey object
 
     Note: If called on non Windows platforms, will raise RuntimeError
     """
     if not is_windows:
         raise RuntimeError("Cannot invoke Windows registry methods on non Windows platform")
-    if type(root) == WindowsRegistryView or type(root) == RegistryKey:
-        return root.get_subkey(subkey)
-    return winreg.OpenKeyEx(root, subkey, access=winreg.KEY_READ)
+    return root.get_subkey(subkey)
 
 
 def get_value(root, value):
@@ -310,6 +306,8 @@ def get_value(root, value):
     """
     if not is_windows:
         raise RuntimeError("Cannot invoke Windows registry methods on non Windows platform")
-    if type(root) == WindowsRegistryView or type(root) == RegistryKey:
-        return root.get_value(value)
-    return winreg.QueryValueEx(root, value)[0]
+    return root.get_value(value)
+
+
+class RegistryError(RuntimeError):
+    """Runtime Error describing issue with invalid key access to Windows registry"""

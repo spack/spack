@@ -7,7 +7,7 @@ index 255b9f5..cc4f096 100644
          $(CRT_Libs);
        </AdditionalDependencies>
 +      <AdditionalLibraryDirectories>
-+        $(IFORT_COMPILER21)compiler\lib\intel64
++        $(SPACK_IFORT)compiler\lib\intel64
 +      </AdditionalLibraryDirectories>
        <ModuleDefinitionFile>.\msmpi.def</ModuleDefinitionFile>
      </Link>
@@ -28,7 +28,7 @@ index 24bd29d..57d0292 100644
 +      <Fort_Flags>/D _WIN64=1 /D _AMD64_=1 /D AMD64=1</Fort_Flags>
      </PropertyGroup>
 -    <Exec Command="$(GFORTRAN_BIN)\gfortran.exe -I$(MPI_INC_ROOT) -c %(ForCompile.Identity) $(Fort_Flags)  -o $(O)\%(ForCompile.FileName).obj" />
-+    <Exec Command="$(GFORTRAN_BIN)\ifort.exe /I$(MPI_INC_ROOT) /c %(ForCompile.Identity) $(Fort_Flags) /names:lowercase /assume:nounderscore /o $(O)\%(ForCompile.FileName).obj" />
++    <Exec Command="$(IFORT_BIN)\ifort.exe /I$(MPI_INC_ROOT) /c %(ForCompile.Identity) $(Fort_Flags) /names:lowercase /assume:nounderscore /o $(O)\%(ForCompile.FileName).obj" />
      <ItemGroup>
        <Lib Condition="'$(ConfigurationType)'=='StaticLibrary'" Include="@(ForCompile->'$(O)\%(Filename).obj')" />
      </ItemGroup>
