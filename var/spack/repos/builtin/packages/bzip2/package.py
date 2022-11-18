@@ -6,6 +6,8 @@
 import re
 import sys
 
+import llnl.util.tty as tty
+
 from spack.package import *
 
 
@@ -63,7 +65,25 @@ class Bzip2(Package, SourcewarePackage):
                 flags.append("-g")
         return (flags, None, None)
 
+    def test_cmp(self):
+        cmp = which("cmp")
+        tty.warn("cmp: {0}".format(cmp.path))
+        codesign = which("codesign")
+        if codesign:
+            tty.warn("codesign --verify {0}".format(cmp.path))
+            codesign("--verify", cmp.path)
+        else:
+            tty.fatal("codesign not found!!!")
+        spctl = which("spctl")
+        if spctl:
+            tty.warn("spctl --assess:")
+            spctl("--assess", cmp.path)
+        if codesign:
+            tty.warn("codesign --sign with --force:")
+            codesign("--force", "--deep", "--sign", "-", cmp.path)
+
     def patch(self):
+        self.test_cmp()
         if self.spec.satisfies("+debug"):
             for makefile in ["Makefile", "Makefile-libbz2_so", "makefile.msc"]:
                 filter_file(r"-O ", "-O0 ", makefile)
@@ -134,6 +154,7 @@ class Bzip2(Package, SourcewarePackage):
             install("*.exe", self.prefix.bin)
             install("*.1", self.prefix.man.man1)
         else:
+            self.test_cmp()
             make()
             make("install", "PREFIX={0}".format(prefix))
 
@@ -159,17 +180,3 @@ class Bzip2(Package, SourcewarePackage):
                 force_remove("bunzip2", "bzcat")
                 symlink("bzip2", "bunzip2")
                 symlink("bzip2", "bzcat")
-
-        cmp = which("cmp")
-        print("cmp: {0}".cmp.path)
-        codesign = which("codesign")
-        if codesign:
-            print("codesign --verify {0}".format(cmp.path))
-            codesign("--verify", cmp.path)
-        spctl = which("spctl")
-        if spctl:
-            print("spctl --assess:")
-            spctl("--assess", cmp.path)
-        if codesign:
-            print("codesign --sign with --force:")
-            codesign("--force", "--deep", "--sign", "-", cmp.path)
