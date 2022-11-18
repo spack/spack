@@ -35,12 +35,12 @@ class Msmpi(Package):
         ver_str = re.search("[Version ([0-9.]+)]", output)
         return Version(ver_str.group(0)) if ver_str else None
 
+
+class GenericBuilder(GenericBuilder):
     def setup_build_environment(self, env):
         ifort_root = os.path.join(*self.compiler.fc.split(os.path.sep)[:-2])
         env.set("SPACK_IFORT", ifort_root)
 
-
-class GenericBuilder(GenericBuilder):
     def is_64bit(self):
         return platform.machine().endswith("64")
 
