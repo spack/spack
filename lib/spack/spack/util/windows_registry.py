@@ -37,7 +37,7 @@ class RegistryKey(object):
     def __init__(self, name, handle):
         self.path = name
         self.name = os.path.split(name)[-1]
-        self.handle = handle
+        self._handle = handle
         self._keys = []
         self._values = {}
 
@@ -57,7 +57,7 @@ class RegistryKey(object):
 
     @property
     def hkey(self):
-        return self.handle
+        return self._handle
 
     def __str__(self):
         return self.name
@@ -66,31 +66,31 @@ class RegistryKey(object):
         """Composes all subkeys into a list for access"""
         if self._keys:
             return
-        sub_keys, _, _ = winreg.QueryInfoKey(self.handle)
+        sub_keys, _, _ = winreg.QueryInfoKey(self.hkey)
         for i in range(sub_keys):
-            sub_name = winreg.EnumKey(self.handle, i)
-            sub_handle = winreg.OpenKeyEx(self.handle, sub_name, access=winreg.KEY_READ)
+            sub_name = winreg.EnumKey(self.hkey, i)
+            sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
             self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
 
     def _gather_value_info(self):
         """Compose all values for this key into a dict of form value name: RegistryValue Object"""
         if self._values:
             return
-        _, values, _ = winreg.QueryInfoKey(self.handle)
+        _, values, _ = winreg.QueryInfoKey(self.hkey)
         for i in range(values):
-            value_name, value_data, _ = winreg.EnumValue(self.handle, i)
-            self._values[value_name] = RegistryValue(value_name, value_data, self.handle)
+            value_name, value_data, _ = winreg.EnumValue(self.hkey, i)
+            self._values[value_name] = RegistryValue(value_name, value_data, self.hkey)
 
     def get_subkey(self, sub_key):
         """Returns subkey of name sub_key in a RegistryKey objects"""
         return RegistryKey(
             os.path.join(self.path, sub_key),
-            winreg.OpenKeyEx(self.handle, sub_key, access=winreg.KEY_READ),
+            winreg.OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ),
         )
 
     def get_value(self, val_name):
         """Returns value associated with this key in RegistryValue object"""
-        return RegistryValue(val_name, winreg.QueryValueEx(self.handle, val_name)[0], self.handle)
+        return RegistryValue(val_name, winreg.QueryValueEx(self.hkey, val_name)[0], self.hkey)
 
 
 class _HKEY_CONSTANT(RegistryKey):
@@ -98,7 +98,6 @@ class _HKEY_CONSTANT(RegistryKey):
 
     def __init__(self, hkey_constant):
         hkey_name = hkey_constant
-        self._handle = None
         # This class is instantiated at module import time
         # on non Windows platforms, winreg would not have been
         # imported. For this reason we can't reference winreg yet,
@@ -111,15 +110,10 @@ class _HKEY_CONSTANT(RegistryKey):
         return getattr(winreg, key)
 
     @property
-    def handle(self):
+    def hkey(self):
         if not self._handle:
             self._handle = self._get_hkey(self.path)
         return self._handle
-
-    @handle.setter
-    def handle(self, handle):
-        if not self._handle:
-            self._handle = handle
 
 
 class HKEY(object):
@@ -171,15 +165,12 @@ class WindowsRegistryView(object):
     @contextmanager
     def invalid_reg_ref_error_handler(self):
         try:
-            try:
-                yield
-            except FileNotFoundError as e:
-                if e.winerror == 2:
-                    tty.debug("Key %s at position %s does not exist" % (self.key, str(self.root)))
-                else:
-                    raise e
-        finally:
-            return
+            yield
+        except FileNotFoundError as e:
+            if e.winerror == 2:
+                tty.debug("Key %s at position %s does not exist" % (self.key, str(self.root)))
+            else:
+                raise e
 
     def __bool__(self):
         return self.reg != -1
