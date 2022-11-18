@@ -58,10 +58,13 @@ class CudaPackage(PackageBase):
         when="+cuda",
     )
 
+    def nvcc_flags(self):
+        return []
+
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
     @staticmethod
-    def cuda_flags(arch_list):
+    def cuda_arch_flags(arch_list):
         return [
             (
                 "--generate-code arch=compute_{0},code=sm_{0} "
@@ -69,6 +72,11 @@ class CudaPackage(PackageBase):
             ).format(s)
             for s in arch_list
         ]
+
+    def cuda_flags(self, arch_list):
+        flags = self.cuda_arch_flags(arch_list)
+        flags.extend(self.nvcc_flags())
+        return flags
 
     depends_on("cuda", when="+cuda")
 
