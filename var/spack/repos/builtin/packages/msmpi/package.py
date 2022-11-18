@@ -41,13 +41,15 @@ class GenericBuilder(GenericBuilder):
         return platform.machine().endswith("64")
 
     def build_command_line(self):
-        arch = "intel64" if self.is_64() else "ia32"
         args = ["-noLogo"]
         # The argument may say gfortran, but spack patches MSMPI to be compatible with IFortran
         # however that variable name proved difficult to patch, so it remians the same
         ifort_bin = self.compiler.fc
         if not ifort_bin:
-            raise InstallError("Cannot install MSMPI without fortran, please select a compiler with fortran support.")
+            raise InstallError(
+                "Cannot install MSMPI without fortran"
+                "please select a compiler with fortran support."
+            )
         args.append("/p:GFORTRAN_BIN=%s" % os.path.dirname(ifort_bin))
         args.append("/p:VCToolsVersion=%s" % self.compiler.msvc_version)
         args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.spec["wdk"].version))
