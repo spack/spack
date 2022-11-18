@@ -17,6 +17,7 @@ class RAbsseq(RPackage):
 
     bioc = "ABSSeq"
 
+    version("1.52.0", commit="07038c047775e17d5d29909927d2143efb63e9cb")
     version("1.50.0", commit="4f384d04ebaae6ea0b56e5cff9a9dcdcb6c8afb0")
     version("1.48.0", commit="b237c967d44d075ca306c35e92df8b66a60ce72d")
     version("1.44.0", commit="c202b4a059021ed1228ccee7303c69b0aa4ca1ee")

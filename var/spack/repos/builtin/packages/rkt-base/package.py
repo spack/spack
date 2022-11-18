@@ -18,5 +18,3 @@ class RktBase(RacketPackage):
     depends_on("racket@8.3", type=("build", "run"), when="@8.3")
 
     racket_name = "base"
-    pkgs = True
-    subdirectory = "pkgs/{0}".format(racket_name)

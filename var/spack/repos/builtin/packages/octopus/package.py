@@ -5,12 +5,13 @@
 
 import os
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 from spack.package import *
 
 
-class Octopus(Package, CudaPackage):
+class Octopus(AutotoolsPackage, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
     theory code."""
 
@@ -37,6 +38,7 @@ class Octopus(Package, CudaPackage):
 
     version("develop", branch="develop")
 
+    variant("mpi", default=True, description="Build with MPI support")
     variant("scalapack", default=False, description="Compile with Scalapack")
     variant("metis", default=False, description="Compile with METIS")
     variant("parmetis", default=False, description="Compile with ParMETIS")
@@ -55,22 +57,32 @@ class Octopus(Package, CudaPackage):
     variant("nlopt", default=False, description="Compile with nlopt")
     variant("debug", default=False, description="Compile with debug flags")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    depends_on("autoconf", type="build", when="@develop")
+    depends_on("automake", type="build", when="@develop")
+    depends_on("libtool", type="build", when="@develop")
+    depends_on("m4", type="build", when="@develop")
+    depends_on("mpi", when="+mpi")
 
     depends_on("blas")
     depends_on("gsl@1.9:")
     depends_on("lapack")
+
+    # The library of exchange and correlation functionals.
     depends_on("libxc@2:2", when="@:5")
     depends_on("libxc@2:3", when="@6:7")
     depends_on("libxc@2:4", when="@8:9")
     depends_on("libxc@5.1.0:", when="@10:")
     depends_on("libxc@5.1.0:", when="@develop")
-    depends_on("mpi")
-    depends_on("fftw@3:+mpi+openmp", when="@8:9")
-    depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+    with when("+mpi"):  # list all the parallel dependencies
+        depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
+        depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+        depends_on("libvdwxc+mpi", when="+libvdwxc")
+
+    with when("~mpi"):  # list all the serial dependencies
+        depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
+        depends_on("fftw-api@3:+openmp~mpi", when="@10:")
+        depends_on("libvdwxc~mpi", when="+libvdwxc")
+
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
     depends_on("metis@5:+int64", when="+metis")
@@ -81,7 +93,6 @@ class Octopus(Package, CudaPackage):
     depends_on("cgal", when="+cgal")
     depends_on("pfft", when="+pfft")
     depends_on("likwid", when="+likwid")
-    depends_on("libvdwxc", when="+libvdwxc")
     depends_on("libyaml", when="+libyaml")
     depends_on("elpa", when="+elpa")
     depends_on("nlopt", when="+nlopt")
@@ -90,7 +101,8 @@ class Octopus(Package, CudaPackage):
     # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft, poke
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
         args = []
@@ -101,12 +113,25 @@ class Octopus(Package, CudaPackage):
                 "--with-lapack=%s" % lapack.ld_flags,
                 "--with-gsl-prefix=%s" % spec["gsl"].prefix,
                 "--with-libxc-prefix=%s" % spec["libxc"].prefix,
-                "CC=%s" % spec["mpi"].mpicc,
-                "FC=%s" % spec["mpi"].mpifc,
-                "--enable-mpi",
                 "--enable-openmp",
             ]
         )
+        if "+mpi" in self.spec:  # we build with MPI
+            args.extend(
+                [
+                    "--enable-mpi",
+                    "CC=%s" % self.spec["mpi"].mpicc,
+                    "FC=%s" % self.spec["mpi"].mpifc,
+                ]
+            )
+        else:
+            args.extend(
+                [
+                    "CC=%s" % self.compiler.cc,
+                    "FC=%s" % self.compiler.fc,
+                ]
+            )
+
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
         elif "^mkl" in spec:
@@ -211,12 +236,7 @@ class Octopus(Package, CudaPackage):
                 args.append(fcflags)
                 args.append(fflags)
 
-        autoreconf("-i")
-        configure(*args)
-        make()
-        # short tests take forever...
-        # make('check-short')
-        make("install")
+        return args
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
@@ -279,7 +299,7 @@ class Octopus(Package, CudaPackage):
         purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
-            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
             self.run_test(
                 exe,
                 options=options,
@@ -305,7 +325,7 @@ class Octopus(Package, CudaPackage):
         purpose = "Run tiny calculation for He"
         with working_dir("example-he", create=True):
             print("Current working directory (in example-he)")
-            copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
             self.run_test(
                 exe,
                 options=options,

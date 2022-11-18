@@ -16,11 +16,9 @@ import sys
 import tempfile
 import time
 import zipfile
-
-from six import iteritems
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import HTTPHandler, Request, build_opener
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -51,6 +49,7 @@ JOB_RETRY_CONDITIONS = [
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
+SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -215,7 +214,7 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
     def _remove_satisfied_deps(deps, satisfied_list):
         new_deps = {}
 
-        for key, value in iteritems(deps):
+        for key, value in deps.items():
             new_value = set([v for v in value if v not in satisfied_list])
             if new_value:
                 new_deps[key] = new_value
@@ -515,38 +514,36 @@ def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
     return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
 
 
-def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True):
-    """Given a list of package names, and assuming an active and
-       concretized environment, return a set of concrete specs from
-       the environment corresponding to any of the affected pkgs (or
-       optionally to any of their dependencies/dependents).
+def get_spec_filter_list(env, affected_pkgs):
+    """Given a list of package names and an active/concretized
+       environment, return the set of all concrete specs from the
+       environment that could have been affected by changing the
+       list of packages.
 
     Arguments:
 
         env (spack.environment.Environment): Active concrete environment
         affected_pkgs (List[str]): Affected package names
-        dependencies (bool): Include dependencies of affected packages
-        dependents (bool): Include dependents of affected pacakges
 
     Returns:
 
-        A list of concrete specs from the active environment including
-        those associated with affected packages, and possible their
-        dependencies and dependents as well.
+        A set of concrete specs from the active environment including
+        those associated with affected packages, their dependencies and
+        dependents, as well as their dependents dependencies.
     """
     affected_specs = set()
     all_concrete_specs = env.all_specs()
     tty.debug("All concrete environment specs:")
     for s in all_concrete_specs:
         tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
-    for pkg in affected_pkgs:
-        env_matches = [s for s in all_concrete_specs if s.name == pkg]
-        for match in env_matches:
-            affected_specs.add(match)
-            if dependencies:
-                affected_specs.update(match.traverse(direction="children", root=False))
-            if dependents:
-                affected_specs.update(match.traverse(direction="parents", root=False))
+    env_matches = [s for s in all_concrete_specs if s.name in frozenset(affected_pkgs)]
+    visited = set()
+    dag_hash = lambda s: s.dag_hash()
+    for match in env_matches:
+        for parent in match.traverse(direction="parents", key=dag_hash):
+            affected_specs.update(
+                parent.traverse(direction="children", visited=visited, key=dag_hash)
+            )
     return affected_specs
 
 
@@ -625,7 +622,7 @@ def generate_gitlab_ci_yaml(
                 affected_specs = get_spec_filter_list(env, affected_pkgs)
                 tty.debug("all affected specs:")
                 for s in affected_specs:
-                    tty.debug("  {0}".format(s.name))
+                    tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
 
     # Allow overriding --prune-dag cli opt with environment variable
     prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
@@ -733,6 +730,12 @@ def generate_gitlab_ci_yaml(
         # won't fetch its index and include in our local cache.
         spack.mirror.add("ci_pr_mirror", remote_mirror_override, cfg.default_modify_scope())
 
+    shared_pr_mirror = None
+    if spack_pipeline_type == "spack_pull_request":
+        stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
+        shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
+        spack.mirror.add("ci_shared_pr_mirror", shared_pr_mirror, cfg.default_modify_scope())
+
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
         proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
@@ -807,6 +810,8 @@ def generate_gitlab_ci_yaml(
         # Clean up remote mirror override if enabled
         if remote_mirror_override:
             spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
+        if spack_pipeline_type == "spack_pull_request":
+            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
 
     all_job_names = []
     output_object = {}
@@ -848,7 +853,11 @@ def generate_gitlab_ci_yaml(
 
                 if prune_untouched_packages:
                     if release_spec not in affected_specs:
-                        tty.debug("Pruning {0}, untouched by change.".format(release_spec.name))
+                        tty.debug(
+                            "Pruning {0}/{1}, untouched by change.".format(
+                                release_spec.name, release_spec.dag_hash()[:7]
+                            )
+                        )
                         spec_record["needs_rebuild"] = False
                         continue
 
@@ -1165,7 +1174,14 @@ def generate_gitlab_ci_yaml(
         "after_script",
     ]
 
-    service_job_retries = {"max": 2, "when": ["runner_system_failure", "stuck_or_timeout_failure"]}
+    service_job_retries = {
+        "max": 2,
+        "when": [
+            "runner_system_failure",
+            "stuck_or_timeout_failure",
+            "script_failure",
+        ],
+    }
 
     if job_id > 0:
         if temp_storage_url_prefix:
@@ -1285,6 +1301,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
         }
@@ -1936,26 +1953,35 @@ def reproduce_ci_job(url, work_dir):
     print("".join(inst_list))
 
 
-def process_command(cmd, cmd_args, repro_dir):
+def process_command(name, commands, repro_dir):
     """
     Create a script for and run the command. Copy the script to the
     reproducibility directory.
 
     Arguments:
-        cmd (str): name of the command being processed
-        cmd_args (list): string arguments to pass to the command
+        name (str): name of the command being processed
+        commands (list): list of arguments for single command or list of lists of
+            arguments for multiple commands. No shell escape is performed.
         repro_dir (str): Job reproducibility directory
 
     Returns: the exit code from processing the command
     """
-    tty.debug("spack {0} arguments: {1}".format(cmd, cmd_args))
+    tty.debug("spack {0} arguments: {1}".format(name, commands))
+
+    if len(commands) == 0 or isinstance(commands[0], str):
+        commands = [commands]
+
+    # Create a string [command 1] && [command 2] && ... && [command n] with commands
+    # quoted using double quotes.
+    args_to_string = lambda args: " ".join('"{}"'.format(arg) for arg in args)
+    full_command = " && ".join(map(args_to_string, commands))
 
     # Write the command to a shell script
-    script = "{0}.sh".format(cmd)
+    script = "{0}.sh".format(name)
     with open(script, "w") as fd:
-        fd.write("#!/bin/bash\n\n")
-        fd.write("\n# spack {0} command\n".format(cmd))
-        fd.write(" ".join(['"{0}"'.format(i) for i in cmd_args]))
+        fd.write("#!/bin/sh\n\n")
+        fd.write("\n# spack {0} command\n".format(name))
+        fd.write(full_command)
         fd.write("\n")
 
     st = os.stat(script)
@@ -1967,15 +1993,15 @@ def process_command(cmd, cmd_args, repro_dir):
     # Run the generated install.sh shell script as if it were being run in
     # a login shell.
     try:
-        cmd_process = subprocess.Popen(["bash", "./{0}".format(script)])
+        cmd_process = subprocess.Popen(["/bin/sh", "./{0}".format(script)])
         cmd_process.wait()
         exit_code = cmd_process.returncode
     except (ValueError, subprocess.CalledProcessError, OSError) as err:
-        tty.error("Encountered error running {0} script".format(cmd))
+        tty.error("Encountered error running {0} script".format(name))
         tty.error(err)
         exit_code = 1
 
-    tty.debug("spack {0} exited {1}".format(cmd, exit_code))
+    tty.debug("spack {0} exited {1}".format(name, exit_code))
     return exit_code
 
 
@@ -2118,8 +2144,9 @@ def run_standalone_tests(**kwargs):
 
     test_args = [
         "spack",
-        "-d",
-        "-v",
+        "--color=always",
+        "--backtrace",
+        "--verbose",
         "test",
         "run",
     ]

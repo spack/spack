@@ -16,6 +16,7 @@ class RAdsplit(RPackage):
 
     bioc = "adSplit"
 
+    version("1.68.0", commit="705977b5e1cb7dd69793cc673fa215baaba42af5")
     version("1.66.0", commit="64580a6f7a9bc6b16334267c90df48fbb839cc16")
     version("1.64.0", commit="32f150eb51c66b867301dceeb527de5b97f9f490")
     version("1.60.0", commit="de5abccfe652cbc5b5f49fb6ed77cdd15cc760cd")

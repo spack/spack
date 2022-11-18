@@ -1079,8 +1079,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         return config_args
 
-    @when("+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="+wrapper-rpath")
     def filter_rpaths(self):
         def filter_lang_rpaths(lang_tokens, rpath_arg):
             if self.compiler.cc_rpath_arg == rpath_arg:
@@ -1112,8 +1111,7 @@ with '-Wl,-commons,use_dylibs' and without
         filter_lang_rpaths(["c++", "CC", "cxx"], self.compiler.cxx_rpath_arg)
         filter_lang_rpaths(["fort", "f77", "f90"], self.compiler.fc_rpath_arg)
 
-    @when("@:3.0.4+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="@:3.0.4+wrapper-rpath")
     def filter_pc_files(self):
         files = find(self.spec.prefix.lib.pkgconfig, "*.pc")
         x = FileFilter(*[f for f in files if not os.path.islink(f)])

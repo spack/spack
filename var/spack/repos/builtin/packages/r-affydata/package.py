@@ -15,6 +15,7 @@ class RAffydata(RPackage):
 
     bioc = "affydata"
 
+    version("1.46.0", commit="870745b886df9f1fbbd6130d266c0ef96f3afa66")
     version("1.44.0", commit="f18304a356cee8cd7297bab362b13c40e50439df")
     version("1.42.0", commit="4b54c1206bedd27ff9be32affc999a279f4e96f0")
     version("1.38.0", commit="b5e843b2514789d0d87bea44d762c89a95314ee7")

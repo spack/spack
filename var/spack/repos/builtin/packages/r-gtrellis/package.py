@@ -18,6 +18,7 @@ class RGtrellis(RPackage):
 
     bioc = "gtrellis"
 
+    version("1.30.0", commit="da93b30ef812e231c47aa83da5c521f1801b3d14")
     version("1.28.0", commit="d770a7b3441e4003869c88cfd8e21fd6508b86c4")
     version("1.26.0", commit="f2c3121b31ad1b422e2cf503435d0590e903ff3f")
     version("1.22.0", commit="c071c5631f3dedda212aed87d9c02954b5ed6611")

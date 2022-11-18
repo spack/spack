@@ -23,6 +23,7 @@ class RAldex2(RPackage):
 
     bioc = "ALDEx2"
 
+    version("1.30.0", commit="cb6670515a8722f9cfedac12a8c2747a5298ee46")
     version("1.28.1", commit="f8d8ba6d2439bff75ab80f5466c9a047c31ed0a6")
     version("1.26.0", commit="0876a2eac08d3f1c01df7414d97d391c80182ada")
     version("1.22.0", commit="ac7f0ab3f094ec52713da7620a27058b14c7181d")

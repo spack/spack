@@ -22,6 +22,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.18.1", sha256="02f5979a22f5961bb775d527f8450db77bc6a8d2541f3b05fb586829b82e9bc8")
     version("3.18.0", sha256="9da802e703ad79fb7ef0007d17f68916573011073ee9712dcd1673537f6a5f68")
     version("3.17.5", sha256="a1193e6c50a1676c3972a1edf0a06eec9fac8ecc2f3771f2689a8997423e4c71")
     version("3.17.4", sha256="99c127486722a3ffd95a268b4ceb0976cbf217926c681a9631bd7246eab8cb2a")
@@ -332,9 +333,20 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hwloc", when="+hwloc")
     depends_on("kokkos", when="+kokkos")
     depends_on("kokkos-kernels", when="+kokkos")
-    depends_on("kokkos+cuda+wrapper+cuda_lambda", when="+kokkos +cuda")
-    depends_on("kokkos-kernels+cuda", when="+kokkos +cuda")
-    depends_on("kokkos+rocm", when="+kokkos +rocm")
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos+cuda+cuda_lambda cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+        depends_on(
+            "kokkos-kernels+cuda cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+    for rocm_arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos+rocm amdgpu_target=%s" % rocm_arch,
+            when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
+        )
 
     phases = ["configure", "build", "install"]
 
@@ -561,7 +573,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             for pkg in hip_lpkgs:
                 hip_lib += spec[pkg].libs.joined() + " "
             options.append("HIPPPFLAGS=%s" % hip_inc)
-            options.append("with-hip-lib=%s -L%s -lamdhip64" % (hip_lib, spec["hip"].prefix.lib))
+            options.append("--with-hip-lib=%s -L%s -lamdhip64" % (hip_lib, spec["hip"].prefix.lib))
 
         if "superlu-dist" in spec:
             if spec.satisfies("@3.10.3:3.15"):
