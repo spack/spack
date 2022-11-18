@@ -50,7 +50,7 @@ class Hiredis(MakefilePackage, CMakePackage):
     variant("test_ssl", default=False, description="Builds  test suite for SSL")
     variant("test_async", default=False, description="Builds test suite for async primitives")
 
-    depends_on("cmake@3.18:", type="build", when="@1.0.0:")
+    depends_on("cmake@3.18:", type="build", when="build_system=cmake")
     depends_on("openssl@1.1:", type=("build", "link"), when="+ssl")
     depends_on("openssl@1.1:", type=("build", "link"), when="+test_ssl")
 
