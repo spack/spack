@@ -1554,6 +1554,12 @@ def fix_darwin_install_name(path):
                 # in builddir). We thus only compare the basenames.
                 if os.path.basename(dep) == os.path.basename(loc):
                     install_name_tool("-change", dep, loc, lib)
+                    codesign = Executable("codesign")
+                    if codesign:
+                        print("codesign --verify {0}".format(lib))
+                        codesign("--verify", lib)
+                        print("codesign --sign with --force")
+                        codesign("--force", "--deep", "--sign", "-", lib)
                     break
 
 

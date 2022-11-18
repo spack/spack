@@ -159,3 +159,17 @@ class Bzip2(Package, SourcewarePackage):
                 force_remove("bunzip2", "bzcat")
                 symlink("bzip2", "bunzip2")
                 symlink("bzip2", "bzcat")
+
+        cmp = which("cmp")
+        print("cmp: {0}".cmp.path)
+        codesign = which("codesign")
+        if codesign:
+            print("codesign --verify {0}".format(cmp.path))
+            codesign("--verify", cmp.path)
+        spctl = which("spctl")
+        if spctl:
+            print("spctl --assess:")
+            spctl("--assess", cmp.path)
+        if codesign:
+            print("codesign --sign with --force:")
+            codesign("--force", "--deep", "--sign", "-", cmp.path)
