@@ -113,16 +113,21 @@ class CoverEdgesVisitor(object):
 class TopoVisitor(object):
     """Visitor that can be used in :py:func:`depth-first traversal
     <spack.traverse.traverse_depth_first_with_visitor>` to generate
-    a topologically ordered list of edges (in-edges before out-edges).
+    a topologically ordered list of specs.
 
     Algorithm based on "Section 22.4: Topological sort", Introduction to Algorithms
     (2001, 2nd edition) by Cormen, Thomas H.; Leiserson, Charles E.; Rivest, Ronald L.;
     Stein, Clifford.
 
-    Summary of the algorithm: append each edge to a list in depth-first post-order,
-    and don't follow edges to nodes already seen. This ensures that for each node all
-    out-edges appear before all in-edges. This list can be reversed to produce a
-    topological ordering.
+    Summary of the algorithm: prepend each vertex to a list in depth-first post-order,
+    not following edges to nodes already seen. This ensures all descendants occur after
+    their parent, yielding a topological order.
+
+    Note: in this particular implementation we collect the *edges* through which the
+    vertices are discovered, meaning that a topological order of *vertices* is obtained
+    by taking the specs pointed to: ``map(lambda edge: edge.spec, visitor.edges)``.
+    Lastly, ``all_edges=True`` can be used to retrieve a list of all reachable
+    edges, with the property that for each vertex all in-edges precede all out-edges.
     """
 
     def __init__(self, visitor, key=id, root=True, all_edges=False):
@@ -131,8 +136,10 @@ class TopoVisitor(object):
             visitor: visitor that implements accept(), pre(), post() and neighbors()
             key: uniqueness key for nodes
             root (bool): Whether to include the root node.
-            all_edges (bool): when False, collect only one in-edge per reachable node.
-                when True, collect all reachable edges.
+            all_edges (bool): when ``False`` (default): Each node is reached once,
+                and ``map(lambda edge: edge.spec, visitor.edges)`` is topologically
+                ordered. When ``True``, every edge is listed, ordered such that for
+                each node all in-edges precede all out-edges.
         """
         self.visited = set()
         self.visitor = visitor
