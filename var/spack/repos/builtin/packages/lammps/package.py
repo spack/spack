@@ -11,10 +11,7 @@ from spack.package import *
 
 class Lammps(CMakePackage, CudaPackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
-    Parallel Simulator. This package uses patch releases, not
-    stable release.
-    See https://github.com/spack/spack/pull/5342 for a detailed
-    discussion.
+    Parallel Simulator.
     """
 
     homepage = "https://www.lammps.org/"
@@ -25,47 +22,155 @@ class Lammps(CMakePackage, CudaPackage):
 
     maintainers("rbberger")
 
+    # rules for new versions and deprecation
+    # * new stable versions should be marked as preferred=True
+    # * a stable version that has updates and any of its outdated update releases should be
+    #   marked deprecated=True
+    # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
     version("20221103", sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e")
     version("20220915", sha256="392b8d35fc7919b0efaf8b389259a9b795a817e58e75e380467c63d03a0dab75")
     version("20220803", sha256="f37cb0b35c1682ffceae5826aadce47278aa7003099a1655fcea43acd7d37926")
     version(
-        "20220623.2", sha256="fdb5474135b17005030cd78ac85762fecf0944bdd27a81fbbe79b2b4522ccae7"
+        "20220623.2",
+        sha256="8a560213e83919623525c4a7c4b5f0eda35cdf3b0c0e6548fd891379e04ca9e6",
+        preferred=True,
     )
     version(
-        "20220623.1", sha256="1d4fb06a4621b271e8b54f31fef241d0569717a69c1b7646a2b76fe5ce47c966"
-    )
-    version("20220623", sha256="21533ce6f174c80815a48c99e5f3dd109e69d55c4cad47312d88a7190a35927f")
-    version("20220602", sha256="3e8f54453e53b3b387a68317277f832b8cf64a981e64b21e98bb37ea36ac4a60")
-    version("20220504", sha256="fe05bae8090fd0177b3c1b987cd32a9cb7cd05d790828ba954c764eb52e10b52")
-    version("20220324", sha256="d791cc93eedfc345fdf87bfa5b6f7e17e461f86ba197f9e9c3d477ce8657a7ef")
-    version("20220217", sha256="e5bd2bf325835fa98d1b95f0667c83076580916027df5b8109d5470d1b97da98")
-    version("20220107", sha256="fbf6c6814968ae0d772d7b6783079ff4f249a8faeceb39992c344969e9f1edbb")
-    version("20211214", sha256="9f7b1ee2394678c1a6baa2c158a62345680a952eee251783e3c246b3f12db4c9")
-    version("20211027", sha256="c06f682fcf9d5921ca90c857a104e90fba0fe65decaac9732745e4da49281938")
-    version(
-        "20210929.3", sha256="d7df30f7ce0bd8b7c21949cf5bdf1877858815379cddb8a264da7a8cbf699639"
+        "20220623.1",
+        sha256="58e3b2b984f8935bb0db5631e143be2826c45ffd48844f7c394f36624a3e17a2",
+        preferred=True,
+        deprecated=True,
     )
     version(
-        "20210929.2", sha256="26586c1e82356b60e40359ee474818003c7788214bfe2bfe9128a3dbe5200b4d"
+        "20220623",
+        sha256="d27ede095c9f00cd13a26f967a723d07cf8f4df65c700ed73573577bc173d5ce",
+        preferred=True,
+        deprecated=True,
     )
     version(
-        "20210929.1", sha256="3b792e20864bf88b855332486996f2c540deabb4e3507e48fa4ee96ad79615ec"
+        "20220602",
+        sha256="3e8f54453e53b3b387a68317277f832b8cf64a981e64b21e98bb37ea36ac4a60",
+        deprecated=True,
     )
-    version("20210929", sha256="5132f332b582be3006510562ef10bac9ef76d760f34fc08a2af556416c57cf4c")
-    version("20210920", sha256="e3eba96933c1dd3177143c7ac837cae69faceba196948fbad2970425db414d8c")
-    version("20210831", sha256="532c42576a79d72682deaf43225ca773ed9f9e35deb484a82f91905b6cba23ec")
-    version("20210730", sha256="c5e998c8282a835d2bcba4fceffe3cecdf9aed9bdf79fa9c945af573e632f6e7")
-    version("20210728", sha256="6b844d2c3f7170a59d36fbf761483aa0c63d95eda254d00fe4d10542403abe36")
-    version("20210702", sha256="4fdd8ca2dbde8809c0048716650b73ae1f840e22ebe24b25f6f7a499377fea57")
-    version("20210514", sha256="74d9c4386f2181b15a024314c42b7a0b0aaefd3b4b947aeca00fe07e5b2f3317")
-    version("20210408", sha256="1645147b7777de4f616b8232edf0b597868084f969c777fa0a757949c3f71f56")
-    version("20210310", sha256="25708378dbeccf794bc5045aceb84380bf4a3ca03fc8e5d150a26ca88d371474")
-    version("20201029", sha256="3d347f6b512bc360505019d1c6183c969a2e1da402e31a1e26577daf5e419d95")
-    version("20200721", sha256="845bfeddb7b667799a1a5dbc166b397d714c3d2720316604a979d3465b4190a9")
-    version("20200630", sha256="413cbfabcc1541a339c7a4ab5693fbeb768f46bb1250640ba94686c6e90922fc")
-    version("20200505", sha256="c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73")
-    version("20200303", sha256="9aa56dfb8673a06e6c88588505ec1dfc01dd94f9d60e719ed0c605e48cc06c58")
+    version(
+        "20220504",
+        sha256="fe05bae8090fd0177b3c1b987cd32a9cb7cd05d790828ba954c764eb52e10b52",
+        deprecated=True,
+    )
+    version(
+        "20220324",
+        sha256="d791cc93eedfc345fdf87bfa5b6f7e17e461f86ba197f9e9c3d477ce8657a7ef",
+        deprecated=True,
+    )
+    version(
+        "20220217",
+        sha256="e5bd2bf325835fa98d1b95f0667c83076580916027df5b8109d5470d1b97da98",
+        deprecated=True,
+    )
+    version(
+        "20220107",
+        sha256="fbf6c6814968ae0d772d7b6783079ff4f249a8faeceb39992c344969e9f1edbb",
+        deprecated=True,
+    )
+    version(
+        "20211214",
+        sha256="9f7b1ee2394678c1a6baa2c158a62345680a952eee251783e3c246b3f12db4c9",
+        deprecated=True,
+    )
+    version(
+        "20211027",
+        sha256="c06f682fcf9d5921ca90c857a104e90fba0fe65decaac9732745e4da49281938",
+        deprecated=True,
+    )
+    version(
+        "20210929.3",
+        sha256="e4c274f0dc5fdedc43f2b365156653d1105197a116ff2bafe893523cdb22532e",
+        preferred=True,
+    )
+    version(
+        "20210929.2",
+        sha256="9318ca816cde16a9a4174bf22a1966f5f2155cb32c0ad5a6757633276411fb36",
+        preferred=True,
+        deprecated=True,
+    )
+    version(
+        "20210929.1",
+        sha256="5000b422c9c245b92df63507de5aa2ea4af345ea1f00180167aaa084b711c27c",
+        preferred=True,
+        deprecated=True,
+    )
+    version(
+        "20210929",
+        sha256="2dff656cb21fd9a6d46c818741c99d400cfb1b12102604844663b655fb2f893d",
+        preferred=True,
+        deprecated=True,
+    )
+    version(
+        "20210920",
+        sha256="e3eba96933c1dd3177143c7ac837cae69faceba196948fbad2970425db414d8c",
+        deprecated=True,
+    )
+    version(
+        "20210831",
+        sha256="532c42576a79d72682deaf43225ca773ed9f9e35deb484a82f91905b6cba23ec",
+        deprecated=True,
+    )
+    version(
+        "20210730",
+        sha256="c5e998c8282a835d2bcba4fceffe3cecdf9aed9bdf79fa9c945af573e632f6e7",
+        deprecated=True,
+    )
+    version(
+        "20210728",
+        sha256="6b844d2c3f7170a59d36fbf761483aa0c63d95eda254d00fe4d10542403abe36",
+        deprecated=True,
+    )
+    version(
+        "20210702",
+        sha256="4fdd8ca2dbde8809c0048716650b73ae1f840e22ebe24b25f6f7a499377fea57",
+        deprecated=True,
+    )
+    version(
+        "20210514",
+        sha256="74d9c4386f2181b15a024314c42b7a0b0aaefd3b4b947aeca00fe07e5b2f3317",
+        deprecated=True,
+    )
+    version(
+        "20210408",
+        sha256="1645147b7777de4f616b8232edf0b597868084f969c777fa0a757949c3f71f56",
+        deprecated=True,
+    )
+    version(
+        "20210310",
+        sha256="25708378dbeccf794bc5045aceb84380bf4a3ca03fc8e5d150a26ca88d371474",
+        deprecated=True,
+    )
+    version(
+        "20201029",
+        sha256="759705e16c1fedd6aa6e07d028cc0c78d73c76b76736668420946a74050c3726",
+        preferred=True,
+    )
+    version(
+        "20200721",
+        sha256="845bfeddb7b667799a1a5dbc166b397d714c3d2720316604a979d3465b4190a9",
+        deprecated=True,
+    )
+    version(
+        "20200630",
+        sha256="413cbfabcc1541a339c7a4ab5693fbeb768f46bb1250640ba94686c6e90922fc",
+        deprecated=True,
+    )
+    version(
+        "20200505",
+        sha256="c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73",
+        deprecated=True,
+    )
+    version(
+        "20200303",
+        sha256="a1a2e3e763ef5baecea258732518d75775639db26e60af1634ab385ed89224d1",
+        preferred=True,
+    )
     version(
         "20200227",
         sha256="1aabcf38bc72285797c710b648e906151a912c36b634a9c88ac383aacf85516e",
@@ -204,8 +309,15 @@ class Lammps(CMakePackage, CudaPackage):
             update = ""
         else:
             update = "_update{0}".format(split_ver[1])
-        return "https://github.com/lammps/lammps/archive/patch_{0}{1}.tar.gz".format(
-            vdate.strftime("%d%b%Y").lstrip("0"), update
+
+        is_stable = (
+            version in self.versions
+            and "preferred" in self.versions[version]
+            and self.versions[version]["preferred"]
+        )
+
+        return "https://github.com/lammps/lammps/archive/{0}_{1}{2}.tar.gz".format(
+            "stable" if is_stable else "patch", vdate.strftime("%d%b%Y").lstrip("0"), update
         )
 
     # List of supported optional packages
