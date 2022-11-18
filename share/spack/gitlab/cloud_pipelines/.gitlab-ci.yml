@@ -539,9 +539,11 @@ radiuss-aws-aarch64-protected-build:
 
 data-vis-sdk-pr-generate:
   extends: [ ".data-vis-sdk", ".pr-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 data-vis-sdk-protected-generate:
   extends: [ ".data-vis-sdk", ".protected-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 data-vis-sdk-pr-build:
   extends: [ ".data-vis-sdk", ".pr-build" ]
