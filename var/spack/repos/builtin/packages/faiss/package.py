@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Faiss(AutotoolsPackage, CudaPackage):
+class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     """Faiss is a library for efficient similarity search and clustering of
      dense vectors.
 
@@ -22,26 +22,33 @@ class Faiss(AutotoolsPackage, CudaPackage):
     homepage = "https://github.com/facebookresearch/faiss"
     url = "https://github.com/facebookresearch/faiss/archive/v1.6.3.tar.gz"
 
-    maintainers = ["bhatiaharsh"]
+    maintainers = ["bhatiaharsh", "rblake-llnl"]
 
+    build_system(
+        conditional("cmake", when="@1.7:"), conditional("autotools", when="@:1.6"), default="cmake"
+    )
+
+    version("1.7.2", sha256="d49b4afd6a7a5b64f260a236ee9b2efb760edb08c33d5ea5610c2f078a5995ec")
     version("1.6.3", sha256="e1a41c159f0b896975fbb133e0240a233af5c9286c09a28fde6aefff5336e542")
     version("1.5.3", sha256="b24d347b0285d01c2ed663ccc7596cd0ea95071f3dd5ebb573ccfc28f15f043b")
 
     variant("python", default=False, description="Build Python bindings")
+    variant("shared", default=False, description="Build shared library")
     variant("tests", default=False, description="Build Tests")
 
     conflicts("+tests", when="~python", msg="+tests must be accompanied by +python")
 
+    depends_on("cmake@3.17:", when="build_system=cmake", type="build")
+
+    extends("python", when="+python")
     depends_on("python@3.7:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
+    depends_on("py-setuptools", when="+python", type="build")
     depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-scipy", when="+tests", type=("build", "run"))
+    depends_on("swig@4", when="+python", type="build")
 
     depends_on("blas")
-    depends_on("python", type="build")
-    depends_on("py-setuptools", when="+python", type="build")
-    depends_on("swig", when="+python", type="build")
 
     # patch for v1.5.3
     # faiss assumes that the "source directory" will always
@@ -56,12 +63,65 @@ class Faiss(AutotoolsPackage, CudaPackage):
     # also, some include paths in gpu/tests/Makefile are missing
     patch("fixes-in-v1.6.3.patch", when="@1.6.3")
 
+    # patch for v1.7.2
+    # a shared object is missing in the python/setup.py
+    #   https://github.com/facebookresearch/faiss/issues/2063
+    #   https://github.com/facebookresearch/faiss/pull/2062
+    # a header is missing in a test file
+    #   https://github.com/facebookresearch/faiss/issues/2300
+    patch("fixes-in-v1.7.2.patch", when="@1.7.2")
+
+    def setup_run_environment(self, env):
+        if "+python" in self.spec:
+            env.prepend_path("PYTHONPATH", python_platlib)
+
+
+class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
+    def __init__(self, pkg, build_dirname):
+        spack.build_systems.python.PythonPipBuilder.__init__(self, pkg)
+        self.build_dirname = build_dirname
+
+    @property
+    def build_directory(self):
+        return os.path.join(self.pkg.stage.path, self.build_dirname, "faiss", "python")
+        # return self.pkg.stage.source_path
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("FAISS_ENABLE_PYTHON", "python"),
+            self.define_from_variant("FAISS_ENABLE_GPU", "cuda"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
+            self.define("FAISS_OPT_LEVEL", "generic"),
+        ]
+        if "+python" in spec:
+            pyexe = spec["python"].command.path
+            args.append(self.define("Python_EXECUTABLE", pyexe))
+
+        if "+cuda" in spec:
+            key = "CMAKE_CUDA_ARCHITECTURES"
+            args.append(self.define_from_variant(key, "cuda_arch"))
+            # args.append(self.define_from_variant(
+            # 'CMAKE_CUDA_STANDARD', 'cudastd'))
+        return args
+
+    def install(self, pkg, spec, prefix):
+        spack.build_systems.cmake.CMakeBuilder.install(self, pkg, spec, prefix)
+        if "+python" in spec:
+            customPip = PythonPipBuilder(pkg, self.build_dirname)
+            customPip.install(pkg, spec, prefix)
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         args.extend(self.with_or_without("cuda", activation_value="prefix"))
         return args
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
 
         make()
 
@@ -81,7 +141,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
                 make("build")  # target added by the patch
                 make("demo_ivfpq_indexing_gpu")
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
 
         make("install")
 
@@ -123,7 +183,3 @@ class Faiss(AutotoolsPackage, CudaPackage):
         # spack injects its own optimization flags
         makefile = FileFilter("makefile.inc")
         makefile.filter("CPUFLAGS     = -mavx2 -mf16c", "#CPUFLAGS     = -mavx2 -mf16c")
-
-    def setup_run_environment(self, env):
-        if "+python" in self.spec:
-            env.prepend_path("PYTHONPATH", python_platlib)
