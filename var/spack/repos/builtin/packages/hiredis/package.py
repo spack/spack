@@ -30,21 +30,16 @@ class Hiredis(CMakePackage, MakefilePackage):
     version("0.13.2", sha256="b0cf73ebe039fe25ecaaa881acdda8bdc393ed997e049b04fc20865835953694")
 
 
+def darwin_fix(builder):
+    fix_darwin_install_name(builder.pkg.prefix.lib)
+
+
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def install(self, pkg, spec, prefix):
         make("PREFIX={0}".format(prefix), "install")
 
-    @run_after("install")
-    def darwin_fix(self):
-        if self.spec.satisfies("platform=darwin"):
-            fix_darwin_install_name(self.pkg.prefix.lib)
+    run_after("install", when="platform=darwin")(darwin_fix)
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    def cmake_args(self):
-        return []
-
-    @run_after("install")
-    def darwin_fix(self):
-        if self.spec.satisfies("platform=darwin"):
-            fix_darwin_install_name(self.pkg.prefix.lib)
+    run_after("install", when="platform=darwin")(darwin_fix)
