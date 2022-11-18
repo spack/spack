@@ -46,7 +46,7 @@ spack:
     - py-breathe
     - py-cgal-pybind
     - py-clustershell
-   #- py-cmake-format
+    - py-cmake-format
     - py-coverage
     - py-dask-mpi
     - py-docopt
