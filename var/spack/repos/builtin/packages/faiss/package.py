@@ -47,6 +47,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     depends_on("py-setuptools", when="+python", type="build")
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("swig@4", when="+python", type="build")
+    depends_on("py-scipy", when="+python+tests", type=("build", "run"))
 
     depends_on("blas")
 
@@ -76,16 +77,6 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
             env.prepend_path("PYTHONPATH", python_platlib)
 
 
-class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
-    def __init__(self, pkg, build_dirname):
-        spack.build_systems.python.PythonPipBuilder.__init__(self, pkg)
-        self.build_dirname = build_dirname
-
-    @property
-    def build_directory(self):
-        return os.path.join(self.pkg.stage.path, self.build_dirname, "faiss", "python")
-
-
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
@@ -110,7 +101,17 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def install(self, pkg, spec, prefix):
         super().install(pkg, spec, prefix)
         if "+python" in spec:
-            customPip = PythonPipBuilder(pkg, self.build_dirname)
+
+            class CustomPythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
+                def __init__(self, pkg, build_dirname):
+                    spack.build_systems.python.PythonPipBuilder.__init__(self, pkg)
+                    self.build_dirname = build_dirname
+
+                @property
+                def build_directory(self):
+                    return os.path.join(self.pkg.stage.path, self.build_dirname, "faiss", "python")
+
+            customPip = CustomPythonPipBuilder(pkg, self.build_dirname)
             customPip.install(pkg, spec, prefix)
 
 
