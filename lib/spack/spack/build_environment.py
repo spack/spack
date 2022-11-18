@@ -564,10 +564,6 @@ def _set_variables_for_single_module(pkg, module):
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
 
-    m.meson = Executable("meson")
-    m.cmake = Executable("cmake")
-    m.ctest = MakeExecutable("ctest", jobs)
-
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
         m.msbuild = Executable("msbuild")
