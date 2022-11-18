@@ -562,6 +562,14 @@ def _replace_prefix_bin(filename, prefix_to_prefix):
         apply_binary_replacements(f, prefix_to_prefix)
 
 
+def macos_codesign(macho_binary):
+    codesign = executable.which("codesign")
+    if codesign:
+        codesign("--force", "--verbose", "--sign", "-", macho_binary)
+    else:
+        tty.warn("codesign tool for signing relocated MacOS binaries not found")
+
+
 def relocate_macho_binaries(
     path_names,
     old_layout_root,
@@ -616,6 +624,7 @@ def relocate_macho_binaries(
             # replace the new paths with relativized paths in the new prefix
             if is_macos:
                 modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
+                macos_codesign(path_name)
             else:
                 modify_object_macholib(path_name, paths_to_paths)
         else:
@@ -628,6 +637,7 @@ def relocate_macho_binaries(
             # replace the old paths with new paths
             if is_macos:
                 modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
+                macos_codesign(path_name)
             else:
                 modify_object_macholib(path_name, paths_to_paths)
 
@@ -755,6 +765,7 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names, old_layout_roo
             orig_path, old_layout_root, rpaths, deps, idpath
         )
         modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths)
+        # macos_codesign(path_name) ? - in make_macho_binaries_relative ?
 
 
 def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
