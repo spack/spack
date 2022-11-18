@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.makefile
 from spack.package import *
 
 
@@ -14,9 +13,6 @@ class FailTestAudit(MakefilePackage):
 
     version("1.0", "0123456789abcdef0123456789abcdef")
     version("2.0", "abcdef0123456789abcdef0123456789")
-
-
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
     build_time_test_callbacks = ["test"]
 
