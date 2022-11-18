@@ -5,7 +5,6 @@
 from __future__ import print_function
 
 import os.path
-import platform
 import shutil
 import tempfile
 
@@ -386,7 +385,10 @@ def _mirror(args):
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible
     # TODO: dependencies of a spec
-    root_specs = spack.bootstrap.all_root_specs(development=args.dev) + ["gnuconfig"]
+    root_specs = spack.bootstrap.all_binaries_root_specs() + ["gnuconfig"]
+    if args.dev:
+        root_specs += spack.bootstrap.all_environment_root_specs()
+
     for spec_str in root_specs:
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'
         llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
@@ -436,10 +438,8 @@ def _mirror(args):
 
 def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
-        if platform.system().lower() == "linux":
-            spack.bootstrap.ensure_patchelf_in_path_or_raise()
-        spack.bootstrap.ensure_clingo_importable_or_raise()
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        spack.bootstrap.ensure_core_dependencies()
+        spack.bootstrap.ensure_environment_dependencies()
 
 
 def bootstrap(parser, args):

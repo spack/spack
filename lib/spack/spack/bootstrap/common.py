@@ -194,3 +194,25 @@ def _executables_in_store(executables, query_spec, query_info=None):
                     query_info["spec"] = concrete_spec
                 return True
     return False
+
+
+def _root_spec(spec_str):
+    """Add a proper compiler and target to a spec used during bootstrapping.
+
+    Args:
+        spec_str (str): spec to be bootstrapped. Must be without compiler and target.
+    """
+    # Add a proper compiler hint to the root spec. We use GCC for
+    # everything but MacOS and Windows.
+    if str(spack.platforms.host()) == "darwin":
+        spec_str += " %apple-clang"
+    elif str(spack.platforms.host()) == "windows":
+        spec_str += " %msvc"
+    else:
+        spec_str += " %gcc"
+
+    target = archspec.cpu.host().family
+    spec_str += f" target={target}"
+
+    tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")
+    return spec_str

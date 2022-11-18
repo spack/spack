@@ -542,7 +542,7 @@ def bootstrap_clingo():
 
     if not clingo:
         with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_clingo_importable_or_raise()
+            spack.bootstrap.ensure_core_dependencies()
             import clingo
 
     from clingo.ast import ASTType

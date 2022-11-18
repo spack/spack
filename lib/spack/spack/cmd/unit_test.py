@@ -214,7 +214,7 @@ def unit_test(parser, args, unknown_args):
     # clingo is wholly unsupported from bootstrap
     if not is_windows:
         with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_clingo_importable_or_raise()
+            spack.bootstrap.ensure_core_dependencies()
 
     if pytest is None:
         vendored_pytest_dir = os.path.join(spack.paths.external_path, "pytest-fallback")

@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
-
 import argparse
 import os
 import re
@@ -25,7 +22,7 @@ level = "long"
 
 
 def grouper(iterable, n, fillvalue=None):
-    "Collect data into fixed-length chunks or blocks"
+    """Collect data into fixed-length chunks or blocks"""
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
     for group in zip_longest(*args, fillvalue=fillvalue):
@@ -41,15 +38,12 @@ exclude_directories = [
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_order = [
-    ("isort", spack.bootstrap.ensure_isort_in_path_or_raise),
-    ("mypy", spack.bootstrap.ensure_mypy_in_path_or_raise),
-    ("black", spack.bootstrap.ensure_black_in_path_or_raise),
-    ("flake8", spack.bootstrap.ensure_flake8_in_path_or_raise),
+tool_names = [
+    "isort",
+    "mypy",
+    "black",
+    "flake8",
 ]
-
-#: list of just the tool names -- for argparse
-tool_names = [k for k, _ in tool_order]
 
 #: tools we run in spack style
 tools = {}
@@ -222,10 +216,8 @@ def rewrite_and_print_output(
         print(line)
 
 
-def print_style_header(file_list, args, selected):
-    tools = [tool for tool in tool_names if tool in selected]
-    tty.msg("Running style checks on spack", "selected: " + ", ".join(tools))
-
+def print_style_header(file_list, args, tools_to_run):
+    tty.msg("Running style checks on spack", "selected: " + ", ".join(tools_to_run))
     # translate modified paths to cwd_relative if needed
     paths = [filename.strip() for filename in file_list]
     if not args.root_relative:
@@ -384,6 +376,10 @@ def validate_toolset(arg_value):
     return tools
 
 
+def missing_tools(tools_to_run):
+    return [t for t in tools_to_run if which(t) is None]
+
+
 def style(parser, args):
     # save initial working directory for relativizing paths later
     args.initial_working_dir = os.getcwd()
@@ -418,25 +414,21 @@ def style(parser, args):
         tty.msg("Nothing to run.")
         return
 
+    tools_to_run = [t for t in tool_names if t in selected]
+    if missing_tools(tools_to_run):
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            spack.bootstrap.ensure_environment_dependencies()
+
     return_code = 0
     with working_dir(args.root):
         if not file_list:
             file_list = changed_files(args.base, args.untracked, args.all)
 
-        print_style_header(file_list, args, selected)
-
-        tools_to_run = [(tool, fn) for tool, fn in tool_order if tool in selected]
-        commands = {}
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            # bootstrap everything first to get commands
-            for tool_name, bootstrap_fn in tools_to_run:
-                commands[tool_name] = bootstrap_fn()
-
-            # run tools once bootstrapping is done
-            for tool_name, bootstrap_fn in tools_to_run:
-                run_function, required = tools[tool_name]
-                print_tool_header(tool_name)
-                return_code |= run_function(commands[tool_name], file_list, args)
+        print_style_header(file_list, args, tools_to_run)
+        for tool_name in tools_to_run:
+            run_function, required = tools[tool_name]
+            print_tool_header(tool_name)
+            return_code |= run_function(which(tool_name), file_list, args)
 
     if return_code == 0:
         tty.msg(color.colorize("@*{spack style checks were clean}"))

@@ -7,16 +7,15 @@ import platform
 
 import spack.util.executable
 
-from .binaries import (
+from .common import _executables_in_store, _python_import, _try_import_from_store
+from .config import ensure_bootstrap_configuration
+from .core import clingo_root_spec, patchelf_root_spec
+from .environment import (
     black_root_spec,
-    clingo_root_spec,
     flake8_root_spec,
     isort_root_spec,
     mypy_root_spec,
-    patchelf_root_spec,
 )
-from .common import _executables_in_store, _python_import, _try_import_from_store
-from .config import ensure_bootstrap_configuration
 
 
 def _required_system_executable(exes, msg):

@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Bootstrap Spack dependencies from binaries.
+"""Bootstrap Spack core dependencies from binaries.
 
 This module contains logic to bootstrap software required by Spack from binaries served in the
 bootstrapping mirrors. The logic is quite different from an installation done from a Spack user,
@@ -27,12 +27,9 @@ import functools
 import json
 import os
 import os.path
-import re
 import sys
 import uuid
 from typing import List
-
-import archspec.cpu
 
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
@@ -56,12 +53,18 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
-from .common import _executables_in_store, _python_import, _try_import_from_store
+from .common import (
+    _executables_in_store,
+    _python_import,
+    _root_spec,
+    _try_import_from_store,
+)
 from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
 
+#: Whether the current platform is Windows
 IS_WINDOWS = sys.platform == "win32"
 
 #: Map a bootstrapper type to the corresponding class
@@ -237,7 +240,7 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
         if test_fn(query_spec=abstract_spec_str, query_info=info):
             return True
 
-        tty.info(f"Bootstrapping {module} from pre-built binaries")
+        tty.debug(f"Bootstrapping {module} from pre-built binaries")
         abstract_spec, bincache_platform = self._spec_and_platform(
             abstract_spec_str + " ^" + spec_for_current_python()
         )
@@ -251,7 +254,7 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
             return True
 
         abstract_spec, bincache_platform = self._spec_and_platform(abstract_spec_str)
-        tty.info(f"Bootstrapping {abstract_spec.name} from pre-built binaries")
+        tty.debug(f"Bootstrapping {abstract_spec.name} from pre-built binaries")
         data = self._read_metadata(abstract_spec.name)
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
 
@@ -271,7 +274,7 @@ class _SourceBootstrapper(_BootstrapperBase):
             self.last_search = info
             return True
 
-        tty.info(f"Bootstrapping {module} from sources")
+        tty.debug(f"Bootstrapping {module} from sources")
 
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
@@ -308,7 +311,7 @@ class _SourceBootstrapper(_BootstrapperBase):
             self.last_search = info
             return True
 
-        tty.info(f"Bootstrapping {abstract_spec_str} from sources")
+        tty.debug(f"Bootstrapping {abstract_spec_str} from sources")
 
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
@@ -477,28 +480,6 @@ def _add_externals_if_missing():
     spack.detection.update_configuration(detected_packages, scope="bootstrap")
 
 
-def _root_spec(spec_str):
-    """Add a proper compiler and target to a spec used during bootstrapping.
-
-    Args:
-        spec_str (str): spec to be bootstrapped. Must be without compiler and target.
-    """
-    # Add a proper compiler hint to the root spec. We use GCC for
-    # everything but MacOS and Windows.
-    if str(spack.platforms.host()) == "darwin":
-        spec_str += " %apple-clang"
-    elif str(spack.platforms.host()) == "windows":
-        spec_str += " %msvc"
-    else:
-        spec_str += " %gcc"
-
-    target = archspec.cpu.host().family
-    spec_str += f" target={target}"
-
-    tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")
-    return spec_str
-
-
 def clingo_root_spec():
     """Return the root spec used to bootstrap clingo"""
     return _root_spec("clingo-bootstrap@spack+python")
@@ -565,83 +546,17 @@ def ensure_patchelf_in_path_or_raise():
         )
 
 
-###
-# Development dependencies
-###
+def ensure_core_dependencies():
+    """Ensure the presence of all the core dependencies."""
+    if sys.platform.lower() == "linux":
+        ensure_patchelf_in_path_or_raise()
+    ensure_clingo_importable_or_raise()
+    ensure_gpg_in_path_or_raise()
 
 
-def isort_root_spec():
-    """Return the root spec used to bootstrap isort"""
-    return _root_spec("py-isort@4.3.5:")
-
-
-def ensure_isort_in_path_or_raise():
-    """Ensure that isort is in the PATH or raise."""
-    executable, root_spec = "isort", isort_root_spec()
-    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
-
-
-def mypy_root_spec():
-    """Return the root spec used to bootstrap mypy"""
-    return _root_spec("py-mypy@0.900:")
-
-
-def ensure_mypy_in_path_or_raise():
-    """Ensure that mypy is in the PATH or raise."""
-    executable, root_spec = "mypy", mypy_root_spec()
-    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
-
-
-def black_root_spec():
-    """Return the root spec used to bootstrap black"""
-    return _root_spec("py-black")
-
-
-def ensure_black_in_path_or_raise():
-    """Ensure that black is in the PATH or raise."""
-    root_spec = black_root_spec()
-
-    def check_black(black_cmd):
-        """Ensure sutable black version."""
-        try:
-            output = black_cmd("--version", output=str)
-        except Exception as exc:  # pylint: disable=broad-except
-            tty.debug(f"Error getting version of {black_cmd}: {exc}")
-            return False
-
-        match = re.match("black, ([^ ]+)", output)
-        if not match:
-            return False
-
-        black_version = spack.version.Version(match.group(1))
-        return black_version.satisfies(spack.spec.Spec(root_spec).versions)
-
-    return ensure_executables_in_path_or_raise(
-        ["black"], abstract_spec=root_spec, cmd_check=check_black
-    )
-
-
-def flake8_root_spec():
-    """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-flake8")
-
-
-def ensure_flake8_in_path_or_raise():
-    """Ensure that flake8 is in the PATH or raise."""
-    executable, root_spec = "flake8", flake8_root_spec()
-    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
-
-
-def all_root_specs(development=False):
-    """Return a list of all the root specs that may be used to bootstrap Spack.
-
-    Args:
-        development (bool): if True include dev dependencies
-    """
-    specs = [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
-    if development:
-        specs += [isort_root_spec(), mypy_root_spec(), black_root_spec(), flake8_root_spec()]
-    return specs
+def all_binaries_root_specs():
+    """Return a list of all the binaries root specs that may be used to bootstrap Spack"""
+    return [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
 
 
 def bootstrapping_sources(scope=None):
