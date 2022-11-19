@@ -16,6 +16,7 @@ class Mercury(CMakePackage):
     maintainers = ["soumagne"]
     tags = ["e4s"]
     version("master", branch="master", submodules=True)
+    version("2.2.0", sha256="e66490cf63907c3959bbb2932b5aaf51d96a481b17f0935f409f3a862eff97f6")
     version("2.1.0", sha256="9a58437161e9273b1b1c484d2f1a477a89eea9afe84575415025d47656f3761b")
     version("2.0.1", sha256="335946d9620ac669643ffd9861a5fb3ee486834bab674b7779eaac9d6662e3fa")
     version("2.0.0", sha256="9e80923712e25df56014309df70660e828dbeabbe5fcc82ee024bcc86e7eb6b7")
@@ -26,6 +27,8 @@ class Mercury(CMakePackage):
     variant("bmi", default=False, description="Use BMI plugin")
     variant("mpi", default=False, description="Use MPI plugin")
     variant("ofi", default=True, when="@1.0.0:", description="Use OFI libfabric plugin")
+    variant("psm", default=False, when="@2.2.0:", description="Use PSM plugin")
+    variant("psm2", default=False, when="@2.2.0:", description="Use PSM2 plugin")
     # NOTE: the sm plugin does not require any package dependency.
     variant("sm", default=True, description="Use shared-memory plugin")
     variant("ucx", default=False, when="@2.1.0:", description="Use UCX plugin")
@@ -40,10 +43,13 @@ class Mercury(CMakePackage):
         "udreg",
         default=False,
         when="@1.0.0:+ofi",
-        description="Enable udreg on supported Cray platforms",
+        description="Enable udreg on supported Cray Aries platforms",
     )
     variant("debug", default=False, description="Enable Mercury to print debug output")
     variant("checksum", default=True, description="Checksum verify all request/response messages")
+    variant(
+        "hwloc", default=False, when="@2.2.0:", description="Use hwloc to retrieve NIC information"
+    )
 
     depends_on("cmake@2.8.12.2:", type="build")
     depends_on("bmi", when="+bmi")
@@ -94,6 +100,16 @@ class Mercury(CMakePackage):
             define_from_variant("NA_USE_MPI", "mpi"),
             define_from_variant("NA_USE_SM", "sm"),
         ]
+
+        if "@2.2.0:" in spec:
+            cmake_args.extend(
+                [
+                    define_from_variant("NA_USE_PSM", "psm"),
+                    define_from_variant("NA_USE_PSM2", "psm2"),
+                ]
+            )
+            if "+ofi" in spec:
+                cmake_args.append(define_from_variant("NA_OFI_USE_HWLOC", "hwloc"))
 
         if "@2.1.0:" in spec:
             cmake_args.append(define_from_variant("NA_USE_UCX", "ucx"))
