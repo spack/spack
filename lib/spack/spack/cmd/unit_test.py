@@ -215,11 +215,9 @@ def unit_test(parser, args, unknown_args):
     if not is_windows:
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_core_dependencies()
-
-    if pytest is None:
-        vendored_pytest_dir = os.path.join(spack.paths.external_path, "pytest-fallback")
-        sys.path.append(vendored_pytest_dir)
-        import pytest
+            if pytest is None:
+                spack.bootstrap.ensure_environment_dependencies()
+                import pytest
 
     if args.pytest_help:
         # make the pytest.main help output more accurate

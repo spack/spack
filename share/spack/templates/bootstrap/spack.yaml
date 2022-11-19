@@ -24,4 +24,5 @@ spack:
           prefix: "{{ python_prefix }}"
 
   concretizer:
+    reuse: false
     unify: true
