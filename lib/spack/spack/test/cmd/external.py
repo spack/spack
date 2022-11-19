@@ -109,7 +109,7 @@ def test_get_executables(working_env, mock_executable):
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
 
     os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
-    path_to_exe = spack.detection.executables_in_path(None)
+    path_to_exe = spack.detection.executables_in_path([cmake_path1])
     cmake_exe = define_plat_exe("cmake")
     assert path_to_exe[cmake_path1] == cmake_exe
 
