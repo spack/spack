@@ -63,7 +63,7 @@ class PyOpenmc(PythonPackage):
     depends_on("py-lxml", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
-    depends_on("py-numpy@1.9:", type=("build", "run"))
+    depends_on("py-numpy@1.9:1.21", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-scipy", type=("build", "run"))
