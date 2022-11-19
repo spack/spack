@@ -14,6 +14,7 @@ import llnl.util.tty.color
 
 import spack
 import spack.bootstrap
+import spack.bootstrap.core
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
@@ -193,7 +194,7 @@ def _root(args):
 
 
 def _list(args):
-    sources = spack.bootstrap.bootstrapping_sources(scope=args.scope)
+    sources = spack.bootstrap.core.bootstrapping_sources(scope=args.scope)
     if not sources:
         llnl.util.tty.msg("No method available for bootstrapping Spack's dependencies")
         return
@@ -322,7 +323,7 @@ def _status(args):
 
 
 def _add(args):
-    initial_sources = spack.bootstrap.bootstrapping_sources()
+    initial_sources = spack.bootstrap.core.bootstrapping_sources()
     names = [s["name"] for s in initial_sources]
 
     # If the name is already used error out
@@ -352,7 +353,7 @@ def _add(args):
 
 
 def _remove(args):
-    initial_sources = spack.bootstrap.bootstrapping_sources()
+    initial_sources = spack.bootstrap.core.bootstrapping_sources()
     names = [s["name"] for s in initial_sources]
     if args.name not in names:
         msg = (
