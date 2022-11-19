@@ -225,6 +225,8 @@ class Boost(Package):
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
     depends_on("zlib", when="+iostreams")
+    depends_on("zstd", when="+iostreams")
+    depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
@@ -513,9 +515,13 @@ class Boost(Package):
                     "-s",
                     "ZLIB_LIBPATH=%s" % spec["zlib"].prefix.lib,
                     "-s",
-                    "NO_LZMA=1",
+                    "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
                     "-s",
-                    "NO_ZSTD=1",
+                    "LZMA_LIBPATH=%s" % spec["xz"].prefix.lib,
+                    "-s",
+                    "ZSTD_INCLUDE=%s" % spec["zstd"].prefix.include,
+                    "-s",
+                    "ZSTD_LIBPATH=%s" % spec["zstd"].prefix.lib,
                 ]
             )
 
