@@ -7,14 +7,16 @@ import platform
 
 import spack.util.executable
 
-from .common import _executables_in_store, _python_import, _try_import_from_store
+from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
 from .core import clingo_root_spec, patchelf_root_spec
 from .environment import (
+    BootstrapEnvironment,
     black_root_spec,
     flake8_root_spec,
     isort_root_spec,
     mypy_root_spec,
+    pytest_root_spec,
 )
 
 
@@ -113,6 +115,11 @@ def _optional_requirements():
 
 
 def _development_requirements():
+    # Ensure we trigger environment modifications if we have an environment
+    if BootstrapEnvironment.spack_yaml().exists():
+        with BootstrapEnvironment() as env:
+            env.update_syspath_and_environ()
+
     return [
         _required_executable(
             "isort", isort_root_spec(), _missing("isort", "required for style checks", False)
@@ -125,6 +132,9 @@ def _development_requirements():
         ),
         _required_executable(
             "black", black_root_spec(), _missing("black", "required for code formatting", False)
+        ),
+        _required_python_module(
+            "pytest", pytest_root_spec(), _missing("pytest", "required to run unit-test", False)
         ),
     ]
 

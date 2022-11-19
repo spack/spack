@@ -10,7 +10,7 @@ from .core import (
     ensure_core_dependencies,
     ensure_patchelf_in_path_or_raise,
 )
-from .environment import ensure_environment_dependencies
+from .environment import all_environment_root_specs, ensure_environment_dependencies
 from .status import status_message
 
 __all__ = [
@@ -20,5 +20,6 @@ __all__ = [
     "ensure_patchelf_in_path_or_raise",
     "all_binaries_root_specs",
     "ensure_environment_dependencies",
+    "all_environment_root_specs",
     "status_message",
 ]

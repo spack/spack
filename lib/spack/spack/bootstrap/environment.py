@@ -17,7 +17,7 @@ import spack.environment
 import spack.tengine
 import spack.util.executable
 
-from .common import _root_spec
+from ._common import _root_spec
 from .config import environment_path, spec_for_current_python, store_path
 
 
@@ -64,9 +64,14 @@ class BootstrapEnvironment(spack.environment.Environment):
         The update is done using a depfile on Linux and macOS, and using the ``install_all``
         method of environments on Windows.
         """
-        specs = self.concretize()
+        with tty.SuppressOutput(msg_enabled=False, warn_enabled=False):
+            specs = self.concretize()
         if specs:
-            tty.msg("Bootstrapping Spack dependencies")
+            colorized_specs = [
+                spack.spec.Spec(x).cformat("{name}{@version}")
+                for x in all_environment_root_specs()
+            ]
+            tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             if sys.platform == "win32":
                 self.install_all()
@@ -104,13 +109,16 @@ class BootstrapEnvironment(spack.environment.Environment):
         make("-C", str(self.environment_root()), "-j", output=os.devnull, error=os.devnull)
 
     def _write_spack_yaml_file(self):
+        tty.msg(
+            "[BOOTSTRAPPING] Spack has missing dependencies, creating a bootstrapping environment"
+        )
         env = spack.tengine.make_environment()
         template = env.get_template("bootstrap/spack.yaml")
         context = {
             "python_spec": spec_for_current_python(),
             "python_prefix": sys.exec_prefix,
             "architecture": archspec.cpu.host().family,
-            "environment_path": environment_path(),
+            "environment_path": self.environment_root(),
             "environment_specs": all_environment_root_specs() + [spec_for_current_python()],
             "store_path": store_path(),
         }
@@ -138,7 +146,7 @@ def flake8_root_spec():
     return _root_spec("py-flake8")
 
 
-def pytest_spec():
+def pytest_root_spec():
     return _root_spec("py-pytest")
 
 
@@ -153,7 +161,7 @@ def all_environment_root_specs():
         mypy_root_spec(),
         black_root_spec(),
         flake8_root_spec(),
-        pytest_spec(),
+        pytest_root_spec(),
     ]
 
 

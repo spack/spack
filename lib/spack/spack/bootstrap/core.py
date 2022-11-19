@@ -53,7 +53,7 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
-from .common import (
+from ._common import (
     _executables_in_store,
     _python_import,
     _root_spec,
@@ -71,7 +71,7 @@ IS_WINDOWS = sys.platform == "win32"
 _bootstrap_methods = {}
 
 
-def _bootstrapper(bootstrapper_type):
+def bootstrapper(bootstrapper_type):
     """Decorator to register classes implementing bootstrapping
     methods.
 
@@ -86,8 +86,8 @@ def _bootstrapper(bootstrapper_type):
     return _register
 
 
-class _BootstrapperBase:
-    """Base class to derive types that can bootstrap software for Spack"""
+class Bootstrapper:
+    """Interface for "core" software bootstrappers"""
 
     config_scope_name = ""
 
@@ -147,8 +147,8 @@ class _BootstrapperBase:
         return False
 
 
-@_bootstrapper(bootstrapper_type="buildcache")
-class _BuildcacheBootstrapper(_BootstrapperBase):
+@bootstrapper(bootstrapper_type="buildcache")
+class BuildcacheBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from a buildcache."""
 
     def __init__(self, conf):
@@ -259,8 +259,8 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
 
 
-@_bootstrapper(bootstrapper_type="install")
-class _SourceBootstrapper(_BootstrapperBase):
+@bootstrapper(bootstrapper_type="install")
+class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
 
     def __init__(self, conf):
@@ -335,10 +335,8 @@ class _SourceBootstrapper(_BootstrapperBase):
         return False
 
 
-def _make_bootstrapper(conf):
-    """Return a bootstrap object built according to the
-    configuration argument
-    """
+def create_bootstrapper(conf):
+    """Return a bootstrap object built according to the configuration argument"""
     btype = conf["type"]
     return _bootstrap_methods[btype](conf)
 
@@ -379,8 +377,7 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     for current_config in bootstrapping_sources():
         with exception_handler.forward(current_config["name"]):
             source_is_enabled_or_raise(current_config)
-
-            bootstrapper = _make_bootstrapper(current_config)
+            bootstrapper = create_bootstrapper(current_config)
             if bootstrapper.try_import(module, abstract_spec):
                 return
 
@@ -431,8 +428,7 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=No
     for current_config in bootstrapping_sources():
         with exception_handler.forward(current_config["name"]):
             source_is_enabled_or_raise(current_config)
-
-            bootstrapper = _make_bootstrapper(current_config)
+            bootstrapper = create_bootstrapper(current_config)
             if bootstrapper.try_search_path(executables, abstract_spec):
                 # Additional environment variables needed
                 concrete_spec, cmd = (

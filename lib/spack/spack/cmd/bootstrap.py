@@ -14,6 +14,7 @@ import llnl.util.tty.color
 
 import spack
 import spack.bootstrap
+import spack.bootstrap.config
 import spack.bootstrap.core
 import spack.cmd.common.arguments
 import spack.config
@@ -75,7 +76,8 @@ def _add_scope_option(parser):
 def setup_parser(subparser):
     sp = subparser.add_subparsers(dest="subcommand")
 
-    sp.add_parser("now", help="Spack ready, right now!")
+    now = sp.add_parser("now", help="Spack ready, right now!")
+    now.add_argument("--dev", action="store_true", help="bootstrap dev dependencies too")
 
     status = sp.add_parser("status", help="get the status of Spack")
     status.add_argument(
@@ -298,7 +300,7 @@ def _status(args):
         sections.append("develop")
 
     header = "@*b{{Spack v{0} - {1}}}".format(
-        spack.spack_version, spack.bootstrap.spec_for_current_python()
+        spack.spack_version, spack.bootstrap.config.spec_for_current_python()
     )
     print(llnl.util.tty.color.colorize(header))
     print()
@@ -440,7 +442,8 @@ def _mirror(args):
 def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
         spack.bootstrap.ensure_core_dependencies()
-        spack.bootstrap.ensure_environment_dependencies()
+        if args.dev:
+            spack.bootstrap.ensure_environment_dependencies()
 
 
 def bootstrap(parser, args):
