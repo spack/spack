@@ -34,7 +34,7 @@ class Parallelio(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("mpi-serial", when="~mpi")
     depends_on("netcdf-c +mpi", type="link", when="+mpi")
-    depends_on("netcdf-c -mpi", type="link", when="~mpi")
+    depends_on("netcdf-c ~mpi", type="link", when="~mpi")
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
