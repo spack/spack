@@ -1178,3 +1178,11 @@ def test_install_use_buildcache(
         # Alternative to --cache-only (always) or --no-cache (never)
         for opt in ["auto", "only", "never"]:
             install_use_buildcache(opt)
+
+
+@pytest.mark.regression("34006")
+@pytest.mark.disable_clean_stage_check
+def test_padded_install_runtests_root(install_mockery_mutable_config, mock_fetch):
+    spack.config.set("config:install_tree:padded_length", 255)
+    output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
+    assert output.count("method not implemented") == 1
