@@ -15,7 +15,6 @@ class Wgl(Package):
     homepage = "https://learn.microsoft.com/en-us/windows/win32/opengl/wgl-and-windows-reference"
     has_code = False
 
-
     # hard code the extension as shared lib
     libraries = ["OpenGL32.Lib"]
 
