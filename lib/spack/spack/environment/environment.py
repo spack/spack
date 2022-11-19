@@ -19,7 +19,6 @@ import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 
-import spack.bootstrap
 import spack.compilers
 import spack.concretize
 import spack.config
@@ -1344,6 +1343,8 @@ class Environment(object):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
+        import spack.bootstrap
+
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order

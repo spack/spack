@@ -8,7 +8,6 @@ import functools
 import os
 import re
 
-import spack.bootstrap
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -47,6 +46,8 @@ def init(gnupghome=None, force=False):
             global objects are set already
     """
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
+    import spack.bootstrap
+
     if force:
         clear()
 
