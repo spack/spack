@@ -57,7 +57,6 @@ def executables_in_path(path_hints):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    path_hints = path_hints or spack.util.environment.get_path("PATH")
     if is_windows:
         path_hints.extend(common_windows_package_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)

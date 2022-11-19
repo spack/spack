@@ -235,7 +235,7 @@ class WindowsRegistryView(object):
             the key if stop_condition is triggered, or None if not
         """
         if not self._valid_reg_check():
-            return None
+            raise RegistryError("Cannot query values from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             queue = self.reg.subkeys
             for key in queue:
@@ -258,6 +258,7 @@ class WindowsRegistryView(object):
         Return:
             the desired subkey as a RegistryKey object, or none
         """
+
         if not recursive:
             return self.get_subkey(subkey_name)
 
@@ -284,29 +285,6 @@ class WindowsRegistryView(object):
                 return None
             else:
                 return key.values[val_name]
-
-
-def open_key(root, subkey):
-    """Returns registry key handle derived from root and its subkey
-    root can be either a WindowsRegistry or RegistryKey object
-
-    Note: If called on non Windows platforms, will raise RuntimeError
-    """
-    if not is_windows:
-        raise RuntimeError("Cannot invoke Windows registry methods on non Windows platform")
-    return root.get_subkey(subkey)
-
-
-def get_value(root, value):
-    """
-    Returns registry value of name `value` associated with the key `root`
-    `root` must be an already open RegistryKey object or PyHKEY object
-
-    Note: If called on non Windows platforms, will raise RuntimeError
-    """
-    if not is_windows:
-        raise RuntimeError("Cannot invoke Windows registry methods on non Windows platform")
-    return root.get_value(value)
 
 
 class RegistryError(RuntimeError):
