@@ -9,10 +9,12 @@ import re
 from spack.package import *
 
 
-class Wgl(BundlePackage):
+class Wgl(Package):
     """External WGl and Windows OpenGL emulation representation in Spack"""
 
     homepage = "https://learn.microsoft.com/en-us/windows/win32/opengl/wgl-and-windows-reference"
+    has_code = False
+
 
     # hard code the extension as shared lib
     libraries = ["OpenGL32.Lib"]
@@ -84,3 +86,12 @@ class Wgl(BundlePackage):
     @property
     def libs(self):
         return find_libraries("opengl32", shared=False, root=self.prefix, recursive=True)
+
+    def install(self, spec, prefix):
+        raise RuntimeError(
+            "This package is not installable from Spack\
+            and should be installed on the system prior to Spack use.\
+                If not installed this package should be installed via\
+                    the Visual Studio installer in order to use the \
+                        MSVC compiler on Windows."
+        )
