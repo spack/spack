@@ -12,9 +12,9 @@ class PyAhpy(PythonPackage):
     decision problem."""
 
     homepage = "https://github.com/PhilipGriffith/AHPy"
-    pypi     = "ahpy/ahpy-2.0.tar.gz"
+    pypi = "ahpy/ahpy-2.0.tar.gz"
 
-    version('2.0', sha256='f0af7b81b51466a055778d84f64c98f5cc3e1ba34aaeaedc48ba0b91008e40e3')
+    version("2.0", sha256="f0af7b81b51466a055778d84f64c98f5cc3e1ba34aaeaedc48ba0b91008e40e3")
 
     depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
