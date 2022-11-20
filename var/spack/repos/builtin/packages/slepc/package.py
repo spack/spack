@@ -167,7 +167,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         python("configure", "--prefix=%s" % prefix, *options)
 
-        make("V=1 MAKE_NP=%s" % make_jobs, parallel=False)
+        make("V=1")
         if self.run_tests:
             make("test", parallel=False)
 
