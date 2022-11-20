@@ -105,9 +105,11 @@ protected-publish:
   script:
     - . "./share/spack/setup-env.sh"
     - spack --version
-    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
-    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
-    - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
+    # Relocation of the extracted binary cache breaks code signatures;
+    # codesign could re-sign the binaries, but it's not done yet(see #33990):
+    # - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
+    # - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
+    # - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
