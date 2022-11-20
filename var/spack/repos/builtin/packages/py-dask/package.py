@@ -18,12 +18,36 @@ class PyDask(PythonPackage):
     version("2021.6.2", sha256="8588fcd1a42224b7cfcd2ebc8ad616734abb6b1a4517efd52d89c7dd66eb91f8")
     version("2021.4.1", sha256="195e4eeb154222ea7a1c368119b5f321ee4ec9d78531471fe0145a527f744aa8")
     version("2020.12.0", sha256="43e745afd4b464e6c0113131e430a16dce6ac42460b06e24d799093d098f7ab0")
-    version("2.16.0", sha256="2af5b0dcd48ce679ce0321cf91de623f4fe376262789b951fefa3c334002f350", deprecated=True)
-    version("1.2.2", sha256="5e7876bae2a01b355d1969b73aeafa23310febd8c353163910b73e93dc7e492c", deprecated=True)
-    version("1.1.2", sha256="93b355b9a9c9a3ddbb39fab99d5759aad5cfd346f4520b87788970e80cf97256", deprecated=True)
-    version("1.1.0", sha256="e76088e8931b326c05a92d2658e07b94a6852b42c13a7560505a8b2354871454", deprecated=True)
-    version("0.17.4", sha256="c111475a3d1f8cba41c8094e1fb1831c65015390dcef0308042a11a9606a2f6d", deprecated=True)
-    version("0.8.1", sha256="43deb1934cd033668e5e60b735f45c9c3ee2813f87bd51c243f975e55267fa43", deprecated=True)
+    version(
+        "2.16.0",
+        sha256="2af5b0dcd48ce679ce0321cf91de623f4fe376262789b951fefa3c334002f350",
+        deprecated=True,
+    )
+    version(
+        "1.2.2",
+        sha256="5e7876bae2a01b355d1969b73aeafa23310febd8c353163910b73e93dc7e492c",
+        deprecated=True,
+    )
+    version(
+        "1.1.2",
+        sha256="93b355b9a9c9a3ddbb39fab99d5759aad5cfd346f4520b87788970e80cf97256",
+        deprecated=True,
+    )
+    version(
+        "1.1.0",
+        sha256="e76088e8931b326c05a92d2658e07b94a6852b42c13a7560505a8b2354871454",
+        deprecated=True,
+    )
+    version(
+        "0.17.4",
+        sha256="c111475a3d1f8cba41c8094e1fb1831c65015390dcef0308042a11a9606a2f6d",
+        deprecated=True,
+    )
+    version(
+        "0.8.1",
+        sha256="43deb1934cd033668e5e60b735f45c9c3ee2813f87bd51c243f975e55267fa43",
+        deprecated=True,
+    )
 
     variant("array", default=True, description="Install requirements for dask.array")
     variant("bag", default=True, description="Install requirements for dask.bag")
@@ -167,9 +191,7 @@ class PyDask(PythonPackage):
         type=("build", "run"),
         when="@2020.12.0:2021.6.1 +distributed",
     )
-    depends_on(
-        "py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2 +distributed"
-    )
+    depends_on("py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2 +distributed")
     depends_on("py-distributed@2022.10.2", type=("build", "run"), when="@2022.10.2 +distributed")
 
     # Requirements for dask.diagnostics
