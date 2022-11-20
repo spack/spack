@@ -12,24 +12,24 @@ class PyTomli(PythonPackage):
     Tomli is fully compatible with TOML v1.0.0."""
 
     homepage = "https://github.com/hukkin/tomli"
-    pypi = "https://pypi.org/project/tomli/"
+    pypi = "tomli/tomli-2.0.1.tar.gz"
     git = "https://github.com/hukkin/tomli.git"
 
     maintainers = ["charmoniumq"]
 
     version(
         "2.0.1",
-        sha256="939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
+        sha256="de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f",
         expand=False,
     )
     version(
         "1.2.2",
-        sha256="f04066f68f5554911363063a30b108d2b5a5b1a010aa8b6132af78489fe3aade",
+        sha256="c6ce0015eb38820eaf32b5db832dbc26deb3dd427bd5f6556cf0acac2c214fee",
         expand=False,
     )
     version(
         "1.2.1",
-        sha256="8dd0e9524d6f386271a36b41dbf6c57d8e32fd96fd22b6584679dc569d20899f",
+        sha256="a5b75cb6f3968abb47af1b40c1819dc519ea82bcc065776a866e8d74c5ca9442",
         expand=False,
     )
 
