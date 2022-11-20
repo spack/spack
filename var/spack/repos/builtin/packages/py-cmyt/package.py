@@ -4,31 +4,31 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class PyCmyt(PythonPackage):
     """Matplotlib colormaps from the yt project !"""
+
     homepage = "https://yt-project.org"
     pypi = "cmyt/cmyt-1.0.4.tar.gz"
     git = "https://github.com/yt-project/cmyt.git"
 
-    maintainers = ['qobilidop', 'charmoniumq']
+    maintainers = ["charmoniumq"]
 
     version("main", branch="main")
 
-    version("1.0.4", "c833ed24eadca8c788e59ce27119d26b2e7d4c6af83293e69385412629294b2a")
-    version("1.0.3", "7d071f86cd9e53ab4f2af9f1b6539d632f52c0d453caf93a80376105ac351556")
-    version("1.0.2", "4cf2e5f06031141e03ab9301a66c99be024a1a8c35ed99d1a88a24baf754234e")
-    version("1.0.1", "c20ec811c0cd71ffb3482e0d269bd22e0f088a3187dd615c59edf348cbefded1")
-    version("1.0.0", "64751ecd5916efe817beb92d0b5b34b0dc134c8ee0dab3f212cb089b6b78bbd4")
+    version("1.1.2", sha256="7027514a89331ee5cd672999e34c15feae218c8ed9b127832b6618c6771a869e")
 
-    depends_on('py-setuptools', type='build')
-    depends_on("py-colorspacious@1.1.2:", type=('build', 'run'))
-    depends_on("py-matplotlib@2.1.0:", type=('build', 'run'))
-    depends_on("py-more-itertools@8.4.0:", type=('build', 'run'))
-    depends_on("py-numpy@1.13.3:", type=('build', 'run'))
-    depends_on("py-typing-extensions@3.10.0.2:", when="^python@:3.6", type=('build', 'run'))
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.8:", type=("build", "run"), when="@1.1.0:")
-    # python_version < "3.8"
+    # https://github.com/yt-project/cmyt/blob/v1.1.2/pyproject.toml#L2
+    depends_on("py-setuptools@40.9:", type="build")
+    depends_on("py-wheel", type="build")
+
+    # https://github.com/yt-project/cmyt/blob/v1.1.2/setup.cfg#40
+    depends_on("python@3.8:")
+
+    # https://github.com/yt-project/cmyt/blob/v1.1.2/setup.cfg#35
+    depends_on("py-colorspacious@1.1.2:", type=("build", "run"))
+    depends_on("py-matplotlib@3.2:", type=("build", "run"))
+    depends_on("py-more-itertools@8.4:", type=("build", "run"))
+    depends_on("py-numpy@1.17.4:", type=("build", "run"))

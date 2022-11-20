@@ -15,6 +15,8 @@ class PyTomli(PythonPackage):
     pypi = "https://pypi.org/project/tomli/"
     git = "https://github.com/hukkin/tomli.git"
 
+    maintainers = ["charmoniumq"]
+
     version(
         "2.0.1",
         sha256="939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
@@ -31,5 +33,9 @@ class PyTomli(PythonPackage):
         expand=False,
     )
 
+    # https://github.com/hukkin/tomli/blob/2.0.1/pyproject.toml#L2
+    depends_on("py-flit-core@3.2:3", type="build")
+
+    # https://github.com/hukkin/tomli/blob/2.0.1/pyproject.toml#L13
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", when="@2.0.1:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@2.0.1:")
