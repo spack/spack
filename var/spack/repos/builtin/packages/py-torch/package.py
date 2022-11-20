@@ -66,7 +66,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     variant(
         "mps",
         default=is_darwin and macos_version() >= Version("12.3"),
-        description="Use MPS for macOS build",
+        description="Use MPS for macOS build (requires full Xcode suite)",
         when="@1.12: platform=darwin",
     )
     variant("nccl", default=True, description="Use NCCL", when="+cuda platform=linux")
