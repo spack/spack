@@ -14,6 +14,7 @@ import archspec.cpu
 
 from llnl.util import tty
 
+import spack.build_environment
 import spack.environment
 import spack.tengine
 import spack.util.executable
@@ -129,7 +130,16 @@ class BootstrapEnvironment(spack.environment.Environment):
             str(self.environment_root().joinpath("Makefile")),
         )
         make = spack.util.executable.which("make")
-        make("-C", str(self.environment_root()), "-j", output=os.devnull, error=os.devnull)
+        kwargs = {}
+        if not tty.is_debug():
+            kwargs = {"output": os.devnull, "error": os.devnull}
+        make(
+            "-C",
+            str(self.environment_root()),
+            "-j",
+            str(spack.build_environment.determine_number_of_jobs(parallel=True)),
+            **kwargs,
+        )
 
     def _write_spack_yaml_file(self):
         tty.msg(
