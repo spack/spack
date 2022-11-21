@@ -7,7 +7,7 @@ import os
 import re
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import find, join_path, working_dir
+from llnl.util.filesystem import find, working_dir
 
 import spack.builder
 import spack.package_base
