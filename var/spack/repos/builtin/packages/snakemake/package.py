@@ -67,7 +67,7 @@ class Snakemake(PythonPackage):
         depends_on("python@3.7:")
         depends_on("py-throttler", type=("build", "run"))
         depends_on("py-yte@1:1", type=("build", "run"))
-        depends_on("py-retry", type=("build", "run"))
+        depends_on("py-reretry", type=("build", "run"))
 
     def test(self):
         Executable("snakemake")("--version")
