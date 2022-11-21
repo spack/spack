@@ -404,7 +404,10 @@ class Python(Package):
         depends_on("xz", when="@3.3:+lzma")
         depends_on("expat", when="+pyexpat")
         depends_on("libffi", when="+ctypes")
+        # https://docs.python.org/3/whatsnew/3.11.html#build-changes
+        depends_on("tk@8.5.12:", when="@3.11: +tkinter")
         depends_on("tk", when="+tkinter")
+        depends_on("tcl@8.5.12:", when="@3.11: +tkinter")
         depends_on("tcl", when="+tkinter")
         depends_on("uuid", when="+uuid")
         depends_on("tix", when="+tix")
