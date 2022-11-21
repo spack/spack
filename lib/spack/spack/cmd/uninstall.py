@@ -145,11 +145,7 @@ def installed_dependents(specs, env):
         active environment, and one from specs to dependent installs outside of
         the active environment.
 
-        Any of the input specs may appear in both mappings (if there are
-        dependents both inside and outside the current environment).
-
-        If a dependent spec is used both by the active environment and by
-        an inactive environment, it will only appear in the first mapping.
+        Every installed dependent spec is listed once.
 
         If there is not current active environment, the first mapping will be
         empty.
