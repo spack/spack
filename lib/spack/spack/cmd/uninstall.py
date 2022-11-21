@@ -171,7 +171,12 @@ def installed_dependents(specs, env):
             root=True,
             key=lambda s: s.dag_hash(),
         ):
-            if dpt.dag_hash() in env_hashes:
+            hash = dpt.dag_hash()
+            # Ensure that all the specs we get are installed
+            record = spack.store.db.query_local_by_spec_hash(hash)
+            if record is None or not record.installed:
+                continue
+            if hash in env_hashes:
                 active_dpts.setdefault(spec, set()).add(dpt)
             else:
                 outside_dpts.setdefault(spec, set()).add(dpt)
@@ -254,7 +259,7 @@ def do_uninstall(env, specs, force):
         if force:
             return True
 
-        _, record = spack.store.db.query_by_spec_hash(dag_hash)
+        record = spack.store.db.query_local_by_spec_hash(dag_hash)
         if not record.ref_count:
             return True
 
