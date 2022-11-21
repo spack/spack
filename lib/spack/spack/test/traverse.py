@@ -214,18 +214,18 @@ def test_breadth_first_traversal_reverse(abstract_specs_dt_diamond):
     ]
 
 
-def test_breadth_first_traversal_multiple_roots(abstract_specs_dt_diamond):
+def test_breadth_first_traversal_multiple_input_specs(abstract_specs_dt_diamond):
     # With DFS, the branch dt-diamond -> dt-diamond-left -> dt-diamond-bottom
     # is followed, with BFS, dt-diamond-bottom should be traced through the second
-    # root dt-diamond-right at depth 1 instead.
-    roots = [
+    # input spec dt-diamond-right at depth 1 instead.
+    input_specs = [
         abstract_specs_dt_diamond["dt-diamond"],
         abstract_specs_dt_diamond["dt-diamond-right"],
     ]
-    gen = traverse.traverse_edges(roots, order="breadth", key=id, depth=True, root=False)
+    gen = traverse.traverse_edges(input_specs, order="breadth", key=id, depth=True, root=False)
     assert [(depth, edge.parent.name, edge.spec.name) for (depth, edge) in gen] == [
-        (1, "dt-diamond", "dt-diamond-left"),  # edge from first root "to" depth 1
-        (1, "dt-diamond-right", "dt-diamond-bottom"),  # edge from second root "to" depth 1
+        (1, "dt-diamond", "dt-diamond-left"),  # edge from first input spec "to" depth 1
+        (1, "dt-diamond-right", "dt-diamond-bottom"),  # edge from second input spec "to" depth 1
     ]
 
 
@@ -369,10 +369,10 @@ def test_traverse_nodes_topo(abstract_specs_toposort):
     # order=topo and cover=nodes.
     nodes = abstract_specs_toposort
 
-    def test_topo(roots, direction="children"):
+    def test_topo(input_specs, direction="children"):
         # Ensure the invariant that all parents of specs[i] are in specs[0:i]
         specs = list(
-            traverse.traverse_nodes(roots, order="topo", cover="nodes", direction=direction)
+            traverse.traverse_nodes(input_specs, order="topo", cover="nodes", direction=direction)
         )
         reverse = "parents" if direction == "children" else "children"
         for i in range(len(specs)):
@@ -392,12 +392,12 @@ def test_traverse_edges_topo(abstract_specs_toposort):
     # Test the invariant that for each node in-edges precede out-edges when
     # using traverse_edges with order=topo.
     nodes = abstract_specs_toposort
-    roots = [nodes["E"], nodes["A"]]
+    input_specs = [nodes["E"], nodes["A"]]
 
     # Collect pairs of (parent spec name, child spec name)
     edges = [
         (e.parent.name, e.spec.name)
-        for e in traverse.traverse_edges(roots, order="topo", cover="edges", root=False)
+        for e in traverse.traverse_edges(input_specs, order="topo", cover="edges", root=False)
     ]
 
     # See figure above, we have 7 edges (excluding artifical ones to the root)
