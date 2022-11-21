@@ -29,7 +29,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.2/bootstrap-buildcache.tar.gz"
+BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.4/bootstrap-buildcache.tar.gz"
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
@@ -49,8 +49,9 @@ BINARY_METADATA = {
     },
 }
 
-CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.2/clingo.json"
-GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.2/gnupg.json"
+CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/clingo.json"
+GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/gnupg.json"
+PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/patchelf.json"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
@@ -92,9 +93,11 @@ def setup_parser(subparser):
 
     enable = sp.add_parser("enable", help="enable bootstrapping")
     _add_scope_option(enable)
+    enable.add_argument("name", help="name of the source to be enabled", nargs="?", default=None)
 
     disable = sp.add_parser("disable", help="disable bootstrapping")
     _add_scope_option(disable)
+    disable.add_argument("name", help="name of the source to be disabled", nargs="?", default=None)
 
     reset = sp.add_parser("reset", help="reset bootstrapping configuration to Spack defaults")
     spack.cmd.common.arguments.add_common_arguments(reset, ["yes_to_all"])
@@ -108,18 +111,10 @@ def setup_parser(subparser):
     list = sp.add_parser("list", help="list all the sources of software to bootstrap Spack")
     _add_scope_option(list)
 
-    trust = sp.add_parser("trust", help="trust a bootstrapping source")
-    _add_scope_option(trust)
-    trust.add_argument("name", help="name of the source to be trusted")
-
-    untrust = sp.add_parser("untrust", help="untrust a bootstrapping source")
-    _add_scope_option(untrust)
-    untrust.add_argument("name", help="name of the source to be untrusted")
-
     add = sp.add_parser("add", help="add a new source for bootstrapping")
     _add_scope_option(add)
     add.add_argument(
-        "--trust", action="store_true", help="trust the source immediately upon addition"
+        "--trust", action="store_true", help="enable the source immediately upon addition"
     )
     add.add_argument("name", help="name of the new source of software")
     add.add_argument("metadata_dir", help="directory where to find metadata files")
@@ -140,9 +135,21 @@ def setup_parser(subparser):
 
 
 def _enable_or_disable(args):
-    # Set to True if we called "enable", otherwise set to false
     value = args.subcommand == "enable"
-    spack.config.set("bootstrap:enable", value, scope=args.scope)
+    if args.name is None:
+        # Set to True if we called "enable", otherwise set to false
+        old_value = spack.config.get("bootstrap:enable", scope=args.scope)
+        if old_value == value:
+            llnl.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
+        else:
+            spack.config.set("bootstrap:enable", value, scope=args.scope)
+            llnl.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
+        return
+
+    if value is True:
+        _enable_source(args)
+    else:
+        _disable_source(args)
 
 
 def _reset(args):
@@ -173,6 +180,8 @@ def _reset(args):
         if os.path.exists(bootstrap_yaml):
             shutil.move(bootstrap_yaml, backup_file)
 
+        spack.config.config.clear_caches()
+
 
 def _root(args):
     if args.path:
@@ -197,36 +206,53 @@ def _list(args):
             header_fmt = "@*b{{{0}:}} {1}"
             color.cprint(header_fmt.format(header, content))
 
-        trust_str = "@*y{UNKNOWN}"
+        trust_str = "@*y{DISABLED}"
         if trusted is True:
-            trust_str = "@*g{TRUSTED}"
+            trust_str = "@*g{ENABLED}"
         elif trusted is False:
-            trust_str = "@*r{UNTRUSTED}"
+            trust_str = "@*r{DISABLED}"
 
         fmt("Name", source["name"] + " " + trust_str)
         print()
-        fmt("  Type", source["type"])
-        print()
+        if trusted is True or args.verbose:
+            fmt("  Type", source["type"])
+            print()
 
-        info_lines = ["\n"]
-        for key, value in source.get("info", {}).items():
-            info_lines.append(" " * 4 + "@*{{{0}}}: {1}\n".format(key, value))
-        if len(info_lines) > 1:
-            fmt("  Info", "".join(info_lines))
+            info_lines = ["\n"]
+            for key, value in source.get("info", {}).items():
+                info_lines.append(" " * 4 + "@*{{{0}}}: {1}\n".format(key, value))
+            if len(info_lines) > 1:
+                fmt("  Info", "".join(info_lines))
 
-        description_lines = ["\n"]
-        for line in source["description"].split("\n"):
-            description_lines.append(" " * 4 + line + "\n")
+            description_lines = ["\n"]
+            for line in source["description"].split("\n"):
+                description_lines.append(" " * 4 + line + "\n")
 
-        fmt("  Description", "".join(description_lines))
+            fmt("  Description", "".join(description_lines))
 
     trusted = spack.config.get("bootstrap:trusted", {})
+
+    def sort_fn(x):
+        x_trust = trusted.get(x["name"], None)
+        if x_trust is True:
+            return 0
+        elif x_trust is None:
+            return 1
+        return 2
+
+    sources = sorted(sources, key=sort_fn)
     for s in sources:
         _print_method(s, trusted.get(s["name"], None))
 
 
-def _write_trust_state(args, value):
-    name = args.name
+def _write_bootstrapping_source_status(name, enabled, scope=None):
+    """Write if a bootstrapping source is enable or disabled to config file.
+
+    Args:
+        name (str): name of the bootstrapping source.
+        enabled (bool): True if the source is enabled, False if it is disabled.
+        scope (None or str): configuration scope to modify. If none use the default scope.
+    """
     sources = spack.config.get("bootstrap:sources")
 
     matches = [s for s in sources if s["name"] == name]
@@ -248,19 +274,19 @@ def _write_trust_state(args, value):
 
     # Setting the scope explicitly is needed to not copy over to a new scope
     # the entire default configuration for bootstrap.yaml
-    scope = args.scope or spack.config.default_modify_scope("bootstrap")
-    spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(value)), scope=scope)
+    scope = scope or spack.config.default_modify_scope("bootstrap")
+    spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(enabled)), scope=scope)
 
 
-def _trust(args):
-    _write_trust_state(args, value=True)
-    msg = '"{0}" is now trusted for bootstrapping'
+def _enable_source(args):
+    _write_bootstrapping_source_status(args.name, enabled=True, scope=args.scope)
+    msg = '"{0}" is now enabled for bootstrapping'
     llnl.util.tty.msg(msg.format(args.name))
 
 
-def _untrust(args):
-    _write_trust_state(args, value=False)
-    msg = '"{0}" is now untrusted and will not be used for bootstrapping'
+def _disable_source(args):
+    _write_bootstrapping_source_status(args.name, enabled=False, scope=args.scope)
+    msg = '"{0}" is now disabled and will not be used for bootstrapping'
     llnl.util.tty.msg(msg.format(args.name))
 
 
@@ -323,7 +349,7 @@ def _add(args):
     msg = 'New bootstrapping source "{0}" added in the "{1}" configuration scope'
     llnl.util.tty.msg(msg.format(args.name, write_scope))
     if args.trust:
-        _trust(args)
+        _enable_source(args)
 
 
 def _remove(args):
@@ -403,16 +429,17 @@ def _mirror(args):
         abs_directory, rel_directory = write_metadata(subdir="binaries", metadata=BINARY_METADATA)
         shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), abs_directory)
         shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), abs_directory)
+        shutil.copy(spack.util.path.canonicalize_path(PATCHELF_JSON), abs_directory)
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)
 
 
 def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_clingo_importable_or_raise()
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
         if platform.system().lower() == "linux":
             spack.bootstrap.ensure_patchelf_in_path_or_raise()
+        spack.bootstrap.ensure_clingo_importable_or_raise()
+        spack.bootstrap.ensure_gpg_in_path_or_raise()
 
 
 def bootstrap(parser, args):
@@ -423,8 +450,6 @@ def bootstrap(parser, args):
         "reset": _reset,
         "root": _root,
         "list": _list,
-        "trust": _trust,
-        "untrust": _untrust,
         "add": _add,
         "remove": _remove,
         "mirror": _mirror,

@@ -12,7 +12,7 @@ class GlobalWorkflowEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/global-workflow"
     git = "https://github.com/NOAA-EMC/global-workflow.git"
 
-    maintainers = ["kgerheiser"]
+    maintainers = ["AlexanderRichert-NOAA"]
 
     version("1.0.0")
     variant("python", default=True, description="Build Python dependencies")
