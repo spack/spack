@@ -27,10 +27,10 @@ class Ecflow(CMakePackage):
     version("4.12.0", sha256="566b797e8d78e3eb93946b923ef540ac61f50d4a17c9203d263c4fd5c39ab1d1")
     version("4.11.1", sha256="b3bcc1255939f87b9ba18d802940e08c0cf6379ca6aeec1fef7bd169b0085d6c")
 
-    variant("ssl", default=True,
-            description="Enable SSL")
-    variant("static_boost", default=False,
-            description="Use also static boost libraries when compiling")
+    variant("ssl", default=True, description="Enable SSL")
+    variant(
+        "static_boost", default=False, description="Use also static boost libraries when compiling"
+    )
     variant("ui", default=False, description="Enable ecflow_ui")
 
     extends("python")
@@ -51,11 +51,11 @@ class Ecflow(CMakePackage):
     # Use newer boost with v5
     depends_on(
         "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer",  # noqa
-        when="@5:"
+        when="@5:",
     )
     depends_on(
         "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer+pic",  # noqa
-        when="@5: +static_boost"
+        when="@5: +static_boost",
     )
 
     depends_on("openssl@1:", when="@5:")
