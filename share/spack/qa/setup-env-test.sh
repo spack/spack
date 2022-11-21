@@ -111,7 +111,9 @@ contains "b@" echo $LIST_CONTENT
 does_not_contain "a@" echo $LIST_CONTENT
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
-contains "export PATH=$(spack -m location -i a)/bin:$(spack -m location -i b)/bin" spack -m load --sh a
+LOAD_CONTENT=`spack -m load --sh a | awk '/^export PATH=/'`
+contains "$(spack -m location -i a)/bin" printf "$LOAD_CONTENT"
+contains "$(spack -m location -i b)/bin" printf "$LOAD_CONTENT"
 succeeds spack -m load --only dependencies a
 succeeds spack -m load --only package a
 fails spack -m load d
