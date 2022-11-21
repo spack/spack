@@ -23,7 +23,7 @@ class Easi(CMakePackage):
     variant("asagi", default=True, description="build with ASAGI support")
     variant(
         "jit",
-        default="impalajit",
+        default="impalajit,lua",
         description="build with JIT support",
         values=("impalajit", "impalajit-llvm", "lua"),
         multi=True,
