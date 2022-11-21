@@ -20,6 +20,7 @@ class RAffxparser(RPackage):
 
     bioc = "affxparser"
 
+    version("1.70.0", commit="28f94cd3477e9500942be89cbcb5cad1bbb369fe")
     version("1.68.1", commit="821a01a2df18115a3b7864b3f45418255b7123eb")
     version("1.66.0", commit="2ea72d4c924ac14bdd807b23563c8501c226ce3a")
     version("1.62.0", commit="b3e988e5c136c3f1a064e1da13730b403c8704c0")

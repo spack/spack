@@ -16,6 +16,7 @@ class RComplexheatmap(RPackage):
 
     bioc = "ComplexHeatmap"
 
+    version("2.14.0", commit="57fcaa040b08917c97fb66b963eb240d5fd5a8c7")
     version("2.12.1", commit="2c5fe70724219008174d4e6f83189cddbd895ec6")
     version("2.12.0", commit="8a5f060b06646f9d6a5032832ea72e3f183ca5d7")
     version("2.10.0", commit="170df82a1568e879e4019e0ff6feb0047851684f")

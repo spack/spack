@@ -7,10 +7,9 @@ from __future__ import print_function
 
 import argparse
 import errno
+import io
 import re
 import sys
-
-from six import StringIO
 
 
 class Command(object):
@@ -181,7 +180,7 @@ class ArgparseRstWriter(ArgparseWriter):
         self.rst_levels = rst_levels
 
     def format(self, cmd):
-        string = StringIO()
+        string = io.StringIO()
         string.write(self.begin_command(cmd.prog))
 
         if cmd.description:
