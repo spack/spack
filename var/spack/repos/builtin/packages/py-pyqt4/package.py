@@ -50,8 +50,6 @@ class PyPyqt4(SIPPackage):
             "--stubsdir",
             join_path(python_platlib, "PyQt4"),
         ]
-        if "+qsci_api" in self.spec:
-            args.extend(["--qsci-api", "--qsci-api-destdir", self.prefix.share.qsci])
         return args
 
     def configure(self, spec, prefix):

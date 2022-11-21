@@ -250,8 +250,6 @@ class Qt(Package):
             msg="Apple Silicon requires a very new version of qt",
         )
 
-    use_xcode = True
-
     # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {
         "intel": ("icc",),
