@@ -10,13 +10,24 @@ from spack.build_environment import MakeExecutable
 from spack.package import *
 
 
-class Gmake(AutotoolsPackage, GNUMirrorPackage):
+class Gmake(Package, GNUMirrorPackage):
     """GNU Make is a tool which controls the generation of executables and
     other non-source files of a program from the program's source files."""
 
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
     maintainers = ["haampie"]
+
+    # We want to use the Autotools build system because of all the things it
+    # does when it comes to patching configure / config.sub / config.guess etc.
+    # But we don't want to inherit from AutotoolsPackage, because it adds a build
+    # dependency on gmake.
+    build_system("autotools")
+
+    depends_on("gnuconfig", type="build", when="target=ppc64le:")
+    depends_on("gnuconfig", type="build", when="target=aarch64:")
+    depends_on("gnuconfig", type="build", when="target=riscv64:")
+    conflicts("platform=windows")
 
     # Alpha releases
     version(
