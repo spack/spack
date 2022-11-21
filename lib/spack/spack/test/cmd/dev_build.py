@@ -21,7 +21,10 @@ env = SpackCommand("env")
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
+    # TODO: ensure that "keep stage" only applies to dev-build spec, so we can get rid
+    # of @pytest.mark.disable_clean_stage_check.
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
     spec.concretize()
 
@@ -40,6 +43,7 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
     assert os.path.exists(str(tmpdir))
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_before(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
     spec.concretize()
@@ -57,6 +61,7 @@ def test_dev_build_before(tmpdir, mock_packages, install_mockery):
     assert not os.path.exists(spec.prefix)
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_until(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
     spec.concretize()
@@ -75,6 +80,7 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
     assert not spack.store.db.query(spec, installed=True)
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
     # Test that we ignore the last_phase argument if it is already last
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
@@ -95,6 +101,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
     assert os.path.exists(str(tmpdir))
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_before_until(tmpdir, mock_packages, install_mockery, capsys):
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
     spec.concretize()
@@ -133,6 +140,7 @@ def mock_module_noop(*args):
     pass
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch, install_mockery, working_env):
     monkeypatch.setattr(os, "execvp", print_spack_cc)
 
@@ -143,6 +151,7 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch, install_mockery, 
         assert "lib/spack/env" in output
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_fails_already_installed(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % tmpdir)
     spec.concretize()
@@ -156,21 +165,25 @@ def test_dev_build_fails_already_installed(tmpdir, mock_packages, install_mocker
         assert "Already installed in %s" % spec.prefix in output
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_fails_no_spec():
     output = dev_build(fail_on_error=False)
     assert "requires a package spec argument" in output
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_fails_multiple_specs(mock_packages):
     output = dev_build("libelf", "libdwarf", fail_on_error=False)
     assert "only takes one spec" in output
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_fails_nonexistent_package_name(mock_packages):
     output = dev_build("no_such_package", fail_on_error=False)
     assert "No package for 'no_such_package' was found" in output
 
 
+@pytest.mark.disable_clean_stage_check
 def test_dev_build_fails_no_version(mock_packages):
     output = dev_build("dev-build-test-install", fail_on_error=False)
     assert "dev-build spec must have a single, concrete version" in output
