@@ -341,7 +341,9 @@ set LIST_CONTENT (spack -m load b; spack load --list)
 spt_contains "b@" echo $LIST_CONTENT
 spt_does_not_contain "a@" echo $LIST_CONTENT
 # test a variable MacOS clears and one it doesn't for recursive loads
-spt_contains "set -gx PATH $_a_bin:$_b_bin" spack -m load --fish a
+set LOAD_CONTENT (spack -m load --fish a | awk '/set -gx PATH/')
+spt_contains "$_a_bin" printf "$LOAD_CONTENT"
+spt_contains "$_b_bin" printf "$LOAD_CONTENT"
 spt_succeeds spack -m load --only dependencies a
 spt_succeeds spack -m load --only package a
 spt_fails spack -m load d
