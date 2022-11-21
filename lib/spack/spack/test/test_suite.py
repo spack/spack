@@ -43,7 +43,7 @@ def test_test_log_pathname(mock_packages, config):
     assert test_suite.test_log_name(spec) in logfile
 
 
-def test_test_ensure_stage(mock_test_stage):
+def test_test_ensure_stage(mock_test_stage, mock_packages):
     """Make sure test stage directory is properly set up."""
     spec = spack.spec.Spec("libdwarf").concretized()
 
