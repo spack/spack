@@ -13,32 +13,36 @@ class PyPyqt4(SIPPackage):
     against Qt v5."""
 
     homepage = "https://www.riverbankcomputing.com/software/pyqt/intro"
-    url = (
-        "http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.12.3/PyQt4_gpl_x11-4.12.3.tar.gz"
-    )
-
-    sip_module = "PyQt4.sip"
+    url = "https://www.riverbankcomputing.com/static/Downloads/PyQt4/4.12.3/PyQt4_gpl_x11-4.12.3.tar.gz"
 
     version("4.12.3", sha256="a00f5abef240a7b5852b7924fa5fdf5174569525dc076cd368a566619e56d472")
     version(
         "4.11.3",
         sha256="853780dcdbe2e6ba785d703d059b096e1fc49369d3e8d41a060be874b8745686",
         url="http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.3/PyQt-x11-gpl-4.11.3.tar.gz",
+        deprecated=True,
     )
 
-    # API files can be installed regardless if QScintilla is installed or not
-    variant("qsci_api", default=False, description="Install PyQt API file for QScintilla")
-
-    # Supposedly can also be built with Qt 5 compatibility layer
     depends_on("qt@4")
-    depends_on("py-sip@:4.19.18 module=PyQt4.sip")
+    depends_on("py-sip@4.16.4:4", type="build")
 
-    # https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html
-    def configure_file(self):
-        return "configure-ng.py"
+    build_directory = "."
 
     def configure_args(self):
+        # https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html
         args = [
+            "--verbose",
+            "--confirm-license",
+            "--qmake",
+            self.spec["qt"].prefix.bin.qmake,
+            "--sip",
+            self.spec["py-sip"].prefix.bin.sip,
+            "--sip-incdir",
+            join_path(self.spec["py-sip"].prefix, self.spec["python"].package.include),
+            "--bindir",
+            self.prefix.bin,
+            "--destdir",
+            python_platlib,
             "--pyuic4-interpreter",
             self.spec["python"].command.path,
             "--sipdir",
@@ -49,3 +53,17 @@ class PyPyqt4(SIPPackage):
         if "+qsci_api" in self.spec:
             args.extend(["--qsci-api", "--qsci-api-destdir", self.prefix.share.qsci])
         return args
+
+    def configure(self, spec, prefix):
+        python("configure-ng.py", *self.configure_args())
+
+    @run_after("install")
+    def extend_path_setup(self):
+        # See github issue #14121 and PR #15297
+        module = self.pkg.spec["py-sip"].variants["module"].value
+        if module != "sip":
+            module = module.split(".")[0]
+            with working_dir(inspect.getmodule(self.pkg).python_platlib):
+                with open(os.path.join(module, "__init__.py"), "a") as f:
+                    f.write("from pkgutil import extend_path\n")
+                    f.write("__path__ = extend_path(__path__, __name__)\n")

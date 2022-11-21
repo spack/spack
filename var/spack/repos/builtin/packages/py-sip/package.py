@@ -40,9 +40,9 @@ class PySip(PythonPackage):
 
     with when("@5:"):
         depends_on("python@3.5.1:", type=("build", "link", "run"))
-        depends_on("py-packaging", type="build")
-        depends_on("py-setuptools@30.3:", type="build")
-        depends_on("py-toml", type="build")
+        depends_on("py-packaging", type=("build", "run"))
+        depends_on("py-setuptools@30.3:", type=("build", "run"))
+        depends_on("py-toml", type=("build", "run"))
 
     with when("@:4"):
         depends_on("python", type=("build", "link", "run"))
