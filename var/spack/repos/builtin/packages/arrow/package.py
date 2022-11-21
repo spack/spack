@@ -146,7 +146,9 @@ class Arrow(CMakePackage, CudaPackage):
 
         with when("@:8"):
             for dep in ("flatbuffers", "rapidjson", "snappy", "zlib", "zstd"):
-                args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
+                # BlueBrain: raises KeyError on zstd
+                if dep in self.spec:
+                    args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
             args.append("-DZLIB_LIBRARIES={0}".format(self.spec["zlib"].libs))
 
         return args
