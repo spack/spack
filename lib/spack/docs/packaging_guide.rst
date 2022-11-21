@@ -2634,9 +2634,12 @@ extendable package:
        extends('python')
        ...
 
-Now, the ``py-numpy`` package can be used as an argument to ``spack
-activate``.  When it is activated, all the files in its prefix will be
-symbolically linked into the prefix of the python package.
+This accomplishes a few things. Firstly, the Python package can set special
+variables such as ``PYTHONPATH`` for all extensions when the run or build
+environment is set up. Secondly, filesystem views can ensure that extensions
+are put in the same prefix as their extendee. This ensures that Python in
+a view can always locate its Python packages, even without environment
+variables set.
 
 A package can only extend one other package at a time.  To support packages
 that may extend one of a list of other packages, Spack supports multiple
@@ -2684,9 +2687,8 @@ variant(s) are selected.  This may be accomplished with conditional
        ...
 
 Sometimes, certain files in one package will conflict with those in
-another, which means they cannot both be activated (symlinked) at the
-same time.  In this case, you can tell Spack to ignore those files
-when it does the activation:
+another, which means they cannot both be used in a view at the
+same time.  In this case, you can tell Spack to ignore those files:
 
 .. code-block:: python
 
@@ -2698,7 +2700,7 @@ when it does the activation:
        ...
 
 The code above will prevent everything in the ``$prefix/bin/`` directory
-from being linked in at activation time.
+from being linked in a view.
 
 .. note::
 
@@ -3523,7 +3525,7 @@ will likely contain some overriding of default builder methods:
        def cmake_args(self):
            pass
 
-   class Autotoolsbuilder(spack.build_systems.autotools.AutotoolsBuilder):
+   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
        def configure_args(self):
            pass
 

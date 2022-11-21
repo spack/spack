@@ -1704,9 +1704,11 @@ dependencies or incompatible build tools like autoconf. Here are several
 packages known to work on Windows:
 
 * abseil-cpp
+* bzip2
 * clingo
 * cpuinfo
 * cmake
+* hdf5
 * glm
 * nasm
 * netlib-lapack (requires Intel Fortran)

@@ -23,18 +23,16 @@ class Paraview(CMakePackage, CudaPackage):
     list_depth = 1
     git = "https://gitlab.kitware.com/paraview/paraview.git"
 
-    maintainers = ["chuckatkins", "danlipsa", "vicentebolea"]
+    maintainers = ["danlipsa", "vicentebolea", "kwryankrattiger"]
     tags = ["e4s"]
 
     version("master", branch="master", submodules=True)
     version(
-        "5.11.0-RC2", sha256="b5748b1ef4b8855467c3db75ffb8739096075596229e7ba16b284946964904b9"
-    )
-    version(
-        "5.10.1",
-        sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2",
+        "5.11.0",
+        sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165",
         preferred=True,
     )
+    version("5.10.1", sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2")
     version("5.10.0", sha256="86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5")
     version("5.9.1", sha256="0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d")
     version("5.9.0", sha256="b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d")
@@ -73,6 +71,7 @@ class Paraview(CMakePackage, CudaPackage):
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
+    variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("catalyst", default=False, description="Enable Catalyst 1", when="@5.7:")
     variant(
         "libcatalyst",
@@ -104,6 +103,7 @@ class Paraview(CMakePackage, CudaPackage):
         ' "on" or "off" will always override the build_edition.',
     )
 
+    conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
     conflicts("+python", when="+python3")
     # Python 2 support dropped with 5.9.0
@@ -199,6 +199,10 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("hdf5@1.10:", when="+hdf5 @5.10:")
     depends_on("adios2+mpi", when="+adios2+mpi")
     depends_on("adios2~mpi", when="+adios2~mpi")
+    depends_on("silo", when="+visitbridge")
+    depends_on("silo+mpi", when="+visitbridge+mpi")
+    depends_on("silo~mpi", when="+visitbridge~mpi")
+    depends_on("boost", when="+visitbridge")
     depends_on("jpeg")
     depends_on("jsoncpp")
     depends_on("libogg")
@@ -385,6 +389,8 @@ class Paraview(CMakePackage, CudaPackage):
             "-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s" % includes,
             "-DBUILD_TESTING:BOOL=OFF",
             "-DOpenGL_GL_PREFERENCE:STRING=LEGACY",
+            self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
+            self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
         if spec.satisfies("@5.11:"):

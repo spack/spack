@@ -15,9 +15,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
     maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
 
-    version(
-        "1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True, preferred=True
-    )
+    version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
+    version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
     version("1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True)
     version("1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True)
     version("1.2.0", commit="255a214e", submodules=True)
@@ -27,7 +26,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version("1.0.0", commit="230d7df2")
     version("0.99.2", commit="56961641")
     version("0.99.1", commit="0ae426c7")
-    version("master", branch="master", submodules=True)
+    version("main", branch="main", submodules=True)
     version("develop", branch="develop", submodules=True)
     version("5-18-2022-snapshot", tag="5-18-2022-snapshot", submodules=True)
 
@@ -44,18 +43,30 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     variant("hiop", default=False, description="Enable/Disable HiOp")
     variant("ipopt", default=False, description="Enable/Disable IPOPT")
 
-    conflicts("~hiop~ipopt", msg="ExaGO needs at least one solver enabled")
+    conflicts(
+        "~hiop~ipopt @:1.4",
+        msg="ExaGO needs at least one solver enabled. PFLOW only mode is supported in 1.5+",
+    )
+    # We will better support minimal builds with Python in future.
+    # You can use Python with PFLOW if desired ~ipopt~hiop
+    conflicts(
+        "~hiop~ipopt+python", msg="ExaGO Python wrapper requires at least one solver enabled."
+    )
 
     # Dependencies
+    depends_on("py-pytest", type=("build", "run"), when="@1.5.0:+python")
+    depends_on("py-mpi4py", when="@1.3.0:+mpi+python")
     depends_on("pkgconfig", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("blas")
+    depends_on("ipopt~mumps", when="+ipopt")
     depends_on("cuda", when="+cuda")
     depends_on("raja", when="+raja")
-
-    depends_on("raja@0.14.0:", when="@1.1.0: +raja")
     depends_on("umpire", when="+raja")
-    depends_on("umpire@6.0.0:", when="@1.1.0: +raja")
+
+    depends_on("umpire@6.0.0", when="@1.1.0: +raja")
+    depends_on("raja@0.14.0", when="@1.1.0: +raja")
+    depends_on("camp@0.2.3", when="@1.1.0: +raja")
 
     # Some allocator code in Umpire only works with static libs
     depends_on("umpire+cuda~shared", when="+raja+cuda")
@@ -101,15 +112,16 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop@0.3.99:", when="@0.99:+hiop")
     depends_on("hiop@0.5.1:", when="@1.1.0:+hiop")
     depends_on("hiop@0.5.3:", when="@1.3.0:+hiop")
+    depends_on("hiop@0.7.0:", when="@1.5.0:+hiop")
 
     depends_on("hiop~mpi", when="+hiop~mpi")
     depends_on("hiop+mpi", when="+hiop+mpi")
 
     depends_on("petsc@3.13:3.14", when="@:1.2.99")
-    depends_on("petsc@3.16.0:3.16", when="@1.3.0:")
-    depends_on("petsc~mpi", when="~mpi")
+    depends_on("petsc@3.16.0:3.16", when="@1.3.0:1.4")
+    depends_on("petsc@3.18.0:3.18", when="@1.5.0:")
 
-    depends_on("py-pytest", type=("build", "run"), when="@1.4.1:+python")
+    depends_on("petsc~mpi", when="~mpi")
 
     for arch in CudaPackage.cuda_arch_values:
         cuda_dep = "+cuda cuda_arch={0}".format(arch)
@@ -125,10 +137,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("hiop {0}".format(rocm_dep), when=rocm_dep)
         depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
-
-    depends_on("ipopt", when="+ipopt")
-
-    depends_on("py-mpi4py", when="@1.3.0:+mpi+python")
 
     flag_handler = build_system_flags
 

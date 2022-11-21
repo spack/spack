@@ -6,14 +6,9 @@ import ast
 import codecs
 import os
 import sys
+import tokenize
 
 import pytest
-import six
-
-if six.PY3:
-    import tokenize
-else:
-    from lib2to3.pgen2 import tokenize
 
 import spack.util.unparse
 
@@ -25,14 +20,10 @@ pytestmark = pytest.mark.skipif(
 def read_pyfile(filename):
     """Read and return the contents of a Python source file (as a
     string), taking into account the file encoding."""
-    if six.PY3:
-        with open(filename, "rb") as pyfile:
-            encoding = tokenize.detect_encoding(pyfile.readline)[0]
-        with codecs.open(filename, "r", encoding=encoding) as pyfile:
-            source = pyfile.read()
-    else:
-        with open(filename, "r") as pyfile:
-            source = pyfile.read()
+    with open(filename, "rb") as pyfile:
+        encoding = tokenize.detect_encoding(pyfile.readline)[0]
+    with codecs.open(filename, "r", encoding=encoding) as pyfile:
+        source = pyfile.read()
     return source
 
 
@@ -341,16 +332,9 @@ def test_huge_float():
     check_ast_roundtrip("-1e1000j")
 
 
-@pytest.mark.skipif(not six.PY2, reason="Only works for Python 2")
-def test_min_int27():
-    check_ast_roundtrip(str(-sys.maxint - 1))
-    check_ast_roundtrip("-(%s)" % (sys.maxint + 1))
-
-
-@pytest.mark.skipif(not six.PY3, reason="Only works for Python 3")
 def test_min_int30():
-    check_ast_roundtrip(str(-(2 ** 31)))
-    check_ast_roundtrip(str(-(2 ** 63)))
+    check_ast_roundtrip(str(-(2**31)))
+    check_ast_roundtrip(str(-(2**63)))
 
 
 def test_imaginary_literals():
@@ -358,9 +342,6 @@ def test_imaginary_literals():
     check_ast_roundtrip("-7j")
     check_ast_roundtrip("0j")
     check_ast_roundtrip("-0j")
-    if six.PY2:
-        check_ast_roundtrip("-(7j)")
-        check_ast_roundtrip("-(0j)")
 
 
 def test_negative_zero():
@@ -391,12 +372,11 @@ def test_function_arguments():
     check_ast_roundtrip("def f(a, b = 2): pass")
     check_ast_roundtrip("def f(a = 5, b = 2): pass")
     check_ast_roundtrip("def f(*args, **kwargs): pass")
-    if six.PY3:
-        check_ast_roundtrip("def f(*, a = 1, b = 2): pass")
-        check_ast_roundtrip("def f(*, a = 1, b): pass")
-        check_ast_roundtrip("def f(*, a, b = 2): pass")
-        check_ast_roundtrip("def f(a, b = None, *, c, **kwds): pass")
-        check_ast_roundtrip("def f(a=2, *args, c=5, d, **kwds): pass")
+    check_ast_roundtrip("def f(*, a = 1, b = 2): pass")
+    check_ast_roundtrip("def f(*, a = 1, b): pass")
+    check_ast_roundtrip("def f(*, a, b = 2): pass")
+    check_ast_roundtrip("def f(a, b = None, *, c, **kwds): pass")
+    check_ast_roundtrip("def f(a=2, *args, c=5, d, **kwds): pass")
 
 
 def test_relative_import():
@@ -407,12 +387,10 @@ def test_import_many():
     check_ast_roundtrip(import_many)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_nonlocal():
     check_ast_roundtrip(nonlocal_ex)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_raise_from():
     check_ast_roundtrip(raise_from)
 
@@ -449,17 +427,11 @@ def test_joined_str_361():
     check_ast_roundtrip('f"{key:4}={value!a:#06x}"')
 
 
-@pytest.mark.skipif(not six.PY2, reason="Only for Python 2")
-def test_repr():
-    check_ast_roundtrip(a_repr)
-
-
 @pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater")
 def test_complex_f_string():
     check_ast_roundtrip(complex_f_string)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_annotations():
     check_ast_roundtrip("def f(a : int): pass")
     check_ast_roundtrip("def f(a: int = 5): pass")
@@ -511,7 +483,6 @@ def test_class_decorators():
     check_ast_roundtrip(class_decorator)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_class_definition():
     check_ast_roundtrip("class A(metaclass=type, *[], **{}): pass")
 
@@ -525,7 +496,6 @@ def test_try_except_finally():
     check_ast_roundtrip(try_except_finally)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_starred_assignment():
     check_ast_roundtrip("a, *b, c = seq")
     check_ast_roundtrip("a, (*b, c) = seq")
