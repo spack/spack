@@ -727,6 +727,12 @@ class Python(Package):
                 return Executable(path)
 
         else:
+            # Give a last try at rhel8 platform python
+            if self.spec.external and self.prefix == "/usr" and self.spec.satisfies("os=rhel8"):
+                path = os.path.join(self.prefix, "libexec", "platform-python")
+                if os.path.exists(path):
+                    return Executable(path)
+
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
 
