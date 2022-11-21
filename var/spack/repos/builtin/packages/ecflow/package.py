@@ -68,8 +68,8 @@ class Ecflow(CMakePackage):
         version = str(self.spec["python"].version[:2])
         filter_file(
             r"REQUIRED COMPONENTS python3",
-            fr"REQUIRED COMPONENTS python{version}",
-            "Pyext/CMakeLists.txt"
+            rf"REQUIRED COMPONENTS python{version}",
+            "Pyext/CMakeLists.txt",
         )
 
     def cmake_args(self):
@@ -82,5 +82,5 @@ class Ecflow(CMakePackage):
             # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
             self.define_from_variant("ENABLE_STATIC_BOOST_LIBS", "static_boost"),
             self.define("Python3_EXECUTABLE", self.spec["python"].package.command),
-            self.define("BOOST_ROOT", self.spec["boost"].prefix)
+            self.define("BOOST_ROOT", self.spec["boost"].prefix),
         ]
