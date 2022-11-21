@@ -23,6 +23,12 @@ spack:
         - spec: "{{ python_spec }}"
           prefix: "{{ python_prefix }}"
 
+    py-typed-ast:
+      require: "+wheel"
+
+    py-platformdirs:
+      require: "+wheel"
+
   concretizer:
     reuse: false
     unify: true
