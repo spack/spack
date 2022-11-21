@@ -206,14 +206,13 @@ def add_back_pytest_args(args, unknown_args):
 
 def unit_test(parser, args, unknown_args):
     global pytest
+    import spack.bootstrap
 
     # Ensure clingo is available before switching to the
     # mock configuration used by unit tests
     # Note: skip on windows here because for the moment,
     # clingo is wholly unsupported from bootstrap
     if not is_windows:
-        import spack.bootstrap
-
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_core_dependencies()
             if pytest is None:
