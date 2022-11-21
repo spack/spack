@@ -32,6 +32,7 @@ class IntelOneapiCompilersClassic(Package):
         "2021.5.0": "2022.0.1:2022.0.2",
         "2021.6.0": "2022.1.0",
         "2021.7.0": "2022.2.0",
+        "2021.7.1": "2022.2.1",
     }.items():
         version(ver)
         depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")
