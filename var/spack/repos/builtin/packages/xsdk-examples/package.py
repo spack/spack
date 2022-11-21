@@ -14,12 +14,15 @@ class XsdkExamples(CMakePackage, CudaPackage):
     url = "https://github.com/xsdk-project/xsdk-examples/archive/v0.1.0.tar.gz"
     git = "https://github.com/xsdk-project/xsdk-examples"
 
-    maintainers = ["acfisher", "balay", "balos1", "luszczek"]
+    maintainers = ["balay", "luszczek", "balos1", "shuds13", "v-dobrev"]
 
     version("develop", branch="master")
     version("0.3.0", sha256="e7444a403c0a69eeeb34a4068be4d6f4e5b54cbfd275629019b9236a538a739e")
-    version("0.2.0", sha256="cf26e3a16a83eba6fb297fb106b0934046f17cf978f96243b44d9d17ad186db6")
-    version("0.1.0", sha256="d24cab1db7c0872b6474d69e598df9c8e25d254d09c425fb0a6a8d6469b8018f")
+    version(
+        "0.2.0",
+        sha256="cf26e3a16a83eba6fb297fb106b0934046f17cf978f96243b44d9d17ad186db6",
+        deprecated=True,
+    )
 
     depends_on("xsdk+cuda", when="+cuda")
     for sm_ in CudaPackage.cuda_arch_values:
@@ -30,7 +33,6 @@ class XsdkExamples(CMakePackage, CudaPackage):
     depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")
     depends_on("xsdk@0.7.0 ^sundials+magma", when="@0.3.0 +cuda")
     depends_on("xsdk@0.6.0", when="@0.2.0")
-    depends_on("xsdk@0.5.0", when="@0.1.0")
     depends_on("mpi")
     depends_on("cmake@3.21:", type="build", when="@0.3.0:")
 

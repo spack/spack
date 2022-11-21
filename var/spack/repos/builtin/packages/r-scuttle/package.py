@@ -16,6 +16,7 @@ class RScuttle(RPackage):
 
     bioc = "scuttle"
 
+    version("1.8.0", commit="dabf6b95e478d599557ebbed03edd44031fd6b78")
     version("1.6.3", commit="df23680da9fa4d685df77e4561467f491c850b50")
     version("1.6.2", commit="afdfc555151d84cc332757b4ec0b97cb7f39d2d5")
     version("1.4.0", commit="b335263dd56bb859b5dd3ea27ee00dffa0215313")
