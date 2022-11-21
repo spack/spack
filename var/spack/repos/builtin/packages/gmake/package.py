@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.build_environment import MakeExecutable
@@ -42,14 +43,8 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     )
 
     variant("guile", default=False, description="Support GNU Guile for embedded scripting")
-    variant("nls", default=True, description="Enable Native Language Support")
 
-    depends_on("gettext", when="+nls")
     depends_on("guile", when="+guile")
-
-    depends_on("texinfo", type="build")
-
-    build_directory = "spack-build"
 
     patch(
         "https://src.fedoraproject.org/rpms/make/raw/519a7c5bcbead22e6ea2d2c2341d981ef9e25c0d/f/make-4.2.1-glob-fix-2.patch",
@@ -77,17 +72,26 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
         match = re.search(r"GNU Make (\S+)", output)
         return match.group(1) if match else None
 
-    def configure_args(self):
-        args = []
-        args.extend(self.with_or_without("guile"))
-        args.extend(self.with_or_without("nls"))
-        return args
-
-    @run_after("install")
-    def symlink_gmake(self):
-        with working_dir(self.prefix.bin):
-            symlink("make", "gmake")
-
     def setup_dependent_package(self, module, dspec):
         module.make = MakeExecutable(self.spec.prefix.bin.make, make_jobs)
         module.gmake = MakeExecutable(self.spec.prefix.bin.gmake, make_jobs)
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    def configure_args(self):
+        args = ["--disable-nls"]
+        args.extend(self.with_or_without("guile"))
+        return args
+
+    def build(self, pkg, spec, prefix):
+        # The configure script generates a build.cfg file
+        # which is used by build.sh to build without make.
+        with working_dir(self.build_directory):
+            build_script = os.path.join(os.curdir, "build.sh")
+            Executable(build_script)()
+
+    def install(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            os.mkdir(prefix.bin)
+            install("make", prefix.bin)
+            os.symlink("make", prefix.bin.gmake)
