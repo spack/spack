@@ -12,6 +12,8 @@ class PyThrottler(PythonPackage):
     homepage = "https://github.com/uburuntu/throttler"
     pypi = "throttler/throttler-1.2.1.tar.gz"
 
+    maintainers = ["charmoniumQ"]
+
     version("1.2.1", sha256="8b23d3485a96d98484024a850c1887ccc685bead17e86c8a9e4b0335e7d74778")
 
     depends_on("py-setuptools", type="build")
