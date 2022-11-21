@@ -12,7 +12,6 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
-import spack.bootstrap
 import spack.paths
 from spack.util.executable import which
 
@@ -380,6 +379,13 @@ def missing_tools(tools_to_run):
     return [t for t in tools_to_run if which(t) is None]
 
 
+def _bootstrap_dev_dependencies():
+    import spack.bootstrap
+
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_environment_dependencies()
+
+
 def style(parser, args):
     # save initial working directory for relativizing paths later
     args.initial_working_dir = os.getcwd()
@@ -416,8 +422,7 @@ def style(parser, args):
 
     tools_to_run = [t for t in tool_names if t in selected]
     if missing_tools(tools_to_run):
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_environment_dependencies()
+        _bootstrap_dev_dependencies()
 
     return_code = 0
     with working_dir(args.root):

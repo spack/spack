@@ -21,7 +21,6 @@ import llnl.util.filesystem
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import spack.bootstrap
 import spack.paths
 
 description = "run spack's unit tests (wrapper around pytest)"
@@ -213,6 +212,8 @@ def unit_test(parser, args, unknown_args):
     # Note: skip on windows here because for the moment,
     # clingo is wholly unsupported from bootstrap
     if not is_windows:
+        import spack.bootstrap
+
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_core_dependencies()
             if pytest is None:
