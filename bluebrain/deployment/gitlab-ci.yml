@@ -205,7 +205,7 @@ github_information:
     - installed-hashes -m|tee missing.txt
     - if [[ -n "$(<missing.txt)" ]]; then
     -     spack fetch -m
-    -     srun -J"spack!${CI_EXTERNAL_PULL_REQUEST_IID:+ №}${CI_EXTERNAL_PULL_REQUEST_IID:-}" slurmspack
+    -     srun -n 1 -J"spack!${CI_EXTERNAL_PULL_REQUEST_IID:+ №}${CI_EXTERNAL_PULL_REQUEST_IID:-}" slurmspack
     - fi
     # We always want to regenerate the modules and compiler configurations,
     # as they may change independenty of package dependencies and shas
