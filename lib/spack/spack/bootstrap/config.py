@@ -5,11 +5,8 @@
 """Manage configuration swapping for bootstrapping purposes"""
 
 import contextlib
-import hashlib
 import os.path
 import sys
-
-import archspec.cpu
 
 from llnl.util import tty
 
@@ -59,16 +56,6 @@ def store_path():
     return _store_path()
 
 
-def environment_path():
-    """Path to the environment used to bootstrap non-core dependencies"""
-    enabled = spack.config.get("bootstrap:enable", True)
-    if not enabled:
-        msg = 'bootstrapping is currently disabled. Use "spack bootstrap enable" to enable it'
-        raise RuntimeError(msg)
-
-    return _environment_path()
-
-
 @contextlib.contextmanager
 def spack_python_interpreter():
     """Override the current configuration to set the interpreter under
@@ -95,17 +82,6 @@ def _store_path():
 def _config_path():
     bootstrap_root_path = root_path()
     return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "config"))
-
-
-def _environment_path():
-    bootstrap_root_path = root_path()
-    python_part = spec_for_current_python().replace("@", "")
-    arch_part = archspec.cpu.host().family
-    interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
-    environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
-    return spack.util.path.canonicalize_path(
-        os.path.join(bootstrap_root_path, "environments", environment_dir)
-    )
 
 
 @contextlib.contextmanager

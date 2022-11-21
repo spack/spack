@@ -377,8 +377,8 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     for current_config in bootstrapping_sources():
         with exception_handler.forward(current_config["name"]):
             source_is_enabled_or_raise(current_config)
-            bootstrapper = create_bootstrapper(current_config)
-            if bootstrapper.try_import(module, abstract_spec):
+            current_bootstrapper = create_bootstrapper(current_config)
+            if current_bootstrapper.try_import(module, abstract_spec):
                 return
 
     assert exception_handler, (
@@ -428,12 +428,12 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=No
     for current_config in bootstrapping_sources():
         with exception_handler.forward(current_config["name"]):
             source_is_enabled_or_raise(current_config)
-            bootstrapper = create_bootstrapper(current_config)
-            if bootstrapper.try_search_path(executables, abstract_spec):
+            current_bootstrapper = create_bootstrapper(current_config)
+            if current_bootstrapper.try_search_path(executables, abstract_spec):
                 # Additional environment variables needed
                 concrete_spec, cmd = (
-                    bootstrapper.last_search["spec"],
-                    bootstrapper.last_search["command"],
+                    current_bootstrapper.last_search["spec"],
+                    current_bootstrapper.last_search["command"],
                 )
                 env_mods = spack.util.environment.EnvironmentModifications()
                 for dep in concrete_spec.traverse(
@@ -550,8 +550,8 @@ def ensure_core_dependencies():
     ensure_gpg_in_path_or_raise()
 
 
-def all_binaries_root_specs():
-    """Return a list of all the binaries root specs that may be used to bootstrap Spack"""
+def all_core_root_specs():
+    """Return a list of all the core root specs that may be used to bootstrap Spack"""
     return [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
 
 

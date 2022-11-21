@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Bootstrap non-core Spack dependencies from an environment."""
 import glob
+import hashlib
 import os
 import pathlib
 import sys
@@ -18,14 +19,36 @@ import spack.tengine
 import spack.util.executable
 
 from ._common import _root_spec
-from .config import environment_path, spec_for_current_python, store_path
+from .config import root_path, spec_for_current_python, store_path
 
 
 class BootstrapEnvironment(spack.environment.Environment):
+    """Environment to install dependencies of Spack for a given interpreter and architecture"""
+
+    @classmethod
+    def spack_dev_requirements(cls):
+        """Spack development requirements"""
+        return [
+            isort_root_spec(),
+            mypy_root_spec(),
+            black_root_spec(),
+            flake8_root_spec(),
+            pytest_root_spec(),
+        ]
+
     @classmethod
     def environment_root(cls):
         """Environment root directory"""
-        return pathlib.Path(environment_path())
+        bootstrap_root_path = root_path()
+        python_part = spec_for_current_python().replace("@", "")
+        arch_part = archspec.cpu.host().family
+        interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
+        environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
+        return pathlib.Path(
+            spack.util.path.canonicalize_path(
+                os.path.join(bootstrap_root_path, "environments", environment_dir)
+            )
+        )
 
     @classmethod
     def view_root(cls):
@@ -69,7 +92,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         if specs:
             colorized_specs = [
                 spack.spec.Spec(x).cformat("{name}{@version}")
-                for x in all_environment_root_specs()
+                for x in self.spack_dev_requirements()
             ]
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
@@ -119,7 +142,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "python_prefix": sys.exec_prefix,
             "architecture": archspec.cpu.host().family,
             "environment_path": self.environment_root(),
-            "environment_specs": all_environment_root_specs() + [spec_for_current_python()],
+            "environment_specs": self.spack_dev_requirements() + [spec_for_current_python()],
             "store_path": store_path(),
         }
         self.environment_root().mkdir(parents=True, exist_ok=True)
@@ -147,25 +170,12 @@ def flake8_root_spec():
 
 
 def pytest_root_spec():
+    """Return the root spec used to bootstrap flake8"""
     return _root_spec("py-pytest")
 
 
-def all_environment_root_specs():
-    """Return a list of all the root specs that may be used to bootstrap Spack.
-
-    Args:
-        development (bool): if True include dev dependencies
-    """
-    return [
-        isort_root_spec(),
-        mypy_root_spec(),
-        black_root_spec(),
-        flake8_root_spec(),
-        pytest_root_spec(),
-    ]
-
-
 def ensure_environment_dependencies():
+    """Ensure Spack dependencies from the bootstrap environment are installed and ready to use"""
     with BootstrapEnvironment() as env:
         env.update_installations()
         env.update_syspath_and_environ()

@@ -388,9 +388,9 @@ def _mirror(args):
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible
     # TODO: dependencies of a spec
-    root_specs = spack.bootstrap.all_binaries_root_specs() + ["gnuconfig"]
+    root_specs = spack.bootstrap.all_core_root_specs() + ["gnuconfig"]
     if args.dev:
-        root_specs += spack.bootstrap.all_environment_root_specs()
+        root_specs += spack.bootstrap.BootstrapEnvironment.spack_dev_requirements()
 
     for spec_str in root_specs:
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'

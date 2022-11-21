@@ -6,11 +6,11 @@
 
 from .config import ensure_bootstrap_configuration, is_bootstrapping
 from .core import (
-    all_binaries_root_specs,
+    all_core_root_specs,
     ensure_core_dependencies,
     ensure_patchelf_in_path_or_raise,
 )
-from .environment import all_environment_root_specs, ensure_environment_dependencies
+from .environment import BootstrapEnvironment, ensure_environment_dependencies
 from .status import status_message
 
 __all__ = [
@@ -18,8 +18,8 @@ __all__ = [
     "ensure_bootstrap_configuration",
     "ensure_core_dependencies",
     "ensure_patchelf_in_path_or_raise",
-    "all_binaries_root_specs",
+    "all_core_root_specs",
     "ensure_environment_dependencies",
-    "all_environment_root_specs",
+    "BootstrapEnvironment",
     "status_message",
 ]
