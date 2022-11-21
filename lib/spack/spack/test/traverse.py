@@ -333,9 +333,9 @@ chain-a
 
 @pytest.fixture()
 def abstract_specs_toposort():
-    # Create a graph that both BFS and DFS would not traverse in topo order, assuming
-    # edges are ordered by target node name. Roots are {A, E} in forward order and
-    # {F, G} in backward order.
+    # Create a graph that both BFS and DFS would not traverse in topo order, given the
+    # default edge ordering (by target spec name). Roots are {A, E} in forward order
+    # and {F, G} in backward order.
     # forward: DFS([A, E]) traverses [A, B, F, G, C, D, E] (not topo since C < B)
     # forward: BFS([A, E]) traverses [A, E, B, C, D, F, G] (not topo since C < B)
     # reverse: DFS([F, G]) traverses [F, B, A, D, C, E, G] (not topo since D < A)
@@ -364,7 +364,9 @@ def abstract_specs_toposort():
     )
 
 
-def test_traverse_topo_nodes(abstract_specs_toposort):
+def test_traverse_nodes_topo(abstract_specs_toposort):
+    # Test whether we get topologically ordered specs when using traverse_nodes with
+    # order=topo and cover=nodes.
     nodes = abstract_specs_toposort
 
     def test_topo(roots, direction="children"):
@@ -377,14 +379,18 @@ def test_traverse_topo_nodes(abstract_specs_toposort):
             parents = specs[i].traverse(cover="nodes", direction=reverse, root=False)
             assert set(list(parents)).issubset(set(specs[:i]))
 
-    # Traverse forward from roots A and E and a non-root D
+    # Traverse forward from roots A and E and a non-root D. Notice that adding D has no
+    # effect, it's just to make the test case a bit more complicated, as D is a starting
+    # point for traversal, but it's also discovered as a descendant of E and A.
     test_topo([nodes["D"], nodes["E"], nodes["A"]], direction="children")
 
     # Traverse reverse from leafs F and G and non-leaf D
     test_topo([nodes["F"], nodes["D"], nodes["G"]], direction="parents")
 
 
-def test_traverse_topo_edges(abstract_specs_toposort):
+def test_traverse_edges_topo(abstract_specs_toposort):
+    # Test the invariant that for each node in-edges precede out-edges when
+    # using traverse_edges with order=topo.
     nodes = abstract_specs_toposort
     roots = [nodes["E"], nodes["A"]]
 

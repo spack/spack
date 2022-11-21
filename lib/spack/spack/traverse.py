@@ -375,10 +375,10 @@ def traverse_edges_topo(
     specs, direction="children", deptype="all", key=id, root=True, all_edges=False
 ):
     """
-    Returns a list of edges where ordered in topo order, in the sense that all
-    in-edges of a vertex appear before all out-edges. By default with direction=children
-    edges are directed from dependent to dependency. With directions=parents, the edges
-    are directed from dependency to dependent.
+    Returns a list of edges in topological order, in the sense that all in-edges of a
+    vertex appear before all out-edges. By default with direction=children edges are
+    directed from dependent to dependency. With directions=parents, the edges are
+    directed from dependency to dependent.
 
     Arguments:
         specs (list): List of root specs (considered to be depth 0)
@@ -448,9 +448,8 @@ def traverse_edges(
     if order == "topo":
         if cover == "paths":
             raise ValueError("cover=paths not supported for order=topo")
-        # For topo order it's somewhat unclear how to handle a pre-existing visited
-        # set. Exclude them? But what if excludes vertices have edges to non-excluded
-        # ones? Not following would violate topo order.
+        # TODO: There is no known need for topological ordering of traversals (edge or node)
+        # with an initialized "visited" set. Revisit if needed.
         if visited is not None:
             raise ValueError("visited set not implemented for order=topo")
         return traverse_edges_topo(
