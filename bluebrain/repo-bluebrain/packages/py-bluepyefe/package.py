@@ -13,8 +13,7 @@ class PyBluepyefe(PythonPackage):
     pypi = "bluepyefe/bluepyefe-0.3.13.tar.gz"
     git = "https://github.com/BlueBrain/BluePyEfe.git"
 
-    version('BPE2', branch='BPE2')
-
+    version('2.1.25', sha256='8d43d7933f0f082627217cf998cb68c21130d971786c5c16cd17315b636a54cb')
     version('0.3.13', sha256='e274780a34e802eae9ba146782f0b9b088734b38bdc2d6da936d79369306b726')
 
     depends_on('py-setuptools', type='build')

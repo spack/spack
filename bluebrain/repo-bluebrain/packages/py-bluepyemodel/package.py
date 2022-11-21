@@ -25,7 +25,7 @@ class PyBluepyemodel(PythonPackage):
     depends_on('py-pyyaml@5.3.1:', type=('build', 'run'))
     depends_on('py-gitpython', type=('build', 'run'))
     depends_on('py-bluepyopt@1.9:', type=('build', 'run'))
-    depends_on('py-bluepyefe@BPE2', type=('build', 'run'))
+    depends_on('py-bluepyefe', type=('build', 'run'))
     depends_on('py-neurom@3.0:3.999', type=('build', 'run'))
     depends_on('py-efel@3.1:', type=('build', 'run'))
     depends_on('py-psycopg2@2.8:', type=('build', 'run'))
