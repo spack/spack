@@ -25,7 +25,6 @@ class Ccache(CMakePackage):
     version("4.7.3", sha256="577841df9e9d9659d58a2f4e0f6eaceb7e29816988ffb2b12390e17b109b4ac4")
     version("4.7.2", sha256="6b346f441342a25a6c1d7e010957a593f416e94b5d66fdf2e2992953b3860b9d")
     version("4.7.1", sha256="fa00c8446d910acebd10dc43e7b77e3b78e774ac3f621618e8d055dcc631e914")
-    version("4.7", sha256="4a7612898dd5dcda6dbecd40e72d5df2a15caae7cf53524db4abe945b73117ea")
     version("4.6.3", sha256="f46ba3706ad80c30d4d5874dee2bf9227a7fcd0ccaac31b51919a3053d84bd05")
     version("4.6.2", sha256="6a746a9bed01585388b68e2d58af2e77741fc8d66bc360b5a0b4c41fc284dafe")
     version("4.6.1", sha256="59b28a57c3a45e48d6049001999c9f94cd4d3e9b0196994bed9a6a7437ffa3bc")
@@ -65,7 +64,7 @@ class Ccache(CMakePackage):
     depends_on("hiredis@0.13.3:", when="@4.4: +redis")
     depends_on("pkgconfig", type="build", when="@4.4:")
 
-    conflicts("%gcc@:8", when="@4.7:")
+    conflicts("%gcc@:7", when="@4.7.1:")
     conflicts("%gcc@:5", when="@4.4:")
     conflicts("%clang@:7", when="@4.7:")
     conflicts("%clang@:4", when="@4.4:")
