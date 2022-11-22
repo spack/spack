@@ -13,11 +13,13 @@ class EcmwfAtlas(CMakePackage):
     git = "https://github.com/ecmwf/atlas.git"
     url = "https://github.com/ecmwf/atlas/archive/0.22.1.tar.gz"
 
-    maintainers = ["climbfuji", "rhoneyager"]
+    maintainers = ["climbfuji", "srherbener"]
 
     version("master", branch="master")
     version("develop", branch="develop")
-    version("0.30.0", commit="d81887206fc49c83fd5eb2e0e17457bdcd04731a", preferred=True)
+    version("0.31.1", sha256="0e14c9512235c1f66e10c25e190cfeb32275c2be")
+    version("0.31.0", sha256="954f0f06991c48dfa25c7f162427e14970085f3d")
+    version("0.30.0", commit="d81887206fc49c83fd5eb2e0e17457bdcd04731a")
     version("0.29.0", commit="b2558897fa22b18164d4481089423e7b443436f9")
     version("0.27.0", commit="d825fad7ab415558a81415914a0fc60da1d0295a")
     version("0.26.0", commit="3ae6184a598a00fbc6b1a77c3c9d5d808f1c65ea")
@@ -51,7 +53,8 @@ class EcmwfAtlas(CMakePackage):
     variant("shared", default=True)
 
     variant("trans", default=False)
-    depends_on("ectrans", when="+trans")
+    depends_on("ectrans@:1.0.0", when="@:0.30.0 +trans")
+    depends_on("ectrans@1.1.0:", when="@0.31.0: +trans")
     # variant('cgal', default=False)
     # depends_on('cgal', when='+cgal')
     variant("eigen", default=True)

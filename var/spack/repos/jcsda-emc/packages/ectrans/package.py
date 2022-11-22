@@ -15,13 +15,15 @@ class Ectrans(CMakePackage):
 
     homepage = "https://github.com/ecmwf-ifs/ectrans"
     git = "https://github.com/ecmwf-ifs/ectrans.git"
+    url = "https://github.com/ecmwf-ifs/ectrans/archive/1.1.0.tar.gz"
 
     maintainers = ['climbfuji']
 
     version('develop', branch='develop', no_cache=True)
     version('main', branch='main', no_cache=True)
+    version("1.1.0", sha256="bc287604cd36ca32618f21767f4a8b85249e3506")
     # Defined for spack use only
-    version('1.0.0', commit='ee1d307f1e47e1dd0b5ea91663a41df8a94cafb3', preferred=True)
+    version('1.0.0', commit='ee1d307f1e47e1dd0b5ea91663a41df8a94cafb3')
 
     variant('build_type', default='RelWithDebInfo',
             description='CMake build type',

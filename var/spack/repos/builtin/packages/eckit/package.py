@@ -16,6 +16,8 @@ class Eckit(CMakePackage):
 
     maintainers = ["skosukhin", "climbfuji"]
 
+    version("1.20.2", sha256="779be536e22f985b00927330d8430794c43f4f48")
+    version("1.20.0", sha256="5ecebc9548eba8df1c3e6f162e8f480257528eab")
     version("1.19.0", commit="53cf89711c4b36700f7e3f95fb99ac1b03fee13b")
     version("1.18.2", commit="c28d3e6dd5c138ab1d42794ebc7cd5c249f0781d")
     version("1.18.0", commit="623d42abc7b8acbffe180923398f2a8da7813da1")
