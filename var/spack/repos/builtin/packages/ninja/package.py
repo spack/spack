@@ -36,6 +36,7 @@ class Ninja(Package):
     version("1.6.0", sha256="b43e88fb068fe4d92a3dfd9eb4d19755dae5c33415db2e9b7b61b4659009cde7")
 
     depends_on("python", type="build")
+    depends_on("re2c@0.11.3:", type="build")
 
     phases = ["configure", "install"]
 
@@ -79,4 +80,5 @@ class Ninja(Package):
         module.ninja = MakeExecutable(
             which_string(name, path=[self.spec.prefix.bin], required=True),
             determine_number_of_jobs(parallel=self.parallel),
+            supports_jobserver=self.spec.version == ver("kitware"),
         )

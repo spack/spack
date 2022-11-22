@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import re
 
+import spack.build_systems.autotools
 from spack.package import *
 
 
@@ -56,11 +56,12 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     )
 
     depends_on("pcre")
+    depends_on("zlib")
 
-    _autoconf_versions = ["@master", "@fortran", "@4.0.2-fortran", "@4.1.dev1-fortran"]
+    AUTOCONF_VERSIONS = ["@master", "@fortran", "@4.0.2-fortran", "@4.1.dev1-fortran"]
 
     # Git releases do *not* include configure script
-    for _version in _autoconf_versions:
+    for _version in AUTOCONF_VERSIONS:
         depends_on("autoconf", type="build", when=_version)
         depends_on("automake", type="build", when=_version)
         depends_on("libtool", type="build", when=_version)
@@ -70,8 +71,6 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         depends_on("automake@1.15:", type="build", when="target={0}:".format(_target))
     depends_on("pkgconfig", type="build")
 
-    build_directory = "spack-build"
-
     conflicts("%nvhpc", when="@:4.0.2")
 
     @classmethod
@@ -79,18 +78,6 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         output = Executable(exe)("-version", output=str, error=str)
         match = re.search(r"SWIG\s+Version\s+(\S+)", output)
         return match.group(1) if match else None
-
-    @run_after("install")
-    def create_symlink(self):
-        # CMake compatibility: see https://github.com/spack/spack/pull/6240
-        with working_dir(self.prefix.bin):
-            os.symlink("swig", "swig{0}".format(self.spec.version.up_to(2)))
-
-    for _version in _autoconf_versions:
-
-        @when(_version)
-        def autoreconf(self, spec, prefix):
-            which("sh")("./autogen.sh")
 
     @property
     def _installed_exe(self):
@@ -134,3 +121,19 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     def test(self):
         self._test_version()
         self._test_swiglib()
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    build_directory = "spack-build"
+
+    @run_after("install")
+    def create_symlink(self):
+        # CMake compatibility: see https://github.com/spack/spack/pull/6240
+        with working_dir(self.prefix.bin):
+            os.symlink("swig", "swig{0}".format(self.spec.version.up_to(2)))
+
+    for _version in Swig.AUTOCONF_VERSIONS:
+
+        @when(_version)
+        def autoreconf(self, pkg, spec, prefix):
+            which("sh")("./autogen.sh")

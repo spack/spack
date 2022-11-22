@@ -14,14 +14,13 @@ class JediUmEnv(BundlePackage):
     homepage = "https://github.com/JCSDA-internal/um-bundle"
     git = "https://github.com/JCSDA-internal/um-bundle.git"
 
-    maintainers = ["climbfuji", "rhoneyager"]
+    maintainers = ["climbfuji", "srherbener"]
 
     version("1.0.0")
 
-    depends_on("base-env", type="run")
+    depends_on("jedi-base-env", type="run")
     depends_on("ectrans", type="run")
     depends_on("fiat", type="run")
-    depends_on("jedi-base-env", type="run")
     depends_on("shumlib", type="run")
 
     # There is no need for install() since there is no code.

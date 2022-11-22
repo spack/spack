@@ -17,6 +17,7 @@ class RRsamtools(RPackage):
 
     bioc = "Rsamtools"
 
+    version("2.14.0", commit="8302eb7fa1c40384f1af5855222d94f2efbdcad1")
     version("2.12.0", commit="d6a65dd57c5a17e4c441a27492e92072f69b175e")
     version("2.10.0", commit="b19738e85a467f9032fc7903be3ba10e655e7061")
     version("2.6.0", commit="f2aea061517c5a55e314c039251ece9831c7fad2")
@@ -46,6 +47,7 @@ class RRsamtools(RPackage):
     depends_on("r-biocparallel", type=("build", "run"))
     depends_on("r-rhtslib@1.16.3", type=("build", "run"), when="@2.0.3")
     depends_on("r-rhtslib@1.17.7:", type=("build", "run"), when="@2.2.1:")
+    depends_on("r-rhtslib@1.99.3:", type=("build", "run"), when="@2.14.0:")
     depends_on("gmake", type="build")
 
     # this is not a listed dependency but is needed

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import sys
 
 import pytest
@@ -11,26 +10,6 @@ import pytest
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.spec import Spec
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-def test_global_activation(install_mockery, mock_fetch):
-    """This test ensures that views which are maintained inside of an extendee
-    package's prefix are maintained as expected and are compatible with
-    global activations prior to #7152.
-    """
-    spec = Spec("extension1").concretized()
-    pkg = spec.package
-    pkg.do_install()
-    pkg.do_activate()
-
-    extendee_spec = spec["extendee"]
-    extendee_pkg = spec["extendee"].package
-    view = extendee_pkg.view()
-    assert pkg.is_activated(view)
-
-    expected_path = os.path.join(extendee_spec.prefix, ".spack", "extensions.yaml")
-    assert view.extensions_layout.extension_file_path(extendee_spec) == expected_path
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")

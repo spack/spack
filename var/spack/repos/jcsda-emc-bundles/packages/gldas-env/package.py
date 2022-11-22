@@ -12,7 +12,7 @@ class GldasEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/GLDAS"
     git = "https://github.com/NOAA-EMC/GLDAS.git"
 
-    maintainers = ["kgerheiser"]
+    maintainers = ["AlexanderRichert-NOAA"]
 
     version("1.0.0")
 
