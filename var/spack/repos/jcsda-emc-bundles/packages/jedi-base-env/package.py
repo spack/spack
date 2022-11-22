@@ -19,6 +19,7 @@ class JediBaseEnv(BundlePackage):
     # Variants defining packages that we cannot distribute publicly
     # Need to find a free fftw provider for fftw-api ...
     variant("fftw", default=True, description="Build fftw")
+    variant("hdf4", default=True, description="Build hdf4 library and python hdf module")
 
     depends_on("base-env", type="run")
     depends_on("bison", type="run")
@@ -37,7 +38,7 @@ class JediBaseEnv(BundlePackage):
     depends_on("git-lfs", type="run")
     depends_on("gsibec", type="run")
     depends_on("gsl-lite", type="run")
-    depends_on("hdf", type="run")
+    depends_on("hdf", when="+hdf4", type="run")
     depends_on("jedi-cmake", type="run")
     depends_on("netcdf-cxx4", type="run")
     depends_on("ncview", type="run")
@@ -51,7 +52,7 @@ class JediBaseEnv(BundlePackage):
     depends_on("py-pandas", type="run")
     depends_on("py-pycodestyle", type="run")
     depends_on("py-pybind11", type="run")
-    depends_on("py-pyhdf", type="run")
+    depends_on("py-pyhdf", when="+hdf4", type="run")
     depends_on("py-python-dateutil", type="run")
     depends_on("py-pyyaml", type="run")
     depends_on("py-scipy", type="run")
