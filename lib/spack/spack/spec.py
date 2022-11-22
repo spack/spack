@@ -4418,10 +4418,7 @@ class Spec(object):
         TODO: allow, e.g., ``$6#`` to customize short hash length
         TODO: allow, e.g., ``$//`` for full hash.
         """
-        tty.warn(
-            "Using the old Spec.format method."
-            " This method was deprecated in Spack v0.15 and will be removed in Spack v0.20"
-        )
+
         color = kwargs.get("color", False)
 
         # Dictionary of transformations for named tokens
