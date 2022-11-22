@@ -38,7 +38,6 @@ class PyPyproj(PythonPackage):
     depends_on("python@2.7:2.8,3.5:", when="@2.2:", type=("build", "link", "run"))
     depends_on("python@2.6:2.8,3.3:", type=("build", "link", "run"))
     depends_on("py-certifi", when="@3.0:", type=("build", "run"))
-    depends_on("py-aenum", when="@2.2 ^python@:3.5", type=("build", "run"))
 
     # https://pyproj4.github.io/pyproj/stable/installation.html#installing-from-source
     depends_on("proj@8.2:", when="@3.4:")

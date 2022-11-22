@@ -21,8 +21,7 @@ class PyTwisted(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@35.0.2:", type="build", when="@21.7.0:")
 
-    depends_on("py-zope-interface@3.6.0:", type=("build", "run"), when="^python@:2")
-    depends_on("py-zope-interface@4.0.2:", type=("build", "run"), when="^python@3:")
+    depends_on("py-zope-interface@4.0.2:", type=("build", "run"))
     depends_on("py-zope-interface@4.4.2:", type=("build", "run"), when="@21.7.0:")
 
     depends_on("py-incremental@21.3.0:", type=("build", "run"), when="@21.7.0:")

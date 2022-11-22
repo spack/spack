@@ -29,7 +29,6 @@ class PyNbmake(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-poetry-core@1:", type="build")
-    depends_on("py-pathlib@1.0.1:1", when="@:0.8 ^python@:3.3", type=("build", "run"))
     depends_on("py-pydantic@1.7.2:1", type=("build", "run"))
     depends_on("py-pytest@6.1.0:", when="@1.2.1:", type=("build", "run"))
     depends_on("py-pytest@6.1.0:6", when="@0.10:1.2.0", type=("build", "run"))

@@ -19,23 +19,15 @@ class PyPymatgen(PythonPackage):
     version(
         "2020.12.31", sha256="5002490facd47c55d2dae42c35712e061c1f5d881180485c0543a899589856d6"
     )
-    version("4.7.2", sha256="e439b78cc3833a03963c3c3efe349d8a0e52a1550c8a05c56a89aa1b86657436")
-    version("4.6.2", sha256="f34349090c6f604f7d402cb09cd486830b38523639d7160d7fd282d504036a0e")
 
-    # Old versions come pre-cythonized and so don't support newer python versions
-    # and 2021.1.1 and newer require Python >= 3.7
-    extends("python@:3.6", ignore="bin/tabulate", when="@:4.7.2")
-    extends("python@3.7:", ignore="bin/tabulate", when="@2021.1.1:")
+    extends("python@3.7:", ignore="bin/tabulate")
 
     depends_on("py-setuptools@18.0:", type="build")
 
     depends_on("py-numpy@1.9:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"), when="@:4.7.2")
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-pyyaml@3.11:", type=("build", "run"), when="@:4.7.2")
     depends_on("py-monty@0.9.6:", type=("build", "run"))
     depends_on("py-scipy@0.14:", type=("build", "run"))
-    depends_on("py-pydispatcher@2.0.5:", type=("build", "run"), when="@:4.7.2")
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-spglib@1.9.8.7:", type=("build", "run"))
     depends_on("py-matplotlib@1.5:", type=("build", "run"))

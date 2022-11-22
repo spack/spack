@@ -16,9 +16,6 @@ class CbtfArgonavis(CMakePackage):
     git = "https://github.com/OpenSpeedShop/cbtf-argonavis.git"
 
     version("develop", branch="master")
-    version("1.9.4.1", branch="1.9.4.1")
-    version("1.9.4", branch="1.9.4")
-    version("1.9.3", branch="1.9.3")
 
     variant(
         "crayfe",
@@ -54,17 +51,12 @@ class CbtfArgonavis(CMakePackage):
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+lwthreads", when="@develop", type=("build", "link", "run"))
-    depends_on("mrnet@5.0.1-3+lwthreads", when="@1.9.3:9999", type=("build", "link", "run"))
 
     # For CBTF
     depends_on("cbtf@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("cbtf@1.9.3:9999", when="@1.9.3:9999", type=("build", "link", "run"))
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when="@develop+runtime", type=("build", "link", "run"))
-    depends_on(
-        "cbtf@1.9.3:9999+runtime", when="@1.9.3:9999+runtime", type=("build", "link", "run")
-    )
 
     # For libmonitor
     depends_on("libmonitor@2013.02.18+commrank", type=("build", "link", "run"))
@@ -74,13 +66,9 @@ class CbtfArgonavis(CMakePackage):
 
     # For CBTF-KRELL
     depends_on("cbtf-krell@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("cbtf-krell@1.9.3:9999", when="@1.9.3:9999", type=("build", "link", "run"))
 
     depends_on(
         "cbtf-krell@develop+runtime", when="@develop+runtime", type=("build", "link", "run")
-    )
-    depends_on(
-        "cbtf-krell@1.9.3:9999+runtime", when="@1.9.3:9999+runtime", type=("build", "link", "run")
     )
 
     # For CUDA

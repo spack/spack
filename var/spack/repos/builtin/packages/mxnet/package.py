@@ -110,7 +110,6 @@ class Mxnet(CMakePackage, CudaPackage):
     depends_on("python@3.6:", when="@2.0.0:+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
-    depends_on("py-contextvars", when="@2.0.0:+python ^python@3.6.0:3.6", type=("build", "run"))
     depends_on("py-setuptools", when="+python", type="build")
     depends_on("py-cython", when="+python", type="build")
     depends_on("py-numpy@1.17:", when="@2.0.0:+python", type=("build", "run"))

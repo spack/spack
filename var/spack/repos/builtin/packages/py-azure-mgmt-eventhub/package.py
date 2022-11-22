@@ -19,4 +19,3 @@ class PyAzureMgmtEventhub(PythonPackage):
     depends_on("py-msrest@0.5.0:", type=("build", "run"))
     depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
     depends_on("py-azure-common@1.1:1", type=("build", "run"))
-    depends_on("py-azure-mgmt-nspkg", when="^python@:2", type=("build", "run"))

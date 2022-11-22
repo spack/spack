@@ -70,7 +70,6 @@ class PyCartopy(PythonPackage):
     depends_on("py-pyshp@1.1.4:", type=("build", "run"))
     depends_on("py-pyproj@3:", when="@0.20:", type=("build", "run"))
     depends_on("py-six@1.3:", when="@:0.18", type=("build", "run"))
-    depends_on("py-futures", when="@0.18 ^python@2.7", type=("build", "run"))
 
     # requirements/epsg.txt
     with when("+epsg"):

@@ -39,4 +39,3 @@ class PyMikado(PythonPackage):
     depends_on("py-ujson", type=("build", "run"))
     depends_on("py-simplejson", type=("build", "run"))
     depends_on("python@3.4:", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

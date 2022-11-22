@@ -44,5 +44,4 @@ class PyRpy2(PythonPackage):
 
     # @:2.8.6
     depends_on("r@2.8:", when="@:2.8.6", type=("build", "run"))
-    depends_on("py-singledispatch", when="^python@:2", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

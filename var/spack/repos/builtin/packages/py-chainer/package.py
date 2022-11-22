@@ -37,7 +37,6 @@ class PyChainer(PythonPackage):
     depends_on("py-typing-extensions@:3.6.6", when="@:6", type=("build", "run"))
     depends_on("py-filelock", type=("build", "run"))
     depends_on("py-protobuf@3:", type=("build", "run"))
-    depends_on("py-typing@:3.6.6", when="@:6", type=("build", "run"))
 
     # Dependencies only required for test of ChainerMN
     depends_on("py-matplotlib", type=("build", "run"), when="+mn")

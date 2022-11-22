@@ -33,7 +33,6 @@ class PyMpi4py(PythonPackage):
     depends_on("py-setuptools@40.9:", type="build")
     depends_on("mpi")
     depends_on("py-cython@0.27.0:", when="@master", type="build")
-    depends_on("py-3to2", when="@3.1: ^python@:2", type="build")
 
     @when("@3.1:")
     def install_options(self, spec, prefix):

@@ -45,7 +45,6 @@ class PyOnnx(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@1.8.1:")
     depends_on("py-six", type=("build", "run"), when="@:1.8.1")
-    depends_on("py-typing@3.6.4:", when="@:1.8.1 ^python@:3.4", type=("build", "run"))
     depends_on("py-typing-extensions@3.6.2.1:", type=("build", "run"))
     depends_on("cmake@3.1:", type="build")
     depends_on("py-pytest-runner", type="build")

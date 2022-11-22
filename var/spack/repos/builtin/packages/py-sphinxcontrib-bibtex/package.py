@@ -36,5 +36,4 @@ class PySphinxcontribBibtex(PythonPackage):
     depends_on("py-sphinx@2.1:", type=("build", "run"), when="@2.1.3:")
     depends_on("py-oset@0.1.3:", type=("build", "run"), when="@:2.0.0")
     depends_on("py-docutils@0.8:", type=("build", "run"), when="@2.1.0:")
-    depends_on("py-dataclasses", when="@2.2.0: ^python@:3.6", type=("build", "run"))
     depends_on("py-importlib-metadata@3.6:", when="@2.5.0: ^python@:3.9", type=("build", "run"))

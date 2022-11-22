@@ -31,4 +31,3 @@ class PyZarr(PythonPackage):
     depends_on("py-numcodecs@0.6.2:", type=("build", "run"))
     depends_on("py-numcodecs@0.6.4:", type=("build", "run"), when="@2.4.0:")
     depends_on("py-numpy@1.7:", type=("build", "run"))
-    depends_on("py-scandir", type=("build", "run"), when="^python@:3.4")

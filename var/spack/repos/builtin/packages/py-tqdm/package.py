@@ -30,6 +30,5 @@ class PyTqdm(PythonPackage):
     depends_on("py-setuptools@42:", type=("build", "run"))
     depends_on("py-setuptools-scm@3.4:+toml", type="build")
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
-    depends_on("py-importlib-resources", when="@4.63: ^python@:3.6", type=("build", "run"))
     depends_on("py-requests", when="+telegram", type=("build", "run"))
     depends_on("py-ipywidgets@6:", when="+notebook", type=("build", "run"))

@@ -37,7 +37,6 @@ class PyTorchgeo(PythonPackage):
     depends_on("python@3.6:3+bz2", when="@:0.2", type=("build", "run"))
     depends_on("py-setuptools@42:65", when="@0.3.1:", type="build")
     depends_on("py-setuptools@42:63", when="@:0.3.0", type="build")
-    depends_on("py-dataclasses", when="@0.2 ^python@3.6", type=("build", "run"))
     depends_on("py-einops@0.3:0.4", type=("build", "run"))
     depends_on("py-fiona@1.8:1", when="@0.3:", type=("build", "run"))
     depends_on("py-fiona@1.5:1", when="@:0.2", type=("build", "run"))

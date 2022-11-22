@@ -33,4 +33,3 @@ class PyXopen(PythonPackage):
     depends_on("py-setuptools-scm@6.2:", type="build", when="@1.2.0:")
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-isal@1.0.0:", type=("build", "run"), when="@1.6.0: target=x86_64:")
-    depends_on("py-bz2file", type=("build", "run"), when="@0.5: ^python@:2.8")

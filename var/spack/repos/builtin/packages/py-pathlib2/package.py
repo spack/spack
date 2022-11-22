@@ -21,5 +21,3 @@ class PyPathlib2(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-scandir", when="^python@:3.4", type=("build", "run"))
-    depends_on("py-typing", when="@2.3.7: ^python@:3.4", type=("build", "run"))

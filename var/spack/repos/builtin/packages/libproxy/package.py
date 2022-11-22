@@ -20,12 +20,11 @@ class Libproxy(CMakePackage):
     version("0.4.13", sha256="d610bc0ef81a18ba418d759c5f4f87bf7102229a9153fb397d7d490987330ffd")
 
     variant("perl", default=False, description="Enable Perl bindings")
-    variant("python", default=True, description="Enable Python bindings")
+    variant("python", default=True, description="Enable Python bindings", when="@0.4.16:")
 
     depends_on("zlib")
     depends_on("perl", type=("build", "run"), when="+perl")
     depends_on("python", type=("build", "run"), when="+python")
-    depends_on("python@:3.6", type=("build", "run"), when="@:0.4.15 +python")
 
     def cmake_args(self):
         return [

@@ -92,5 +92,4 @@ class PyTensorboard(PythonPackage):
     depends_on("py-werkzeug@0.11.15:", type=("build", "run"))
     depends_on("py-werkzeug@1.0.1:", type=("build", "run"), when="@2.9:")
     depends_on("py-wheel@0.26:", type="build")
-    depends_on("py-futures@3.1.1:", type=("build", "run"), when="^python@:2")
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@:2.4")

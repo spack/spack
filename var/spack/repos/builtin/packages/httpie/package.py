@@ -35,4 +35,3 @@ class Httpie(PythonPackage):
     depends_on("py-requests@2.11:", type=("build", "run"))
     depends_on("py-requests@2.22:+socks", when="@2.5:", type=("build", "run"))
     depends_on("py-requests-toolbelt@0.9.1:", when="@2.5:", type=("build", "run"))
-    depends_on("py-argparse@1.2.1:", type=("build", "run"), when="^python@:2.6,3.0:3.1")

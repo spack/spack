@@ -26,8 +26,6 @@ class PyNipype(PythonPackage):
     depends_on("py-networkx@1.9:", type=("build", "run"))
     depends_on("py-nibabel@2.1:", type=("build", "run"))
     depends_on("py-numpy@1.15.3:", when="^python@3.7:", type=("build", "run"))
-    depends_on("py-numpy@1.13:", when="@1.5: ^python@:3.6", type=("build", "run"))
-    depends_on("py-numpy@1.12:", when="^python@:3.6", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-prov@1.5.2:", type=("build", "run"))
     depends_on("py-pydot@1.2.3:", type=("build", "run"))

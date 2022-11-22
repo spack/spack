@@ -21,4 +21,3 @@ class PyAzureMgmtConsumption(PythonPackage):
     depends_on("py-msrestazure@0.4.32:1", when="@3:", type=("build", "run"))
     depends_on("py-msrestazure@0.4.20:1", type=("build", "run"))
     depends_on("py-azure-common@1.1:1", type=("build", "run"))
-    depends_on("py-azure-mgmt-nspkg", when="@3: ^python@:2", type=("build", "run"))

@@ -36,7 +36,6 @@ class Herwig3(AutotoolsPackage):
     depends_on("vbfnlo@3:")
     depends_on("madgraph5amc")
     depends_on("njet")
-    depends_on("py-gosam", when="^python@2.7.0:2.7")
     depends_on("gosam-contrib")
     depends_on("openloops")
 
@@ -59,9 +58,6 @@ class Herwig3(AutotoolsPackage):
             "--with-vbfnlo=" + self.spec["vbfnlo"].prefix,
             "--with-evtgen=" + self.spec["evtgen"].prefix,
         ]
-
-        if self.spec.satisfies("^python@2.7.0:2.7"):
-            args.append("--with-gosam=" + self.spec["gosam"].prefix)
 
         return args
 

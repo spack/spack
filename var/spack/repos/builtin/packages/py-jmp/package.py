@@ -19,5 +19,4 @@ class PyJmp(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.19.5:", type=("build", "run"))
-    depends_on("py-dataclasses@0.7:", type=("build", "run"), when="^python@:3.6")
     depends_on("py-jax@0.1.71:", type=("build", "run"))

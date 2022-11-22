@@ -17,4 +17,3 @@ class PyHyperlink(PythonPackage):
     depends_on("python@2.6:2,3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-idna@2.5:", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

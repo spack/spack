@@ -17,5 +17,4 @@ class PyAiocontextvars(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-contextvars@2.4", when="^python@:3.6", type=("build", "run"))
     depends_on("py-pytest-runner", type="build")

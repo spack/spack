@@ -24,4 +24,3 @@ class PyLz4(PythonPackage):
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-pkgconfig", type="build")
     depends_on("lz4@1.7.5:")
-    depends_on("py-future", when="^python@:2", type=("build", "run"))

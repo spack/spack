@@ -22,17 +22,9 @@ class PyMouseinfo(PythonPackage):
 
     # rubicon-objc;platform_system=="Darwin"',
     # 'python3-Xlib;platform_system=="Linux" and python_version>="3.0"',
-    # 'Xlib;platform_system=="Linux" and python_version<"3.0"',
     # Conflicting until rubicon-objc exists
     conflicts("platform=darwin")
-    depends_on("py-python3-xlib", when="^python@3 platform=linux", type=("build", "run"))
-    depends_on("py-python-xlib", when="^python@2 platform=linux", type=("build", "run"))
+    depends_on("py-python3-xlib", when="platform=linux", type=("build", "run"))
 
     depends_on("py-pyperclip", type=("build", "run"))
-    depends_on("pil@5.2.0:", when="^python@3.7:", type=("build", "run"))
-    depends_on("pil@4.0.0:", when="^python@3.6", type=("build", "run"))
-    depends_on("pil@3.2.0:", when="^python@3.5", type=("build", "run"))
-    depends_on("pil@2.5.0:5.4.1", when="^python@3.4", type=("build", "run"))
-    depends_on("pil@2.0.0:4.3.0", when="^python@3.3", type=("build", "run"))
-    depends_on("pil@2.0.0:3.4.2", when="^python@3.2", type=("build", "run"))
-    depends_on("pil@2.0.0:", when="^python@2.7", type=("build", "run"))
+    depends_on("pil@5.2.0:", type=("build", "run"))

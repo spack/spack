@@ -37,7 +37,6 @@ class PyKubernetes(PythonPackage):
     depends_on("py-pyyaml@3.12:", when="@:18.19", type=("build", "run"))
     depends_on("py-pyyaml@5.4.1:", when="@18.20.0:", type=("build", "run"))
     depends_on("py-google-auth@1.0.1:", type=("build", "run"))
-    depends_on("py-ipaddress@1.0.17:", when="^python@:2.8", type=("build", "run"))
     depends_on("py-websocket-client@0.32:0.39,0.43:", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-requests-oauthlib", type=("build", "run"))
