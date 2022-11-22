@@ -31,7 +31,6 @@ The available directives are:
   * ``version``
 
 """
-import copy
 import functools
 import os.path
 import re
@@ -802,7 +801,7 @@ def drop_patch(name):
                 # Future-proofing
                 raise RuntimeError("Unknown patch type: " + str(type(p)))
 
-        old_patches = copy.deepcopy(pkg.patches)
+        old_patches = pkg.patches
         new_patches = {}
         for spec, patches in old_patches.items():
             filtered_patches = [p for p in patches if not filter_func(p)]
