@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import subprocess
 
 from spack.package import *
 
@@ -88,7 +89,7 @@ class Esmf(MakefilePackage):
         when="@8.3.0b09",
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
-    variant("caplinks", default=False, description="Create symlinks libESMF.{a,so}")
+    variant("shared", default=True, description="Build shared library")
 
     # Required dependencies
     depends_on("zlib")
@@ -99,7 +100,6 @@ class Esmf(MakefilePackage):
     depends_on("lapack@3:", when="+external-lapack")
     depends_on("netcdf-c@3.6:", when="+netcdf")
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
-    depends_on("hdf5+hl", when="+netcdf^netcdf-fortran~shared")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
     depends_on("parallelio@2.5.8:", when="+parallelio")
@@ -312,14 +312,11 @@ class Esmf(MakefilePackage):
             # NetCDF format.
             os.environ["ESMF_NETCDF"] = "nc-config"
             os.environ["ESMF_NFCONFIG"] = "nf-config"
-
-            if spec["hdf5"].satisfies("~shared"):
-                ESMF_NETCDF_LIBS = [spec["netcdf-c"].libs.link_flags]
-                ESMF_NETCDF_LIBS.append(spec["netcdf-fortran"].libs.link_flags)
-                ESMF_NETCDF_LIBS.append(spec["hdf5"].libs.link_flags)
-                ESMF_NETCDF_LIBS.append(spec["hdf5:hl"].libs.link_flags)
-                ESMF_NETCDF_LIBS.append(spec["zlib"].libs.link_flags)
-                os.environ["ESMF_NETCDF_LIBS"] = " ".join(ESMF_NETCDF_LIBS)
+            if spec["netcdf-c"].satisfies("~shared"):
+                nc_pc_cmd = ["nc-config","--static","--libs"]
+                nc_flags = \
+                  subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+                os.environ["ESMF_NETCDF_LIBS"] = nc_flags
 
         ###################
         # Parallel-NetCDF #
@@ -366,15 +363,12 @@ class Esmf(MakefilePackage):
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
 
+        if "~shared" in spec:
+            os.environ["ESMF_SHARED_LIB_BUILD"] = "OFF"
+
     @run_after("install")
     def install_findesmf(self):
         install_tree("cmake", self.prefix.cmake)
-
-    @run_after("install")
-    def install_caplinks(self):
-        if "+caplinks" in self.spec:
-            os.symlink(f"{self.prefix.lib}/libesmf.so",f"{self.prefix.lib}/libESMF.so")
-            os.symlink(f"{self.prefix.lib}/libesmf.a",f"{self.prefix.lib}/libESMF.a")
 
     def check(self):
         make("check", parallel=False)
