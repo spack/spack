@@ -15,22 +15,35 @@ import warnings
 import llnl.util.filesystem
 import llnl.util.tty
 
-import spack.operating_systems.windows_os as winOs
 import spack.util.environment
 import spack.util.ld_so_conf
 
-from .common import (
+from .common import (  # find_windows_compiler_bundled_packages,
     DetectedPackage,
+    WindowsCompilerExternalPaths,
+    WindowsKitExternalPaths,
     _convert_to_iterable,
     compute_windows_program_path_for_package,
+    compute_windows_user_path_for_package,
     executable_prefix,
     find_win32_additional_install_paths,
-    is_executable,
     library_prefix,
+    path_to_dict,
 )
 
+is_windows = sys.platform == "win32"
 
-def executables_in_path(path_hints=None):
+
+def common_windows_package_paths():
+    paths = WindowsCompilerExternalPaths.find_windows_compiler_bundled_packages()
+    paths.extend(find_win32_additional_install_paths())
+    paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
+    paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
+    paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
+    return paths
+
+
+def executables_in_path(path_hints):
     """Get the paths of all executables available from the current PATH.
 
     For convenience, this is constructed as a dictionary where the keys are
@@ -44,36 +57,10 @@ def executables_in_path(path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    # If we're on a Windows box, run vswhere,
-    # steal the installationPath using windows_os.py logic,
-    # construct paths to CMake and Ninja, add to PATH
-    path_hints = path_hints or spack.util.environment.get_path("PATH")
-    if sys.platform == "win32":
-        msvc_paths = list(winOs.WindowsOs.vs_install_paths)
-        msvc_cmake_paths = [
-            os.path.join(
-                path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin"
-            )
-            for path in msvc_paths
-        ]
-        path_hints = msvc_cmake_paths + path_hints
-        msvc_ninja_paths = [
-            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
-            for path in msvc_paths
-        ]
-        path_hints = msvc_ninja_paths + path_hints
-        path_hints.extend(find_win32_additional_install_paths())
+    if is_windows:
+        path_hints.extend(common_windows_package_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
-
-    path_to_exe = {}
-    # Reverse order of search directories so that an exe in the first PATH
-    # entry overrides later entries
-    for search_path in reversed(search_paths):
-        for exe in os.listdir(search_path):
-            exe_path = os.path.join(search_path, exe)
-            if is_executable(exe_path):
-                path_to_exe[exe_path] = exe
-    return path_to_exe
+    return path_to_dict(search_paths)
 
 
 def libraries_in_ld_and_system_library_path(path_hints=None):
@@ -102,16 +89,23 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
         + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
     )
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+    return path_to_dict(search_paths)
 
-    path_to_lib = {}
-    # Reverse order of search directories so that a lib in the first
-    # LD_LIBRARY_PATH entry overrides later entries
-    for search_path in reversed(search_paths):
-        for lib in os.listdir(search_path):
-            lib_path = os.path.join(search_path, lib)
-            if llnl.util.filesystem.is_readable_file(lib_path):
-                path_to_lib[lib_path] = lib
-    return path_to_lib
+
+def libraries_in_windows_paths(path_hints):
+    path_hints.extend(spack.util.environment.get_path("PATH"))
+    search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+    # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
+    # at the search root. Add both of those options to the search scheme
+    search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*path_hints))
+    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
+    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
+    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
+    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
+    # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
+    # location, so we handle that case specifically.
+    search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
+    return path_to_dict(search_paths)
 
 
 def _group_by_prefix(paths):
@@ -141,12 +135,23 @@ def by_library(packages_to_check, path_hints=None):
             DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH environment variables
             and standard system library paths.
     """
-    path_to_lib_name = libraries_in_ld_and_system_library_path(path_hints=path_hints)
+    # If no path hints from command line, intialize to empty list so
+    # we can add default hints on a per package basis
+    path_hints = [] if path_hints is None else path_hints
+
     lib_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, "libraries"):
             for lib in pkg.libraries:
                 lib_pattern_to_pkgs[lib].append(pkg)
+        path_hints.extend(compute_windows_user_path_for_package(pkg))
+        path_hints.extend(compute_windows_program_path_for_package(pkg))
+
+    path_to_lib_name = (
+        libraries_in_ld_and_system_library_path(path_hints=path_hints)
+        if not is_windows
+        else libraries_in_windows_paths(path_hints)
+    )
 
     pkg_to_found_libs = collections.defaultdict(set)
     for lib_pattern, pkgs in lib_pattern_to_pkgs.items():
@@ -231,13 +236,14 @@ def by_executable(packages_to_check, path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    path_hints = [] if path_hints is None else path_hints
+    path_hints = spack.util.environment.get_path("PATH") if path_hints is None else path_hints
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, "executables"):
             for exe in pkg.platform_executables():
                 exe_pattern_to_pkgs[exe].append(pkg)
         # Add Windows specific, package related paths to the search paths
+        path_hints.extend(compute_windows_user_path_for_package(pkg))
         path_hints.extend(compute_windows_program_path_for_package(pkg))
 
     path_to_exe_name = executables_in_path(path_hints=path_hints)
