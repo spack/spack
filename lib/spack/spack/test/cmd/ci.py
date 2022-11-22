@@ -706,6 +706,8 @@ spack:
 """
         )
 
+    monkeypatch.setattr(spack.ci, "SHARED_PR_MIRROR_URL", "https://fake.shared.pr.mirror")
+
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
         outputfile = str(tmpdir.join(".gitlab-ci.yml"))
@@ -952,7 +954,7 @@ def test_ci_rebuild_mock_success(
             assert "Cannot copy test logs" in out
 
 
-@pytest.mark.xfail(reason="fails intermittently and covered by gitlab ci")
+@pytest.mark.skip(reason="fails intermittently and covered by gitlab ci")
 def test_ci_rebuild(
     tmpdir,
     working_env,
@@ -1011,7 +1013,6 @@ def test_ci_rebuild(
 
         assert "--keep-stage" in install_parts
         assert "--no-check-signature" not in install_parts
-        assert "--no-add" in install_parts
         assert "-f" in install_parts
         flag_index = install_parts.index("-f")
         assert "archive-files.json" in install_parts[flag_index + 1]
@@ -1261,7 +1262,7 @@ spack:
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", json_path)
+            install_cmd("--add", "--keep-stage", json_path)
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
@@ -1623,7 +1624,7 @@ spack:
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", "-f", json_path)
+            install_cmd("--add", "--keep-stage", "-f", json_path)
             buildcache_cmd("create", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 

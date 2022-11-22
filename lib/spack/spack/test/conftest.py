@@ -591,6 +591,16 @@ def linux_os():
     return LinuxOS(name=name, version=version)
 
 
+@pytest.fixture
+def ensure_debug(monkeypatch):
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
+
+    yield
+
+    tty.set_debug(current_debug_level)
+
+
 @pytest.fixture(autouse=is_windows, scope="session")
 def platform_config():
     spack.config.add_default_platform_scope(spack.platforms.real_host().name)
@@ -1633,7 +1643,7 @@ def mock_executable(tmpdir):
     """
     import jinja2
 
-    shebang = "#!/bin/bash\n" if not is_windows else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if not is_windows else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
@@ -1798,14 +1808,24 @@ def mock_tty_stdout(monkeypatch):
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
 
 
+@pytest.fixture
+def prefix_like():
+    return "package-0.0.0.a1-hashhashhashhashhashhashhashhash"
+
+
 @pytest.fixture()
-def binary_with_rpaths(tmpdir):
+def prefix_tmpdir(tmpdir, prefix_like):
+    return tmpdir.mkdir(prefix_like)
+
+
+@pytest.fixture()
+def binary_with_rpaths(prefix_tmpdir):
     """Factory fixture that compiles an ELF binary setting its RPATH. Relative
     paths are encoded with `$ORIGIN` prepended.
     """
 
     def _factory(rpaths, message="Hello world!"):
-        source = tmpdir.join("main.c")
+        source = prefix_tmpdir.join("main.c")
         source.write(
             """
         #include <stdio.h>
@@ -1832,3 +1852,27 @@ def binary_with_rpaths(tmpdir):
         return executable
 
     return _factory
+
+
+@pytest.fixture(scope="session")
+def concretized_specs_cache():
+    """Cache for mock concrete specs"""
+    return {}
+
+
+@pytest.fixture
+def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+    """Return the default mock concretization of a spec literal, obtained using the mock
+    repository and the mock configuration.
+
+    This fixture is unsafe to call in a test when either the default configuration or mock
+    repository are not used or have been modified.
+    """
+
+    def _func(spec_str, tests=False):
+        key = spec_str, tests
+        if key not in concretized_specs_cache:
+            concretized_specs_cache[key] = spack.spec.Spec(spec_str).concretized(tests=tests)
+        return concretized_specs_cache[key].copy()
+
+    return _func

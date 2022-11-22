@@ -229,7 +229,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
-            args.append("CCTYPE=%s" % self.compiler.msvc_version)
+            args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
         args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
@@ -481,28 +481,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         patterns = [r"perllocal\.pod$"]
 
         return match_predicate(ignore_arg, patterns)
-
-    def activate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).activate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        exts[ext_pkg.name] = ext_pkg.spec
-
-    def deactivate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).deactivate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        # Make deactivate idempotent
-        if ext_pkg.name in exts:
-            del exts[ext_pkg.name]
 
     @property
     def command(self):

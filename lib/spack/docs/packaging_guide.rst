@@ -2634,9 +2634,12 @@ extendable package:
        extends('python')
        ...
 
-Now, the ``py-numpy`` package can be used as an argument to ``spack
-activate``.  When it is activated, all the files in its prefix will be
-symbolically linked into the prefix of the python package.
+This accomplishes a few things. Firstly, the Python package can set special
+variables such as ``PYTHONPATH`` for all extensions when the run or build
+environment is set up. Secondly, filesystem views can ensure that extensions
+are put in the same prefix as their extendee. This ensures that Python in
+a view can always locate its Python packages, even without environment
+variables set.
 
 A package can only extend one other package at a time.  To support packages
 that may extend one of a list of other packages, Spack supports multiple
@@ -2684,9 +2687,8 @@ variant(s) are selected.  This may be accomplished with conditional
        ...
 
 Sometimes, certain files in one package will conflict with those in
-another, which means they cannot both be activated (symlinked) at the
-same time.  In this case, you can tell Spack to ignore those files
-when it does the activation:
+another, which means they cannot both be used in a view at the
+same time.  In this case, you can tell Spack to ignore those files:
 
 .. code-block:: python
 
@@ -2698,7 +2700,7 @@ when it does the activation:
        ...
 
 The code above will prevent everything in the ``$prefix/bin/`` directory
-from being linked in at activation time.
+from being linked in a view.
 
 .. note::
 
@@ -2721,67 +2723,6 @@ binary since the real path of the Python executable is used to detect
 extensions; as a consequence python extension packages (those inheriting from
 ``PythonPackage``) likewise override ``add_files_to_view`` in order to rewrite
 shebang lines which point to the Python interpreter.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Activation & deactivation
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Adding an extension to a view is referred to as an activation. If the view is
-maintained in the Spack installation prefix of the extendee this is called a
-global activation. Activations may involve updating some centralized state
-that is maintained by the extendee package, so there can be additional work
-for adding extensions compared with non-extension packages.
-
-Spack's ``Package`` class has default ``activate`` and ``deactivate``
-implementations that handle symbolically linking extensions' prefixes
-into a specified view. Extendable packages can override these methods
-to add custom activate/deactivate logic of their own.  For example,
-the ``activate`` and ``deactivate`` methods in the Python class handle
-symbolic linking of extensions, but they also handle details surrounding
-Python's ``.pth`` files, and other aspects of Python packaging.
-
-Spack's extensions mechanism is designed to be extensible, so that
-other packages (like Ruby, R, Perl, etc.)  can provide their own
-custom extension management logic, as they may not handle modules the
-same way that Python does.
-
-Let's look at Python's activate function:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.activate
-   :linenos:
-
-This function is called on the *extendee* (Python).  It first calls
-``activate`` in the superclass, which handles symlinking the
-extension package's prefix into the specified view.  It then does
-some special handling of the ``easy-install.pth`` file, part of
-Python's setuptools.
-
-Deactivate behaves similarly to activate, but it unlinks files:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.deactivate
-   :linenos:
-
-Both of these methods call some custom functions in the Python
-package.  See the source for Spack's Python package for details.
-
-^^^^^^^^^^^^^^^^^^^^
-Activation arguments
-^^^^^^^^^^^^^^^^^^^^
-
-You may have noticed that the ``activate`` function defined above
-takes keyword arguments.  These are the keyword arguments from
-``extends()``, and they are passed to both activate and deactivate.
-
-This capability allows an extension to customize its own activation by
-passing arguments to the extendee.  Extendees can likewise implement
-custom ``activate()`` and ``deactivate()`` functions to suit their
-needs.
-
-The only keyword argument supported by default is the ``ignore``
-argument, which can take a regex, list of regexes, or a predicate to
-determine which files *not* to symlink during activation.
 
 .. _virtual-dependencies:
 
@@ -3584,7 +3525,7 @@ will likely contain some overriding of default builder methods:
        def cmake_args(self):
            pass
 
-   class Autotoolsbuilder(spack.build_systems.autotools.AutotoolsBuilder):
+   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
        def configure_args(self):
            pass
 
@@ -4406,16 +4347,9 @@ In addition to invoking the right compiler, the compiler wrappers add
 flags to the compile line so that dependencies can be easily found.
 These flags are added for each dependency, if they exist:
 
-Compile-time library search paths
-* ``-L$dep_prefix/lib``
-* ``-L$dep_prefix/lib64``
-
-Runtime library search paths (RPATHs)
-* ``$rpath_flag$dep_prefix/lib``
-* ``$rpath_flag$dep_prefix/lib64``
-
-Include search paths
-* ``-I$dep_prefix/include``
+* Compile-time library search paths: ``-L$dep_prefix/lib``, ``-L$dep_prefix/lib64``
+* Runtime library search paths (RPATHs): ``$rpath_flag$dep_prefix/lib``, ``$rpath_flag$dep_prefix/lib64``
+* Include search paths: ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
@@ -5260,6 +5194,16 @@ where each argument has the following meaning:
   will run.
 
   The default of ``None`` corresponds to the current directory (``'.'``).
+  Each call starts with the working directory set to the spec's test stage
+  directory (i.e., ``self.test_suite.test_dir_for_spec(self.spec)``).
+
+.. warning::
+
+   Use of the package spec's installation directory for building and running
+   tests is **strongly** discouraged. Doing so has caused permission errors
+   for shared spack instances *and* for facilities that install the software
+   in read-only file systems or directories.
+
 
 """""""""""""""""""""""""""""""""""""""""
 Accessing package- and test-related files
@@ -5267,10 +5211,10 @@ Accessing package- and test-related files
 
 You may need to access files from one or more locations when writing
 stand-alone tests. This can happen if the software's repository does not
-include test source files or includes files but no way to build the
-executables using the installed headers and libraries. In these
-cases, you may need to reference the files relative to one or more
-root directory. The properties containing package- and test-related
+include test source files or includes files but has no way to build the
+executables using the installed headers and libraries. In these cases,
+you may need to reference the files relative to one or more root
+directory. The properties containing package- (or spec-) and test-related
 directory paths are provided in the table below.
 
 .. list-table:: Directory-to-property mapping
@@ -5279,19 +5223,22 @@ directory paths are provided in the table below.
    * - Root Directory
      - Package Property
      - Example(s)
-   * - Package Installation Files
+   * - Package (Spec) Installation
      - ``self.prefix``
      - ``self.prefix.include``, ``self.prefix.lib``
-   * - Package Dependency's Files
+   * - Dependency Installation
      - ``self.spec['<dependency-package>'].prefix``
      - ``self.spec['trilinos'].prefix.include``
-   * - Test Suite Stage Files
+   * - Test Suite Stage
      - ``self.test_suite.stage``
      - ``join_path(self.test_suite.stage, 'results.txt')``
-   * - Staged Cached Build-time Files
+   * - Spec's Test Stage
+     - ``self.test_suite.test_dir_for_spec``
+     - ``self.test_suite.test_dir_for_spec(self.spec)``
+   * - Current Spec's Build-time Files
      - ``self.test_suite.current_test_cache_dir``
      - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
-   * - Staged Custom Package Files
+   * - Current Spec's Custom Test Files
      - ``self.test_suite.current_test_data_dir``
      - ``join_path(self.test_suite.current_test_data_dir, 'hello.f90')``
 

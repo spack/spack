@@ -5,6 +5,7 @@
 from __future__ import division, print_function
 
 import collections
+import collections.abc
 import copy
 import itertools
 import os
@@ -13,11 +14,7 @@ import re
 import types
 import warnings
 
-from six import string_types
-
 import archspec.cpu
-
-from llnl.util.compat import Sequence
 
 try:
     import clingo  # type: ignore[import]
@@ -102,7 +99,15 @@ ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
 #: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = ["spec", "external", "packages_yaml", "package_py", "installed"]
+version_origin_fields = [
+    "spec",
+    "dev_spec",
+    "external",
+    "packages_yaml",
+    "package_py",
+    "installed",
+]
+
 #: Look up version precedence strings by enum id
 version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
 
@@ -206,9 +211,9 @@ def build_criteria_names(costs, tuples):
 
 
 def issequence(obj):
-    if isinstance(obj, string_types):
+    if isinstance(obj, str):
         return False
-    return isinstance(obj, (Sequence, types.GeneratorType))
+    return isinstance(obj, (collections.abc.Sequence, types.GeneratorType))
 
 
 def listify(args):
@@ -218,7 +223,7 @@ def listify(args):
 
 
 def packagize(pkg):
-    if isinstance(pkg, string_types):
+    if isinstance(pkg, str):
         return spack.repo.path.get_pkg_class(pkg)
     else:
         return pkg
@@ -614,11 +619,13 @@ class PyclingoDriver(object):
         self.control = control or default_clingo_control()
         # set up the problem -- this generates facts and rules
         self.assumptions = []
+        timer.start("setup")
         with self.control.backend() as backend:
             self.backend = backend
             setup.setup(self, specs, reuse=reuse)
-        timer.phase("setup")
+        timer.stop("setup")
 
+        timer.start("load")
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
@@ -648,12 +655,13 @@ class PyclingoDriver(object):
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
-        timer.phase("load")
+        timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
         # and first-order logic rules into propositional logic.
+        timer.start("ground")
         self.control.ground([("base", [])])
-        timer.phase("ground")
+        timer.stop("ground")
 
         # With a grounded program, we can run the solve.
         result = Result(specs)
@@ -671,8 +679,10 @@ class PyclingoDriver(object):
 
         if clingo_cffi:
             solve_kwargs["on_unsat"] = cores.append
+
+        timer.start("solve")
         solve_result = self.control.solve(**solve_kwargs)
-        timer.phase("solve")
+        timer.stop("solve")
 
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
@@ -942,7 +952,7 @@ class SpackSolverSetup(object):
         """Manipulate requirements from packages.yaml, and return a list of tuples
         with a uniform structure (name, policy, requirements).
         """
-        if isinstance(requirements, string_types):
+        if isinstance(requirements, str):
             rules = [(pkg_name, "one_of", [requirements])]
         else:
             rules = []
@@ -1463,6 +1473,12 @@ class SpackSolverSetup(object):
                         if concrete_build_deps or dtype != "build":
                             clauses.append(fn.depends_on(spec.name, dep.name, dtype))
 
+                            # Ensure Spack will not coconcretize this with another provider
+                            # for the same virtual
+                            for virtual in dep.package.virtuals_provided:
+                                clauses.append(fn.virtual_node(virtual.name))
+                                clauses.append(fn.provider(dep.name, virtual.name))
+
                     # imposing hash constraints for all but pure build deps of
                     # already-installed concrete specs.
                     if concrete_build_deps or dspec.deptypes != ("build",):
@@ -1483,7 +1499,7 @@ class SpackSolverSetup(object):
 
         return clauses
 
-    def build_version_dict(self, possible_pkgs, specs):
+    def build_version_dict(self, possible_pkgs):
         """Declare any versions in specs not declared in packages."""
         self.declared_versions = collections.defaultdict(list)
         self.possible_versions = collections.defaultdict(set)
@@ -1524,6 +1540,8 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
+    def add_concrete_versions_from_specs(self, specs, origin):
+        """Add concrete versions to possible versions from lists of CLI/dev specs."""
         for spec in specs:
             for dep in spec.traverse():
                 if not dep.versions.concrete:
@@ -1547,7 +1565,7 @@ class SpackSolverSetup(object):
                 # about*, add it to the known versions. Use idx=0, which is the
                 # best possible, so they're guaranteed to be used preferentially.
                 self.declared_versions[dep.name].append(
-                    DeclaredVersion(version=dep.version, idx=0, origin=version_provenance.spec)
+                    DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(dep.version)
 
@@ -1938,11 +1956,28 @@ class SpackSolverSetup(object):
         # rules to generate an ASP program.
         self.gen = driver
 
+        # Calculate develop specs
+        # they will be used in addition to command line specs
+        # in determining known versions/targets/os
+        dev_specs = ()
+        env = ev.active_environment()
+        if env:
+            dev_specs = tuple(
+                spack.spec.Spec(info["spec"]).constrained(
+                    "dev_path=%s"
+                    % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
+                )
+                for name, info in env.dev_specs.items()
+            )
+        specs = tuple(specs)  # ensure compatible types to add
+
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
 
         # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible, specs)
+        self.build_version_dict(possible)
+        self.add_concrete_versions_from_specs(specs, version_provenance.spec)
+        self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
@@ -1960,8 +1995,8 @@ class SpackSolverSetup(object):
 
         # architecture defaults
         self.platform_defaults()
-        self.os_defaults(specs)
-        self.target_defaults(specs)
+        self.os_defaults(specs + dev_specs)
+        self.target_defaults(specs + dev_specs)
 
         self.virtual_providers()
         self.provider_defaults()
@@ -1978,11 +2013,8 @@ class SpackSolverSetup(object):
             self.target_preferences(pkg)
 
         # Inject dev_path from environment
-        env = ev.active_environment()
-        if env:
-            for spec in sorted(specs):
-                for dep in spec.traverse():
-                    _develop_specs_from_env(dep, env)
+        for ds in dev_specs:
+            self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
 
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
@@ -2290,6 +2322,12 @@ class SpecBuilder(object):
                 if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_git_lookup(spec.fullname)
 
+        # Add synthetic edges for externals that are extensions
+        for root in self._specs.values():
+            for dep in root.traverse():
+                if dep.external:
+                    dep.package.update_external_dependencies()
+
         return self._specs
 
 
@@ -2305,8 +2343,7 @@ def _develop_specs_from_env(spec, env):
             "Internal Error: The dev_path for spec {name} is not connected to a valid environment"
             "path. Please note that develop specs can only be used inside an environment"
             "These paths should be the same:\n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
-        )
-        error_msg.format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
+        ).format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
 
         assert spec.variants["dev_path"].value == path, error_msg
     else:

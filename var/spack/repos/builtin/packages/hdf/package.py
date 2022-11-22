@@ -93,6 +93,8 @@ class Hdf(AutotoolsPackage):
         sha256="49733dd6143be7b30a28d386701df64a72507974274f7e4c0a9e74205510ea72",
         when="@4.2.15:",
     )
+    # https://github.com/NOAA-EMC/spack-stack/issues/317
+    patch("hdfi_h_apple_m1.patch", when="@4.2.15: target=aarch64: platform=darwin")
 
     @property
     def libs(self):

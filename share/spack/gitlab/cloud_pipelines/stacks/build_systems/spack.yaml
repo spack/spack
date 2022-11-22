@@ -6,6 +6,7 @@ spack:
     unify: when_possible
 
   config:
+    build_jobs: 32
     install_tree:
       root: /home/software/spack
       padded_length: 512
@@ -36,6 +37,7 @@ spack:
     script:
       - uname -a || true
       - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - nproc
       - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
       - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
       - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
@@ -48,6 +50,8 @@ spack:
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack --color=always --backtrace ci rebuild
+    after_script:
+      - cat /proc/loadavg || true
 
     image:
       name: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"

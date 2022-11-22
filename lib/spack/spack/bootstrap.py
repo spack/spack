@@ -17,8 +17,6 @@ import sys
 import sysconfig
 import uuid
 
-import six
-
 import archspec.cpu
 
 import llnl.util.filesystem as fs
@@ -78,7 +76,7 @@ def _try_import_from_store(module, query_spec, query_info=None):
             command found and the concrete spec providing it
     """
     # If it is a string assume it's one of the root specs by this module
-    if isinstance(query_spec, six.string_types):
+    if isinstance(query_spec, str):
         # We have to run as part of this python interpreter
         query_spec += " ^" + spec_for_current_python()
 
@@ -91,13 +89,6 @@ def _try_import_from_store(module, query_spec, query_info=None):
             os.path.join(candidate_spec.prefix, pkg.platlib),
         ]  # type: list[str]
         path_before = list(sys.path)
-
-        # Python 3.8+ on Windows does not search dependent DLLs in PATH,
-        # so we need to manually add it using os.add_dll_directory
-        # https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
-        if sys.version_info[:2] >= (3, 8) and sys.platform == "win32":
-            if os.path.isdir(candidate_spec.prefix.bin):
-                os.add_dll_directory(candidate_spec.prefix.bin)  # novermin
 
         # NOTE: try module_paths first and last, last allows an existing version in path
         # to be picked up and used, possibly depending on something in the store, first
@@ -476,21 +467,14 @@ def source_is_enabled_or_raise(conf):
 
 def spec_for_current_python():
     """For bootstrapping purposes we are just interested in the Python
-    minor version (all patches are ABI compatible with the same minor)
-    and on whether ucs4 support has been enabled for Python 2.7
+    minor version (all patches are ABI compatible with the same minor).
 
     See:
       https://www.python.org/dev/peps/pep-0513/
       https://stackoverflow.com/a/35801395/771663
     """
     version_str = ".".join(str(x) for x in sys.version_info[:2])
-    variant_str = ""
-    if sys.version_info[0] == 2 and sys.version_info[1] == 7:
-        unicode_size = sysconfig.get_config_var("Py_UNICODE_SIZE")
-        variant_str = "+ucs4" if unicode_size == 4 else "~ucs4"
-
-    spec_fmt = "python@{0} {1}"
-    return spec_fmt.format(version_str, variant_str)
+    return "python@{0}".format(version_str)
 
 
 @contextlib.contextmanager
@@ -873,9 +857,7 @@ def ensure_mypy_in_path_or_raise():
 
 
 def black_root_spec():
-    # black v21 is the last version to support Python 2.7.
-    # Upgrade when we no longer support Python 2.7
-    return _root_spec("py-black@:21")
+    return _root_spec("py-black")
 
 
 def ensure_black_in_path_or_raise():
@@ -932,7 +914,7 @@ def _missing(name, purpose, system_only=True):
 
 def _required_system_executable(exes, msg):
     """Search for an executable is the system path only."""
-    if isinstance(exes, six.string_types):
+    if isinstance(exes, str):
         exes = (exes,)
     if spack.util.executable.which_string(*exes):
         return True, None
@@ -950,7 +932,7 @@ def _required_python_module(module, query_spec, msg):
 
 def _required_executable(exes, query_spec, msg):
     """Search for an executable in the system path or in the bootstrap store."""
-    if isinstance(exes, six.string_types):
+    if isinstance(exes, str):
         exes = (exes,)
     if spack.util.executable.which_string(*exes) or _executables_in_store(exes, query_spec):
         return True, None

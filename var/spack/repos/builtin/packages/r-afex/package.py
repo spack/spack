@@ -24,6 +24,7 @@ class RAfex(RPackage):
 
     cran = "afex"
 
+    version("1.2-0", sha256="8b57ffb8ba2f6354185fc79c8b0cab2703d753b89a100f4325bb2e4c7a3531c2")
     version("1.1-1", sha256="66011599b193ebbb3bd241eb7200bd68ac4b5d2d1df84e63e9fdd72fb4110427")
     version("1.0-1", sha256="6febc34b87a1109f5cbcd213c08d2b7b3e9cf99065fa41c19bc88ac99fb104cc")
     version("0.28-1", sha256="cfb0b79bfa01b590afc3354a5b2ad3640d2f4974b036d6c256fa8e684bc69c2e")

@@ -14,6 +14,7 @@ class REvaluate(RPackage):
 
     cran = "evaluate"
 
+    version("0.18", sha256="7f4eecdc97ac286d5c7a39c454fe6798da38ef634bf9305c595faa8facb2bf36")
     version("0.17", sha256="49c743c94cb967911af0e5555861a3762cd840b98578882671b583cff86ba963")
     version("0.15", sha256="885aee530a8b6aa7fd3acaa1ecd94ab58b71038c879ca37405f948e105907c5d")
     version("0.14", sha256="a8c88bdbe4e60046d95ddf7e181ee15a6f41cdf92127c9678f6f3d328a3c5e28")
