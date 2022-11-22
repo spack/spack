@@ -65,7 +65,9 @@ class Ccache(CMakePackage):
     depends_on("hiredis@0.13.3:", when="@4.4: +redis")
     depends_on("pkgconfig", type="build", when="@4.4:")
 
+    conflicts("%gcc@:8", when="@4.7:")
     conflicts("%gcc@:5", when="@4.4:")
+    conflicts("%clang@:7", when="@4.7:")
     conflicts("%clang@:4", when="@4.4:")
 
     def cmake_args(self):
