@@ -3398,12 +3398,12 @@ class Spec(object):
         self._normal = True
         return any_change
 
-    def normalized(self):
+    def normalized(self, tests=False):
         """
         Return a normalized copy of this spec without modifying this spec.
         """
         clone = self.copy()
-        clone.normalize()
+        clone.normalize(tests=tests)
         return clone
 
     def validate_or_raise(self):
