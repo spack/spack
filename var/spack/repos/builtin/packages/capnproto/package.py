@@ -12,27 +12,27 @@ class Capnproto(AutotoolsPackage):
     """
 
     homepage = "https://capnproto.org"
-    url = "https://github.com/capnproto/capnproto/archive/refs/tags/v0.8.0.zip"
+    url = "https://github.com/capnproto/capnproto/archive/refs/tags/v0.8.0.tar.gz"
     git = "https://github.com/capnproto/capnproto"
 
     maintainers = ["a.knieps"]
 
     version("master", branch="master")
-    version("0.10.2", sha256="b44e97b391139f35f1749d65d741cc672a72e9396ffb83057bc58f0154ecd18c")
-    version("0.10.1", sha256="f68bd25c2e9b2eadee96dced3c2623d4fdba84f1a1135fb0660a3a3bf3cf04bb")
-    version("0.10.0", sha256="9fddbe3b13b70e39fda376f8d0bba3e70ddaecaf2fa3962ecb427195d83594cb")
-    version("0.9.1", sha256="5d8cc078d866722acf09bd610f3d58565c29986e0a1ca5a4b4cf4a2778b86e41")
-    version("0.9.0", sha256="18cf46aa4e05446a3d34bad8d56f9d0c73e72020a2b7548b6ec7cb7b1a828d5b")
-    version("0.8.0", sha256="9a5e090b1f3ad39bb47fed5fd03672169493674ce273418b76c868393fced2e4")
-    version("0.7.0", sha256="1054a879e174b8f797f1b506fedb14ecba5556c656e33ac51bd0a62bd90f925f")
-    version("0.6.1", sha256="db365d1a05afdf82d1069cab9a7fae0e1eafdba26616e8d8bdac3abade71612b")
-    version("0.6.0", sha256="5b8401fb30811dcb472791e239a1d034ba890b1d1983cd986a26ccef86f2eb0d")
-    version("0.5.3.1", sha256="c3390a67428d78aa4903c8cc519a94d62dd99c84467be539a380e70ac36ee2c4")
-    version("0.5.3", sha256="e5c9e7404eba86062f88703ae146c4fa919955ce79b4a1880159dd71476886b7")
-    version("0.5.2", sha256="bf3e341bc2c4652da6db08a79f29f658c803e6a8ac10515a702217d2693aae88")
-    version("0.5.1.2", sha256="2f24bc302c72762ccaedf47b7d2f835a42184fe0c8eba6537ac1f57f21abbaa3")
-    version("0.5.1.1", sha256="b56f8d4e6ccfe480dce20aaf9ccab7e7b5fdc3feeeb0d8016ef00fbc2de82263")
-    version("0.4.1.2", sha256="a22b54252f86b5d4edb3770b8d78bf5611dcce34abdc5713af6ff8a093cf9ba6")
+
+    version("0.10.2", sha256="756262841fa66260c9969e900701cc86720c2548584fb96c8153348fd7edfe69")
+    version("0.10.0", sha256="0e46a72d086830762c001116c0a146098fbdce3cd40665a0ffd4742962d42bfd")
+    version("0.9.1", sha256="daf49f794560f715e2f4651c842aaece2d065d4216834c5c3d3254962e35b535")
+    version("0.9.0", sha256="a156efe56b42957ea2d118340d96509af2e40c7ef8f3f8c136df48001a5eb2ac")
+    version("0.8.0", sha256="6d8b43a7ec2a764b4dfe4139a7cdd070ad9057f106898050d9f4db3754b98820")
+    version("0.7.0", sha256="76c7114a3d142ad08b7208b3964a26e72a6320ee81331d3f0b87569fc9c47a28")
+    version("0.6.1", sha256="85210424c09693d8fe158c1970a2bca37af3a0424f02b263f566a1b8a5451a2d")
+    version("0.6.0", sha256="3b73a3dc39592a30b1bb6d00dff930e5fb277c774a1d40bf6a1aa7758c5fec74")
+    version("0.5.3.1", sha256="e9af9ccfcb6d61be2dca1daf75e90daea32cf6f4c7c24a19919815ce527d9ac8")
+    version("0.5.3", sha256="13c66dc1ce2a038562cddeaf48f71f0bb0e15a1d1a1775efa80dff3cdebeea6c")
+    version("0.5.2", sha256="bd8aa7c45120c3bc5e1857d72006171b78a4b698af54dd1e3bfc966b54faedaf")
+    version("0.5.1.2", sha256="e76c2b55e2b6fe8b6db8df46a348c36e7056e95507359118e54db60d746ff244")
+    version("0.5.1.1", sha256="caf308e92683b278bc6c568d4fb5558eca78180cac1eb4a3db15d435bf25116f")
+    version("0.4.1.2", sha256="6376c1910e9bc9d09dc46d53b063c5bdcb5cdf066a8210e9fffe299fb863f0d9")
 
     depends_on("zlib", when="+zlib")
     depends_on("openssl", when="+tls")
