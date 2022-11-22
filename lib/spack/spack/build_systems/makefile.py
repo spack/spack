@@ -10,6 +10,7 @@ import llnl.util.filesystem as fs
 import spack.builder
 import spack.package_base
 from spack.directives import build_system, conflicts, depends_on
+from spack.multimethod import when
 
 from ._checks import (
     BaseBuilder,
@@ -29,8 +30,10 @@ class MakefilePackage(spack.package_base.PackageBase):
     legacy_buildsystem = "makefile"
 
     build_system("makefile")
-    depends_on("gmake", type="build")
-    conflicts("platform=windows", when="build_system=makefile")
+
+    with when("build_system=makefile"):
+        depends_on("gmake", type="build")
+        conflicts("platform=windows")
 
 
 @spack.builder.builder("makefile")
