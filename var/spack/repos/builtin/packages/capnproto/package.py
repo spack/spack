@@ -15,7 +15,7 @@ class Capnproto(AutotoolsPackage):
     url = "https://github.com/capnproto/capnproto/archive/refs/tags/v0.8.0.tar.gz"
     git = "https://github.com/capnproto/capnproto"
 
-    maintainers = ["a.knieps"]
+    maintainers = ["alexrobomind"]
 
     version("master", branch="master")
 
