@@ -63,7 +63,6 @@ class PyMypy(PythonPackage):
     depends_on("python@3.4:", type=("build", "run"))
 
     # Historical dependencies
-    depends_on("py-typing@3.5.3:", when="@:0.699 ^python@:3.4", type=("build", "run"))
     depends_on("py-toml", when="@0.900:0.910", type=("build", "run"))
 
     # https://github.com/python/mypy/issues/13627
