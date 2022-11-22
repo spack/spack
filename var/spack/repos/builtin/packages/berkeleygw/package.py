@@ -125,7 +125,6 @@ class Berkeleygw(MakefilePackage):
         fflags = spec.compiler_flags["fflags"][:]
         if "+openmp" in spec:
             paraflags.append("-DOMP")
-            spec.compiler_flags["fflags"].append(self.compiler.openmp_flag)
             fflags.append(self.compiler.openmp_flag)
 
         buildopts.append("C_PARAFLAG=-DPARA")
