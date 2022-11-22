@@ -152,7 +152,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "python_prefix": sys.exec_prefix,
             "architecture": archspec.cpu.host().family,
             "environment_path": self.environment_root(),
-            "environment_specs": self.spack_dev_requirements() + [spec_for_current_python()],
+            "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),
         }
         self.environment_root().mkdir(parents=True, exist_ok=True)
