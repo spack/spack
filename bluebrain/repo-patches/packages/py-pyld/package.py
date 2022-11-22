@@ -18,3 +18,4 @@ class PyPyld(PythonPackage):
     depends_on('py-cachetools', type=('build', 'run'))
     depends_on('py-frozendict', type=('build', 'run'))
     depends_on('py-lxml', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build'))
