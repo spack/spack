@@ -133,7 +133,7 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False, o
     return specs_from_cli
 
 
-def installed_dependents(specs, env):
+def installed_runtime_dependents(specs, env):
     """Map each spec to a list of its installed dependents.
 
     Args:
@@ -160,10 +160,10 @@ def installed_dependents(specs, env):
 
     for spec in specs:
         for dpt in traverse.traverse_nodes(
-            spec.dependents(deptype="all"),
+            spec.dependents(deptype=("link", "run")),
             direction="parents",
             visited=visited,
-            deptype="all",
+            deptype=("link", "run"),
             root=True,
             key=lambda s: s.dag_hash(),
         ):
@@ -265,7 +265,7 @@ def get_uninstall_list(args, specs, env):
     # args.all takes care of the case where '-a' is given in the cli
     base_uninstall_specs = set(find_matching_specs(env, specs, args.all, args.force))
 
-    active_dpts, outside_dpts = installed_dependents(base_uninstall_specs, env)
+    active_dpts, outside_dpts = installed_runtime_dependents(base_uninstall_specs, env)
     # It will be useful to track the unified set of specs with dependents, as
     # well as to separately track specs in the current env with dependents
     spec_to_dpts = {}
