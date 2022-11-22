@@ -10,7 +10,7 @@ class Hiredis(MakefilePackage, CMakePackage):
     """Hiredis is a minimalistic C client library for the Redis database."""
 
     homepage = "https://github.com/redis/hiredis"
-    url = "https://github.com/redis/hiredis/archive/refs/tags/v1.0.2.tar.gz"
+    url = "https://github.com/redis/hiredis/archive/refs/tags/v1.1.0.tar.gz"
     git = "https://github.com/redis/hiredis.git"
 
     maintainers = ["lpottier", "rblake-llnl"]
@@ -25,8 +25,8 @@ class Hiredis(MakefilePackage, CMakePackage):
     version("0.13.2", sha256="b0cf73ebe039fe25ecaaa881acdda8bdc393ed997e049b04fc20865835953694")
 
     build_system(
-        conditional("cmake", when="@1.0.0:"),
-        conditional("makefile", when="@:0.14.1"),
+        conditional("cmake", when="@1:"),
+        conditional("makefile", when="@:0"),
         default="cmake",
     )
 
