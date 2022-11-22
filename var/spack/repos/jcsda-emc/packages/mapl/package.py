@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import subprocess
+
 from spack.package import *
 
 
@@ -63,7 +65,6 @@ class Mapl(CMakePackage):
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("extdata2g", default=False, description="Use ExtData2G")
     variant("pnetcdf", default=True, description="Use parallel netCDF")
-    variant("buildexe", default=True, description="Build pfio test executables")
 
     depends_on("cmake@3.17:")
     depends_on("mpi")
@@ -80,6 +81,9 @@ class Mapl(CMakePackage):
     depends_on("ecbuild")
 
     def cmake_args(self):
+        nc_pc_cmd = ["nc-config","--static","--libs"]
+        nc_flags = \
+          subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
         args = [
             self.define_from_variant("BUILD_WITH_FLAP", "flap"),
             self.define_from_variant("BUILD_WITH_PFLOGGER", "pflogger"),
@@ -89,6 +93,7 @@ class Mapl(CMakePackage):
             "-DCMAKE_C_COMPILER=%s" % self.spec["mpi"].mpicc,
             "-DCMAKE_CXX_COMPILER=%s" % self.spec["mpi"].mpicxx,
             "-DCMAKE_Fortran_COMPILER=%s" % self.spec["mpi"].mpifc,
+            "-DNETCDF_LIBRARIES=%s" % nc_flags,
         ]
 
         if self.spec.satisfies("@2.22.0:"):
@@ -111,6 +116,10 @@ class Mapl(CMakePackage):
 
         return args
 
-    def patch(self):
-        filter_file(r"\s*(ecbuild_add_executable|TARGET|SOURCES|LIBS).*", "", "pfio/CMakeLists.txt", when="~buildexe")
-        filter_file(r".*\.x.*", "", "pfio/CMakeLists.txt", when="~buildexe")
+#    def patch(self):
+#        if "~shared" in self.spec["netcdf-c"]:
+#            nc_pc_cmd = ["nc-config","--static","--libs"]
+#            nc_flags = \
+#              subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+#            filter_file("(target_link_libraries[^)]+PUBLIC )", \
+#              r'\1 %s '%nc_flags, "pfio/CMakeLists.txt")
