@@ -13,6 +13,7 @@ import pprint
 import re
 import types
 import warnings
+from typing import Tuple
 
 import archspec.cpu
 
@@ -124,84 +125,72 @@ DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "
 
 # The space of possible priorities for optimization targets
 # is partitioned in the following ranges:
-#
-# [0-100) Optimization criteria for software being reused
-# [100-200) Fixed criteria that are higher priority than reuse, but lower than build
-# [200-300) Optimization criteria for software being built
-# [300-1000) High-priority fixed criteria
-# [1000-inf) Error conditions
+# +=============================================================+
+# |   Priority  |  Description                                  |
+# +=============================================================+
+# | 10,000,000+ |  Error conditions                             |
+# +-------------+-----------------------------------------------+
+# |  9,999,999  |                                               |
+# |      ...    |  High-priority criteria                       |
+# |  1,000,000  |                                               |
+# +-------------+-----------------------------------------------+
+# |    999,999  |                                               |
+# |      ...    |  Standard criteria for built packages         |
+# |    100,001  |                                               |
+# +-------------+-----------------------------------------------+
+# |    100,000  |  Number of packages being built               |
+# +-------------+-----------------------------------------------+
+# |     99,999  |                                               |
+# |       ...   |  Standard criteria for reused packages        |
+# |          0  |                                               |
+# +-------------+-----------------------------------------------+
 #
 # Each optimization target is a minimization with optimal value 0.
-
+#
 #: High fixed priority offset for criteria that supersede all build criteria
-high_fixed_priority_offset = 300
+high_fixed_priority_offset = 10_000_000
 
 #: Priority offset for "build" criteria (regular criterio shifted to
 #: higher priority for specs we have to build)
-build_priority_offset = 200
-
-#: Priority offset of "fixed" criteria (those w/o build criteria)
-fixed_priority_offset = 100
+build_priority_offset = 100_000
 
 
-def build_criteria_names(costs, arg_tuples):
+def build_criteria_names(costs, opt_criteria):
     """Construct an ordered mapping from criteria names to costs."""
-    # pull optimization criteria names out of the solution
-    priorities_names = []
 
-    num_fixed = 0
-    num_high_fixed = 0
-    for args in arg_tuples:
-        priority, name = args[:2]
+    # ensure names of all criteria are unique
+    names = {name for _, name in opt_criteria}
+    assert len(names) == len(opt_criteria), "names of optimization criteria must be unique"
+
+    # costs contains:
+    #  - error criteria
+    #  - number of input specs not concretized
+    #  - N build criteria
+    #    ...
+    #  - number of packages to build
+    #  - N reuse criteria
+    #    ...
+
+    # opt_criteria has all the named criteria, which is all but the errors.
+    # So we can figure out how many build criteria there are up front.
+    n_build_criteria = len(opt_criteria) - 2
+
+    # number of criteria *not* including errors
+    n_named_criteria = len(opt_criteria) + n_build_criteria
+
+    # opt_criteria are in order, highest to lowest, as written in concretize.lp
+    # put costs in the same order as opt criteria
+    start = len(costs) - n_named_criteria
+    ordered_costs = costs[start:]
+    ordered_costs.insert(1, ordered_costs.pop(n_build_criteria + 1))
+
+    # list of build cost, reuse cost, and name of each criterion
+    criteria: List[Tuple[int, int, str]] = []
+    for i, (priority, name) in enumerate(opt_criteria):
         priority = int(priority)
-
-        # add the priority of this opt criterion and its name
-        priorities_names.append((priority, name))
-
-        # if the priority is less than fixed_priority_offset, then it
-        # has an associated build priority -- the same criterion but for
-        # nodes that we have to build.
-        if priority < fixed_priority_offset:
-            build_priority = priority + build_priority_offset
-            priorities_names.append((build_priority, name))
-        elif priority >= high_fixed_priority_offset:
-            num_high_fixed += 1
-        else:
-            num_fixed += 1
-
-    # sort the criteria by priority
-    priorities_names = sorted(priorities_names, reverse=True)
-
-    # We only have opt-criterion values for non-error types
-    # error type criteria are excluded (they come first)
-    error_criteria = len(costs) - len(priorities_names)
-    costs = costs[error_criteria:]
-
-    # split list into three parts: build criteria, fixed criteria, non-build criteria
-    num_criteria = len(priorities_names)
-    num_build = (num_criteria - num_fixed - num_high_fixed) // 2
-
-    build_start_idx = num_high_fixed
-    fixed_start_idx = num_high_fixed + num_build
-    installed_start_idx = num_high_fixed + num_build + num_fixed
-
-    high_fixed = priorities_names[:build_start_idx]
-    build = priorities_names[build_start_idx:fixed_start_idx]
-    fixed = priorities_names[fixed_start_idx:installed_start_idx]
-    installed = priorities_names[installed_start_idx:]
-
-    # mapping from priority to index in cost list
-    indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
-
-    # make a list that has each name with its build and non-build costs
-    criteria = [(cost, None, name) for cost, (p, name) in zip(costs[:build_start_idx], high_fixed)]
-    criteria += [
-        (cost, None, name)
-        for cost, (p, name) in zip(costs[fixed_start_idx:installed_start_idx], fixed)
-    ]
-
-    for (i, name), (b, _) in zip(installed, build):
-        criteria.append((costs[indices[i]], costs[indices[b]], name))
+        build_cost = ordered_costs[i]
+        reuse_cost = ordered_costs[i + n_build_criteria] if priority < 100_000 else None
+        criteria.append((reuse_cost, build_cost, name))
 
     return criteria
 

@@ -112,8 +112,8 @@ def _process_result(result, show, required_format, kwargs):
                 % (
                     i,
                     name,
-                    "-" if build_cost is None else installed_cost,
-                    installed_cost if build_cost is None else build_cost,
+                    installed_cost if installed_cost is not None else "-",
+                    build_cost if build_cost is not None else "-",
                 )
             )
         print()
