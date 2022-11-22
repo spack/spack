@@ -54,7 +54,7 @@ class PyYt(PythonPackage):
     depends_on("py-matplotlib@1.5.3:", type=("build", "run"))
     depends_on("py-matplotlib@:3.2.2", type=("build", "run"), when="@:3.6.0")
     depends_on("py-matplotlib@3.1:", type=("build", "run"), when="@4.1.2:")
-    conflicts("py-matplotlib@3.4.2", when="@4.1.2:")
+    conflicts("^py-matplotlib@3.4.2", when="@4.1.2:")
     depends_on("py-more-itertools@8.4:", when="@4.1.2:")
     depends_on("py-numpy@1.10.4:", type=("build", "run"))
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@4.1.2:")
@@ -78,7 +78,7 @@ class PyYt(PythonPackage):
     depends_on("py-h5py@3.1:3", type=("build", "run"), when="+h5py")
     depends_on("py-scipy@1.5.0:", type=("build", "run"), when="+scipy")
     depends_on("rockstar@yt", type=("build", "run"), when="+rockstar")
-    depends_on("py-astropy@4.0.1:6.0.0", type=("build", "run"), when="+astropy")
+    depends_on("py-astropy@4.0.1:5", type=("build", "run"), when="+astropy")
 
     # Build dependencies:
     # See https://github.com/yt-project/yt/blob/yt-4.1.2/pyproject.toml#L2

@@ -22,10 +22,9 @@ class PyCmyt(PythonPackage):
 
     # https://github.com/yt-project/cmyt/blob/v1.1.2/pyproject.toml#L2
     depends_on("py-setuptools@40.9:", type="build")
-    depends_on("py-wheel", type="build")
 
     # https://github.com/yt-project/cmyt/blob/v1.1.2/setup.cfg#40
-    depends_on("python@3.8:")
+    depends_on("python@3.8:", type=("build", "run"))
 
     # https://github.com/yt-project/cmyt/blob/v1.1.2/setup.cfg#35
     depends_on("py-colorspacious@1.1.2:", type=("build", "run"))
