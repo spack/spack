@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+"""Run unit-tests delegating to pytest.main"""
 from __future__ import division, print_function
 
 import argparse
@@ -20,7 +20,7 @@ except ImportError:
     pytest = None  # type: ignore
 
 import llnl.util.filesystem
-import llnl.util.tty.color as color
+from llnl.util.tty import color
 from llnl.util.tty.colify import colify
 
 import spack.paths
@@ -28,20 +28,25 @@ import spack.paths
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
 level = "long"
-is_windows = sys.platform == "win32"
+
+IS_WINDOWS = sys.platform == "win32"
 
 
 class ConcretizationTimer(collections.abc.MutableMapping):
+    """Timer used to collect concretization times in tests"""
+
     def __init__(self):
         self.key = None
         self.start_time = None
         self._timers = collections.defaultdict(list)
 
     def start(self, key):
+        """Start timing a concretization"""
         self.key = key
         self.start_time = time.time()
 
     def end(self):
+        """End timing the current concretization"""
         elapsed_time = time.time() - self.start_time
         self._timers[self.key].append(elapsed_time)
         self.key, self.start_time = None, None
@@ -51,7 +56,7 @@ class ConcretizationTimer(collections.abc.MutableMapping):
         result = "Total time spent in concretization {}\n"
         for spec, times in self._timers.items():
             total_time += sum(times)
-            line = "{}: concretized {} times\n".format(spec, len(times))
+            line = f"{spec}: concretized {len(times)} times\n"
             result += line
         return result.format(llnl.util.lang.pretty_seconds(total_time))
 
@@ -72,6 +77,8 @@ class ConcretizationTimer(collections.abc.MutableMapping):
 
 
 class ConcretizationTimerPlugin:
+    """Plugin to pytest to time concretizations in unit tests"""
+
     def __init__(self):
         # Give the plugin a name, so we can reference it later
         self.__name__ = "concretization_timer"
@@ -79,6 +86,7 @@ class ConcretizationTimerPlugin:
 
     @staticmethod
     def pytest_addoption(parser):
+        """Add the custom options to pytest"""
         parser.addoption(
             "--time-concretization",
             default=False,
@@ -88,6 +96,7 @@ class ConcretizationTimerPlugin:
 
     @pytest.fixture(scope="session", autouse=True)
     def time_concretization(self, request):
+        """Time concretization if an option has been used on the command line"""
         if not request.config.getoption("--time-concretization"):
             return
 
@@ -95,13 +104,13 @@ class ConcretizationTimerPlugin:
 
         def _timed_concretize(another_self, tests=False):
             self.timer.start(str(another_self))
-            result = decorated_fn(another_self, tests)
+            decorated_fn(another_self, tests)
             self.timer.end()
-            return result
 
         spack.spec.Spec.concretize = _timed_concretize
 
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
+        """Print a custom terminal summary for concretization time"""
         if not config.getoption("--time-concretization"):
             return
 
@@ -118,11 +127,11 @@ class ConcretizationTimerPlugin:
         reports.sort(reverse=True)
         for partial_time, ntimes, spec_str in reports[:20]:
             line = llnl.util.lang.pretty_seconds(partial_time)
-            line += "\t{} [{} concretization(s)]\n".format(spec_str, ntimes)
+            line += f"\t{spec_str} [{ntimes} concretization(s)]\n"
             terminalreporter.write(line)
 
-        result = "Total time spent in concretization {}\n".format(
-            llnl.util.lang.pretty_seconds(total_time)
+        result = (
+            f"Total time spent in concretization {llnl.util.lang.pretty_seconds(total_time)}\n"
         )
         terminalreporter.line(result, blue=True, bold=True)
 
@@ -310,7 +319,7 @@ def unit_test(parser, args, unknown_args):
     # mock configuration used by unit tests
     # Note: skip on windows here because for the moment,
     # clingo is wholly unsupported from bootstrap
-    if not is_windows:
+    if not IS_WINDOWS:
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_core_dependencies()
             if pytest is None:
