@@ -23,5 +23,5 @@ class CpuFeatures(CMakePackage):
 
     def cmake_args(self):
         args = ["-DBUILD_TESTING:BOOL=OFF"]
-        args += self.enable_or_disable("BUILD_SHARED_LIBS", variant="shared")
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", variant="shared"))
         return args
