@@ -224,13 +224,15 @@ def get_uninstall_list(args, specs, env):
     if has_error:
         msgs = []
         tty.info("Refusing to uninstall the following specs")
-        spack.cmd.display_specs(matching_specs, groups=False, **display_args)
+        spack.cmd.display_specs(matching_specs, **display_args)
         if dangling_dependents:
-            print("\nThe following dependents are still installed:")
-            spack.cmd.display_specs(dependent_specs, groups=False, **display_args)
+            print()
+            tty.info("The following dependents are still installed:")
+            spack.cmd.display_specs(dependent_specs, **display_args)
             msgs.append("use `spack uninstall --dependents` to remove dependents too")
         if dangling_environments:
-            print("\nThe following environments still reference these specs:")
+            print()
+            tty.info("The following environments still reference these specs:")
             colify([e.name for e in other_dependent_envs.keys()], indent=4)
             msgs.append("use `spack env remove` to remove environments")
         print()
