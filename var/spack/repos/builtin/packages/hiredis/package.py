@@ -13,7 +13,7 @@ class Hiredis(MakefilePackage, CMakePackage):
     url = "https://github.com/redis/hiredis/archive/refs/tags/v1.0.2.tar.gz"
     git = "https://github.com/redis/hiredis.git"
 
-    maintainers = ["lpottier"]
+    maintainers = ["lpottier", "rblake-llnl"]
 
     version("1.1.0", sha256="fe6d21741ec7f3fc9df409d921f47dfc73a4d8ff64f4ac6f1d95f951bf7f53d6")
     version("1.0.2", sha256="e0ab696e2f07deb4252dda45b703d09854e53b9703c7d52182ce5a22616c3819")
