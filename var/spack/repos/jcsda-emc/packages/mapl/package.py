@@ -81,9 +81,6 @@ class Mapl(CMakePackage):
     depends_on("ecbuild")
 
     def cmake_args(self):
-        nc_pc_cmd = ["nc-config","--static","--libs"]
-        nc_flags = \
-          subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
         args = [
             self.define_from_variant("BUILD_WITH_FLAP", "flap"),
             self.define_from_variant("BUILD_WITH_PFLOGGER", "pflogger"),
