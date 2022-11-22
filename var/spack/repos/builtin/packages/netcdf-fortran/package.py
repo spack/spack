@@ -6,6 +6,7 @@
 import glob
 import os
 from shutil import Error, copyfile
+import subprocess
 
 from spack.package import *
 
@@ -33,13 +34,9 @@ class NetcdfFortran(AutotoolsPackage):
     variant("doc", default=False, description="Enable building docs")
 
     depends_on("netcdf-c")
-    depends_on("netcdf-c+shared", when="+shared")
     depends_on("netcdf-c@4.7.4:", when="@4.5.3:")  # nc_def_var_szip required
     depends_on("doxygen", when="+doc", type="build")
-    depends_on("mpi", when="^netcdf-c+parallel-netcdf")
-    depends_on("mpi", when="^netcdf-c+mpi")
-    depends_on("hdf5", when="^netcdf-c+parallel-netcdf", type="link")
-    depends_on("hdf5", when="^netcdf-c+mpi", type="link")
+    depends_on("mpi", when="^hdf5~shared+mpi")
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
@@ -137,32 +134,26 @@ class NetcdfFortran(AutotoolsPackage):
                 # not run by default and explicitly disabled above. To avoid the
                 # configuration failure, we set the following cache variable:
                 config_args.append("ac_cv_func_MPI_File_open=yes")
-            if "~shared" in self.spec:
-                config_args.append("CC=%s" % self.spec["mpi"].mpicc)
-                config_args.append("FC=%s" % self.spec["mpi"].mpifc)
-                config_args.append("F77=%s" % self.spec["mpi"].mpif77)
-                cppflags = []
-                ldflags = []
-                libs = []
-                ## HDF5:
-                hdf5 = self.spec["hdf5"]
-                cppflags.append(hdf5.headers.cpp_flags)
-                ldflags.append("-L" + hdf5.prefix.lib)
-                libs.append(hdf5.libs.link_flags)
-                ## HDF5 high-level:
-                hdf5hl = self.spec["hdf5:hl"]
-                cppflags.append(hdf5hl.headers.cpp_flags)
-                ldflags.append("-L" + hdf5hl.prefix.lib)
-                libs.append(hdf5hl.libs.link_flags)
-                ## zlib:
-                zlib = self.spec["zlib"]
-                cppflags.append(zlib.headers.cpp_flags)
-                ldflags.append("-L" + zlib.prefix.lib)
-                libs.append(zlib.libs.link_flags)
 
-                config_args.append("CPPFLAGS=" + " ".join(cppflags))
-                config_args.append("LDFLAGS=" + " ".join(ldflags))
-                config_args.append("LIBS=" + " ".join(libs))
+        if "~shared" in netcdf_c_spec:
+            netcdf_libs_cmd = ["pkg-config","netcdf","--libs"]
+            netcdf_libs = subprocess.check_output(netcdf_libs_cmd, encoding="utf-8").strip()
+            config_args.append("LIBS=" + netcdf_libs)
+
+            netcdf_ldflags_cmd = ["pkg-config","netcdf","--libs-only-L"]
+            netcdf_ldflags = \
+              subprocess.check_output(netcdf_ldflags_cmd, encoding="utf8").strip()
+            config_args.append("LDFLAGS=" + netcdf_ldflags)
+
+            netcdf_cflags_cmd = ["pkg-config","netcdf","--cflags"]
+            netcdf_cflags = \
+              subprocess.check_output(netcdf_cflags_cmd, encoding="utf8").strip()
+            config_args.append("CPPFLAGS=" + netcdf_cflags)
+
+        if "~shared" in self.spec:
+            config_args.append("CC=%s" % self.spec["mpi"].mpicc)
+            config_args.append("FC=%s" % self.spec["mpi"].mpifc)
+            config_args.append("F77=%s" % self.spec["mpi"].mpif77)
 
         return config_args
 
