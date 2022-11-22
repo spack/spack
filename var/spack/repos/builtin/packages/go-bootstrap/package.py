@@ -46,7 +46,11 @@ class GoBootstrap(Package):
 
     depends_on("git", type=("build", "link", "run"))
 
-    conflicts("os=monterey", msg="go-bootstrap won't build on new macOS")
+    conflicts(
+        "os=monterey",
+        msg="go-bootstrap won't build on MacOS Monterey: "
+        "try `brew install go` and `spack external find go`",
+    )
     conflicts("target=aarch64:", msg="Go bootstrap doesn't support aarch64 architectures")
 
     # This virtual package allows a fallback to gccgo for aarch64,

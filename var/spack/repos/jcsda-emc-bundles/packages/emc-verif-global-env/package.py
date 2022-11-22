@@ -12,7 +12,7 @@ class EmcVerifGlobalEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/EMC_verif-global"
     git = "https://github.com/NOAA-EMC/EMC_verif-global.git"
 
-    maintainers = ["kgerheiser"]
+    maintainers = ["AlexanderRichert-NOAA"]
 
     version("1.0.0")
 

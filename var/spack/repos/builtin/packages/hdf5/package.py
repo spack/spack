@@ -196,13 +196,16 @@ class Hdf5(CMakePackage):
 
     depends_on("cmake@3.12:", type="build")
 
+    depends_on("msmpi", when="+mpi platform=windows")
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
     depends_on("zlib@1.1.2:")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
-    depends_on("pkgconfig", type="run")
+    # Skip this on Windows since pkgconfig is autotools
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("pkgconfig", when="platform=%s" % plat, type="run")
 
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
@@ -498,7 +501,7 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec:
+        if "+mpi" in spec and "platform=windows" not in spec:
             args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
 
             if "+cxx" in self.spec:
@@ -567,7 +570,7 @@ class Hdf5(CMakePackage):
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
             r"\1\2\3",
             *pc_files,
-            backup=False
+            backup=False,
         )
 
         # HDF5 build incorrectly assign -l to zlib file path

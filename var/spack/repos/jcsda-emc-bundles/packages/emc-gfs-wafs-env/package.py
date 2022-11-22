@@ -12,7 +12,7 @@ class EmcGfsWafsEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/EMC_gfs_wafs"
     git = "https://github.com/NOAA-EMC/EMC_gfs_wafs.git"
 
-    maintainers = ["kgerheiser"]
+    maintainers = ["AlexanderRichert-NOAA"]
 
     version("1.0.0")
 

@@ -24,8 +24,6 @@ from threading import Thread
 from types import ModuleType  # novm
 from typing import Optional  # novm
 
-from six import StringIO, string_types
-
 import llnl.util.tty as tty
 
 termios = None  # type: Optional[ModuleType]
@@ -241,8 +239,7 @@ class keyboard_input(object):
         """If termios was available, restore old settings."""
         if self.old_cfg:
             self._restore_default_terminal_settings()
-            if sys.version_info >= (3,):
-                atexit.unregister(self._restore_default_terminal_settings)
+            atexit.unregister(self._restore_default_terminal_settings)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
@@ -309,7 +306,7 @@ class FileWrapper(object):
 
         self.file_like = file_like
 
-        if isinstance(file_like, string_types):
+        if isinstance(file_like, str):
             self.open = True
         elif _file_descriptors_work(file_like):
             self.open = False
@@ -323,12 +320,9 @@ class FileWrapper(object):
     def unwrap(self):
         if self.open:
             if self.file_like:
-                if sys.version_info < (3,):
-                    self.file = open(self.file_like, "w")
-                else:
-                    self.file = open(self.file_like, "w", encoding="utf-8")  # novm
+                self.file = open(self.file_like, "w", encoding="utf-8")
             else:
-                self.file = StringIO()
+                self.file = io.StringIO()
             return self.file
         else:
             # We were handed an already-open file object. In this case we also
@@ -699,13 +693,10 @@ class StreamWrapper:
         self.sys_attr = sys_attr
         self.saved_stream = None
         if sys.platform.startswith("win32"):
-            if sys.version_info < (3, 5):
-                libc = ctypes.CDLL(ctypes.util.find_library("c"))
+            if hasattr(sys, "gettotalrefcount"):  # debug build
+                libc = ctypes.CDLL("ucrtbased")
             else:
-                if hasattr(sys, "gettotalrefcount"):  # debug build
-                    libc = ctypes.CDLL("ucrtbased")
-                else:
-                    libc = ctypes.CDLL("api-ms-win-crt-stdio-l1-1-0")
+                libc = ctypes.CDLL("api-ms-win-crt-stdio-l1-1-0")
 
             kernel32 = ctypes.WinDLL("kernel32")
 
@@ -794,7 +785,7 @@ class winlog(object):
             raise RuntimeError("file argument must be set by __init__ ")
 
         # Open both write and reading on logfile
-        if type(self.logfile) == StringIO:
+        if type(self.logfile) == io.StringIO:
             self._ioflag = True
             # cannot have two streams on tempfile, so we must make our own
             sys.stdout = self.logfile
@@ -927,13 +918,10 @@ def _writer_daemon(
     if sys.version_info < (3, 8) or sys.platform != "darwin":
         os.close(write_fd)
 
-    # Use line buffering (3rd param = 1) since Python 3 has a bug
+    # 1. Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    if sys.version_info < (3,):
-        in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1)
-    else:
-        # Python 3.x before 3.7 does not open with UTF-8 encoding by default
-        in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1, encoding="utf-8")
+    # 2. Python 3.x before 3.7 does not open with UTF-8 encoding by default
+    in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1, encoding="utf-8")
 
     if stdin_multiprocess_fd:
         stdin = os.fdopen(stdin_multiprocess_fd.fd)
@@ -1023,7 +1011,7 @@ def _writer_daemon(
 
     finally:
         # send written data back to parent if we used a StringIO
-        if isinstance(log_file, StringIO):
+        if isinstance(log_file, io.StringIO):
             control_pipe.send(log_file.getvalue())
         log_file_wrapper.close()
         close_connection_and_file(read_multiprocess_fd, in_pipe)

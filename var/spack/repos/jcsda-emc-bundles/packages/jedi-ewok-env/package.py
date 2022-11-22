@@ -30,8 +30,7 @@ class JediEwokEnv(BundlePackage):
         description="Build EWOK (Experiments and Workflows Orchestration Kit)",
     )
 
-    depends_on("base-env", type="run")
-    depends_on("jedi-base-env", type="run")
+    depends_on("jedi-base-env +python", type="run")
     depends_on("py-boto3", type="run")
     depends_on("py-cartopy", type="run")
     depends_on("py-jinja2", type="run")

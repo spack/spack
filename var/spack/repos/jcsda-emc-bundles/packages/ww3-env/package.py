@@ -14,7 +14,7 @@ class Ww3Env(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/WW3"
     # There is no URL since there is no code to download.
 
-    maintainers = ["kgerheiser", "Hang-Lei-NOAA"]
+    maintainers = ["AlexanderRichert-NOAA", "Hang-Lei-NOAA"]
 
     version("1.0.0")
 

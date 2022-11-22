@@ -21,6 +21,7 @@ class NetcdfC(AutotoolsPackage):
     maintainers = ["skosukhin", "WardF"]
 
     version("main", branch="main")
+    version("4.9.0", sha256="9f4cb864f3ab54adb75409984c6202323d2fc66c003e5308f3cdf224ed41c0a6")
     version("4.8.1", sha256="bc018cc30d5da402622bf76462480664c6668b55eb16ba205a0dfb8647161dd0")
     version("4.8.0", sha256="aff58f02b1c3e91dc68f989746f652fe51ff39e6270764e484920cb8db5ad092")
     version("4.7.4", sha256="99930ad7b3c4c1a8e8831fb061cb02b2170fc8e5ccaeda733bd99c3b9d31666b")
@@ -66,7 +67,7 @@ class NetcdfC(AutotoolsPackage):
     patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
 
     # See https://github.com/Unidata/netcdf-c/pull/2293
-    patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1:")
+    patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1")
 
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")
     variant("parallel-netcdf", default=False, description="Enable parallel I/O for classic files")
@@ -83,6 +84,8 @@ class NetcdfC(AutotoolsPackage):
     variant("cdf5", default=True, description="Enable CDF5 support")
     variant("netcdf-4", default=True, description="Build with netCDF 4")
     variant("doxygen", default=True, description="Enable generation of documentation")
+    variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
+    variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -131,6 +134,8 @@ class NetcdfC(AutotoolsPackage):
     # https://github.com/Unidata/netcdf-c/issues/250
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
+    depends_on("zstd", when="+zstd")
+
     # The feature was introduced in version 4.1.2
     # and was removed in version 4.4.0
     # conflicts('+cdmremote', when='@:4.1.1,4.4:')
@@ -158,6 +163,9 @@ class NetcdfC(AutotoolsPackage):
         libs = []
         config_args = []
 
+        if "+optimize" in self.spec:
+            cflags.append("-O2")
+
         config_args.extend(self.enable_or_disable("fsync"))
         config_args.extend(self.enable_or_disable("v2"))
         config_args.extend(self.enable_or_disable("utilities"))
@@ -173,9 +181,7 @@ class NetcdfC(AutotoolsPackage):
 
         config_args.extend(self.enable_or_disable("shared"))
 
-        if "~shared" in self.spec or "+pic" in self.spec:
-            # We don't have shared libraries but we still want it to be
-            # possible to use this library in shared builds
+        if "+pic" in self.spec:
             cflags.append(self.compiler.cc_pic_flag)
 
         config_args.extend(self.enable_or_disable("dap"))
@@ -248,6 +254,16 @@ class NetcdfC(AutotoolsPackage):
             if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
                 libs.append(hdf4["rpc"].libs.link_flags)
 
+        if "+zstd" in self.spec:
+            zstd = self.spec["zstd"]
+            cppflags.append(zstd.headers.cpp_flags)
+            ldflags.append(zstd.libs.search_flags)
+            config_args.append("--with-plugin-dir={}".format(self.prefix.plugins))
+        elif "~zstd" in self.spec:
+            # Prevent linking to system zstd.
+            # There is no explicit option to disable zstd.
+            config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
+
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
         # Use the netcdf-fortran package to install Fortran support.
@@ -259,7 +275,12 @@ class NetcdfC(AutotoolsPackage):
 
         return config_args
 
+    def setup_run_environment(self, env):
+        if "+zstd" in self.spec:
+            env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
         # we have to shadow nc-config from self.prefix.bin, which references the real compiler,

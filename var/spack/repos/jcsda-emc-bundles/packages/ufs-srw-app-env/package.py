@@ -15,7 +15,7 @@ class UfsSrwAppEnv(BundlePackage):
     git = "https://github.com/ufs-community/ufs-srweather-app.git"
     # There is no URL since there is no code to download.
 
-    maintainers = ["kgerheiser", "Hang-Lei-NOAA"]
+    maintainers = ["AlexanderRichert-NOAA", "Hang-Lei-NOAA"]
 
     variant("python", default=True, description="Build Python dependencies")
 

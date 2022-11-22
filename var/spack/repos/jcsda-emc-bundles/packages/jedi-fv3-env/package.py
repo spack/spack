@@ -12,11 +12,10 @@ class JediFv3Env(BundlePackage):
     homepage = "https://github.com/JCSDA/fv3-bundle"
     git = "https://github.com/JCSDA/fv3-bundle.git"
 
-    maintainers = ["climbfuji", "rhoneyager"]
+    maintainers = ["climbfuji", "srherbener"]
 
     version("1.0.0")
 
-    depends_on("base-env", type="run")
     depends_on("jedi-base-env", type="run")
     depends_on("fms@release-jcsda", type="run")
 
