@@ -29,7 +29,6 @@ class PyBokeh(PythonPackage):
     depends_on("py-requests@1.2.3:", type=("build", "run"), when="@0.12.2")
     depends_on("py-six@1.5.2:", type=("build", "run"), when="@:1.3.4")
     depends_on("py-python-dateutil@2.1:", type=("build", "run"), when="@:2.3.3")
-    depends_on("py-futures@3.0.3:", type=("build", "run"), when="@:1.3.4 ^python@2.7:2.8")
 
     depends_on("py-jinja2@2.7:", type=("build", "run"))
     depends_on("py-jinja2@2.9:", type=("build", "run"), when="@2.3.3:")
