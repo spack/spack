@@ -20,3 +20,4 @@ class PyPythonKeycloak(PythonPackage):
     depends_on('py-python-jose', type='run')
     depends_on('py-urllib3', type='run')
     depends_on('py-requests-toolbelt', type='run')
+    depends_on('py-poetry', type='build')
