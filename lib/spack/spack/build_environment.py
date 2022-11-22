@@ -1452,6 +1452,13 @@ def write_log_summary(out, log_type, log, last=None):
 
 
 class ModuleMonkeyPatcher:
+    """Wrapper class to accept changes to a package.py Python module, and propagate them in the
+    MRO of the package.
+
+    It is mainly used as a substitute of the ``package.py`` module, when calling the
+    "setup_dependent_package" function during build environment setup.
+    """
+
     _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")
 
     def __init__(self, package):
