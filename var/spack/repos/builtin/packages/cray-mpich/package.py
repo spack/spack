@@ -38,8 +38,10 @@ class CrayMpich(Package):
         "gcc": "GNU",
         "cce": "CRAY",
         "intel": "INTEL",
+        "oneapi": "INTEL",
         "clang": "ALLINEA",
         "aocc": "AOCC",
+        "nvhpc": "NVIDIA",
     }
 
     @property
@@ -48,6 +50,15 @@ class CrayMpich(Package):
 
     @property
     def external_prefix(self):
+        mpich_compiler = self.spec.compiler.name
+
+        if mpich_compiler in self.canonical_names:
+            os.environ["PE_ENV"] = self.canonical_names[mpich_compiler]
+        else:
+            msg = "The compiler you are building with, "
+            msg += "'{0}', is not supported by cray-mpich."
+            raise InstallError(msg.format(mpich_compiler))
+
         mpich_module = module("show", self.modname).splitlines()
 
         for line in mpich_module:
@@ -60,6 +71,11 @@ class CrayMpich(Package):
             if "CRAY_LD_LIBRARY_PATH" in line:
                 libdir = get_path_args_from_module_line(line)[0]
                 return os.path.dirname(os.path.normpath(libdir))
+
+        msg = "The compiler you are building with, '{0}', "
+        msg += "is not provided by this install of cray-mpich."
+
+        raise InstallError(msg.format(mpich_compiler))
 
     def setup_run_environment(self, env):
         if "+wrappers" in self.spec:
