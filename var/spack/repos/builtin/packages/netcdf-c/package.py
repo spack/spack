@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import subprocess
 
 from spack.package import *
 
@@ -157,27 +158,27 @@ class NetcdfC(AutotoolsPackage):
         libs = []
         config_args = []
 
-        config_args.append(self.enable_or_disable("fsync"))
-        config_args.append(self.enable_or_disable("v2"))
-        config_args.append(self.enable_or_disable("utilities"))
-        config_args.append(self.enable_or_disable("largefile"))
-        config_args.append(self.enable_or_disable("parallel-tests"))
-        config_args.append(self.enable_or_disable("cdf5"))
-        config_args.append(self.enable_or_disable("netcdf-4"))
-        config_args.append(self.enable_or_disable("doxygen"))
+        config_args.extend(self.enable_or_disable("fsync"))
+        config_args.extend(self.enable_or_disable("v2"))
+        config_args.extend(self.enable_or_disable("utilities"))
+        config_args.extend(self.enable_or_disable("largefile"))
+        config_args.extend(self.enable_or_disable("parallel-tests"))
+        config_args.extend(self.enable_or_disable("cdf5"))
+        config_args.extend(self.enable_or_disable("netcdf-4"))
+        config_args.extend(self.enable_or_disable("doxygen"))
 
         # The flag was introduced in version 4.3.1
         if self.spec.satisfies("@4.3.1:"):
             config_args.append("--enable-dynamic-loading")
 
-        config_args.append(self.enable_or_disable("shared"))
+        config_args.extend(self.enable_or_disable("shared"))
 
         if "~shared" in self.spec or "+pic" in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
             cflags.append(self.compiler.cc_pic_flag)
 
-        config_args.append(self.enable_or_disable("dap"))
+        config_args.extend(self.enable_or_disable("dap"))
         # config_args.append(self.enable_or_disable('cdmremote'))
 
         # if '+dap' in self.spec or '+cdmremote' in self.spec:
@@ -202,7 +203,7 @@ class NetcdfC(AutotoolsPackage):
                 config_args.append("--disable-parallel4")
 
         if self.spec.satisfies("@4.3.2:"):
-            config_args.append(self.enable_or_disable("jna"))
+            config_args.extend(self.enable_or_disable("jna"))
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
@@ -212,11 +213,10 @@ class NetcdfC(AutotoolsPackage):
         ldflags.append(hdf5_hl.libs.search_flags)
         if hdf5_hl.satisfies("~shared"):
             libs.append(hdf5_hl.libs.link_flags)
-
-        if "~shared" in self.spec:
-            zlib = self.spec["zlib"]
-            libs.append(zlib.libs.link_flags)
-            ldflags.append(zlib.libs.search_flags)
+            h5_pc_cmd = ["pkg-config","hdf5","--static","--libs"]
+            h5_flags = \
+              subprocess.check_output(h5_pc_cmd, encoding="utf8").strip()
+            libs.extend(h5_flags.split()[::-1])
 
         if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")
@@ -231,7 +231,7 @@ class NetcdfC(AutotoolsPackage):
         if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
             config_args.append("CC=%s" % self.spec["mpi"].mpicc)
 
-        config_args.append(self.enable_or_disable("hdf4"))
+        config_args.extend(self.enable_or_disable("hdf4"))
         if "+hdf4" in self.spec:
             hdf4 = self.spec["hdf"]
             cppflags.append(hdf4.headers.cpp_flags)
