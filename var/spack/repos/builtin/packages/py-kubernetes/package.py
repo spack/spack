@@ -16,6 +16,7 @@ class PyKubernetes(PythonPackage):
 
     maintainers = ["vvolkl"]
 
+    version("25.3.0", sha256="213befbb4e5aed95f94950c7eed0c2322fc5a2f8f40932e58d28fdd42d90836c")
     version("21.7.0", sha256="c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977")
     version("20.13.0", sha256="ce5e881c13dc56f21a243804f90bc3c507af93c380f505c00e392c823968e4de")
     version("19.15.0", sha256="08c93f300a9837104282ecc81458b903a56444c5c1ec3d990d237557312af47f")
