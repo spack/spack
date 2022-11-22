@@ -93,7 +93,6 @@ class Mapl(CMakePackage):
             "-DCMAKE_C_COMPILER=%s" % self.spec["mpi"].mpicc,
             "-DCMAKE_CXX_COMPILER=%s" % self.spec["mpi"].mpicxx,
             "-DCMAKE_Fortran_COMPILER=%s" % self.spec["mpi"].mpifc,
-            "-DNETCDF_LIBRARIES=%s" % nc_flags,
         ]
 
         if self.spec.satisfies("@2.22.0:"):
@@ -116,10 +115,10 @@ class Mapl(CMakePackage):
 
         return args
 
-#    def patch(self):
-#        if "~shared" in self.spec["netcdf-c"]:
-#            nc_pc_cmd = ["nc-config","--static","--libs"]
-#            nc_flags = \
-#              subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
-#            filter_file("(target_link_libraries[^)]+PUBLIC )", \
-#              r'\1 %s '%nc_flags, "pfio/CMakeLists.txt")
+    def patch(self):
+        if "~shared" in self.spec["netcdf-c"]:
+            nc_pc_cmd = ["nc-config","--static","--libs"]
+            nc_flags = \
+              subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+            filter_file("(target_link_libraries[^)]+PUBLIC )", \
+              r'\1 %s '%nc_flags, "pfio/CMakeLists.txt")
