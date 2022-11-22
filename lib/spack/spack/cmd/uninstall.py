@@ -244,7 +244,7 @@ def do_uninstall(specs, force=False):
         deptype="all",
     ):
         if s.dag_hash() in hashes_to_remove:
-            s.package.do_uninstall(force=force)
+            spack.package_base.PackageBase.uninstall_by_spec(s)
 
 
 def get_uninstall_list(args, specs, env):
