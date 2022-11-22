@@ -566,6 +566,7 @@ def _set_variables_for_single_module(pkg, module):
 
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
