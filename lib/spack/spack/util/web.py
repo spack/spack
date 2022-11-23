@@ -17,12 +17,7 @@ import sys
 import traceback
 from html.parser import HTMLParser
 from urllib.error import URLError
-from urllib.request import (
-    HTTPRedirectHandler,
-    HTTPSHandler,
-    Request,
-    build_opener,
-)
+from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 
 import llnl.util.lang
 import llnl.util.tty as tty
