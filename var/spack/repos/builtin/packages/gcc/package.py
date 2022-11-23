@@ -29,6 +29,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     git = "git://gcc.gnu.org/git/gcc.git"
     list_url = "https://ftp.gnu.org/gnu/gcc/"
     list_depth = 1
+    keep_werror = "all"
 
     maintainers = ["michaelkuhn", "alalazo"]
 

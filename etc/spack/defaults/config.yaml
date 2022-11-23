@@ -215,3 +215,8 @@ config:
   # Number of seconds a buildcache's index.json is cached locally before probing
   # for updates, within a single Spack invocation. Defaults to 10 minutes.
   binary_index_ttl: 600
+
+  flags:
+    # Whether to keep -Werror flags active in package builds.
+    keep_werror: 'none'
+
