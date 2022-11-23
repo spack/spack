@@ -134,13 +134,8 @@ class Pumi(CMakePackage):
             join_path(data_dir, "pipe.dmg"),
             join_path(data_dir, "pipe.smb"),
             join_path(self.prefix.bin, "pipe_2_.smb"),
-            "2"
+            "2",
         ]
         expected = "pipe_2_.smb written"
         description = "testing pumi mesh partitioning"
-        self.run_test(
-            mpiexec,
-            options,
-            expected,
-            purpose=description
-        )
+        self.run_test(mpiexec, options, expected, purpose=description)
