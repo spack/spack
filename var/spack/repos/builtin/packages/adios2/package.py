@@ -208,6 +208,7 @@ class Adios2(CMakePackage, CudaPackage):
 
         if "+python" in spec or self.run_tests:
             args.append("-DPYTHON_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
+            args.append("-DPython_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
 
         return args
 
