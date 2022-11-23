@@ -14,6 +14,7 @@ class RA4(RPackage):
 
     bioc = "a4"
 
+    version("1.46.0", commit="1b8f1300025fb0940e7f24cff7ffec9fca02d0e4")
     version("1.44.0", commit="5b0fc5a9971d8f3688ad1f88a4f5ee1498e91633")
     version("1.42.0", commit="fc26809e2bce7cd50d99d6f6dd5f85c38342fdea")
     version("1.38.0", commit="5b7a9087bab10c55e24707e96e48046995236c94")

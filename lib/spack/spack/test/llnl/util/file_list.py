@@ -8,7 +8,6 @@ import os.path
 import sys
 
 import pytest
-import six
 
 from llnl.util.filesystem import (
     HeaderList,
@@ -320,7 +319,7 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     rlist = list(reversed(result))
 
     # At this point make sure the search list is a sequence
-    if isinstance(search_list, six.string_types):
+    if isinstance(search_list, str):
         search_list = [search_list]
 
     # Discard entries in the order they appear in search list

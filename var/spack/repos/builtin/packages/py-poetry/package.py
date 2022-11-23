@@ -27,7 +27,6 @@ class PyPoetry(PythonPackage):
     depends_on(
         "py-backports-cached-property@1.0.2:1", when="@1.2.1: ^python@:3.7", type=("build", "run")
     )
-    depends_on("py-cachecontrol@0.12.4:0.12+filecache", when="^python@:3.5", type=("build", "run"))
     depends_on("py-cachecontrol@0.12.9:0.12+filecache", when="@1.2.1:", type=("build", "run"))
     depends_on(
         "py-cachecontrol@0.12.9:0.12+filecache", when="^python@3.6:3", type=("build", "run")
@@ -42,8 +41,6 @@ class PyPoetry(PythonPackage):
     depends_on("py-importlib-metadata@4.4:", when="@1.2.0 ^python@:3.9", type=("build", "run"))
     depends_on("py-importlib-metadata@4.4:4", when="@1.2.1: ^python@:3.9", type=("build", "run"))
     depends_on("py-jsonschema@4.10.0:4", when="@1.2:", type=("build", "run"))
-    depends_on("py-keyring@18.0.1:18", when="^python@2.7", type=("build", "run"))
-    depends_on("py-keyring@20.0.1:20", when="@:1.11.1 ^python@3.5", type=("build", "run"))
     depends_on("py-keyring@21.2.0:21", when="@1.1.12 ^python@3.6:3", type=("build", "run"))
     depends_on("py-keyring@21.2.0:", when="@1.1.13:", type=("build", "run"))
     depends_on("py-packaging@20.4:20", when="@:1.1", type=("build", "run"))
@@ -64,9 +61,3 @@ class PyPoetry(PythonPackage):
     depends_on("py-urllib3@1.26.0:1", when="@1.2:")
     depends_on("py-dulwich@0.20.44:0.20", when="@1.2.0")
     depends_on("py-dulwich@0.20.46:0.20", when="@1.2.1:")
-    depends_on("py-typing@3.6:3", when="^python@2.7", type=("build", "run"))
-    depends_on("py-pathlib2@2.3:2", when="^python@2.7", type=("build", "run"))
-    depends_on("py-futures@3.3:3", when="^python@2.7", type=("build", "run"))
-    depends_on("py-glob2@0.6.0:0.6", when="^python@2.7", type=("build", "run"))
-    depends_on("py-functools32@3.2.3:3", when="^python@2.7", type=("build", "run"))
-    depends_on("py-subprocess32@3.5:3", when="^python@2.7", type=("build", "run"))

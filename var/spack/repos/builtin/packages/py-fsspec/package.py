@@ -12,6 +12,7 @@ class PyFsspec(PythonPackage):
     homepage = "https://github.com/intake/filesystem_spec"
     pypi = "fsspec/fsspec-0.4.4.tar.gz"
 
+    version("2022.11.0", sha256="259d5fd5c8e756ff2ea72f42e7613c32667dc2049a4ac3d84364a7ca034acb8b")
     version("2021.7.0", sha256="792ebd3b54de0b30f1ce73f0ba0a8bcc864724f2d9f248cb8d0ece47db0cbde8")
     version("2021.4.0", sha256="8b1a69884855d1a8c038574292e8b861894c3373282d9a469697a2b41d5289a6")
     version("0.9.0", sha256="3f7a62547e425b0b336a6ac2c2e6c6ac824648725bc8391af84bb510a63d1a56")
@@ -25,6 +26,7 @@ class PyFsspec(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@0.6.3:")
+    depends_on("python@3.7:", type=("build", "run"), when="@2022.11.0:")
     depends_on("py-setuptools", type="build")
     depends_on("py-requests", type=("build", "run"), when="+http")
     depends_on("py-aiohttp", type=("build", "run"), when="+http")

@@ -20,4 +20,3 @@ class PyAntlr4Python3Runtime(PythonPackage):
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

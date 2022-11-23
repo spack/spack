@@ -19,5 +19,4 @@ class PyVcrpy(PythonPackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-wrapt", type=("build", "run"))
     depends_on("py-six@1.5:", type=("build", "run"))
-    depends_on("py-yarl", when="^python@3.6:", type=("build", "run"))
-    depends_on("py-yarl@:1.3", when="^python@3.5", type=("build", "run"))
+    depends_on("py-yarl", type=("build", "run"))

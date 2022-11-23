@@ -21,6 +21,7 @@ class RPcamethods(RPackage):
 
     bioc = "pcaMethods"
 
+    version("1.90.0", commit="52474bc6d125122e89834328a1a780988349756f")
     version("1.88.0", commit="02fb58d6fe35579b86fb2ebd2eaf92e6b53444d2")
     version("1.86.0", commit="9419cfa18c18dfbd1e1194127fd120ab456c3657")
     version("1.82.0", commit="d500b3363308f1f8ca70625c5cd10cce59b27641")

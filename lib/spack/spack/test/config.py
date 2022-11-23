@@ -5,13 +5,13 @@
 
 import collections
 import getpass
+import io
 import os
 import sys
 import tempfile
 from datetime import date
 
 import pytest
-from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
@@ -1012,7 +1012,7 @@ def test_write_empty_single_file_scope(tmpdir):
 
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
-    f = StringIO(file_contents)
+    f = io.StringIO(file_contents)
     data = syaml.load_config(f)
     spack.config.validate(data, name)
 
