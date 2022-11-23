@@ -532,67 +532,16 @@ def ci_rebuild(args):
         # Add additional arguments to `spack install` for CDash reporting.
         cdash_args.extend(cdash_handler.args())
 
-    slash_hash = "/{}".format(job_spec.dag_hash())
-    deps_install_args = install_args
-    root_install_args = install_args + [
+    install_args += [
         "--keep-stage",
-        "--only=package",
         "--use-buildcache=package:never,dependencies:only",
-        slash_hash,
+        "/{}".format(job_spec.dag_hash()),
     ]
 
-    # ["x", "y"] -> "'x' 'y'"
-    args_to_string = lambda args: " ".join("'{}'".format(arg) for arg in args)
-
-    commands = [
-        # apparently there's a race when spack bootstraps? do it up front once
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "bootstrap",
-            "now",
-        ],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "config",
-            "add",
-            "config:db_lock_timeout:120",  # 2 minutes for processes to fight for a db lock
-        ],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "env",
-            "depfile",
-            "-o",
-            "Makefile",
-            "--use-buildcache=package:never,dependencies:only",
-            slash_hash,  # limit to spec we're building
-        ],
-        [
-            # --output-sync requires GNU make 4.x.
-            # Old make errors when you pass it a flag it doesn't recognize,
-            # but it doesn't error or warn when you set unrecognized flags in
-            # this variable.
-            "export",
-            "GNUMAKEFLAGS=--output-sync=recurse",
-        ],
-        [
-            MAKE_COMMAND,
-            "SPACK={}".format(args_to_string(spack_cmd)),
-            "SPACK_COLOR=always",
-            "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
-            "-j$(nproc)",
-            "install-deps/{}".format(job_spec.format("{name}-{version}-{hash}")),
-        ],
-        spack_cmd + ["install"] + root_install_args,
-    ]
+    command = spack_cmd + ["install"] + install_args
 
     tty.debug("Installing {0} from source".format(job_spec.name))
-    install_exit_code = spack_ci.process_command("install", commands, repro_dir)
+    install_exit_code = spack_ci.process_command("install", command, repro_dir)
 
     # Now do the post-install tasks
     tty.debug("spack install exited {0}".format(install_exit_code))
