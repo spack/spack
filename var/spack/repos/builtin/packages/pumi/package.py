@@ -114,13 +114,18 @@ class Pumi(CMakePackage):
     def test(self):
         if self.spec.version <= Version("2.2.6"):
             return
-        exe = "uniform"
-        options = ["../share/testdata/pipe.dmg", "../share/testdata/pipe.smb", "pipe_unif.smb"]
-        expected = "mesh pipe_unif.smb written"
+        data_dir = self.prefix.share.testdata
+        exe = self.prefix.bin.uniform
+        options = [
+            join_path(data_dir, "pipe.dmg"),
+            join_path(data_dir, "pipe.smb"),
+            join_path(self.prefix.bin, "pipe_unif.smb"),
+        ]
+        expected = "pipe_unif.smb written"
         description = "testing pumi uniform mesh refinement"
-        self.run_test(exe, options, expected, purpose=description, work_dir=self.prefix.bin)
+        self.run_test(exe, options, expected, purpose=description)
 
-        mpiexec = Executable(join_path(self.spec["mpi"].prefix.bin, "mpiexec")).command
+        mpiexec = self.spec["mpi"].prefix.bin.mpiexec
         mpiopt = ["-n", "2"]
         exe = ["split"]
         options = ["../share/testdata/pipe.dmg", "../share/testdata/pipe.smb", "pipe_2_.smb", "2"]
@@ -131,5 +136,4 @@ class Pumi(CMakePackage):
             mpiopt + exe + options,
             expected,
             purpose=description,
-            work_dir=self.prefix.bin,
         )
