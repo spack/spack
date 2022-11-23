@@ -143,7 +143,7 @@ Spack (packaging) cheat sheet
            return (None, None, flags)
 
 Multi-buildsystem (since Spack v0.19.0)
----------------------------------
+---------------------------------------
 
 How-to multi-buildsystem: 
 
