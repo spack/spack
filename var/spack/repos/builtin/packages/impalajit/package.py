@@ -10,8 +10,8 @@ from spack.package import *
 class Impalajit(CMakePackage):
     """A lightweight JIT compiler for flexible data access in simulation applications."""
 
-    homepage = "https://github.com/Manuel1605/ImpalaJIT/blob/master/README.md"
-    version("develop", git="https://github.com/Manuel1605/ImpalaJIT.git", branch="master")
+    homepage = "https://github.com/manuel-fasching/ImpalaJIT/blob/master/README.md"
+    version("develop", git="https://github.com/manuel-fasching/ImpalaJIT.git", branch="master")
     maintainers = ["Thomas-Ulrich", "ravil-mobile"]
     variant("static", default=True, description="compile as a static lib")
     depends_on("cmake", type="build")

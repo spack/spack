@@ -10,6 +10,10 @@ from spack.package import *
 class ImpalajitLlvm(CMakePackage):
     """Impala is a calculator-like language. This is a fork of
     the original ImpalaJIT project and was enhanced with LLVM JIT.
+    This means that impalajit-llvm is supposed to work on any
+    architecture supported by llvm, contrary to the impalajit package
+    which is restricted to x86 architectures.
+    This comes at the price of extra dependencies.
     Impala acts as a backend for `easi` project.
     """
 
