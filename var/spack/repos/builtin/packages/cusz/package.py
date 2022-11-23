@@ -6,19 +6,28 @@
 from spack.package import *
 
 
-class Cusz(MakefilePackage):
-    """cuSZ is a CUDA-based error-bounded lossy compressor for scientific
-    data (floating point and integers).
-    """
+class Cusz(CMakePackage, CudaPackage):
+    """A GPU accelerated error-bounded lossy compression for scientific data"""
 
-    homepage = "https://szcompressor.org"
-    url = "https://github.com/szcompressor/cuSZ/releases/download/v0.1.2/cuSZ-0.1.2.tar.gz"
-    git = "https://github.com/szcompressor/cuSZ"
-    maintainers = ["dingwentao", "jtian0"]
+    homepage = "https://szcompressor.org/"
+    git = "https://github.com/szcompressor/cusz"
+    url = "https://github.com/szcompressor/cuSZ/archive/refs/tags/v0.3.tar.gz"
 
-    version("master", branch="master")
-    version("0.1.2", sha256="c6e89a26b295724edefc8052f62653c5a315c78eaf6d5273299a8e11a5cf7363")
+    maintainers = ["jtian0", "dingwentao"]
+    tags = ["e4s"]
 
-    def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install("bin/cusz", prefix.bin)
+    conflicts("~cuda")
+    conflicts("cuda_arch=none", when="+cuda")
+
+    version("develop", branch="develop")
+    version("0.3", sha256="0feb4f7fd64879fe147624dd5ad164adf3983f79b2e0383d35724f8d185dcb11")
+
+    # these version of Cuda provide the CUB headers, but not CUB cmake configuration that we use.
+    conflicts("cuda@11.0.2:11.2.2")
+
+    depends_on("cub", when="^ cuda@:10.2.89")
+
+    def cmake_args(self):
+        cuda_arch = self.spec.variants["cuda_arch"].value
+        args = ["-DBUILD_TESTING=OFF", ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)]
+        return args

@@ -11,28 +11,38 @@ concurrency:
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10']
+        os: [ubuntu-latest]
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
-        - python-version: 2.7
+        - python-version: '3.11'
+          os: ubuntu-latest
           concretizer: original
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
-        - python-version: '3.10'
-          concretizer: original
+        - python-version: '3.6'
+          os: ubuntu-20.04
+          concretizer: clingo
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
         exclude:
         - python-version: '3.7'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.8'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.9'
+          os: ubuntu-latest
+          concretizer: 'clingo'
+          on_develop: false
+        - python-version: '3.10'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
 
@@ -49,19 +59,11 @@ jobs:
           # Needed for unit tests
           sudo apt-get -y install \
               coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
-              patchelf cmake bison libbison-dev kcov
+              cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-cov pytest-xdist
-          # ensure style checks are not skipped in unit tests for python >= 3.6
-          # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
-          if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
-              pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click==8.0.4" "black<=21.12b0"
-          fi
-    - name: Pin pathlib for Python 2.7
-      if: ${{ matrix.python-version == 2.7 }}
-      run: |
-          pip install -U pathlib2==2.3.6
+          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-xdist pytest-cov
+          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -73,7 +75,8 @@ jobs:
           SPACK_PYTHON: python
       run: |
           . share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap disable spack-install
+          spack bootstrap now
           spack -v solve zlib
     - name: Run unit tests
       env:
@@ -81,11 +84,9 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
           SPACK_TEST_PARALLEL: 2
           COVERAGE: true
-          UNIT_TEST_COVERAGE: ${{ (matrix.concretizer == 'original' && matrix.python-version == '2.7') || (matrix.python-version == '3.10') }}
+          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-          coverage combine -a
-          coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
@@ -98,7 +99,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -106,7 +107,7 @@ jobs:
           sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2 pytest-xdist
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml] pytest-xdist
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -155,14 +156,11 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Install System packages
       run: |
           sudo apt-get -y update
-          # Needed for unit tests
-          sudo apt-get -y install \
-              coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
-              patchelf kcov
+          sudo apt-get -y install coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build kcov
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools pytest codecov coverage[toml] pytest-cov clingo pytest-xdist
@@ -177,8 +175,6 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-          coverage combine -a
-          coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # @v2.1.0
       with:
         flags: unittests,linux,clingo
@@ -187,7 +183,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.10"]
     steps:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
@@ -210,15 +206,10 @@ jobs:
         git --version
         . .github/workflows/setup_git.sh
         . share/spack/setup-env.sh
-        $(which spack) bootstrap untrust spack-install
+        $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        $(which spack) unit-test --cov --cov-config=pyproject.toml "${common_args[@]}"
-        coverage combine -a
-        coverage xml
-        # Delete the symlink going from ./lib/spack/docs/_spack_root back to
-        # the initial directory, since it causes ELOOP errors with codecov/actions@2
-        rm lib/spack/docs/_spack_root
+        $(which spack) unit-test --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,macos

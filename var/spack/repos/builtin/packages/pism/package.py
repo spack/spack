@@ -22,7 +22,7 @@ class Pism(CMakePackage):
 
     variant("extra", default=False, description="Build extra executables (testing/verification)")
     variant("shared", default=True, description="Build shared Pism libraries")
-    variant("python", default=False, description="Build python bindings")
+    variant("python", default=False, description="Build python bindings", when="@1.1:")
     variant("icebin", default=False, description="Build classes needed by IceBin")
     variant(
         "proj",
@@ -46,6 +46,8 @@ class Pism(CMakePackage):
 
     description = "Report errors through Everytrace (requires Everytrace)"
     variant("everytrace", default=False, description=description)
+
+    patch("pism-petsc-3.18.diff", when="@1.1.4 ^petsc@3.18:")
 
     # CMake build options not transferred to Spack variants
     # (except from CMakeLists.txt)
@@ -78,8 +80,7 @@ class Pism(CMakePackage):
     depends_on("everytrace", when="+everytrace")
 
     extends("python", when="+python")
-    depends_on("python@2.7:2.8,3.3:", when="@1.1: +python")
-    depends_on("python@2.7:2.8", when="@:1.0 +python")
+    depends_on("python@2.7:2.8,3.3:", when="+python")
     depends_on("py-matplotlib", when="+python")
     depends_on("py-numpy", when="+python")
 

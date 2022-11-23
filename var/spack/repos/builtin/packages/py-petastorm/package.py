@@ -16,6 +16,7 @@ class PyPetastorm(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("0.12.0", sha256="79b98b87a619f34ca96a3dd42670506ce9439d321b3aab356cdf7edac8ff5c5c")
     version("0.11.4", sha256="7090dfc86f110e641d95798bcc75f8b1ca14cd56ed3feef491baaa6849629e51")
     version("0.9.8", sha256="571855224411b88b759ba5d48b288ad2ba09997ebd259292f72b9246144b8101")
     version("0.8.2", sha256="1bf4f26ce0b14f7334c0c29868154f1e600021a044f7565a5ad766b5ecdde911")
@@ -25,7 +26,6 @@ class PyPetastorm(PythonPackage):
     depends_on("py-dill@0.2.1:", type=("build", "run"))
     depends_on("py-diskcache@3.0.0:", type=("build", "run"))
     depends_on("py-future@0.10.2:", type=("build", "run"))
-    depends_on("py-futures@2.0:", type=("build", "run"), when="^python@:2")
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
     depends_on("py-packaging@15.0:", type=("build", "run"))
     depends_on("py-pandas@0.19.0:", type=("build", "run"))

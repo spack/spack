@@ -15,6 +15,18 @@ class PyPillowBase(PythonPackage):
 
     # These defaults correspond to Pillow defaults
     # https://pillow.readthedocs.io/en/stable/installation.html#external-libraries
+    VARIANTS_IN_SETUP_CFG = (
+        "zlib",
+        "jpeg",
+        "tiff",
+        "freetype",
+        "lcms",
+        "webp",
+        "webpmux",
+        "jpeg2000",
+        "imagequant",
+        "xcb",
+    )
     variant("zlib", default=True, description="Compressed PNG functionality")
     variant("jpeg", default=True, description="JPEG functionality")
     variant("tiff", default=False, description="Compressed TIFF functionality")
@@ -36,10 +48,6 @@ class PyPillowBase(PythonPackage):
     depends_on("python@2.7:2.8,3.5:3.8", when="@6.2.1:6.2.2", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:3.7", when="@6.0:6.2.0", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:3.7", when="@5.2:5.4", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:3.6", when="@5.0:5.1", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.3:3.6", when="@4.0:4", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.2:3.5", when="@2:3", type=("build", "run"))
-    depends_on("python@2.4:2.7", when="@:1", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     # Optional dependencies
@@ -79,8 +87,7 @@ class PyPillowBase(PythonPackage):
 
         with open("setup.cfg", "a") as setup:
             setup.write("[build_ext]\n")
-            variants = list(self.spec.variants)
-            for variant in variants:
+            for variant in self.VARIANTS_IN_SETUP_CFG:
                 setup.write(variant_to_cfg(variant))
 
             setup.write("rpath={0}\n".format(":".join(self.rpath)))
@@ -113,9 +120,6 @@ class PyPillow(PyPillowBase):
     version("6.2.0", sha256="4548236844327a718ce3bb182ab32a16fa2050c61e334e959f554cac052fb0df")
     version("6.0.0", sha256="809c0a2ce9032cbcd7b5313f71af4bdc5c8c771cb86eb7559afd954cab82ebb5")
     version("5.4.1", sha256="5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f")
-    version("5.1.0", sha256="cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef")
-    version("3.2.0", sha256="64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a")
-    version("3.0.0", sha256="ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb")
 
     for ver in [
         "9.2.0",
@@ -132,8 +136,5 @@ class PyPillow(PyPillowBase):
         "6.2.0",
         "6.0.0",
         "5.4.1",
-        "5.1.0",
-        "3.2.0",
-        "3.0.0",
     ]:
         provides("pil@" + ver, when="@" + ver)

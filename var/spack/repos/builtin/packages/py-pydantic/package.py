@@ -19,6 +19,5 @@ class PyPydantic(PythonPackage):
     depends_on("python@3.7:", when="@1.10.2:", type=("build", "run"))
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-dataclasses@0.6:", when="^python@:3.6", type=("build", "run"))
     depends_on("py-typing-extensions@4.1.0:", when="@1.10.2:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.3:", type=("build", "run"))

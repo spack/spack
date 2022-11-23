@@ -15,7 +15,12 @@ class UfsUtils(CMakePackage):
     homepage = "https://noaa-emcufs-utils.readthedocs.io/en/latest/"
     url = "https://github.com/NOAA-EMC/UFS_UTILS/archive/refs/tags/ufs_utils_1_6_0.tar.gz"
 
-    maintainers = ["t-brown", "edwardhartnett", "kgerheiser", "Hang-Lei-NOAA"]
+    maintainers = [
+        "t-brown",
+        "edwardhartnett",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+    ]
 
     version("1_6_0", sha256="829ba4b50162e4202f96ec92a65b9fa824f71db65d2b63b70822db07d061cd92")
 

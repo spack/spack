@@ -20,6 +20,7 @@ class PyShapely(PythonPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("1.8.5", sha256="e82b6d60ecfb124120c88fe106a478596bbeab142116d7e7f64a364dac902a92")
     version("1.8.4", sha256="a195e51caafa218291f2cbaa3fef69fd3353c93ec4b65b2a4722c4cf40c3198c")
     version("1.8.3", sha256="1ce9da186d48efc50130af96d62ffb4d2e175235143d804ef395aad156d45bb3")
     version("1.8.2", sha256="572af9d5006fd5e3213e37ee548912b0341fb26724d6dc8a4e3950c10197ebb6")
