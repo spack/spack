@@ -18,7 +18,6 @@ import traceback
 from html.parser import HTMLParser
 from urllib.error import URLError
 from urllib.request import (
-    HTTPError,
     HTTPRedirectHandler,
     HTTPSHandler,
     Request,
