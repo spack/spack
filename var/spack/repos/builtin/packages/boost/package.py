@@ -524,6 +524,9 @@ class Boost(Package):
                     "ZSTD_LIBPATH=%s" % spec["zstd"].prefix.lib,
                 ]
             )
+            # At least with older Xcode, _lzma_cputhreads is missing (#33998)
+            if "platform=darwin" in self.spec:
+                options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
         if "+shared" in spec:

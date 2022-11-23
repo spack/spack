@@ -29,4 +29,3 @@ class PyBiomFormat(PythonPackage):
     depends_on("py-scipy@1.3.1:", type=("build", "run"))
     depends_on("py-pandas@0.20.0:", type=("build", "run"))
     depends_on("py-six@1.10.0:", type=("build", "run"))
-    depends_on("py-pyqi", type=("build", "run"), when="^python@:2")
