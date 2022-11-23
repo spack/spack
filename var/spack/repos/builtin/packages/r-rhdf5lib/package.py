@@ -13,6 +13,7 @@ class RRhdf5lib(RPackage):
 
     bioc = "Rhdf5lib"
 
+    version("1.20.0", commit="760679995f17996a9de328cf7a8bcaa6c87286d4")
     version("1.18.2", commit="d104bbfdb91ac5ec7db3c453f23e4d1d6feb671f")
     version("1.16.0", commit="534c49705dbdb27ae0c564acff2c72df2b27b3f1")
     version("1.12.1", commit="cf464f40fd95274d0d351cf28b586c49307c4f0b")

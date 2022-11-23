@@ -33,6 +33,9 @@ default:
 .generate:
   stage: generate
   script:
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -41,6 +44,8 @@ default:
       --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  after_script:
+    - cat /proc/loadavg || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"

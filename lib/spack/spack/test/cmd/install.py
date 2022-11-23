@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import argparse
+import builtins
 import filecmp
 import itertools
 import os
@@ -12,7 +12,6 @@ import sys
 import time
 
 import pytest
-from six.moves import builtins
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -1179,3 +1178,11 @@ def test_install_use_buildcache(
         # Alternative to --cache-only (always) or --no-cache (never)
         for opt in ["auto", "only", "never"]:
             install_use_buildcache(opt)
+
+
+@pytest.mark.regression("34006")
+@pytest.mark.disable_clean_stage_check
+def test_padded_install_runtests_root(install_mockery_mutable_config, mock_fetch):
+    spack.config.set("config:install_tree:padded_length", 255)
+    output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
+    assert output.count("method not implemented") == 1

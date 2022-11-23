@@ -33,6 +33,7 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
+import io
 import multiprocessing
 import os
 import re
@@ -40,8 +41,6 @@ import shutil
 import sys
 import traceback
 import types
-
-from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
@@ -353,10 +352,8 @@ def set_compiler_environment_variables(pkg, env):
         if isinstance(pkg.flag_handler, types.FunctionType):
             handler = pkg.flag_handler
         else:
-            if sys.version_info >= (3, 0):
-                handler = pkg.flag_handler.__func__
-            else:
-                handler = pkg.flag_handler.im_func
+            handler = pkg.flag_handler.__func__
+
         injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag][:])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
@@ -569,6 +566,7 @@ def _set_variables_for_single_module(pkg, module):
 
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
@@ -1271,6 +1269,8 @@ def get_package_context(traceback, context=3):
             obj = frame.f_locals["self"]
             if isinstance(obj, spack.package_base.PackageBase):
                 break
+    else:
+        return None
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
@@ -1352,7 +1352,7 @@ class ChildError(InstallError):
 
     @property
     def long_message(self):
-        out = StringIO()
+        out = io.StringIO()
         out.write(self._long_message if self._long_message else "")
 
         have_log = self.log_name and os.path.exists(self.log_name)

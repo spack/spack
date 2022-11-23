@@ -17,6 +17,7 @@ import spack.error
 import spack.package_base
 import spack.repo
 import spack.store
+import spack.traverse as traverse
 from spack.database import InstallStatuses
 
 description = "remove installed packages"
@@ -144,11 +145,7 @@ def installed_dependents(specs, env):
         active environment, and one from specs to dependent installs outside of
         the active environment.
 
-        Any of the input specs may appear in both mappings (if there are
-        dependents both inside and outside the current environment).
-
-        If a dependent spec is used both by the active environment and by
-        an inactive environment, it will only appear in the first mapping.
+        Every installed dependent spec is listed once.
 
         If there is not current active environment, the first mapping will be
         empty.
@@ -158,19 +155,27 @@ def installed_dependents(specs, env):
 
     env_hashes = set(env.all_hashes()) if env else set()
 
-    all_specs_in_db = spack.store.db.query()
+    # Ensure we stop traversal at input specs.
+    visited = set(s.dag_hash() for s in specs)
 
     for spec in specs:
-        installed = [x for x in all_specs_in_db if spec in x]
-
-        # separate installed dependents into dpts in this environment and
-        # dpts that are outside this environment
-        for dpt in installed:
-            if dpt not in specs:
-                if dpt.dag_hash() in env_hashes:
-                    active_dpts.setdefault(spec, set()).add(dpt)
-                else:
-                    outside_dpts.setdefault(spec, set()).add(dpt)
+        for dpt in traverse.traverse_nodes(
+            spec.dependents(deptype="all"),
+            direction="parents",
+            visited=visited,
+            deptype="all",
+            root=True,
+            key=lambda s: s.dag_hash(),
+        ):
+            hash = dpt.dag_hash()
+            # Ensure that all the specs we get are installed
+            record = spack.store.db.query_local_by_spec_hash(hash)
+            if record is None or not record.installed:
+                continue
+            if hash in env_hashes:
+                active_dpts.setdefault(spec, set()).add(dpt)
+            else:
+                outside_dpts.setdefault(spec, set()).add(dpt)
 
     return active_dpts, outside_dpts
 
@@ -225,54 +230,21 @@ def _remove_from_env(spec, env):
         pass  # ignore non-root specs
 
 
-def do_uninstall(env, specs, force):
-    """Uninstalls all the specs in a list.
+def do_uninstall(specs, force=False):
+    # TODO: get rid of the call-sites that use this function,
+    # so that we don't have to do a dance of list -> set -> list -> set
+    hashes_to_remove = set(s.dag_hash() for s in specs)
 
-    Args:
-        env (spack.environment.Environment or None): active environment, or ``None``
-            if there is not one
-        specs (list): list of specs to be uninstalled
-        force (bool): force uninstallation (boolean)
-    """
-    packages = []
-    for item in specs:
-        try:
-            # should work if package is known to spack
-            packages.append(item.package)
-        except spack.repo.UnknownEntityError:
-            # The package.py file has gone away -- but still
-            # want to uninstall.
-            spack.package_base.PackageBase.uninstall_by_spec(item, force=True)
-
-    # A package is ready to be uninstalled when nothing else references it,
-    # unless we are requested to force uninstall it.
-    def is_ready(dag_hash):
-        if force:
-            return True
-
-        _, record = spack.store.db.query_by_spec_hash(dag_hash)
-        if not record.ref_count:
-            return True
-
-        # If this spec is only used as a build dependency, we can uninstall
-        return all(
-            dspec.deptypes == ("build",) or not dspec.parent.installed
-            for dspec in record.spec.edges_from_dependents()
-        )
-
-    while packages:
-        ready = [x for x in packages if is_ready(x.spec.dag_hash())]
-        if not ready:
-            msg = (
-                "unexpected error [cannot proceed uninstalling specs with"
-                " remaining link or run dependents {0}]"
-            )
-            msg = msg.format(", ".join(x.name for x in packages))
-            raise spack.error.SpackError(msg)
-
-        packages = [x for x in packages if x not in ready]
-        for item in ready:
-            item.do_uninstall(force=force)
+    for s in traverse.traverse_nodes(
+        specs,
+        order="topo",
+        direction="children",
+        root=True,
+        cover="nodes",
+        deptype="all",
+    ):
+        if s.dag_hash() in hashes_to_remove:
+            spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
 
 
 def get_uninstall_list(args, specs, env):
@@ -414,7 +386,7 @@ def uninstall_specs(args, specs):
         confirm_removal(uninstall_list)
 
     # Uninstall everything on the list
-    do_uninstall(env, uninstall_list, args.force)
+    do_uninstall(uninstall_list, args.force)
 
     if env:
         with env.write_transaction():

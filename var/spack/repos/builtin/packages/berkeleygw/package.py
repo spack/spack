@@ -35,11 +35,12 @@ class Berkeleygw(MakefilePackage):
         expand=False,
     )
 
-    variant("mpi", default=True, description="Builds with MPI support")
+    # For parallel computing support, enable +mpi. It uses MPI and ScaLAPACK
+    # which are inter-dependent in the berkeleygw code(they need each other):
+    # https://github.com/spack/spack/pull/33948#issuecomment-1323805817
+    variant("mpi", default=True, description="Build with MPI and ScaLAPACK support")
     variant("elpa", default=True, description="Build with ELPA support")
-    variant("python", default=False, description="Build with Python support")
     variant("openmp", default=True, description="Build with OpenMP support")
-    variant("scalapack", default=True, description="Build with ScaLAPACK support")
     variant("hdf5", default=True, description="Builds with HDF5 support")
     variant("debug", default=False, description="Builds with DEBUG flag")
     variant("verbose", default=False, description="Builds with VERBOSE flag")
@@ -47,28 +48,15 @@ class Berkeleygw(MakefilePackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
+    depends_on("scalapack", when="+mpi")
     depends_on("hdf5+fortran+hl", when="+hdf5~mpi")
     depends_on("hdf5+fortran+hl+mpi", when="+hdf5+mpi")
-    depends_on("scalapack", when="+scalapack+mpi")
     depends_on("elpa+openmp", when="+elpa+openmp")
     depends_on("elpa~openmp", when="+elpa~openmp")
     depends_on("fftw-api@3+openmp", when="+openmp")
     depends_on("fftw-api@3~openmp", when="~openmp")
 
-    depends_on("python@:2", type=("build", "run"), when="+python")
-    depends_on("py-numpy@:1.16", type=("build", "run"), when="+python")
-    depends_on("py-setuptools@:44", type=("build", "run"), when="+python")
-    depends_on("py-h5py@:2", type=("build", "run"), when="+hdf5+python")
-
     depends_on("perl", type="test")
-
-    # scalapack and mpi variants need each other, make the solver (de)select the other too:
-    conflicts(
-        "+scalapack", when="~mpi", msg="scalapack is a parallel library and needs MPI support"
-    )
-    conflicts(
-        "~scalapack", when="+mpi", msg="ScaLAPACK is required for MPI builds of berkelygw"
-    )
 
     conflicts("+elpa", when="~mpi", msg="elpa is a parallel library and needs MPI support")
 
@@ -163,7 +151,7 @@ class Berkeleygw(MakefilePackage):
 
         buildopts.append("LAPACKLIB=%s" % spec["lapack"].libs.ld_flags)
 
-        if "+scalapack" in spec:
+        if "+mpi" in spec:
             mathflags.append("-DUSESCALAPACK")
             buildopts.append("SCALAPACKLIB=%s" % spec["scalapack"].libs.ld_flags)
 
@@ -175,9 +163,8 @@ class Berkeleygw(MakefilePackage):
                 buildopts.append("F90free=%s -free" % spec["mpi"].mpifc)
                 buildopts.append("C_COMP=%s" % spec["mpi"].mpicc)
                 buildopts.append("CC_COMP=%s" % spec["mpi"].mpicxx)
-                if "+scalapack" in spec:
-                    buildopts.append("BLACSDIR=%s" % spec["scalapack"].libs)
-                    buildopts.append("BLACS=%s" % spec["scalapack"].libs.ld_flags)
+                buildopts.append("BLACSDIR=%s" % spec["scalapack"].libs)
+                buildopts.append("BLACS=%s" % spec["scalapack"].libs.ld_flags)
             else:
                 buildopts.append("F90free=%s -free" % spack_fc)
                 buildopts.append("C_COMP=%s" % spack_cc)
@@ -218,7 +205,7 @@ class Berkeleygw(MakefilePackage):
                 buildopts.append("F90free=%s %s" % (spack_fc, f90_flags))
                 buildopts.append("C_COMP=%s %s" % (spack_cc, c_flags))
                 buildopts.append("CC_COMP=%s %s" % (spack_cxx, cxx_flags))
-            buildopts.append("FOPTS=-Kfast -Knotemparraystack %s" % " ".join(fflags))
+                buildopts.append("FOPTS=-Kfast -Knotemparraystack %s" % " ".join(fflags))
         else:
             raise InstallError(
                 "Spack does not yet have support for building "
