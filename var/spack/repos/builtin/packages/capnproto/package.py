@@ -70,7 +70,10 @@ class Capnproto(AutotoolsPackage):
                 "set\\(VERSION 0\\.(\\d*)\\-dev\\)", "set(VERSION 0.\\1)", "c++/CMakeLists.txt"
             )
             filter_file(
-                "AC_INIT\\(\\[Capn Proto\\],\\[0\\.(\\d*)\\-dev\\],\\[capnproto@googlegroups\\.com\\],\\[capnproto\\-c\\+\\+\\]\\)",
+                (
+                    "AC_INIT\\(\\[Capn Proto\\],\\[0\\.(\\d*)\\-dev\\],"
+                    "\\[capnproto@googlegroups\\.com\\],\\[capnproto\\-c\\+\\+\\]\\)"
+                ),
                 "AC_INIT([Capn Proto],[0.\\1],[capnproto@googlegroups.com],[capnproto-c++])",
                 "c++/configure.ac",
             )
