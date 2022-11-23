@@ -18,6 +18,9 @@ class BaseEnv(BundlePackage):
 
     version("1.0.0")
 
+    variant("python", default=True, description="Include Python")
+    variant("shared", default=True, description="Build shared libraries as much as possible")
+
     # Basic utilities
     if sys.platform == "darwin":
         depends_on("libbacktrace", type="run")
@@ -27,15 +30,20 @@ class BaseEnv(BundlePackage):
     depends_on("curl", type="run")
 
     # I/O
-    depends_on("zlib", type="run")
-    depends_on("hdf5", type="run")
-    depends_on("netcdf-c", type="run")
-    depends_on("netcdf-fortran", type="run")
-    depends_on("parallel-netcdf", type="run")
-    depends_on("parallelio", type="run")
+    depends_on("zlib+shared", type="run", when="+shared")
+    depends_on("zlib~shared", type="run", when="~shared")
+    depends_on("hdf5+hl+mpi+shared", type="run", when="+shared")
+    depends_on("hdf5+hl+mpi~shared", type="run", when="~shared")
+    depends_on("netcdf-c~parallel-netcdf+v2+mpi+shared", type="run", when="+shared")
+    depends_on("netcdf-c~parallel-netcdf+v2+mpi~shared", type="run", when="~shared")
+    depends_on("netcdf-fortran+shared", type="run", when="+shared")
+    depends_on("netcdf-fortran~shared", type="run", when="~shared")
+    depends_on("parallel-netcdf+shared", type="run", when="+shared")
+    depends_on("parallel-netcdf~shared", type="run", when="~shared")
+    depends_on("parallelio+fortran~pnetcdf~shared", type="run")
     depends_on("nccmp", type="run")
 
     # Python
-    depends_on("python@3.7:")
+    depends_on("python@3.7:", when="+python")
 
     # There is no need for install() since there is no code.
