@@ -111,6 +111,10 @@ class FluxCore(AutotoolsPackage):
     variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
+    # Restrict flux to Linux based platforms where builds are possible.
+    conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
+    conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
+
     depends_on("libarchive", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
