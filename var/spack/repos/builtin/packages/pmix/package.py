@@ -69,6 +69,11 @@ class Pmix(AutotoolsPackage):
         description="allow a PMIx server to request services from " "a system-level REST server",
     )
 
+    variant('python',
+            default=False,
+            when="@4.1.2:",
+            description="Enable python bindigs")
+
     variant("docs", default=False, description="Build manpages")
 
     depends_on("m4", type="build", when="@master")
@@ -83,6 +88,8 @@ class Pmix(AutotoolsPackage):
     depends_on("hwloc@1.11:1,2:", when="@3:")
     depends_on("curl", when="+restful")
     depends_on("jansson@2.11:", when="+restful")
+    depends_on('python', when="+python")
+    depends_on('py-cython', when="+python")
 
     def autoreconf(self, spec, prefix):
         """Only needed when building from git checkout"""
@@ -100,6 +107,12 @@ class Pmix(AutotoolsPackage):
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+
+        config_args.extend(
+            self.enable_or_disable(
+                "python-bindings", variant="python"
+            )
+        )
 
         config_args.extend(
             self.enable_or_disable(
