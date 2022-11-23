@@ -264,7 +264,7 @@ class Openloops(Package):
             f.write("cc = {0}\n".format(env["SPACK_CC"]))
             f.write("cxx = {0}\n".format(env["SPACK_CXX"]))
             if not self.compiler.fc:
-                raise InstallError(f"{self.compiler.cc} has no Fortran compiler in spack!")
+                raise InstallError(f"{self.spec.compiler} has no Fortran compiler in spack!")
             f.write("fortran_compiler = {0}\n".format(env["SPACK_FC"]))
             if self.spec.satisfies("@1.3.1") and not is_intel:
                 f.write("gfortran_f_flags = -ffree-line-length-none\n")
