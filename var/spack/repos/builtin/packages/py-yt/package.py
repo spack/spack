@@ -22,10 +22,6 @@ class PyYt(PythonPackage):
 
     maintainers = ["charmoniumq"]
 
-    version("main", branch="main")
-    version("develop", branch="master", deprecated=True)
-    version("develop-4.0", branch="yt-4.0", deprecated=True)
-
     version("4.1.2", sha256="0ae03288b067721baad14c016f253dc791cd444a1f2dd5d804cf91da622a0c76")
     version("3.6.1", sha256="a1be3ea7e18729d3cd86e9234dc4731bf23200dff3344fa756fe173ea36cc747")
     version("3.6.0", sha256="4e3bab11766d5950477ba4d6c528a495e12cda1155227361b4579ac4ac0bf975")
