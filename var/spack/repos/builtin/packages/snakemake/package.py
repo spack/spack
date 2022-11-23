@@ -63,17 +63,18 @@ class Snakemake(PythonPackage):
             depends_on("py-google-api-python-client", type=("build", "run"))
             depends_on("py-google-cloud-storage", type=("build", "run"))
 
-        variant("ftputil", default=False, description="Enable snakemake.remote.FTP")
-        with when("+ftputil"):
+        # These variants are not in PyPI/pip, but they are undocumented dependencies needed to make certain parts of Snakemake work.
+        variant("ftp", default=False, description="Enable snakemake.remote.FTP")
+        with when("+ftp"):
             depends_on("py-ftputil")
 
-        variant("boto", default=False, description="Enable snakemake.remote.S3")
-        with when("+boto"):
+        variant("s3", default=False, description="Enable snakemake.remote.S3")
+        with when("+s3"):
             depends_on("py-boto3")
             depends_on("py-botocore")
 
-        variant("requests", default=False, description="Enable snakemake.remote.HTTP")
-        with when("+requests"):
+        variant("http", default=False, description="Enable snakemake.remote.HTTP")
+        with when("+http"):
             depends_on("py-requests")
 
     with when("@7:"):
