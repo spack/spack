@@ -58,7 +58,7 @@ spack:
     - py-neurodamus+all_deps
     - py-pytouchreader
     - reportinglib
-    - spatial-index
+    - spatial-index ^boost+filesystem
     - spykfunc
     - steps+petsc
     - synapsetool
