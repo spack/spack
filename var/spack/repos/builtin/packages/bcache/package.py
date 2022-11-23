@@ -25,7 +25,9 @@ class Bcache(MakefilePackage):
     depends_on("pkgconfig", type="build")
 
     def setup_build_environment(self, env):
-        env.append_flags("LDFLAGS", "-lintl")
+        # Add -lintl if provided by gettext, otherwise libintl is provided by the system's glibc:
+        if "libintl" in self.spec["gettext"].libs.joined():
+            env.append_flags("LDFLAGS", "-lintl")
 
     patch(
         "func_crc64.patch",
