@@ -29,6 +29,8 @@ class Sw4(MakefilePackage):
     depends_on("zfp")
     depends_on("fftw@3.0: +mpi")
     depends_on("h5z-zfp")
+    depends_on("python")
+    depends_on("py-h5py+mpi")
 
     def edit(self, spec, prefix):
         os.environ["CXX"] = spec["mpi"].mpicc
