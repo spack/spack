@@ -59,7 +59,7 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     arch_scheme = (
         "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"
     )
-    ns_scheme = "${architecture}/${namespace}/${name}-${version}-${hash:7}"
+    ns_scheme = "{architecture}/{namespace}/{name}-{version}-{hash:7}"
     arch_ns_scheme_projections = {"all": arch_scheme, "python": ns_scheme}
     layout_arch_ns = DirectoryLayout(str(tmpdir), projections=arch_ns_scheme_projections)
 
