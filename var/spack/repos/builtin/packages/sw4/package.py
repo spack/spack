@@ -51,3 +51,4 @@ class Sw4(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install("optimize_mp/sw4", prefix.bin)
+        install("pytest", prefix)
