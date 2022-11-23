@@ -222,7 +222,10 @@ class MockPaginator(object):
 
 class MockClientError(Exception):
     def __init__(self):
-        self.response = {"Error": {"Code": "NoSuchKey"}}
+        self.response = {
+            "Error": {"Code": "NoSuchKey"},
+            "ResponseMetadata": {"HTTPStatusCode": 404},
+        }
 
 
 class MockS3Client(object):
@@ -239,6 +242,12 @@ class MockS3Client(object):
         pass
 
     def get_object(self, Bucket=None, Key=None):
+        self.ClientError = MockClientError
+        if Bucket == "my-bucket" and Key == "subdirectory/my-file":
+            return True
+        raise self.ClientError
+
+    def head_object(self, Bucket=None, Key=None):
         self.ClientError = MockClientError
         if Bucket == "my-bucket" and Key == "subdirectory/my-file":
             return True
