@@ -34,6 +34,7 @@ ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
 
+A :doc:`cheatsheet` is available for quick reference.
 
 .. _installation_procedure:
 
