@@ -8,6 +8,7 @@ import warnings
 import llnl.util.lang
 import llnl.util.tty
 
+import spack.parser
 import spack.spec
 
 
@@ -25,11 +26,9 @@ def _make_validator():
 
         for spec_str in instance:
             try:
-                spack.spec.parse(spec_str)
-            except spack.spec.SpecParseError as e:
-                yield jsonschema.ValidationError(
-                    '"{0}" is an invalid spec [{1}]'.format(spec_str, str(e))
-                )
+                spack.parser.parse(spec_str)
+            except spack.parser.SpecSyntaxError as e:
+                yield jsonschema.ValidationError(str(e))
 
     def _deprecated_properties(validator, deprecated, instance, schema):
         if not (validator.is_type(instance, "object") or validator.is_type(instance, "array")):

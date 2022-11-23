@@ -68,10 +68,8 @@ def test_validate_spec(validate_spec_schema):
 
     # Check that invalid data throws
     data["^python@3.7@"] = "baz"
-    with pytest.raises(jsonschema.ValidationError) as exc_err:
+    with pytest.raises(jsonschema.ValidationError, match="cannot parse"):
         v.validate(data)
-
-    assert "is an invalid spec" in str(exc_err.value)
 
 
 @pytest.mark.regression("9857")
@@ -79,10 +77,8 @@ def test_module_suffixes(module_suffixes_schema):
     v = spack.schema.Validator(module_suffixes_schema)
     data = {"tcl": {"all": {"suffixes": {"^python@2.7@": "py2.7"}}}}
 
-    with pytest.raises(jsonschema.ValidationError) as exc_err:
+    with pytest.raises(jsonschema.ValidationError, match="cannot parse"):
         v.validate(data)
-
-    assert "is an invalid spec" in str(exc_err.value)
 
 
 @pytest.mark.regression("10246")
