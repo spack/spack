@@ -198,10 +198,12 @@ def diff(parser, args):
     if len(args.specs) != 2:
         tty.die("You must provide two specs to diff.")
 
-    specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
-        for spec in spack.cmd.parse_specs(args.specs)
-    ]
+    specs = []
+    for spec in spack.cmd.parse_specs(args.specs):
+        if spec.concrete:
+            specs.append(spec)
+        else:
+            specs.append(spack.cmd.disambiguate_spec(spec, env, first=args.load_first))
 
     # Calculate the comparison (c)
     color = False if args.dump_json else get_color_when()

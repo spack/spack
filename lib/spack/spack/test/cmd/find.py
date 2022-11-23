@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import sys
+from textwrap import dedent
 
 import pytest
 
@@ -126,6 +127,19 @@ def test_namespaces_shown_correctly(database):
 
     out = find("--namespace")
     assert "builtin.mock.zmpi" in out
+
+
+@pytest.mark.db
+def test_find_cli_output_format(database, mock_tty_stdout):
+    out = find("zmpi")
+    assert out.endswith(
+        dedent(
+            """\
+    zmpi@1.0
+    ==> 1 installed package
+    """
+        )
+    )
 
 
 def _check_json_output(spec_list):
@@ -255,9 +269,9 @@ mpileaks-2.3
     callpath-1.0
         dyninst-8.2
             libdwarf-20130729
-                libelf-0.8.13
-        zmpi-1.0
-            fake-1.0
+            libelf-0.8.13
+    zmpi-1.0
+        fake-1.0
 
 """
     )
@@ -277,9 +291,9 @@ mpileaks-2.3                   {0}
     callpath-1.0               {1}
         dyninst-8.2            {2}
             libdwarf-20130729  {3}
-                libelf-0.8.13  {4}
-        zmpi-1.0               {5}
-            fake-1.0           {6}
+            libelf-0.8.13      {4}
+    zmpi-1.0                   {5}
+        fake-1.0               {6}
 
 """.format(
             *prefixes
@@ -308,7 +322,7 @@ def test_find_very_long(database, config):
 @pytest.mark.db
 def test_find_show_compiler(database, config):
     output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@4.5.0" in output
+    assert "mpileaks@2.3%gcc@10.2.1" in output
 
 
 @pytest.mark.db
@@ -342,7 +356,7 @@ def test_find_prefix_in_env(
     """Test `find` formats requiring concrete specs work in environments."""
     env("create", "test")
     with ev.read("test"):
-        install("mpileaks")
+        install("--add", "mpileaks")
         find("-p")
         find("-l")
         find("-L")
@@ -359,8 +373,3 @@ def test_find_loaded(database, working_env):
     output = find("--loaded")
     expected = find()
     assert output == expected
-
-
-def test_bootstrap_deprecated():
-    output = find("--bootstrap")
-    assert "`spack find --bootstrap` is deprecated" in output

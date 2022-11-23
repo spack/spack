@@ -46,8 +46,15 @@ class DarshanUtil(AutotoolsPackage):
     version("3.0.0", sha256="95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0")
 
     variant("bzip2", default=False, description="Enable bzip2 compression")
-    variant("apmpi", default=False, description="Compile with AutoPerf MPI module support")
-    variant("apxc", default=False, description="Compile with AutoPerf XC module support")
+    variant(
+        "apmpi",
+        default=False,
+        description="Compile with AutoPerf MPI module support",
+        when="@3.3:",
+    )
+    variant(
+        "apxc", default=False, description="Compile with AutoPerf XC module support", when="@3.3:"
+    )
 
     depends_on("zlib")
     depends_on("bzip2", when="+bzip2", type=("build", "link", "run"))
@@ -61,13 +68,6 @@ class DarshanUtil(AutotoolsPackage):
     depends_on("m4", type="build", when="@3.4.0:")
 
     patch("retvoid.patch", when="@3.2.0:3.2.1")
-
-    conflicts(
-        "+apmpi", when="@:3.2.1", msg="+apmpi variant only available starting from version 3.3.0"
-    )
-    conflicts(
-        "+apxc", when="@:3.2.1", msg="+apxc variant only available starting from version 3.3.0"
-    )
 
     @property
     def configure_directory(self):

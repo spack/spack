@@ -12,6 +12,7 @@ class PyTqdm(PythonPackage):
     homepage = "https://github.com/tqdm/tqdm"
     pypi = "tqdm/tqdm-4.45.0.tar.gz"
 
+    version("4.64.1", sha256="5f4f682a004951c1b450bc753c710e9280c5746ce6ffedee253ddbcbf54cf1e4")
     version("4.64.0", sha256="40be55d30e200777a307a7585aee69e4eabb46b4ec6a4b4a5f2d9f11e7d5408d")
     version("4.62.3", sha256="d359de7217506c9851b7869f3708d8ee53ed70a1b8edbba4dbcb47442592920d")
     version("4.59.0", sha256="d666ae29164da3e517fcf125e41d4fe96e5bb375cd87ff9763f6b38b5592fe33")
@@ -29,6 +30,5 @@ class PyTqdm(PythonPackage):
     depends_on("py-setuptools@42:", type=("build", "run"))
     depends_on("py-setuptools-scm@3.4:+toml", type="build")
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
-    depends_on("py-importlib-resources", when="@4.63: ^python@:3.6", type=("build", "run"))
     depends_on("py-requests", when="+telegram", type=("build", "run"))
     depends_on("py-ipywidgets@6:", when="+notebook", type=("build", "run"))

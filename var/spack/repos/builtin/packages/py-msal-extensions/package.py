@@ -22,4 +22,3 @@ class PyMsalExtensions(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-msal@0.4.1:1", type=("build", "run"))
     depends_on("py-portalocker@1.0:1", type=("build", "run"))
-    depends_on("py-pathlib2", when="@0.2:^python@:2", type=("build", "run"))

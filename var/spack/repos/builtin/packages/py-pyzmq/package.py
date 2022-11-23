@@ -32,6 +32,7 @@ class PyPyzmq(PythonPackage):
         "zmq.devices",
     ]
 
+    version("24.0.1", sha256="216f5d7dbb67166759e59b0479bca82b8acf9bed6015b526b8eb10143fb08e77")
     version("22.3.0", sha256="8eddc033e716f8c91c6a2112f0a8ebc5e00532b4a6ae1eb0ccc48e027f9c671c")
     version("18.1.0", sha256="93f44739db69234c013a16990e43db1aa0af3cf5a4b8b377d028ff24515fbeb3")
     version("18.0.1", sha256="8b319805f6f7c907b101c864c3ca6cefc9db8ce0791356f180b1b644c7347e4c")
@@ -51,6 +52,7 @@ class PyPyzmq(PythonPackage):
     depends_on("libzmq", type=("build", "link"))
     depends_on("libzmq@3.2:", type=("build", "link"), when="@22.3.0:")
     depends_on("py-setuptools", type="build", when="@22.3.0:")
+    depends_on("py-packaging", type="build")
     # Only when python is provided by 'pypy'
     depends_on("py-py", type=("build", "run"), when="@:22")
     depends_on("py-cffi", type=("build", "run"), when="@:22")

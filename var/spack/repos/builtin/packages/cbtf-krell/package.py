@@ -19,9 +19,6 @@ class CbtfKrell(CMakePackage):
     git = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version("develop", branch="master")
-    version("1.9.4.1", branch="1.9.4.1")
-    version("1.9.4", branch="1.9.4")
-    version("1.9.3", branch="1.9.3")
 
     # MPI variants
     variant(
@@ -70,30 +67,23 @@ class CbtfKrell(CMakePackage):
 
     # For Dyninst
     depends_on("dyninst@10.1.0", when="@develop")
-    depends_on("dyninst@10.1.0", when="@1.9.3:9999")
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+lwthreads", when="@develop", type=("build", "link", "run"))
-    depends_on("mrnet@5.0.1-3+lwthreads", when="@1.9.3:9999", type=("build", "link", "run"))
 
     # For Xerces-C
     depends_on("xerces-c")
 
     # For CBTF
     depends_on("cbtf@develop", when="@develop", type=("build", "link", "run"))
-    depends_on("cbtf@1.9.3:9999", when="@1.9.3:9999", type=("build", "link", "run"))
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when="@develop+runtime", type=("build", "link", "run"))
-    depends_on(
-        "cbtf@1.9.3:9999+runtime", when="@1.9.3:9999+runtime", type=("build", "link", "run")
-    )
 
     # for services and collectors
     depends_on("libmonitor@2013.02.18+commrank", type=("build", "link", "run"))
 
     depends_on("libunwind", when="@develop")
-    depends_on("libunwind@1.2.1", when="@1.9.3:9999")
 
     depends_on("papi@5.4.1:", type=("build", "link", "run"))
 
@@ -106,7 +96,6 @@ class CbtfKrell(CMakePackage):
     depends_on("mpt", when="+mpt")
 
     depends_on("python", when="@develop", type=("build", "run"))
-    depends_on("python@2.7.14:2.7.15", when="@2.3.1.3:9999", type=("build", "run"))
 
     depends_on("gotcha")
 

@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import argparse
+import sys
 
 import llnl.util.tty as tty
 
@@ -15,7 +16,8 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.crypto
-from spack.package_base import preferred_version
+from spack.package_base import deprecated_version, preferred_version
+from spack.util.editor import editor
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import VersionBase, ver
 
@@ -53,6 +55,13 @@ def setup_parser(subparser):
         default=False,
         help="checksum the preferred version only",
     )
+    subparser.add_argument(
+        "-a",
+        "--add-to-package",
+        action="store_true",
+        default=False,
+        help="add new versions to package",
+    )
     arguments.add_common_arguments(subparser, ["package"])
     subparser.add_argument(
         "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
@@ -81,6 +90,9 @@ def checksum(parser, args):
     if versions:
         remote_versions = None
         for version in versions:
+            if deprecated_version(pkg, version):
+                tty.warn("Version {0} is deprecated".format(version))
+
             version = ver(version)
             if not isinstance(version, VersionBase):
                 tty.die(
@@ -101,7 +113,7 @@ def checksum(parser, args):
         url_dict = pkg.fetch_remote_versions()
 
     if not url_dict:
-        tty.die("Could not find any versions for {0}".format(pkg.name))
+        tty.die("Could not find any remote versions for {0}".format(pkg.name))
 
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict,
@@ -115,3 +127,46 @@ def checksum(parser, args):
     print()
     print(version_lines)
     print()
+
+    if args.add_to_package:
+        filename = spack.repo.path.filename_for_package_name(pkg.name)
+        # Make sure we also have a newline after the last version
+        versions = [v + "\n" for v in version_lines.splitlines()]
+        versions.append("\n")
+        # We need to insert the versions in reversed order
+        versions.reverse()
+        versions.append("    # FIXME: Added by `spack checksum`\n")
+        version_line = None
+
+        with open(filename, "r") as f:
+            lines = f.readlines()
+            for i in range(len(lines)):
+                # Black is drunk, so this is what it looks like for now
+                # See https://github.com/psf/black/issues/2156 for more information
+                if lines[i].startswith("    # FIXME: Added by `spack checksum`") or lines[
+                    i
+                ].startswith("    version("):
+                    version_line = i
+                    break
+
+        if version_line is not None:
+            for v in versions:
+                lines.insert(version_line, v)
+
+            with open(filename, "w") as f:
+                f.writelines(lines)
+
+            msg = "opening editor to verify"
+
+            if not sys.stdout.isatty():
+                msg = "please verify"
+
+            tty.info(
+                "Added {0} new versions to {1}, "
+                "{2}.".format(len(versions) - 2, args.package, msg)
+            )
+
+            if sys.stdout.isatty():
+                editor(filename)
+        else:
+            tty.warn("Could not add new versions to {0}.".format(args.package))

@@ -21,7 +21,7 @@ class Phist(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/essex/phist/"
-    url = "https://bitbucket.org/essex/phist/get/phist-1.9.6.tar.gz"
+    url = "https://bitbucket.org/essex/phist/get/phist-1.11.2.tar.gz"
     git = "https://bitbucket.org/essex/phist.git"
 
     maintainers = ["jthies"]
@@ -33,6 +33,12 @@ class Phist(CMakePackage):
 
     version("develop", branch="devel")
     version("master", branch="master")
+
+    # compatible with python@3.11: and cray-libsci as BLAS/LAPACK provider
+    version("1.11.2", sha256="e23f76307c26b930f7331a734b0a864ea6d7fb4a13c12f3c5d70c2c41481747b")
+
+    # updated lapack interface to work with openblas and netlib-lapack
+    version("1.11.0", sha256="36e6cc41a13884ba0a26f7be03e3f1882b1a2d14ca04353a609c0eec0cfb7a77")
 
     # updated the Trilinos interface to work with trilinos@13:
     # without using deprecated interfaces in tpetra
@@ -125,6 +131,10 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
+    # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
+    conflicts("^cray-libsci", when="@:1.11.1")
+    # phist@1.11.2 got rid of some deprecated python code
+    conflicts("^python@3.11:", when="@:1.11.1")
     # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
     # phist 1.9.6, which causes compile-time errors with mpich and older
     # GCC versions.
@@ -145,6 +155,8 @@ class Phist(CMakePackage):
     patch("ppc64_sse.patch", when="@1.9.4")
     patch("update_tpetra_gotypes.patch", when="@1.6:1.8")
     patch("sbang.patch", when="+fortran")
+    patch("fortran-fixes-pre-1.11.patch", when="+fortran @1.7.0:1.10.0")
+    patch("lapack-fixes-pre-1.11.patch", when="@:1.10.0")
 
     # ###################### Dependencies ##########################
 
@@ -192,7 +204,7 @@ class Phist(CMakePackage):
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
     # MPI installation to be used than the one spack wants.
     def patch(self):
-        if self.spec.satisfies("@1.9.6:"):
+        if self.spec.satisfies("@1.9.6:1.10.0"):
             filter_file("USE mpi", "use mpi_f08", "src/kernels/builtin/crsmat_module.F90")
             # filter_file('use mpi', 'use mpi_f08', -> Needs more fixes
             #            'fortran_bindings/phist_testing.F90')

@@ -9,8 +9,10 @@ from spack.package import *
 class PyRegex(PythonPackage):
     """Alternative regular expression module, to replace re."""
 
+    homepage = "https://github.com/mrabarnett/mrab-regex"
     pypi = "regex/regex-2020.11.13.tar.gz"
 
+    version("2022.8.17", sha256="5c77eab46f3a2b2cd8bbe06467df783543bf7396df431eb4a144cc4b89e9fb3c")
     version(
         "2020.11.13", sha256="83d6b356e116ca119db8e7c6fc2983289d87b27b3fac238cfe5dca529d884562"
     )
@@ -25,4 +27,5 @@ class PyRegex(PythonPackage):
         "2017.07.11", sha256="dbda8bdc31a1c85445f1a1b29d04abda46e5c690f8f933a9cc3a85a358969616"
     )
 
-    depends_on("py-setuptools", type="build", when="@:2018,2020:")
+    depends_on("py-setuptools", type="build")
+    depends_on("python@3.6:", when="@2022.8.17:", type=("build", "run"))

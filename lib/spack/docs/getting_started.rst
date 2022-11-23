@@ -23,8 +23,36 @@ be present on the machine where Spack is run:
 These requirements can be easily installed on most modern Linux systems;
 on macOS, XCode is required.  Spack is designed to run on HPC
 platforms like Cray.  Not all packages should be expected
-to work on all platforms.  A build matrix showing which packages are
-working on which systems is planned but not yet available.
+to work on all platforms.
+
+A build matrix showing which packages are working on which systems is shown below.
+
+.. tab-set::
+
+   .. tab-item:: Debian/Ubuntu
+
+      .. code-block:: console
+
+         apt update
+         apt install build-essential ca-certificates coreutils curl environment-modules gfortran git gpg lsb-release python3 python3-distutils python3-venv unzip zip
+
+   .. tab-item:: RHEL
+
+      .. code-block:: console
+
+         yum update -y
+         yum install -y epel-release
+         yum update -y
+         yum --enablerepo epel groupinstall -y "Development Tools"
+         yum --enablerepo epel install -y curl findutils gcc-c++ gcc gcc-gfortran git gnupg2 hostname iproute redhat-lsb-core make patch python3 python3-pip python3-setuptools unzip
+         python3 -m pip install boto3
+
+   .. tab-item:: macOS Brew
+
+      .. code-block:: console
+
+         brew update
+         brew install curl gcc git gnupg zip
 
 ------------
 Installation
@@ -96,88 +124,41 @@ Spack provides two ways of bootstrapping ``clingo``: from pre-built binaries
 (default), or from sources. The fastest way to get started is to bootstrap from
 pre-built binaries.
 
-.. note::
-
-   When bootstrapping from pre-built binaries, Spack currently requires 
-   ``patchelf`` on Linux and ``otool`` on macOS. If ``patchelf`` is not in the
-   ``PATH``, Spack will build it from sources, and a C++ compiler is required.
-
-The first time you concretize a spec, Spack will bootstrap in the background:
+The first time you concretize a spec, Spack will bootstrap automatically:
 
 .. code-block:: console
 
-   $ time spack spec zlib
+   $ spack spec zlib
+   ==> Bootstrapping clingo from pre-built binaries
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-ba5ijauisd3uuixtmactc36vps7yfsrl.spec.json
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64/gcc-10.2.1/clingo-bootstrap-spack/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-ba5ijauisd3uuixtmactc36vps7yfsrl.spack
+   ==> Installing "clingo-bootstrap@spack%gcc@10.2.1~docs~ipo+python+static_libstdcpp build_type=Release arch=linux-centos7-x86_64" from a buildcache
+   ==> Bootstrapping patchelf from pre-built binaries
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.16.1-p72zyan5wrzuabtmzq7isa5mzyh6ahdp.spec.json
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.16.1/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.16.1-p72zyan5wrzuabtmzq7isa5mzyh6ahdp.spack
+   ==> Installing "patchelf@0.16.1%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  build_system=autotools arch=linux-centos7-x86_64" from a buildcache
    Input spec
    --------------------------------
    zlib
 
    Concretized
    --------------------------------
-   zlib@1.2.11%gcc@7.5.0+optimize+pic+shared arch=linux-ubuntu18.04-zen
-
-   real	0m20.023s
-   user	0m18.351s
-   sys	0m0.784s
-
-After this command you'll see that ``clingo`` has been installed for Spack's own use:
-
-.. code-block:: console
-
-   $ spack find -b
-   ==> Showing internal bootstrap store at "/root/.spack/bootstrap/store"
-   ==> 3 installed packages
-   -- linux-rhel5-x86_64 / gcc@9.3.0 -------------------------------
-   clingo-bootstrap@spack  python@3.6
-
-   -- linux-ubuntu18.04-zen / gcc@7.5.0 ----------------------------
-   patchelf@0.13
-
-Subsequent calls to the concretizer will then be much faster:
-
-.. code-block:: console
-
-   $ time spack spec zlib
-   [ ... ]
-   real	0m0.490s
-   user	0m0.431s
-   sys	0m0.041s
-
+   zlib@1.2.13%gcc@9.4.0+optimize+pic+shared build_system=makefile arch=linux-ubuntu20.04-icelake
 
 If for security concerns you cannot bootstrap ``clingo`` from pre-built
-binaries, you have to mark this bootstrapping method as untrusted. This makes
-Spack fall back to bootstrapping from sources:
+binaries, you have to disable fetching the binaries we generated with Github Actions.
 
 .. code-block:: console
 
-   $ spack bootstrap untrust github-actions-v0.2
-   ==> "github-actions-v0.2" is now untrusted and will not be used for bootstrapping
+   $ spack bootstrap disable github-actions-v0.4
+   ==> "github-actions-v0.4" is now disabled and will not be used for bootstrapping
+   $ spack bootstrap disable github-actions-v0.3
+   ==> "github-actions-v0.3" is now disabled and will not be used for bootstrapping
 
 You can verify that the new settings are effective with:
 
-.. code-block:: console
+.. command-output:: spack bootstrap list
 
-   $ spack bootstrap list
-   Name: github-actions-v0.2 UNTRUSTED
-
-     Type: buildcache
-
-     Info:
-       url: https://mirror.spack.io/bootstrap/github-actions/v0.2
-       homepage: https://github.com/spack/spack-bootstrap-mirrors
-       releases: https://github.com/spack/spack-bootstrap-mirrors/releases
-
-     Description:
-       Buildcache generated from a public workflow using Github Actions.
-       The sha256 checksum of binaries is checked before installation.
-
-   [ ... ]
-
-   Name: spack-install TRUSTED
-
-     Type: install
-
-     Description:
-       Specs built from sources by Spack. May take a long time.
 
 .. note::
 
@@ -207,9 +188,7 @@ under the ``${HOME}/.spack`` directory. The software installed there can be quer
 
 .. code-block:: console
 
-   $ spack find --bootstrap
-   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
-   ==> 3 installed packages
+   $ spack -b find
    -- linux-ubuntu18.04-x86_64 / gcc@10.1.0 ------------------------
    clingo-bootstrap@spack  python@3.6.9  re2c@1.2.1
 
@@ -218,7 +197,7 @@ In case it's needed the bootstrap store can also be cleaned with:
 .. code-block:: console
 
    $ spack clean -b
-   ==> Removing software in "/home/spack/.spack/bootstrap/store"
+   ==> Removing bootstrapped software and configuration in "/home/spack/.spack/bootstrap"
 
 ^^^^^^^^^^^^^^^^^^
 Check Installation
@@ -1725,9 +1704,11 @@ dependencies or incompatible build tools like autoconf. Here are several
 packages known to work on Windows:
 
 * abseil-cpp
+* bzip2
 * clingo
 * cpuinfo
 * cmake
+* hdf5
 * glm
 * nasm
 * netlib-lapack (requires Intel Fortran)

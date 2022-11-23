@@ -20,6 +20,5 @@ class PyFasteners(PythonPackage):
     depends_on("python@3.6:", when="@0.17:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-monotonic@0.1:", when="@0.16 ^python@:3.3", type=("build", "run"))
     depends_on("py-monotonic@0.1:", when="@:0.15", type=("build", "run"))
     depends_on("py-six", when="@:0.16", type=("build", "run"))

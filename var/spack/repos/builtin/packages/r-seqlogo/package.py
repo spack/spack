@@ -15,6 +15,7 @@ class RSeqlogo(RPackage):
 
     bioc = "seqLogo"
 
+    version("1.64.0", commit="75ff6c0689fce541f054d33750acb6224d14ed4e")
     version("1.62.0", commit="f2d0b53b1411ea98299201a8125a85f4cbf7c9cd")
     version("1.60.0", commit="4115c8e1d01accb8c8cc1cf96f23359466827e16")
     version("1.56.0", commit="169260c43fc58dc75becb3b7842cac3d0038a8d5")

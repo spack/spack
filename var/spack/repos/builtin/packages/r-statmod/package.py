@@ -19,6 +19,7 @@ class RStatmod(RPackage):
 
     cran = "statmod"
 
+    version("1.4.37", sha256="90d2c8a79e0cb291f2685686436bcf4c5b9abd2efb84759a8553d1b1adb76913")
     version("1.4.36", sha256="14e897c83d426caca4d920d3d5bead7ae9a679276b3cb2e227f299ad189d7bc2")
     version("1.4.35", sha256="de5e428f81c306849af47b9ae583362855e166b1da62893734f1154cb5b3f8fe")
     version("1.4.32", sha256="2f67a1cfa66126e6345f8a40564a3077d08f1748f17cb8c8fb05c94ed0f57e20")

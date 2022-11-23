@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Nasm(Package):
+class Nasm(AutotoolsPackage):
     """NASM (Netwide Assembler) is an 80x86 assembler designed for
     portability and modularity. It includes a disassembler as well."""
 
@@ -16,6 +16,8 @@ class Nasm(Package):
     url = "https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.gz"
     list_url = "https://www.nasm.us/pub/nasm/releasebuilds"
     list_depth = 1
+
+    build_system("autotools", conditional("generic", when="platform=windows"), default="autotools")
 
     version("2.15.05", sha256="9182a118244b058651c576baa9d0366ee05983c4d4ae1d9ddd3236a9f2304997")
     version("2.14.02", sha256="b34bae344a3f2ed93b2ca7bf25f1ed3fb12da89eeda6096e3551fd66adeae9fc")
@@ -31,11 +33,11 @@ class Nasm(Package):
         when="@2.13.03 %gcc@8:",
     )
 
-    patch("msvc.mak.patch", when="@2.15.05 platform=windows")
+    with when("platform=windows"):
+        depends_on("perl")
+        patch("msvc.mak.patch", when="@2.15.05")
 
-    conflicts("%intel@:14", when="@2.14:", msg="Intel 14 has immature C11 support")
-
-    depends_on("perl", when="platform=windows")
+    conflicts("%intel@:14", when="@2.14:", msg="Intel <= 14 lacks support for C11")
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
@@ -51,13 +53,8 @@ class Nasm(Package):
                 "configure",
             )
 
-    def install(self, spec, prefix):
-        with working_dir(self.stage.source_path, create=True):
-            configure(*["--prefix={0}".format(self.prefix)])
-            make("V=1")
-            make("install")
 
-    @when("platform=windows")
+class GenericBuilder(spack.build_systems.generic.GenericBuilder):
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
             # build NASM with nmake

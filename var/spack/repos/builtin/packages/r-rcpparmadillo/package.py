@@ -24,6 +24,9 @@ class RRcpparmadillo(RPackage):
     cran = "RcppArmadillo"
 
     version(
+        "0.11.4.0.1", sha256="0ce4ddf5f3ca23e729437084240b352118cf2275525082239c2bd9cda86a37e3"
+    )
+    version(
         "0.11.1.1.0", sha256="eb0bfc484c41543e766441b4c8c4a3061d8633540914ed2bbf363da047a74897"
     )
     version(

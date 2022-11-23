@@ -140,13 +140,6 @@ def setup_parser(subparser):
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
     subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
-    subparser.add_argument(
-        "-b",
-        "--bootstrap",
-        action="store_true",
-        help="show software in the internal bootstrap store",
-    )
-
     arguments.add_common_arguments(subparser, ["constraint"])
 
 
@@ -203,7 +196,16 @@ def setup_env(env):
     return decorator, added, roots, removed
 
 
-def display_env(env, args, decorator):
+def display_env(env, args, decorator, results):
+    """Display extra find output when running in an environment.
+
+    Find in an environment outputs 2 or 3 sections:
+
+    1. Root specs
+    2. Concretized roots (if asked for with -c)
+    3. Installed specs
+
+    """
     tty.msg("In environment %s" % env.name)
 
     if not env.user_specs:
@@ -234,25 +236,14 @@ def display_env(env, args, decorator):
         cmd.display_specs(env.specs_by_hash.values(), args, decorator=decorator)
         print()
 
+    # Display a header for the installed packages section IF there are installed
+    # packages. If there aren't any, we'll just end up printing "0 installed packages"
+    # later.
+    if results:
+        tty.msg("Installed packages")
+
 
 def find(parser, args):
-    if args.bootstrap:
-        tty.warn(
-            "`spack find --bootstrap` is deprecated and will be removed in v0.19.",
-            "Use `spack --bootstrap find` instead.",
-        )
-
-    if args.bootstrap:
-        bootstrap_store_path = spack.bootstrap.store_path()
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            msg = 'Showing internal bootstrap store at "{0}"'
-            tty.msg(msg.format(bootstrap_store_path))
-            _find(parser, args)
-        return
-    _find(parser, args)
-
-
-def _find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
 
@@ -286,10 +277,11 @@ def _find(parser, args):
     else:
         if not args.format:
             if env:
-                display_env(env, args, decorator)
+                display_env(env, args, decorator, results)
 
+        cmd.display_specs(results, args, decorator=decorator, all_headers=True)
+
+        # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(results, pkg_type)
-
-        cmd.display_specs(results, args, decorator=decorator, all_headers=True)

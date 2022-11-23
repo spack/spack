@@ -9,6 +9,7 @@ import os
 
 import llnl.util.tty as tty
 
+import spack.builder
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
@@ -134,6 +135,7 @@ def location(parser, args):
     # Either concretize or filter from already concretized environment
     spec = spack.cmd.matching_spec_from_env(spec)
     pkg = spec.package
+    builder = spack.builder.create(pkg)
 
     if args.stage_dir:
         print(pkg.stage.path)
@@ -141,10 +143,10 @@ def location(parser, args):
 
     if args.build_dir:
         # Out of source builds have build_directory defined
-        if hasattr(pkg, "build_directory"):
+        if hasattr(builder, "build_directory"):
             # build_directory can be either absolute or relative to the stage path
             # in either case os.path.join makes it absolute
-            print(os.path.normpath(os.path.join(pkg.stage.path, pkg.build_directory)))
+            print(os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory)))
             return
 
         # Otherwise assume in-source builds
