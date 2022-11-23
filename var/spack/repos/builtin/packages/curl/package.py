@@ -3,14 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import re
 import sys
 
+from spack.build_systems.nmake import NMakeBuilder
+from spack.build_systems.autotools import AutotoolsBuilder
 from spack.package import *
 
 
-class Curl(Package):
+class Curl(NMakePackage ,AutotoolsPackage):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
@@ -133,7 +136,11 @@ class Curl(Package):
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
 
-    phases = ["configure", "build", "install"]
+    build_system(
+        "autotools",
+        conditional("nmake", when="platform=windows"),
+        default="autotools",
+    )
 
     @classmethod
     def determine_version(cls, exe):
@@ -168,6 +175,8 @@ class Curl(Package):
     def command(self):
         return Executable(self.prefix.bin.join("curl-config"))
 
+
+class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -258,6 +267,24 @@ class Curl(Package):
             else:
                 return "--without-darwinssl"
 
+
+    def configure(self, spec, prefix):
+        options = getattr(self, "configure_flag_args", [])
+        options += ["--prefix={0}".format(prefix)]
+        options += self.configure_args()
+
+        with working_dir(self.build_directory, create=True):
+            configure(*options)
+
+    def build(self, spec, prefix):
+        params = ["V=1"]
+        params += self.build_targets
+        with working_dir(self.build_directory):
+            make(*params)
+
+class NMakeBuilder(NMakeBuilder):
+    phases = ["install"]
+
     def nmake_args(self):
         args = []
         mode = "dll" if "libs=dll" in self.spec else "static"
@@ -287,33 +314,6 @@ class Curl(Package):
         args.append("WITH_PREFIX=%s" % self.prefix + "\\")
         return args
 
-    def configure(self, spec, prefix):
-        options = getattr(self, "configure_flag_args", [])
-        options += ["--prefix={0}".format(prefix)]
-        options += self.configure_args()
-
-        with working_dir(self.build_directory, create=True):
-            configure(*options)
-
-    @when("platform=windows")
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        params = ["V=1"]
-        params += self.build_targets
-        with working_dir(self.build_directory):
-            make(*params)
-
-    @when("platform=windows")
-    def build(self, spec, prefix):
-        pass
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make(*self.install_targets)
-
-    @when("platform=windows")
     def install(self, spec, prefix):
         # Spack's env CC and CXX values will cause an error
         # if there is a path in the space, and escaping with
@@ -328,3 +328,6 @@ class Curl(Package):
         winbuild_dir = os.path.join(self.stage.source_path, "winbuild")
         with working_dir(winbuild_dir):
             nmake("/f", "Makefile.vc", *self.nmake_args(), ignore_quotes=True)
+        with working_dir(os.path.join(self.stage.source_path, "builds")):
+            install_dir = glob.glob("libcurl-**")[0]
+            install_tree(install_dir, self.prefix)
