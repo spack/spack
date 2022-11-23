@@ -126,14 +126,21 @@ class Pumi(CMakePackage):
         self.run_test(exe, options, expected, purpose=description)
 
         mpiexec = self.spec["mpi"].prefix.bin.mpiexec
-        mpiopt = ["-n", "2"]
-        exe = ["split"]
-        options = ["../share/testdata/pipe.dmg", "../share/testdata/pipe.smb", "pipe_2_.smb", "2"]
-        expected = "mesh pipe_2_.smb written"
+        data_dir = self.prefix.share.testdata
+        options = [
+            "-n",
+            "2",
+            join_path(self.prefix.bin, "split"),
+            join_path(data_dir, "pipe.dmg"),
+            join_path(data_dir, "pipe.smb"),
+            join_path(self.prefix.bin, "pipe_2_.smb"),
+            "2"
+        ]
+        expected = "pipe_2_.smb written"
         description = "testing pumi mesh partitioning"
         self.run_test(
             mpiexec,
-            mpiopt + exe + options,
+            options,
             expected,
-            purpose=description,
+            purpose=description
         )
