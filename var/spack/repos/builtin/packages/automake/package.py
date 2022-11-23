@@ -39,10 +39,20 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def patch(self):
+        # Fix a complaint for an unescaped left brace in a regex by perl@5.26(e.g.RHEL8-based OS):
+        if (
+            self.spec.version < Version("1.15.1")
+            and self.spec["perl"].version < Version("5.28")
+            and self.spec["perl"].version >= Version("5.26")
+        ):
+            filter_file(r"s/\${", r"s/\$\{", "automake.in", string=True, ignore_absent=True)
+            filter_file(r"s/\${", r"s/\$\{", "bin/automake.in", string=True, ignore_absent=True)
         # The full perl shebang might be too long
         files_to_be_patched_fmt = "bin/{0}.in"
         if "@:1.15.1" in self.spec:
             files_to_be_patched_fmt = "t/wrap/{0}.in"
+        if "@:1.11.6" in self.spec:
+            files_to_be_patched_fmt = "{0}.in"
 
         if "@1.16.3:" in self.spec:
             shebang_string = "^#!@PERL@"
