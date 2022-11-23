@@ -69,6 +69,9 @@ class Libfabric(AutotoolsPackage):
         "xpmem",
     )
 
+    # CXI is a closed source package and only exists when an external.
+    conflicts("fabrics=cxi")
+
     variant(
         "fabrics",
         default="sockets,tcp,udp",
@@ -172,6 +175,13 @@ class Libfabric(AutotoolsPackage):
 # Idea taken from the AutotoolsPackage source.
 def get_options_from_variant(self, name):
     values = self.variants[name][0].values
+    explicit_values = []
     if getattr(values, "feature_values", None):
         values = values.feature_values
-    return values
+    for value in sorted(values):
+        if hasattr(value, "when") and value.when is True:
+            # Explicitly extract the True value for downstream use
+            explicit_values.append("{0}".format(value))
+        else:
+            explicit_values.append(value)
+    return explicit_values
