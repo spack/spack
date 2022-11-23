@@ -1604,6 +1604,30 @@ repo:
     shutil.rmtree(str(repodir))
 
 
+@pytest.fixture(scope="function")
+def mock_clone_repo(tmpdir_factory):
+    """Create a cloned repository."""
+    repo_namespace = "mock_clone_repo"
+    repodir = tmpdir_factory.mktemp(repo_namespace)
+    yaml = repodir.join("repo.yaml")
+    yaml.write(
+        """
+repo:
+    namespace: mock_clone_repo
+"""
+    )
+
+    shutil.copytree(
+        os.path.join(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
+        os.path.join(str(repodir), spack.repo.packages_dir_name),
+    )
+
+    with spack.repo.use_repositories(str(repodir)) as repo:
+        yield repo, repodir
+
+    shutil.rmtree(str(repodir))
+
+
 ##########
 # Class and fixture to work around problems raising exceptions in directives,
 # which cause tests like test_from_list_url to hang for Python 2.x metaclass
