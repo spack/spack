@@ -12,7 +12,7 @@ class PyUrwid(PythonPackage):
     homepage = "https://urwid.org/"
     pypi = "urwid/urwid-1.3.0.tar.gz"
 
-    version('2.1.2', sha256='588bee9c1cb208d0906a9f73c613d2bd32c3ed3702012f51efe318a3f2127eae')
-    version('1.3.0', sha256='29f04fad3bf0a79c5491f7ebec2d50fa086e9d16359896c9204c6a92bc07aba2')
+    version("2.1.2", sha256="588bee9c1cb208d0906a9f73c613d2bd32c3ed3702012f51efe318a3f2127eae")
+    version("1.3.0", sha256="29f04fad3bf0a79c5491f7ebec2d50fa086e9d16359896c9204c6a92bc07aba2")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
