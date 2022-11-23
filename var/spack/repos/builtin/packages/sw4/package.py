@@ -7,20 +7,18 @@ import os
 
 from spack.package import *
 
-
 class Sw4(MakefilePackage):
     """This package builds SW4 with HDF5, PROJ, and ZFP."""
 
     homepage = "https://github.com/geodynamics/sw4"
     git = "https://github.com/geodynamics/sw4.git"
-    url = "https://github.com/geodynamics/sw4/archive/refs/tags/v3.0-beta.tar.gz"
 
     maintainers = ["houjun", "andersp"]
 
     # tags = ["e4s"]
 
+    version("3.0-beta", tag="v3.0-beta")
     version("developer", branch="developer")
-    version("v3.0-beta", sha256="95527e7612c8a5a222a9b39663e3e17cf98a9c17")
     version("master", branch="master")
 
     depends_on("mpi")
@@ -49,7 +47,6 @@ class Sw4(MakefilePackage):
 
         if "%gcc" in self.spec:
             os.environ["EXTRA_LINK_FLAGS"] += " -lgfortran"
-
     
     def install(self, spec, prefix):
         mkdir(prefix.bin)
