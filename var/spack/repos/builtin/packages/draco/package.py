@@ -88,8 +88,7 @@ class Draco(CMakePackage):
     conflicts("+caliper", when="@:7.7")
 
     # Fix python discovery.
-    patch("d710.patch", when="@7.1.0^python@3:")
-    patch("d710-python2.patch", when="@7.1.0^python@2.7:2")
+    patch("d710.patch", when="@7.1.0")
     patch("d730.patch", when="@7.3.0:7.3")
     patch("d740.patch", when="@7.4.0:7.4")
     patch("d750-intel17.patch", when="@7.5.0:7.6.99%intel@17.0.0:18.0.0")

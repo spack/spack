@@ -106,221 +106,6 @@ class Python(Package):
     version("3.7.2", sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d")
     version("3.7.1", sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06")
     version("3.7.0", sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d")
-    version(
-        "3.6.15",
-        sha256="54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043",
-        deprecated=True,
-    )
-    version(
-        "3.6.14",
-        sha256="70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5",
-        deprecated=True,
-    )
-    version(
-        "3.6.13",
-        sha256="614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669",
-        deprecated=True,
-    )
-    version(
-        "3.6.12",
-        sha256="12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693",
-        deprecated=True,
-    )
-    version(
-        "3.6.11",
-        sha256="96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c",
-        deprecated=True,
-    )
-    version(
-        "3.6.10",
-        sha256="7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d",
-        deprecated=True,
-    )
-    version(
-        "3.6.9",
-        sha256="47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa",
-        deprecated=True,
-    )
-    version(
-        "3.6.8",
-        sha256="7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0",
-        deprecated=True,
-    )
-    version(
-        "3.6.7",
-        sha256="b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239",
-        deprecated=True,
-    )
-    version(
-        "3.6.6",
-        sha256="7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58",
-        deprecated=True,
-    )
-    version(
-        "3.6.5",
-        sha256="53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6",
-        deprecated=True,
-    )
-    version(
-        "3.6.4",
-        sha256="7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486",
-        deprecated=True,
-    )
-    version(
-        "3.6.3",
-        sha256="ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91",
-        deprecated=True,
-    )
-    version(
-        "3.6.2",
-        sha256="7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82",
-        deprecated=True,
-    )
-    version(
-        "3.6.1",
-        sha256="aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828",
-        deprecated=True,
-    )
-    version(
-        "3.6.0",
-        sha256="aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b",
-        deprecated=True,
-    )
-    version(
-        "3.5.10",
-        sha256="3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a",
-        deprecated=True,
-    )
-    version(
-        "3.5.9",
-        sha256="67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1",
-        deprecated=True,
-    )
-    version(
-        "3.5.8",
-        sha256="18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a",
-        deprecated=True,
-    )
-    version(
-        "3.5.7",
-        sha256="542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b",
-        deprecated=True,
-    )
-    version(
-        "3.5.6",
-        sha256="30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8",
-        deprecated=True,
-    )
-    version(
-        "3.5.5",
-        sha256="2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5",
-        deprecated=True,
-    )
-    version(
-        "3.5.4",
-        sha256="6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44",
-        deprecated=True,
-    )
-    version(
-        "3.5.3",
-        sha256="d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a",
-        deprecated=True,
-    )
-    version(
-        "3.5.2",
-        sha256="1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0",
-        deprecated=True,
-    )
-    version(
-        "3.5.1",
-        sha256="687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7",
-        deprecated=True,
-    )
-    version(
-        "3.5.0",
-        sha256="584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0",
-        deprecated=True,
-    )
-    version(
-        "3.4.10",
-        sha256="217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d",
-        deprecated=True,
-    )
-    version(
-        "3.4.3",
-        sha256="8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147",
-        deprecated=True,
-    )
-    version(
-        "3.3.6",
-        sha256="0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034",
-        deprecated=True,
-    )
-    version(
-        "3.2.6",
-        sha256="fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e",
-        deprecated=True,
-    )
-    version(
-        "3.1.5",
-        sha256="d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103",
-        deprecated=True,
-    )
-    version(
-        "2.7.18",
-        sha256="da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814",
-        deprecated=True,
-    )
-    version(
-        "2.7.17",
-        sha256="f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde",
-        deprecated=True,
-    )
-    version(
-        "2.7.16",
-        sha256="01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5",
-        deprecated=True,
-    )
-    version(
-        "2.7.15",
-        sha256="18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db",
-        deprecated=True,
-    )
-    version(
-        "2.7.14",
-        sha256="304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8",
-        deprecated=True,
-    )
-    version(
-        "2.7.13",
-        sha256="a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1",
-        deprecated=True,
-    )
-    version(
-        "2.7.12",
-        sha256="3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6",
-        deprecated=True,
-    )
-    version(
-        "2.7.11",
-        sha256="82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6",
-        deprecated=True,
-    )
-    version(
-        "2.7.10",
-        sha256="eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a",
-        deprecated=True,
-    )
-    version(
-        "2.7.9",
-        sha256="c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b",
-        deprecated=True,
-    )
-    version(
-        "2.7.8",
-        sha256="74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557",
-        deprecated=True,
-    )
 
     extendable = True
 
@@ -331,18 +116,7 @@ class Python(Package):
         "debug", default=False, description="debug build with extra checks (this is high overhead)"
     )
 
-    # --enable-shared is known to cause problems for some users on macOS
-    # This is a problem for Python 2.7 only, not Python3
-    # See http://bugs.python.org/issue29846
     variant("shared", default=True, description="Enable shared libraries")
-    # From https://docs.python.org/2/c-api/unicode.html: Python's default
-    # builds use a 16-bit type for Py_UNICODE and store Unicode values
-    # internally as UCS2. It is also possible to build a UCS4 version of Python
-    # (most recent Linux distributions come with UCS4 builds of Python).  These
-    # builds then use a 32-bit type for Py_UNICODE and store Unicode data
-    # internally as UCS4. Note that UCS2 and UCS4 Python builds are not binary
-    # compatible.
-    variant("ucs4", default=False, description="Enable UCS4 (wide) unicode strings")
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant(
         "optimizations",
@@ -353,7 +127,7 @@ class Python(Package):
     variant(
         "pythoncmd",
         default=not is_windows,
-        description="Symlink 'python3' executable to 'python' " "(not PEP 394 compliant)",
+        description="Symlink 'python3' executable to 'python' (not PEP 394 compliant)",
     )
 
     # Optional Python modules
@@ -364,12 +138,12 @@ class Python(Package):
     variant("nis", default=False, description="Build nis module")
     variant("zlib", default=True, description="Build zlib module")
     variant("bz2", default=True, description="Build bz2 module")
-    variant("lzma", default=True, description="Build lzma module", when="@3.3:")
+    variant("lzma", default=True, description="Build lzma module")
     variant("pyexpat", default=True, description="Build pyexpat module")
     variant("ctypes", default=True, description="Build ctypes module")
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
-    variant("tix", default=False, description="Build Tix module")
+    variant("tix", default=False, description="Build Tix module", when="+tkinter")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
@@ -384,24 +158,18 @@ class Python(Package):
         depends_on("readline", when="+readline")
         depends_on("ncurses", when="+readline")
         depends_on("openssl", when="+ssl")
-        # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
-        # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
-        depends_on("openssl@:1.0.2z", when="@:2.7.13,3.0.0:3.5.2+ssl")
-        depends_on(
-            "openssl@1.0.2:", when="@3.7:+ssl"
-        )  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-        depends_on(
-            "openssl@1.1.1:", when="@3.10:+ssl"
-        )  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        depends_on("openssl@1.0.2:", when="+ssl")
+        # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on("openssl@1.1.1:", when="@3.10:+ssl")
         depends_on("sqlite@3.0.8:", when="@:3.9+sqlite3")
-        depends_on(
-            "sqlite@3.7.15:", when="@3.10:+sqlite3"
-        )  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on("sqlite@3.7.15:", when="@3.10:+sqlite3")
         depends_on("gdbm", when="+dbm")  # alternatively ndbm or berkeley-db
         depends_on("libnsl", when="+nis")
         depends_on("zlib@1.1.3:", when="+zlib")
         depends_on("bzip2", when="+bz2")
-        depends_on("xz", when="@3.3:+lzma")
+        depends_on("xz", when="+lzma")
         depends_on("expat", when="+pyexpat")
         depends_on("libffi", when="+ctypes")
         # https://docs.python.org/3/whatsnew/3.11.html#build-changes
@@ -423,16 +191,13 @@ class Python(Package):
     # C/C++ modules, consider installing a Spack-managed Python with
     # this patch instead. For more information, see:
     # https://github.com/spack/spack/pull/16856
-    patch("python-2.7.8-distutils-C++.patch", when="@2.7.8:2.7.16")
-    patch("python-2.7.17+-distutils-C++.patch", when="@2.7.17:2.7.18")
-    patch("python-2.7.17+-distutils-C++-fixup.patch", when="@2.7.17:2.7.18")
-    patch("python-3.6.8-distutils-C++.patch", when="@3.6.8,3.7.2")
+    patch("python-3.7.2-distutils-C++.patch", when="@3.7.2")
     patch("python-3.7.3-distutils-C++.patch", when="@3.7.3")
     patch("python-3.7.4+-distutils-C++.patch", when="@3.7.4:3.10")
     patch("python-3.7.4+-distutils-C++-testsuite.patch", when="@3.7.4:")
     patch("python-3.11-distutils-C++.patch", when="@3.11.0:3.11")
     patch("cpython-windows-externals.patch", when="@:3.9.6 platform=windows")
-    patch("tkinter.patch", when="@:2.8,3.3:3.7 platform=darwin")
+    patch("tkinter-3.7.patch", when="@3.7 platform=darwin")
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
     patch("tkinter-3.8.patch", when="@3.8:3.9 ~tkinter")
@@ -440,21 +205,15 @@ class Python(Package):
     patch("tkinter-3.11.patch", when="@3.11.0:3.11 ~tkinter")
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
-    patch("cray-rpath-2.3.patch", when="@2.3:3.0.1 platform=cray")
-    patch("cray-rpath-3.1.patch", when="@3.1:3  platform=cray")
+    patch("cray-rpath-3.1.patch", when="@3 platform=cray")
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
-    patch("fj-rpath-2.3.patch", when="@2.3:3.0.1 %fj")
-    patch("fj-rpath-3.1.patch", when="@3.1:3.9.7,3.10.0  %fj")
-    patch("fj-rpath-3.9.patch", when="@3.9.8:3.9,3.10.1:  %fj")
-
-    # Fixes an alignment problem with more aggressive optimization in gcc8
-    # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
-    patch("gcc-8-2.7.14.patch", when="@2.7.14 %gcc@8:")
+    patch("fj-rpath-3.1.patch", when="@:3.9.7,3.10.0 %fj")
+    patch("fj-rpath-3.9.patch", when="@3.9.8:3.9,3.10.1: %fj")
 
     # Fixes build with the Intel compilers
     # https://github.com/python/cpython/pull/16717
-    patch("intel-3.6.7.patch", when="@3.6.7:3.6.8,3.7.1:3.7.5 %intel")
+    patch("intel-3.7.patch", when="@3.7.1:3.7.5 %intel")
 
     # CPython tries to build an Objective-C file with GCC's C frontend
     # https://github.com/spack/spack/pull/16222
@@ -464,20 +223,7 @@ class Python(Package):
         msg="CPython does not compile with GCC on macOS yet, use clang. "
         "See: https://github.com/python/cpython/pull/13306",
     )
-    # For more information refer to this bug report:
-    # https://bugs.python.org/issue29712
-    conflicts(
-        "@:2.8 +shared",
-        when="+optimizations",
-        msg="+optimizations is incompatible with +shared in python@2.X",
-    )
-    conflicts("+tix", when="~tkinter", msg="python+tix requires python+tix+tkinter")
     conflicts("%nvhpc")
-    conflicts(
-        "@:2.7",
-        when="platform=darwin target=aarch64:",
-        msg="Python 2.7 is too old for Apple Silicon",
-    )
 
     # Used to cache various attributes that are expensive to compute
     _config_vars = {}  # type: Dict[str, Dict[str, str]]
@@ -491,7 +237,6 @@ class Python(Package):
     def determine_version(cls, exe):
         # Newer versions of Python support `--version`,
         # but older versions only support `-V`
-        # Python 2 sends to STDERR, while Python 3 sends to STDOUT
         # Output looks like:
         #   Python 3.7.7
         # On pre-production Ubuntu, this is also possible:
@@ -512,7 +257,18 @@ class Python(Package):
         else:
             variants += "~pythoncmd"
 
-        for module in ["readline", "sqlite3", "dbm", "nis", "zlib", "bz2", "ctypes", "uuid"]:
+        for module in [
+            "readline",
+            "sqlite3",
+            "dbm",
+            "nis",
+            "zlib",
+            "bz2",
+            "lzma",
+            "ctypes",
+            "tkinter",
+            "uuid",
+        ]:
             try:
                 python("-c", "import " + module, error=os.devnull)
                 variants += "+" + module
@@ -534,38 +290,12 @@ class Python(Package):
         except ProcessError:
             variants += "~pyexpat"
 
-        # Some modules are version-dependent
-        if Version(version_str) >= Version("3.3"):
-            try:
-                python("-c", "import lzma", error=os.devnull)
-                variants += "+lzma"
-            except ProcessError:
-                variants += "~lzma"
-
-        if Version(version_str) >= Version("3"):
-            try:
-                python("-c", "import tkinter", error=os.devnull)
-                variants += "+tkinter"
-            except ProcessError:
-                variants += "~tkinter"
-
-            try:
-                python("-c", "import tkinter.tix", error=os.devnull)
-                variants += "+tix"
-            except ProcessError:
-                variants += "~tix"
-        else:
-            try:
-                python("-c", "import Tkinter", error=os.devnull)
-                variants += "+tkinter"
-            except ProcessError:
-                variants += "~tkinter"
-
-            try:
-                python("-c", "import Tix", error=os.devnull)
-                variants += "+tix"
-            except ProcessError:
-                variants += "~tix"
+        # Some variant names do not match module names
+        try:
+            python("-c", "import tkinter.tix", error=os.devnull)
+            variants += "+tix"
+        except ProcessError:
+            variants += "~tix"
 
         # Some modules are platform-dependent
         if not is_windows:
@@ -581,57 +311,24 @@ class Python(Package):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
         return url.format(re.split("[a-z]", str(version))[0], version)
 
-    # TODO: Ideally, these patches would be applied as separate '@run_before'
-    # functions enabled via '@when', but these two decorators don't work
-    # when used together. See: https://github.com/spack/spack/issues/12736
     def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a
         # user's local configurations to change the Spack installation.  In
         # order to prevent this behavior for a full installation, we must
         # modify the installation script so that it ignores user files.
-        if self.spec.satisfies("@2.7:2.8,3.4:"):
-            ff = FileFilter("Makefile.pre.in")
-            ff.filter(
-                r"^(.*)setup\.py(.*)((build)|(install))(.*)$", r"\1setup.py\2 --no-user-cfg \3\6"
-            )
-
-        # NOTE: Older versions of Python do not support the '--with-openssl'
-        # configuration option, so the installation's module setup file needs
-        # to be modified directly in order to point to the correct SSL path.
-        # See: https://stackoverflow.com/a/5939170
-        if self.spec.satisfies("@:3.6+ssl"):
-            ff = FileFilter(join_path("Modules", "Setup.dist"))
-            ff.filter(r"^#(((SSL=)|(_ssl))(.*))$", r"\1")
-            ff.filter(r"^#((.*)(\$\(SSL\))(.*))$", r"\1")
-            ff.filter(r"^SSL=(.*)$", r"SSL={0}".format(self.spec["openssl"].prefix))
-        # Because Python uses compiler system paths during install, it's
-        # possible to pick up a system OpenSSL when building 'python~ssl'.
-        # To avoid this scenario, we disable the 'ssl' module with patching.
-        elif self.spec.satisfies("@:3.6~ssl"):
-            ff = FileFilter("setup.py")
-            ff.filter(r"^(\s+(ssl_((incs)|(libs)))\s+=\s+)(.*)$", r"\1 None and \6")
-            ff.filter(r"^(\s+(opensslv_h)\s+=\s+)(.*)$", r"\1 None and \3")
+        ff = FileFilter("Makefile.pre.in")
+        ff.filter(
+            r"^(.*)setup\.py(.*)((build)|(install))(.*)$", r"\1setup.py\2 --no-user-cfg \3\6"
+        )
 
     def setup_build_environment(self, env):
         spec = self.spec
-
-        # TODO: The '--no-user-cfg' option for Python installation is only in
-        # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
-        # adding support for ignoring user configuration will require
-        # significant changes to this package for other Python versions.
-        if not spec.satisfies("@2.7:2.8,3.4:"):
-            tty.warn(
-                (
-                    "Python v{0} may not install properly if Python "
-                    "user configurations are present."
-                ).format(self.version)
-            )
 
         # TODO: Python has incomplete support for Python modules with mixed
         # C/C++ source, and patches are required to enable building for these
         # modules. All Python versions without a viable patch are installed
         # with a warning message about this potentially erroneous behavior.
-        if not spec.satisfies("@2.7.8:2.7.18,3.6.8,3.7.2:"):
+        if not spec.satisfies("@3.7.2:"):
             tty.warn(
                 (
                     'Python v{0} does not have the C++ "distutils" patch; '
@@ -769,21 +466,12 @@ class Python(Package):
 
             config_args.extend(["CPPFLAGS=" + cppflags, "LDFLAGS=" + ldflags])
 
-        # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-        if spec.satisfies("@:3.6"):
-            config_args.append("--with-threads")
-
-        if spec.satisfies("@2.7.13:2.8,3.5.3:", strict=True) and "+optimizations" in spec:
+        if "+optimizations" in spec:
             config_args.append("--enable-optimizations")
             config_args.append("--with-lto")
             config_args.append("--with-computed-gotos")
 
-        if spec.satisfies("%gcc platform=darwin"):
-            config_args.append("--disable-toolbox-glue")
-
-        if spec.satisfies("%intel", strict=True) and spec.satisfies(
-            "@2.7.12:2.8,3.5.2:3.7", strict=True
-        ):
+        if spec.satisfies("@3.7 %intel", strict=True):
             config_args.append("--with-icc={0}".format(spack_cc))
 
         if "+debug" in spec:
@@ -796,24 +484,13 @@ class Python(Package):
         else:
             config_args.append("--disable-shared")
 
-        if "+ucs4" in spec:
-            if spec.satisfies("@:2.7"):
-                config_args.append("--enable-unicode=ucs4")
-            elif spec.satisfies("@3.0:3.2"):
-                config_args.append("--with-wide-unicode")
-            elif spec.satisfies("@3.3:"):
-                # https://docs.python.org/3.3/whatsnew/3.3.html#functionality
-                raise ValueError("+ucs4 variant not compatible with Python 3.3 and beyond")
-
-        if spec.satisfies("@2.7.9:2,3.4:"):
-            config_args.append("--without-ensurepip")
+        config_args.append("--without-ensurepip")
 
         if "+pic" in spec:
             cflags.append(self.compiler.cc_pic_flag)
 
         if "+ssl" in spec:
-            if spec.satisfies("@3.7:"):
-                config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
+            config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
 
         if "+dbm" in spec:
             # Default order is ndbm:gdbm:bdb
@@ -844,7 +521,7 @@ class Python(Package):
             )
 
         # https://docs.python.org/3.8/library/sqlite3.html#f1
-        if spec.satisfies("@3.2: +sqlite3 ^sqlite+dynamic_extensions"):
+        if spec.satisfies("+sqlite3 ^sqlite+dynamic_extensions"):
             config_args.append("--enable-loadable-sqlite-extensions")
 
         if spec.satisfies("%oneapi"):
@@ -929,19 +606,7 @@ class Python(Package):
         spec = self.spec
         prefix = self.prefix
 
-        # TODO:
-        # On OpenSuse 13, python uses <prefix>/lib64/python2.7/lib-dynload/*.so
-        # instead of <prefix>/lib/python2.7/lib-dynload/*.so. Oddly enough the
-        # result is that Python can not find modules like cPickle. A workaround
-        # for now is to symlink to `lib`:
-        src = os.path.join(prefix.lib64, "python{0}".format(self.version.up_to(2)), "lib-dynload")
-        dst = os.path.join(prefix.lib, "python{0}".format(self.version.up_to(2)), "lib-dynload")
-        if os.path.isdir(src) and not os.path.isdir(dst):
-            mkdirp(dst)
-            for f in os.listdir(src):
-                os.symlink(os.path.join(src, f), os.path.join(dst, f))
-
-        if spec.satisfies("@3:") and spec.satisfies("+pythoncmd"):
+        if spec.satisfies("+pythoncmd"):
             os.symlink(os.path.join(prefix.bin, "python3"), os.path.join(prefix.bin, "python"))
             os.symlink(
                 os.path.join(prefix.bin, "python3-config"),
@@ -993,9 +658,8 @@ class Python(Package):
                 self.command("-c", "import bz2")
 
             # Ensure that lzma module works
-            if spec.satisfies("@3.3:"):
-                if "+lzma" in spec:
-                    self.command("-c", "import lzma")
+            if "+lzma" in spec:
+                self.command("-c", "import lzma")
 
             # Ensure that pyexpat module works
             if "+pyexpat" in spec:
@@ -1011,15 +675,9 @@ class Python(Package):
             if "+tkinter" in spec:
                 # Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
                 if "DISPLAY" in env:
-                    if spec.satisfies("@3:"):
-                        self.command("-c", "import tkinter; tkinter._test()")
-                    else:
-                        self.command("-c", "import Tkinter; Tkinter._test()")
+                    self.command("-c", "import tkinter; tkinter._test()")
                 else:
-                    if spec.satisfies("@3:"):
-                        self.command("-c", "import tkinter")
-                    else:
-                        self.command("-c", "import Tkinter")
+                    self.command("-c", "import tkinter")
 
             # Ensure that uuid module works
             if "+uuid" in spec:
@@ -1027,10 +685,7 @@ class Python(Package):
 
             # Ensure that tix module works
             if "+tix" in spec:
-                if spec.satisfies("@3:"):
-                    self.command("-c", "import tkinter.tix")
-                else:
-                    self.command("-c", "import Tix")
+                self.command("-c", "import tkinter.tix")
 
             # Ensure that crypt module works
             if "+crypt" in spec:
@@ -1045,10 +700,9 @@ class Python(Package):
         """Returns the Python command, which may vary depending
         on the version of Python and how it was installed.
 
-        In general, Python 2 comes with ``python`` and ``python2`` commands,
-        while Python 3 only comes with a ``python3`` command. However, some
+        In general, Python 3 only comes with a ``python3`` command. However, some
         package managers will symlink ``python`` to ``python3``, while others
-        may contain ``python3.6``, ``python3.5``, and ``python3.4`` in the
+        may contain ``python3.11``, ``python3.10``, and ``python3.9`` in the
         same directory.
 
         Returns:
@@ -1058,11 +712,11 @@ class Python(Package):
         # installed python, several different commands could be located
         # in the same directory. Be as specific as possible. Search for:
         #
-        # * python3.6
+        # * python3.11
         # * python3
         # * python
         #
-        # in that order if using python@3.6.5, for example.
+        # in that order if using python@3.11.0, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), ""]:
             if not is_windows:
@@ -1075,31 +729,6 @@ class Python(Package):
         else:
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
-
-    def print_string(self, string):
-        """Returns the appropriate print string depending on the
-        version of Python.
-
-        Examples:
-
-        * Python 2
-
-          .. code-block:: python
-
-             >>> self.print_string('sys.prefix')
-             'print sys.prefix'
-
-        * Python 3
-
-          .. code-block:: python
-
-             >>> self.print_string('sys.prefix')
-             'print(sys.prefix)'
-        """
-        if self.spec.satisfies("@:2"):
-            return "print {0}".format(string)
-        else:
-            return "print({0})".format(string)
 
     @property
     def config_vars(self):
@@ -1129,10 +758,8 @@ config['config_h_filename'] = get_config_h_filename()
 config['makefile_filename'] = get_makefile_filename()
 config.update(get_paths())
 
-%s
-""" % self.print_string(
-            "json.dumps(config)"
-        )
+print(json.dumps(config))
+"""
 
         dag_hash = self.spec.dag_hash()
         lib_prefix = "lib" if not is_windows else ""
@@ -1150,9 +777,6 @@ config.update(get_paths())
                 "INCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "LIBDEST": self.prefix.lib.join("python{}").format(version),
                 "LIBDIR": self.prefix.lib,
-                "LIBPL": self.prefix.lib.join("python{0}")
-                .join("config-{0}-{1}")
-                .format(version, sys.platform),
                 "LDLIBRARY": "{}python{}.{}".format(lib_prefix, version, dso_suffix),
                 "LIBRARY": "{}python{}.{}".format(lib_prefix, version, stat_suffix),
                 "LDSHARED": "cc",
@@ -1196,13 +820,10 @@ config.update(get_paths())
 
         libdest = self.config_vars["LIBDEST"]
 
-        filename = "_sysconfigdata.py"
-        if self.spec.satisfies("@3.6:"):
-            # Python 3.6.0 renamed the sys config file
-            cmd = "from sysconfig import _get_sysconfigdata_name; "
-            cmd += self.print_string("_get_sysconfigdata_name()")
-            filename = self.command("-c", cmd, output=str).strip()
-            filename += ".py"
+        cmd = "from sysconfig import _get_sysconfigdata_name; "
+        cmd += "print(_get_sysconfigdata_name())"
+        filename = self.command("-c", cmd, output=str).strip()
+        filename += ".py"
 
         return join_path(libdest, filename)
 
@@ -1225,10 +846,6 @@ config.update(get_paths())
         # in either lib or lib64, so we need to ask Python where its LIBDIR is.
         libdir = self.config_vars["LIBDIR"]
 
-        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be in LBPL
-        # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
-        libpl = self.config_vars["LIBPL"]
-
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
         frameworkprefix = self.config_vars["PYTHONFRAMEWORKPREFIX"]
@@ -1246,7 +863,6 @@ config.update(get_paths())
 
         directories = [
             libdir,
-            libpl,
             frameworkprefix,
             macos_developerdir,
             win_bin_dir,
@@ -1586,8 +1202,7 @@ config.update(get_paths())
 
         # checks import works and executable comes from the spec prefix
         reason = "test: checking import and executable"
-        print_str = self.print_string("sys.executable")
-        options = ["-c", "import sys; {0}".format(print_str)]
+        options = ["-c", "import sys; print(sys.executable)"]
         self.run_test(
             exe, options=options, expected=[self.spec.prefix], installed=True, purpose=reason
         )
