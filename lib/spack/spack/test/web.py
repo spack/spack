@@ -6,6 +6,7 @@ import collections
 import os
 import posixpath
 import sys
+from urllib.request import Request
 
 import pytest
 
@@ -316,3 +317,14 @@ def test_s3_url_exists(monkeypatch, capfd):
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
+
+
+def test_head_requests_are_head_requests_after_redirection():
+    # Test whether our workaround for an issue in Python where HEAD requests get
+    # upgraded to GET requests upon redirect works.
+    handler = spack.util.web.BetterHTTPRedirectHandler()
+    initial_request = Request("http://example.com", method="HEAD")
+    redirected_request = handler.redirect_request(
+        initial_request, {}, 302, "Moved Permanently", {}, "http://www.example.com"
+    )
+    assert redirected_request.get_method() == "HEAD"
