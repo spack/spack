@@ -14,9 +14,10 @@ from spack.main import SpackCommand
 python = SpackCommand("python")
 
 
-def test_python():
-    out = python("-c", "import spack; print(spack.spack_version)")
-    assert out.strip() == spack.spack_version
+def test_python(capsys):
+    with capsys.disabled():
+        out = python("-c", "import spack; print(spack.spack_version)")
+        assert out.strip() == spack.spack_version
 
 
 def test_python_interpreter_path():
