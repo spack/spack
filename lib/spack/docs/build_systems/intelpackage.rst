@@ -5,9 +5,9 @@
 
 .. _intelpackage:
 
-------------
-IntelPackage
-------------
+-----
+Intel
+-----
 
 .. contents::
 

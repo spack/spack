@@ -6,9 +6,9 @@
 .. _inteloneapipackage:
 
 
-====================
- IntelOneapiPackage
-====================
+===========
+IntelOneapi
+===========
 
 
 .. contents::
@@ -36,7 +36,7 @@ For more information on a specific package, do::
 
 Intel no longer releases new versions of Parallel Studio, which can be
 used in Spack via the :ref:`intelpackage`. All of its components can
-now be found in oneAPI. 
+now be found in oneAPI.
 
 Examples
 ========
