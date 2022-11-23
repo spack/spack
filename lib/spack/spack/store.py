@@ -119,6 +119,7 @@ def parse_install_tree(config_dict):
             msg = "Cannot pad %s to %s characters." % (root, padded_length)
             msg += " It is already %s characters long" % len(root)
             tty.warn(msg)
+        root = root.rstrip(os.path.sep)
     else:
         root = unpadded_root
 
@@ -274,7 +275,9 @@ def _construct_upstream_dbs_from_install_roots(install_roots, _test=False):
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            install_root, is_upstream=True, upstream_dbs=upstream_dbs
+            spack.util.path.canonicalize_path(install_root),
+            is_upstream=True,
+            upstream_dbs=upstream_dbs,
         )
         next_db._fail_when_missing_deps = _test
         next_db._read()

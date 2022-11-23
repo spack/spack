@@ -37,6 +37,7 @@ class Herwig3(AutotoolsPackage):
     depends_on("madgraph5amc")
     depends_on("njet", when="+njet")
     depends_on("py-gosam")
+    depends_on("njet")
     depends_on("gosam-contrib")
 
     # OpenLoops fail to build on PPC64: error: detected recursion whilst expanding macro "vector"
@@ -62,7 +63,7 @@ class Herwig3(AutotoolsPackage):
             "--with-openloops=" + self.spec["openloops"].prefix,
             "--with-gosam-contrib=" + self.spec["gosam-contrib"].prefix,
             "--with-evtgen=" + self.spec["evtgen"].prefix,
-            "--with-gosam=" + self.spec["gosam"].prefix,
+            "--with-gosam=" + self.spec["py-gosam"].prefix,
         ]
 
         if self.spec.satisfies("+njet"):

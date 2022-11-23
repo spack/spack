@@ -21,6 +21,7 @@ class RBiocneighbors(RPackage):
 
     bioc = "BiocNeighbors"
 
+    version("1.16.0", commit="3b227beead424314aab5ef847222f8f4243c684f")
     version("1.14.0", commit="670a1bd4d82636d28fbff50cea2157e16bb1a858")
     version("1.12.0", commit="3c8a290f75adc944b408e6e77a36f3a0c1509c4c")
     version("1.8.2", commit="889bc91f8cb45d210b47ae5c0b9cfb86fb071ca2")

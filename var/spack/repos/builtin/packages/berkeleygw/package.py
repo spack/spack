@@ -37,7 +37,6 @@ class Berkeleygw(MakefilePackage):
 
     variant("mpi", default=True, description="Builds with MPI support")
     variant("elpa", default=True, description="Build with ELPA support")
-    variant("python", default=False, description="Build with Python support")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("scalapack", default=True, description="Build with ScaLAPACK support")
     variant("hdf5", default=True, description="Builds with HDF5 support")
@@ -55,11 +54,6 @@ class Berkeleygw(MakefilePackage):
     depends_on("elpa~openmp", when="+elpa~openmp")
     depends_on("fftw-api@3+openmp", when="+openmp")
     depends_on("fftw-api@3~openmp", when="~openmp")
-
-    depends_on("python@:2", type=("build", "run"), when="+python")
-    depends_on("py-numpy@:1.16", type=("build", "run"), when="+python")
-    depends_on("py-setuptools@:44", type=("build", "run"), when="+python")
-    depends_on("py-h5py@:2", type=("build", "run"), when="+hdf5+python")
 
     depends_on("perl", type="test")
 
@@ -121,9 +115,11 @@ class Berkeleygw(MakefilePackage):
         if "+mpi" in spec:
             paraflags.append("-DMPI")
 
+        # We need to copy fflags in case we append to it (#34019):
+        fflags = spec.compiler_flags["fflags"][:]
         if "+openmp" in spec:
             paraflags.append("-DOMP")
-            spec.compiler_flags["fflags"].append(self.compiler.openmp_flag)
+            fflags.append(self.compiler.openmp_flag)
 
         buildopts.append("C_PARAFLAG=-DPARA")
         buildopts.append("PARAFLAG=%s" % " ".join(paraflags))
@@ -138,7 +134,7 @@ class Berkeleygw(MakefilePackage):
         buildopts.append("LINK=%s" % spec["mpi"].mpifc)
         buildopts.append("C_LINK=%s" % spec["mpi"].mpicxx)
 
-        buildopts.append("FOPTS=%s" % " ".join(spec.compiler_flags["fflags"]))
+        buildopts.append("FOPTS=%s" % " ".join(fflags))
         buildopts.append("C_OPTS=%s" % " ".join(spec.compiler_flags["cflags"]))
 
         mathflags = []
@@ -163,7 +159,7 @@ class Berkeleygw(MakefilePackage):
             buildopts.append("CC_COMP=%s" % spec["mpi"].mpicxx)
             buildopts.append("BLACSDIR=%s" % spec["scalapack"].libs)
             buildopts.append("BLACS=%s" % spec["scalapack"].libs.ld_flags)
-            buildopts.append("FOPTS=%s" % " ".join(spec.compiler_flags["fflags"]))
+            buildopts.append("FOPTS=%s" % " ".join(fflags))
         elif spec.satisfies("%gcc"):
             c_flags = "-std=c99"
             cxx_flags = "-std=c++0x"
@@ -178,7 +174,7 @@ class Berkeleygw(MakefilePackage):
             buildopts.append("FCPP=cpp -C -nostdinc")
             buildopts.append("C_COMP=%s %s" % (spec["mpi"].mpicc, c_flags))
             buildopts.append("CC_COMP=%s %s" % (spec["mpi"].mpicxx, cxx_flags))
-            buildopts.append("FOPTS=%s" % " ".join(spec.compiler_flags["fflags"]))
+            buildopts.append("FOPTS=%s" % " ".join(fflags))
         elif spec.satisfies("%fj"):
             c_flags = "-std=c99"
             cxx_flags = "-std=c++0x"
@@ -189,9 +185,7 @@ class Berkeleygw(MakefilePackage):
             buildopts.append("FCPP=cpp -C -nostdinc")
             buildopts.append("C_COMP=%s %s" % (spec["mpi"].mpicc, c_flags))
             buildopts.append("CC_COMP=%s %s" % (spec["mpi"].mpicxx, cxx_flags))
-            buildopts.append(
-                "FOPTS=-Kfast -Knotemparraystack %s" % " ".join(spec.compiler_flags["fflags"])
-            )
+            buildopts.append("FOPTS=-Kfast -Knotemparraystack %s" % " ".join(fflags))
         else:
             raise InstallError(
                 "Spack does not yet have support for building "

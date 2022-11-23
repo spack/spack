@@ -20,7 +20,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     homepage = "https://www.openssl.org"
 
     # URL must remain http:// so Spack can bootstrap curl
-    url = "https://www.openssl.org/source/openssl-1.1.1d.tar.gz"
+    url = "http://www.openssl.org/source/openssl-1.1.1d.tar.gz"
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
@@ -419,11 +419,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r"-arch x86_64", "", "Makefile")
-
-        if spec.satisfies("+dynamic"):
-            # This variant only makes sense for Windows
-            if spec.satisfies("platform=windows"):
-                filter_file(r"MT", "MD", "makefile")
 
         if spec.satisfies("platform=windows"):
             host_make = nmake

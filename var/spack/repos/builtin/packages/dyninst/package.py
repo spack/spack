@@ -19,6 +19,7 @@ class Dyninst(CMakePackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("12.2.1", tag="v12.2.1")
     version("12.2.0", tag="v12.2.0")
     version("12.1.0", tag="v12.1.0")
     version("12.0.1", tag="v12.0.1")

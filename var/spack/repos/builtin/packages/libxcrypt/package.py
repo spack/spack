@@ -30,9 +30,11 @@ class Libxcrypt(AutotoolsPackage):
     patch("truncating-conversion.patch", when="@4.4.30")
 
     def configure_args(self):
-        # Disable test dependency on Python (Python itself depends on libxcrypt).
         args = [
+            # Disable test dependency on Python (Python itself depends on libxcrypt).
             "ac_cv_path_python3_passlib=not found",
+            # Disable -Werror, which breaks with newer compilers
+            "--disable-werror",
         ]
         args += self.enable_or_disable("obsolete-api", variant="obsolete_api")
         return args
