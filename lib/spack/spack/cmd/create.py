@@ -259,16 +259,6 @@ class SconsPackageTemplate(PackageTemplate):
         return args"""
 
 
-class WafPackageTemplate(PackageTemplate):
-    """Provides appropriate override for Waf-based packages"""
-
-    base_class_name = "WafPackage"
-
-    body_def = """\
-    # FIXME: Override configure_args(), build_args(),
-    # or install_args() if necessary."""
-
-
 class BazelPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Bazel-based packages"""
 
@@ -591,7 +581,6 @@ templates = {
     "qmake": QMakePackageTemplate,
     "maven": MavenPackageTemplate,
     "scons": SconsPackageTemplate,
-    "waf": WafPackageTemplate,
     "bazel": BazelPackageTemplate,
     "python": PythonPackageTemplate,
     "r": RPackageTemplate,
@@ -693,7 +682,6 @@ class BuildSystemGuesser:
             (r"/Makefile\.am$", "autoreconf"),
             (r"/pom\.xml$", "maven"),
             (r"/SConstruct$", "scons"),
-            (r"/waf$", "waf"),
             (r"/pyproject.toml", "python"),
             (r"/setup\.(py|cfg)$", "python"),
             (r"/WORKSPACE$", "bazel"),

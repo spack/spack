@@ -22,7 +22,6 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
         ("project.pro", "qmake"),
         ("pom.xml", "maven"),
         ("SConstruct", "scons"),
-        ("waf", "waf"),
         ("argbah.rockspec", "lua"),
         ("setup.py", "python"),
         ("NAMESPACE", "r"),

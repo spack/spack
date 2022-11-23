@@ -3390,9 +3390,6 @@ the build system. The build systems currently supported by Spack are:
 | :class:`~spack.build_systems.scons`                      | Specialized build system for     |
 |                                                          | software built using SCons       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.waf`                        | Specialized build system for     |
-|                                                          | software built using Waf         |
-+----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.r`                          | Specialized build system for     |
 |                                                          | R extensions                     |
 +----------------------------------------------------------+----------------------------------+
@@ -4720,9 +4717,6 @@ other checks.
    * - :ref:`SIPPackage <sippackage>`
      - Not applicable
      - ``test`` (module imports)
-   * - :ref:`WafPackage <wafpackage>`
-     - ``build_test`` (must be overridden)
-     - ``install_test`` (must be overridden)
 
 For example, the ``Libelf`` package inherits from ``AutotoolsPackage``
 and its ``Makefile`` has a standard ``check`` target. So Spack will

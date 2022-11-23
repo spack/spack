@@ -51,7 +51,6 @@ from spack.build_systems.scons import SConsPackage
 from spack.build_systems.sip import SIPPackage
 from spack.build_systems.sourceforge import SourceforgePackage
 from spack.build_systems.sourceware import SourcewarePackage
-from spack.build_systems.waf import WafPackage
 from spack.build_systems.xorg import XorgPackage
 from spack.builder import run_after, run_before
 from spack.dependency import all_deptypes

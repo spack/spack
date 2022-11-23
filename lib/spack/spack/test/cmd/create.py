@@ -118,7 +118,6 @@ create = SpackCommand("create")
             "py-test-sip",
             [r"PyTestSip(SIPPackage)", r"def configure_args(self"],
         ),
-        (["-t", "waf", "/test-waf"], "test-waf", [r"TestWaf(WafPackage)", r"configure_args()"]),
     ],
 )
 def test_create_template(mock_test_repo, args, name, expected):
