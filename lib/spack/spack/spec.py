@@ -4332,7 +4332,9 @@ class Spec(object):
                     attribute += c
             else:
                 if c == "}":
-                    raise SpecFormatStringError("Encountered closing } before opening {")
+                    raise SpecFormatStringError(
+                        "Encountered closing } before opening { in %s" % format_string
+                    )
                 elif c == "{":
                     in_attribute = True
                 else:
