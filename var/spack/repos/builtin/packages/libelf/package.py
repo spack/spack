@@ -29,8 +29,23 @@ class Libelf(AutotoolsPackage):
 
     provides("elf@0")
 
+    # configure: error: neither int nor long is 32-bit
+    depends_on("automake", when="platform=darwin target=aarch64:", type="build")
+    depends_on("autoconf", when="platform=darwin target=aarch64:", type="build")
+    depends_on("libtool", when="platform=darwin target=aarch64:", type="build")
+    depends_on("m4", when="platform=darwin target=aarch64:", type="build")
+
+    @property
+    def force_autoreconf(self):
+        return self.spec.satisfies("platform=darwin target=aarch64:")
+
     def configure_args(self):
-        args = ["--enable-shared", "--disable-dependency-tracking", "--disable-debug"]
+        args = ["--enable-shared", "--disable-debug"]
+
+        # config.sub: invalid option -apple-darwin21.6.0
+        if self.spec.satisfies("platform=darwin target=aarch64:"):
+            args.append("--build=aarch64-apple-darwin")
+
         return args
 
     def install(self, spec, prefix):
