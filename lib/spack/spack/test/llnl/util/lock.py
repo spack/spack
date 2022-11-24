@@ -1313,6 +1313,7 @@ def test_downgrade_write_okay(tmpdir):
         lock.downgrade_write_to_read()
         assert lock._reads == 1
         assert lock._writes == 0
+        lock.release_read()
 
 
 def test_downgrade_write_fails(tmpdir):
@@ -1323,6 +1324,7 @@ def test_downgrade_write_fails(tmpdir):
         msg = "Cannot downgrade lock from write to read on file: lockfile"
         with pytest.raises(lk.LockDowngradeError, match=msg):
             lock.downgrade_write_to_read()
+        lock.release_read()
 
 
 @pytest.mark.parametrize(
@@ -1362,6 +1364,7 @@ def test_upgrade_read_okay(tmpdir):
         lock.upgrade_read_to_write()
         assert lock._reads == 0
         assert lock._writes == 1
+        lock.release_write()
 
 
 def test_upgrade_read_fails(tmpdir):
@@ -1372,3 +1375,4 @@ def test_upgrade_read_fails(tmpdir):
         msg = "Cannot upgrade lock from read to write on file: lockfile"
         with pytest.raises(lk.LockUpgradeError, match=msg):
             lock.upgrade_read_to_write()
+        lock.release_write()
