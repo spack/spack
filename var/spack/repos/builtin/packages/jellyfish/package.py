@@ -26,11 +26,8 @@ class Jellyfish(AutotoolsPackage):
     )
 
     depends_on("perl", when="@2.2.7:", type=("build", "run"))
-    # Spack dropped support for python2 and CI no longer accepts depends on python2:
-    # The bindings would have to be updated/converted to python3 or use external python.
-    # For now this only adds --enable-python-binding and you have to provide python2:
-    variant("python", default=False, description="Enable python bindings")
     variant("ruby", default=False, description="Enable ruby bindings")
+    # Info: python bindings exist, but are for python2 which is no longer supported in spack
 
     extends("ruby@:2.6", when="+ruby")
 
@@ -40,8 +37,6 @@ class Jellyfish(AutotoolsPackage):
     conflicts("+ruby", when="@1.1.11")
 
     def configure_args(self):
-        if "+python" in self.spec:
-            return ["--enable-python-binding"]
         if "+ruby" in self.spec:
             return ["--enable-ruby-binding"]
         return []
