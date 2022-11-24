@@ -574,12 +574,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def build(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        # PETSc has its own way of doing parallel make.
-        make("V=1 MAKE_NP=%s" % make_jobs, parallel=False)
+        make("V=1")
 
     def install(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        make("install")
+        make("install", parallel=False)
 
         if self.run_tests:
             make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix), parallel=False)
