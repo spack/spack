@@ -26,8 +26,8 @@ import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
 import llnl.util.lang
-import llnl.util.tty as tty
 import llnl.util.lock
+import llnl.util.tty as tty
 from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
 import spack.binary_distribution
