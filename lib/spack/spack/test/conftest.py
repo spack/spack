@@ -17,7 +17,7 @@ import stat
 import sys
 import tempfile
 import xml.etree.ElementTree
-from typing import Dict  # novm
+from typing import Dict
 
 import py
 import pytest

@@ -886,8 +886,8 @@ def load_module_from_file(module_name, module_path):
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
 
-    spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-    module = importlib.util.module_from_spec(spec)  # novm
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    module = importlib.util.module_from_spec(spec)
     # The module object needs to exist in sys.modules before the
     # loader executes the module code.
     #

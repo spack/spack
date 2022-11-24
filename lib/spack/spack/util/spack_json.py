@@ -5,7 +5,7 @@
 
 """Simple wrapper around JSON to guarantee consistent use of load/dump. """
 import json
-from typing import Any, Dict, Optional  # novm
+from typing import Any, Dict, Optional
 
 import spack.error
 

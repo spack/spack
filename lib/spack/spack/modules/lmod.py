@@ -7,7 +7,7 @@ import collections
 import itertools
 import os.path
 import posixpath
-from typing import Any, Dict  # novm
+from typing import Any, Dict
 
 import llnl.util.lang as lang
 

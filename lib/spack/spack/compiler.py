@@ -10,7 +10,7 @@ import platform
 import re
 import shutil
 import tempfile
-from typing import List, Sequence  # novm
+from typing import List, Sequence
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -286,7 +286,7 @@ class Compiler(object):
         environment=None,
         extra_rpaths=None,
         enable_implicit_rpaths=None,
-        **kwargs
+        **kwargs,
     ):
         self.spec = cspec
         self.operating_system = str(operating_system)
