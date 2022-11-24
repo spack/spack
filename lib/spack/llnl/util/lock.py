@@ -9,7 +9,6 @@ import socket
 import sys
 import time
 from datetime import datetime
-from typing import Dict, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
@@ -81,7 +80,7 @@ class OpenFileTracker(object):
 
     def __init__(self):
         """Create a new ``OpenFileTracker``."""
-        self._descriptors: Dict[Tuple[int, int], OpenFile] = {}
+        self._descriptors = {}
 
     def get_fh(self, path):
         """Get a filehandle for a lockfile.
