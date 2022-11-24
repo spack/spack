@@ -103,7 +103,7 @@ class OpenFileTracker(object):
         try:
             # see whether we've seen this inode/pid before
             stat = os.stat(path)
-            key = (stat.st_ino, pid)
+            key = (stat.st_dev, stat.st_ino, pid)
             open_file = self._descriptors.get(key)
 
         except OSError as e:
@@ -129,34 +129,26 @@ class OpenFileTracker(object):
 
             # if we just created the file, we'll need to get its inode here
             if not stat:
-                inode = os.fstat(fd).st_ino
-                key = (inode, pid)
+                stat = os.fstat(fd)
+                key = (stat.st_dev, stat.st_ino, pid)
 
             self._descriptors[key] = open_file
 
         open_file.refs += 1
         return open_file.fh
 
-    def release_inode(self, inode):
-        key = (inode, os.getpid())
+    def release_by_stat(self, stat):
+        key = (stat.st_dev, stat.st_ino, os.getpid())
         open_file = self._descriptors.get(key)
-        assert open_file, "Attempted to close non-existing inode: %s" % inode
+        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_inode
 
         open_file.refs -= 1
         if not open_file.refs:
             del self._descriptors[key]
             open_file.fh.close()
 
-    def release_fh(self, path):
-        """Release a filehandle, only closing it if there are no more references."""
-        try:
-            inode = os.stat(path).st_ino
-        except OSError as e:
-            if e.errno != errno.ENOENT:  # only handle file not found
-                raise
-            inode = None  # this will not be in self._descriptors
-
-        self.release_inode(inode)
+    def release_by_fh(self, fh):
+        self.release_by_stat(os.fstat(fh.fileno()))
 
     def purge(self):
         for key in list(self._descriptors.keys()):
@@ -440,8 +432,7 @@ class Lock(object):
 
         """
         fcntl.lockf(self._file, fcntl.LOCK_UN, self._length, self._start, os.SEEK_SET)
-        inode = os.fstat(self._file.fileno()).st_ino
-        file_tracker.release_inode(inode)
+        file_tracker.release_by_fh(self._file)
         self._file = None
         self._reads = 0
         self._writes = 0

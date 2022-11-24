@@ -687,7 +687,9 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
-        lk.file_tracker.release_fh(lock.path)
+
+        # TODO: lk.file_tracker does not release private_lock_path
+        lk.file_tracker.release_by_stat(os.stat(private_lock_path))
 
 
 class ComplexAcquireAndRelease(object):
