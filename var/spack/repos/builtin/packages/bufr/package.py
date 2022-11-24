@@ -17,7 +17,13 @@ class Bufr(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-bufr"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/bufr_v11.5.0.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "edwardhartnett", "Hang-Lei-NOAA", "jbathegit"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "edwardhartnett",
+        "Hang-Lei-NOAA",
+        "jbathegit",
+    ]
 
     version("11.5.0", sha256="d154839e29ef1fe82e58cf20232e9f8a4f0610f0e8b6a394b7ca052e58f97f43")
 

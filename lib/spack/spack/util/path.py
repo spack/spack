@@ -14,8 +14,8 @@ import re
 import subprocess
 import sys
 import tempfile
-
-from six.moves.urllib.parse import urlparse
+from datetime import date
+from urllib.parse import urlparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -27,16 +27,50 @@ is_windows = sys.platform == "win32"
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
 
+def architecture():
+    # break circular import
+    import spack.platforms
+    import spack.spec
+
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system("default_os")
+    host_target = host_platform.target("default_target")
+
+    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
+
+
+def get_user():
+    # User pwd where available because it accounts for effective uids when using ksu and similar
+    try:
+        # user pwd for unix systems
+        import pwd
+
+        return pwd.getpwuid(os.geteuid()).pw_name
+    except ImportError:
+        # fallback on getpass
+        return getpass.getuser()
+
+
 # Substitutions to perform
 def replacements():
     # break circular import from spack.util.executable
     import spack.paths
 
+    arch = architecture()
+
     return {
         "spack": spack.paths.prefix,
-        "user": getpass.getuser(),
+        "user": get_user(),
         "tempdir": tempfile.gettempdir(),
         "user_cache_path": spack.paths.user_cache_path,
+        "architecture": str(arch),
+        "arch": str(arch),
+        "platform": str(arch.platform),
+        "operating_system": str(arch.os),
+        "os": str(arch.os),
+        "target": str(arch.target),
+        "target_family": str(arch.target.microarchitecture.family),
+        "date": date.today().strftime("%Y-%m-%d"),
     }
 
 
@@ -245,6 +279,14 @@ def substitute_config_variables(path):
     - $tempdir           Default temporary directory returned by tempfile.gettempdir()
     - $user              The current user's username
     - $user_cache_path   The user cache directory (~/.spack, unless overridden)
+    - $architecture      The spack architecture triple for the current system
+    - $arch              The spack architecture triple for the current system
+    - $platform          The spack platform for the current system
+    - $os                The OS of the current system
+    - $operating_system  The OS of the current system
+    - $target            The ISA target detected for the system
+    - $target_family     The family of the target detected for the system
+    - $date              The current date (YYYY-MM-DD)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only

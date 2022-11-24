@@ -2,15 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
 import spack.hooks.sbang as sbang
 from spack.package import *
 
 
-class GobjectIntrospection(MesonPackage):
+class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     """The GObject Introspection is used to describe the program APIs and
     collect them in a uniform, machine readable format.Cairo is a 2D graphics
-    library with support for multiple output"""
+    library with support for multiple output
+    """
 
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
     url = "https://download.gnome.org/sources/gobject-introspection/1.72/gobject-introspection-1.72.0.tar.xz"
@@ -21,6 +22,12 @@ class GobjectIntrospection(MesonPackage):
     version("1.56.1", sha256="5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b")
     version("1.49.2", sha256="73d59470ba1a546b293f54d023fd09cca03a951005745d86d586b9e3a8dde9ac")
     version("1.48.0", sha256="fa275aaccdbfc91ec0bc9a6fd0562051acdba731e7d584b64a277fec60e75877")
+
+    build_system(
+        conditional("autotools", when="@:1.60"),
+        conditional("meson", when="@1.61:"),
+        default="meson",
+    )
 
     depends_on("pkgconfig", type="build")
     depends_on("bison", type="build")
@@ -94,22 +101,9 @@ class GobjectIntrospection(MesonPackage):
     def parallel(self):
         return not self.spec.satisfies("%fj")
 
-    def meson_args(self):
-        return []
 
-    @when("@:1.60")
-    def meson(self, spec, prefix):
-        """Run the AutotoolsPackage configure phase"""
-        configure("--prefix={0}".format(prefix))
-
-    @when("@:1.60")
-    def build(self, spec, prefix):
-        """Run the AutotoolsPackage build phase"""
+class AutotoolsBuilderPackage(spack.build_systems.autotools.AutotoolsBuilder):
+    @run_before("build")
+    def filter_file_to_avoid_overly_long_shebangs(self):
         # we need to filter this file to avoid an overly long hashbang line
         filter_file("#!/usr/bin/env @PYTHON@", "#!@PYTHON@", "tools/g-ir-tool-template.in")
-        make()
-
-    @when("@:1.60")
-    def install(self, spec, prefix):
-        """Run the AutotoolsPackage install phase"""
-        make("install", parallel=False)

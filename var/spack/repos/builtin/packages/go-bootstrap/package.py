@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 # THIS PACKAGE SHOULD NOT EXIST
@@ -44,8 +46,31 @@ class GoBootstrap(Package):
 
     depends_on("git", type=("build", "link", "run"))
 
-    conflicts("os=monterey", msg="go-bootstrap won't build on new macOS")
+    conflicts(
+        "os=monterey",
+        msg="go-bootstrap won't build on MacOS Monterey: "
+        "try `brew install go` and `spack external find go`",
+    )
     conflicts("target=aarch64:", msg="Go bootstrap doesn't support aarch64 architectures")
+
+    # This virtual package allows a fallback to gccgo for aarch64,
+    # where go-bootstrap cannot be built(aarch64 was added with Go 1.5)
+    provides("go-external-or-gccgo-bootstrap")
+
+    # Support for aarch64 was added in Go 1.5, use an external package or gccgo instead:
+    conflicts("@:1.4", when="target=aarch64:")
+
+    executables = ["^go$"]
+
+    # When the user adds a go compiler using ``spack external find go-bootstrap``,
+    # this lets us get the version for packages.yaml. Then, the solver can avoid
+    # to build the bootstrap go compiler(for aarch64, it's only gccgo) from source:
+    @classmethod
+    def determine_version(cls, exe):
+        """Return the version of an externally provided go executable or ``None``"""
+        output = Executable(exe)("version", output=str, error=str)
+        match = re.search(r"go version go(\S+)", output)
+        return match.group(1) if match else None
 
     def patch(self):
         if self.spec.satisfies("@:1.4.3"):
@@ -72,7 +97,13 @@ class GoBootstrap(Package):
         install_tree(".", prefix)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("GOROOT_BOOTSTRAP", self.spec.prefix)
+        """Set GOROOT_BOOTSTRAP: When using an external compiler, get its GOROOT env"""
+        if self.spec.external:
+            # Use the go compiler added by ``spack external find go-bootstrap``:
+            goroot = Executable(self.spec.prefix.bin.go)("env", "GOROOT", output=str)
+        else:
+            goroot = self.spec.prefix
+        env.set("GOROOT_BOOTSTRAP", goroot)
 
     def setup_build_environment(self, env):
         env.set("GOROOT_FINAL", self.spec.prefix)

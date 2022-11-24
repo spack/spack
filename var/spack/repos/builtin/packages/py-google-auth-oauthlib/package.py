@@ -13,6 +13,7 @@ class PyGoogleAuthOauthlib(PythonPackage):
     homepage = "https://github.com/googleapis/google-auth-library-python-oauthlib"
     pypi = "google-auth-oauthlib/google-auth-oauthlib-0.4.1.tar.gz"
 
+    version("0.5.2", sha256="d5e98a71203330699f92a26bc08847a92e8c3b1b8d82a021f1af34164db143ae")
     version("0.4.6", sha256="a90a072f6993f2c327067bf65270046384cda5a8ecb20b94ea9a687f1f233a7a")
     version("0.4.1", sha256="88d2cd115e3391eb85e1243ac6902e76e77c5fe438b7276b297fbe68015458dd")
 

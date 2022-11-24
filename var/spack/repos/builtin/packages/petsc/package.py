@@ -22,6 +22,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.18.1", sha256="02f5979a22f5961bb775d527f8450db77bc6a8d2541f3b05fb586829b82e9bc8")
+    version("3.18.0", sha256="9da802e703ad79fb7ef0007d17f68916573011073ee9712dcd1673537f6a5f68")
+    version("3.17.5", sha256="a1193e6c50a1676c3972a1edf0a06eec9fac8ecc2f3771f2689a8997423e4c71")
     version("3.17.4", sha256="99c127486722a3ffd95a268b4ceb0976cbf217926c681a9631bd7246eab8cb2a")
     version("3.17.3", sha256="5c24ade5e4b32cc04935ba0db1dafe48d633bebaaa30a3033f1e58788d37875f")
     version("3.17.2", sha256="2313dd1ca41bf0ace68671ea6f8d4abf90011ed899f5e1e08658d3f18478359d")
@@ -65,33 +68,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     version("3.11.2", sha256="4d244dd7d1565d6534e776445fcf6977a6ee2a8bb2be4a36ac1e0fc1f9ad9cfa")
     version("3.11.1", sha256="cb627f99f7ce1540ebbbf338189f89a5f1ecf3ab3b5b0e357f9e46c209f1fb23")
     version("3.11.0", sha256="b3bed2a9263193c84138052a1b92d47299c3490dd24d1d0bf79fb884e71e678a")
-    version("3.10.5", sha256="3a81c8406410e0ffa8a3e9f8efcdf2e683cc40613c9bb5cb378a6498f595803e")
-    version("3.10.4", sha256="6c836df84caa9ae683ae401d3f94eb9471353156fec6db602bf2e857e4ec339f")
-    version("3.10.3", sha256="cd106babbae091604fee40c258737c84dec048949be779eaef5a745df3dc8de4")
-    version("3.10.2", sha256="9d3381bcf9c63abe6521b21a88efc70f8e893293503cff497971d0d9c1ec68cc")
-    version("3.10.1", sha256="b6e64ce062113ee0e2e2a6cfffb4d33c085ec91d5bc3afeb33781074aa5a22a5")
-    version("3.10.0", sha256="6ebacc010397ea47649495e8363cd7d7d86b876e6df07c6f6ccfa48b22fa555c")
-    version("3.9.4", sha256="ecc647c9b1ef565a2c113936454c65632eedc1626e0fc99b5a36accb91195a63")
-    version("3.9.3", sha256="6c7f2c7a28433385d74d647b4934aaeea3c1b3053b207973c9497639b6ebf7c8")
-    version("3.9.2", sha256="ab396ae5dbfff808df1b5648f5ce30f3021ec70faec3d5cd63df324d416ac6ac")
-    version("3.9.1", sha256="742e838a35d278693e956ed1ca4592c1d663451f6beea0694bf334aeb67681e8")
-    version("3.9.0", sha256="dcbcab1f321667be1c6e5f8e7b4ee8670bb09e372e51f1ea6471464519d54b2d")
-    version("3.8.4", sha256="9f78dc4dd4c58433fa18d3dd3a9029e39a83e4e4b64f845a029dd9fed44bc4c7")
-    version("3.8.3", sha256="01f9c3ed937eafac6c9e006510b61c7cd07197115ec40c429fc835f346ca3eac")
-    version("3.8.2", sha256="42690508d408e31fb98be738ac097bc869be14c5bfe08dda2184243283ceb16a")
-    version("3.8.1", sha256="9b48a9e72d304046923667d2ab1f201778cc56242928a374ff9e074843a334ff")
-    version("3.8.0", sha256="1e1b4d90ccbf98dc5759a956ac9a771310a6690f1cbb37b31502b29568262d7e")
-    version("3.7.7", sha256="40fd3bc76998e056c4097704c08f28eb89bf3b93164dc9e69abab393f43bf6f0")
-    version("3.7.6", sha256="3c8ee051349587d45baa7910c54ce8e0a571592e3b40f3054a7b7f986919d449")
-    version("3.7.5", sha256="493ab0b6c1b3fe68e71d990eff87c84f499f680e6d2c0c394e78646a82ed4be3")
-    version("3.7.4", sha256="54b804f924ea5be3b6718b4d4e98f8ccb9d1bd6bbbd1e9c0f18c4a90ddf5db18")
-    version("3.7.2", sha256="36681dd0df97e0d5cd182d902e89f527eb8f441f05271159dac5340acb4cf0ec")
-    version("3.6.4", sha256="eb09925a139b52b4dd5a071b3da4fe2165f1d6e8f71d410479603c9976c940f0")
-    version("3.6.3", sha256="776e2644e4003653c56a44a6f7c02c41427af26f7c5cd9bec3aa84ed90223245")
-    version("3.5.3", sha256="68e6a42f5ec75bad87f74d4df8f55ad63f0c4d996f162da6713cb3d6f566830d")
-    version("3.5.2", sha256="1a8f09af654afab787c732e7b2f5d0c1d856777398148351565389d38d30935e")
-    version("3.5.1", sha256="199af205f62dcc572728600670c7d4c8cb0d4efc4172c26f02b895d9dd1df245")
-    version("3.4.4", sha256="fa73b99caf70c416a967234f5476cdb1d2c014610ee0619e48f54d8d309631b7")
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
@@ -201,6 +177,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("xcode_stub_out_of_sync.patch", when="@:3.10.4")
     patch("xlf_fix-dup-petscfecreate.patch", when="@3.11.0")
     patch("disable-DEPRECATED_ENUM.diff", when="@3.14.1 +cuda")
+    patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
 
     depends_on("diffutils", type="build")
 
@@ -217,6 +194,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
+    depends_on("hipsolver", when="+rocm")
     depends_on("rocsparse", when="+rocm")
     depends_on("rocsolver", when="+rocm")
     depends_on("rocblas", when="+rocm")
@@ -225,8 +203,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("rocprim", when="+rocm")
 
     # Build dependencies
-    depends_on("python@2.6:2.8", type="build", when="@:3.10")
-    depends_on("python@2.6:2.8,3.4:", type="build", when="@3.11:")
+    depends_on("python@2.6:2.8,3.4:", type="build")
 
     # Other dependencies
     depends_on("metis@5:~int64+real64", when="@:3.7+metis~int64+double")
@@ -328,9 +305,20 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hwloc", when="+hwloc")
     depends_on("kokkos", when="+kokkos")
     depends_on("kokkos-kernels", when="+kokkos")
-    depends_on("kokkos+cuda+wrapper+cuda_lambda", when="+kokkos +cuda")
-    depends_on("kokkos-kernels+cuda", when="+kokkos +cuda")
-    depends_on("kokkos+rocm", when="+kokkos +rocm")
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos+cuda+cuda_lambda cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+        depends_on(
+            "kokkos-kernels+cuda cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+    for rocm_arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos+rocm amdgpu_target=%s" % rocm_arch,
+            when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
+        )
 
     phases = ["configure", "build", "install"]
 
@@ -543,7 +531,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if not spec.satisfies("amdgpu_target=none"):
                 hip_arch = spec.variants["amdgpu_target"].value
                 options.append("--with-hip-arch={0}".format(hip_arch[0]))
-            hip_pkgs = ["hipsparse", "hipblas", "rocsparse", "rocsolver", "rocblas"]
+            hip_pkgs = ["hipsparse", "hipblas", "hipsolver", "rocsparse", "rocsolver", "rocblas"]
             hip_ipkgs = hip_pkgs + ["rocthrust", "rocprim"]
             hip_lpkgs = hip_pkgs
             if spec.satisfies("^rocrand@5.1:"):
@@ -557,7 +545,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             for pkg in hip_lpkgs:
                 hip_lib += spec[pkg].libs.joined() + " "
             options.append("HIPPPFLAGS=%s" % hip_inc)
-            options.append("with-hip-lib=%s -L%s -lamdhip64" % (hip_lib, spec["hip"].prefix.lib))
+            options.append("--with-hip-lib=%s -L%s -lamdhip64" % (hip_lib, spec["hip"].prefix.lib))
 
         if "superlu-dist" in spec:
             if spec.satisfies("@3.10.3:3.15"):
@@ -586,12 +574,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def build(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        # PETSc has its own way of doing parallel make.
-        make("V=1 MAKE_NP=%s" % make_jobs, parallel=False)
+        make("V=1")
 
     def install(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        make("install")
+        make("install", parallel=False)
 
         if self.run_tests:
             make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix), parallel=False)

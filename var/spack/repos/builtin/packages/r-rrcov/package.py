@@ -21,6 +21,8 @@ class RRrcov(RPackage):
 
     cran = "rrcov"
 
+    version("1.7-2", sha256="0f01ed07cbc9e55dfcba27040a3f72237fb2fb86eda899472c2f96500220ecae")
+    version("1.7-1", sha256="e115a09997b46c7eed33017f748632c7d50a95ad621f1f452f22dfc714c9a4e5")
     version("1.7-0", sha256="cbcca84a82d63fa50556aa8db29312b9bb588a638eb306ce4a81c271529228fd")
     version("1.6-1", sha256="9f3b500f2bdac375d0374cd1b120806c785b1981101d7d018fc1fcc73e305d90")
     version("1.6-0", sha256="795f3a49b3e17c9c6e0fdd865e81a0402cefda970032c8299bcf2056ca7ec944")

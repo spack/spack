@@ -45,6 +45,13 @@ class ScalapackBase(CMakePackage):
         when="@2.2.0",
     )
 
+    def flag_handler(self, name, flags):
+        iflags = []
+        if name == "fflags":
+            if self.spec.satisfies("%cce"):
+                iflags.append("-hnopattern")
+        return (iflags, None, None)
+
     @property
     def libs(self):
         # Note that the default will be to search
@@ -80,7 +87,7 @@ class ScalapackBase(CMakePackage):
         # Work around errors of the form:
         #   error: implicit declaration of function 'BI_smvcopy' is
         #   invalid in C99 [-Werror,-Wimplicit-function-declaration]
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang"):
+        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%oneapi"):
             c_flags.append("-Wno-error=implicit-function-declaration")
 
         options.append(self.define("CMAKE_C_FLAGS", " ".join(c_flags)))

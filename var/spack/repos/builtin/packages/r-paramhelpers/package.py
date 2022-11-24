@@ -18,6 +18,7 @@ class RParamhelpers(RPackage):
 
     cran = "ParamHelpers"
 
+    version("1.14.1", sha256="0450ff8489b0d4d0842130f6a9713ede97da936d7909c43d43587bf2d5a01a21")
     version("1.14", sha256="b17652d0a69de3241a69f20be4ad1bfe02c413328a17f3c1ac7b73886a6ba2eb")
     version("1.12", sha256="b54db9e6608ba530345c380c757a60cb2b78ab08992a890b1a41914ce7abcc14")
     version("1.11", sha256="1614f4c0842cf822befc01228ab7263417f3423dd6a1dc24347b14f8491637a0")
