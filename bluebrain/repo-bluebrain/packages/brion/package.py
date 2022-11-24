@@ -18,15 +18,6 @@ class Brion(CMakePackage):
     submodules = True
 
     version('develop', branch='master')
-    version('3.3.0', tag='3.3.0')
-    version('3.3.1', tag='3.3.1')
-    version('3.3.2', tag='3.3.2')
-    version('3.3.3', tag='3.3.3')
-    version('3.3.4', tag='3.3.4')
-    version('3.3.5', tag='3.3.5', submodules=False)
-    version('3.3.6', tag='3.3.6', submodules=False)
-    version('3.3.7', tag='3.3.7', submodules=False)
-    version('3.3.8', tag='3.3.8', submodules=False)
     version('3.3.9', tag='3.3.9', submodules=False)
 
     variant('python', default=False, description='Build Python wrapping')
@@ -43,14 +34,12 @@ class Brion(CMakePackage):
     depends_on('boost +shared +python', when='+python')
 
     depends_on('libsonata')
-    depends_on('morphio', when='@3.3.5:')
+    depends_on('morphio')
 
     # TODO: bzip2 is a dependency of boost. Needed here because of linking
     # issue (libboost_iostreams.so.1.68.0 not finding libbz2.so)
     depends_on('bzip2')
-    depends_on('highfive@2.3.1 +boost', when='@3.3.8:')
-    depends_on('highfive@2.2.2 +boost', when='@3.3.2:3.3.7')
-    depends_on('highfive@2.2.1 +boost', when='@:3.3.1')
+    depends_on('highfive +boost')
     depends_on('mvdtool')
     depends_on('glm@:0.9.9.5')
 
