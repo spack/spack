@@ -398,6 +398,12 @@ class Openfoam(Package):
         when="@1806",
         sha256="531146be868dd0cda70c1cf12a22110a38a30fd93b5ada6234be3d6c9256c6cf",
     )
+    # Fix: missing std::array include (searchable sphere)
+    patch(
+        "https://develop.openfoam.com/Development/openfoam/commit/b4324b1297761545d5b10f50b60ab29e71c172aa.patch",
+        when="@2012_220610",
+        sha256="bad4b0e80fd26ea702bce9ccfb925edbbaa3308f70392fe6da2c7671b1d39bea",
+    )
 
     # Some user config settings
     # default: 'compile-option': '-spack',
