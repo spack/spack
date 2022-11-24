@@ -41,7 +41,6 @@ import shutil
 import sys
 import traceback
 import types
-from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
