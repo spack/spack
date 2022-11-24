@@ -155,59 +155,17 @@ class Boost(Package):
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
-    # Available since 1.75.0
-    variant(
-        "json",
-        default=False,
-        when="@1.75.0:",
-        description="JSON parsing, serialization, and DOM in C++11",
-    )
-
-    # Available since 1.73.0
-    variant(
-        "nowide",
-        default=False,
-        when="@1.73.0:",
-        description="Standard library functions with UTF-8 API on Windows",
-    )
-
-    # Available since 1.67.0
-    variant("contract", default=False, when="@1.67.0:", description="Contract programming for C++")
-
-    # Available since 1.65.0
-    variant(
-        "stacktrace",
-        default=False,
-        when="@1.65.0:",
-        description="Gather, store, copy and print backtraces",
-    )
-
-    # Available since 1.62.0
-    variant("fiber", default=False, when="@1.62.0:", description="C++11 userland threads")
-
-    # Available since 1.59.0, converted to header-only in 1.64.0
-    variant("coroutine2", default=False, when="@1.59.0:1.64.0", description="C++11 coroutines")
-
-    # Available since 1.54.0
-    variant("log", default=False, when="@1.54.0:", description="Logging")
-
-    # Available since 1.54.0, header-only until 1.60.0
-    variant(
-        "type_erasure",
-        default=False,
-        when="@1.60.0:",
-        description="Runtime polymorphism based on concepts",
-    )
-
     # Available since 1.53.0
     variant("atomic", default=False, when="@1.53.0:", description="C++11-style atomic<>")
+
+    # Available since 1.47.0
+    variant("chrono", default=False, when="@1.47.0:", description="Time utilities")
 
     # Available since 1.53.0, header-only until 1.54.0
     variant("coroutine", default=False, when="@1.54.0:", description="DEPRECATED- use coroutine2")
 
     # Available since 1.51.0
     variant("context", default=False, when="@1.51.0:", description="Context-switching library")
-
     variant(
         "context-impl",
         default="fcontext",
@@ -225,21 +183,14 @@ class Boost(Package):
         description="Standard library containers and extensions",
     )
 
-    # Available since 1.48.0
-    variant(
-        "locale", default=False, when="@1.48.0:", description="Localization and Unicode handling"
-    )
+    # Available since 1.67.0
+    variant("contract", default=False, when="@1.67.0:", description="Contract programming for C++")
 
-    # Available since 1.47.0
-    variant("chrono", default=False, when="@1.47.0:", description="Time utilities")
+    # Available since 1.59.0, converted to header-only in 1.64.0
+    variant("coroutine2", default=False, when="@1.59.0:1.64.0", description="C++11 coroutines")
 
-    # Available since 1.40.0
-    variant(
-        "graph_parallel",
-        default=False,
-        when="@1.40.0:",
-        description="Parallel, distributed computation on graphs",
-    )
+    # Available since 1.29.0
+    variant("date_time", default=False, when="@1.39.0:", description="Generic date-time utilities")
 
     # Available since 1.36.0, header-only until 1.47.0
     variant(
@@ -249,11 +200,32 @@ class Boost(Package):
         description="Transport arbitrary data in exception objects between threads",
     )
 
-    # Available since 1.35.0
-    variant("mpi", default=False, when="@1.39.0:", description="Boost interface to MPI")
+    # Available since 1.62.0
+    variant("fiber", default=False, when="@1.62.0:", description="C++11 userland threads")
 
-    # Available since 1.35.0
-    variant("system", default=False, when="@1.39.0:", description="Extensible error reporting")
+    # Available since 1.30.0
+    variant(
+        "filesystem",
+        default=False,
+        when="@1.39.0:",
+        description="Query and manipulate paths, files, and directories",
+    )
+
+    # Available since 1.18.0
+    variant(
+        "graph",
+        default=False,
+        when="@1.39.0:",
+        description="Generic interface for traversing graphs",
+    )
+
+    # Available since 1.40.0
+    variant(
+        "graph_parallel",
+        default=False,
+        when="@1.40.0:",
+        description="Parallel, distributed computation on graphs",
+    )
 
     # Available since 1.33.0
     variant(
@@ -263,12 +235,39 @@ class Boost(Package):
         description="Streams, stream buffers, and i/o filters",
     )
 
-    # Available since 1.33.0
+    # Available since 1.75.0
     variant(
-        "wave",
+        "json",
+        default=False,
+        when="@1.75.0:",
+        description="JSON parsing, serialization, and DOM in C++11",
+    )
+
+    # Available since 1.48.0
+    variant(
+        "locale", default=False, when="@1.48.0:", description="Localization and Unicode handling"
+    )
+
+    # Available since 1.54.0
+    variant("log", default=False, when="@1.54.0:", description="Logging")
+
+    # Available since 1.23.0
+    variant(
+        "math",
         default=False,
         when="@1.39.0:",
-        description="Mandatory C99/C++ preprocessor functionality",
+        description="Special functions, complex numbers, " "quaternions, and octonions",
+    )
+
+    # Available since 1.35.0
+    variant("mpi", default=False, when="@1.39.0:", description="Boost interface to MPI")
+
+    # Available since 1.73.0
+    variant(
+        "nowide",
+        default=False,
+        when="@1.73.0:",
+        description="Standard library functions with UTF-8 API on Windows",
     )
 
     # Available since 1.32.0
@@ -279,6 +278,15 @@ class Boost(Package):
         description="Obtain user-provided options from command line or config file",
     )
 
+    # Available since 1.19.0
+    variant("python", default=False, when="@1.39.0:", description="Boost interface to Python")
+
+    # Available since 1.15.0, header-only until 1.43.0
+    variant("random", default=False, when="@1.43.0:", description="Random number generation")
+
+    # Available since 1.18.0
+    variant("regex", default=False, when="@1.39.0:", description="Regular expressions")
+
     # Available since 1.32.0
     variant(
         "serialization",
@@ -286,17 +294,6 @@ class Boost(Package):
         when="@1.39.0:",
         description="Serialization for persistence and marshalling",
     )
-
-    # Available since 1.30.0
-    variant(
-        "filesystem",
-        default=False,
-        when="@1.39.0:",
-        description="Query and manipulate paths, files, and directories",
-    )
-
-    # Available since 1.29.0
-    variant("date_time", default=False, when="@1.39.0:", description="Generic date-time utilities")
 
     # Available since 1.29.0, removed in 1.68.0
     variant(
@@ -306,16 +303,16 @@ class Boost(Package):
         description="DEPRECATED/REMOVED- use signals2",
     )
 
-    # Available since 1.25.0
-    variant("thread", default=False, when="@1.39.0:", description="Portable multi-threading")
-
-    # Available since 1.23.0
+    # Available since 1.65.0
     variant(
-        "math",
+        "stacktrace",
         default=False,
-        when="@1.39.0:",
-        description="Special functions, complex numbers, " "quaternions, and octonions",
+        when="@1.65.0:",
+        description="Gather, store, copy and print backtraces",
     )
+
+    # Available since 1.35.0
+    variant("system", default=False, when="@1.39.0:", description="Extensible error reporting")
 
     # Available since 1.21.0
     variant(
@@ -325,22 +322,8 @@ class Boost(Package):
         description="Unit testing and program execution monitoring",
     )
 
-    # Available since 1.19.0
-    variant("python", default=False, when="@1.39.0:", description="Boost interface to Python")
-
-    # Available since 1.18.0
-    variant("regex", default=False, when="@1.39.0:", description="Regular expressions")
-
-    # Available since 1.18.0
-    variant(
-        "graph",
-        default=False,
-        when="@1.39.0:",
-        description="Generic interface for traversing graphs",
-    )
-
-    # Available since 1.15.0, header-only until 1.43.0
-    variant("random", default=False, when="@1.43.0:", description="Random number generation")
+    # Available since 1.25.0
+    variant("thread", default=False, when="@1.39.0:", description="Portable multi-threading")
 
     # Available since 1.9.0, header-only until 1.48.0
     variant(
@@ -348,6 +331,22 @@ class Boost(Package):
         default=False,
         when="@1.48.0:",
         description="Event timer, progress timer, and progress display",
+    )
+
+    # Available since 1.54.0, header-only until 1.60.0
+    variant(
+        "type_erasure",
+        default=False,
+        when="@1.60.0:",
+        description="Runtime polymorphism based on concepts",
+    )
+
+    # Available since 1.33.0
+    variant(
+        "wave",
+        default=False,
+        when="@1.39.0:",
+        description="Mandatory C99/C++ preprocessor functionality",
     )
 
     variant(
