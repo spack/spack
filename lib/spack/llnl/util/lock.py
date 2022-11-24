@@ -158,6 +158,10 @@ class OpenFileTracker(object):
 
         self.release_inode(inode)
 
+    def __del__(self):
+        for open_file in self._descriptors.values():
+            open_file.fh.close()
+
 
 #: Open file descriptors for locks in this process. Used to prevent one process
 #: from opening the sam file many times for different byte range locks
