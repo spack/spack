@@ -137,6 +137,16 @@ class OpenFileTracker(object):
         open_file.refs += 1
         return open_file.fh
 
+    def release_inode(self, inode):
+        key = (inode, os.getpid())
+        open_file = self._descriptors.get(key)
+        assert open_file, "Attempted to close non-existing inode: %s" % inode
+
+        open_file.refs -= 1
+        if not open_file.refs:
+            del self._descriptors[key]
+            open_file.fh.close()
+
     def release_fh(self, path):
         """Release a filehandle, only closing it if there are no more references."""
         try:
@@ -146,14 +156,7 @@ class OpenFileTracker(object):
                 raise
             inode = None  # this will not be in self._descriptors
 
-        key = (inode, os.getpid())
-        open_file = self._descriptors.get(key)
-        assert open_file, "Attempted to close non-existing lock path: %s" % path
-
-        open_file.refs -= 1
-        if not open_file.refs:
-            del self._descriptors[key]
-            open_file.fh.close()
+        self.release_inode(inode)
 
 
 #: Open file descriptors for locks in this process. Used to prevent one process
@@ -432,8 +435,8 @@ class Lock(object):
 
         """
         fcntl.lockf(self._file, fcntl.LOCK_UN, self._length, self._start, os.SEEK_SET)
-
-        file_tracker.release_fh(self.path)
+        inode = os.fstat(self._file.fileno()).st_ino
+        file_tracker.release_inode(inode)
         self._file = None
         self._reads = 0
         self._writes = 0
