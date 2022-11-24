@@ -45,7 +45,7 @@ spack:
   specs:
     - py-amici  # BSD-276
     - py-atlalign
-    - py-atlannot
+  # - py-atlannot  # needs v0.1.3 to be on pypi
     - py-atldld
     - py-atlinter
     - py-bba-datafetch
