@@ -14,7 +14,7 @@ packages:
     # Merged GCC / LLVM requirements
     variants: +gas+gold+ld+plugins~libiberty
   boost:
-    variants: +pic
+    variants: +filesystem+pic+test
   cmake:
     version: [3.21.4]
   coreneuron:

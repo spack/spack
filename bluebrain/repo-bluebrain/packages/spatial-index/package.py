@@ -33,7 +33,7 @@ class SpatialIndex(PythonPackage):
     depends_on("py-setuptools")
     depends_on("cmake@3.2:", type="build")
     depends_on("boost@:1.70.0", when="@:0.5.1")
-    depends_on("boost@1.79.0:", when="@0.5.2:")
+    depends_on("boost@1.79.0: +filesystem", when="@0.5.2:")
     depends_on("py-docopt", type=("build", "run"))
     depends_on("py-libsonata", type=("build", "run"), when="@0.2.2:")
     depends_on("py-morphio", type=("build", "run"))
