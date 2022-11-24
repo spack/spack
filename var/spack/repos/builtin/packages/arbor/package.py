@@ -36,11 +36,6 @@ class Arbor(CMakePackage, CudaPackage):
         sha256="290e2ad8ca8050db1791cabb6b431e7c0409c305af31b559e397e26b300a115d",
         url="https://github.com/arbor-sim/arbor/releases/download/v0.5.2/arbor-v0.5.2-full.tar.gz",
     )
-    version(
-        "0.5",
-        sha256="d0c8a4c7f97565d7c30493c66249be794d1dc424de266fc79cecbbf0e313df59",
-        url="https://github.com/arbor-sim/arbor/releases/download/v0.5/arbor-v0.5-full.tar.gz",
-    )
 
     variant(
         "assertions",
