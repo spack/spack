@@ -43,13 +43,12 @@ def augment(parser, args):
     else:
         tty.die("No package for '{0}' was found.".format(name),
                 "  Use `spack create` to create a new package")
-    spec = Spec(".".join([repo.namespace, name]))
 
     if not os.path.exists(target_path):
         mkdirp(os.path.dirname(target_path))
         with open(target_path, "w") as pkg_file:
             pkg_file.write(PACKAGE_TEMPLATE.format(
-                module=spec.package.fullname.replace('-', '_'),
+                module=".".join([repo.namespace, name]).replace('-', '_'),
                 namespace=repo.namespace.capitalize(),
                 cls=mod_to_class(name)))
     if args.split:
