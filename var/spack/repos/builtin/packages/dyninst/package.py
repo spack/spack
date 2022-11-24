@@ -13,23 +13,24 @@ class Dyninst(CMakePackage):
     are executing without recompiling, re-linking, or re-executing."""
 
     homepage = "https://dyninst.org"
+    url = "https://github.com/dyninst/dyninst/archive/refs/tags/v12.2.0.tar.gz"
     git = "https://github.com/dyninst/dyninst.git"
     maintainers = ["hainest"]
 
     tags = ["e4s"]
 
     version("master", branch="master")
-    version("12.2.1", tag="v12.2.1")
-    version("12.2.0", tag="v12.2.0")
-    version("12.1.0", tag="v12.1.0")
-    version("12.0.1", tag="v12.0.1")
-    version("12.0.0", tag="v12.0.0")
-    version("11.0.1", tag="v11.0.1")
-    version("11.0.0", tag="v11.0.0")
-    version("10.2.1", tag="v10.2.1")
-    version("10.2.0", tag="v10.2.0")
-    version("10.1.0", tag="v10.1.0")
-    version("10.0.0", tag="v10.0.0")
+    version("12.2.1", sha256="c304af3c6191e92acd27350fd9b7b02899767a0e38abb3a08a378abe01d1ef01")
+    version("12.2.0", sha256="84c37efc1b220110af03f8fbb6ab295628b445c873b5115db91b64443e445a5d")
+    version("12.1.0", sha256="c71c0caed12b0b65bbbd09896d0b25dde3b9062b5b2eb8426c86baa50e7af2fb")
+    version("12.0.1", sha256="0d940dffd73711eb973e90d2a6ecaeb368b2b025c7db9a1cfa61716e73909041")
+    version("12.0.0", sha256="829f9340cb1550efa0b69a7b4db36975ede9c70d7c0ecbad2fda91ffcec0609a")
+    version("11.0.1", sha256="e80c7c786b25f931890145dd349c576f49b6031c2cad4d4c722cbcc7e9550b73")
+    version("11.0.0", sha256="3b3fd2743d9312e9cb9770c8c520dd3d0730dc90584e28024664cda50f00e3b9")
+    version("10.2.1", sha256="8077c6c7a12577d2ffdcd07521c1eb1b7367da94d9a7ef10bf14053aeaae7ba1")
+    version("10.2.0", sha256="4212b93bef4563c7de7dce4258e899bcde52315a571087e87fde9f8040123b43")
+    version("10.1.0", sha256="4a121d70c1bb020408a7a697d74602e18250c3c85800f230566fcccd593c0129")
+    version("10.0.0", sha256="542fccf5c57c4fe784b1a9a9e3db01d40b16ad04e7174dc6f7eb23440485ba06")
     version("9.3.2", tag="v9.3.2", deprecated=True)
     version("9.3.0", tag="v9.3.0", deprecated=True)
     version("9.2.0", tag="v9.2.0", deprecated=True)
