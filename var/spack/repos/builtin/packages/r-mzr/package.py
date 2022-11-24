@@ -19,6 +19,7 @@ class RMzr(RPackage):
 
     bioc = "mzR"
 
+    version("2.32.0", commit="ef57d59205398558898a748ba9c8de66b0bddb81")
     version("2.30.0", commit="563ae755cfc7de1ac8862247779182b7b3aebdcc")
     version("2.28.0", commit="bee7d6fb5f99e1fab5444ae1ad27b0bc6e83be9e")
     version("2.24.1", commit="e1d4de8761e6729fd45320d842691c8fe9116b7b")

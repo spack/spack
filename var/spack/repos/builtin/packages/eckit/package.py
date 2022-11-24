@@ -15,6 +15,8 @@ class Eckit(CMakePackage):
 
     maintainers = ["skosukhin"]
 
+    version("1.20.2", sha256="9c11ddaaf346e40d11312b81ca7f1b510017f26618f4c0f5c5c59c37623fbac8")
+    version("1.16.3", sha256="d2aae7d8030e2ce39e5d04e36dd6aa739f3c8dfffe32c61c2a3127c36b573485")
     version("1.16.0", sha256="9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1")
 
     variant("tools", default=True, description="Build the command line tools")
@@ -136,5 +138,13 @@ class Eckit(CMakePackage):
             # ENABLE_LAPACK is ignored if MKL backend is enabled
             # (the LAPACK backend is still built though):
             args.append(self.define("ENABLE_LAPACK", "linalg=lapack" in self.spec))
+
+        if "+admin" in self.spec and "+termlib" in self.spec["ncurses"]:
+            # Make sure that libeckit_cmd is linked to a library that resolves 'setupterm',
+            # 'tputs', etc. That is either libncurses (when 'ncurses~termlib') or libtinfo (when
+            # 'ncurses+termlib'). CMake considers the latter only if CURSES_NEED_NCURSES is set to
+            # TRUE. Note that the installation of eckit does not fail without this but the building
+            # of a dependent package (e.g. fdb) might fail due to the undefined references.
+            args.append(self.define("CURSES_NEED_NCURSES", True))
 
         return args

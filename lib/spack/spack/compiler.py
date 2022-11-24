@@ -56,25 +56,25 @@ def get_compiler_version_output(compiler_path, *args, **kwargs):
     return _get_compiler_version_output(compiler_path, *args, **kwargs)
 
 
-def tokenize_flags(flags_str):
+def tokenize_flags(flags_values, propagate=False):
     """Given a compiler flag specification as a string, this returns a list
     where the entries are the flags. For compiler options which set values
     using the syntax "-flag value", this function groups flags and their
     values together. Any token not preceded by a "-" is considered the
     value of a prior flag."""
-    tokens = flags_str.split()
+    tokens = flags_values.split()
     if not tokens:
         return []
     flag = tokens[0]
-    flags = []
+    flags_with_propagation = []
     for token in tokens[1:]:
         if not token.startswith("-"):
             flag += " " + token
         else:
-            flags.append(flag)
+            flags_with_propagation.append((flag, propagate))
             flag = token
-    flags.append(flag)
-    return flags
+    flags_with_propagation.append((flag, propagate))
+    return flags_with_propagation
 
 
 #: regex for parsing linker lines
@@ -311,11 +311,13 @@ class Compiler(object):
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
         # in compilers/__init__.py
-        self.flags = {}
-        for flag in spack.spec.FlagMap.valid_compiler_flags():
+        self.flags = spack.spec.FlagMap(self.spec)
+        for flag in self.flags.valid_compiler_flags():
             value = kwargs.get(flag, None)
             if value is not None:
-                self.flags[flag] = tokenize_flags(value)
+                values_with_propagation = tokenize_flags(value, False)
+                for value, propagation in values_with_propagation:
+                    self.flags.add_flag(flag, value, propagation)
 
         # caching value for compiler reported version
         # used for version checks for API, e.g. C++11 flag
@@ -536,6 +538,14 @@ class Compiler(object):
                 ignore_errors=tuple(self.ignore_version_errors),
             )
             return self.extract_version_from_output(output)
+
+    @property
+    def prefix(self):
+        """Query the compiler for its install prefix. This is the install
+        path as reported by the compiler. Note that paths for cc, cxx, etc
+        are not enough to find the install prefix of the compiler, since
+        the can be symlinks, wrappers, or filenames instead of absolute paths."""
+        raise NotImplementedError("prefix is not implemented for this compiler")
 
     #
     # Compiler classes have methods for querying the version of

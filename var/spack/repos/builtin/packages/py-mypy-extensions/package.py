@@ -16,4 +16,3 @@ class PyMypyExtensions(PythonPackage):
     version("0.4.3", sha256="2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-typing@3.5.3:", when="^python@:3.4", type=("build", "run"))

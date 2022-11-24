@@ -23,6 +23,11 @@ class Esmf(MakefilePackage):
 
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
+    # generate chksum with spack checksum esmf@x.y.z
+    version(
+        "8.3.1",
+        sha256="6c39261e55dcdf9781cdfa344417b9606f7f961889d5ec626150f992f04f146d",
+    )
     version(
         "8.3.0",
         sha256="0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd",
@@ -56,7 +61,7 @@ class Esmf(MakefilePackage):
         description="Build with external LAPACK support",
     )
     variant("netcdf", default=True, description="Build with NetCDF support")
-    variant("pnetcdf", default=True, description="Build with pNetCDF support")
+    variant("pnetcdf", default=True, description="Build with pNetCDF support", when="+mpi")
     variant("xerces", default=True, description="Build with Xerces support")
     variant(
         "parallelio",
@@ -111,7 +116,8 @@ class Esmf(MakefilePackage):
     patch("mvapich2.patch", when="@:7.0")
 
     # explicit type cast of variables from long to int
-    patch("cce.patch", when="@:8.4.0 %cce@13.99:")
+    patch("longtoint.patch", when="@:8.3.2 %cce@14:")
+    patch("longtoint.patch", when="@:8.3.2 %oneapi@2022:")
 
     # Allow different directories for creation and
     # installation of dynamic libraries on OSX:
@@ -194,7 +200,7 @@ class Esmf(MakefilePackage):
                     "."
                 )[0]
             )
-        elif self.compiler.name == "intel":
+        elif self.compiler.name == "intel" or self.compiler.name == "oneapi":
             os.environ["ESMF_COMPILER"] = "intel"
         elif self.compiler.name in ["clang", "apple-clang"]:
             os.environ["ESMF_COMPILER"] = "gfortranclang"
@@ -207,6 +213,8 @@ class Esmf(MakefilePackage):
             os.environ["ESMF_COMPILER"] = "nag"
         elif self.compiler.name == "pgi":
             os.environ["ESMF_COMPILER"] = "pgi"
+        elif self.compiler.name == "nvhpc":
+            os.environ["ESMF_COMPILER"] = "nvhpc"
         elif self.compiler.name == "cce":
             os.environ["ESMF_COMPILER"] = "cce"
         else:
@@ -247,7 +255,7 @@ class Esmf(MakefilePackage):
         # ESMF_COMM must be set to indicate which MPI implementation
         # is used to build the ESMF library.
         if "+mpi" in spec:
-            if "platform=cray" in self.spec:
+            if "^cray-mpich" in self.spec:
                 os.environ["ESMF_COMM"] = "mpi"
             elif "^mvapich2" in spec:
                 os.environ["ESMF_COMM"] = "mvapich2"
