@@ -110,7 +110,7 @@ spack:
     - graphviz
     - hdf5~mpi@1.10.7
     - help2man
-    - hpctoolkit
+    - hpctoolkit+mpi
     - hpcviewer
     - hpe-mpi@2.25.hmpt
     - intel-mkl
