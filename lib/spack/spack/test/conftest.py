@@ -1698,7 +1698,10 @@ def inode_cache():
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
-    # currently there are too many issues to fix.
+    # currently there are too many issues to fix, so look for the more
+    # serious issue of having a closed file descriptor in the cache.
+    assert not any(f.fh.closed for f in llnl.util.lock.file_tracker._descriptors.values())
+    llnl.util.lock.file_tracker.purge()
 
 
 @pytest.fixture(autouse=True)
