@@ -27,6 +27,7 @@ import archspec.cpu.schema
 
 import llnl.util.lang
 import llnl.util.tty as tty
+import llnl.util.lock
 from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
 import spack.binary_distribution
@@ -1690,6 +1691,16 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set("config:test_stage", tmp_stage)
 
     yield tmp_stage
+
+
+@pytest.fixture(autouse=True)
+def inode_cache():
+    llnl.util.lock.file_tracker.purge()
+    yield
+    # TODO: it is a bug when the file tracker is non-empty after a test,
+    # since it means a lock was not released, or the inode was not purged
+    # when acquiring the lock failed. So, we could assert that here, but
+    # currently there are too many issues to fix.
 
 
 @pytest.fixture(autouse=True)
