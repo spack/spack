@@ -155,6 +155,79 @@ class Boost(Package):
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
+    # --------- VARIANTS -------------------------------
+    #  These are available for all versions of Boost
+
+    variant(
+        "cxxstd",
+        default="11",
+        values=(
+            "98",
+            "11",
+            "14",
+            # C++17 is not supported by Boost < 1.63.0.
+            conditional("17", when="@1.63.0:"),
+            # C++20/2a is not supported by Boost < 1.73.0
+            conditional("2a", when="@1.73.0:"),
+            conditional("20", when="@1.77.0:"),
+            conditional("23", when="@1.79.0:"),
+            conditional("26", when="@1.79.0:"),
+        ),
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
+
+    # 1.84.0 dropped support for 98/03
+    conflicts("cxxstd=98", when="@1.84.0:")
+
+    variant("debug", default=False, description="Switch to the debug version of Boost")
+
+    variant("shared", default=True, description="Additionally build shared libraries")
+
+    variant(
+        "multithreaded", default=True, description="Build multi-threaded versions of libraries"
+    )
+
+    variant(
+        "singlethreaded", default=False, description="Build single-threaded versions of libraries"
+    )
+
+    variant("icu", default=False, description="Build with Unicode and ICU suport")
+
+    variant("taggedlayout", default=False, description="Augment library names with build options")
+
+    variant(
+        "versionedlayout",
+        default=False,
+        description="Augment library layout with versioned subdirs",
+    )
+
+    variant(
+        "clanglibcpp", default=False, description="Compile with clang libc++ instead of libstdc++"
+    )
+
+    variant("numpy", default=False, when="+python", description="Build the Boost NumPy library")
+
+    variant(
+        "pic",
+        default=False,
+        description="Generate position-independent code (PIC), useful "
+        "for building static libraries",
+    )
+
+    # https://boostorg.github.io/build/manual/develop/index.html#bbv2.builtin.features.visibility
+    variant(
+        "visibility",
+        values=("global", "protected", "hidden"),
+        default="hidden",
+        multi=False,
+        when="@1.69.0:",
+        description="Default symbol visibility in compiled libraries",
+    )
+
+    # --------- VERSIONED VARIANTS ---------------------
+    #  These are available only for specific versions of Boost
+
     # Available since 1.53.0
     variant("atomic", default=False, when="@1.53.0:", description="C++11-style atomic<>")
 
@@ -347,73 +420,6 @@ class Boost(Package):
         default=False,
         when="@1.39.0:",
         description="Mandatory C99/C++ preprocessor functionality",
-    )
-
-    variant(
-        "cxxstd",
-        default="11",
-        values=(
-            "98",
-            "11",
-            "14",
-            # C++17 is not supported by Boost < 1.63.0.
-            conditional("17", when="@1.63.0:"),
-            # C++20/2a is not supported by Boost < 1.73.0
-            conditional("2a", when="@1.73.0:"),
-            conditional("20", when="@1.77.0:"),
-            conditional("23", when="@1.79.0:"),
-            conditional("26", when="@1.79.0:"),
-        ),
-        multi=False,
-        description="Use the specified C++ standard when building.",
-    )
-
-    # 1.84.0 dropped support for 98/03
-    conflicts("cxxstd=98", when="@1.84.0:")
-
-    variant("debug", default=False, description="Switch to the debug version of Boost")
-
-    variant("shared", default=True, description="Additionally build shared libraries")
-
-    variant(
-        "multithreaded", default=True, description="Build multi-threaded versions of libraries"
-    )
-
-    variant(
-        "singlethreaded", default=False, description="Build single-threaded versions of libraries"
-    )
-
-    variant("icu", default=False, description="Build with Unicode and ICU suport")
-
-    variant("taggedlayout", default=False, description="Augment library names with build options")
-
-    variant(
-        "versionedlayout",
-        default=False,
-        description="Augment library layout with versioned subdirs",
-    )
-
-    variant(
-        "clanglibcpp", default=False, description="Compile with clang libc++ instead of libstdc++"
-    )
-
-    variant("numpy", default=False, when="+python", description="Build the Boost NumPy library")
-
-    variant(
-        "pic",
-        default=False,
-        description="Generate position-independent code (PIC), useful "
-        "for building static libraries",
-    )
-
-    # https://boostorg.github.io/build/manual/develop/index.html#bbv2.builtin.features.visibility
-    variant(
-        "visibility",
-        values=("global", "protected", "hidden"),
-        default="hidden",
-        multi=False,
-        when="@1.69.0:",
-        description="Default symbol visibility in compiled libraries",
     )
 
     # Unicode support
