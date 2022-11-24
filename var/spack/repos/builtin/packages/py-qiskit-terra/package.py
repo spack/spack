@@ -31,7 +31,6 @@ class PyQiskitTerra(PythonPackage):
     with when("@0.18.3"):
         depends_on("python@3.6:", type=("build", "run"))
         depends_on("py-cython@0.27.1:", type="build")
-        depends_on("py-contextvars@2.4:", when="^python@:3.6", type=("build", "run"))
         depends_on("py-jsonschema@2.6:", type=("build", "run"))
         depends_on("py-retworkx@0.9.0:", type=("build", "run"))
         depends_on("py-scipy@1.4:", type=("build", "run"))
