@@ -62,7 +62,9 @@ class PyCartopy(PythonPackage):
     depends_on("py-numpy@1.13.3:", when="@0.19:", type=("build", "run"))
     depends_on("py-numpy@1.10:", when="@0.17:", type=("build", "run"))
     depends_on("py-numpy@1.6:", type=("build", "run"))
-    depends_on("py-matplotlib@3.1:", when="@0.20:", type=("build", "run"))
+    depends_on("py-matplotlib@3.1:", when="@0.21:", type=("build", "run"))
+    # https://github.com/SciTools/cartopy/issues/2086
+    depends_on("py-matplotlib@3.1:3.5", when="@0.20", type=("build", "run"))
     depends_on("py-shapely@1.6.4:1", when="@0.20:", type=("build", "run"))
     depends_on("py-shapely@1.5.6:1", type=("build", "run"))
     depends_on("py-pyshp@2.1:", when="@0.20:", type=("build", "run"))
@@ -91,8 +93,8 @@ class PyCartopy(PythonPackage):
         depends_on("pil@1.7.8:", type="run")
         depends_on("py-scipy@1.3.1:", when="@0.20:", type="run")
         depends_on("py-scipy@0.10:", type="run")
-        depends_on("py-matplotlib@1.5.1:", when="@0.17:0.19", type="run")
-        depends_on("py-matplotlib@1.3:", when="@0.16", type="run")
+        depends_on("py-matplotlib@1.5.1:3.5", when="@0.17:0.19", type="run")
+        depends_on("py-matplotlib@1.3:3.5", when="@0.16", type="run")
 
     patch("proj6.patch", when="@0.17.0")
 
