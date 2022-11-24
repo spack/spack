@@ -158,5 +158,7 @@ class Gnuplot(AutotoolsPackage):
         # TODO: --with-aquaterm  depends_on('aquaterm')
         options.append("--without-aquaterm")
 
-        os.environ["LDFLAGS"] = "-Wl,--copy-dt-needed-entries"
+        if spec.satisfies("%gcc@11:"):
+            os.environ["LDFLAGS"] = "-Wl,--copy-dt-needed-entries"
+
         return options
