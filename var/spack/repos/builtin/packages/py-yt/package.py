@@ -65,7 +65,6 @@ class PyYt(PythonPackage):
     depends_on("py-typing-extensions@4.2:", type=("build", "run"), when="@4.1.2: ^python@:3.7")
     # See https://github.com/spack/spack/pull/30418#discussion_r863962805
     depends_on("py-ipython@1.0:", type=("build", "run"), when="@:3")
-    depends_on("py-ipython@:6", type=("build", "run"), when="@:3 ^python@:2")
     depends_on("python@2.7.0:2.7,3.5:", type=("build", "run"))
     depends_on("python@3.7:", type=("build", "run"), when="@4.1.2:")
 

@@ -41,6 +41,7 @@ import shutil
 import sys
 import traceback
 import types
+from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
@@ -284,6 +285,23 @@ def clean_environment():
     return env
 
 
+def _add_werror_handling(keep_werror, env):
+    keep_flags = set()
+    # set of pairs
+    replace_flags = []  # type: List[Tuple[str,str]]
+    if keep_werror == "all":
+        keep_flags.add("-Werror*")
+    else:
+        if keep_werror == "specific":
+            keep_flags.add("-Werror-*")
+            keep_flags.add("-Werror=*")
+        # This extra case is to handle -Werror-implicit-function-declaration
+        replace_flags.append(("-Werror-", "-Wno-error="))
+        replace_flags.append(("-Werror", "-Wno-error"))
+    env.set("SPACK_COMPILER_FLAGS_KEEP", "|".join(keep_flags))
+    env.set("SPACK_COMPILER_FLAGS_REPLACE", " ".join(["|".join(item) for item in replace_flags]))
+
+
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
@@ -329,6 +347,13 @@ def set_compiler_environment_variables(pkg, env):
     else:
         env.set("SPACK_DTAGS_TO_STRIP", compiler.disable_new_dtags)
         env.set("SPACK_DTAGS_TO_ADD", compiler.enable_new_dtags)
+
+    if pkg.keep_werror is not None:
+        keep_werror = pkg.keep_werror
+    else:
+        keep_werror = spack.config.get("config:flags:keep_werror")
+
+    _add_werror_handling(keep_werror, env)
 
     # Set the target parameters that the compiler will add
     # Don't set on cray platform because the targeting module handles this
@@ -566,6 +591,7 @@ def _set_variables_for_single_module(pkg, module):
 
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
