@@ -527,13 +527,13 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
 class TestModuleMonkeyPatcher:
     def test_getting_attributes(self, default_mock_concretization):
         s = default_mock_concretization("libelf")
-        module_wrapper = spack.build_environment.ModuleMonkeyPatcher(s.package)
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
         assert module_wrapper.Libelf == s.package.module.Libelf
 
     def test_setting_attributes(self, default_mock_concretization):
         s = default_mock_concretization("libelf")
         module = s.package.module
-        module_wrapper = spack.build_environment.ModuleMonkeyPatcher(s.package)
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
 
         # Setting an attribute has an immediate effect
         module_wrapper.SOME_ATTRIBUTE = 1

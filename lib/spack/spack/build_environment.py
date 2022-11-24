@@ -1001,7 +1001,7 @@ def modifications_from_dependencies(
             if set_package_py_globals:
                 set_module_variables_for_package(dpkg)
 
-            current_module = ModuleMonkeyPatcher(spec.package)
+            current_module = ModuleChangePropagator(spec.package)
             dpkg.setup_dependent_package(current_module, spec)
             current_module.propagate_changes_to_mro()
 
@@ -1451,7 +1451,7 @@ def write_log_summary(out, log_type, log, last=None):
         out.write(make_log_context(warnings))
 
 
-class ModuleMonkeyPatcher:
+class ModuleChangePropagator:
     """Wrapper class to accept changes to a package.py Python module, and propagate them in the
     MRO of the package.
 
@@ -1487,7 +1487,7 @@ class ModuleMonkeyPatcher:
         return getattr(self.current_module, item)
 
     def __setattr__(self, key, value):
-        if key in ModuleMonkeyPatcher._PROTECTED_NAMES:
+        if key in ModuleChangePropagator._PROTECTED_NAMES:
             msg = f'Cannot set attribute "{key}" in ModuleMonkeyPatcher'
             return AttributeError(msg)
 
