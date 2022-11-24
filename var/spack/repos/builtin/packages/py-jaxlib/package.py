@@ -5,8 +5,6 @@
 
 import tempfile
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 
@@ -50,7 +48,10 @@ class PyJaxlib(PythonPackage, CudaPackage):
                 "{0:.1f}".format(float(i) / 10.0) for i in spec.variants["cuda_arch"].value
             )
             args.append("--cuda_compute_capabilities={0}".format(capabilities))
-        args.append("--bazel_startup_options=" "--output_user_root={0}".format(self.wrapped_package_object.buildtmp))
+        args.append(
+            "--bazel_startup_options="
+            "--output_user_root={0}".format(self.wrapped_package_object.buildtmp)
+        )
         python(*args)
         with working_dir(self.wrapped_package_object.tmp_path):
             args = std_pip_args + ["--prefix=" + self.prefix, "."]
@@ -77,4 +78,3 @@ class PyJaxlib(PythonPackage, CudaPackage):
             "build/build_wheel.py",
             string=True,
         )
-
