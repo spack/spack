@@ -40,6 +40,7 @@ class Berkeleygw(MakefilePackage):
     # https://github.com/spack/spack/pull/33948#issuecomment-1323805817
     variant("mpi", default=True, description="Build with MPI and ScaLAPACK support")
     variant("elpa", default=True, description="Build with ELPA support")
+    variant("python", default=True, description="Build with Python support")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("hdf5", default=True, description="Builds with HDF5 support")
     variant("debug", default=False, description="Builds with DEBUG flag")
@@ -55,6 +56,12 @@ class Berkeleygw(MakefilePackage):
     depends_on("elpa~openmp", when="+elpa~openmp")
     depends_on("fftw-api@3+openmp", when="+openmp")
     depends_on("fftw-api@3~openmp", when="~openmp")
+
+    # in order to run the installed python scripts
+    depends_on("python", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-setuptools", type=("build", "run"), when="+python")
+    depends_on("py-h5py", type=("build", "run"), when="+hdf5+python")
 
     depends_on("perl", type="test")
 
@@ -91,7 +98,7 @@ class Berkeleygw(MakefilePackage):
         # use parallelization in tests
         filter_file(
             r"cd testsuite \&\& \$\(MAKE\) check$",
-            "cd testsuite && $(MAKE) check-parallel",
+            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 && $(MAKE) check-parallel",
             "Makefile",
         )
 
@@ -237,6 +244,12 @@ class Berkeleygw(MakefilePackage):
         buildopts.append("MATHFLAG=%s" % " ".join(mathflags))
 
         make("all-flavors", *buildopts)
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        with working_dir(self.build_directory):
+            make("check")
 
     def install(self, spec, prefix):
         make("install", "INSTDIR=%s" % prefix)
