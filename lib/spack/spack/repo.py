@@ -890,7 +890,7 @@ class RepoPath(object):
             pkg_name (str): name of the package we want to check
         """
         have_name = self._have_name(pkg_name)
-        return have_name and pkg_name in self.provider_index
+        return have_name and pkg_name != "all" and pkg_name in self.provider_index
 
     def is_virtual_safe(self, pkg_name):
         """Return True if the package with this name is virtual, False otherwise.
