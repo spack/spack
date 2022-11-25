@@ -14,6 +14,7 @@ class PyCryptography(PythonPackage):
     pypi = "cryptography/cryptography-1.8.1.tar.gz"
 
     version("38.0.1", sha256="1db3d807a14931fa317f96435695d9ec386be7b84b618cc61cfa5d08b0ae33d7")
+    version("37.0.4", sha256="63f9c17c0e2474ccbebc9302ce2f07b55b3b3fcb211ded18a42d5764f5c10a82")
     version("36.0.1", sha256="53e5c1dc3d7a953de055d77bef2ff607ceef7a2aac0353b5d630ab67f7423638")
     version("35.0.0", sha256="9933f28f70d0517686bd7de36166dda42094eac49415459d9bdf5e7df3e0086d")
     version("3.4.8", sha256="94cc5ed4ceaefcbe5bf38c8fba6a21fc1d365bb8fb826ea1688e3370b2e24a1c")
@@ -47,8 +48,6 @@ class PyCryptography(PythonPackage):
     depends_on("py-six@1.4.1:", type=("build", "run"), when="@:3.3")
     depends_on("py-idna@2.1:", type=("build", "run"), when="@:2.4")  # deprecated
     depends_on("py-idna@2.1:", type=("build", "run"), when="@2.5: +idna")  # deprecated
-    depends_on("py-enum34", type=("build", "run"), when="^python@:3.4")
-    depends_on("py-ipaddress", type=("build", "run"), when="^python@:3.3")
     depends_on("openssl@:1.0", when="@:1.8.1")
     depends_on("openssl")
 

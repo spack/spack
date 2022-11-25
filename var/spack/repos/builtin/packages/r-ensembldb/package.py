@@ -24,6 +24,8 @@ class REnsembldb(RPackage):
 
     bioc = "ensembldb"
 
+    version("2.22.0", commit="4dda178a14e080c643bbd8c4dd6378bfe4e6ee9f")
+    version("2.20.2", commit="ac1fb8389efd88099600af298d6bb3384206f9ed")
     version("2.20.1", commit="e547d184730cfe5e65f59e4f3512395fb1cdba1a")
     version("2.18.3", commit="e2fcfc0c7700110df070a171d2d542b37ec098f3")
     version("2.14.0", commit="c7150519ed4ef38e5eac1043209863dbc7be43a1")
@@ -39,6 +41,7 @@ class REnsembldb(RPackage):
     depends_on("r-genomicranges@1.31.18:", type=("build", "run"), when="@2.4.1:")
     depends_on("r-genomicfeatures@1.23.18:", type=("build", "run"))
     depends_on("r-genomicfeatures@1.29.10:", type=("build", "run"), when="@2.2.2:")
+    depends_on("r-genomicfeatures@1.49.6:", type=("build", "run"), when="@2.22.0:")
     depends_on("r-annotationfilter@0.99.7:", type=("build", "run"))
     depends_on("r-annotationfilter@1.1.9:", type=("build", "run"), when="@2.2.2:")
     depends_on("r-annotationfilter@1.5.2:", type=("build", "run"), when="@2.6.8:")

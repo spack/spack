@@ -26,7 +26,8 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     variant("cuda", default=True, description="Build with CUDA")
 
     # https://github.com/NVIDIA/apex/issues/1498
-    conflicts("~cuda")
+    # https://github.com/NVIDIA/apex/pull/1499
+    patch("1499.patch", when="@2020-10-19")
 
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
@@ -37,6 +38,8 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
                     for i in self.spec.variants["cuda_arch"].value
                 )
                 env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
+        else:
+            env.unset("CUDA_HOME")
 
     def global_options(self, spec, prefix):
         args = []

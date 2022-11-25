@@ -1,0 +1,49 @@
+diff --git a/faiss/python/CMakeLists.txt b/faiss/python/CMakeLists.txt
+index e403065..be3736f 100644
+--- a/faiss/python/CMakeLists.txt
++++ b/faiss/python/CMakeLists.txt
+@@ -68,7 +68,7 @@ swig_add_library(swigfaiss
+   LANGUAGE python
+   SOURCES swigfaiss.swig
+ )
+-set_property(TARGET swigfaiss PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
++set_property(TARGET swigfaiss PROPERTY SWIG_COMPILE_OPTIONS)
+ 
+ set_property(SOURCE swigfaiss_avx2.swig
+   PROPERTY SWIG_MODULE_NAME swigfaiss_avx2)
+@@ -77,7 +77,7 @@ swig_add_library(swigfaiss_avx2
+   LANGUAGE python
+   SOURCES swigfaiss_avx2.swig
+ )
+-set_property(TARGET swigfaiss_avx2 PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
++set_property(TARGET swigfaiss_avx2 PROPERTY SWIG_COMPILE_OPTIONS)
+ if(NOT FAISS_OPT_LEVEL STREQUAL "avx2")
+   set_target_properties(swigfaiss_avx2 PROPERTIES EXCLUDE_FROM_ALL TRUE)
+ endif()
+diff --git a/faiss/python/setup.py b/faiss/python/setup.py
+index 9ef3a03..5ff9585 100644
+--- a/faiss/python/setup.py
++++ b/faiss/python/setup.py
+@@ -21,9 +21,11 @@ prefix = "Release/" * (platform.system() == 'Windows')
+ 
+ swigfaiss_generic_lib = f"{prefix}_swigfaiss{ext}"
+ swigfaiss_avx2_lib = f"{prefix}_swigfaiss_avx2{ext}"
++callbacks_lib = f"{prefix}libfaiss_python_callbacks{ext}"
+ 
+ found_swigfaiss_generic = os.path.exists(swigfaiss_generic_lib)
+ found_swigfaiss_avx2 = os.path.exists(swigfaiss_avx2_lib)
++found_callbacks = os.path.exists(callbacks_lib)
+ 
+ assert (found_swigfaiss_generic or found_swigfaiss_avx2), \
+     f"Could not find {swigfaiss_generic_lib} or " \
+@@ -39,6 +41,10 @@ if found_swigfaiss_avx2:
+     shutil.copyfile("swigfaiss_avx2.py", "faiss/swigfaiss_avx2.py")
+     shutil.copyfile(swigfaiss_avx2_lib, f"faiss/_swigfaiss_avx2{ext}")
+ 
++if found_callbacks:
++  print(f"Copying {callbacks_lib}")
++  shutil.copyfile(callbacks_lib, f"faiss/{callbacks_lib}")
++
+ long_description="""
+ Faiss is a library for efficient similarity search and clustering of dense
+ vectors. It contains algorithms that search in sets of vectors of any size,

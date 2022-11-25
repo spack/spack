@@ -16,6 +16,7 @@ class PyFiona(PythonPackage):
     maintainers = ["adamjstewart"]
 
     version("master", branch="master")
+    version("1.8.22", sha256="a82a99ce9b3e7825740157c45c9fb2259d4e92f0a886aaac25f0db40ffe1eea3")
     version("1.8.21", sha256="3a0edca2a7a070db405d71187214a43d2333a57b4097544a3fcc282066a58bfc")
     version("1.8.20", sha256="a70502d2857b82f749c09cb0dea3726787747933a2a1599b5ab787d74e3c143b")
     version("1.8.18", sha256="b732ece0ff8886a29c439723a3e1fc382718804bb057519d537a81308854967a")
@@ -28,7 +29,7 @@ class PyFiona(PythonPackage):
     depends_on("gdal@1.11:", type=("build", "link", "run"), when="@1.9:")
     depends_on("gdal@1.8:", type=("build", "link", "run"))
 
-    depends_on("py-cython", type="build", when="@master")
+    depends_on("py-cython@0.29.29:", type="build", when="@master")
     depends_on("py-attrs@17:", type=("build", "run"))
     depends_on("py-certifi", type=("build", "run"), when="@1.8.18:")
     depends_on("py-click@4:", type=("build", "run"))
@@ -37,6 +38,3 @@ class PyFiona(PythonPackage):
     depends_on("py-six@1.7:", type=("build", "run"))
     depends_on("py-munch", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-argparse", type=("build", "run"), when="^python@:2.6,3.0:3.1")
-    depends_on("py-ordereddict", type=("build", "run"), when="^python@:2.6")
-    depends_on("py-enum34", type=("build", "run"), when="^python@:3.3")

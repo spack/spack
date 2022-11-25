@@ -98,40 +98,42 @@ For example, this command:
 
 .. code-block:: console
 
-   $ spack create http://www.mr511.de/software/libelf-0.8.13.tar.gz
+   $ spack create https://ftp.osuosl.org/pub/blfs/conglomeration/libelf/libelf-0.8.13.tar.gz
 
 creates a simple python file:
 
 .. code-block:: python
 
-   from spack import *
+   from spack.package import *
 
 
-   class Libelf(Package):
+   class Libelf(AutotoolsPackage):
        """FIXME: Put a proper description of your package here."""
 
        # FIXME: Add a proper url for your package's homepage here.
-       homepage = "http://www.example.com"
-       url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+       homepage = "https://www.example.com"
+       url = "https://ftp.osuosl.org/pub/blfs/conglomeration/libelf/libelf-0.8.13.tar.gz"
 
-       version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
+       # FIXME: Add a list of GitHub accounts to
+       # notify when the package is updated.
+       # maintainers = ["github_user1", "github_user2"]
+
+       version("0.8.13", sha256="591a9b4ec81c1f2042a97aa60564e0cb79d041c52faa7416acb38bc95bd2c76d")
 
        # FIXME: Add dependencies if required.
-       # depends_on('foo')
+       # depends_on("foo")
 
-       def install(self, spec, prefix):
-           # FIXME: Modify the configure line to suit your build system here.
-           configure('--prefix={0}'.format(prefix))
-
-           # FIXME: Add logic to build and install here.
-           make()
-           make('install')
+       def configure_args(self):
+           # FIXME: Add arguments other than --prefix
+           # FIXME: If not needed delete this function
+           args = []
+           return args
 
 It doesn't take much python coding to get from there to a working
 package:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/libelf/package.py
-   :lines: 6-
+   :lines: 5-
 
 Spack also provides wrapper functions around common commands like
 ``configure``, ``make``, and ``cmake`` to make writing packages

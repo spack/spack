@@ -21,6 +21,20 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "22.9": {
+        "Linux-aarch64": (
+            "bc4473f04b49bc9a26f08c17a72360650ddf48a3b6eefacdc525d79c8d730f30",
+            "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "9aac31d36bb09f6653544978021f5b78c272112e7748871566f7e930f5e7475b",
+            "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_ppc64le_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "aebfeb826ace3dabf9699f72390ca0340f8789a8ef6fe4032e3c7b794f073ea3",
+            "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
     "22.7": {
         "Linux-aarch64": (
             "2aae3fbfd2d0d2d09448a36166c42311368f5600c7c346f159c280b412fe924a",
@@ -401,3 +415,6 @@ class Nvhpc(Package):
             libs.append("libnvf")
 
         return find_libraries(libs, root=prefix, recursive=True)
+
+    # Avoid binding stub libraries by absolute path
+    non_bindable_shared_objects = ["stubs"]
