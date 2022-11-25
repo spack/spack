@@ -1647,7 +1647,7 @@ class Spec(object):
 
     @property
     def virtual(self):
-        return spack.repo.path.is_virtual(self.name)
+        return not self.concrete and spack.repo.path.is_virtual(self.name)
 
     @property
     def concrete(self):
