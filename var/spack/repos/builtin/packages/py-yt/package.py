@@ -54,7 +54,6 @@ class PyYt(PythonPackage):
     depends_on("py-more-itertools@8.4:", when="@4.1.2:")
     depends_on("py-numpy@1.10.4:", type=("build", "run"))
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@4.1.2:")
-    depends_on("py-setuptools@19.6:", type=("build", "run"))
     depends_on("py-packaging@20.9:", type=("build", "run"), when="@4.1.2:")
     # PIL/pillow and pyparsing dependency is handled by matplotlib
     depends_on("py-tomli-w@0.4:", type=("build", "run"), when="@4.1.2:")
@@ -65,8 +64,6 @@ class PyYt(PythonPackage):
     depends_on("py-typing-extensions@4.2:", type=("build", "run"), when="@4.1.2: ^python@:3.7")
     # See https://github.com/spack/spack/pull/30418#discussion_r863962805
     depends_on("py-ipython@1.0:", type=("build", "run"), when="@:3")
-    depends_on("python@2.7.0:2.7,3.5:", type=("build", "run"))
-    depends_on("python@3.7:", type=("build", "run"), when="@4.1.2:")
 
     # Extras:
     # See https://github.com/yt-project/yt/blob/yt-4.1.2/setup.cfg#L80
@@ -79,8 +76,9 @@ class PyYt(PythonPackage):
     # See https://github.com/yt-project/yt/blob/yt-4.1.2/pyproject.toml#L2
     depends_on("py-cython@0.24:", type="build")
     depends_on("py-cython@0.29.21:2", type="build", when="@4.1.2:")
-    depends_on("py-wheel@0.36.2", type="build", when="@4.1.2:")
-    depends_on("py-setuptools@59.0.1:", type="build", when="@4.1.2:")
+    depends_on("py-wheel@0.36.2:", type="build", when="@4.1.2:")
+    depends_on("py-setuptools@19.6:", type=("build", "run"))
+    depends_on("py-setuptools@59.0.1:", type=("build", "run"), when="@4.1.2:")
 
     @run_before("install")
     def prep_yt(self):
