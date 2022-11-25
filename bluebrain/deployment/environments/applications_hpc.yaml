@@ -26,7 +26,7 @@ spack:
           - unit-test-translator
         projections:
           all: '{name}/{version}'
-          ^coreneuron+knl: '{name}-knl/{version}'
+          ^neuron+knl: '{name}-knl/{version}'
           +common: '{name}/{version}-commonmods'
           +plasticity: '{name}-plasticity/{version}'
           +ngv+metabolism: '{name}-multiscale/{version}'
@@ -40,17 +40,12 @@ spack:
     - neurodamus-core~common
     - neurodamus-core+common
     - neurodamus-hippocampus+coreneuron+caliper
-    - neurodamus-hippocampus+coreneuron+caliper^coreneuron+knl
     - neurodamus-mousify+coreneuron+caliper
     - neurodamus-neocortex+coreneuron+caliper
-    - neurodamus-neocortex+coreneuron+caliper^coreneuron+knl
     - neurodamus-neocortex+plasticity+coreneuron+caliper
     - neurodamus-neocortex+ngv+metabolism+caliper
     - neurodamus-thalamus+coreneuron+caliper
-    - neurodamus-thalamus+coreneuron+caliper^coreneuron+knl
-    - neuron+coreneuron+tests
-   #- neuron+coreneuron+tests ^coreneuron+gpu~shared
-    - neuron+debug
+    - neuron+coreneuron+debug build_type=Debug
     - nmodl
     - parquet-converters
     - py-neurodamus+all_deps

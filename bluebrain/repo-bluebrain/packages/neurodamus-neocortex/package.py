@@ -34,6 +34,7 @@ class NeurodamusNeocortex(NeurodamusModel):
 
     # IMPORTANT: Register new versions only using version_from_model_*
     # Final version name is combined e.g. "1.0-3.0.1"
+    version_from_model_ndpy_dep('1.10')
     version_from_model_ndpy_dep('1.9')
     version_from_model_ndpy_dep('1.8')
     version_from_model_ndpy_dep('1.7')

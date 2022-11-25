@@ -15,6 +15,7 @@ class Nmodl(CMakePackage):
 
     version("develop", branch="master", submodules=True)
     version("llvm", branch="llvm", submodules=True)
+    version("0.5.a", commit="94cba1c")
     version("0.4.0", tag="0.4")
 
     variant("legacy-unit", default=True, description="Enable legacy units")
