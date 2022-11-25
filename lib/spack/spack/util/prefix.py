@@ -7,10 +7,7 @@
 This file contains utilities for managing the installation prefix of a package.
 """
 import os
-from typing import Dict, Union
-
-# https://peps.python.org/pep-0519/#provide-specific-type-hinting-support
-_PathLike = Union[str, bytes, os.PathLike]
+from typing import Dict
 
 
 class Prefix(str):
@@ -40,7 +37,7 @@ class Prefix(str):
     This prints ``foobar /usr``. All of this is meant to make custom installs easy.
     """
 
-    def __getattr__(self, name: _PathLike) -> "Prefix":
+    def __getattr__(self, name: str) -> "Prefix":
         """Concatenate a string to a prefix.
 
         Useful for strings that are valid variable names.
@@ -53,7 +50,7 @@ class Prefix(str):
         """
         return Prefix(os.path.join(self, name))
 
-    def join(self, string: _PathLike) -> "Prefix":  # type: ignore[override]
+    def join(self, string: str) -> "Prefix":  # type: ignore[override]
         """Concatenate a string to a prefix.
 
         Useful for strings that are not valid variable names. This includes strings containing
