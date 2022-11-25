@@ -131,7 +131,7 @@ class NeurodamusModel(SimModel):
                     mod_fil = core_prefix.lib.mod.join(aux_mod.strip())
                     if os.path.isfile(mod_fil):
                         shutil.copy(mod_fil, 'mod_core')
-                        core_nrn_mods.add(aux_mod)
+                        core_nrn_mods.add(aux_mod.strip())
             with working_dir(core_prefix.lib.mod):
                 all_mods = set(f for f in os.listdir() if f.endswith(".mod"))
             with open(join_path('mod', 'neuron_only_mods.txt'), 'w') as blackl:
