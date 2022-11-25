@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PySetuptools(PythonExtension):
+class PySetuptools(Package, PythonExtension):
     """A Python utility that aids in the process of downloading, building,
     upgrading, installing, and uninstalling Python packages."""
 
@@ -175,6 +175,7 @@ class PySetuptools(PythonExtension):
         expand=False,
     )
 
+    extends("python")
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):

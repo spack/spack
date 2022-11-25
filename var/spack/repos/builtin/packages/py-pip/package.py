@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class PyPip(PythonExtension):
+class PyPip(Package, PythonExtension):
     """The PyPA recommended tool for installing Python packages."""
 
     homepage = "https://pip.pypa.io/"
@@ -72,6 +72,8 @@ class PyPip(PythonExtension):
         sha256="690b762c0a8460c303c089d5d0be034fb15a5ea2b75bdf565f40421f542fefb0",
         expand=False,
     )
+
+    extends("python")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"
