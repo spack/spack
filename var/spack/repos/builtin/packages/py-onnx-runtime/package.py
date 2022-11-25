@@ -54,8 +54,9 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     # https://github.com/cms-externals/onnxruntime/compare/0d9030e...7a6355a
     patch("cms_1_10.patch", whe="@1.10")
     # https://github.com/microsoft/onnxruntime/issues/4234#issuecomment-698077636
-    patch("libiconv.patch", level=0, when="@1.7.2")
-    patch("libiconv-1.10.patch", level=0, when="@1.10.0")
+    # only needed when iconv is provided by libiconv
+    patch("libiconv.patch", level=0, when="@1.7.2 ^libiconv")
+    patch("libiconv-1.10.patch", level=0, when="@1.10.0 ^libiconv")
     # https://github.com/microsoft/onnxruntime/commit/de4089f8cbe0baffe56a363cc3a41595cc8f0809.patch
     patch("gcc11.patch", level=1, when="@1.7.2")
 
