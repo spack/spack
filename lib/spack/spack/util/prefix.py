@@ -9,7 +9,6 @@ This file contains utilities for managing the installation prefix of a package.
 import os
 from typing import Dict, Union
 
-
 # https://peps.python.org/pep-0519/#provide-specific-type-hinting-support
 _PathLike = Union[str, bytes, os.PathLike]
 
@@ -52,9 +51,9 @@ class Prefix(str):
         Returns:
             the newly created installation prefix
         """
-        return Prefix(os.path.join(self, attr))
+        return Prefix(os.path.join(self, name))
 
-    def join(self, string: _PathLike) -> "Prefix":
+    def join(self, string: _PathLike) -> "Prefix":  # type: ignore[override]
         """Concatenate a string to a prefix.
 
         Useful for strings that are not valid variable names. This includes strings containing
@@ -82,4 +81,4 @@ class Prefix(str):
         Args:
             new state of the object
         """
-        self.__dict__.update(d)
+        self.__dict__.update(state)
