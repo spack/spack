@@ -69,6 +69,7 @@ properties = {
             "misc_cache": {"type": "string"},
             "connect_timeout": {"type": "integer", "minimum": 0},
             "verify_ssl": {"type": "boolean"},
+            "git_terminal_prompt_enable": {"type": "boolean"},  # stupid fix for mirroring
             "suppress_gpg_warnings": {"type": "boolean"},
             "install_missing_compilers": {"type": "boolean"},
             "debug": {"type": "boolean"},

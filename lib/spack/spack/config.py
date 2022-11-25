@@ -95,6 +95,7 @@ config_defaults = {
         "debug": False,
         "connect_timeout": 10,
         "verify_ssl": True,
+        "git_terminal_prompt_enable": False,
         "checksum": True,
         "dirty": False,
         "build_jobs": min(16, cpus_available()),

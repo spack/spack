@@ -786,7 +786,9 @@ class GitFetchStrategy(VCSFetchStrategy):
             # with git as well.
             if not spack.config.get("config:verify_ssl"):
                 self._git.add_default_env("GIT_SSL_NO_VERIFY", "true")
-
+            # stupid fix for mirroring
+            if not spack.config.get("config:git_terminal_prompt_enable"):
+                self._git.add_default_env("GIT_TERMINAL_PROMPT", "0")
         return self._git
 
     @property
