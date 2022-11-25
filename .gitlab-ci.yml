@@ -104,29 +104,6 @@ atomic_build:
     GITHUB_API_KEY_OVERRIDE: $GITHUB_API_KEY_FOR_GITLAB_LOG_UPLOAD
   resource_group: BlueBrain.GPFS.$CI_EXTERNAL_PULL_REQUEST_IID
 
-clean_merged_prs:
-  needs: [setup_environment]
-  tags: [bb5_map]
-  # Really only want to run this a few times a day at most: exclude running
-  # on PRs, just merges and schedules.
-  rules:
-    - if: $CI_EXTERNAL_PULL_REQUEST_IID
-      when: never
-    - when: always
-  # No race conditions, please!
-  resource_group: BlueBrain.GPFS.Cleanup
-  script:
-    - |
-      pulls=$(curl -sG "https://api.github.com/repos/BlueBrain/spack/pulls"|python -c '
-      import json,os,sys
-      import json,os,sys
-      basedir=os.path.join(os.environ["DEPLOYMENT_BASE"], "pulls")
-      prs=set(str(p["number"]) for p in json.load(sys.stdin))
-      for dn in os.listdir(basedir):
-        if dn not in prs:
-          print(os.path.join(basedir, dn))')
-    - for pth in $pulls; do echo "Cleaning up $pth"; rm -rf "$pth"; done
-
 forward_tests:
   needs: [setup_environment, atomic_build]
   tags: [bb5_map]
@@ -173,3 +150,19 @@ update_spacktainerizer:
     - when: always
   trigger:
     project: hpc/spacktainerizer
+
+# PRs run as a different user, after merging on `develop`, we need to trigger the cleanup
+# project that always runs with the PR builder user
+clean_merged_prs:
+  needs: []
+  # Really only want to run this a few times a day at most: exclude running
+  # on PRs, just merges and schedules.
+  rules:
+    - if: $CI_EXTERNAL_PULL_REQUEST_IID
+      when: never
+    - when: always
+  trigger:
+    project: hpc/spack-pr-cleaner
+  variables:
+    DEPLOYMENT_BASE: $DEPLOYMENT_BASE
+    GITHUB_PULL_REQUEST_ID: "merged"
