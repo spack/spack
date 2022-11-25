@@ -17,7 +17,6 @@ import stat
 import sys
 import tempfile
 import xml.etree.ElementTree
-from typing import Dict  # novm
 
 import py
 import pytest
@@ -26,6 +25,7 @@ import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
 import llnl.util.lang
+import llnl.util.lock
 import llnl.util.tty as tty
 from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
@@ -1640,7 +1640,6 @@ repo:
 class MockBundle(object):
     has_code = False
     name = "mock-bundle"
-    versions = {}  # type: Dict
 
 
 @pytest.fixture
@@ -1690,6 +1689,19 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set("config:test_stage", tmp_stage)
 
     yield tmp_stage
+
+
+@pytest.fixture(autouse=True)
+def inode_cache():
+    llnl.util.lock.file_tracker.purge()
+    yield
+    # TODO: it is a bug when the file tracker is non-empty after a test,
+    # since it means a lock was not released, or the inode was not purged
+    # when acquiring the lock failed. So, we could assert that here, but
+    # currently there are too many issues to fix, so look for the more
+    # serious issue of having a closed file descriptor in the cache.
+    assert not any(f.fh.closed for f in llnl.util.lock.file_tracker._descriptors.values())
+    llnl.util.lock.file_tracker.purge()
 
 
 @pytest.fixture(autouse=True)
