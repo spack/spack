@@ -126,4 +126,9 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
 
     @run_after("install")
     def install_python(self):
-        PythonPackage.install(self, self.spec, self.prefix)
+        platlib = self.spec["python"].package.platlib
+        with working_dir(self.build_directory):
+            py = which("python")
+            py("setup.py", "build")
+            mkdirp(join_path(self.spec.prefix, platlib))
+            install_tree(join_path("build", "lib", "onnxruntime"), platlib)
