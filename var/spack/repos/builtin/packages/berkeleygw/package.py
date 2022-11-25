@@ -98,7 +98,8 @@ class Berkeleygw(MakefilePackage):
         # use parallelization in tests
         filter_file(
             r"cd testsuite \&\& \$\(MAKE\) check$",
-            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 && $(MAKE) check-parallel",
+            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 && \
+             $(MAKE) check-parallel",
             "Makefile",
         )
 
