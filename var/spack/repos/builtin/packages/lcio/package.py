@@ -19,6 +19,7 @@ class Lcio(CMakePackage):
     maintainers = ["gaede", "vvolkl"]
 
     version("master", branch="master")
+    version("2.18", sha256="e722df7f4a6adcc2459ea1c6488a2a6e40bb04f7ee99536fdc60b51e6c80f565")
     version("2.17.1", sha256="e7e4e4399a53680dfb8cc497e7f59633a96361f8f9435d1b044a90fd3ad97ab7")
     version("2.17", sha256="a81e07790443f0e2d9abb18bc3b5f2929edbc8d8e4f307f931679eaa39bb044a")
     version("2.16.1", sha256="992a649f864785e62fe12d7a638b2696c91f9535881de33f22b3cceabcdcdbaf")
@@ -38,7 +39,14 @@ class Lcio(CMakePackage):
     variant(
         "cxxstd",
         default="17",
-        values=("11", "14", "17", "20"),
+        values=(
+            "11",
+            "14",
+            "17",
+            "20",
+            # c++17 became minimum with 2.18
+            conditional("17", "20", when="@2.18:"),
+        ),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
