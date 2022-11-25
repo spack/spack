@@ -37,6 +37,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     )
     variant("tls", default=False, description="Build Emacs with gnutls")
     variant("native", default=False, description="enable native compilation of elisp")
+    variant("treesitter", default=False, description="Build with tree-sitter support")
 
     depends_on("pkgconfig", type="build")
 
@@ -53,6 +54,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gtkplus", when="+X toolkit=gtk")
     depends_on("gnutls", when="+tls")
     depends_on("jpeg")
+    depends_on("tree-sitter", when="+treesitter")
     depends_on("m4", type="build", when="@master:")
     depends_on("autoconf", type="build", when="@master:")
     depends_on("automake", type="build", when="@master:")
@@ -62,6 +64,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
     conflicts("@:26.3", when="platform=darwin os=catalina")
     conflicts("+native", when="@:27", msg="native compilation require @master")
+    conflicts("+treesitter", when="@:28", msg="tree-sitter support requires version 29")
 
     @when("platform=darwin")
     def setup_build_environment(self, env):
@@ -91,6 +94,9 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
             args.append("--with-gnutls")
         else:
             args.append("--without-gnutls")
+
+        if "+treesitter" in spec:
+            args.append("--with-tree-sitter")
 
         return args
 
