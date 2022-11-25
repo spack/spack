@@ -21,7 +21,6 @@ class Gplates(CMakePackage):
     manual_download = True
 
     version("2.3.0", sha256="7d4be9d524d1fcbb6a81de29bd1d4b13133082db23f0808965c5efe30e9538ab")
-    version("2.1.0", sha256="5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07")
 
     depends_on("cmake@3.5:", when="@2.3:", type="build")
     depends_on("cmake@2.8.8:", when="@2.1", type="build")
@@ -31,7 +30,6 @@ class Gplates(CMakePackage):
     depends_on("glu")
     depends_on("glew")
     depends_on("python@2:3", when="@2.3:")
-    depends_on("python@2", when="@:2.1")
     depends_on("boost@1.35:1.75+program_options+python+system+thread", when="@2.3:")
     # Boost's Python library has a different name starting with 1.67.
     depends_on("boost@1.34:1.66+program_options+python+system+thread", when="@2.1")

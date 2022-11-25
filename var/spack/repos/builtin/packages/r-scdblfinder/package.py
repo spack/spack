@@ -16,6 +16,7 @@ class RScdblfinder(RPackage):
 
     bioc = "scDblFinder"
 
+    version("1.12.0", commit="65a88be3a4ca98ccad0a1829a19652df1a3c94fd")
     version("1.10.0", commit="03512cad0cdfe3cddbef66ec5e330b53661eccfc")
 
     depends_on("r@4.0:", type=("build", "run"))

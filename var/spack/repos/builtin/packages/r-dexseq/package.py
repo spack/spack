@@ -21,6 +21,7 @@ class RDexseq(RPackage):
 
     maintainers = ["dorton21"]
 
+    version("1.44.0", commit="9660d7372d5ced1a7e324ed9a61b935023b7d135")
     version("1.42.0", commit="d91de62a27d0cab2ef12ef1a5f23dc2f7a0cfadd")
     version("1.40.0", commit="7d2d639b3a157e443058fc557132cd2629bb36f3")
     version("1.36.0", commit="f0a361af6954fcc2abb2db801c26e303570669b2")
