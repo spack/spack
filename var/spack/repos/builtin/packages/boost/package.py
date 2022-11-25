@@ -8,6 +8,8 @@ import sys
 
 from spack.package import *
 
+_library_names = list()
+
 
 class Boost(Package):
     """Boost provides free peer-reviewed portable C++ source
@@ -106,53 +108,22 @@ class Boost(Package):
         ]
     )
 
-    # mpi/python are not installed by default because they pull in many
-    # dependencies and/or because there is a great deal of customization
-    # possible (and it would be difficult to choose sensible defaults)
+    @staticmethod
+    def boost_variant(name, is_library=False, **kwargs):
+        variant(name, **kwargs)
+        if is_library:
+            global _library_names
+            _library_names.append(name)
 
-    all_libs = [
-        "atomic",
-        "chrono",
-        "container",
-        "context",
-        "contract",
-        "coroutine",
-        "date_time",
-        "exception",
-        "fiber",
-        "filesystem",
-        "graph",
-        "graph_parallel",
-        "iostreams",
-        "json",
-        "locale",
-        "log",
-        "math",
-        "mpi",
-        "nowide",
-        "program_options",
-        "python",
-        "random",
-        "regex",
-        "serialization",
-        "signals",
-        "stacktrace",
-        "system",
-        "test",
-        "thread",
-        "timer",
-        "type_erasure",
-        "wave",
-    ]
+    def _requested_libraries(self):
+        return [v for v in _library_names if self.spec.satisfies("+{0:s}".format(v))]
 
     @property
     def libs(self):
         query = self.spec.last_query.extra_parameters
         shared = "+shared" in self.spec
 
-        libnames = (
-            query if query else [lib for lib in self.all_libs if self.spec.satisfies("+%s" % lib)]
-        )
+        libnames = query if query else self._requested_libraries()
         libnames += ["monitor"]
         libraries = ["libboost_*%s*" % lib for lib in libnames]
 
@@ -161,7 +132,7 @@ class Boost(Package):
     # --------- VARIANTS -------------------------------
     #  These are available for all versions of Boost
 
-    variant(
+    boost_variant(
         "cxxstd",
         default="11",
         values=(
@@ -183,35 +154,39 @@ class Boost(Package):
     # 1.84.0 dropped support for 98/03
     conflicts("cxxstd=98", when="@1.84.0:")
 
-    variant("debug", default=False, description="Switch to the debug version of Boost")
+    boost_variant("debug", default=False, description="Switch to the debug version of Boost")
 
-    variant("shared", default=True, description="Additionally build shared libraries")
+    boost_variant("shared", default=True, description="Additionally build shared libraries")
 
-    variant(
+    boost_variant(
         "multithreaded", default=True, description="Build multi-threaded versions of libraries"
     )
 
-    variant(
+    boost_variant(
         "singlethreaded", default=False, description="Build single-threaded versions of libraries"
     )
 
-    variant("icu", default=False, description="Build with Unicode and ICU suport")
+    boost_variant("icu", default=False, description="Build with Unicode and ICU suport")
 
-    variant("taggedlayout", default=False, description="Augment library names with build options")
+    boost_variant(
+        "taggedlayout", default=False, description="Augment library names with build options"
+    )
 
-    variant(
+    boost_variant(
         "versionedlayout",
         default=False,
         description="Augment library layout with versioned subdirs",
     )
 
-    variant(
+    boost_variant(
         "clanglibcpp", default=False, description="Compile with clang libc++ instead of libstdc++"
     )
 
-    variant("numpy", default=False, when="+python", description="Build the Boost NumPy library")
+    boost_variant(
+        "numpy", default=False, when="+python", description="Build the Boost NumPy library"
+    )
 
-    variant(
+    boost_variant(
         "pic",
         default=False,
         description="Generate position-independent code (PIC), useful "
@@ -219,7 +194,7 @@ class Boost(Package):
     )
 
     # https://boostorg.github.io/build/manual/develop/index.html#bbv2.builtin.features.visibility
-    variant(
+    boost_variant(
         "visibility",
         values=("global", "protected", "hidden"),
         default="hidden",
@@ -232,17 +207,37 @@ class Boost(Package):
     #  These are available only for specific versions of Boost
 
     # Available since 1.53.0
-    variant("atomic", default=False, when="@1.53.0:", description="C++11-style atomic<>")
+    boost_variant(
+        "atomic",
+        default=False,
+        when="@1.53.0:",
+        description="C++11-style atomic<>",
+        is_library=True,
+    )
 
     # Available since 1.47.0
-    variant("chrono", default=False, when="@1.47.0:", description="Time utilities")
+    boost_variant(
+        "chrono", default=False, when="@1.47.0:", description="Time utilities", is_library=True
+    )
 
     # Available since 1.53.0, header-only until 1.54.0
-    variant("coroutine", default=False, when="@1.54.0:", description="DEPRECATED- use coroutine2")
+    boost_variant(
+        "coroutine",
+        default=False,
+        when="@1.54.0:",
+        description="DEPRECATED- use coroutine2",
+        is_library=True,
+    )
 
     # Available since 1.51.0
-    variant("context", default=False, when="@1.51.0:", description="Context-switching library")
-    variant(
+    boost_variant(
+        "context",
+        default=False,
+        when="@1.51.0:",
+        description="Context-switching library",
+        is_library=True,
+    )
+    boost_variant(
         "context-impl",
         default="fcontext",
         values=("fcontext", "ucontext", "winfib"),
@@ -252,177 +247,254 @@ class Boost(Package):
     )
 
     # Available since 1.48.0, header-only until 1.56.0
-    variant(
+    boost_variant(
         "container",
         default=False,
         when="@1.56.0:",
         description="Standard library containers and extensions",
+        is_library=True,
     )
 
     # Available since 1.67.0
-    variant("contract", default=False, when="@1.67.0:", description="Contract programming for C++")
+    boost_variant(
+        "contract",
+        default=False,
+        when="@1.67.0:",
+        description="Contract programming for C++",
+        is_library=True,
+    )
 
     # Available since 1.59.0, converted to header-only in 1.64.0
-    variant("coroutine2", default=False, when="@1.59.0:1.64.0", description="C++11 coroutines")
+    boost_variant(
+        "coroutine2",
+        default=False,
+        when="@1.59.0:1.64.0",
+        description="C++11 coroutines",
+        is_library=True,
+    )
 
     # Available since 1.29.0
-    variant("date_time", default=False, when="@1.39.0:", description="Generic date-time utilities")
+    boost_variant(
+        "date_time",
+        default=False,
+        when="@1.39.0:",
+        description="Generic date-time utilities",
+        is_library=True,
+    )
 
     # Available since 1.36.0, header-only until 1.47.0
-    variant(
+    boost_variant(
         "exception",
         default=False,
         when="@1.47.0:",
         description="Transport arbitrary data in exception objects between threads",
+        is_library=True,
     )
 
     # Available since 1.62.0
-    variant("fiber", default=False, when="@1.62.0:", description="C++11 userland threads")
+    boost_variant(
+        "fiber",
+        default=False,
+        when="@1.62.0:",
+        description="C++11 userland threads",
+        is_library=True,
+    )
 
     # Available since 1.30.0
-    variant(
+    boost_variant(
         "filesystem",
         default=False,
         when="@1.39.0:",
         description="Query and manipulate paths, files, and directories",
+        is_library=True,
     )
 
     # Available since 1.18.0
-    variant(
+    boost_variant(
         "graph",
         default=False,
         when="@1.39.0:",
         description="Generic interface for traversing graphs",
+        is_library=True,
     )
 
     # Available since 1.40.0
-    variant(
+    boost_variant(
         "graph_parallel",
         default=False,
         when="@1.40.0:",
         description="Parallel, distributed computation on graphs",
+        is_library=True,
     )
 
     # Available since 1.33.0
-    variant(
+    boost_variant(
         "iostreams",
         default=False,
         when="@1.39.0:",
         description="Streams, stream buffers, and i/o filters",
+        is_library=True,
     )
 
     # Available since 1.75.0
-    variant(
+    boost_variant(
         "json",
         default=False,
         when="@1.75.0:",
         description="JSON parsing, serialization, and DOM in C++11",
+        is_library=True,
     )
 
     # Available since 1.48.0
-    variant(
-        "locale", default=False, when="@1.48.0:", description="Localization and Unicode handling"
+    boost_variant(
+        "locale",
+        default=False,
+        when="@1.48.0:",
+        description="Localization and Unicode handling",
+        is_library=True,
     )
 
     # Available since 1.54.0
-    variant("log", default=False, when="@1.54.0:", description="Logging")
+    boost_variant("log", default=False, when="@1.54.0:", description="Logging", is_library=True)
 
     # Available since 1.23.0
-    variant(
+    boost_variant(
         "math",
         default=False,
         when="@1.39.0:",
         description="Special functions, complex numbers, " "quaternions, and octonions",
+        is_library=True,
     )
 
     # Available since 1.35.0
-    variant("mpi", default=False, when="@1.39.0:", description="Boost interface to MPI")
+    boost_variant(
+        "mpi",
+        default=False,
+        when="@1.39.0:",
+        description="Boost interface to MPI",
+        is_library=True,
+    )
 
     # Available since 1.73.0
-    variant(
+    boost_variant(
         "nowide",
         default=False,
         when="@1.73.0:",
         description="Standard library functions with UTF-8 API on Windows",
+        is_library=True,
     )
 
     # Available since 1.32.0
-    variant(
+    boost_variant(
         "program_options",
         default=False,
         when="@1.39.0:",
         description="Obtain user-provided options from command line or config file",
+        is_library=True,
     )
 
     # Available since 1.19.0
-    variant("python", default=False, when="@1.39.0:", description="Boost interface to Python")
+    boost_variant(
+        "python",
+        default=False,
+        when="@1.39.0:",
+        description="Boost interface to Python",
+        is_library=True,
+    )
 
     # Available since 1.15.0, header-only until 1.43.0
-    variant("random", default=False, when="@1.43.0:", description="Random number generation")
+    boost_variant(
+        "random",
+        default=False,
+        when="@1.43.0:",
+        description="Random number generation",
+        is_library=True,
+    )
 
     # Available since 1.18.0
-    variant("regex", default=False, when="@1.39.0:", description="Regular expressions")
+    boost_variant(
+        "regex", default=False, when="@1.39.0:", description="Regular expressions", is_library=True
+    )
 
     # Available since 1.32.0
-    variant(
+    boost_variant(
         "serialization",
         default=False,
         when="@1.39.0:",
         description="Serialization for persistence and marshalling",
+        is_library=True,
     )
 
     # Available since 1.29.0, removed in 1.68.0
-    variant(
+    boost_variant(
         "signals",
         default=False,
         when="@1.39.0:1.68.0",
         description="DEPRECATED/REMOVED- use signals2",
+        is_library=True,
     )
 
     # Available since 1.65.0
-    variant(
+    boost_variant(
         "stacktrace",
         default=False,
         when="@1.65.0:",
         description="Gather, store, copy and print backtraces",
+        is_library=True,
     )
 
     # Available since 1.35.0
-    variant("system", default=False, when="@1.39.0:", description="Extensible error reporting")
+    boost_variant(
+        "system",
+        default=False,
+        when="@1.39.0:",
+        description="Extensible error reporting",
+        is_library=True,
+    )
 
     # Available since 1.21.0
-    variant(
+    boost_variant(
         "test",
         default=False,
         when="@1.39.0:",
         description="Unit testing and program execution monitoring",
+        is_library=True,
     )
 
     # Available since 1.25.0
-    variant("thread", default=False, when="@1.39.0:", description="Portable multi-threading")
+    boost_variant(
+        "thread",
+        default=False,
+        when="@1.39.0:",
+        description="Portable multi-threading",
+        is_library=True,
+    )
 
     # Available since 1.9.0, header-only until 1.48.0
-    variant(
+    boost_variant(
         "timer",
         default=False,
         when="@1.48.0:",
         description="Event timer, progress timer, and progress display",
+        is_library=True,
     )
 
     # Available since 1.54.0, header-only until 1.60.0
-    variant(
+    boost_variant(
         "type_erasure",
         default=False,
         when="@1.60.0:",
         description="Runtime polymorphism based on concepts",
+        is_library=True,
     )
 
     # Available since 1.33.0
-    variant(
+    boost_variant(
         "wave",
         default=False,
         when="@1.39.0:",
         description="Mandatory C99/C++ preprocessor functionality",
+        is_library=True,
     )
 
     # Unicode support
@@ -855,10 +927,7 @@ class Boost(Package):
             force_symlink("/usr/bin/libtool", join_path(newdir, "libtool"))
             env["PATH"] = newdir + ":" + env["PATH"]
 
-        with_libs = list()
-        for lib in Boost.all_libs:
-            if "+{0}".format(lib) in spec:
-                with_libs.append(lib)
+        with_libs = self._requested_libraries()
 
         if not with_libs:
             # if no libraries are specified for compilation, then you dont have
