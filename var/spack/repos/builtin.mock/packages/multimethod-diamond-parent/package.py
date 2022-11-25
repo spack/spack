@@ -17,6 +17,6 @@ class MultimethodDiamondParent(MultimethodBase):
     def diamond_inheritance(self):
         return "second_parent"
 
-    @when("@4.0, 2.0")
+    @when("@4.0,2.0")
     def diamond_inheritance(self):
         return "should never be reached by diamond inheritance test"

@@ -27,7 +27,7 @@ class Xeus(CMakePackage):
     conflicts("%clang@:3.6")
     conflicts("%intel@:17")
 
-    depends_on("libzmq@4.2.5:-libsodium")
+    depends_on("libzmq@4.2.5: ~libsodium")
     depends_on("cppzmq@4.7.1:", when="@1.0.4:")
     depends_on("cppzmq@4.3.0:", when="@:0.15.0")
 
