@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyWheel(Package):
+class PyWheel(PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
@@ -14,8 +14,6 @@ class PyWheel(Package):
         "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
     )
     list_url = "https://pypi.org/simple/wheel/"
-
-    maintainers = ["adamjstewart"]
 
     version(
         "0.37.1",
@@ -73,10 +71,6 @@ class PyWheel(Package):
         expand=False,
     )
 
-    extends("python")
-    depends_on("python@2.7:2.8,3.5:", when="@0.34:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@0.30:", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
     depends_on("py-pip", type="build")
 
     def install(self, spec, prefix):
