@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+
 from spack.package import *
 from spack.pkg.builtin.blis import BlisBase
 
@@ -62,3 +64,11 @@ class Amdblis(BlisBase):
             config_args.append("auto")
 
         return config_args
+
+    @run_after("install")
+    def create_symlink(self):
+        with working_dir(self.prefix.lib):
+            if os.path.isfile("libblis-mt.a"):
+                os.symlink("libblis-mt.a", "libblis.a")
+            if os.path.isfile("libblis-mt.so"):
+                os.symlink("libblis-mt.so", "libblis.so")
