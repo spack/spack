@@ -63,14 +63,14 @@ class Snakemake(PythonPackage):
     # These variants are not in PyPI/pip, but they are undocumented dependencies
     # needed to make certain parts of Snakemake work.
     variant("ftp", default=False, description="Enable snakemake.remote.FTP")
-    depends_on("py-ftputil", when="+ftp")
+    depends_on("py-ftputil", when="+ftp", type=("build", "run"))
 
     variant("s3", default=False, description="Enable snakemake.remote.S3")
-    depends_on("py-boto3", when="+s3")
-    depends_on("py-botocore", when="+s3")
+    depends_on("py-boto3", when="+s3", type=("build", "run"))
+    depends_on("py-botocore", when="+s3", type=("build", "run"))
 
     variant("http", default=False, description="Enable snakemake.remote.HTTP")
-    depends_on("py-requests", when="+http")
+    depends_on("py-requests", when="+http", type=("build", "run"))
 
     def test(self):
         Executable("snakemake")("--version")
