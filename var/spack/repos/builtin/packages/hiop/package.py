@@ -63,8 +63,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         description="Ultra safety checks - " "used for increased robustness and self-diagnostics",
     )
     variant("ginkgo", default=False, description="Enable/disable ginkgo solver")
-    variant("cusolver_lu", default=False, when="@0.7.1:", description="Enable/disable cuSovler")
-
+    variant("cusolver_lu", default=False, when="@0.7.1:", description="Enable/disable cuSovler LU refactorization")
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
