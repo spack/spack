@@ -96,8 +96,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
     depends_on("cuda@11:", when="@develop:+cuda")
-    conflicts("+cusolver_lu", when="~cuda", msg="Cusolver requires CUDA")
-
+    conflicts("+cusolver_lu", when="~cuda", msg="Cusolver LU refactorization requires CUDA")
+    conflicts("+cusolver_lu", when="~suite-sparse", msg="Cusolver LU refactorization requires KLU from SuiteSparse library")
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
