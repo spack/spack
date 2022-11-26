@@ -16,17 +16,17 @@ class Aragorn(Package):
     version(
         "1.2.41",
         sha256="92a31cc5c0b0ad16d4d7b01991989b775f07d2815df135fe6e3eab88f5e97f4a",
-        expand=False
+        expand=False,
     )
     version(
         "1.2.38",
         sha256="28aae803d191524b038da582c62c92f190c1925ec69beda56bc21310d8ece522",
-        expand=False
+        expand=False,
     )
     version(
         "1.2.36",
         sha256="16e5283d890ff74e52e885c9c34b1c2ba2de72770631122e9178079cd06ea8d2",
-        expand=False
+        expand=False,
     )
 
     # fix checksum error
