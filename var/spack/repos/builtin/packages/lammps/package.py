@@ -532,6 +532,9 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
     depends_on("n2p2+shared", when="+lib ^n2p2")
 
+    depends_on("googletest", type="test")
+    depends_on("libyaml", type="test")
+
     conflicts("+cuda", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
     conflicts("+latte", when="@:20170921")
@@ -601,7 +604,7 @@ class Lammps(CMakePackage, CudaPackage):
             self.define_from_variant("LAMMPS_EXCEPTIONS", "exceptions"),
             "-D{0}_MPI={1}".format(mpi_prefix, "ON" if "+mpi" in spec else "OFF"),
             self.define_from_variant("BUILD_OMP", "openmp"),
-            "-DENABLE_TESTING=ON",
+            self.define("ENABLE_TESTING", self.run_tests),
         ]
         if spec.satisfies("+cuda"):
             args.append("-DPKG_GPU=ON")
