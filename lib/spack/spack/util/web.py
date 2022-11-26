@@ -437,8 +437,9 @@ def url_exists(url, curl=None):
     # If we get here, then the only other fetch method option is urllib.
     # We try a HEAD request and expect a 200 return code.
     try:
+        mtd = "GET" if (url.find("bitbucket.org/") >= 0) else "HEAD"
         response = urlopen(
-            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
+            Request(url, method=mtd, headers={"User-Agent": SPACK_USER_AGENT}),
             timeout=spack.config.get("config:connect_timeout", 10),
         )
         return response.status == 200
