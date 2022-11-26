@@ -8,6 +8,8 @@ import collections.abc
 import contextlib
 import errno
 import functools
+import glob
+import hashlib
 import importlib
 import importlib.machinery  # novm
 import importlib.util
@@ -367,6 +369,7 @@ class FastPackageChecker(collections.abc.Mapping):
 
     #: Global cache, reused by every instance
     _paths_cache = {}  # type: Dict[str, Dict[str, os.stat_result]]
+    _content_hashes = {}
 
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
@@ -383,6 +386,33 @@ class FastPackageChecker(collections.abc.Mapping):
         """Regenerate cache for this checker."""
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
+        self._content_hashes = {}
+
+    def content_hash(self):
+        """Compute a (non-cryptographically secure) content hash from all package.py
+        files. This is useful for immutable caches as a starting point for mutable
+        caches."""
+        if self.packages_path in self._content_hashes:
+            return self._content_hashes[self.packages_path]
+
+        buf_size = 65536
+        checksum = hashlib.md5()
+        pkgs_names = os.listdir(self.packages_path)
+        pkgs_names.sort()
+        for pkg_name in pkgs_names:
+            pkg_file = os.path.join(self.packages_path, pkg_name, package_file_name)
+            try:
+                with open(pkg_file, "rb") as f:
+                    b = f.read(buf_size)
+                    while b:
+                        checksum.update(b)
+                        b = f.read(buf_size)
+            except OSError:
+                continue
+
+        digest = checksum.hexdigest()
+        self._content_hashes[self.packages_path] = digest
+        return digest
 
     def _create_new_cache(self):  # type: () -> Dict[str, os.stat_result]
         """Create a new cache for packages in a repo.
@@ -395,7 +425,9 @@ class FastPackageChecker(collections.abc.Mapping):
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
         cache = {}  # type: Dict[str, os.stat_result]
-        for pkg_name in os.listdir(self.packages_path):
+        pkg_names = os.listdir(self.packages_path)
+        pkg_names.sort()
+        for pkg_name in pkg_names:
             # Skip non-directories in the package root.
             pkg_dir = os.path.join(self.packages_path, pkg_name)
 
@@ -617,6 +649,29 @@ class RepoIndex(object):
         for name, indexer in self.indexers.items():
             self.indexes[name] = self._build_index(name, indexer)
 
+    def _init_from_content_hash(self, name, indexer):
+        repo_dir = os.path.join(self.packages_path, "..")
+
+        # Fast path: many custom repos do not have a content-addressable index,
+        # they should not be penalized; so check ahead of time if there are candidates.
+        if not glob.glob(
+            os.path.join(repo_dir, "{0}-{1}-index-*.json".format(name, self.namespace))
+        ):
+            return False
+
+        # Create a content hash of all packages.py files
+        content_hash_file = os.path.join(
+            repo_dir,
+            "{0}-{1}-index-{2}.json".format(name, self.namespace, self.checker.content_hash()),
+        )
+
+        try:
+            with open(content_hash_file, "r") as f:
+                indexer.read(f)
+            return True
+        except OSError:
+            return False
+
     def _build_index(self, name, indexer):
         """Determine which packages need an update, and update indexes."""
 
@@ -625,30 +680,45 @@ class RepoIndex(object):
 
         # Compute which packages needs to be updated in the cache
         index_mtime = self.cache.mtime(cache_filename)
+        no_index = index_mtime == 0
+
+        # On a cold cache, it's faster to do a content hash if it exists.
+        if no_index and self._init_from_content_hash(name, indexer):
+            with self.cache.write_transaction(cache_filename) as (old, new):
+                indexer.write(new)
+            return indexer.index
+
+        # Otherwise, we'll list all packages to update by mtime.
         needs_update = self.checker.modified_since(index_mtime)
 
-        index_existed = self.cache.init_entry(cache_filename)
-        if index_existed and not needs_update:
-            # If the index exists and doesn't need an update, read it
+        # If the index exists and doesn't need an update, read it
+        if not no_index and not needs_update:
             with self.cache.read_transaction(cache_filename) as f:
                 indexer.read(f)
+            return indexer.index
 
-        else:
-            # Otherwise update it and rewrite the cache file
-            with self.cache.write_transaction(cache_filename) as (old, new):
-                indexer.read(old) if old else indexer.create()
+        # We may need to create a fresh cache.
+        with self.cache.write_transaction(cache_filename) as (old, new):
 
-                # Compute which packages needs to be updated **again** in case someone updated them
-                # while we waited for the lock
-                new_index_mtime = self.cache.mtime(cache_filename)
-                if new_index_mtime != index_mtime:
-                    needs_update = self.checker.modified_since(new_index_mtime)
+            # Even when there was no cache file yet, once we get the write lock
+            # another process may have finished creating it. So ensure we have
+            # the latest mtime, and hopefully we really have to do nothing.
+            if old:
+                indexer.read(old)
+                mtime_on_write_acquired = self.cache.mtime(cache_filename)
+                if mtime_on_write_acquired > index_mtime:
+                    needs_update = self.checker.modified_since(mtime_on_write_acquired)
 
-                for pkg_name in needs_update:
-                    namespaced_name = "%s.%s" % (self.namespace, pkg_name)
-                    indexer.update(namespaced_name)
+                if not needs_update:
+                    return indexer.index
+            else:
+                indexer.create()
 
-                indexer.write(new)
+            for pkg_name in needs_update:
+                namespaced_name = "%s.%s" % (self.namespace, pkg_name)
+                indexer.update(namespaced_name)
+
+            indexer.write(new)
 
         return indexer.index
 
