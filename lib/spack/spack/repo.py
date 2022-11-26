@@ -26,7 +26,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Dict  # novm
+from typing import Dict
 
 import ruamel.yaml as yaml
 
@@ -368,8 +368,8 @@ class FastPackageChecker(collections.abc.Mapping):
     """
 
     #: Global cache, reused by every instance
-    _paths_cache = {}  # type: Dict[str, Dict[str, os.stat_result]]
-    _content_hashes = {}
+    _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
+    _content_hashes: Dict[str, str] = {}
 
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
@@ -414,7 +414,7 @@ class FastPackageChecker(collections.abc.Mapping):
         self._content_hashes[self.packages_path] = digest
         return digest
 
-    def _create_new_cache(self):  # type: () -> Dict[str, os.stat_result]
+    def _create_new_cache(self) -> Dict[str, os.stat_result]:
         """Create a new cache for packages in a repo.
 
         The implementation here should try to minimize filesystem
@@ -424,7 +424,7 @@ class FastPackageChecker(collections.abc.Mapping):
         """
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
-        cache = {}  # type: Dict[str, os.stat_result]
+        cache: Dict[str, os.stat_result] = {}
         pkg_names = os.listdir(self.packages_path)
         pkg_names.sort()
         for pkg_name in pkg_names:
