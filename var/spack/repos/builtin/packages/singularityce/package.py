@@ -16,7 +16,8 @@ class SingularityBase(MakefilePackage):
     variant("network", default=True, description="install network plugins")
 
     depends_on("pkgconfig", type="build")
-    depends_on("glib")
+    depends_on("conmon", type=("build", "run"))
+    depends_on("squashfs", type=("build", "run"))
     depends_on("go@1.16:")
     depends_on("uuid")
     depends_on("libgpg-error")
@@ -73,6 +74,8 @@ class SingularityBase(MakefilePackage):
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             confstring = "./mconfig --prefix=%s" % prefix
+            # Using conmon from spack
+            confstring += " --without-conmon"
             if "~suid" in spec:
                 confstring += " --without-suid"
             if "~network" in spec:
