@@ -28,5 +28,3 @@ class PyImportlibResources(PythonPackage):
     depends_on("py-setuptools-scm@3.4.1:+toml", when="@5:", type="build")
     depends_on("py-zipp@0.4:", when="@5.0:5.1", type=("build", "run"))
     depends_on("py-zipp@3.1.0:", when="@5.2.2: ^python@:3.9", type=("build", "run"))
-    depends_on("py-pathlib2", when="^python@:2", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

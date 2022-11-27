@@ -16,4 +16,3 @@ class PyBackportsOs(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm", type="build")
-    depends_on("py-future", type=("build", "run"), when="^python@:2")

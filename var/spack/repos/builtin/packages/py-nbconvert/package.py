@@ -64,7 +64,6 @@ class PyNbconvert(PythonPackage):
     depends_on("py-traitlets@5:", when="@6.2.0:", type=("build", "run"))
     depends_on("py-entrypoints", when="@:6", type=("build", "run"))
     depends_on("py-entrypoints@0.2.2:", when="@5:6", type=("build", "run"))
-    depends_on("py-pycurl", when="^python@:2.7.8", type="build")
     depends_on("py-testpath", when="@5:6.4", type=("build", "run"))
 
     # https://bugs.gentoo.org/720870

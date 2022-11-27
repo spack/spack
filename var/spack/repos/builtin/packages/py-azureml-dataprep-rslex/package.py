@@ -36,18 +36,6 @@ class PyAzuremlDataprepRslex(PythonPackage):
             expand=False,
             url="https://pypi.io/packages/cp37/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.9.0-cp37-cp37m-macosx_10_9_x86_64.whl",
         )
-        version(
-            "1.9.0-py3.6",
-            sha256="80d518774591deb2c8f1457708c10c9ba348407d7aa49e0710358f46846fcbef",
-            expand=False,
-            url="https://pypi.io/packages/cp36/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.9.0-cp36-cp36m-macosx_10_9_x86_64.whl",
-        )
-        version(
-            "1.9.0-py3.5",
-            sha256="91a5c09796e60570620efb7d66f05647557ec6d39aab8b22c0e13926c402ca5b",
-            expand=False,
-            url="https://pypi.io/packages/cp35/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.9.0-cp35-cp35m-macosx_10_9_x86_64.whl",
-        )
 
         version(
             "1.8.0-py3.9",
@@ -66,18 +54,6 @@ class PyAzuremlDataprepRslex(PythonPackage):
             sha256="8e9feb3187f11fb86f525bc88bf6a6171d7e7d6e2860411a5b82d1f3ecaa8ae8",
             expand=False,
             url="https://pypi.io/packages/cp37/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.8.0-cp37-cp37m-macosx_10_9_x86_64.whl",
-        )
-        version(
-            "1.8.0-py3.6",
-            sha256="f5f7c9af1f1ecfbfee0e5822db180de05c6f5aeed34f6d0b3fd26e210f476d3e",
-            expand=False,
-            url="https://pypi.io/packages/cp36/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.8.0-cp36-cp36m-macosx_10_9_x86_64.whl",
-        )
-        version(
-            "1.8.0-py3.5",
-            sha256="1c610a25a3e09d4ebb95c42baaa57b5c0c66e31522a6bff52dda0df2d6ac7f4d",
-            expand=False,
-            url="https://pypi.io/packages/cp35/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.8.0-cp35-cp35m-macosx_10_9_x86_64.whl",
         )
     elif sys.platform.startswith("linux"):
         version(
@@ -99,18 +75,6 @@ class PyAzuremlDataprepRslex(PythonPackage):
             expand=False,
             url="https://pypi.io/packages/cp37/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.9.0-cp37-cp37m-manylinux1_x86_64.whl",
         )
-        version(
-            "1.9.0-py3.6",
-            sha256="2723bf56f2d11e5ee00c6619f2365bd594e85ba116ffc912a2433c52913d0890",
-            expand=False,
-            url="https://pypi.io/packages/cp36/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.9.0-cp36-cp36m-manylinux1_x86_64.whl",
-        )
-        version(
-            "1.9.0-py3.5",
-            sha256="d5c6d363da2b3ace1baa9ad3e645ad8a19fdacf0b95dd1f8b6ab19c4371cc10f",
-            expand=False,
-            url="https://pypi.io/packages/cp35/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.9.0-cp35-cp35m-manylinux1_x86_64.whl",
-        )
 
         version(
             "1.8.0-py3.9",
@@ -130,24 +94,10 @@ class PyAzuremlDataprepRslex(PythonPackage):
             expand=False,
             url="https://pypi.io/packages/cp37/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.8.0-cp37-cp37m-manylinux1_x86_64.whl",
         )
-        version(
-            "1.8.0-py3.6",
-            sha256="195507ba55aa5ac7c5d37d05b8ac25813add0da5cc9bd4a04f2cb5da984cb287",
-            expand=False,
-            url="https://pypi.io/packages/cp36/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.8.0-cp36-cp36m-manylinux1_x86_64.whl",
-        )
-        version(
-            "1.8.0-py3.5",
-            sha256="9dfbd1065030dee3aa45b6796c087acffb06cfcbe97cc877e255e21e320362be",
-            expand=False,
-            url="https://pypi.io/packages/cp35/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.8.0-cp35-cp35m-manylinux1_x86_64.whl",
-        )
 
     depends_on("python@3.9.0:3.9", when="@1.9.0-py3.9,1.8.0-py3.9", type=("build", "run"))
     depends_on("python@3.8.0:3.8", when="@1.9.0-py3.8,1.8.0-py3.8", type=("build", "run"))
     depends_on("python@3.7.0:3.7", when="@1.9.0-py3.7,1.8.0-py3.7", type=("build", "run"))
-    depends_on("python@3.6.0:3.6", when="@1.9.0-py3.6,1.8.0-py3.6", type=("build", "run"))
-    depends_on("python@3.5.0:3.5", when="@1.9.0-py3.5,1.8.0-py3.5", type=("build", "run"))
 
     for t in set(
         [str(x.family) for x in archspec.cpu.TARGETS.values() if str(x.family) != "x86_64"]
