@@ -614,6 +614,8 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append("-DGPU_ARCH=sm_{0}".format(cuda_arch[0]))
             args.append(self.define_from_variant("CUDA_MPS_SUPPORT", "cuda_mps"))
         elif spec.satisfies("+opencl"):
+            # LAMMPS downloads and bundles its own OpenCL ICD Loader by default
+            args.append("-DUSE_STATIC_OPENCL_LOADER=OFF")
             args.append("-DPKG_GPU=ON")
             args.append("-DGPU_API=opencl")
         else:
