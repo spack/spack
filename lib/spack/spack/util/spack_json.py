@@ -4,11 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Simple wrapper around JSON to guarantee consistent use of load/dump. """
-import collections
 import json
 from typing import Any, Dict, Optional  # novm
-
-from six import PY3, iteritems, string_types
 
 import spack.error
 
@@ -20,7 +17,7 @@ _json_dump_args = {"indent": 2, "separators": (",", ": ")}
 def load(stream):
     # type: (Any) -> Dict
     """Spack JSON needs to be ordered to support specs."""
-    if isinstance(stream, string_types):
+    if isinstance(stream, str):
         load = json.loads  # type: ignore[assignment]
     else:
         load = json.load  # type: ignore[assignment]
@@ -56,26 +53,6 @@ def _strify(data, ignore_dicts=False):
 
     Converts python 2 unicodes to str in JSON data, or the other way around."""
     # this is a no-op in python 3
-    if PY3:
-        return data
-
-    # if this is a unicode string in python 2, return its string representation
-    if isinstance(data, string_types):
-        return data.encode("utf-8")
-
-    # if this is a list of values, return list of byteified values
-    if isinstance(data, list):
-        return [_strify(item, ignore_dicts=True) for item in data]
-
-    # if this is a dictionary, return dictionary of byteified keys and values
-    # but only if we haven't already byteified it
-    if isinstance(data, dict) and not ignore_dicts:
-        return collections.OrderedDict(
-            (_strify(key, ignore_dicts=True), _strify(value, ignore_dicts=True))
-            for key, value in iteritems(data)
-        )
-
-    # if it's anything else, return it in its original form
     return data
 
 

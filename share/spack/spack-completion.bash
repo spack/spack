@@ -337,16 +337,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace --backtrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
-    fi
-}
-
-_spack_activate() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -f --force -v --view"
-    else
-        _installed_packages
+        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize config containerize create debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -412,7 +403,7 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="now status enable disable reset root list trust untrust add remove mirror"
+        SPACK_COMPREPLY="now status enable disable reset root list add remove mirror"
     fi
 }
 
@@ -457,24 +448,6 @@ _spack_bootstrap_root() {
 
 _spack_bootstrap_list() {
     SPACK_COMPREPLY="-h --help --scope"
-}
-
-_spack_bootstrap_trust() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --scope"
-    else
-        SPACK_COMPREPLY=""
-    fi
-}
-
-_spack_bootstrap_untrust() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --scope"
-    else
-        SPACK_COMPREPLY=""
-    fi
 }
 
 _spack_bootstrap_add() {
@@ -607,7 +580,7 @@ _spack_change() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred -a --add-to-package"
     else
         _all_packages
     fi
@@ -838,15 +811,6 @@ _spack_create() {
     fi
 }
 
-_spack_deactivate() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -f --force -v --view -a --all"
-    else
-        _installed_packages
-    fi
-}
-
 _spack_debug() {
     if $list_options
     then
@@ -1039,7 +1003,7 @@ _spack_env_depfile() {
 _spack_extensions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -d --deps -p --paths -s --show -v --view"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -d --deps -p --paths -s --show"
     else
         _extensions
     fi
@@ -1083,7 +1047,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date -b --bootstrap"
+        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date"
     else
         _installed_packages
     fi

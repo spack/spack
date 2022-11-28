@@ -18,7 +18,6 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.paths as spack_paths
-import spack.spec as spec
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 
@@ -145,13 +144,12 @@ def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
         ci.download_and_extract_artifacts(url, working_dir)
 
 
-def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, config, mock_packages, monkeypatch, capfd):
+def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, default_mock_concretization, capfd):
     """The copy will fail because the spec is not concrete so does not have
     a package."""
     log_dir = tmpdir.join("log_dir")
-    s = spec.Spec("printing-package").concretized()
-
-    ci.copy_stage_logs_to_artifacts(s, log_dir)
+    concrete_spec = default_mock_concretization("printing-package")
+    ci.copy_stage_logs_to_artifacts(concrete_spec, log_dir)
     _, err = capfd.readouterr()
     assert "Unable to copy files" in err
     assert "No such file or directory" in err
@@ -456,17 +454,16 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
     assert affected_pkg_names == expected_affected_pkg_names
 
 
-@pytest.mark.maybeslow
 @pytest.mark.regression("29947")
-def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
+def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_packages, config):
     e = ev.create("first_concretization")
-    e.add("hdf5~mpi~szip")
-    e.add("hdf5~mpi+szip")
+    e.add("mpileaks~shared")
+    e.add("mpileaks+shared")
     e.concretize()
 
-    affected_specs = spack.ci.get_spec_filter_list(e, ["zlib"])
-    hdf5_specs = [s for s in affected_specs if s.name == "hdf5"]
-    assert len(hdf5_specs) == 2
+    affected_specs = spack.ci.get_spec_filter_list(e, ["callpath"])
+    mpileaks_specs = [s for s in affected_specs if s.name == "mpileaks"]
+    assert len(mpileaks_specs) == 2, e.all_specs()
 
 
 @pytest.mark.skipif(
@@ -515,14 +512,14 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
 
 
 def test_ci_run_standalone_tests_missing_requirements(
-    tmpdir, working_env, config, mock_packages, capfd
+    tmpdir, working_env, default_mock_concretization, capfd
 ):
     """This test case checks for failing prerequisite checks."""
     ci.run_standalone_tests()
     err = capfd.readouterr()[1]
     assert "Job spec is required" in err
 
-    args = {"job_spec": spec.Spec("printing-package").concretized()}
+    args = {"job_spec": default_mock_concretization("printing-package")}
     ci.run_standalone_tests(**args)
     err = capfd.readouterr()[1]
     assert "Reproduction directory is required" in err
@@ -532,12 +529,12 @@ def test_ci_run_standalone_tests_missing_requirements(
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
+    tmpdir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
     log_file = tmpdir.join("junit.xml").strpath
     args = {
         "log_file": log_file,
-        "job_spec": spec.Spec("printing-package").concretized(),
+        "job_spec": default_mock_concretization("printing-package"),
         "repro_dir": tmpdir.join("repro_dir").strpath,
         "fail_fast": True,
     }
@@ -553,13 +550,13 @@ def test_ci_run_standalone_tests_not_installed_junit(
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_cdash(
-    tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
+    tmpdir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
     """Test run_standalone_tests with cdash and related options."""
     log_file = tmpdir.join("junit.xml").strpath
     args = {
         "log_file": log_file,
-        "job_spec": spec.Spec("printing-package").concretized(),
+        "job_spec": default_mock_concretization("printing-package"),
         "repro_dir": tmpdir.join("repro_dir").strpath,
     }
     os.makedirs(args["repro_dir"])

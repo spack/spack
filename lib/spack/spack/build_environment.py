@@ -33,6 +33,7 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
+import io
 import multiprocessing
 import os
 import re
@@ -40,8 +41,6 @@ import shutil
 import sys
 import traceback
 import types
-
-from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
@@ -285,6 +284,23 @@ def clean_environment():
     return env
 
 
+def _add_werror_handling(keep_werror, env):
+    keep_flags = set()
+    # set of pairs
+    replace_flags = []  # type: List[Tuple[str,str]]
+    if keep_werror == "all":
+        keep_flags.add("-Werror*")
+    else:
+        if keep_werror == "specific":
+            keep_flags.add("-Werror-*")
+            keep_flags.add("-Werror=*")
+        # This extra case is to handle -Werror-implicit-function-declaration
+        replace_flags.append(("-Werror-", "-Wno-error="))
+        replace_flags.append(("-Werror", "-Wno-error"))
+    env.set("SPACK_COMPILER_FLAGS_KEEP", "|".join(keep_flags))
+    env.set("SPACK_COMPILER_FLAGS_REPLACE", " ".join(["|".join(item) for item in replace_flags]))
+
+
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
@@ -331,6 +347,13 @@ def set_compiler_environment_variables(pkg, env):
         env.set("SPACK_DTAGS_TO_STRIP", compiler.disable_new_dtags)
         env.set("SPACK_DTAGS_TO_ADD", compiler.enable_new_dtags)
 
+    if pkg.keep_werror is not None:
+        keep_werror = pkg.keep_werror
+    else:
+        keep_werror = spack.config.get("config:flags:keep_werror")
+
+    _add_werror_handling(keep_werror, env)
+
     # Set the target parameters that the compiler will add
     # Don't set on cray platform because the targeting module handles this
     if spec.satisfies("platform=cray"):
@@ -353,10 +376,8 @@ def set_compiler_environment_variables(pkg, env):
         if isinstance(pkg.flag_handler, types.FunctionType):
             handler = pkg.flag_handler
         else:
-            if sys.version_info >= (3, 0):
-                handler = pkg.flag_handler.__func__
-            else:
-                handler = pkg.flag_handler.im_func
+            handler = pkg.flag_handler.__func__
+
         injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag][:])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
@@ -569,6 +590,7 @@ def _set_variables_for_single_module(pkg, module):
 
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
@@ -978,22 +1000,9 @@ def modifications_from_dependencies(
             if set_package_py_globals:
                 set_module_variables_for_package(dpkg)
 
-            # Allow dependencies to modify the module
-            # Get list of modules that may need updating
-            modules = []
-            for cls in inspect.getmro(type(spec.package)):
-                module = cls.module
-                if module == spack.package_base:
-                    break
-                modules.append(module)
-
-            # Execute changes as if on a single module
-            # copy dict to ensure prior changes are available
-            changes = spack.util.pattern.Bunch()
-            dpkg.setup_dependent_package(changes, spec)
-
-            for module in modules:
-                module.__dict__.update(changes.__dict__)
+            current_module = ModuleChangePropagator(spec.package)
+            dpkg.setup_dependent_package(current_module, spec)
+            current_module.propagate_changes_to_mro()
 
             if context == "build":
                 builder = spack.builder.create(dpkg)
@@ -1271,6 +1280,8 @@ def get_package_context(traceback, context=3):
             obj = frame.f_locals["self"]
             if isinstance(obj, spack.package_base.PackageBase):
                 break
+    else:
+        return None
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
@@ -1352,7 +1363,7 @@ class ChildError(InstallError):
 
     @property
     def long_message(self):
-        out = StringIO()
+        out = io.StringIO()
         out.write(self._long_message if self._long_message else "")
 
         have_log = self.log_name and os.path.exists(self.log_name)
@@ -1437,3 +1448,51 @@ def write_log_summary(out, log_type, log, last=None):
         # If no errors are found but warnings are, display warnings
         out.write("\n%s found in %s log:\n" % (plural(nwar, "warning"), log_type))
         out.write(make_log_context(warnings))
+
+
+class ModuleChangePropagator:
+    """Wrapper class to accept changes to a package.py Python module, and propagate them in the
+    MRO of the package.
+
+    It is mainly used as a substitute of the ``package.py`` module, when calling the
+    "setup_dependent_package" function during build environment setup.
+    """
+
+    _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")
+
+    def __init__(self, package):
+        self._set_self_attributes("package", package)
+        self._set_self_attributes("current_module", package.module)
+
+        #: Modules for the classes in the MRO up to PackageBase
+        modules_in_mro = []
+        for cls in inspect.getmro(type(package)):
+            module = cls.module
+
+            if module == self.current_module:
+                continue
+
+            if module == spack.package_base:
+                break
+
+            modules_in_mro.append(module)
+        self._set_self_attributes("modules_in_mro", modules_in_mro)
+        self._set_self_attributes("_set_attributes", {})
+
+    def _set_self_attributes(self, key, value):
+        super().__setattr__(key, value)
+
+    def __getattr__(self, item):
+        return getattr(self.current_module, item)
+
+    def __setattr__(self, key, value):
+        if key in ModuleChangePropagator._PROTECTED_NAMES:
+            msg = f'Cannot set attribute "{key}" in ModuleMonkeyPatcher'
+            return AttributeError(msg)
+
+        setattr(self.current_module, key, value)
+        self._set_attributes[key] = value
+
+    def propagate_changes_to_mro(self):
+        for module_in_mro in self.modules_in_mro:
+            module_in_mro.__dict__.update(self._set_attributes)
