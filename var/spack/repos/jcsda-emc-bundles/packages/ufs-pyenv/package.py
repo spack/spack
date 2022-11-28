@@ -20,7 +20,7 @@ class UfsPyenv(BundlePackage):
 
     depends_on("py-cython")
     depends_on("py-cftime")
-    depends_on("py-h5py")
+    #depends_on("py-h5py")
     depends_on("py-numpy")
     depends_on("py-pandas")
     depends_on("py-python-dateutil")
