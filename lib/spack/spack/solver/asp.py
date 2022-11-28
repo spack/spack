@@ -1026,12 +1026,12 @@ class SpackSolverSetup(object):
                         trigger_id = self.condition(
                             condition_spec,
                             name=pkg.name,
-                            msg="invalid variant value {0}={1}".format(name, value)
+                            msg="invalid variant value {0}={1}".format(name, value),
                         )
                         constraint_id = self.condition(
                             spack.spec.Spec(),
                             name=pkg.name,
-                            msg="empty (total) conflict constraint"
+                            msg="empty (total) conflict constraint",
                         )
                         msg = "variant {0}={1} is conditionally disabled".format(name, value)
                         self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, msg))

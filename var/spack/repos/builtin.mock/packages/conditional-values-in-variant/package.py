@@ -40,7 +40,8 @@ class ConditionalValuesInVariant(Package):
     )
 
     variant(
-        "foo", default="foo",
+        "foo",
+        default="foo",
         values=(conditional("foo", when=True), conditional("bar", when=False)),
-        description="Variant with default condition false"
+        description="Variant with default condition false",
     )
