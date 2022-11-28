@@ -38,3 +38,9 @@ class ConditionalValuesInVariant(Package):
         values=any_combination_of(conditional("flexpath", "dataspaces", when="@1.73.0:")),
         description="Enable dataspaces and/or flexpath staging transports",
     )
+
+    variant(
+        "foo", default="foo",
+        values=(conditional("foo", when=True), conditional("bar", when=False)),
+        description="Variant with default condition false"
+    )
