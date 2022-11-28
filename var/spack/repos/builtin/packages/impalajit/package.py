@@ -16,7 +16,12 @@ class Impalajit(CMakePackage):
 
     homepage = "https://github.com/manuel-fasching/ImpalaJIT/blob/master/README.md"
 
-    version("main", git="https://github.com/manuel-fasching/ImpalaJIT.git", branch="master", preferred=True)
+    version(
+        "main",
+        git="https://github.com/manuel-fasching/ImpalaJIT.git",
+        branch="master",
+        preferred=True,
+    )
     version("llvm", git="https://github.com/ravil-mobile/ImpalaJIT.git", branch="dev")
     version("llvm-1.0.0", git="https://github.com/ravil-mobile/ImpalaJIT.git", tag="v1.0.0")
 
