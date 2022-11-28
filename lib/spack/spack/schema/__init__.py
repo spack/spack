@@ -8,14 +8,13 @@ import warnings
 import llnl.util.lang
 import llnl.util.tty
 
-import spack.parser
-import spack.spec
-
 
 # jsonschema is imported lazily as it is heavy to import
 # and increases the start-up time
 def _make_validator():
     import jsonschema
+
+    import spack.parser
 
     def _validate_spec(validator, is_spec, instance, schema):
         """Check if the attributes on instance are valid specs."""

@@ -6,7 +6,7 @@
 import pathlib
 import re
 from enum import Enum, auto
-from typing import Iterator, List, Optional, cast
+from typing import Iterator, List, Optional
 
 from llnl.util.tty import color
 
@@ -154,7 +154,7 @@ def tokenize(text: str) -> Iterator[Token]:
 
     if match is None or match.end() != len(text):
         scanner = ANALYSIS_REGEX.scanner(text)  # type: ignore[attr-defined]
-        matches = [m for m in cast(Iterator[re.Match], iter(scanner.match, None))]
+        matches = [m for m in iter(scanner.match, None)]  # type: ignore[var-annotated]
         raise SpecTokenizationError(matches, text)
 
 
