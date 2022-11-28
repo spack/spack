@@ -25,7 +25,7 @@ class PyPyerfa(PythonPackage):
     # From setup.cfg
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-numpy@1.17:", type=("build", "run"))
-    depends_on("py-setuptools-scm", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build")
     # From pyproject.toml
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-packaging", type="build")

@@ -83,8 +83,6 @@ class PyAstropy(PythonPackage):
         # cython-ized files
         if os.path.exists("astropy/cython_version.py"):
             os.remove("astropy/cython_version.py")
-        else:
-            pass
 
     def install_options(self, spec, prefix):
         args = [
