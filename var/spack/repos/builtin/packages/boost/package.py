@@ -116,8 +116,7 @@ class Boost(Package):
         Args:
          name (str): name of the variant
 
-         is_library (bool): True if `name` corresponds to a library that
-                            needs to be compiled for _some_ version of Boost
+         is_library (bool): True if `name` corresponds to a library
 
          buildable (str): The version string indicating which versions
                           for which the library should be compiled or `None`
