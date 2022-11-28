@@ -12,17 +12,10 @@ class PyAtlannot(PythonPackage):
 
     homepage = "https://atlas-annotation.rtfd.io"
     maintainers = ["EmilieDel", "Stannislav"]
+    pypi = "atlannot/atlannot-0.1.3.tar.gz"
 
-    version(
-        "0.1.3",
-        url="https://github.com/BlueBrain/atlas-annotation/archive/refs/tags/v0.1.3.tar.gz",  # it is not on pypi
-        sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    )
-    version(
-        "0.1.2",
-        url="https://files.pythonhosted.org/packages/08/b9/6edff732ad711e600b91d32052604987b744f054c049739df73c07ef0232/atlannot-0.1.2.tar.gz",
-        sha256="145dac874752d5e5d093b977aa04798916daf31d1e942cc64d059175deea27df",
-    )
+    version("0.1.3", sha256="66717d37dd7808f8d7543c8da4d2b09c7e21d9c6151474ad1079b10d7b66d243")
+    version("0.1.2", sha256="145dac874752d5e5d093b977aa04798916daf31d1e942cc64d059175deea27df")
     version(
         "0.1.1",
         tag="v0.1.1",
