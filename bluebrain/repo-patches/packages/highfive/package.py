@@ -52,11 +52,6 @@ class Highfive(CMakePackage):
     depends_on('xtensor', when='+xtensor')
     depends_on('mpi', when='+mpi')
 
-    def patch(self):
-        # CMake's FindHDF5 can't handle this version, force CONFIG mode
-        if self.spec.satisfies('^hdf5@1.12.2'):
-            filter_file('(HDF5 REQUIRED)', r'\1 CONFIG', 'CMake/HighFiveTargetDeps.cmake')
-
     def cmake_args(self):
         return [
             '-DUSE_BOOST:Bool=' + str(self.spec.satisfies('+boost')),
@@ -70,6 +65,6 @@ class Highfive(CMakePackage):
             + str(self.spec.satisfies('@develop')),
             '-DHIGHFIVE_TEST_SINGLE_INCLUDES:Bool='
             + str(self.spec.satisfies('@develop')),
-            '-DHDF5_NO_FIND_PACKAGE_CONFIG_FILE=1',  # Dont use targets
             '-DHIGHFIVE_USE_INSTALL_DEPS:Bool=ON',
+            '-DHDF5_NO_FIND_PACKAGE_CONFIG_FILE:Bool=ON',
         ]
