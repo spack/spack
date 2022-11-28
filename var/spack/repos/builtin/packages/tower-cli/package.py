@@ -20,6 +20,12 @@ class TowerCli(Package):
     if platform.machine() == "x86_64":
         if platform.system() == "Darwin":
             version(
+                "0.7.1",
+                sha256="a4731d0d7f2c2d4219758126a8ee0b22a0a68464329d4be0a025ad7eb191e5c0",
+                url="https://github.com/seqeralabs/tower-cli/releases/download/v0.7.1/tw-0.7.1-osx-x86_64",
+                expand=False,
+            )
+            version(
                 "0.7.0",
                 sha256="b1b3ade4231de2c7303832bac406510c9de171d07d6384a54945903f5123f772",
                 url="https://github.com/seqeralabs/tower-cli/releases/download/v0.7.0/tw-0.7.0-osx-x86_64",
@@ -38,6 +44,12 @@ class TowerCli(Package):
                 expand=False,
             )
         elif platform.system() == "Linux":
+            version(
+                "0.7.1",
+                sha256="f3f8cf6b241f8935d4d90bd271809ca4cd7157ac476822483f458edbe54a1fa8",
+                url="https://github.com/seqeralabs/tower-cli/releases/download/v0.7.1/tw-0.7.1-linux-x86_64",
+                expand=False,
+            )
             version(
                 "0.7.0",
                 sha256="651f564b80585c9060639f1a8fc82966f81becb0ab3e3ba34e53baf3baabff39",
