@@ -18,7 +18,7 @@ class PyRsa(PythonPackage):
     version("3.4.2", sha256="25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5")
 
     depends_on("py-setuptools", when="@:4.7.2", type=("build", "run"))
-    depends_on("py-poetry", when="@4.9:", type=("build", "run"))
+    depends_on("py-poetry-core@1:", when="@4.9:", type="build")
     depends_on("py-pyasn1@0.1.3:", type=("build", "run"))
     depends_on("python@3.5:3", when="@4.7.2:", type=("build", "run"))
     depends_on("python@3.6:3", when="@4.9:", type=("build", "run"))
