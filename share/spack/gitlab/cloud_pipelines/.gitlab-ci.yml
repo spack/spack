@@ -64,17 +64,27 @@ default:
   extends: [ ".generate" ]
   tags: ["spack", "aws", "public", "medium", "aarch64"]
 
+.generate-ppc64le:
+  extends: .generate
+  tags: ["spack", "public", "medium", "ppc64le"]
+
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
 .pr-generate-aarch64:
   extends: [ ".pr", ".generate-aarch64" ]
 
+.pr-generate-ppc64le:
+  extends: [ ".pr", ".generate-ppc64le" ]
+
 .protected-generate:
   extends: [ ".protected", ".generate" ]
 
 .protected-generate-aarch64:
   extends: [ ".protected", ".generate-aarch64" ]
+
+.protected-generate-ppc64le:
+  extends: [ ".protected", ".generate-ppc64le" ]
 
 .build:
   stage: build
@@ -877,3 +887,293 @@ ml-rocm-protected-build:
   needs:
     - artifacts: True
       job: ml-rocm-protected-generate
+
+#######################################
+# HPCToolkit Multi-OS and Multi-Arch
+#######################################
+.hpctoolkit:
+  variables:
+    SPACK_CI_STACK_NAME: hpctoolkit
+.hpctoolkit-centos7:
+  extends: .hpctoolkit
+  image: ghcr.io/spack/e4s-centos-7@sha256:e9c5b1d3dd6bc0c202cc8d8df69c4bb0da4ec93d060a8f213a1c4f541f09e6ae
+.hpctoolkit-fedora36:
+  extends: .hpctoolkit
+  image: ghcr.io/spack/e4s-fedora-36@sha256:a70ca93bdf4795259ed7373cc507a9fcca0b8d92f068904705ecb3e8d93d11e4
+.hpctoolkit-leap15:
+  extends: .hpctoolkit
+  image: ghcr.io/spack/e4s-leap-15@sha256:4fe84fa2bbfc46ce451367a5201dfd48cfa289afce2b1875129a31016eef3d69
+.hpctoolkit-almalinux8:
+  extends: .hpctoolkit
+  image: ghcr.io/spack/e4s-almalinux-8@sha256:780286ddcccdd6a69d8a8d3aefddfec49b1d04c6f58d77fb340e0af803928b70
+.hpctoolkit-ubuntu20.04:
+  extends: .hpctoolkit
+  image: ghcr.io/spack/e4s-ubuntu-20.04@sha256:7cabb40c05e3bb6bbe709aad49429179e812187f0697cbb54b939dcb667c9f5f
+
+hpctoolkit-centos7-pr-generate:
+  extends: [ ".hpctoolkit-centos7", ".pr-generate"]
+hpctoolkit-fedora36-pr-generate:
+  extends: [ ".hpctoolkit-fedora36", ".pr-generate"]
+hpctoolkit-fedora36-pr-generate-aarch64:
+  extends: [ ".hpctoolkit-fedora36", ".pr-generate-aarch64"]
+hpctoolkit-fedora36-pr-generate-ppc64le:
+  extends: [ ".hpctoolkit-fedora36", ".pr-generate-ppc64le"]
+hpctoolkit-leap15-pr-generate:
+  extends: [ ".hpctoolkit-leap15", ".pr-generate"]
+hpctoolkit-almalinux8-pr-generate:
+  extends: [ ".hpctoolkit-almalinux8", ".pr-generate"]
+hpctoolkit-almalinux8-pr-generate-aarch64:
+  extends: [ ".hpctoolkit-almalinux8", ".pr-generate-aarch64"]
+hpctoolkit-almalinux8-pr-generate-ppc64le:
+  extends: [ ".hpctoolkit-almalinux8", ".pr-generate-ppc64le"]
+hpctoolkit-ubuntu20.04-pr-generate:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".pr-generate"]
+hpctoolkit-ubuntu20.04-pr-generate-aarch64:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".pr-generate-aarch64"]
+hpctoolkit-ubuntu20.04-pr-generate-ppc64le:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".pr-generate-ppc64le"]
+
+hpctoolkit-centos7-protected-generate:
+  extends: [ ".hpctoolkit-centos7", ".protected-generate"]
+hpctoolkit-fedora36-protected-generate:
+  extends: [ ".hpctoolkit-fedora36", ".protected-generate"]
+hpctoolkit-fedora36-protected-generate-aarch64:
+  extends: [ ".hpctoolkit-fedora36", ".protected-generate-aarch64"]
+hpctoolkit-fedora36-protected-generate-ppc64le:
+  extends: [ ".hpctoolkit-fedora36", ".protected-generate-ppc64le"]
+hpctoolkit-leap15-protected-generate:
+  extends: [ ".hpctoolkit-leap15", ".protected-generate"]
+hpctoolkit-almalinux8-protected-generate:
+  extends: [ ".hpctoolkit-almalinux8", ".protected-generate"]
+hpctoolkit-almalinux8-protected-generate-aarch64:
+  extends: [ ".hpctoolkit-almalinux8", ".protected-generate-aarch64"]
+hpctoolkit-almalinux8-protected-generate-ppc64le:
+  extends: [ ".hpctoolkit-almalinux8", ".protected-generate-ppc64le"]
+hpctoolkit-ubuntu20.04-protected-generate:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".protected-generate"]
+hpctoolkit-ubuntu20.04-protected-generate-aarch64:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".protected-generate-aarch64"]
+hpctoolkit-ubuntu20.04-protected-generate-ppc64le:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".protected-generate-ppc64le"]
+
+hpctoolkit-centos7-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-centos7-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-centos7-pr-generate
+hpctoolkit-fedora36-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-fedora36-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-fedora36-pr-generate
+hpctoolkit-fedora36-pr-build-aarch64:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-fedora36-pr-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-fedora36-pr-generate-aarch64
+hpctoolkit-fedora36-pr-build-ppc64le:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-fedora36-pr-generate-ppc64le
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-fedora36-pr-generate-ppc64le
+hpctoolkit-leap15-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-leap15-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-leap15-pr-generate
+hpctoolkit-almalinux8-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-almalinux8-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-almalinux8-pr-generate
+hpctoolkit-almalinux8-pr-build-aarch64:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-almalinux8-pr-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-almalinux8-pr-generate-aarch64
+hpctoolkit-almalinux8-pr-build-ppc64le:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-almalinux8-pr-generate-ppc64le
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-almalinux8-pr-generate-ppc64le
+hpctoolkit-ubuntu20.04-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubuntu20.04-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-ubuntu20.04-pr-generate
+hpctoolkit-ubuntu20.04-pr-build-aarch64:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubuntu20.04-pr-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-ubuntu20.04-pr-generate-aarch64
+hpctoolkit-ubuntu20.04-pr-build-ppc64le:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubuntu20.04-pr-generate-ppc64le
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-ubuntu20.04-pr-generate-ppc64le
+
+hpctoolkit-centos7-protected-build:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-centos7-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-centos7-protected-generate
+hpctoolkit-fedora36-protected-build:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-fedora36-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-fedora36-protected-generate
+hpctoolkit-fedora36-protected-build-aarch64:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-fedora36-protected-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-fedora36-protected-generate-aarch64
+hpctoolkit-fedora36-protected-build-ppc64le:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-fedora36-protected-generate-ppc64le
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-fedora36-protected-generate-ppc64le
+hpctoolkit-leap15-protected-build:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-leap15-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-leap15-protected-generate
+hpctoolkit-almalinux8-protected-build:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-almalinux8-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-almalinux8-protected-generate
+hpctoolkit-almalinux8-protected-build-aarch64:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-almalinux8-protected-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-almalinux8-protected-generate-aarch64
+hpctoolkit-almalinux8-protected-build-ppc64le:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-almalinux8-protected-generate-ppc64le
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-almalinux8-protected-generate-ppc64le
+hpctoolkit-ubuntu20.04-protected-build:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubuntu20.04-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-ubuntu20.04-protected-generate
+hpctoolkit-ubuntu20.04-protected-build-aarch64:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubuntu20.04-protected-generate-aarch64
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-ubuntu20.04-protected-generate-aarch64
+hpctoolkit-ubuntu20.04-protected-build-ppc64le:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubuntu20.04-protected-generate-ppc64le
+    strategy: depend
+  needs:
+    - artifacts: true
+      job: hpctoolkit-ubuntu20.04-protected-generate-ppc64le

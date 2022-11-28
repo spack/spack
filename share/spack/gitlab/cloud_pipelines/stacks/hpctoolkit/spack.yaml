@@ -1,0 +1,291 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /tmp/home/software/spack
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  definitions:
+  - when: arch.satisfies('target=x86_64_v3:')
+    target: [target=x86_64_v3]
+  - when: arch.satisfies('target=aarch64:')
+    target: [target=aarch64]
+  - when: arch.satisfies('target=ppc64le:')
+    target: [target=ppc64le]
+
+  - gpus:
+    # No GPU support
+    - ~cuda ~rocm ~level_zero
+    # CUDA (Nvidia) support
+    - +cuda ~rocm ~level_zero
+        ^cuda@11
+    # Level Zero (Intel) support
+    # GTPin support relies on external packages and so is disabled
+    - +level_zero ~gtpin ~cuda ~rocm
+  - when: not arch.satisfies('target=aarch64:')
+    gpus:
+    # CUDA (Nvidia) support
+    # CUDA on ARM is only supported in CUDA 11 and following
+    - +cuda ~rocm ~level_zero
+        ^cuda@10.2
+  - when: arch.satisfies('target=x86_64:')
+    gpus:
+    # ROCm (AMD) support
+    # ROCm currently only supports x86
+    - +rocm ~cuda ~level_zero
+        ^hip@5.2 ^hsa-rocr-dev@5.2 ^rocprofiler-dev@5.2 ^roctracer-dev@5.2
+
+  specs:
+    - matrix:
+      - &core ['hpctoolkit @2022.10.01: ~mpi +viewer ~opencl +papi']
+      - [$gpus]
+      - [$target]
+
+  mirrors:
+    mirror: s3://spack-binaries/develop/hpctoolkit
+
+  gitlab-ci:
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - spack -d ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+
+    variables:
+      CI_JOB_SIZE: default
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      image: { "name": "ghcr.io/spack/ubuntu-jammy:latest", "entrypoint": [""] }
+      tags: ["spack", "public", "x86_64_v3"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+
+    match_behavior: merge
+    mappings:
+      - match: ['os=centos7']
+        runner-attributes:
+          image: ghcr.io/spack/e4s-centos-7@sha256:e9c5b1d3dd6bc0c202cc8d8df69c4bb0da4ec93d060a8f213a1c4f541f09e6ae
+          tags: []
+      - match: ['os=fedora36']
+        runner-attributes:
+          image: ghcr.io/spack/e4s-fedora-36@sha256:a70ca93bdf4795259ed7373cc507a9fcca0b8d92f068904705ecb3e8d93d11e4
+          tags: []
+      - match: ['os=opensuse_leap15']
+        runner-attributes:
+          image: ghcr.io/spack/e4s-leap-15@sha256:4fe84fa2bbfc46ce451367a5201dfd48cfa289afce2b1875129a31016eef3d69
+          tags: []
+      - match: ['os=almalinux8']
+        runner-attributes:
+          image: ghcr.io/spack/e4s-almalinux-8@sha256:780286ddcccdd6a69d8a8d3aefddfec49b1d04c6f58d77fb340e0af803928b70
+          tags: []
+      - match: ['os=ubuntu20.04']
+        runner-attributes:
+          image: ghcr.io/spack/e4s-ubuntu-20.04@sha256:7cabb40c05e3bb6bbe709aad49429179e812187f0697cbb54b939dcb667c9f5f
+          tags: []
+
+      - match: ['target=:x86_64_v3']
+        runner-attributes:
+          tags: [x86_64_v3]
+      - match: ['target=:graviton']
+        runner-attributes:
+          tags: [graviton]
+      - match: ['target=:ppc64le']
+        runner-attributes:
+          tags: [ppc64le]
+
+      - match:
+        - alsa-lib
+        - ant
+        - antlr
+        - argobots
+        - automake
+        - berkeley-db
+        - bison
+        - blt
+        - cmake
+        - curl
+        - darshan-util
+        - diffutils
+        - exmcutils
+        - expat
+        - flit
+        - freetype
+        - gdbm
+        - gotcha
+        - hpcviewer
+        - jansson
+        - json-c
+        - libbsd
+        - libevent
+        - libjpeg-turbo
+        - libnrm
+        - libpng
+        - libunistring
+        - lua-luaposix
+        - m4
+        - mpfr
+        - ncurses
+        - openblas
+        - openjdk
+        - papi
+        - parallel-netcdf
+        - pcre2
+        - perl-data-dumper
+        - pkgconf
+        - py-alembic
+        - py-idna
+        - py-testpath
+        - qhull
+        - snappy
+        - swig
+        - tar
+        - tcl
+        - texinfo
+        - unzip
+        - util-linux-uuid
+        - util-macros
+        - yaml-cpp
+        - zlib
+        - zstd
+        remove-attributes:
+          tags: &all_sizes [default, small, medium, large, huge]
+        runner-attributes:
+          tags: [small]
+          variables:
+            CI_JOB_SIZE: small
+            KUBERNETES_CPU_REQUEST: 500m
+            KUBERNETES_MEMORY_REQUEST: 500M
+
+      - match:
+        - adios2
+        - amrex
+        - archer
+        - ascent
+        - axom
+        - binutils
+        - blaspp
+        - boost
+        - butterflypack
+        - cabana
+        - caliper
+        - camp
+        - chai
+        - conduit
+        - datatransferkit
+        - faodel
+        - ffmpeg
+        - fftw
+        - fortrilinos
+        - gperftools
+        - gptune
+        - hdf5
+        - heffte
+        - hpctoolkit
+        - hwloc
+        - hypre
+        - kokkos
+        - lammps
+        - lapackpp
+        - legion
+        - libzmq
+        - llvm-openmp-ompt
+        - mbedtls
+        - netlib-scalapack
+        - omega-h
+        - openmpi
+        - openpmd-api
+        - pagmo2
+        - papyrus
+        - parsec
+        - pdt
+        - petsc
+        - pumi
+        - py-ipython-genutils
+        - py-petsc4py
+        - py-scipy
+        - py-statsmodels
+        - py-warlock
+        - py-warpx
+        - pygmo
+        - slepc
+        - slurm
+        - strumpack
+        - sundials
+        - superlu-dist
+        - tasmanian
+        - tau
+        - upcxx
+        - vtk-h
+        - zfp
+        remove-attributes:
+          tags: *all_sizes
+        runner-attributes:
+          tags: [medium]
+          variables:
+            CI_JOB_SIZE: medium
+            KUBERNETES_CPU_REQUEST: 2000m
+            KUBERNETES_MEMORY_REQUEST: 4G
+
+      - match:
+        - cuda
+        - dyninst
+        - ginkgo
+        - hpx
+        - kokkos-kernels
+        - kokkos-nvcc-wrapper
+        - magma
+        - mfem
+        - mpich
+        - openturns
+        - precice
+        - raja
+        - rust
+        - slate
+        - trilinos
+        - vtk-m
+        - warpx
+        remove-attributes:
+          tags: *all_sizes
+        runner-attributes:
+          tags: [large]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+        - hipblas
+        - llvm
+        - llvm-amdgpu
+        - rocblas
+        remove-attributes:
+          tags: *all_sizes
+        runner-attributes:
+          tags: [huge]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
