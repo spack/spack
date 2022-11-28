@@ -1499,7 +1499,7 @@ class TestConcretize(object):
 
         s = Spec(spec_str)
         raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
-        with (llnl.util.lang.nullcontext() if valid else raises):
+        with llnl.util.lang.nullcontext() if valid else raises:
             s.concretize()
 
     def test_conditional_values_in_conditional_variant(self):
