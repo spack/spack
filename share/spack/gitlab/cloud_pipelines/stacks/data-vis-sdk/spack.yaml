@@ -3,7 +3,7 @@ spack:
 
   concretizer:
     reuse: false
-    unify: false
+    unify: when_possible
 
   config:
     build_jobs: 32
@@ -17,31 +17,57 @@ spack:
     cmake:
       variants: ~ownlibs
     mesa:
-      variants: +glx ~osmesa +opengl ~opengles +llvm
-    paraview:
-      variants: +qt
-    visit:
-      variants: +gui
+      variants: +glx +osmesa +opengl ~opengles +llvm
     all:
       target: [x86_64]
 
-  # Currently disabled: sensei
+  definitions:
+    - paraview_specs:
+      - matrix:
+        - [paraview]
+        - [+qt~osmesa, ~qt~osmesa, ~qt+osmesa]
+    - visit_specs:
+      - matrix:
+        - [visit]
+        - [+gui~osmesa, ~gui~osmesa, ~gui+osmesa]
+    - davsdk_base_spec:
+      - ecp-data-vis-sdk ~cuda ~rocm
+          +adios2
+          +cinema
+          +darshan
+          +faodel
+          +hdf5
+          +pnetcdf
+          +sz
+          +unifyfs
+          +veloc
+          +vtkm
+          +zfp
+
   specs:
-    - ecp-data-vis-sdk ~cuda ~rocm ~sensei
-        +adios2
-        +ascent
-        +cinema
-        +darshan
-        +faodel
-        +hdf5
-        +paraview
-        +pnetcdf
-        +sz
-        +unifyfs
-        +veloc
-        +vtkm
-        +zfp
-        +visit
+  #  - matrix:
+  #    - [$davsdk_base_spec]
+  #    - [~sensei +paraview +ascent ~visit]
+  #    - [$^paraview_specs]
+  #  - matrix:
+  #    - [$davsdk_base_spec]
+  #    - [+sensei +paraview ~ascent ~visit]
+  #    - [$^paraview_specs]
+  #  - matrix:
+  #    - [$davsdk_base_spec]
+  #    - [+sensei ~paraview +ascent ~visit]
+  #  - matrix:
+  #    - [$davsdk_base_spec]
+  #    - [+sensei ~paraview ~ascent +visit]
+  #    - [$^visit_specs]
+    - matrix:
+      - [$davsdk_base_spec]
+      - [~sensei +paraview +ascent ~visit]
+      - [$^paraview_specs]
+    - matrix:
+      - [$davsdk_base_spec]
+      - [~sensei ~paraview ~ascent +visit]
+      - [$^visit_specs]
 
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
@@ -59,6 +85,7 @@ spack:
       - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
+      - spack config add "config:build_jobs:$(nproc)"
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
@@ -69,8 +96,10 @@ spack:
     match_behavior: first
     mappings:
       - match:
-          - llvm
-          - qt
+            - llvm
+            - paraview
+            - qt
+            - visit
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
           variables:
@@ -82,8 +111,6 @@ spack:
             - ecp-data-vis-sdk
             - mesa
             - openblas
-            - paraview
-            - visit
             - vtk-m
         runner-attributes:
           tags: [ "spack", "large", "x86_64" ]
