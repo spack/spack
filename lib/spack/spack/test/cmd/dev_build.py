@@ -254,13 +254,18 @@ env:
 def test_dev_build_multiple(
     tmpdir, mock_packages, install_mockery, mutable_mock_env_path, mock_fetch
 ):
-    """Test spack install with multiple developer builds"""
+    """Test spack install with multiple developer builds
+
+    Test that only the root needs to be specified in the environment
+    Test that versions known only from the dev specs are included in the solve,
+    even if they come from a non-root
+    """
     # setup dev-build-test-install package for dev build
     # Wait to concretize inside the environment to set dev_path on the specs;
     # without the environment, the user would need to set dev_path for both the
     # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir("leaf")
-    leaf_spec = spack.spec.Spec("dev-build-test-install@0.0.0")
+    leaf_spec = spack.spec.Spec("dev-build-test-install@1.0.0")
     leaf_pkg_cls = spack.repo.path.get_pkg_class(leaf_spec.name)
     with leaf_dir.as_cwd():
         with open(leaf_pkg_cls.filename, "w") as f:
@@ -283,13 +288,12 @@ def test_dev_build_multiple(
                 """\
 env:
   specs:
-  - dev-build-test-install@0.0.0
   - dev-build-test-dependent@0.0.0
 
   develop:
     dev-build-test-install:
       path: %s
-      spec: dev-build-test-install@0.0.0
+      spec: dev-build-test-install@1.0.0
     dev-build-test-dependent:
       spec: dev-build-test-dependent@0.0.0
       path: %s
@@ -300,6 +304,7 @@ env:
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             # Do concretization inside environment for dev info
+            # These specs are the source of truth to compare against the installs
             leaf_spec.concretize()
             root_spec.concretize()
 

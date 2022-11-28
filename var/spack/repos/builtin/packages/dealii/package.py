@@ -265,6 +265,14 @@ class Dealii(CMakePackage, CudaPackage):
         when="@9.4.0 ^python",
     )
 
+    # Fix issues with the FIND_GINKGO module for the newer Ginkgo versions
+    # https://github.com/dealii/dealii/pull/14413
+    patch(
+        "https://github.com/dealii/dealii/commit/df6c5de8d6785fce701c10575982858f3aeb4cbd.patch?full_index=1",
+        sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
+        when="@:9.4.0+ginkgo ^ginkgo@1.5.0:",
+    )
+
     # Check for sufficiently modern versions
     conflicts("cxxstd=11", when="@9.3:")
 
@@ -591,6 +599,9 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define("SCALAPACK_FOUND", True),
                     self.define("SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
                     self.define("SCALAPACK_LIBRARIES", scalapack_libs.joined(";")),
+                    # If SCALAPACK_LIBRARY is not set, deal.II still searches
+                    # for SCALAPACK despite the above settings:
+                    self.define("SCALAPACK_LIBRARY", scalapack_libs.joined(";")),
                 ]
             )
 

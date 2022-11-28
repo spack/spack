@@ -9,7 +9,6 @@ from spack.package import *
 class JediToolsEnv(BundlePackage):
     """Development environment for jedi-tools"""
 
-    # DH* TODO CHANGE FROM INTERNAL TO PUBLIC
     homepage = "https://github.com/JCSDA-internal/jedi-tools"
     git = "https://github.com/JCSDA-internal/jedi-tools.git"
 

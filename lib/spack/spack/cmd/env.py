@@ -4,12 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import os
 import shutil
 import sys
 import tempfile
-
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -28,6 +27,7 @@ import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
 import spack.tengine
+import spack.traverse as traverse
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -634,36 +634,6 @@ def env_depfile_setup_parser(subparser):
     )
 
 
-class SpecNode(object):
-    def __init__(self, spec, depth):
-        self.spec = spec
-        self.depth = depth
-
-    def key(self):
-        return self.spec.dag_hash()
-
-
-class UniqueNodesQueue(object):
-    def __init__(self, init=[]):
-        self.seen = set()
-        self.queue = []
-        for item in init:
-            self.push(item)
-
-    def push(self, item):
-        key = item.key()
-        if key in self.seen:
-            return
-        self.queue.append(item)
-        self.seen.add(key)
-
-    def empty(self):
-        return len(self.queue) == 0
-
-    def pop(self):
-        return self.queue.pop()
-
-
 def _deptypes(use_buildcache):
     """What edges should we follow for a given node? If it's a cache-only
     node, then we can drop build type deps."""
@@ -692,29 +662,30 @@ class MakeTargetVisitor(object):
     def neighbors(self, node):
         """Produce a list of spec to follow from node"""
         deptypes = self.deptypes_root if node.depth == 0 else self.deptypes_deps
-        return node.spec.dependencies(deptype=deptypes)
+        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
 
-    def visit(self, node):
-        dag_hash = node.spec.dag_hash()
-        spec_str = node.spec.format("{name}{@version}{%compiler}{variants}{arch=architecture}")
-        buildcache = self.pkg_buildcache if node.depth == 0 else self.deps_buildcache
-        if buildcache == "only":
-            build_cache_flag = "--use-buildcache=only"
-        elif buildcache == "never":
-            build_cache_flag = "--use-buildcache=never"
-        else:
-            build_cache_flag = ""
-        prereqs = " ".join([self.target(dep.dag_hash()) for dep in self.neighbors(node)])
-        self.adjacency_list.append((dag_hash, spec_str, build_cache_flag, prereqs))
+    def build_cache_flag(self, depth):
+        setting = self.pkg_buildcache if depth == 0 else self.deps_buildcache
+        if setting == "only":
+            return "--use-buildcache=only"
+        elif setting == "never":
+            return "--use-buildcache=never"
+        return ""
 
+    def accept(self, node):
+        fmt = "{name}-{version}-{hash}"
+        tgt = node.edge.spec.format(fmt)
+        spec_str = node.edge.spec.format(
+            "{name}{@version}{%compiler}{variants}{arch=architecture}"
+        )
+        buildcache_flag = self.build_cache_flag(node.depth)
+        prereqs = " ".join([self.target(dep.spec.format(fmt)) for dep in self.neighbors(node)])
+        self.adjacency_list.append(
+            (tgt, prereqs, node.edge.spec.dag_hash(), spec_str, buildcache_flag)
+        )
 
-def traverse_breadth_first(visitor, specs=[]):
-    queue = UniqueNodesQueue([SpecNode(s, 0) for s in specs])
-    while not queue.empty():
-        node = queue.pop()
-        visitor.visit(node)
-        for child in visitor.neighbors(node):
-            queue.push(SpecNode(child, node.depth + 1))
+        # We already accepted this
+        return True
 
 
 def env_depfile(args):
@@ -722,6 +693,8 @@ def env_depfile(args):
     spack.cmd.require_active_env(cmd_name="env depfile")
     env = ev.active_environment()
 
+    # Special make targets are useful when including a makefile in another, and you
+    # need to "namespace" the targets to avoid conflicts.
     if args.make_target_prefix is None:
         target_prefix = os.path.join(env.env_subdir_path, "makedeps")
     else:
@@ -738,10 +711,10 @@ def env_depfile(args):
             return os.path.join(target_prefix, name)
 
     def get_install_target(name):
-        return os.path.join(target_prefix, ".install", name)
+        return os.path.join(target_prefix, "install", name)
 
     def get_install_deps_target(name):
-        return os.path.join(target_prefix, ".install-deps", name)
+        return os.path.join(target_prefix, "install-deps", name)
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
@@ -751,19 +724,33 @@ def env_depfile(args):
     else:
         roots = [s for _, s in env.concretized_specs()]
 
-    # Shallow means we will drop non-direct build deps from the DAG
+    # We produce a sub-DAG from the DAG induced by roots, where we drop build
+    # edges for those specs that are installed through a binary cache.
     pkg_buildcache, dep_buildcache = args.use_buildcache
-    visitor = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
-    traverse_breadth_first(visitor, roots)
+    make_targets = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
+    traverse.traverse_breadth_first_with_visitor(
+        roots, traverse.CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
+    )
 
     # Root specs without deps are the prereqs for the environment target
-    root_install_targets = [get_install_target(h.dag_hash()) for h in roots]
+    root_install_targets = [get_install_target(h.format("{name}-{version}-{hash}")) for h in roots]
 
-    # Cleanable targets...
-    cleanable_targets = [get_install_target(h) for h, _, _, _ in visitor.adjacency_list]
-    cleanable_targets.extend([get_install_deps_target(h) for h, _, _, _ in visitor.adjacency_list])
+    # All install and install-deps targets
+    all_install_related_targets = []
 
-    buf = six.StringIO()
+    # Convenience shortcuts: ensure that `make install/pkg-version-hash` triggers
+    # <absolute path to env>/.spack-env/makedeps/install/pkg-version-hash in case
+    # we don't have a custom make target prefix.
+    phony_convenience_targets = []
+
+    for tgt, _, _, _, _ in make_targets.adjacency_list:
+        all_install_related_targets.append(get_install_target(tgt))
+        all_install_related_targets.append(get_install_deps_target(tgt))
+        if args.make_target_prefix is None:
+            phony_convenience_targets.append(os.path.join("install", tgt))
+            phony_convenience_targets.append(os.path.join("install-deps", tgt))
+
+    buf = io.StringIO()
 
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
 
@@ -772,15 +759,17 @@ def env_depfile(args):
             "all_target": get_target("all"),
             "env_target": get_target("env"),
             "clean_target": get_target("clean"),
-            "cleanable_targets": " ".join(cleanable_targets),
+            "all_install_related_targets": " ".join(all_install_related_targets),
             "root_install_targets": " ".join(root_install_targets),
             "dirs_target": get_target("dirs"),
             "environment": env.path,
-            "install_target": get_target(".install"),
-            "install_deps_target": get_target(".install-deps"),
+            "install_target": get_target("install"),
+            "install_deps_target": get_target("install-deps"),
             "any_hash_target": get_target("%"),
             "jobserver_support": "+" if args.jobserver else "",
-            "adjacency_list": visitor.adjacency_list,
+            "adjacency_list": make_targets.adjacency_list,
+            "phony_convenience_targets": " ".join(phony_convenience_targets),
+            "target_prefix": target_prefix,
         }
     )
 

@@ -12,7 +12,7 @@ class UfsWeatherModelEnv(BundlePackage):
     homepage = "https://github.com/ufs-community/ufs-weather-model"
     git = "https://github.com/ufs-community/ufs-weather-model.git"
 
-    maintainers = ["kgerheiser", "climbfuji"]
+    maintainers = ["AlexanderRichert-NOAA", "climbfuji"]
 
     version("1.0.0")
 

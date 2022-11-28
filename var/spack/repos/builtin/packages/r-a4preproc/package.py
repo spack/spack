@@ -14,6 +14,7 @@ class RA4preproc(RPackage):
 
     bioc = "a4Preproc"
 
+    version("1.46.0", commit="8463958692c73fd655a6dfec39ea99c915513719")
     version("1.44.0", commit="252381265b96b83803a93e0c2014dd6b0574e57f")
     version("1.42.0", commit="773a91e884d2ada16fe9cf57d5ed53c0155e3fa2")
     version("1.38.0", commit="c93c223bd531bff090531a109b51f8dcd710d0cb")

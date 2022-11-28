@@ -7,17 +7,15 @@ from spack.package import *
 
 
 class JediUfsEnv(BundlePackage):
-    """Development environment for fv3-bundle"""
+    """Development environment for ufs-bundle"""
 
-    # DH* TODO - we should rename this to just ufs-bundle to match the other bundles
-    homepage = "https://github.com/JCSDA/ufs-jedi-bundle"
-    git = "https://github.com/JCSDA/ufs-jedi-bundle.git"
+    homepage = "https://github.com/JCSDA/ufs-bundle"
+    git = "https://github.com/JCSDA/ufs-bundle.git"
 
     maintainers = ["climbfuji", "mark-a-potts"]
 
     version("1.0.0")
 
-    depends_on("base-env", type="run")
     depends_on("jedi-base-env", type="run")
     depends_on("fms@release-jcsda", type="run")
 
