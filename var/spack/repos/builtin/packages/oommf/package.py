@@ -118,7 +118,7 @@ class Oommf(Package):
 
     # sanity checks: (https://spack.readthedocs.io/en/latest/packaging_guide.html#checking-an-installation)
     sanity_check_is_file = [join_path("bin", "oommf.tcl")]
-    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/eamples"]
+    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/examples"]
 
     def get_oommf_source_root(self):
         """If we download the source from NIST, then 'oommf.tcl' is in the root directory.
