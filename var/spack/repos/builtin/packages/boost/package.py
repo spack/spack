@@ -180,7 +180,10 @@ class Boost(Package):
     )
 
     boost_variant(
-        "shared", default=True, description="Additionally build shared libraries", is_library=False
+        "shared",
+        default=True,
+        description="Additionally build shared libraries",
+        is_library=False,
     )
 
     boost_variant(
@@ -233,8 +236,8 @@ class Boost(Package):
     boost_variant(
         "pic",
         default=False,
-        description="Generate position-independent code (PIC), useful "
-        "for building static libraries",
+        description="Generate position-independent code (PIC), useful for building static"
+        " libraries",
         is_library=False,
     )
 
@@ -270,13 +273,18 @@ class Boost(Package):
     )
     boost_variant(
         "beast",
-        description="Portable HTTP, WebSocket, and network operations using only C++11 and Boost.Asio",
+        description="Portable HTTP, WebSocket, and network operations using only C++11 "
+        "and Boost.Asio",
         default="False",
         when="@1.66.0:",
     )
     boost_variant(
         "callabletraits",
-        description="A spiritual successor to Boost.FunctionTypes, Boost.CallableTraits is a header-only C++11 library for the compile-time inspection and manipulation of all 'callable' types. Additional support for C++17 features.",
+        description=(
+            "A spiritual successor to Boost.FunctionTypes, Boost.CallableTraits is a"
+            " header-only C++11 library for the compile-time inspection and manipulation of"
+            " all 'callable' types. Additional support for C++17 features."
+        ),
         default="False",
         when="@1.66.0:",
     )
@@ -317,7 +325,12 @@ class Boost(Package):
     )
     boost_variant(
         "contract",
-        description="Contract programming for C++. All contract programming features are supported: Subcontracting, class invariants, postconditions (with old and return values), preconditions, customizable actions on assertion failure (e.g., terminate or throw), optional compilation and checking of assertions, etc.",
+        description=(
+            "Contract programming for C++. All contract programming features are supported:"
+            " Subcontracting, class invariants, postconditions (with old and return values),"
+            " preconditions, customizable actions on assertion failure (e.g., terminate or"
+            " throw), optional compilation and checking of assertions, etc."
+        ),
         default="False",
         when="@1.67.0:",
         buildable="@1.67.0:",
@@ -369,13 +382,19 @@ class Boost(Package):
     )
     boost_variant(
         "endian",
-        description="Types and conversion functions for correct byte ordering and more regardless of processor endianness.",
+        description=(
+            "Types and conversion functions for correct byte ordering and more regardless of"
+            " processor endianness."
+        ),
         default="False",
         when="@1.58.0:",
     )
     boost_variant(
         "exception",
-        description="The Boost Exception library supports transporting of arbitrary data in exception objects, and transporting of exceptions between threads.",
+        description=(
+            "The Boost Exception library supports transporting of arbitrary data in exception"
+            " objects, and transporting of exceptions between threads."
+        ),
         default="True",
         when="@1.36.0:",
         buildable="@1.47.0:",
@@ -389,7 +408,10 @@ class Boost(Package):
     )
     boost_variant(
         "filesystem",
-        description="The Boost Filesystem Library provides portable facilities to query and manipulate paths, files, and directories.",
+        description=(
+            "The Boost Filesystem Library provides portable facilities to query and manipulate"
+            " paths, files, and directories."
+        ),
         default="True",
         when="@1.30.0:",
         buildable="@1.30.0:",
@@ -414,27 +436,40 @@ class Boost(Package):
     )
     boost_variant(
         "geometry",
-        description="The Boost.Geometry library provides geometric algorithms, primitives and spatial index.",
+        description=(
+            "The Boost.Geometry library provides geometric algorithms, primitives and spatial"
+            " index."
+        ),
         default="False",
         when="@1.47.0:",
     )
     boost_variant(
         "graph",
-        description="The BGL graph interface and graph components are generic, in the same sense as the Standard Template Library (STL).",
+        description=(
+            "The BGL graph interface and graph components are generic, in the same sense as"
+            " the Standard Template Library (STL)."
+        ),
         default="True",
         when="@1.18.0:",
         buildable="@1.18.0:",
     )
     boost_variant(
         "graph_parallel",
-        description="The PBGL graph interface and graph components are generic, in the same sense as the Standard Template Library (STL).",
+        description=(
+            "The PBGL graph interface and graph components are generic, in the same sense as"
+            " the Standard Template Library (STL)."
+        ),
         default="False",
         when="@1.40.0:",
         buildable="@1.40.0:",
     )
     boost_variant(
         "hana",
-        description="A modern C++ metaprogramming library. It provides high level algorithms to manipulate heterogeneous sequences, allows writing type-level computations with a natural syntax, provides tools to introspect user-defined types and much more.",
+        description=(
+            "A modern C++ metaprogramming library. It provides high level algorithms to"
+            " manipulate heterogeneous sequences, allows writing type-level computations with"
+            " a natural syntax, provides tools to introspect user-defined types and much more."
+        ),
         default="False",
         when="@1.61.0:",
     )
@@ -458,19 +493,28 @@ class Boost(Package):
     )
     boost_variant(
         "icl",
-        description="Interval Container Library, interval sets and maps and aggregation of associated values",
+        description=(
+            "Interval Container Library, interval sets and maps and aggregation of associated"
+            " values"
+        ),
         default="False",
         when="@1.46.0:",
     )
     boost_variant(
         "identity_type",
-        description="Wrap types within round parenthesis so they can always be passed as macro parameters.",
+        description=(
+            "Wrap types within round parenthesis so they can always be passed as macro"
+            " parameters."
+        ),
         default="False",
         when="@1.50.0:",
     )
     boost_variant(
         "iostreams",
-        description="Boost.IOStreams provides a framework for defining streams, stream buffers and i/o filters.",
+        description=(
+            "Boost.IOStreams provides a framework for defining streams, stream buffers and i/o"
+            " filters."
+        ),
         default="False",
         when="@1.33.0:",
         buildable="@1.33.0:",
@@ -496,7 +540,10 @@ class Boost(Package):
     )
     boost_variant(
         "local_function",
-        description="Program functions locally, within other functions, directly within the scope where they are needed.",
+        description=(
+            "Program functions locally, within other functions, directly within the scope"
+            " where they are needed."
+        ),
         default="False",
         when="@1.50.0:",
     )
@@ -522,20 +569,33 @@ class Boost(Package):
     )
     boost_variant(
         "math",
-        description="Boost.Math includes several contributions in the domain of mathematics: The Greatest Common Divisor and Least Common Multiple library provides run-time and compile-time evaluation of the greatest common divisor (GCD) or least common multiple (LCM) of two integers. The Special Functions library currently provides eight templated special functions, in namespace boost. The Complex Number Inverse Trigonometric Functions are the inverses of trigonometric functions currently present in the C++ standard. Quaternions are a relative of complex numbers often used to parameterise rotations in three dimentional space. Octonions, like quaternions, are a relative of complex numbers.",
+        description=(
+            "Boost.Math includes several contributions in the domain of mathematics: The"
+            " Greatest Common Divisor and Least Common Multiple library provides run-time and"
+            " compile-time evaluation of the greatest common divisor (GCD) or least common"
+            " multiple (LCM) of two integers. The Special Functions library currently provides"
+            " eight templated special functions, in namespace boost. The Complex Number"
+            " Inverse Trigonometric Functions are the inverses of trigonometric functions"
+            " currently present in the C++ standard. Quaternions are a relative of complex"
+            " numbers often used to parameterise rotations in three dimentional space."
+            " Octonions, like quaternions, are a relative of complex numbers."
+        ),
         default="True",
         when="@1.23.0:",
         buildable="@1.23.0:",
     )
     boost_variant(
         "meta_state_machine",
-        description="A very high-performance library for expressive UML2 finite state machines.",
+        description=("A very high-performance library for expressive UML2 finite state machines."),
         default="False",
         when="@1.44.0:",
     )
     boost_variant(
         "metaparse",
-        description="A library for generating compile time parsers parsing embedded DSL code as part of the C++ compilation process",
+        description=(
+            "A library for generating compile time parsers parsing embedded DSL code as part"
+            " of the C++ compilation process"
+        ),
         default="False",
         when="@1.61.0:",
         buildable="@1.61.0:1.65.1",
@@ -554,14 +614,20 @@ class Boost(Package):
     )
     boost_variant(
         "mpi",
-        description="Message Passing Interface library, for use in distributed-memory parallel application programming.",
+        description=(
+            "Message Passing Interface library, for use in distributed-memory parallel"
+            " application programming."
+        ),
         default="False",
         when="@1.35.0:",
         buildable="@1.35.0:",
     )
     boost_variant(
         "multiprecision",
-        description="Extended precision arithmetic types for floating point, integer andrational arithmetic.",
+        description=(
+            "Extended precision arithmetic types for floating point, integer andrational"
+            " arithmetic."
+        ),
         default="False",
         when="@1.53.0:",
     )
@@ -580,7 +646,10 @@ class Boost(Package):
     )
     boost_variant(
         "outcome",
-        description="A deterministic failure handling library partially simulating lightweight exceptions.",
+        description=(
+            "A deterministic failure handling library partially simulating lightweight"
+            " exceptions."
+        ),
         default="False",
         when="@1.70.0:",
     )
@@ -610,13 +679,21 @@ class Boost(Package):
     )
     boost_variant(
         "polygon",
-        description="Voronoi diagram construction and booleans/clipping, resizing/offsetting and more for planar polygons with integral coordinates.",
+        description=(
+            "Voronoi diagram construction and booleans/clipping, resizing/offsetting and more"
+            " for planar polygons with integral coordinates."
+        ),
         default="False",
         when="@1.44.0:",
     )
     boost_variant(
         "predef",
-        description="This library defines a set of compiler, architecture, operating system, library, and other version numbers from the information it can gather of C, C++, Objective C, and Objective C++ predefined macros or those defined in generally available headers.",
+        description=(
+            "This library defines a set of compiler, architecture, operating system, library,"
+            " and other version numbers from the information it can gather of C, C++,"
+            " Objective C, and Objective C++ predefined macros or those defined in generally"
+            " available headers."
+        ),
         default="False",
         when="@1.55.0:",
     )
@@ -628,7 +705,11 @@ class Boost(Package):
     )
     boost_variant(
         "program_options",
-        description="The program_options library allows program developers to obtain program options, that is (name, value) pairs from the user, via conventional methods such as command line and config file.",
+        description=(
+            "The program_options library allows program developers to obtain program options,"
+            " that is (name, value) pairs from the user, via conventional methods such as"
+            " command line and config file."
+        ),
         default="True",
         when="@1.32.0:",
         buildable="@1.32.0:",
@@ -647,7 +728,11 @@ class Boost(Package):
     )
     boost_variant(
         "python",
-        description="The Boost Python Library is a framework for interfacing Python and C++. It allows you to quickly and seamlessly expose C++ classes functions and objects to Python, and vice-versa, using no special tools -- just your C++ compiler.",
+        description=(
+            "The Boost Python Library is a framework for interfacing Python and C++. It allows"
+            " you to quickly and seamlessly expose C++ classes functions and objects to"
+            " Python, and vice-versa, using no special tools -- just your C++ compiler."
+        ),
         default="False",
         when="@1.19.0:",
         buildable="@1.19.0:",
@@ -712,13 +797,19 @@ class Boost(Package):
     )
     boost_variant(
         "spirit_classic",
-        description="LL parser framework represents parsers directly as EBNF grammars in inlined C++.",
+        description=(
+            "LL parser framework represents parsers directly as EBNF grammars in inlined C++."
+        ),
         default="False",
         when="@1.69.0:",
     )
     boost_variant(
         "spirit_repository",
-        description="The Spirit repository is a community effort collecting different reusable components (primitives, directives, grammars, etc.) for Qi parsers and Karma generators.",
+        description=(
+            "The Spirit repository is a community effort collecting different reusable"
+            " components (primitives, directives, grammars, etc.) for Qi parsers and Karma"
+            " generators."
+        ),
         default="False",
         when="@1.69.0:",
     )
@@ -737,7 +828,9 @@ class Boost(Package):
     )
     boost_variant(
         "stl_interfaces",
-        description="C++14 and later CRTP templates for defining iterators, views, and containers.",
+        description=(
+            "C++14 and later CRTP templates for defining iterators, views, and containers."
+        ),
         default="False",
         when="@1.74.0:",
     )
@@ -756,7 +849,10 @@ class Boost(Package):
     )
     boost_variant(
         "test",
-        description="Support for simple program testing, full unit testing, and for program execution monitoring.",
+        description=(
+            "Support for simple program testing, full unit testing, and for program execution"
+            " monitoring."
+        ),
         default="True",
         when="@1.21.0:",
         buildable="@1.21.0:",
@@ -820,7 +916,11 @@ class Boost(Package):
     )
     boost_variant(
         "wave",
-        description="The Boost.Wave library is a Standards conformant, and highly configurable implementation of the mandated C99/C++ preprocessor functionality packed behind an easy to use iterator interface.",
+        description=(
+            "The Boost.Wave library is a Standards conformant, and highly configurable"
+            " implementation of the mandated C99/C++ preprocessor functionality packed behind"
+            " an easy to use iterator interface."
+        ),
         default="True",
         when="@1.33.0:",
         buildable="@1.33.0:",
