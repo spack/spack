@@ -33,7 +33,7 @@ class Micromamba(CMakePackage):
     depends_on("libsolv~shared", type="build")
     depends_on("nghttp2", type="build")
     depends_on("yaml-cpp~shared", type="build")
-    depends_on("libreproc+cxx", type="build")
+    depends_on("libreproc+cxx~shared", type="build")
 
     depends_on("fmt", type="build")
     depends_on("spdlog", type="build")
