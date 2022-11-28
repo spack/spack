@@ -16,17 +16,17 @@ class PyPyerfa(PythonPackage):
     """
 
     homepage = "https://github.com/liberfa/pyerfa"
-    pypi     = "pyerfa/pyerfa-2.0.0.1.tar.gz"
+    pypi = "pyerfa/pyerfa-2.0.0.1.tar.gz"
 
     maintainers = ["meyersbs"]
 
-    version('2.0.0.1', sha256='2fd4637ffe2c1e6ede7482c13f583ba7c73119d78bef90175448ce506a0ede30')
+    version("2.0.0.1", sha256="2fd4637ffe2c1e6ede7482c13f583ba7c73119d78bef90175448ce506a0ede30")
 
     # From setup.cfg
-    depends_on("python@3.7:",       type=("build", "run"))
-    depends_on("py-numpy@1.17:",    type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-numpy@1.17:", type=("build", "run"))
     depends_on("py-setuptools-scm", type="build")
     # From pyproject.toml
     depends_on("py-setuptools@42:", type="build")
-    depends_on("py-packaging",      type="build")
+    depends_on("py-packaging", type="build")
     depends_on("py-jinja2@2.10.3:", type="build")

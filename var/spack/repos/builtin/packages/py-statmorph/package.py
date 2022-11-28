@@ -13,14 +13,14 @@ class PyStatmorph(PythonPackage):
     """
 
     homepage = "https://github.com/vrodgom/statmorph"
-    pypi     = "statmorph/statmorph-0.4.0.tar.gz"
+    pypi = "statmorph/statmorph-0.4.0.tar.gz"
 
     maintainers = ["meyersbs"]
 
     version("0.4.0", sha256="7d1bb802baf3e203ac44c630a58c5049da5eb4d85091ac35e3f5c6ee4af8b05a")
 
-    depends_on("py-numpy@1.14.0:",      type=("build", "run"))
-    depends_on("py-scipy@0.19:",        type=("build", "run"))
+    depends_on("py-numpy@1.14.0:", type=("build", "run"))
+    depends_on("py-scipy@0.19:", type=("build", "run"))
     depends_on("py-scikit-image@0.14:", type=("build", "run"))
-    depends_on("py-astropy@2.0:",       type=("build", "run"))
-    depends_on("py-photutils@0.7:",     type=("build", "run"))
+    depends_on("py-astropy@2.0:", type=("build", "run"))
+    depends_on("py-photutils@0.7:", type=("build", "run"))
