@@ -6,18 +6,15 @@
 """The variant module contains data structures that are needed to manage
 variants both in packages and in specs.
 """
-
+import collections.abc
 import functools
 import inspect
+import io
 import itertools
 import re
 
-import six
-from six import StringIO
-
 import llnl.util.lang as lang
 import llnl.util.tty.color
-from llnl.util.compat import Sequence
 
 import spack.directives
 import spack.error as error
@@ -666,7 +663,7 @@ class VariantMap(lang.HashableMap):
             bool_keys.append(key) if isinstance(self[key].value, bool) else kv_keys.append(key)
 
         # add spaces before and after key/value variants.
-        string = StringIO()
+        string = io.StringIO()
 
         for key in bool_keys:
             string.write(str(self[key]))
@@ -712,7 +709,7 @@ def substitute_abstract_variants(spec):
 
 # The class below inherit from Sequence to disguise as a tuple and comply
 # with the semantic expected by the 'values' argument of the variant directive
-class DisjointSetsOfValues(Sequence):
+class DisjointSetsOfValues(collections.abc.Sequence):
     """Allows combinations from one of many mutually exclusive sets.
 
     The value ``('none',)`` is reserved to denote the empty set
@@ -896,12 +893,12 @@ class Value(object):
         return hash(self.value)
 
     def __eq__(self, other):
-        if isinstance(other, (six.string_types, bool)):
+        if isinstance(other, (str, bool)):
             return self.value == other
         return self.value == other.value
 
     def __lt__(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             return self.value < other
         return self.value < other.value
 

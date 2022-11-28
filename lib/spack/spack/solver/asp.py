@@ -5,6 +5,7 @@
 from __future__ import division, print_function
 
 import collections
+import collections.abc
 import copy
 import itertools
 import os
@@ -13,11 +14,7 @@ import re
 import types
 import warnings
 
-from six import string_types
-
 import archspec.cpu
-
-from llnl.util.compat import Sequence
 
 try:
     import clingo  # type: ignore[import]
@@ -214,9 +211,9 @@ def build_criteria_names(costs, tuples):
 
 
 def issequence(obj):
-    if isinstance(obj, string_types):
+    if isinstance(obj, str):
         return False
-    return isinstance(obj, (Sequence, types.GeneratorType))
+    return isinstance(obj, (collections.abc.Sequence, types.GeneratorType))
 
 
 def listify(args):
@@ -226,7 +223,7 @@ def listify(args):
 
 
 def packagize(pkg):
-    if isinstance(pkg, string_types):
+    if isinstance(pkg, str):
         return spack.repo.path.get_pkg_class(pkg)
     else:
         return pkg
@@ -623,11 +620,13 @@ class PyclingoDriver(object):
         self.control = control or default_clingo_control()
         # set up the problem -- this generates facts and rules
         self.assumptions = []
+        timer.start("setup")
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs, reuse=reuse, namespace=namespace)
-        timer.phase("setup")
+            setup.setup(self, specs, reuse=reuse)
+        timer.stop("setup")
 
+        timer.start("load")
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
@@ -657,12 +656,13 @@ class PyclingoDriver(object):
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
-        timer.phase("load")
+        timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
         # and first-order logic rules into propositional logic.
+        timer.start("ground")
         self.control.ground([("base", [])])
-        timer.phase("ground")
+        timer.stop("ground")
 
         # With a grounded program, we can run the solve.
         result = Result(specs)
@@ -680,8 +680,10 @@ class PyclingoDriver(object):
 
         if clingo_cffi:
             solve_kwargs["on_unsat"] = cores.append
+
+        timer.start("solve")
         solve_result = self.control.solve(**solve_kwargs)
-        timer.phase("solve")
+        timer.stop("solve")
 
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
@@ -955,7 +957,7 @@ class SpackSolverSetup(object):
         """Manipulate requirements from packages.yaml, and return a list of tuples
         with a uniform structure (name, policy, requirements).
         """
-        if isinstance(requirements, string_types):
+        if isinstance(requirements, str):
             rules = [(pkg_name, "one_of", [requirements])]
         else:
             rules = []

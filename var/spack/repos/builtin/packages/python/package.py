@@ -370,6 +370,9 @@ class Python(Package):
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if not is_windows:
         depends_on("pkgconfig@0.9.0:", type="build")
@@ -401,10 +404,14 @@ class Python(Package):
         depends_on("xz", when="@3.3:+lzma")
         depends_on("expat", when="+pyexpat")
         depends_on("libffi", when="+ctypes")
+        # https://docs.python.org/3/whatsnew/3.11.html#build-changes
+        depends_on("tk@8.5.12:", when="@3.11: +tkinter")
         depends_on("tk", when="+tkinter")
+        depends_on("tcl@8.5.12:", when="@3.11: +tkinter")
         depends_on("tcl", when="+tkinter")
         depends_on("uuid", when="+uuid")
         depends_on("tix", when="+tix")
+        depends_on("libxcrypt", when="+crypt")
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -559,6 +566,14 @@ class Python(Package):
                 variants += "+tix"
             except ProcessError:
                 variants += "~tix"
+
+        # Some modules are platform-dependent
+        if not is_windows:
+            try:
+                python("-c", "import crypt", error=os.devnull)
+                variants += "+crypt"
+            except ProcessError:
+                variants += "~crypt"
 
         return variants
 
@@ -1017,6 +1032,10 @@ class Python(Package):
                 else:
                     self.command("-c", "import Tix")
 
+            # Ensure that crypt module works
+            if "+crypt" in spec:
+                self.command("-c", "import crypt")
+
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -1408,12 +1427,7 @@ config.update(get_paths())
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        # If we set PYTHONHOME, we must also ensure that the corresponding
-        # python is found in the build environment. This to prevent cases
-        # where a system provided python is run against the standard libraries
-        # of a Spack built python. See issue #7128
-        env.set("PYTHONHOME", self.home)
-
+        # Ensure the current Python is first in the PATH
         path = os.path.dirname(self.command.path)
         if not is_system_path(path):
             env.prepend_path("PATH", path)

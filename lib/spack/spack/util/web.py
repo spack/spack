@@ -15,10 +15,9 @@ import shutil
 import ssl
 import sys
 import traceback
-
-import six
-from six.moves.urllib.error import URLError
-from six.moves.urllib.request import Request, urlopen
+from html.parser import HTMLParser
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -39,16 +38,10 @@ from spack.util.path import convert_to_posix_path
 #: User-Agent used in Request objects
 SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
 
-if sys.version_info < (3, 0):
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParseError, HTMLParser  # novm
-else:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
 
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
+# Also, HTMLParseError is deprecated and never raised.
+class HTMLParseError(Exception):
+    pass
 
 
 class LinkParser(HTMLParser):
@@ -676,11 +669,6 @@ def spider(root_urls, depth=0, concurrency=32):
         except HTMLParseError as e:
             # This error indicates that Python's HTML parser sucks.
             msg = "Got an error parsing HTML."
-
-            # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
-            if sys.version_info[:3] < (2, 7, 3):
-                msg += " Use Python 2.7.3 or newer for better HTML parsing."
-
             tty.warn(msg, url, "HTMLParseError: " + str(e))
 
         except Exception as e:
@@ -693,7 +681,7 @@ def spider(root_urls, depth=0, concurrency=32):
 
         return pages, links, subcalls
 
-    if isinstance(root_urls, six.string_types):
+    if isinstance(root_urls, str):
         root_urls = [root_urls]
 
     # Clear the local cache of visited pages before starting the search

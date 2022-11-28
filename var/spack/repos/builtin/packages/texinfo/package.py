@@ -35,16 +35,22 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("perl")
 
+    # sanity check
+    sanity_check_is_file = [
+        join_path("bin", "info"),
+        join_path("bin", "makeinfo"),
+    ]
+
     # Fix unescaped braces in regexps.
     # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=898994
-    patch("fix_unescaped_braces.patch", when="@6.3:")
+    patch("fix_unescaped_braces.patch", when="@6.3:6.5")
     patch("fix_unescaped_braces_2.patch", when="@5.1:6.0")
     patch("fix_unescaped_braces_3.patch", when="@5.0")
 
     # Apply this fix to perform thread-safe processing in code
     # that uses the global locale.
     # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=902771
-    patch("update_locale_handling.patch", when="@6.3:")
+    patch("update_locale_handling.patch", when="@6.3:6.5")
 
     patch("nvhpc.patch", when="%nvhpc")
 
