@@ -22,6 +22,7 @@ class RGenomicranges(RPackage):
 
     bioc = "GenomicRanges"
 
+    version("1.50.1", commit="6b3fb388ec038fb43f3cd26684ce778ee0e80e81")
     version("1.48.0", commit="2bce60814db7c20949892587740fb484aa435978")
     version("1.46.1", commit="e422642f64815cdfee8fc340681ad87a7eafc3bb")
     version("1.42.0", commit="32baca734b599d60fa13bdbe31c5712e648f538d")
@@ -46,6 +47,7 @@ class RGenomicranges(RPackage):
     depends_on("r-iranges@2.15.12:", type=("build", "run"), when="@1.34.0:")
     depends_on("r-iranges@2.17.1:", type=("build", "run"), when="@1.36.1:")
     depends_on("r-iranges@2.23.9:", type=("build", "run"), when="@1.42.0:")
+    depends_on("r-iranges@2.31.2:", type=("build", "run"), when="@1.50.1:")
     depends_on("r-genomeinfodb@1.11.5:", type=("build", "run"))
     depends_on("r-genomeinfodb@1.13.1:", type=("build", "run"), when="@1.30.3:")
     depends_on("r-genomeinfodb@1.15.2:", type=("build", "run"), when="@1.32.7:")

@@ -44,10 +44,6 @@ class Boost(Package):
     version("1.66.0", sha256="5721818253e6a0989583192f96782c4a98eb6204965316df9f5ad75819225ca9")
     version("1.65.1", sha256="9807a5d16566c57fd74fb522764e0b134a8bbe6b6e8967b83afefd30dcd3be81")
     version("1.65.0", sha256="ea26712742e2fb079c2a566a31f3266973b76e38222b9f88b387e3c8b2f9902c")
-    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
-    #       +python and +mpi, there seem to be errors with out-of-date
-    #       API calls from mpi/python.
-    #       See: https://github.com/spack/spack/issues/3963
     version("1.64.0", sha256="7bcc5caace97baa948931d712ea5f37038dbb1c5d89b43ad4def4ed7cb683332")
     version("1.63.0", sha256="beae2529f759f6b3bf3f4969a19c2e9d6f0c503edcb2de4a61d1428519fcb3b0")
     version("1.62.0", sha256="36c96b0f6155c98404091d8ceb48319a28279ca0333fba1ad8611eb90afb2ca0")
@@ -226,9 +222,14 @@ class Boost(Package):
     conflicts("cxxstd=98", when="+icu")  # Requires c++11 at least
 
     depends_on("python", when="+python")
+    # https://github.com/boostorg/python/commit/cbd2d9f033c61d29d0a1df14951f4ec91e7d05cd
+    depends_on("python@:3.9", when="@:1.75 +python")
+
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
     depends_on("zlib", when="+iostreams")
+    depends_on("zstd", when="+iostreams")
+    depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
@@ -244,6 +245,13 @@ class Boost(Package):
     conflicts("+fiber", when="@:1.61")  # Fiber since 1.62.0.
     conflicts("cxxstd=98", when="+fiber")  # Fiber requires >=C++11.
     conflicts("~context", when="+fiber")  # Fiber requires Context.
+
+    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
+    #       +python and +mpi, there seem to be errors with out-of-date
+    #       API calls from mpi/python.
+    #       See: https://github.com/spack/spack/issues/3963
+    conflicts("@1.64.0", when="+python", msg="Errors with out-of-date API calls from Python")
+    conflicts("@1.64.0", when="+mpi", msg="Errors with out-of-date API calls from MPI")
 
     conflicts("+taggedlayout", when="+versionedlayout")
     conflicts("+numpy", when="~python")
@@ -510,11 +518,18 @@ class Boost(Package):
                     "-s",
                     "ZLIB_LIBPATH=%s" % spec["zlib"].prefix.lib,
                     "-s",
-                    "NO_LZMA=1",
+                    "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
                     "-s",
-                    "NO_ZSTD=1",
+                    "LZMA_LIBPATH=%s" % spec["xz"].prefix.lib,
+                    "-s",
+                    "ZSTD_INCLUDE=%s" % spec["zstd"].prefix.include,
+                    "-s",
+                    "ZSTD_LIBPATH=%s" % spec["zstd"].prefix.lib,
                 ]
             )
+            # At least with older Xcode, _lzma_cputhreads is missing (#33998)
+            if "platform=darwin" in self.spec:
+                options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
         if "+shared" in spec:
