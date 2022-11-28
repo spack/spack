@@ -40,12 +40,12 @@ misc_cache = llnl.util.lang.Singleton(_misc_cache)
 def fetch_cache_location():
     """Filesystem cache of downloaded archives.
 
-    This prevents Spack from repeatedly fetch the same files when
+    This prevents Spack from repeatedly fetching the same files when
     building the same package different ways or multiple times.
     """
     path = spack.config.get("config:source_cache")
     if not path:
-        path = spack.paths.default_fetch_cache_path
+        path = spack.paths.local_user_mirror
     path = spack.util.path.canonicalize_path(path)
     return path
 

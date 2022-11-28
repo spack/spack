@@ -64,10 +64,6 @@ mock_packages_path = os.path.join(repos_path, "builtin.mock")
 # Writable things in $spack/var/spack
 # TODO: Deprecate these, as we want a read-only spack prefix by default.
 # TODO: These should probably move to user cache, or some other location.
-#
-# fetch cache for downloaded files
-default_fetch_cache_path = os.path.join(var_path, "cache")
-
 # GPG paths.
 gpg_keys_path = os.path.join(var_path, "gpg")
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
@@ -101,6 +97,9 @@ default_monitor_path = os.path.join(reports_path, "monitor")
 
 #: git repositories fetched to compare commits to versions
 user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
+
+#: default location to fetch downloaded archives to.
+local_user_mirror = os.path.join(user_cache_path, "mirror")
 
 #: bootstrap store for bootstrapping clingo and other tools
 default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
