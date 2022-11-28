@@ -222,6 +222,9 @@ class Boost(Package):
     conflicts("cxxstd=98", when="+icu")  # Requires c++11 at least
 
     depends_on("python", when="+python")
+    # https://github.com/boostorg/python/commit/cbd2d9f033c61d29d0a1df14951f4ec91e7d05cd
+    depends_on("python@:3.9", when="@:1.75 +python")
+
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
     depends_on("zlib", when="+iostreams")
@@ -524,6 +527,9 @@ class Boost(Package):
                     "ZSTD_LIBPATH=%s" % spec["zstd"].prefix.lib,
                 ]
             )
+            # At least with older Xcode, _lzma_cputhreads is missing (#33998)
+            if "platform=darwin" in self.spec:
+                options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
         if "+shared" in spec:

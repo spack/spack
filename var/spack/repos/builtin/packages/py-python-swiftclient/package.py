@@ -28,7 +28,6 @@ class PyPythonSwiftclient(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-pbr", type="build")
 
-    depends_on("py-futures@3:", type=("build", "run"), when="^python@:2")
     depends_on("py-requests@1.1.0:", type=("build", "run"))
     depends_on("py-six@1.9:", type=("build", "run"))
 

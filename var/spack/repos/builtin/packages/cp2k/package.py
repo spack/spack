@@ -53,7 +53,10 @@ class Cp2k(MakefilePackage, CudaPackage):
         description=("Enable the alternative PEXSI method" "for density matrix evaluation"),
     )
     variant(
-        "elpa", default=False, description="Enable optimised diagonalisation routines from ELPA"
+        "elpa",
+        default=False,
+        description="Enable optimised diagonalisation routines from ELPA",
+        when="@8.3:",
     )
     variant(
         "sirius",
@@ -164,9 +167,6 @@ class Cp2k(MakefilePackage, CudaPackage):
         conflicts("~mpi", msg="elpa requires MPI")
         depends_on("elpa+openmp", when="+openmp")
         depends_on("elpa~openmp", when="~openmp")
-        depends_on("elpa@2011.12:2016.13", when="@:5")
-        depends_on("elpa@2011.12:2017.11", when="@6.0:6")
-        depends_on("elpa@2018.05:2020.11.001", when="@7.0:8.2")
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
 
