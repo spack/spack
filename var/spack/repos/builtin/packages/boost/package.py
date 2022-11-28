@@ -109,7 +109,7 @@ class Boost(Package):
     )
 
     @staticmethod
-    def boost_variant(name, is_library=False, **kwargs):
+    def boost_variant(name, is_library=False, buildable="", **kwargs):
         variant(name, **kwargs)
         if is_library:
             global _library_names
@@ -231,39 +231,63 @@ class Boost(Package):
         is_library=False,
     )
 
-    # --------- VERSIONED VARIANTS ---------------------
-    #  These are available only for specific versions of Boost
-
-    # Available since 1.53.0
+    boost_variant(
+        "algorithm",
+        description="A collection of useful generic algorithms.",
+        default="False",
+        when="@1.50.0:",
+    )
+    boost_variant(
+        "align",
+        description="Memory alignment functions, allocators, traits.",
+        default="False",
+        when="@1.56.0:",
+    )
     boost_variant(
         "atomic",
-        default=False,
+        description="C++11-style atomic<>.",
+        default="False",
         when="@1.53.0:",
-        description="C++11-style atomic<>",
-        is_library=True,
+        buildable="@1.53.0:",
     )
-
-    # Available since 1.47.0
     boost_variant(
-        "chrono", default=False, when="@1.47.0:", description="Time utilities", is_library=True
+        "beast",
+        description="Portable HTTP, WebSocket, and network operations using only C++11 and Boost.Asio",
+        default="False",
+        when="@1.66.0:",
     )
-
-    # Available since 1.53.0, header-only until 1.54.0
     boost_variant(
-        "coroutine",
-        default=False,
-        when="@1.54.0:",
-        description="DEPRECATED- use coroutine2",
-        is_library=True,
+        "callabletraits",
+        description="A spiritual successor to Boost.FunctionTypes, Boost.CallableTraits is a header-only C++11 library for the compile-time inspection and manipulation of all 'callable' types. Additional support for C++17 features.",
+        default="False",
+        when="@1.66.0:",
     )
-
-    # Available since 1.51.0
+    boost_variant(
+        "chrono",
+        description="Useful time utilities. C++11.",
+        default="False",
+        when="@1.47.0:",
+        buildable="@1.47.0:",
+    )
+    boost_variant(
+        "compute",
+        description="Parallel/GPU-computing library",
+        default="False",
+        when="@1.61.0:",
+    )
+    boost_variant(
+        "container",
+        description="Standard library containers and extensions.",
+        default="False",
+        when="@1.48.0:",
+        buildable="@1.56.0:",
+    )
     boost_variant(
         "context",
-        default=False,
+        description="(C++11) Context switching library.",
+        default="False",
         when="@1.51.0:",
-        description="Context-switching library",
-        is_library=True,
+        buildable="@1.51.0:",
     )
     boost_variant(
         "context-impl",
@@ -273,256 +297,521 @@ class Boost(Package):
         description="Use the specified backend for boost-context",
         when="+context",
     )
-
-    # Available since 1.48.0, header-only until 1.56.0
-    boost_variant(
-        "container",
-        default=False,
-        when="@1.56.0:",
-        description="Standard library containers and extensions",
-        is_library=True,
-    )
-
-    # Available since 1.67.0
     boost_variant(
         "contract",
-        default=False,
+        description="Contract programming for C++. All contract programming features are supported: Subcontracting, class invariants, postconditions (with old and return values), preconditions, customizable actions on assertion failure (e.g., terminate or throw), optional compilation and checking of assertions, etc.",
+        default="False",
         when="@1.67.0:",
-        description="Contract programming for C++",
-        is_library=True,
+        buildable="@1.67.0:",
     )
-
-    # Available since 1.59.0, converted to header-only in 1.64.0
+    boost_variant(
+        "convert",
+        description="An extendible and configurable type-conversion framework.",
+        default="False",
+        when="@1.59.0:",
+    )
+    boost_variant(
+        "core",
+        description="A collection of simple core utilities with minimal dependencies.",
+        default="False",
+        when="@1.56.0:",
+    )
+    boost_variant(
+        "coroutine",
+        description="Coroutine library.",
+        default="False",
+        when="@1.53.0:",
+        buildable="@1.54.0:",
+    )
     boost_variant(
         "coroutine2",
-        default=False,
-        when="@1.59.0:1.64.0",
-        description="C++11 coroutines",
-        is_library=True,
+        description="(C++11) Coroutine library.",
+        default="False",
+        when="@1.59.0:",
+        buildable="@1.59.0:@1.64.0",
     )
-
-    # Available since 1.29.0
     boost_variant(
         "date_time",
-        default=False,
-        when="@1.39.0:",
-        description="Generic date-time utilities",
-        is_library=True,
+        description="A set of date-time libraries based on generic programming concepts.",
+        default="True",
+        when="@1.29.0:",
+        buildable="@1.29.0:",
     )
-
-    # Available since 1.36.0, header-only until 1.47.0
+    boost_variant(
+        "describe",
+        description="A C++14 reflection library.",
+        default="False",
+        when="@1.77.0:",
+    )
+    boost_variant(
+        "dll",
+        description="Library for comfortable work with DLL and DSO.",
+        default="False",
+        when="@1.61.0:",
+    )
+    boost_variant(
+        "endian",
+        description="Types and conversion functions for correct byte ordering and more regardless of processor endianness.",
+        default="False",
+        when="@1.58.0:",
+    )
     boost_variant(
         "exception",
-        default=False,
-        when="@1.47.0:",
-        description="Transport arbitrary data in exception objects between threads",
-        is_library=True,
+        description="The Boost Exception library supports transporting of arbitrary data in exception objects, and transporting of exceptions between threads.",
+        default="True",
+        when="@1.36.0:",
+        buildable="@1.47.0:",
     )
-
-    # Available since 1.62.0
     boost_variant(
         "fiber",
-        default=False,
+        description="(C++11) Userland threads library.",
+        default="False",
         when="@1.62.0:",
-        description="C++11 userland threads",
-        is_library=True,
+        buildable="@1.62.0:",
     )
-
-    # Available since 1.30.0
     boost_variant(
         "filesystem",
-        default=False,
-        when="@1.39.0:",
-        description="Query and manipulate paths, files, and directories",
-        is_library=True,
+        description="The Boost Filesystem Library provides portable facilities to query and manipulate paths, files, and directories.",
+        default="True",
+        when="@1.30.0:",
+        buildable="@1.30.0:",
     )
-
-    # Available since 1.18.0
+    boost_variant(
+        "functional_factory",
+        description="Function object templates for dynamic and static object creation",
+        default="False",
+        when="@1.43.0:",
+    )
+    boost_variant(
+        "functional_forward",
+        description="Adapters to allow generic function objects to accept arbitrary arguments",
+        default="False",
+        when="@1.43.0:",
+    )
+    boost_variant(
+        "functional_overloaded_function",
+        description="Overload different functions into a single function object.",
+        default="False",
+        when="@1.50.0:",
+    )
+    boost_variant(
+        "geometry",
+        description="The Boost.Geometry library provides geometric algorithms, primitives and spatial index.",
+        default="False",
+        when="@1.47.0:",
+    )
     boost_variant(
         "graph",
-        default=False,
-        when="@1.39.0:",
-        description="Generic interface for traversing graphs",
-        is_library=True,
+        description="The BGL graph interface and graph components are generic, in the same sense as the Standard Template Library (STL).",
+        default="True",
+        when="@1.18.0:",
+        buildable="@1.18.0:",
     )
-
-    # Available since 1.40.0
     boost_variant(
         "graph_parallel",
-        default=False,
+        description="The PBGL graph interface and graph components are generic, in the same sense as the Standard Template Library (STL).",
+        default="False",
         when="@1.40.0:",
-        description="Parallel, distributed computation on graphs",
-        is_library=True,
+        buildable="@1.40.0:",
     )
-
-    # Available since 1.33.0
+    boost_variant(
+        "hana",
+        description="A modern C++ metaprogramming library. It provides high level algorithms to manipulate heterogeneous sequences, allows writing type-level computations with a natural syntax, provides tools to introspect user-defined types and much more.",
+        default="False",
+        when="@1.61.0:",
+    )
+    boost_variant(
+        "heap",
+        description="Priority queue data structures.",
+        default="False",
+        when="@1.49.0:",
+    )
+    boost_variant(
+        "histogram",
+        description="Fast multi-dimensional histogram with convenient interface for C++14",
+        default="False",
+        when="@1.70.0:",
+    )
+    boost_variant(
+        "hof",
+        description="Higher-order functions for C++",
+        default="False",
+        when="@1.67.0:",
+    )
+    boost_variant(
+        "icl",
+        description="Interval Container Library, interval sets and maps and aggregation of associated values",
+        default="False",
+        when="@1.46.0:",
+    )
+    boost_variant(
+        "identity_type",
+        description="Wrap types within round parenthesis so they can always be passed as macro parameters.",
+        default="False",
+        when="@1.50.0:",
+    )
     boost_variant(
         "iostreams",
-        default=False,
-        when="@1.39.0:",
-        description="Streams, stream buffers, and i/o filters",
-        is_library=True,
+        description="Boost.IOStreams provides a framework for defining streams, stream buffers and i/o filters.",
+        default="False",
+        when="@1.33.0:",
+        buildable="@1.33.0:",
     )
-
-    # Available since 1.75.0
     boost_variant(
         "json",
-        default=False,
-        when="@1.75.0:",
         description="JSON parsing, serialization, and DOM in C++11",
-        is_library=True,
+        default="False",
+        when="@1.75.0:",
+        buildable="@1.75.0:",
     )
-
-    # Available since 1.48.0
+    boost_variant(
+        "lambda2",
+        description="A C++14 lambda library.",
+        default="False",
+        when="@1.77.0:",
+    )
+    boost_variant(
+        "leaf",
+        description="A lightweight error handling library for C++11.",
+        default="False",
+        when="@1.75.0:",
+    )
+    boost_variant(
+        "local_function",
+        description="Program functions locally, within other functions, directly within the scope where they are needed.",
+        default="False",
+        when="@1.50.0:",
+    )
     boost_variant(
         "locale",
-        default=False,
+        description="Provide localization and Unicode handling tools for C++.",
+        default="False",
         when="@1.48.0:",
-        description="Localization and Unicode handling",
-        is_library=True,
+        buildable="@1.48.0:",
     )
-
-    # Available since 1.54.0
-    boost_variant("log", default=False, when="@1.54.0:", description="Logging", is_library=True)
-
-    # Available since 1.23.0
+    boost_variant(
+        "lockfree",
+        description="Lockfree data structures.",
+        default="False",
+        when="@1.53.0:",
+    )
+    boost_variant(
+        "log",
+        description="Logging library.",
+        default="False",
+        when="@1.54.0:",
+        buildable="@1.54.0:",
+    )
     boost_variant(
         "math",
-        default=False,
-        when="@1.39.0:",
-        description="Special functions, complex numbers, " "quaternions, and octonions",
-        is_library=True,
+        description="Boost.Math includes several contributions in the domain of mathematics: The Greatest Common Divisor and Least Common Multiple library provides run-time and compile-time evaluation of the greatest common divisor (GCD) or least common multiple (LCM) of two integers. The Special Functions library currently provides eight templated special functions, in namespace boost. The Complex Number Inverse Trigonometric Functions are the inverses of trigonometric functions currently present in the C++ standard. Quaternions are a relative of complex numbers often used to parameterise rotations in three dimentional space. Octonions, like quaternions, are a relative of complex numbers.",
+        default="True",
+        when="@1.23.0:",
+        buildable="@1.23.0:",
     )
-
-    # Available since 1.35.0
+    boost_variant(
+        "meta_state_machine",
+        description="A very high-performance library for expressive UML2 finite state machines.",
+        default="False",
+        when="@1.44.0:",
+    )
+    boost_variant(
+        "metaparse",
+        description="A library for generating compile time parsers parsing embedded DSL code as part of the C++ compilation process",
+        default="False",
+        when="@1.61.0:",
+        buildable="@1.61.0:@1.65.1",
+    )
+    boost_variant(
+        "move",
+        description="Portable move semantics for C++03 and C++11 compilers.",
+        default="False",
+        when="@1.48.0:",
+    )
+    boost_variant(
+        "mp11",
+        description="A C++11 metaprogramming library.",
+        default="False",
+        when="@1.66.0:",
+    )
     boost_variant(
         "mpi",
-        default=False,
-        when="@1.39.0:",
-        description="Boost interface to MPI",
-        is_library=True,
+        description="Message Passing Interface library, for use in distributed-memory parallel application programming.",
+        default="False",
+        when="@1.35.0:",
+        buildable="@1.35.0:",
     )
-
-    # Available since 1.73.0
+    boost_variant(
+        "multiprecision",
+        description="Extended precision arithmetic types for floating point, integer andrational arithmetic.",
+        default="False",
+        when="@1.53.0:",
+    )
     boost_variant(
         "nowide",
-        default=False,
+        description="Standard library functions with UTF-8 API on Windows.",
+        default="False",
         when="@1.73.0:",
-        description="Standard library functions with UTF-8 API on Windows",
-        is_library=True,
+        buildable="@1.73.0:",
     )
-
-    # Available since 1.32.0
+    boost_variant(
+        "odeint",
+        description="Solving ordinary differential equations.",
+        default="False",
+        when="@1.53.0:",
+    )
+    boost_variant(
+        "outcome",
+        description="A deterministic failure handling library partially simulating lightweight exceptions.",
+        default="False",
+        when="@1.70.0:",
+    )
+    boost_variant(
+        "parameter_python_bindings",
+        description="Boost.Parameter Library Python bindings.",
+        default="False",
+        when="@1.69.0:",
+    )
+    boost_variant(
+        "pfr",
+        description="Basic reflection for user defined types.",
+        default="False",
+        when="@1.75.0:",
+    )
+    boost_variant(
+        "phoenix",
+        description="Define small unnamed function objects at the actual call site, and more.",
+        default="False",
+        when="@1.47.0:",
+    )
+    boost_variant(
+        "polycollection",
+        description="Fast containers of polymorphic objects.",
+        default="False",
+        when="@1.65.0:",
+    )
+    boost_variant(
+        "polygon",
+        description="Voronoi diagram construction and booleans/clipping, resizing/offsetting and more for planar polygons with integral coordinates.",
+        default="False",
+        when="@1.44.0:",
+    )
+    boost_variant(
+        "predef",
+        description="This library defines a set of compiler, architecture, operating system, library, and other version numbers from the information it can gather of C, C++, Objective C, and Objective C++ predefined macros or those defined in generally available headers.",
+        default="False",
+        when="@1.55.0:",
+    )
+    boost_variant(
+        "process",
+        description="Library to create processes in a portable way.",
+        default="False",
+        when="@1.64.0:",
+    )
     boost_variant(
         "program_options",
-        default=False,
-        when="@1.39.0:",
-        description="Obtain user-provided options from command line or config file",
-        is_library=True,
+        description="The program_options library allows program developers to obtain program options, that is (name, value) pairs from the user, via conventional methods such as command line and config file.",
+        default="True",
+        when="@1.32.0:",
+        buildable="@1.32.0:",
     )
-
-    # Available since 1.19.0
+    boost_variant(
+        "property_map",
+        description="Parallel extensions to Property Map for use with Parallel Graph.",
+        default="False",
+        when="@1.77.0:",
+    )
+    boost_variant(
+        "property_tree",
+        description="A tree data structure especially suited to storing configuration data.",
+        default="False",
+        when="@1.41.0:",
+    )
     boost_variant(
         "python",
-        default=False,
-        when="@1.39.0:",
-        description="Boost interface to Python",
-        is_library=True,
+        description="The Boost Python Library is a framework for interfacing Python and C++. It allows you to quickly and seamlessly expose C++ classes functions and objects to Python, and vice-versa, using no special tools -- just your C++ compiler.",
+        default="False",
+        when="@1.19.0:",
+        buildable="@1.19.0:",
     )
-
-    # Available since 1.15.0, header-only until 1.43.0
+    boost_variant(
+        "qvm",
+        description="Generic C++ library for working with Quaternions Vectors and Matrices.",
+        default="False",
+        when="@1.62.0:",
+    )
     boost_variant(
         "random",
-        default=False,
-        when="@1.43.0:",
-        description="Random number generation",
-        is_library=True,
+        description="A complete system for random number generation.",
+        default="True",
+        when="@1.15.0:",
+        buildable="@1.43.0:",
     )
-
-    # Available since 1.18.0
     boost_variant(
-        "regex", default=False, when="@1.39.0:", description="Regular expressions", is_library=True
+        "ratio",
+        description="Compile time rational arithmetic. C++11.",
+        default="False",
+        when="@1.47.0:",
     )
-
-    # Available since 1.32.0
+    boost_variant(
+        "regex",
+        description="Regular expression library.",
+        default="True",
+        when="@1.18.0:",
+        buildable="@1.18.0:",
+    )
+    boost_variant(
+        "safe_numerics",
+        description="Guaranteed Correct Integer Arithmetic",
+        default="False",
+        when="@1.69.0:",
+    )
     boost_variant(
         "serialization",
-        default=False,
-        when="@1.39.0:",
-        description="Serialization for persistence and marshalling",
-        is_library=True,
+        description="Serialization for persistence and marshalling.",
+        default="True",
+        when="@1.32.0:",
+        buildable="@1.32.0:",
     )
-
-    # Available since 1.29.0, removed in 1.68.0
     boost_variant(
         "signals",
-        default=False,
-        when="@1.39.0:1.68.0",
-        description="DEPRECATED/REMOVED- use signals2",
-        is_library=True,
+        description="REMOVED",
+        default="False",
+        when="@1.29.0:1.68.0",
+        buildable="@1.29.0:1.68.0",
     )
-
-    # Available since 1.65.0
+    boost_variant(
+        "signals2",
+        description="Managed signals & slots callback implementation (thread-safe version 2).",
+        default="False",
+        when="@1.39.0:",
+    )
+    boost_variant(
+        "sort",
+        description="High-performance templated sort functions.",
+        default="False",
+        when="@1.58.0:",
+    )
+    boost_variant(
+        "spirit_classic",
+        description="LL parser framework represents parsers directly as EBNF grammars in inlined C++.",
+        default="False",
+        when="@1.69.0:",
+    )
+    boost_variant(
+        "spirit_repository",
+        description="The Spirit repository is a community effort collecting different reusable components (primitives, directives, grammars, etc.) for Qi parsers and Karma generators.",
+        default="False",
+        when="@1.69.0:",
+    )
     boost_variant(
         "stacktrace",
-        default=False,
+        description="Gather, store, copy and print backtraces.",
+        default="False",
         when="@1.65.0:",
-        description="Gather, store, copy and print backtraces",
-        is_library=True,
+        buildable="@1.65.0:",
     )
-
-    # Available since 1.35.0
+    boost_variant(
+        "static_string",
+        description="A fixed capacity dynamically sized string.",
+        default="False",
+        when="@1.73.0:",
+    )
+    boost_variant(
+        "stl_interfaces",
+        description="C++14 and later CRTP templates for defining iterators, views, and containers.",
+        default="False",
+        when="@1.74.0:",
+    )
+    boost_variant(
+        "string_ref",
+        description="String view templates.",
+        default="False",
+        when="@1.71.0:",
+    )
     boost_variant(
         "system",
-        default=False,
-        when="@1.39.0:",
-        description="Extensible error reporting",
-        is_library=True,
+        description="Extensible error reporting.",
+        default="True",
+        when="@1.35.0:",
+        buildable="@1.35.0:",
     )
-
-    # Available since 1.21.0
     boost_variant(
         "test",
-        default=False,
-        when="@1.39.0:",
-        description="Unit testing and program execution monitoring",
-        is_library=True,
+        description="Support for simple program testing, full unit testing, and for program execution monitoring.",
+        default="True",
+        when="@1.21.0:",
+        buildable="@1.21.0:",
     )
-
-    # Available since 1.25.0
     boost_variant(
         "thread",
-        default=False,
-        when="@1.39.0:",
-        description="Portable multi-threading",
-        is_library=True,
+        description="Portable C++ multi-threading. C++03, C++11, C++14, C++17.",
+        default="True",
+        when="@1.25.0:",
+        buildable="@1.25.0:",
     )
-
-    # Available since 1.9.0, header-only until 1.48.0
+    boost_variant(
+        "throwexception",
+        description="A common infrastructure for throwing exceptions from Boost libraries.",
+        default="False",
+        when="@1.56.0:",
+    )
     boost_variant(
         "timer",
-        default=False,
-        when="@1.48.0:",
-        description="Event timer, progress timer, and progress display",
-        is_library=True,
+        description="Event timer, progress timer, and progress display classes.",
+        default="True",
+        when="@1.9.0:",
+        buildable="@1.48.0:",
     )
-
-    # Available since 1.54.0, header-only until 1.60.0
+    boost_variant(
+        "tti",
+        description="Type Traits Introspection library.",
+        default="False",
+        when="@1.54.0:",
+    )
     boost_variant(
         "type_erasure",
-        default=False,
-        when="@1.60.0:",
-        description="Runtime polymorphism based on concepts",
-        is_library=True,
+        description="Runtime polymorphism based on concepts.",
+        default="False",
+        when="@1.54.0:",
+        buildable="@1.60.0:",
     )
-
-    # Available since 1.33.0
+    boost_variant(
+        "type_index",
+        description="Runtime/Compile time copyable type info.",
+        default="False",
+        when="@1.56.0:",
+    )
+    boost_variant(
+        "uuid",
+        description="A universally unique identifier.",
+        default="False",
+        when="@1.42.0:",
+    )
+    boost_variant(
+        "variant2",
+        description="A never-valueless, strong guarantee implementation of std::variant.",
+        default="False",
+        when="@1.71.0:",
+    )
+    boost_variant(
+        "vmd",
+        description="Variadic Macro Data library.",
+        default="False",
+        when="@1.60.0:",
+    )
     boost_variant(
         "wave",
-        default=False,
-        when="@1.39.0:",
-        description="Mandatory C99/C++ preprocessor functionality",
-        is_library=True,
+        description="The Boost.Wave library is a Standards conformant, and highly configurable implementation of the mandated C99/C++ preprocessor functionality packed behind an easy to use iterator interface.",
+        default="True",
+        when="@1.33.0:",
+        buildable="@1.33.0:",
+    )
+    boost_variant(
+        "yap",
+        description="An expression template library for C++14 and later.",
+        default="False",
+        when="@1.68.0:",
     )
 
     # Unicode support
