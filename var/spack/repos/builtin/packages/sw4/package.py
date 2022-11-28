@@ -26,9 +26,9 @@ class Sw4(MakefilePackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("hdf5+mpi")
-    depends_on("zfp")
     depends_on("fftw@3.0: +mpi")
-    depends_on("h5z-zfp")
+    depends_on("zfp")
+    depends_on("h5z-zfp@develop")
     depends_on("python")
     depends_on("py-h5py+mpi")
 
