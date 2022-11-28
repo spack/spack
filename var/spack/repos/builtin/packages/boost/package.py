@@ -1362,23 +1362,11 @@ class Boost(Package):
             force_symlink("/usr/bin/libtool", join_path(newdir, "libtool"))
             env["PATH"] = newdir + ":" + env["PATH"]
 
-        with_libs = self._libraries_to_build()
-
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, "boost")
-            mkdirp(join_path(prefix, "include"))
-            dst = join_path(prefix, "include", "boost")
-            install_tree(src, dst)
-            return
-
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
         bootstrap_options = ["--prefix=%s" % prefix]
-        self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
+        self.determine_bootstrap_options(spec, self._libraries_to_build(), bootstrap_options)
 
         if self.spec.satisfies("platform=windows"):
             bootstrap = Executable("cmd.exe")
