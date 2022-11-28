@@ -38,12 +38,15 @@ def mock_calls_for_clean(monkeypatch):
     monkeypatch.setattr(spack.caches.fetch_cache, "destroy", Counter("downloads"), raising=False)
     monkeypatch.setattr(spack.caches.misc_cache, "destroy", Counter("caches"))
     monkeypatch.setattr(spack.installer, "clear_failures", Counter("failures"))
+    monkeypatch.setattr(
+        spack.binary_distribution.local_binary_cache, "destroy", Counter("binary_cache")
+    )
     monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
 
     yield counts
 
 
-all_effects = ["stages", "downloads", "caches", "failures", "python_cache"]
+all_effects = ["stages", "downloads", "caches", "failures", "python_cache", "binary_cache"]
 
 
 @pytest.mark.usefixtures("mock_packages", "config")
@@ -56,6 +59,7 @@ all_effects = ["stages", "downloads", "caches", "failures", "python_cache"]
         ("-m", ["caches"]),
         ("-f", ["failures"]),
         ("-p", ["python_cache"]),
+        ("-B", ["binary_cache"]),
         ("-a", all_effects),
         ("", []),
     ],

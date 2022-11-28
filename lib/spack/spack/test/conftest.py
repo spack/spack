@@ -1724,6 +1724,14 @@ def brand_new_binary_cache():
     )
 
 
+@pytest.fixture(autouse=True)
+def brand_new_local_binary_cache():
+    yield
+    spack.binary_distribution.local_binary_cache = llnl.util.lang.Singleton(
+        spack.binary_distribution._local_binary_cache
+    )
+
+
 @pytest.fixture
 def directory_with_manifest(tmpdir):
     """Create a manifest file in a directory. Used by 'spack external'."""

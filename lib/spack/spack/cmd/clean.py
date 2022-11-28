@@ -29,7 +29,7 @@ class AllClean(argparse.Action):
     """Activates flags -s -d -f -m and -p simultaneously"""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        parser.parse_args(["-sdfmp"], namespace=namespace)
+        parser.parse_args(["-sdfmpB"], namespace=namespace)
 
 
 def setup_parser(subparser):
@@ -58,6 +58,12 @@ def setup_parser(subparser):
         help="remove .pyc, .pyo files and __pycache__ folders",
     )
     subparser.add_argument(
+        "-B",
+        "--binary-cache",
+        action="store_true",
+        help="remove software and configuration needed to bootstrap Spack",
+    )
+    subparser.add_argument(
         "-b",
         "--bootstrap",
         action="store_true",
@@ -67,7 +73,7 @@ def setup_parser(subparser):
         "-a",
         "--all",
         action=AllClean,
-        help="equivalent to -sdfmp (does not include --bootstrap)",
+        help="equivalent to -sdfmpB (does not include --bootstrap)",
         nargs=0,
     )
     arguments.add_common_arguments(subparser, ["specs"])
@@ -98,6 +104,7 @@ def clean(parser, args):
             args.failures,
             args.misc_cache,
             args.python_cache,
+            args.binary_cache,
             args.bootstrap,
         ]
     ):
@@ -134,6 +141,11 @@ def clean(parser, args):
     if args.python_cache:
         tty.msg("Removing python cache files")
         remove_python_cache()
+
+    if args.binary_cache:
+        if spack.binary_distribution.local_binary_cache:
+            tty.msg("Removing local binary cache files")
+        spack.binary_distribution.local_binary_cache.destroy()
 
     if args.bootstrap:
         bootstrap_prefix = spack.util.path.canonicalize_path(spack.config.get("bootstrap:root"))

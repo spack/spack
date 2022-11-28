@@ -216,6 +216,16 @@ config:
   # for updates, within a single Spack invocation. Defaults to 10 minutes.
   binary_index_ttl: 600
 
+  # Directory (or multiple directories) to cache files downloaded from buildcaches.
+  # Should be 'null' in most cases, unless you wipe your Spack install tree frequently (e.g. in CI).
+  local_binary_cache: null
+  # Examples:
+  # local_binary_cache: /path/to/cachedir
+  # local_binary_cache:
+  #   - prefixes: ['https://binaries.spack.io/']
+  #     root: /cachedir/for/public/buildcache
+  #   - root: /cachedir/for/everything/else
+
   flags:
     # Whether to keep -Werror flags active in package builds.
     keep_werror: 'none'
