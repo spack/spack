@@ -154,36 +154,62 @@ class Boost(Package):
     # 1.84.0 dropped support for 98/03
     conflicts("cxxstd=98", when="@1.84.0:")
 
-    boost_variant("debug", default=False, description="Switch to the debug version of Boost")
-
-    boost_variant("shared", default=True, description="Additionally build shared libraries")
-
     boost_variant(
-        "multithreaded", default=True, description="Build multi-threaded versions of libraries"
+        "debug",
+        default=False,
+        description="Switch to the debug version of Boost",
+        is_library=False,
     )
 
     boost_variant(
-        "singlethreaded", default=False, description="Build single-threaded versions of libraries"
+        "shared", default=True, description="Additionally build shared libraries", is_library=False
     )
 
-    boost_variant("icu", default=False, description="Build with Unicode and ICU suport")
+    boost_variant(
+        "multithreaded",
+        default=True,
+        description="Build multi-threaded versions of libraries",
+        is_library=False,
+    )
 
     boost_variant(
-        "taggedlayout", default=False, description="Augment library names with build options"
+        "singlethreaded",
+        default=False,
+        description="Build single-threaded versions of libraries",
+        is_library=False,
+    )
+
+    boost_variant(
+        "icu", default=False, description="Build with Unicode and ICU suport", is_library=False
+    )
+
+    boost_variant(
+        "taggedlayout",
+        default=False,
+        description="Augment library names with build options",
+        is_library=False,
     )
 
     boost_variant(
         "versionedlayout",
         default=False,
         description="Augment library layout with versioned subdirs",
+        is_library=False,
     )
 
     boost_variant(
-        "clanglibcpp", default=False, description="Compile with clang libc++ instead of libstdc++"
+        "clanglibcpp",
+        default=False,
+        description="Compile with clang libc++ instead of libstdc++",
+        is_library=False,
     )
 
     boost_variant(
-        "numpy", default=False, when="+python", description="Build the Boost NumPy library"
+        "numpy",
+        default=False,
+        when="+python",
+        description="Build the Boost NumPy library",
+        is_library=False,
     )
 
     boost_variant(
@@ -191,6 +217,7 @@ class Boost(Package):
         default=False,
         description="Generate position-independent code (PIC), useful "
         "for building static libraries",
+        is_library=False,
     )
 
     # https://boostorg.github.io/build/manual/develop/index.html#bbv2.builtin.features.visibility
@@ -201,6 +228,7 @@ class Boost(Package):
         multi=False,
         when="@1.69.0:",
         description="Default symbol visibility in compiled libraries",
+        is_library=False,
     )
 
     # --------- VERSIONED VARIANTS ---------------------
