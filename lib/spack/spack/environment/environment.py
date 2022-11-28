@@ -534,7 +534,7 @@ class ViewDescriptor(object):
 
         for s in concretized_root_specs:
             if self.link == "all":
-                specs.extend(s.traverse(deptype=("link", "run")))
+                specs.extend(s.traverse(deptype=("build","link", "run")))
             elif self.link == "run":
                 specs.extend(s.traverse(deptype=("run")))
             else:
