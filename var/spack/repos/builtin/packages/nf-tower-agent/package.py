@@ -8,7 +8,7 @@ import platform
 from spack.package import *
 
 
-class TowerAgent(Package):
+class NfTowerAgent(Package):
     """Tower Agent allows Nextflow Tower to launch pipelines
     on HPC clusters that do not allow direct access through
     an SSH client.

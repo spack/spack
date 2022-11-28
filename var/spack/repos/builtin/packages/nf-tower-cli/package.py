@@ -8,7 +8,7 @@ import platform
 from spack.package import *
 
 
-class TowerCli(Package):
+class NfTowerCli(Package):
     """Tower on the Command Line brings Nextflow Tower concepts
     including Pipelines, Actions and Compute Environments
     to the terminal.
