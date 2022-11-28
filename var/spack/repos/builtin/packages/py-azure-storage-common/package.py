@@ -21,4 +21,3 @@ class PyAzureStorageCommon(PythonPackage):
     depends_on("py-cryptography", type=("build", "run"))
     depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-azure-storage-nspkg", when="^python@:2", type=("build", "run"))

@@ -17,7 +17,7 @@ import sys
 import traceback
 from html.parser import HTMLParser
 from urllib.error import URLError
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -34,6 +34,44 @@ import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.path import convert_to_posix_path
+
+
+class BetterHTTPRedirectHandler(HTTPRedirectHandler):
+    """The same as HTTPRedirectHandler, except that it sticks to a HEAD
+    request on redirect. Somehow Python upgrades HEAD requests to GET
+    requests when following redirects, which makes no sense. This
+    handler makes Python's urllib compatible with ``curl -LI``"""
+
+    def redirect_request(self, old_request, fp, code, msg, headers, newurl):
+        new_request = super().redirect_request(old_request, fp, code, msg, headers, newurl)
+        if old_request.get_method() == "HEAD":
+            new_request.method = "HEAD"
+        return new_request
+
+
+def _urlopen():
+    # One opener when SSL is enabled
+    with_ssl = build_opener(
+        BetterHTTPRedirectHandler,
+        HTTPSHandler(context=ssl.create_default_context()),
+    )
+
+    # One opener when SSL is disabled
+    without_ssl = build_opener(
+        BetterHTTPRedirectHandler,
+        HTTPSHandler(context=ssl._create_unverified_context()),
+    )
+
+    # And dynamically dispatch based on the config:verify_ssl.
+    def dispatch_open(*args, **kwargs):
+        opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
+        return opener.open(*args, **kwargs)
+
+    return dispatch_open
+
+
+#: Dispatches to the correct OpenerDirector.open, based on Spack configuration.
+urlopen = llnl.util.lang.Singleton(_urlopen)
 
 #: User-Agent used in Request objects
 SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
@@ -78,35 +116,11 @@ def uses_ssl(parsed_url):
     return False
 
 
-__UNABLE_TO_VERIFY_SSL = (lambda pyver: ((pyver < (2, 7, 9)) or ((3,) < pyver < (3, 4, 3))))(
-    sys.version_info
-)
-
-
 def read_from_url(url, accept_content_type=None):
     url = url_util.parse(url)
-    context = None
-
-    verify_ssl = spack.config.get("config:verify_ssl")
 
     # Timeout in seconds for web requests
     timeout = spack.config.get("config:connect_timeout", 10)
-
-    # Don't even bother with a context unless the URL scheme is one that uses
-    # SSL certs.
-    if uses_ssl(url):
-        if verify_ssl:
-            if __UNABLE_TO_VERIFY_SSL:
-                # User wants SSL verification, but it cannot be provided.
-                warn_no_ssl_cert_checking()
-            else:
-                # User wants SSL verification, and it *can* be provided.
-                context = ssl.create_default_context()  # novm
-        else:
-            # User has explicitly indicated that they do not want SSL
-            # verification.
-            if not __UNABLE_TO_VERIFY_SSL:
-                context = ssl._create_unverified_context()
 
     url_scheme = url.scheme
     url = url_util.format(url)
@@ -123,7 +137,7 @@ def read_from_url(url, accept_content_type=None):
         # one round-trip.  However, most servers seem to ignore the header
         # if you ask for a tarball with Accept: text/html.
         req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=timeout, context=context)
+        resp = urlopen(req, timeout=timeout)
 
         content_type = get_header(resp.headers, "Content-type")
 
@@ -131,7 +145,7 @@ def read_from_url(url, accept_content_type=None):
     req.get_method = lambda: "GET"
 
     try:
-        response = _urlopen(req, timeout=timeout, context=context)
+        response = urlopen(req, timeout=timeout)
     except URLError as err:
         raise SpackWebError("Download failed: {ERROR}".format(ERROR=str(err)))
 
@@ -154,22 +168,11 @@ def read_from_url(url, accept_content_type=None):
     return response.geturl(), response.headers, response
 
 
-def warn_no_ssl_cert_checking():
-    tty.warn(
-        "Spack will not check SSL certificates. You need to update "
-        "your Python to enable certificate verification."
-    )
-
-
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
     if sys.platform == "win32":
         if remote_path[1] == ":":
             remote_path = "file://" + remote_path
     remote_url = url_util.parse(remote_path)
-    verify_ssl = spack.config.get("config:verify_ssl")
-
-    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_url):
-        warn_no_ssl_cert_checking()
 
     remote_file_path = url_util.local_file_path(remote_url)
     if remote_file_path is not None:
@@ -405,12 +408,12 @@ def url_exists(url, curl=None):
         )  # noqa: E501
 
         try:
-            s3.get_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
+            s3.head_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
             return True
         except s3.ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchKey":
+            if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                 return False
-            raise err
+            raise
 
     # Check if Google Storage .. urllib-based fetch
     if url_result.scheme == "gs":
@@ -432,12 +435,14 @@ def url_exists(url, curl=None):
         return curl_exe.returncode == 0
 
     # If we get here, then the only other fetch method option is urllib.
-    # So try to "read" from the URL and assume that *any* non-throwing
-    #  response contains the resource represented by the URL.
+    # We try a HEAD request and expect a 200 return code.
     try:
-        read_from_url(url)
-        return True
-    except (SpackWebError, URLError) as e:
+        response = urlopen(
+            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
+            timeout=spack.config.get("config:connect_timeout", 10),
+        )
+        return response.status == 200
+    except URLError as e:
         tty.debug("Failure reading URL: " + str(e))
         return False
 
@@ -720,36 +725,24 @@ def spider(root_urls, depth=0, concurrency=32):
     return pages, links
 
 
-def _urlopen(req, *args, **kwargs):
-    """Wrapper for compatibility with old versions of Python."""
+def _open(req, *args, **kwargs):
+    global open
     url = req
     try:
         url = url.get_full_url()
     except AttributeError:
         pass
 
-    # Note: 'context' parameter was only introduced starting
-    # with versions 2.7.9 and 3.4.3 of Python.
-    if __UNABLE_TO_VERIFY_SSL:
-        del kwargs["context"]
-
-    opener = urlopen
     if url_util.parse(url).scheme == "s3":
         import spack.s3_handler
 
-        opener = spack.s3_handler.open
+        return spack.s3_handler.open(req, *args, **kwargs)
     elif url_util.parse(url).scheme == "gs":
         import spack.gcs_handler
 
-        opener = spack.gcs_handler.gcs_open
+        return spack.gcs_handler.gcs_open(req, *args, **kwargs)
 
-    try:
-        return opener(req, *args, **kwargs)
-    except TypeError as err:
-        # If the above fails because of 'context', call without 'context'.
-        if "context" in kwargs and "context" in str(err):
-            del kwargs["context"]
-        return opener(req, *args, **kwargs)
+    return open(req, *args, **kwargs)
 
 
 def find_versions_of_archive(

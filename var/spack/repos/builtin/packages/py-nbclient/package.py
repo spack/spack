@@ -28,7 +28,6 @@ class PyNbclient(PythonPackage):
     depends_on("py-jupyter-client@6.1.5:", type=("build", "run"))
     depends_on("py-nbformat@5.0:", type=("build", "run"))
     depends_on("py-async-generator", type=("build", "run"), when="@0.5.0")
-    depends_on("py-async-generator", type=("build", "run"), when="@0.5.5: ^python@:3.6")
     depends_on("py-nest-asyncio", type=("build", "run"))
     depends_on("py-traitlets@5.2.2:", when="@0.6:", type=("build", "run"))
     depends_on("py-traitlets@5:", when="@0.5.13:", type=("build", "run"))
