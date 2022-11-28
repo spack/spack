@@ -347,7 +347,7 @@ class Boost(Package):
         description="(C++11) Coroutine library.",
         default="False",
         when="@1.59.0:",
-        buildable="@1.59.0:@1.64.0",
+        buildable="@1.59.0:1.64.0",
     )
     boost_variant(
         "date_time",
@@ -539,7 +539,7 @@ class Boost(Package):
         description="A library for generating compile time parsers parsing embedded DSL code as part of the C++ compilation process",
         default="False",
         when="@1.61.0:",
-        buildable="@1.61.0:@1.65.1",
+        buildable="@1.61.0:1.65.1",
     )
     boost_variant(
         "move",
