@@ -26,12 +26,9 @@ class Hdf5(CMakePackage):
         "lrknox",
         "brtnfld",
         "byrnHDF",
-        "ChristopherHogan",
-        "epourmal",
         "gheber",
         "hyoklee",
         "lkurz",
-        "soumagne",
     ]
 
     tags = ["e4s"]
