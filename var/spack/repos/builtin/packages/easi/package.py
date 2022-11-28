@@ -32,7 +32,7 @@ class Easi(CMakePackage):
     depends_on("asagi +mpi +mpi3", when="+asagi")
     depends_on("yaml-cpp@0.6.2")
 
-    depends_on("impalajit-llvm@1.0.0", when="jit=impalajit-llvm")
+    depends_on("impalajit@llvm-1.0.0", when="jit=impalajit-llvm")
     depends_on("lua@5.3.2", when="jit=lua")
     depends_on("impalajit", when="jit=impalajit")
 
