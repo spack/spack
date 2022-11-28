@@ -1070,19 +1070,23 @@ the include is conditional.
 Building a subset of the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The generated ``Makefile``\s contain install targets for each spec. Given the hash
-of a particular spec, you can use the ``.install/<hash>`` target to install the
-spec with its dependencies. There is also ``.install-deps/<hash>`` to *only* install
+The generated ``Makefile``\s contain install targets for each spec, identified
+by ``<name>-<version>-<hash>``. This allows you to install only a subset of the
+packages in the environment. When packages are unique in the environment, it's
+enough to know the name and let tab-completion fill out the version and hash.
+
+The following phony targets are available: ``install/<spec>`` to install the
+spec with its dependencies, and ``install-deps/<spec>`` to *only* install
 its dependencies. This can be useful when certain flags should only apply to
 dependencies. Below we show a use case where a spec is installed with verbose
 output (``spack install --verbose``) while its dependencies are installed silently:
 
 .. code:: console
 
-   $ spack env depfile -o Makefile --make-target-prefix my_env
+   $ spack env depfile -o Makefile
 
    # Install dependencies in parallel, only show a log on error.
-   $ make -j16 my_env/.install-deps/<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
+   $ make -j16 install-deps/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
 
    # Install the root spec with verbose output.
-   $ make -j16 my_env/.install/<hash> SPACK_INSTALL_FLAGS=--verbose
+   $ make -j16 install/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--verbose

@@ -39,7 +39,6 @@ class PyRich(PythonPackage):
         "py-typing-extensions@3.7.4:4", when="@10.14.0: ^python@:3.7", type=("build", "run")
     )
     depends_on("py-typing-extensions@3.7.4:3", when="@:10.13.0", type=("build", "run"))
-    depends_on("py-dataclasses@0.7:0.8", when="^python@:3.6", type=("build", "run"))
     depends_on("py-pygments@2.6:2", type=("build", "run"))
     depends_on("py-commonmark@0.9.0:0.9", type=("build", "run"))
     depends_on("py-colorama@0.4.0:0.4", type=("build", "run"), when="@:10.14.0")

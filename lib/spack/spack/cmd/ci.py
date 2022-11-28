@@ -6,7 +6,6 @@
 import json
 import os
 import shutil
-import sys
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -498,7 +497,7 @@ def ci_rebuild(args):
             bindist.download_single_spec(job_spec, build_cache_dir, mirror_url=matching_mirror)
 
         # Now we are done and successful
-        sys.exit(0)
+        return 0
 
     # Before beginning the install, if this is a "rebuild everything" pipeline, we
     # only want to keep the mirror being used by the current pipeline as it's binary
@@ -566,8 +565,6 @@ def ci_rebuild(args):
             "-o",
             "Makefile",
             "--use-buildcache=package:never,dependencies:only",
-            "--make-target-prefix",
-            "ci",
             slash_hash,  # limit to spec we're building
         ],
         [
@@ -584,7 +581,7 @@ def ci_rebuild(args):
             "SPACK_COLOR=always",
             "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
             "-j$(nproc)",
-            "ci/.install-deps/{}".format(job_spec.dag_hash()),
+            "install-deps/{}".format(job_spec.format("{name}-{version}-{hash}")),
         ],
         spack_cmd + ["install"] + root_install_args,
     ]

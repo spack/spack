@@ -15,6 +15,7 @@ class RClusterprofiler(RPackage):
 
     bioc = "clusterProfiler"
 
+    version("4.6.0", commit="2644118c36a3aa14408bc0c97ac20a545e40344d")
     version("4.4.4", commit="9fca9a45ca1793884d8dcfd0f077353dbf75df29")
     version("4.4.1", commit="daad11fb80be2dd9b825e0b484815a0a2b1592a4")
     version("4.2.2", commit="4ebb9de8e03eedc971f54a57cf5bf1b250ed43d5")
@@ -34,12 +35,14 @@ class RClusterprofiler(RPackage):
     depends_on("r-dose@3.3.2:", type=("build", "run"), when="@3.6.0:")
     depends_on("r-dose@3.5.1:", type=("build", "run"), when="@3.8.1:")
     depends_on("r-dose@3.13.1:", type=("build", "run"), when="@3.18.0:")
+    depends_on("r-dose@3.23.2:", type=("build", "run"), when="@4.6.0:")
     depends_on("r-dplyr", type=("build", "run"), when="@3.18.0:")
     depends_on("r-enrichplot@0.99.7:", type=("build", "run"), when="@3.8.1:")
     depends_on("r-enrichplot@1.9.3:", type=("build", "run"), when="@3.18.0:")
     depends_on("r-go-db", type=("build", "run"))
     depends_on("r-gosemsim", type=("build", "run"))
     depends_on("r-gosemsim@2.0.0:", type=("build", "run"), when="@3.4.4:3.6.0")
+    depends_on("r-gson@0.0.7:", type=("build", "run"), when="@4.6.0:")
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-plyr", type=("build", "run"))
     depends_on("r-qvalue", type=("build", "run"))

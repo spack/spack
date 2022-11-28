@@ -21,7 +21,7 @@ class Zlib(MakefilePackage, Package):
 
     homepage = "https://zlib.net"
     # URL must remain http:// so Spack can bootstrap curl
-    url = "https://zlib.net/fossils/zlib-1.2.11.tar.gz"
+    url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
 
     version("1.2.13", sha256="b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30")
     version(
@@ -76,6 +76,43 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         if "~shared" in self.spec:
             config_args.append("--static")
         configure("--prefix={0}".format(prefix), *config_args)
+
+        if "+shared" in self.spec:
+            # We need to fix the building of the shared libraries with compilers that are not
+            # recognized as gcc. Note that a compiler is recognized as gcc if it has "gcc" or
+            # "clang" substring either in its executable name (including the path) or in the output
+            # generated with the `-v` flag (i.e '$CC -v 2>&1'). The latter is the reason why, for
+            # example, %intel and %oneapi are often recognized as gcc: they almost always contain
+            # "gcc" in the verbose output. Another example is %pgi, which has "gcc" in the name of
+            # the C compiler (pgcc) and in the verbose output (e.g. "pgcc-Warning-No files to
+            # process"). Although we should not rely on the false positive results of the configure
+            # script but patch the makefile for all the aforementioned compilers, given the
+            # importance of the package, we try to be conservative for now and do the patching only
+            # for compilers that will not produce a correct shared library otherwise.
+            if self.spec.compiler.name in ["nvhpc"]:
+                if "~pic" in self.spec:
+                    # In this case, we should build the static library without PIC, therefore we
+                    # don't append the respective compiler flag to CFLAGS in the build environment.
+                    # However, we need the flag for the objects of the shared library:
+                    filter_file(
+                        r"^(SFLAGS *=.*)$",
+                        r"\1 {0}".format(self.pkg.compiler.cc_pic_flag),
+                        "Makefile",
+                    )
+                if any(self.spec.satisfies("platform={0}".format(p)) for p in ["linux", "cray"]):
+                    # Without the following, the shared library will not have a soname entry.
+                    # Currently, we support linux and cray platforms only.
+                    filter_file(
+                        r"^(LDSHARED *= *).*$",
+                        # Note that we should use '-Wl,` and not self.pkg.compiler.linker_arg
+                        # because the former is understood by virtually every C compiler and the
+                        # latter might be meant for the Fortran compiler only (e.g. NAG):
+                        r"\1 {0} -shared "
+                        r"-Wl,-soname,libz.{1}.{2},--version-script,zlib.map".format(
+                            spack_cc, dso_suffix, self.spec.version.up_to(1)
+                        ),
+                        "Makefile",
+                    )
 
 
 class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironment):

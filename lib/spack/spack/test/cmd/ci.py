@@ -1007,7 +1007,7 @@ def test_ci_rebuild_mock_success(
             assert "Cannot copy test logs" in out
 
 
-@pytest.mark.xfail(reason="fails intermittently and covered by gitlab ci")
+@pytest.mark.skip(reason="fails intermittently and covered by gitlab ci")
 def test_ci_rebuild(
     tmpdir,
     working_env,
