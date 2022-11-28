@@ -8,7 +8,7 @@ import sys
 
 from spack.package import *
 
-_library_names = list()
+_library_names = dict()
 
 
 class Boost(Package):
@@ -109,28 +109,47 @@ class Boost(Package):
     )
 
     @staticmethod
-    def boost_variant(name, is_library=False, buildable="", **kwargs):
-        variant(name, **kwargs)
-        if is_library:
-            global _library_names
-            _library_names.append(name)
+    def boost_variant(name, is_library=True, buildable=None, **kwargs):
+        """
+        Create a spack.Variant, but with extra logic to handle
+        the cases when libraries should be compiled
 
-    def _requested_libraries(self):
-        return [v for v in _library_names if self.spec.satisfies("+{0:s}".format(v))]
+        Args:
+         name (str): name of the variant
+
+         is_library (bool): True if `name` corresponds to a library that
+                            needs to be compiled for _some_ version of Boost
+
+         buildable (str): The version string indicating which versions
+                          for which the library should be compiled or `None`
+
+        kwargs (dict): The rest of the arguments forwarded on to the
+                       spack.Variant constructor
+        """
+        variant(name, **kwargs)
+        if is_library and buildable is not None:
+            _library_names[name] = buildable
+
+    def _libraries_to_build(self):
+        """
+        The set of libraries that need to be passed to b2 via --with-libraries to be compiled
+        """
+        return [
+            n
+            for n, version in _library_names.items()
+            if self.spec.satisfies("+{0:s} {1:s}".format(n, version))
+        ]
 
     @property
     def libs(self):
         query = self.spec.last_query.extra_parameters
         shared = "+shared" in self.spec
 
-        libnames = query if query else self._requested_libraries()
+        libnames = query if query else self._libraries_to_build()
         libnames += ["monitor"]
         libraries = ["libboost_*%s*" % lib for lib in libnames]
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
-
-    # --------- VARIANTS -------------------------------
-    #  These are available for all versions of Boost
 
     boost_variant(
         "cxxstd",
@@ -1244,7 +1263,7 @@ class Boost(Package):
             force_symlink("/usr/bin/libtool", join_path(newdir, "libtool"))
             env["PATH"] = newdir + ":" + env["PATH"]
 
-        with_libs = self._requested_libraries()
+        with_libs = self._libraries_to_build()
 
         if not with_libs:
             # if no libraries are specified for compilation, then you dont have
