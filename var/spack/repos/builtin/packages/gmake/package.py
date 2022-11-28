@@ -65,7 +65,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     )
 
     # See https://savannah.gnu.org/bugs/?57962
-    patch("findprog-in-ignore-directories.patch", when="@4.3")
+    patch("findprog-in-ignore-directories.patch", when="@4.3:4.3.0")
 
     tags = ["build-tools"]
 

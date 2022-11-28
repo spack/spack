@@ -2386,7 +2386,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 urls.append(args["url"])
         return urls
 
-    def fetch_remote_versions(self, concurrency=128):
+    def fetch_remote_versions(self, concurrency=None):
         """Find remote versions of this package.
 
         Uses ``list_url`` and any other URLs listed in the package file.

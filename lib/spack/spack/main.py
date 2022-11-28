@@ -46,6 +46,8 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.executable as exe
+import spack.util.jobserver
+import spack.util.parallel
 import spack.util.path
 from spack.error import SpackError
 
@@ -607,6 +609,9 @@ def setup_main_options(args):
 
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
+
+    # Respect the jobserver when using Spack from the command line.
+    spack.util.parallel.global_jobserver = spack.util.jobserver.jobserver_client_from_environment()
 
 
 def allows_unknown_args(command):

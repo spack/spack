@@ -7,7 +7,6 @@ import codecs
 import collections
 import hashlib
 import json
-import multiprocessing.pool
 import os
 import shutil
 import sys
@@ -38,6 +37,7 @@ import spack.repo
 import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
+import spack.util.parallel
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -917,7 +917,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
             if spec_url.endswith(".yaml"):
                 return Spec.from_yaml(spec_file_contents)
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    tp = spack.util.parallel.JobserverAwareThreadPool(processes=concurrency)
     try:
         fetched_specs = tp.map(
             llnl.util.lang.star(_fetch_spec_from_mirror), [(f,) for f in file_list]
@@ -1082,14 +1082,14 @@ def _spec_files_from_cache(cache_prefix):
     raise ListMirrorSpecsError("Failed to get list of specs from {0}".format(cache_prefix))
 
 
-def generate_package_index(cache_prefix, concurrency=32):
+def generate_package_index(cache_prefix, concurrency=None):
     """Create or replace the build cache index on the given mirror.  The
     buildcache index contains an entry for each binary package under the
     cache_prefix.
 
     Args:
         cache_prefix(str): Base url of binary mirror.
-        concurrency: (int): The desired threading concurrency to use when
+        concurrency: (int or None): The desired threading concurrency to use when
             fetching the spec files from the mirror.
 
     Return:

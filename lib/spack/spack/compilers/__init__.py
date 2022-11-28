@@ -8,7 +8,6 @@ system and configuring Spack to use multiple compilers.
 """
 import collections
 import itertools
-import multiprocessing.pool
 import os
 from typing import Dict  # novm
 
@@ -24,6 +23,7 @@ import spack.error
 import spack.paths
 import spack.platforms
 import spack.spec
+import spack.util.parallel
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
@@ -237,7 +237,7 @@ def find_compilers(path_hints=None):
         arguments.extend(arguments_to_detect_version_fn(o, search_paths))
 
     # Here we map the function arguments to the corresponding calls
-    tp = multiprocessing.pool.ThreadPool()
+    tp = spack.util.parallel.JobserverAwareThreadPool()
     try:
         detected_versions = tp.map(detect_version, arguments)
     finally:

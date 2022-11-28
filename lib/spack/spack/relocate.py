@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
-import multiprocessing.pool
 import os
 import re
 import shutil
@@ -26,6 +25,7 @@ import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+import spack.util.parallel
 
 is_macos = str(spack.platforms.real_host()) == "darwin"
 
@@ -822,7 +822,7 @@ def utf8_paths_to_single_binary_regex(prefixes):
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
 
 
-def unsafe_relocate_text(files, prefixes, concurrency=32):
+def unsafe_relocate_text(files, prefixes, concurrency=None):
     """Relocate text file from the original installation prefix to the
     new prefix.
 
@@ -834,7 +834,7 @@ def unsafe_relocate_text(files, prefixes, concurrency=32):
     Args:
         files (list): Text files to be relocated
         prefixes (OrderedDict): String prefixes which need to be changed
-        concurrency (int): Preferred degree of parallelism
+        concurrency (int or None): Preferred degree of parallelism
     """
 
     # This now needs to be handled by the caller in all cases
@@ -856,7 +856,7 @@ def unsafe_relocate_text(files, prefixes, concurrency=32):
     for filename in files:
         args.append((filename, compiled_prefixes))
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    tp = spack.util.parallel.JobserverAwareThreadPool(processes=concurrency)
     try:
         tp.map(llnl.util.lang.star(_replace_prefix_text), args)
     finally:
@@ -864,7 +864,7 @@ def unsafe_relocate_text(files, prefixes, concurrency=32):
         tp.join()
 
 
-def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
+def unsafe_relocate_text_bin(binaries, prefixes, concurrency=None):
     """Replace null terminated path strings hard coded into binaries.
 
     The new install prefix must be shorter than the original one.
@@ -875,7 +875,7 @@ def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
     Args:
         binaries (list): binaries to be relocated
         prefixes (OrderedDict): String prefixes which need to be changed.
-        concurrency (int): Desired degree of parallelism.
+        concurrency (int or None): Desired degree of parallelism.
 
     Raises:
       BinaryTextReplaceError: when the new path is longer than the old path
@@ -901,7 +901,7 @@ def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
     for binary in binaries:
         args.append((binary, byte_prefixes))
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    tp = spack.util.parallel.JobserverAwareThreadPool(processes=concurrency)
 
     try:
         tp.map(llnl.util.lang.star(_replace_prefix_bin), args)

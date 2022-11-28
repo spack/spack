@@ -4,13 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from __future__ import print_function
 
-import contextlib
-import multiprocessing
+import multiprocessing.pool
 import os
 import sys
 import traceback
 
+import spack.util.jobserver
+
 from .cpus import cpus_available
+
+#: The global jobserver used in Spack.
+global_jobserver = spack.util.jobserver.NullJobserverClient()
 
 
 class ErrorFromWorker(object):
@@ -83,21 +87,6 @@ def raise_if_errors(*results, **kwargs):
     raise RuntimeError(error_fmt.format(msg))
 
 
-@contextlib.contextmanager
-def pool(*args, **kwargs):
-    """Context manager to start and terminate a pool of processes, similar to the
-    default one provided in Python 3.X
-
-    Arguments are forwarded to the multiprocessing.Pool.__init__ method.
-    """
-    try:
-        p = multiprocessing.Pool(*args, **kwargs)
-        yield p
-    finally:
-        p.terminate()
-        p.join()
-
-
 def num_processes(max_processes=None):
     """Return the number of processes in a pool.
 
@@ -109,8 +98,63 @@ def num_processes(max_processes=None):
     Args:
         max_processes (int or None): maximum number of processes allowed
     """
-    max_processes or cpus_available()
-    return min(cpus_available(), max_processes)
+    return min(cpus_available(), max_processes or cpus_available())
+
+
+class JobserverAwareThreadPool(multiprocessing.pool.ThreadPool):
+    """
+    This class is a trivial wrapper around multiprocessing's ThreadPool,
+    with the difference that it uses available number of CPUs instead of
+    physical number of CPUs as a default number of processes. And most
+    importantly it respects the Spack global jobserver, meaning that it
+    is safer to use in GNU Make (we won't use more thread than the N in
+    make -j <N>).
+    """
+
+    def __init__(self, processes=None, initializer=None, initargs=()):
+        # Get number of *available* not physical cpus.
+        processes = processes or cpus_available()
+
+        # Acquire processes - 1 additional jobs
+        processes = global_jobserver.acquire(processes - 1) + 1
+
+        super().__init__(processes, initializer, initargs)
+
+    def terminate(self):
+        global_jobserver.release()
+        super().terminate()
+
+    def close(self):
+        global_jobserver.release()
+        super().close()
+
+
+class JobserverAwarePool(multiprocessing.pool.Pool):
+    """
+    This class is a trivial wrapper around multiprocessing's Pool,
+    with the difference that it uses available number of CPUs instead of
+    physical number of CPUs as a default number of processes. And most
+    importantly it respects the Spack global jobserver, meaning that it
+    is safer to use in GNU Make (we won't use more thread than the N in
+    make -j <N>).
+    """
+
+    def __init__(self, processes=None, initializer=None, initargs=()):
+        # Get number of *available* not physical cpus.
+        processes = processes or cpus_available()
+
+        # Acquire processes - 1 additional jobs
+        processes = global_jobserver.acquire(processes - 1) + 1
+
+        super().__init__(processes, initializer, initargs)
+
+    def terminate(self):
+        global_jobserver.release()
+        super().terminate()
+
+    def close(self):
+        global_jobserver.release()
+        super().close()
 
 
 def parallel_map(func, arguments, max_processes=None, debug=False):
@@ -128,7 +172,7 @@ def parallel_map(func, arguments, max_processes=None, debug=False):
     """
     task_wrapper = Task(func)
     if sys.platform != "darwin" and sys.platform != "win32":
-        with pool(processes=num_processes(max_processes=max_processes)) as p:
+        with JobserverAwarePool(max_processes) as p:
             results = p.map(task_wrapper, arguments)
     else:
         results = list(map(task_wrapper, arguments))
