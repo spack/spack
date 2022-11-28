@@ -6,7 +6,9 @@
 import pathlib
 import re
 from enum import Enum, auto
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, cast
+
+from llnl.util.tty import color
 
 import spack.error
 import spack.spec
@@ -62,6 +64,8 @@ class TokenKind(Enum):
     FULLY_QUALIFIED_PACKAGE_NAME = auto()
     # White spaces
     WS = auto()
+    # Unexpected character
+    UNEXPECTED = auto()
 
     def __str__(self):
         return f"{self._name_}"
@@ -116,10 +120,15 @@ TOKEN_REGEXES = [
     rf"(?P<{TokenKind.WS}>\s+)",
 ]
 
+ERROR_HANDLING_REGEXES = TOKEN_REGEXES + [
+    rf"(?P<{TokenKind.UNEXPECTED}>(.[\s]*))",
+]
+
 #: Maps a string representation to the corresponding token kind
 STR_TO_TOKEN = {str(x): x for x in TokenKind}
 
 MASTER_REGEX = re.compile("|".join(TOKEN_REGEXES))
+ANALYSIS_REGEX = re.compile("|".join(ERROR_HANDLING_REGEXES))
 
 
 def tokenize(text: str) -> Iterator[Token]:
@@ -144,7 +153,9 @@ def tokenize(text: str) -> Iterator[Token]:
         return
 
     if match is None or match.end() != len(text):
-        raise SpecTokenizationError(match, text)
+        scanner = ANALYSIS_REGEX.scanner(text)  # type: ignore[attr-defined]
+        matches = [m for m in cast(Iterator[re.Match], iter(scanner.match, None))]
+        raise SpecTokenizationError(matches, text)
 
 
 class TokenContext:
@@ -204,7 +215,10 @@ class SpecParser:
                 dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
 
                 if dependency == spack.spec.Spec():
-                    msg = "cannot parse a dependency sigil without a following dependency"
+                    msg = (
+                        "this dependency sigil needs to be followed by a package name "
+                        "or a node attribute (version, variant, etc.)"
+                    )
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
 
                 root_spec._add_dependency(dependency, ())
@@ -419,13 +433,18 @@ class SpecSyntaxError(Exception):
 class SpecTokenizationError(SpecSyntaxError):
     """Syntax error in a spec string"""
 
-    def __init__(self, last_match, text):
-        message = "cannot parse the current spec string\n"
+    def __init__(self, matches, text):
+        message = "unexpected tokens in the spec string\n"
         message += f"{text}"
-        if last_match is not None:
-            message += f"\n{' '*last_match.end()}{'^'*(len(text) - last_match.end())}"
-        else:
-            message += f"\n{'^' * len(text)}"
+
+        underline = "\n"
+        for match in matches:
+            if match.lastgroup == str(TokenKind.UNEXPECTED):
+                underline += f"{'^' * (match.end() - match.start())}"
+                continue
+            underline += f"{' ' * (match.end() - match.start())}"
+
+        message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 
 
@@ -434,5 +453,6 @@ class SpecParsingError(SpecSyntaxError):
 
     def __init__(self, message, token, text):
         message += f"\n{text}"
-        message += f"\n{' '*token.start}{'^'*(token.end - token.start)}"
+        underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
+        message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)

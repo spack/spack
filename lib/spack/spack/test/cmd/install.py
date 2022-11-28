@@ -363,7 +363,7 @@ def test_install_conflicts(conflict_spec):
 )
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
-    with pytest.raises(SpecSyntaxError, match="cannot parse"):
+    with pytest.raises(SpecSyntaxError, match="unexpected tokens"):
         install(invalid_spec)
 
 
