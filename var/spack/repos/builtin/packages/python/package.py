@@ -1406,11 +1406,6 @@ config.update(get_paths())
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-        # If we set PYTHONHOME, we must also ensure that the corresponding
-        # python is found in the build environment. This to prevent cases
-        # where a system provided python is run against the standard libraries
-        # of a Spack built python. See issue #7128
-        env.set("PYTHONHOME", self.home)
 
         path = os.path.dirname(self.command.path)
         if not is_system_path(path):
