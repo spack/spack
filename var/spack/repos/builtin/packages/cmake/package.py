@@ -311,6 +311,13 @@ class Cmake(Package):
         args = []
         self.generator = make
 
+        # The Intel compiler isn't able to deal with noinline member functions of
+        # template classses defined in headers.  As such it outputs
+        #   warning #2196: routine is both "inline" and "noinline"
+        # cmake bootstrap will fail due to th word 'warning'.
+        if spec.satisfies("%intel@:2021.6.0"):
+            args.append("CXXFLAGS=-diag-disable=2196")
+
         if self.spec.satisfies("platform=windows"):
             args.append("-GNinja")
             self.generator = ninja
