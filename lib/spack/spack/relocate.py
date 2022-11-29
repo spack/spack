@@ -679,7 +679,7 @@ def relocate_text_bin(binaries, prefixes):
         prefixes (OrderedDict): String prefixes which need to be changed.
 
     Raises:
-      BinaryTextReplaceError: when the new path is longer than the old path
+      spack.relocate_text.BinaryTextReplaceError: when the new path is longer than the old path
     """
     BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
 
