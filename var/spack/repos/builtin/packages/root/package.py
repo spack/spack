@@ -300,10 +300,6 @@ class Root(CMakePackage):
     # Incompatible variants
     if sys.platform != "darwin":
         conflicts("+opengl", when="~x", msg="OpenGL requires X")
-        version = platform.mac_ver()(0)
-        major_version = int(version.split('.')(0))
-        if major_version >= 13:
-            conflicts(":6.26.09", msg="macOS 13 support was added in 6.26.10")
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
@@ -317,8 +313,15 @@ class Root(CMakePackage):
     # Feature removed in 6.26.00:
     conflicts("+vmc", when="@6.26:", msg="VMC was removed in ROOT v6.26.00.")
 
-    # Clang incompatibilities
+    # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
+
+    # See https://github.com/root-project/root/issues/11714
+    if sys.platform == "darwin":
+        version = platform.mac_ver()(0)
+        major_version = int(version.split(".")(0))
+        if major_version >= 13:
+            conflicts(":6.26.09", msg="macOS 13 support was added in 6.26.10")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
