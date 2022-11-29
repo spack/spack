@@ -140,6 +140,10 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     flag_handler = build_system_flags
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@develop %gcc@11.2.0:"):
+            env.set("CXXFLAGS", "-Wno-error=non-pod-varargs")
+
     def cmake_args(self):
         args = []
         spec = self.spec
