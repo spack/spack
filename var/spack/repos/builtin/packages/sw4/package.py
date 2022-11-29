@@ -11,7 +11,8 @@ class Sw4(MakefilePackage):
     """This package builds SW4 with HDF5, PROJ, and ZFP."""
 
     homepage = "https://github.com/geodynamics/sw4"
-    git = "https://github.com/geodynamics/sw4.git"
+    # git = "https://github.com/geodynamics/sw4.git"
+    git = "https://github.com/houjun/sw4.git"
 
     maintainers = ["houjun", "andersp"]
 
@@ -21,35 +22,55 @@ class Sw4(MakefilePackage):
     version("developer", branch="developer")
     version("master", branch="master")
 
+    variant("openmp", default=True, description="build with OpenMP")
+    variant("hdf5", default=True, description="build with HDF5")
+    variant("proj", default=True, description="build with proj")
+    variant("zfp", default=True, description="build with ZFP")
+    variant("fftw", default=True, description="build with FFTW")
+
     depends_on("mpi")
-    depends_on("proj")
     depends_on("blas")
     depends_on("lapack")
-    depends_on("hdf5+mpi")
-    depends_on("fftw@3.0: +mpi")
-    depends_on("zfp")
-    depends_on("h5z-zfp@develop")
+    depends_on("proj", when="+proj")
+    depends_on("hdf5+mpi", when="+hdf5")
+    depends_on("fftw@3.0: +mpi", when="+fftw")
+    depends_on("zfp", when="+zfp")
+    depends_on("h5z-zfp@develop", when="+zfp")
     depends_on("python")
-    depends_on("py-h5py+mpi")
+    depends_on("py-h5py")
+    depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     def edit(self, spec, prefix):
-        os.environ["CXX"] = spec["mpi"].mpicc
-        os.environ["FC"] = spec["mpi"].mpifc
-        os.environ["proj"] = "yes"
-        os.environ["SW4ROOT"] = self.spec["proj"].prefix
-        os.environ["hdf5"] = "yes"
-        os.environ["HDF5ROOT"] = self.spec["hdf5"].prefix
-        os.environ["zfp"] = "yes"
-        os.environ["H5ZROOT"] = self.spec["h5z-zfp"].prefix
-        os.environ["ZFPROOT"] = self.spec["zfp"].prefix
-        os.environ["fftw"] = "yes"
-        os.environ["FFTWHOME"] = self.spec["fftw"].prefix
-        os.environ["EXTRA_CXX_FLAGS"] = " -I" + self.spec["blas"].prefix + "/include"
-        os.environ["EXTRA_LINK_FLAGS"] = "-lstdc++ -lm -ldl -lopenblas" + " -L" + self.spec["blas"].prefix + "/lib"
+        os.environ["CXX"]               = spec["mpi"].mpicxx
+        os.environ["FC"]                = spec["mpi"].mpifc
+        os.environ["proj"]              = "yes"
+        os.environ["openmp"]            = "yes"
+        os.environ["hdf5"]              = "yes"
+        os.environ["zfp"]               = "yes"
+        os.environ["fftw"]              = "yes"
+        os.environ["SW4ROOT"]           = spec["proj"].prefix
+        os.environ["HDF5ROOT"]          = spec["hdf5"].prefix
+        os.environ["H5ZROOT"]           = spec["h5z-zfp"].prefix
+        os.environ["ZFPROOT"]           = spec["zfp"].prefix
+        os.environ["FFTWHOME"]          = spec["fftw"].prefix
+        os.environ["EXTRA_LINK_FLAGS"]  = "-lstdc++ -lm -ldl "
+        os.environ["EXTRA_LINK_FLAGS"] += spec["blas"].libs.ld_flags + " "
+        os.environ["EXTRA_LINK_FLAGS"] += spec["blas"].libs.ld_flags + " "
 
-        if "%gcc" in self.spec:
-            os.environ["EXTRA_LINK_FLAGS"] += " -lgfortran"
+        if "+openmp" in spec:
+            if spec.satisfies("%apple-clang"):
+                os.environ["EXTRA_LINK_FLAGS"] += spec["llvm-openmp"].libs.ld_flags + " "
     
+        # From spack/trilinos
+        if spec.compiler.name in ["clang", "apple-clang", "gcc"]:
+            fc = Executable(self.compiler.fc)
+            libgfortran = fc(
+            	"--print-file-name", "libgfortran." + dso_suffix, output=str
+            ).strip()
+            if libgfortran == "libgfortran." + dso_suffix:
+            	libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
+            os.environ["EXTRA_LINK_FLAGS"] += " -L{0} -lgfortran ".format(os.path.dirname(libgfortran))
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install("optimize_mp/sw4", prefix.bin)
