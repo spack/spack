@@ -51,6 +51,7 @@ class Gnuplot(AutotoolsPackage):
         description="Enable PBM (Portable Bit Map) and other older bitmap terminals",
     )
     variant("qt", default=False, description="Build with QT")
+    variant("readline", default=True, description="Build with readline")
 
     # required dependencies
     depends_on("readline")
@@ -79,9 +80,10 @@ class Gnuplot(AutotoolsPackage):
             "--disable-silent-rules",
             # Per upstream: "--with-tutorial is horribly out of date."
             "--without-tutorial",
-            "--with-readline=%s" % spec["readline"].prefix,
         ]
 
+        options += self.with_or_without("readline", "prefix")
+        
         if "+pbm" in spec:
             options.append("--with-bitmap-terminals")
         else:
