@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import platform
 import sys
 
 from spack.package import *
@@ -299,8 +300,10 @@ class Root(CMakePackage):
     # Incompatible variants
     if sys.platform != "darwin":
         conflicts("+opengl", when="~x", msg="OpenGL requires X")
-        # TODO: Query os.uname() to check if we're dealing with macOS >= 13.
-        #       If so add conflict with @:6.26.09, support was added in .10
+        version, _, _ = platform.mac_ver()
+        major_version = version.split('.')[0]
+        if major_version >= 13:
+            conflicts(":6.26.09", msg="macOS 13 support was added in 6.26.10")
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
