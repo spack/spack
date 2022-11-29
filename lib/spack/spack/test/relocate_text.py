@@ -236,3 +236,12 @@ def test_inplace_text_replacement():
         b"#!/my/prefix",
         b"#!/replacement",
     )
+
+
+def test_relocate_text_filters_redundant_entries():
+    # Test that we're filtering identical old / new paths, since that's a waste.
+    mapping = OrderedDict([("/hello", "/hello"), ("/world", "/world")])
+    replacer_1 = relocate_text.BinaryFilePrefixReplacer.from_strings_or_bytes(mapping)
+    replacer_2 = relocate_text.TextFilePrefixReplacer.from_strings_or_bytes(mapping)
+    assert not replacer_1.prefix_to_prefix
+    assert not replacer_2.prefix_to_prefix

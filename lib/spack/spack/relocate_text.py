@@ -33,17 +33,31 @@ def utf8_paths_to_single_binary_regex(prefixes):
     return byte_strings_to_single_binary_regex(p.encode("utf-8") for p in prefixes)
 
 
+def changing_prefixes(prefix_to_prefix):
+    """Filter out prefixes that have not changed"""
+    return OrderedDict((k, v) for (k, v) in prefix_to_prefix.items() if k != v)
+
+
 class PrefixReplacer:
+    def __init__(self, prefix_to_prefix):
+        self.prefix_to_prefix = changing_prefixes(prefix_to_prefix)
+
     def apply(self, filenames):
+        if not self.prefix_to_prefix:
+            return
         for filename in filenames:
             self.apply_to_filename(filename)
 
     def apply_to_filename(self, filename):
+        if not self.prefix_to_prefix:
+            return
         with open(filename, "rb+") as f:
             self.apply_to_file(f)
 
     def apply_to_file(self, f):
-        pass
+        if not self.prefix_to_prefix:
+            return
+        self._apply_to_file(self, f)
 
 
 class TextFilePrefixReplacer(PrefixReplacer):
@@ -52,14 +66,17 @@ class TextFilePrefixReplacer(PrefixReplacer):
         prefix_to_prefix (OrderedDict): OrderedDictionary where the keys are
             bytes representing the old prefixes and the values are the new
         """
-        self.prefix_to_prefix = prefix_to_prefix
-        self.regex = byte_strings_to_single_binary_regex(prefix_to_prefix.keys())
+        super().__init__(prefix_to_prefix)
+        self.regex = byte_strings_to_single_binary_regex(self.prefix_to_prefix.keys())
 
     @classmethod
     def from_strings_or_bytes(cls, prefix_to_prefix):
         return cls(prefix_to_prefix_as_bytes(prefix_to_prefix))
 
     def apply_to_file(self, f):
+        if not self.prefix_to_prefix:
+            return
+
         def replacement(match):
             return match.group(1) + self.prefix_to_prefix[match.group(2)] + match.group(3)
 
@@ -81,9 +98,9 @@ class BinaryFilePrefixReplacer(PrefixReplacer):
             of the suffix should remain to avoid aliasing issues?
         """
         assert suffix_safety_size >= 0
-        self.prefix_to_prefix = prefix_to_prefix
+        super().__init__(prefix_to_prefix)
         self.suffix_safety_size = suffix_safety_size
-        self.regex = self.binary_text_regex(prefix_to_prefix.keys(), suffix_safety_size)
+        self.regex = self.binary_text_regex(self.prefix_to_prefix.keys(), suffix_safety_size)
 
     @classmethod
     def binary_text_regex(cls, binary_prefixes, suffix_safety_size=7):
