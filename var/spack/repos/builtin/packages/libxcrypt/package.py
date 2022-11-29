@@ -31,6 +31,7 @@ class Libxcrypt(AutotoolsPackage):
     variant("obsolete_api", default=False, when="@4.4.30:")
 
     patch("truncating-conversion.patch", when="@4.4.30")
+    depends_on("perl-file-open", type=("build", "run"), when="@4.3.31:")
 
     def configure_args(self):
         args = [
