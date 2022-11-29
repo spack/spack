@@ -3,7 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import inspect
+
+import llnl.util.filesystem as fs
 from spack.package import *
+from spack.build_systems.python import PythonPipBuilder
 
 
 class PyOnnxRuntime(CMakePackage, PythonExtension):
@@ -27,6 +31,7 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     depends_on("cmake@3.1:", type="build")
     depends_on("ninja", type="build")
     depends_on("python", type=("build", "run"))
+    depends_on("py-pip", type="build")
     depends_on("protobuf")
     # https://github.com/microsoft/onnxruntime/pull/11639
     depends_on("protobuf@:3.19", when="@:1.11")
@@ -127,9 +132,11 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
 
     @run_after("install")
     def install_python(self):
-        platlib = self.spec["python"].package.platlib
-        with working_dir(self.build_directory):
-            py = which("python")
-            py("setup.py", "build")
-            mkdirp(join_path(self.spec.prefix, platlib))
-            install_tree(join_path("build", "lib", "onnxruntime"), platlib)
+        """Install everything from build directory."""
+        # Truncated version of PythonPipBuilder.install
+
+        args = PythonPipBuilder.std_args(self) + ["--prefix=" + prefix, "."]
+
+        pip = inspect.getmodule(self).pip
+        with fs.working_dir(self.build_directory):
+            pip(*args)
