@@ -16,6 +16,6 @@ class PyPythonLspJsonrpc(PythonPackage):
 
     version("1.0.0", sha256="7bec170733db628d3506ea3a5288ff76aa33c70215ed223abdb0d95e957660bd")
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools@61.2.0:", type="build")
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     depends_on("py-ujson@3.0.0:", type=("build", "run"))
