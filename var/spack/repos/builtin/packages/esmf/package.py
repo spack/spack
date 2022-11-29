@@ -326,7 +326,7 @@ class Esmf(MakefilePackage):
         ##############
         # ParallelIO #
         ##############
-        if "+parallelio" in spec and "+mpi" in spec:
+        if "+parallelio" in spec:
             os.environ["ESMF_PIO"] = "external"
             os.environ["ESMF_PIO_LIBPATH"] = spec["parallelio"].prefix.lib
             os.environ["ESMF_PIO_INCLUDE"] = spec["parallelio"].prefix.include
