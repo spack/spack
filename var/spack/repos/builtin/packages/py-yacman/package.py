@@ -19,8 +19,8 @@ class PyYacman(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-depends_on("py-attmap@0.13.0", type=("build", "run"))
-depends_on("py-jsonschema@3.2.0", type=("build", "run"))
+depends_on("py-attmap@0.13.0:", type=("build", "run"))
+depends_on("py-jsonschema@3.2.0:", type=("build", "run"))
 depends_on("py-oyaml", type=("build", "run"))
-depends_on("py-pyyaml@3.13", type=("build", "run"))
-depends_on("py-ubiquerg@0.6.1", type=("build", "run"))
+depends_on("py-pyyaml@3.13:", type=("build", "run"))
+depends_on("py-ubiquerg@0.6.1:", type=("build", "run"))
