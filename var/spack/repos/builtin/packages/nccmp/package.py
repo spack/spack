@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+import subprocess
 
 
 class Nccmp(CMakePackage):
@@ -17,6 +18,7 @@ class Nccmp(CMakePackage):
 
     depends_on("cmake@3.12:", type="build")
     depends_on("netcdf-c", type=("build", "run"))
+    depends_on("mpi", when="^netcdf-c+mpi~shared")
 
     def cmake_args(self):
         args = []
@@ -27,5 +29,14 @@ class Nccmp(CMakePackage):
 
         if cflags:
             args.append(self.define("CMAKE_C_FLAGS", " ".join(cflags)))
+
+        if self.spec["netcdf-c"].satisfies("~shared"):
+            nc_pc_cmd = ["nc-config","--static","--libs"]
+            nc_flags = \
+              subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+            args.append(self.define("CMAKE_EXE_LINKER_FLAGS", nc_flags))
+
+        if self.spec.satisfies("^mpi"):
+            args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
 
         return args
