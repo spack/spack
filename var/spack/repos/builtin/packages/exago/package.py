@@ -138,7 +138,11 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("hiop {0}".format(rocm_dep), when=rocm_dep)
         depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
-    flag_handler = build_system_flags
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("@develop %gcc@11.2.0:"):
+                flags.append("-Wno-error=non-pod-varargs")
+        return (flags, None, None) 
 
     def cmake_args(self):
         args = []
