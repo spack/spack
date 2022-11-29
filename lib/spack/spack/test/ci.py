@@ -615,3 +615,33 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
             elif reason in line:
                 have[1] += 1
         assert all(count == 1 for count in have)
+
+
+def test_ci_staged_phases(config, mutable_mock_env_path, mock_packages):
+    e = ev.create("phase_specs")
+    e.add("dyninst")
+    e.concretize()
+
+    phases, _ = spack.ci.phase_specs(e, {})
+    assert len(phases) == 1 and phases[0]["name"] == "specs"
+
+    def print_it(specs, k="", indent=""):
+        prefix = "%s%s:" % (indent, type(specs))
+        if isinstance(specs, dict):
+            for k in specs:
+                print(prefix + (" %s:" % k))
+                print_it(specs[k], k, indent + "  ")
+        elif isinstance(specs, (list, tuple)):
+            print(prefix)
+            for entry in specs:
+                print_it(entry, "", indent + "  ")
+        else:
+            print(prefix + "  " + str(specs))
+
+    staged_phases = spack.ci.staged_phases(e, phases)
+    spec_labels, dependencies, stages = staged_phases["specs"]
+
+    # The DAG for dyninst results in one stage for each spec
+    assert len(spec_labels) == len(
+        stages
+    ), "Expected dyninst to have one stage for each spec label"

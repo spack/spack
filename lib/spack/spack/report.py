@@ -19,6 +19,7 @@ from spack.install_test import TestSuite
 from spack.reporter import Reporter
 from spack.reporters.cdash import CDash
 from spack.reporters.junit import JUnit
+from spack.spec import Spec
 
 report_writers = {None: Reporter, "junit": JUnit, "cdash": CDash}
 
@@ -38,6 +39,62 @@ def fetch_log(pkg, do_fn, dir):
             return "".join(f.readlines())
     except Exception:
         return "Cannot open log for {0}".format(pkg.spec.cshort_spec)
+
+
+def spec_name(spec):
+    return "{0}_{1}".format(spec.name, spec.dag_hash(length=7))
+
+
+class SpecData(dict):
+    def __init__(self, spec):
+        kv = [
+            ("name", spec_name(spec)),
+            ("nerrors", None),
+            ("nfailures", None),
+            ("npackages", None),
+            ("time", None),
+            ("timestamp", time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime())),
+            ("properties", []),
+            ("packages", []),
+        ]
+        dict.__init__(self, kv)
+
+        Property = collections.namedtuple("Property", ["name", "value"])
+        self["properties"].append(Property("architecture", spec.architecture))
+        self["properties"].append(Property("compiler", spec.compiler))
+
+    def add_package(self, spec_or_pkg, **kwargs):
+        spec = spec_or_pkg if isinstance(spec_or_pkg, Spec) else None
+        if spec:
+            package = {
+                "name": spec.name,
+                "id": spec.dag_hash(),
+                "elapsed_time": kwargs.get("elapsed_time"),
+                "result": kwargs.get("result"),
+                "message": kwargs.get("message"),
+                "installed_from_binary_cache": kwargs.get("installed_from_binary_cache", False),
+            }
+        else:
+            package = kwargs.get("package")
+
+        if package:
+            self["packages"].append(package)
+
+        return package
+
+    def add_skipped_package(self, spec, message):
+        self.add_package(
+            spec,
+            elapsed_time="0.0",
+            result="skipped",
+            message=message,
+        )
+
+    def summarize(self):
+        self["npackages"] = len(self["packages"])
+        self["nfailures"] = len([x for x in self["packages"] if x["result"] == "failure"])
+        self["nerrors"] = len([x for x in self["packages"] if x["result"] == "error"])
+        self["time"] = sum([float(x["elapsed_time"]) for x in self["packages"]])
 
 
 class InfoCollector(object):
@@ -74,38 +131,14 @@ class InfoCollector(object):
     def __enter__(self):
         # Initialize the spec report with the data that is available upfront.
         for input_spec in self.input_specs:
-            name_fmt = "{0}_{1}"
-            name = name_fmt.format(input_spec.name, input_spec.dag_hash(length=7))
-
-            spec = {
-                "name": name,
-                "nerrors": None,
-                "nfailures": None,
-                "npackages": None,
-                "time": None,
-                "timestamp": time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime()),
-                "properties": [],
-                "packages": [],
-            }
-
-            self.specs.append(spec)
-
-            Property = collections.namedtuple("Property", ["name", "value"])
-            spec["properties"].append(Property("architecture", input_spec.architecture))
-            spec["properties"].append(Property("compiler", input_spec.compiler))
+            spec_data = SpecData(input_spec)
+            self.specs.append(spec_data)
 
             # Check which specs are already installed and mark them as skipped
             # only for install_task
             if self.do_fn == "_install_task":
                 for dep in filter(lambda x: x.installed, input_spec.traverse()):
-                    package = {
-                        "name": dep.name,
-                        "id": dep.dag_hash(),
-                        "elapsed_time": "0.0",
-                        "result": "skipped",
-                        "message": "Spec already installed",
-                    }
-                    spec["packages"].append(package)
+                    spec_data.add_skipped_package(dep, "Spec already installed")
 
         def gather_info(do_fn):
             """Decorates do_fn to gather useful information for
@@ -127,25 +160,17 @@ class InfoCollector(object):
                 # We accounted before for what is already installed
                 installed_already = pkg.spec.installed
 
-                package = {
-                    "name": pkg.name,
-                    "id": pkg.spec.dag_hash(),
-                    "elapsed_time": None,
-                    "result": None,
-                    "message": None,
-                    "installed_from_binary_cache": False,
-                }
-
                 # Append the package to the correct spec report. In some
                 # cases it may happen that a spec that is asked to be
                 # installed explicitly will also be installed as a
                 # dependency of another spec. In this case append to both
                 # spec reports.
+                package = None
                 for s in llnl.util.lang.dedupe([pkg.spec.root, pkg.spec]):
-                    name = name_fmt.format(s.name, s.dag_hash(length=7))
+                    name = spec_name(s)
                     try:
-                        item = next((x for x in self.specs if x["name"] == name))
-                        item["packages"].append(package)
+                        spec_data = next((x for x in self.specs if x["name"] == name))
+                        package = spec_data.add_package(package or pkg.spec)
                     except StopIteration:
                         pass
 
@@ -198,11 +223,8 @@ class InfoCollector(object):
         # Restore the original method in PackageBase
         setattr(self.wrap_class, self.do_fn, self._backup_do_fn)
 
-        for spec in self.specs:
-            spec["npackages"] = len(spec["packages"])
-            spec["nfailures"] = len([x for x in spec["packages"] if x["result"] == "failure"])
-            spec["nerrors"] = len([x for x in spec["packages"] if x["result"] == "error"])
-            spec["time"] = sum([float(x["elapsed_time"]) for x in spec["packages"]])
+        for spec_data in self.specs:
+            spec_data.summarize()
 
 
 class collect_info(object):
