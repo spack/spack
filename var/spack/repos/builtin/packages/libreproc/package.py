@@ -18,11 +18,15 @@ class Libreproc(CMakePackage):
     variant("cxx", default=False, description="Build reproc C++ bindings")
     variant("shared", default=True, description="Build shared libraries, otherwise static")
 
+    depends_on("cmake@3.14:", type="build")
+    depends_on("zlib+shared", type="run", when="+shared")
+    depends_on("zlib~shared", type="build", when="~shared")
+
     def url_for_version(self, version):
         return f"{self.url}/archive/refs/tags/v{version}.tar.gz"
 
     def cmake_args(self):
         return [
-            self.define_from_variant("REPROCC++", "cxx"),
-	    self.define_from_variant("BUILD_SHARED_LIBS", "+shared"),
+            self.define_from_variant("REPROC++", "cxx"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]

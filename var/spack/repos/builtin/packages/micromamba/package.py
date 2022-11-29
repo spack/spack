@@ -20,7 +20,7 @@ class Micromamba(CMakePackage):
     # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L276
     depends_on("curl", type="build")
     depends_on("libssh2~shared", type="build")
-    #depends_on("krb5~shared", type="build")
+    depends_on("krb5~shared", type="build")
     depends_on("openssl", type="build")
     depends_on("libarchive", type="build")
     depends_on("iconv", type="build")

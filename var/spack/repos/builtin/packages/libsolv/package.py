@@ -19,6 +19,8 @@ class Libsolv(CMakePackage):
     variant("shared", default=True, description="Build shared libraries, otherwise build static")
 
     depends_on("expat", type="build")
+    depends_on("zlib+shared", type="run", when="+shared")
+    depends_on("zlib~shared", type="build", when="~shared")
 
     def url_for_version(self, version):
         return f"{self.url}/archive/refs/tags/{version}.tar.gz"
