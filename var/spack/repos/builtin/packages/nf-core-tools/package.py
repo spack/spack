@@ -33,7 +33,7 @@ class NfCoreTools(PythonPackage):
     depends_on("py-pytest@7.0.0:", type=("build", "run"))
     depends_on("py-pytest-workflow@1.6.0:", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-questionary@:1.8.0", type=("build", "run"))
+    depends_on("py-questionary@1.8.0:", type=("build", "run"))
     depends_on("py-refgenie", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-requests-cache", type=("build", "run"))
