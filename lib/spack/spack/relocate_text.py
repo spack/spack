@@ -35,8 +35,8 @@ def utf8_paths_to_single_binary_regex(prefixes):
 
 class PrefixReplacer:
     def apply(self, filenames):
-        for file in filenames:
-            self.apply_to_filename(file)
+        for filename in filenames:
+            self.apply_to_filename(filename)
 
     def apply_to_filename(self, filename):
         with open(filename, "rb+") as f:
