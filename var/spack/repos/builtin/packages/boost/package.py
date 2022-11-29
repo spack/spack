@@ -207,6 +207,7 @@ class Boost(Package):
         "taggedlayout",
         default=False,
         description="Augment library names with build options",
+        when="@1.40.0:",
         is_library=False,
     )
 
