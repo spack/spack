@@ -18,7 +18,7 @@ class PyPythonLspServer(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@61.2.0:", type="build")
-    depends_on("py-jedi@0.17.2:0.19.0", type=("build", "run"))
+    depends_on("py-jedi@0.17.2:0.18", type=("build", "run"))
     depends_on("py-python-lsp-jsonrpc@1.0.0:", type=("build", "run"))
     depends_on("py-pluggy@1.0.0:", type=("build", "run"))
     depends_on("py-docstring-to-markdown", type=("build", "run"))
