@@ -73,8 +73,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
         # by Spack, otherwise we may end up with contradictory or invalid flags
         # see https://github.com/spack/spack/issues/17794
 
+        # https://gitlab.com/libxc/libxc/-/issues/430 (configure script does not ensure C99)
+        # TODO: Switch to cmake since this is better supported
+        env.append_flags("CFLAGS", self.compiler.c99_flag)
         if "%intel" in self.spec:
-            env.append_flags("CFLAGS", "-std=c99")
             if which("xiar"):
                 env.set("AR", "xiar")
 
