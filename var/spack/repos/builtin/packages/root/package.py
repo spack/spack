@@ -31,6 +31,8 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
+    version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
     version("6.26.04", sha256="a271cf82782d6ed2c87ea5eef6681803f2e69e17b3036df9d863636e9358421e")
     version("6.26.02", sha256="7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb")
@@ -288,8 +290,9 @@ class Root(CMakePackage):
     # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
     conflicts("%gcc@9.0.0:", when="@:6.11")
 
-    # ROOT <6.14 was incompatible with Python 3.7+
-    conflicts("^python@3.7:", when="@:6.13 +python")
+    # Python incompatibilities
+    conflicts("^python@3.7:", when="@:6.13 +python", msg="Python 3.7+ support was added in 6.14")
+    conflicts("^python@3.11:", when="@:6.26.09 +python", msg="Python 3.11+ support was added in 6.26.10")
 
     # See https://github.com/root-project/root/issues/9297
     conflicts("target=ppc64le:", when="@:6.24")
@@ -297,6 +300,8 @@ class Root(CMakePackage):
     # Incompatible variants
     if sys.platform != "darwin":
         conflicts("+opengl", when="~x", msg="OpenGL requires X")
+        # TODO: Query os.uname() to check if we're dealing with macOS >= 13.
+        #       If so add conflict with @:6.26.09, support was added in .10
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
@@ -309,6 +314,12 @@ class Root(CMakePackage):
 
     # Feature removed in 6.26.00:
     conflicts("+vmc", when="@6.26:", msg="VMC was removed in ROOT v6.26.00.")
+
+    # nlohmann_json incompatibilities
+    conflicts("^nlohmann-json@3.11:", when="@:6.26.07", msg="nlohmann_json 3.11+ support was added in 6.26.08")
+
+    # Clang incompatibilities
+    conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
