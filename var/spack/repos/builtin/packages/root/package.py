@@ -234,7 +234,6 @@ class Root(CMakePackage):
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
     depends_on("python@2.7:3.10", when="@:6.26.09 +python", type=("build", "run"))
-    depends_on("python@2.7:3.6", when="@:6.13 +python", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"), when="+tmva")
     # This numpy dependency was not intended and will hopefully
     # be fixed in 6.20.06.
@@ -319,6 +318,9 @@ class Root(CMakePackage):
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
         conflicts("@:6.26.09", msg="macOS 13 support was added in 6.26.10")
+
+    # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
+    conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
