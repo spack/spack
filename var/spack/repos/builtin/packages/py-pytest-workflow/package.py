@@ -19,6 +19,6 @@ class PyPytestWorkflow(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@51:", type="build")
 
-    depends_on("pyyaml", type=("build", "run"))
-    depends_on("pytest@7.0.0:", type=("build", "run"))
-    depends_on("jsonschema", type=("build", "run"))
+    depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-pytest@7.0.0:", type=("build", "run"))
+    depends_on("py-jsonschema", type=("build", "run"))
