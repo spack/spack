@@ -11,6 +11,7 @@ where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
 import collections
+import collections.abc
 import operator
 import os
 import os.path
@@ -18,10 +19,8 @@ import sys
 import traceback
 
 import ruamel.yaml.error as yaml_error
-import six
 
 import llnl.util.tty as tty
-from llnl.util.compat import Mapping
 from llnl.util.filesystem import mkdirp
 
 import spack.config
@@ -37,7 +36,7 @@ from spack.version import VersionList
 
 
 def _is_string(url):
-    return isinstance(url, six.string_types)
+    return isinstance(url, str)
 
 
 def _display_mirror_entry(size, name, url, type_=None):
@@ -78,10 +77,7 @@ class Mirror(object):
             data = syaml.load(stream)
             return Mirror.from_dict(data, name)
         except yaml_error.MarkedYAMLError as e:
-            raise six.raise_from(
-                syaml.SpackYAMLError("error parsing YAML mirror:", str(e)),
-                e,
-            )
+            raise syaml.SpackYAMLError("error parsing YAML mirror:", str(e)) from e
 
     @staticmethod
     def from_json(stream, name=None):
@@ -89,10 +85,7 @@ class Mirror(object):
             d = sjson.load(stream)
             return Mirror.from_dict(d, name)
         except Exception as e:
-            raise six.raise_from(
-                sjson.SpackJSONError("error parsing JSON mirror:", str(e)),
-                e,
-            )
+            raise sjson.SpackJSONError("error parsing JSON mirror:", str(e)) from e
 
     def to_dict(self):
         if self._push_url is None:
@@ -102,7 +95,7 @@ class Mirror(object):
 
     @staticmethod
     def from_dict(d, name=None):
-        if isinstance(d, six.string_types):
+        if isinstance(d, str):
             return Mirror(d, name=name)
         else:
             return Mirror(d["fetch"], d["push"], name=name)
@@ -228,7 +221,7 @@ class Mirror(object):
             self._push_url = None
 
 
-class MirrorCollection(Mapping):
+class MirrorCollection(collections.abc.Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):
@@ -257,10 +250,7 @@ class MirrorCollection(Mapping):
             data = syaml.load(stream)
             return MirrorCollection(data)
         except yaml_error.MarkedYAMLError as e:
-            raise six.raise_from(
-                syaml.SpackYAMLError("error parsing YAML mirror collection:", str(e)),
-                e,
-            )
+            raise syaml.SpackYAMLError("error parsing YAML mirror collection:", str(e)) from e
 
     @staticmethod
     def from_json(stream, name=None):
@@ -268,10 +258,7 @@ class MirrorCollection(Mapping):
             d = sjson.load(stream)
             return MirrorCollection(d)
         except Exception as e:
-            raise six.raise_from(
-                sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)),
-                e,
-            )
+            raise sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)) from e
 
     def to_dict(self, recursive=False):
         return syaml_dict(

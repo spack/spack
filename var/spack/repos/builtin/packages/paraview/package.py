@@ -23,18 +23,16 @@ class Paraview(CMakePackage, CudaPackage):
     list_depth = 1
     git = "https://gitlab.kitware.com/paraview/paraview.git"
 
-    maintainers = ["chuckatkins", "danlipsa", "vicentebolea"]
+    maintainers = ["danlipsa", "vicentebolea", "kwryankrattiger"]
     tags = ["e4s"]
 
     version("master", branch="master", submodules=True)
     version(
-        "5.11.0-RC1", sha256="892c4617b3f23f6e5c9a08ecc9b3e9f16b9e2f54c044155c3c252f00b0fbafd9"
-    )
-    version(
-        "5.10.1",
-        sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2",
+        "5.11.0",
+        sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165",
         preferred=True,
     )
+    version("5.10.1", sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2")
     version("5.10.0", sha256="86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5")
     version("5.9.1", sha256="0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d")
     version("5.9.0", sha256="b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d")
@@ -59,8 +57,7 @@ class Paraview(CMakePackage, CudaPackage):
         default=True,
         description="Install include files for Catalyst or plugins support",
     )
-    variant("python", default=False, description="Enable Python support")
-    variant("python3", default=False, description="Enable Python3 support")
+    variant("python", default=False, description="Enable Python support", when="@5.6:")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("mpi", default=True, description="Enable MPI support")
     variant("osmesa", default=False, description="Enable OSMesa support")
@@ -73,6 +70,7 @@ class Paraview(CMakePackage, CudaPackage):
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
+    variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("catalyst", default=False, description="Enable Catalyst 1", when="@5.7:")
     variant(
         "libcatalyst",
@@ -104,12 +102,9 @@ class Paraview(CMakePackage, CudaPackage):
         ' "on" or "off" will always override the build_edition.',
     )
 
+    conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
-    conflicts("+python", when="+python3")
-    # Python 2 support dropped with 5.9.0
-    conflicts("+python", when="@5.9:")
-    conflicts("+python3", when="@:5.5")
-    conflicts("+shared", when="+cuda")
+    conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
@@ -144,34 +139,19 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on("ninja", type="build")
 
-    # Workaround for
-    # adding the following to your packages.yaml
-    # packages:
-    #   python:
-    #     version: [3, 2]
-    # without this you'll get:
-    # paraview requires python version 3:, but spec asked for 2.7.16
-    # for `spack spec paraview+python+osmesa`
-    # see spack pull request #11539
     extends("python", when="+python")
-    extends("python", when="+python3")
-
-    depends_on("python@2.7:2.8", when="+python", type=("build", "run"))
 
     # VTK < 8.2.1 can't handle Python 3.8
     # This affects Paraview <= 5.7 (VTK 8.2.0)
     # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
-    depends_on("python@3:3.7", when="@:5.7 +python3", type=("build", "run"))
-    depends_on("python@3:", when="@5.8:+python3", type=("build", "run"))
+    depends_on("python@3:3.7", when="@:5.7 +python", type=("build", "run"))
+    depends_on("python@3:", when="@5.8:+python", type=("build", "run"))
 
-    depends_on("py-numpy@:1.15.4", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python3", type=("build", "run"))
+    depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
-    depends_on("py-mpi4py", when="+python3+mpi", type=("build", "run"))
 
-    depends_on("py-matplotlib@:2", when="+python", type="run")
-    depends_on("py-matplotlib", when="+python3", type="run")
-    depends_on("py-pandas@0.21:", when="+python3", type="run")
+    depends_on("py-matplotlib", when="+python", type="run")
+    depends_on("py-pandas@0.21:", when="+python", type="run")
 
     depends_on("mpi", when="+mpi")
     depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
@@ -199,6 +179,10 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("hdf5@1.10:", when="+hdf5 @5.10:")
     depends_on("adios2+mpi", when="+adios2+mpi")
     depends_on("adios2~mpi", when="+adios2~mpi")
+    depends_on("silo", when="+visitbridge")
+    depends_on("silo+mpi", when="+visitbridge+mpi")
+    depends_on("silo~mpi", when="+visitbridge~mpi")
+    depends_on("boost", when="+visitbridge")
     depends_on("jpeg")
     depends_on("jsoncpp")
     depends_on("libogg")
@@ -218,11 +202,6 @@ class Paraview(CMakePackage, CudaPackage):
     # and pre-5.9 is unable to handle that.
     depends_on("pugixml@:1.10", when="@:5.8")
     depends_on("pugixml", when="@5.9:")
-
-    # Can't contretize with python2 and py-setuptools@45.0.0:
-    depends_on("py-setuptools@:44", when="+python")
-    # Can't contretize with python2 and py-pillow@7.0.0:
-    depends_on("pil@:6", when="+python")
 
     # ParaView depends on cli11 due to changes in MR
     # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
@@ -311,6 +290,15 @@ class Paraview(CMakePackage, CudaPackage):
         if (name == "cflags" or name == "cxxflags") and self.spec.satisfies("%intel"):
             flags.append("-no-ipo")
             return (None, None, flags)
+
+        if name in ("cflags", "cxxflags"):
+            # Constrain the HDF5 API
+            if self.spec.satisfies("@:5.9 +hdf5"):
+                if self.spec["hdf5"].satisfies("@1.10:"):
+                    flags.append("-DH5_USE_18_API")
+            elif self.spec.satisfies("@5.10: +hdf5"):
+                if self.spec["hdf5"].satisfies("@1.12:"):
+                    flags.append("-DH5_USE_110_API")
         return (flags, None, None)
 
     def setup_run_environment(self, env):
@@ -336,7 +324,7 @@ class Paraview(CMakePackage, CudaPackage):
         env.prepend_path("LIBRARY_PATH", lib_dir)
         env.prepend_path("LD_LIBRARY_PATH", lib_dir)
 
-        if "+python" in self.spec or "+python3" in self.spec:
+        if "+python" in self.spec:
             if self.spec.version <= Version("5.4.1"):
                 pv_pydir = join_path(lib_dir, "site-packages")
                 env.prepend_path("PYTHONPATH", pv_pydir)
@@ -376,6 +364,8 @@ class Paraview(CMakePackage, CudaPackage):
             "-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s" % includes,
             "-DBUILD_TESTING:BOOL=OFF",
             "-DOpenGL_GL_PREFERENCE:STRING=LEGACY",
+            self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
+            self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
         if spec.satisfies("@5.11:"):
@@ -460,10 +450,10 @@ class Paraview(CMakePackage, CudaPackage):
 
         # CMake flags for python have changed with newer ParaView versions
         # Make sure Spack uses the right cmake flags
-        if "+python" in spec or "+python3" in spec:
+        if "+python" in spec:
             py_use_opt = "USE" if spec.satisfies("@5.8:") else "ENABLE"
             py_ver_opt = "PARAVIEW" if spec.satisfies("@5.7:") else "VTK"
-            py_ver_val = 3 if "+python3" in spec else 2
+            py_ver_val = 3
             cmake_args.extend(
                 [
                     "-DPARAVIEW_%s_PYTHON:BOOL=ON" % py_use_opt,
@@ -575,7 +565,7 @@ class Paraview(CMakePackage, CudaPackage):
             cmake_args.append("-DPARAVIEW_ENABLE_MOTIONFX:BOOL=OFF")
 
         # Encourage Paraview to use the correct Python libs
-        if spec.satisfies("+python") or spec.satisfies("+python3"):
+        if spec.satisfies("+python"):
             pylibdirs = spec["python"].libs.directories
             cmake_args.append("-DCMAKE_INSTALL_RPATH={0}".format(":".join(self.rpath + pylibdirs)))
 
@@ -584,7 +574,7 @@ class Paraview(CMakePackage, CudaPackage):
 
         if "+catalyst" in spec:
             cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_Catalyst=YES")
-            if "+python3" in spec:
+            if "+python" in spec:
                 cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_PythonCatalyst=YES")
 
         if "+libcatalyst" in spec:

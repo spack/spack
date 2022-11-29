@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import inspect
 import os
 import platform
 import posixpath
@@ -14,6 +14,7 @@ from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
 import spack.config
+import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
 from spack.build_environment import (
@@ -465,7 +466,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
     pkg = s.package
 
     env = EnvironmentModifications()
-    with spack.config.override("config:shared_linking", config_setting):
+    with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
         spack.build_environment.set_compiler_environment_variables(pkg, env)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
@@ -521,3 +522,27 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
     assert mock_module_cmd.calls
     assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
     assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
+
+
+class TestModuleMonkeyPatcher:
+    def test_getting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+        assert module_wrapper.Libelf == s.package.module.Libelf
+
+    def test_setting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module = s.package.module
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+
+        # Setting an attribute has an immediate effect
+        module_wrapper.SOME_ATTRIBUTE = 1
+        assert module.SOME_ATTRIBUTE == 1
+
+        # We can also propagate the settings to classes in the MRO
+        module_wrapper.propagate_changes_to_mro()
+        for cls in inspect.getmro(type(s.package)):
+            current_module = cls.module
+            if current_module == spack.package_base:
+                break
+            assert current_module.SOME_ATTRIBUTE == 1

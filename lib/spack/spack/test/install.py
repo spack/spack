@@ -252,12 +252,8 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
     # The order should be maintained
     phases = [x["name"] for x in times["phases"]]
-    total = sum([x["seconds"] for x in times["phases"]])
-    for name in ["one", "two", "three", "install"]:
-        assert name in phases
-
-    # Give a generous difference threshold
-    assert abs(total - times["total"]["seconds"]) < 5
+    assert phases == ["stage", "one", "two", "three", "install"]
+    assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 
 def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):
@@ -429,7 +425,7 @@ def test_uninstall_by_spec_errors(mutable_database):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd):
+def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd, ensure_debug):
     """Test install phases with the nosource package."""
     spec = Spec("nosource").concretized()
     pkg = spec.package
@@ -444,7 +440,9 @@ def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd)
 
 
 @pytest.mark.disable_clean_stage_check
-def test_nosource_bundle_pkg_install(install_mockery, mock_fetch, mock_packages, capfd):
+def test_nosource_bundle_pkg_install(
+    install_mockery, mock_fetch, mock_packages, capfd, ensure_debug
+):
     """Test install phases with the nosource-bundle package."""
     spec = Spec("nosource-bundle").concretized()
     pkg = spec.package

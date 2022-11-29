@@ -26,6 +26,7 @@ class RGrbase(RPackage):
 
     cran = "gRbase"
 
+    version("1.8.8", sha256="fdd5d1ca8adb74e8bd2b210c9a652a10e60a90b40450cd8a295b06af41acf9db")
     version("1.8.7", sha256="01d77e1b029ac22b4e13f07384285f363733a42aba842eddfc5e1aceea99f808")
     version("1.8-6.7", sha256="aaafc7e1b521de60e1a57c0175ac64d4283850c3273bd14774cf24dabc743388")
     version("1.8-3.4", sha256="d35f94c2fb7cbd4ce3991570424dfe6723a849658da32e13df29f53b6ea2cc2c")

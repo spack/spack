@@ -19,6 +19,7 @@ class PyProtobuf(PythonPackage):
 
     variant("cpp", default=False, description="Enable the cpp implementation")
 
+    version("4.21.7", sha256="71d9dba03ed3432c878a801e2ea51e034b0ea01cf3a4344fb60166cb5f6c8757")
     version("4.21.5", sha256="eb1106e87e095628e96884a877a51cdb90087106ee693925ec0a300468a9be3a")
     version(
         "3.20.1",
@@ -63,19 +64,21 @@ class PyProtobuf(PythonPackage):
         deprecated=True,
     )
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
-    version("3.0.0b2", sha256="d5b560bbc4b7d97cc2455c05cad9299d9db02d7bd11193b05684e3a86303c229")
-    version("3.0.0a3", sha256="b61622de5048415bfd3f2d812ad64606438ac9e25009ae84191405fe58e522c1")
-    version("2.6.1", sha256="8faca1fb462ee1be58d00f5efb4ca4f64bde92187fe61fde32615bbee7b3e745")
-    version("2.5.0", sha256="58292c459598c9297258bf57acc055f701c727f0154a86af8c0947dde37d8172")
-    version("2.4.1", sha256="df30b98acb6ef892da8b4776175510cff2131908fd0526b6bad960c55a830a1b")
-    version("2.3.0", sha256="374bb047874a506507912c3717d0ce62affbaa9a22bcb494d63d60326a0867b5")
+    version(
+        "3.0.0b2",
+        sha256="d5b560bbc4b7d97cc2455c05cad9299d9db02d7bd11193b05684e3a86303c229",
+        deprecated=True,
+    )
+    version(
+        "3.0.0a3",
+        sha256="b61622de5048415bfd3f2d812ad64606438ac9e25009ae84191405fe58e522c1",
+        deprecated=True,
+    )
 
     depends_on("python@3.5:", when="@3.18:", type=("build", "run"))
     depends_on("python@3.7:", when="@3.20:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.9:", when="@3:", type=("build", "run"))
-    depends_on("py-ordereddict", when="@3: ^python@:2", type=("build", "run"))
-    depends_on("py-unittest2", when="@3: ^python@:2", type=("build", "run"))
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases
@@ -84,12 +87,6 @@ class PyProtobuf(PythonPackage):
     # Handle the 3.x series releases
     for ver in list(range(1, 8)) + list(range(9, 21)):
         depends_on("protobuf@3." + str(ver), when="+cpp @3." + str(ver))
-    # Handle the 2.x series releases
-    for ver in list(range(3, 7)):
-        if ver == 5:
-            depends_on("protobuf@2." + str(ver), when="+cpp @2." + str(ver))
-        else:
-            conflicts("+cpp", when="@2." + str(ver))
 
     @property
     def build_directory(self):

@@ -5,20 +5,17 @@
 
 from __future__ import division
 
+import collections.abc
 import contextlib
 import functools
 import inspect
+import itertools
 import os
 import re
 import sys
 import traceback
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterable, List, Tuple
-
-import six
-from six import string_types
-
-from llnl.util.compat import MutableMapping, MutableSequence, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r"^\.#", "~$"]
@@ -200,14 +197,9 @@ def memoized(func):
             return ret
         except TypeError as e:
             # TypeError is raised when indexing into a dict if the key is unhashable.
-            raise six.raise_from(
-                UnhashableArguments(
-                    "args + kwargs '{}' was not hashable for function '{}'".format(
-                        key, func.__name__
-                    ),
-                ),
-                e,
-            )
+            raise UnhashableArguments(
+                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__),
+            ) from e
 
     return _memoized_function
 
@@ -312,7 +304,7 @@ def lazy_eq(lseq, rseq):
     # zip_longest is implemented in native code, so use it for speed.
     # use zip_longest instead of zip because it allows us to tell
     # which iterator was longer.
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return False
 
@@ -332,7 +324,7 @@ def lazy_lt(lseq, rseq):
     liter = lseq()
     riter = rseq()
 
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return left is done  # left was shorter than right
 
@@ -482,7 +474,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
 
 @lazy_lexicographic_ordering
-class HashableMap(MutableMapping):
+class HashableMap(collections.abc.MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
 
@@ -574,7 +566,7 @@ def match_predicate(*args):
 
     def match(string):
         for arg in args:
-            if isinstance(arg, string_types):
+            if isinstance(arg, str):
                 if re.search(arg, string):
                     return True
             elif isinstance(arg, list) or isinstance(arg, tuple):
@@ -887,32 +879,28 @@ def load_module_from_file(module_name, module_path):
         ImportError: when the module can't be loaded
         FileNotFoundError: when module_path doesn't exist
     """
+    import importlib.util
+
     if module_name in sys.modules:
         return sys.modules[module_name]
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
-        import importlib.util
 
-        spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-        module = importlib.util.module_from_spec(spec)  # novm
-        # The module object needs to exist in sys.modules before the
-        # loader executes the module code.
-        #
-        # See https://docs.python.org/3/reference/import.html#loading
-        sys.modules[spec.name] = module
+    spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
+    module = importlib.util.module_from_spec(spec)  # novm
+    # The module object needs to exist in sys.modules before the
+    # loader executes the module code.
+    #
+    # See https://docs.python.org/3/reference/import.html#loading
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
         try:
-            spec.loader.exec_module(module)
-        except BaseException:
-            try:
-                del sys.modules[spec.name]
-            except KeyError:
-                pass
-            raise
-    elif sys.version_info[0] == 2:
-        import imp
-
-        module = imp.load_source(module_name, module_path)
+            del sys.modules[spec.name]
+        except KeyError:
+            pass
+        raise
     return module
 
 
@@ -1022,7 +1010,15 @@ def stable_partition(
     return true_items, false_items
 
 
-class TypedMutableSequence(MutableSequence):
+def ensure_last(lst, *elements):
+    """Performs a stable partition of lst, ensuring that ``elements``
+    occur at the end of ``lst`` in specified order. Mutates ``lst``.
+    Raises ``ValueError`` if any ``elements`` are not already in ``lst``."""
+    for elt in elements:
+        lst.append(lst.pop(lst.index(elt)))
+
+
+class TypedMutableSequence(collections.abc.MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
     Client code can inherit from this base class:

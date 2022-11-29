@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This is where most of the action happens in Spack.
 
 The spack package class structure is based strongly on Homebrew
@@ -18,6 +17,7 @@ import functools
 import glob
 import hashlib
 import inspect
+import io
 import os
 import re
 import shutil
@@ -28,8 +28,6 @@ import traceback
 import types
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
-
-import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -66,13 +64,12 @@ from spack.util.prefix import Prefix
 from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
-if sys.version_info[0] >= 3:
-    FLAG_HANDLER_RETURN_TYPE = Tuple[
-        Optional[Iterable[str]],
-        Optional[Iterable[str]],
-        Optional[Iterable[str]],
-    ]
-    FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
+FLAG_HANDLER_RETURN_TYPE = Tuple[
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+]
+FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -131,7 +128,7 @@ def preferred_version(pkg):
     return sorted(pkg.versions, key=key_fn).pop()
 
 
-class WindowsRPathMeta(object):
+class WindowsRPath(object):
     """Collection of functionality surrounding Windows RPATH specific features
 
     This is essentially meaningless for all other platforms
@@ -140,11 +137,30 @@ class WindowsRPathMeta(object):
     they would a genuine RPATH, i.e. adding directories that contain
     runtime library dependencies"""
 
-    def add_search_paths(self, *path):
-        """Add additional rpaths that are not implicitly included in the search
-        scheme
+    def win_add_library_dependent(self):
+        """Return extra set of directories that require linking for package
+
+        This method should be overridden by packages that produce
+        binaries/libraries/python extension modules/etc that are installed into
+        directories outside a package's `bin`, `lib`, and `lib64` directories,
+        but still require linking against one of the packages dependencies, or
+        other components of the package itself. No-op otherwise.
+
+        Returns:
+            List of additional directories that require linking
         """
-        self.win_rpath.include_additional_link_paths(*path)
+        return []
+
+    def win_add_rpath(self):
+        """Return extra set of rpaths for package
+
+        This method should be overridden by packages needing to
+        include additional paths to be searched by rpath. No-op otherwise
+
+        Returns:
+            List of additional rpaths
+        """
+        return []
 
     def windows_establish_runtime_linkage(self):
         """Establish RPATH on Windows
@@ -152,6 +168,8 @@ class WindowsRPathMeta(object):
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
         if is_windows:
+            self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
+            self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
 
 
@@ -236,7 +254,7 @@ class DetectablePackageMeta(object):
                         variants = [variants]
 
                     for variant in variants:
-                        if isinstance(variant, six.string_types):
+                        if isinstance(variant, str):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
                         spec_str = "{0}@{1} {2}".format(cls.name, version_str, variant_str)
@@ -423,7 +441,7 @@ def test_log_pathname(test_stage, spec):
     return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
 
 
-class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewMixin, object)):
+class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -510,10 +528,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     # These are default values for instance variables.
     #
 
-    #: A list or set of build time test functions to be called when tests
-    #: are executed or 'None' if there are no such test functions.
-    build_time_test_callbacks = None  # type: Optional[List[str]]
-
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
@@ -521,10 +535,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: Most Spack packages are used to install source or binary code while
     #: those that do not can be used to install a set of other Spack packages.
     has_code = True
-
-    #: A list or set of install time test functions to be called when tests
-    #: are executed or 'None' if there are no such test functions.
-    install_time_test_callbacks = None  # type: Optional[List[str]]
 
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
@@ -536,12 +546,25 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
 
+    #: Keep -Werror flags, matches config:flags:keep_werror to override config
+    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
+    keep_werror = None  # type: Optional[str]
+
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
 
     #: When True, add RPATHs for the entire DAG. When False, add RPATHs only
     #: for immediate dependencies.
     transitive_rpaths = True
+
+    #: List of shared objects that should be replaced with a different library at
+    #: runtime. Typically includes stub libraries like libcuda.so. When linking
+    #: against a library listed here, the dependent will only record its soname
+    #: or filename, not its absolute path, so that the dynamic linker will search
+    #: for it. Note: accepts both file names and directory names, for example
+    #: ``["libcuda.so", "stubs"]`` will ensure libcuda.so and all libraries in the
+    #: stubs directory are not bound by path."""
+    non_bindable_shared_objects = []  # type: List[str]
 
     #: List of prefix-relative file paths (or a single path). If these do
     #: not exist after install, or if they exist but are not files,
@@ -888,6 +911,12 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         See Class Version (version.py)
         """
         return self._implement_all_urls_for_version(version)[0]
+
+    def update_external_dependencies(self):
+        """
+        Method to override in package classes to handle external dependencies
+        """
+        pass
 
     def all_urls_for_version(self, version):
         """Return all URLs derived from version_urls(), url, urls, and
@@ -1277,19 +1306,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         s = self.extendee_spec
         return s and spec.satisfies(s)
 
-    def is_activated(self, view):
-        """Return True if package is activated."""
-        if not self.is_extension:
-            raise ValueError("is_activated called on package that is not an extension.")
-        if self.extendee_spec.installed_upstream:
-            # If this extends an upstream package, it cannot be activated for
-            # it. This bypasses construction of the extension map, which can
-            # can fail when run in the context of a downstream Spack instance
-            return False
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.extendee_spec)
-        return (self.name in exts) and (exts[self.name] == self.spec)
-
     def provides(self, vpkg_name):
         """
         True if this package provides a virtual package with the specified name
@@ -1617,7 +1633,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 from_local_sources = env and env.is_develop(self.spec)
                 if self.has_code and not self.spec.external and not from_local_sources:
                     message = "Missing a source id for {s.name}@{s.version}"
-                    tty.warn(message.format(s=self))
+                    tty.debug(message.format(s=self))
                 hash_content.append("".encode("utf-8"))
             else:
                 hash_content.append(source_id.encode("utf-8"))
@@ -1638,10 +1654,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(sorted(hash_content))).digest()
         ).lower()
-
-        # convert from bytes if running python 3
-        if sys.version_info[0] >= 3:
-            b32_hash = b32_hash.decode("utf-8")
+        b32_hash = b32_hash.decode("utf-8")
 
         return b32_hash
 
@@ -1851,7 +1864,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 be copied to the corresponding location(s) under the install
                 testing directory.
         """
-        paths = [srcs] if isinstance(srcs, six.string_types) else srcs
+        paths = [srcs] if isinstance(srcs, str) else srcs
 
         for path in paths:
             src_path = os.path.join(self.stage.source_path, path)
@@ -1981,7 +1994,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                     print(line.rstrip("\n"))
 
                 if exc_type is spack.util.executable.ProcessError:
-                    out = six.StringIO()
+                    out = io.StringIO()
                     spack.build_environment.write_log_summary(
                         out, "test", self.test_log_file, last=1
                     )
@@ -2003,9 +2016,9 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 return False
 
     def _run_test_helper(self, runner, options, expected, status, installed, purpose):
-        status = [status] if isinstance(status, six.integer_types) else status
-        expected = [expected] if isinstance(expected, six.string_types) else expected
-        options = [options] if isinstance(options, six.string_types) else options
+        status = [status] if isinstance(status, int) else status
+        expected = [expected] if isinstance(expected, str) else expected
+        options = [options] if isinstance(options, str) else options
 
         if purpose:
             tty.msg(purpose)
@@ -2289,30 +2302,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         """Deprecate this package in favor of deprecator spec"""
         spec = self.spec
 
-        # Check whether package to deprecate has active extensions
-        if self.extendable:
-            view = spack.filesystem_view.YamlFilesystemView(spec.prefix, spack.store.layout)
-            active_exts = view.extensions_layout.extension_map(spec).values()
-            if active_exts:
-                short = spec.format("{name}/{hash:7}")
-                m = "Spec %s has active extensions\n" % short
-                for active in active_exts:
-                    m += "        %s\n" % active.format("{name}/{hash:7}")
-                    m += "Deactivate extensions before deprecating %s" % short
-                tty.die(m)
-
-        # Check whether package to deprecate is an active extension
-        if self.is_extension:
-            extendee = self.extendee_spec
-            view = spack.filesystem_view.YamlFilesystemView(extendee.prefix, spack.store.layout)
-
-            if self.is_activated(view):
-                short = spec.format("{name}/{hash:7}")
-                short_ext = extendee.format("{name}/{hash:7}")
-                msg = "Spec %s is an active extension of %s\n" % (short, short_ext)
-                msg += "Deactivate %s to be able to deprecate it" % short
-                tty.die(msg)
-
         # Install deprecator if it isn't installed already
         if not spack.store.db.query(deprecator):
             deprecator.package.do_install()
@@ -2342,155 +2331,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         if not self.extendable:
             raise ValueError("Package %s is not extendable!" % self.name)
 
-    def _sanity_check_extension(self):
-        if not self.is_extension:
-            raise ActivationError("This package is not an extension.")
-
-        extendee_package = self.extendee_spec.package
-        extendee_package._check_extendable()
-
-        if not self.extendee_spec.installed:
-            raise ActivationError("Can only (de)activate extensions for installed packages.")
-        if not self.spec.installed:
-            raise ActivationError("Extensions must first be installed.")
-        if self.extendee_spec.name not in self.extendees:
-            raise ActivationError("%s does not extend %s!" % (self.name, self.extendee.name))
-
-    def do_activate(self, view=None, with_dependencies=True, verbose=True):
-        """Called on an extension to invoke the extendee's activate method.
-
-        Commands should call this routine, and should not call
-        activate() directly.
-        """
-        if verbose:
-            tty.msg(
-                "Activating extension {0} for {1}".format(
-                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
-                )
-            )
-
-        self._sanity_check_extension()
-        if not view:
-            view = YamlFilesystemView(self.extendee_spec.prefix, spack.store.layout)
-
-        extensions_layout = view.extensions_layout
-
-        try:
-            extensions_layout.check_extension_conflict(self.extendee_spec, self.spec)
-        except spack.directory_layout.ExtensionAlreadyInstalledError as e:
-            # already installed, let caller know
-            tty.msg(e.message)
-            return
-
-        # Activate any package dependencies that are also extensions.
-        if with_dependencies:
-            for spec in self.dependency_activations():
-                if not spec.package.is_activated(view):
-                    spec.package.do_activate(
-                        view, with_dependencies=with_dependencies, verbose=verbose
-                    )
-
-        self.extendee_spec.package.activate(self, view, **self.extendee_args)
-
-        extensions_layout.add_extension(self.extendee_spec, self.spec)
-
-        if verbose:
-            tty.debug(
-                "Activated extension {0} for {1}".format(
-                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
-                )
-            )
-
-    def dependency_activations(self):
-        return (
-            spec
-            for spec in self.spec.traverse(root=False, deptype="run")
-            if spec.package.extends(self.extendee_spec)
-        )
-
-    def activate(self, extension, view, **kwargs):
-        """
-        Add the extension to the specified view.
-
-        Package authors can override this function to maintain some
-        centralized state related to the set of activated extensions
-        for a package.
-
-        Spack internals (commands, hooks, etc.) should call
-        do_activate() method so that proper checks are always executed.
-        """
-        view.merge(extension.spec, ignore=kwargs.get("ignore", None))
-
-    def do_deactivate(self, view=None, **kwargs):
-        """Remove this extension package from the specified view. Called
-        on the extension to invoke extendee's deactivate() method.
-
-        `remove_dependents=True` deactivates extensions depending on this
-        package instead of raising an error.
-        """
-        self._sanity_check_extension()
-        force = kwargs.get("force", False)
-        verbose = kwargs.get("verbose", True)
-        remove_dependents = kwargs.get("remove_dependents", False)
-
-        if verbose:
-            tty.msg(
-                "Deactivating extension {0} for {1}".format(
-                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
-                )
-            )
-
-        if not view:
-            view = YamlFilesystemView(self.extendee_spec.prefix, spack.store.layout)
-        extensions_layout = view.extensions_layout
-
-        # Allow a force deactivate to happen.  This can unlink
-        # spurious files if something was corrupted.
-        if not force:
-            extensions_layout.check_activated(self.extendee_spec, self.spec)
-
-            activated = extensions_layout.extension_map(self.extendee_spec)
-            for name, aspec in activated.items():
-                if aspec == self.spec:
-                    continue
-                for dep in aspec.traverse(deptype="run"):
-                    if self.spec == dep:
-                        if remove_dependents:
-                            aspec.package.do_deactivate(**kwargs)
-                        else:
-                            msg = (
-                                "Cannot deactivate {0} because {1} is "
-                                "activated and depends on it"
-                            )
-                            raise ActivationError(
-                                msg.format(self.spec.cshort_spec, aspec.cshort_spec)
-                            )
-
-        self.extendee_spec.package.deactivate(self, view, **self.extendee_args)
-
-        # redundant activation check -- makes SURE the spec is not
-        # still activated even if something was wrong above.
-        if self.is_activated(view):
-            extensions_layout.remove_extension(self.extendee_spec, self.spec)
-
-        if verbose:
-            tty.debug(
-                "Deactivated extension {0} for {1}".format(
-                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
-                )
-            )
-
-    def deactivate(self, extension, view, **kwargs):
-        """
-        Remove all extension files from the specified view.
-
-        Package authors can override this method to support other
-        extension mechanisms.  Spack internals (commands, hooks, etc.)
-        should call do_deactivate() method so that proper checks are
-        always executed.
-        """
-        view.unmerge(extension.spec, ignore=kwargs.get("ignore", None))
-
     def view(self):
         """Create a view with the prefix of this package as the root.
         Extensions added to this view will modify the installation prefix of
@@ -2519,7 +2359,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
 
         doc = re.sub(r"\s+", " ", cls.__doc__)
         lines = textwrap.wrap(doc, 72)
-        results = six.StringIO()
+        results = io.StringIO()
         for line in lines:
             results.write((" " * indent) + line + "\n")
         return results.getvalue()
@@ -2571,12 +2411,17 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
-        rpaths = [self.prefix.lib, self.prefix.lib64]
         deps = self.spec.dependencies(deptype="link")
-        rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+
+        # on Windows, libraries of runtime interest are typically
+        # stored in the bin directory
         if is_windows:
+            rpaths = [self.prefix.bin]
             rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+        else:
+            rpaths = [self.prefix.lib, self.prefix.lib64]
+            rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
+            rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
         return rpaths
 
     @property
@@ -2606,12 +2451,12 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 try:
                     fn = getattr(builder, name)
 
-                    msg = ("RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name),)
+                    msg = "RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name)
                     print_test_message(logger, msg, True)
 
                     fn()
                 except AttributeError as e:
-                    msg = ("RUN-TESTS: method not implemented [{0}]".format(name),)
+                    msg = "RUN-TESTS: method not implemented [{0}]".format(name)
                     print_test_message(logger, msg, True)
 
                     builder.pkg.test_failures.append((e, msg))
