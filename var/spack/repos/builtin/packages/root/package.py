@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import platform
 import sys
 
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 from spack.util.environment import is_system_path
 
@@ -317,11 +317,8 @@ class Root(CMakePackage):
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
 
     # See https://github.com/root-project/root/issues/11714
-    if sys.platform == "darwin":
-        version = platform.mac_ver()(0)
-        major_version = int(version.split(".")(0))
-        if major_version >= 13:
-            conflicts(":6.26.09", msg="macOS 13 support was added in 6.26.10")
+    if sys.platform == "darwin" and macos_version() >= Version("13"):
+        conflicts(":6.26.09", msg="macOS 13 support was added in 6.26.10")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
