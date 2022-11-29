@@ -519,7 +519,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 useinc = True
                 uselib = True
 
-            library_requested = spacklibname.split(":")[0] in direct_dependencies
+            # Make sure that packages that provide multiple virtual dependencies only provide requested ones
+            # from the spec dependencies (direct_dependencies includes all virtual dependencies)
+            dependency_name = spacklibname.split(":")[0]
+            dependency_names = [d.name for d in spec.dependencies()]
+            library_requested = dependency_name in direct_dependencies and dependency_name in dependency_names
             options.append(
                 "--with-{library}={value}".format(
                     library=petsclibname, value=("1" if library_requested else "0")
