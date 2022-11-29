@@ -31,7 +31,6 @@ spack:
           +plasticity: '{name}-plasticity/{version}'
           +ngv+metabolism: '{name}-multiscale/{version}'
   specs:
-    - asciitoh5@1.0
    #- coreneuron+tests
    #- coreneuron+tests+nmodl+sympy
    #- coreneuron%nvhpc+tests+gpu+openmp
