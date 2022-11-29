@@ -11,6 +11,7 @@ class Libxcrypt(AutotoolsPackage):
 
     homepage = "https://github.com/besser82/libxcrypt"
     url = "https://github.com/besser82/libxcrypt/releases/download/v4.4.30/libxcrypt-4.4.30.tar.xz"
+    maintainers = ["haampie"]
 
     def url_for_version(self, version):
         if version <= Version("4.4.17"):
@@ -19,6 +20,8 @@ class Libxcrypt(AutotoolsPackage):
             version, version
         )
 
+    version("4.4.33", sha256="e87acf9c652c573a4713d5582159f98f305d56ed5f754ce64f57d4194d6b3a6f")
+    version("4.4.32", sha256="0613f9bd51d713f8bb79fa10705b68d2ab705c3be4c4fc119f0a96bdc72256c4")
     version("4.4.31", sha256="c0181b6a8eea83850cfe7783119bf71fddbde69adddda1d15747ba433d5c57ba")
     version("4.4.30", sha256="b3667f0ba85daad6af246ba4090fbe53163ad93c8b6a2a1257d22a78bb7ceeba")
     version("4.4.17", sha256="7665168d0409574a03f7b484682e68334764c29c21ca5df438955a381384ca07")
@@ -30,9 +33,11 @@ class Libxcrypt(AutotoolsPackage):
     patch("truncating-conversion.patch", when="@4.4.30")
 
     def configure_args(self):
-        # Disable test dependency on Python (Python itself depends on libxcrypt).
         args = [
+            # Disable test dependency on Python (Python itself depends on libxcrypt).
             "ac_cv_path_python3_passlib=not found",
+            # Disable -Werror, which breaks with newer compilers
+            "--disable-werror",
         ]
         args += self.enable_or_disable("obsolete-api", variant="obsolete_api")
         return args

@@ -32,6 +32,4 @@ class PyPreCommit(PythonPackage):
     depends_on("py-toml", type=("build", "run"))
     depends_on("py-virtualenv@15.2:", type=("build", "run"))
     depends_on("py-virtualenv@20.0.8:", type=("build", "run"), when="@2.4.0:")
-    depends_on("py-futures", type=("build", "run"), when="^python@:3.1")
     depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-importlib-resources@:5.2", type=("build", "run"), when="^python@:3.6")

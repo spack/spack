@@ -17,9 +17,9 @@ import time
 import traceback
 import warnings
 from contextlib import closing
+from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
-from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang
@@ -1634,7 +1634,7 @@ def make_package_relative(workdir, spec, allow_root):
     if "elf" in platform.binary_formats:
         relocate.make_elf_binaries_relative(cur_path_names, orig_path_names, old_layout_root)
 
-    relocate.raise_if_not_relocatable(cur_path_names, allow_root)
+    allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
     orig_path_names = list()
     cur_path_names = list()
     for linkname in buildinfo.get("relocate_links", []):
@@ -1652,7 +1652,7 @@ def check_package_relocatable(workdir, spec, allow_root):
     cur_path_names = list()
     for filename in buildinfo["relocate_binaries"]:
         cur_path_names.append(os.path.join(workdir, filename))
-    relocate.raise_if_not_relocatable(cur_path_names, allow_root)
+    allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
 
 
 def dedupe_hardlinks_if_necessary(root, buildinfo):

@@ -14,7 +14,6 @@ from textwrap import dedent
 from typing import List, Tuple
 
 import ruamel.yaml as yaml
-import six
 from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
@@ -217,7 +216,7 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get("tests", False)
 
     sargs = args
-    if not isinstance(args, six.string_types):
+    if not isinstance(args, str):
         sargs = " ".join(args)
     unquoted_flags = _UnquotedFlags.extract(sargs)
 

@@ -29,14 +29,17 @@ class Parallelio(CMakePackage):
     variant(
         "fortran", default=True, description="enable fortran interface (requires netcdf fortran)"
     )
+    variant("mpi", default=True, description="Use mpi to build, otherwise use mpi-serial")
 
-    depends_on("mpi")
-    depends_on("netcdf-c +mpi", type="link")
+    depends_on("mpi", when="+mpi")
+    depends_on("mpi-serial", when="~mpi")
+    depends_on("netcdf-c +mpi", type="link", when="+mpi")
+    depends_on("netcdf-c ~mpi", type="link", when="~mpi")
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
-    patch("gfortran.patch", when="+fortran %gcc@10:")
+    patch("gfortran.patch", when="@:2.5.8 +fortran %gcc@10:")
 
     resource(name="genf90", git="https://github.com/PARALLELIO/genf90.git", tag="genf90_200608")
 
@@ -44,9 +47,8 @@ class Parallelio(CMakePackage):
         define = self.define
         define_from_variant = self.define_from_variant
         spec = self.spec
-        env["CC"] = spec["mpi"].mpicc
-        env["FC"] = spec["mpi"].mpifc
         src = self.stage.source_path
+
         args = [
             define("NetCDF_C_PATH", spec["netcdf-c"].prefix),
             define("USER_CMAKE_MODULE_PATH", join_path(src, "cmake")),
@@ -66,7 +68,18 @@ class Parallelio(CMakePackage):
                     define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix),
                 ]
             )
-
+        if spec.satisfies("+mpi"):
+            env["CC"] = spec["mpi"].mpicc
+            env["FC"] = spec["mpi"].mpifc
+        else:
+            env["FFLAGS"] = "-DNO_MPIMOD"
+            args.extend(
+                [
+                    define("PIO_USE_MPISERIAL", True),
+                    define("PIO_ENABLE_TESTS", False),
+                    define("MPISERIAL_PATH", spec["mpi-serial"].prefix),
+                ]
+            )
         args.extend(
             [
                 define_from_variant("PIO_ENABLE_TIMING", "timing"),
@@ -80,3 +93,12 @@ class Parallelio(CMakePackage):
         return "https://github.com/NCAR/ParallelIO/archive/pio{0}.tar.gz".format(
             version.underscored
         )
+
+    def setup_run_environment(self, env):
+        env.set("PIO_VERSION_MAJOR", "2")
+        valid_values = "netcdf"
+        if self.spec.satisfies("+mpi"):
+            valid_values += ",netcdf4p,netcdf4c"
+            if self.spec.satisfies("+pnetcdf"):
+                valid_values += ",pnetcdf"
+        env.set("PIO_TYPENAME_VALID_VALUES", valid_values)

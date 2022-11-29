@@ -49,7 +49,7 @@ class PySqlalchemy(PythonPackage):
     depends_on("python@2.7:2.8,3.4:", when="@:1.3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-importlib-metadata", when="@1.4.0: ^python@:3.7", type="run")
-    depends_on("py-greenlet@:0.4.16,0.4.18:", when="@1.4.0: ^python@3:", type="run")
+    depends_on("py-greenlet@:0.4.16,0.4.18:", when="@1.4.0:", type="run")
 
     variant(
         "backend",
@@ -58,12 +58,8 @@ class PySqlalchemy(PythonPackage):
     )
 
     # >=1.4.0
-    depends_on("py-mysqlclient@1.4:", when="backend=mysql @1.4: ^python@3:", type=("build", "run"))
-    depends_on(
-        "py-mysqlclient@1.4:,:1", when="backend=mysql @1.4: ^python@:2.7", type=("build", "run")
-    )
-    depends_on("py-pymysql", when="backend=pymysql @1.4: ^python@3:", type=("build", "run"))
-    depends_on("py-pymysql@:0", when="backend=pymysql @1.4: ^python@:2.7", type=("build", "run"))
+    depends_on("py-mysqlclient@1.4:", when="backend=mysql @1.4:", type=("build", "run"))
+    depends_on("py-pymysql", when="backend=pymysql @1.4:", type=("build", "run"))
     depends_on("py-psycopg2@2.7:", when="backend=postgresql @1.4:", type=("build", "run"))
 
     # < 1.4.0

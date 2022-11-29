@@ -5,9 +5,8 @@
 
 from __future__ import division, print_function
 
+import urllib.parse
 from collections import defaultdict
-
-import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty.color as color
 from llnl.util import tty
@@ -323,7 +322,7 @@ def url_stats(args):
                     md5_hashes[pkg_name].append(fetcher.url)
 
                 # parse out the URL scheme (https/http/ftp/etc.)
-                urlinfo = urllib_parse.urlparse(fetcher.url)
+                urlinfo = urllib.parse.urlparse(fetcher.url)
                 self.schemes[urlinfo.scheme] += 1
 
                 if urlinfo.scheme == "http":

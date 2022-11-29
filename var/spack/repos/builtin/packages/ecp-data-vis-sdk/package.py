@@ -156,7 +156,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("py-cinemasci", when="+cinema")
 
     dav_sdk_depends_on(
-        "paraview@5.10:+mpi+python3+kits+shared", when="+paraview", propagate=["hdf5", "adios2"]
+        "paraview@5.10:+mpi+python+kits+shared", when="+paraview", propagate=["hdf5", "adios2"]
     )
     # ParaView needs @5.11: in order to use cuda and be compatible with other
     # SDK packages.
