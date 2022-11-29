@@ -64,8 +64,11 @@ class TextFilePrefixReplacer(PrefixReplacer):
             return match.group(1) + self.prefix_to_prefix[match.group(2)] + match.group(3)
 
         data = f.read()
+        new_data = re.sub(self.regex, replacement, data)
+        if data == new_data:
+            return
         f.seek(0)
-        f.write(re.sub(self.regex, replacement, data))
+        f.write()
         f.truncate()
 
 
