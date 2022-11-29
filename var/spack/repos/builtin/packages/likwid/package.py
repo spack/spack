@@ -69,7 +69,7 @@ class Likwid(Package):
     variant(
         "accessmode",
         default="perf_event",
-        values=("perf_event", "direct", "accessdaemon"),
+        values=("perf_event", "accessdaemon"),
         description="the default mode for MSR access",
     )
 
@@ -231,10 +231,4 @@ class Likwid(Package):
             """.format(
                     perm_script_path
                 )
-            )
-        elif "accessmode=direct" in self.spec:
-            tty.warn(
-                """
-            Root permissions will be needed to run this installation of LIKWID.
-            """
             )
