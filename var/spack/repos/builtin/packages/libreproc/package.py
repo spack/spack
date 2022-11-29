@@ -9,7 +9,8 @@ from spack.package import *
 class Libreproc(CMakePackage):
     """A cross-platform process library"""
 
-    url = "https://github.com/DaanDeMeyer/reproc"
+    homepage = "https://github.com/DaanDeMeyer/reproc/"
+    url = "https://github.com/DaanDeMeyer/reproc/archive/v14.2.4.tar.gz"
 
     maintainers = ["charmoniumQ"]
 
@@ -21,9 +22,6 @@ class Libreproc(CMakePackage):
     depends_on("cmake@3.14:", type="build")
     depends_on("zlib+shared", type="run", when="+shared")
     depends_on("zlib~shared", type="build", when="~shared")
-
-    def url_for_version(self, version):
-        return f"{self.url}/archive/refs/tags/v{version}.tar.gz"
 
     def cmake_args(self):
         return [

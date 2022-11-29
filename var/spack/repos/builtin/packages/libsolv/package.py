@@ -10,7 +10,7 @@ class Libsolv(CMakePackage):
     """Library for solving packages and reading repositories."""
 
     homepage = "https://en.opensuse.org/OpenSUSE:Libzypp_satsolver"
-    url = "https://github.com/opensuse/libsolv"
+    url = "https://github.com/opensuse/libsolv/archive/0.7.22.tar.gz"
 
     maintainers = ["charmoniumQ"]
 
@@ -21,9 +21,6 @@ class Libsolv(CMakePackage):
     depends_on("expat", type="build")
     depends_on("zlib+shared", type="run", when="+shared")
     depends_on("zlib~shared", type="build", when="~shared")
-
-    def url_for_version(self, version):
-        return f"{self.url}/archive/refs/tags/{version}.tar.gz"
 
     def cmake_args(self):
         if "+shared" in self.spec:

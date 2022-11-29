@@ -43,7 +43,7 @@ class Micromamba(CMakePackage):
         depends_on("spdlog~shared", type="build")
 
         # Not specified, but needed:
-        depends_on("tl-expected@master", type="build")
+        depends_on("tl-expected@b74fecd", type="build")
         depends_on("nlohmann-json", type="build")
 
     # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L423
@@ -54,7 +54,7 @@ class Micromamba(CMakePackage):
         depends_on("openssl", type="build")
         depends_on("yaml-cpp", type="build")
         depends_on("libreproc+cxx", type="build")
-        depends_on("tl-expected@master", type="build")
+        depends_on("tl-expected@b74fecd", type="build")
         depends_on("fmt", type="build")
         depends_on("spdlog", type="build")
 
