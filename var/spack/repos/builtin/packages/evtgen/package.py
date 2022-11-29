@@ -54,15 +54,13 @@ class Evtgen(CMakePackage):
 
     @property
     def root_cmakelists_dir(self):
-          # deal with inconsistent intermediate folders of tarballs
-          # 02.00.00 only has 'R02-00-00'
-          # but 02.02.00 has 'EvtGen/R02-02-00'
-          if self.spec.satisfies("@02.02.00:"):
-              return "R" + str(self.version).replace('.', '-')
-          else:
-              return ""
-
-
+        # deal with inconsistent intermediate folders of tarballs
+        # 02.00.00 only has 'R02-00-00'
+        # but 02.02.00 has 'EvtGen/R02-02-00'
+        if self.spec.satisfies("@02.02.00:"):
+            return "R" + str(self.version).replace(".", "-")
+        else:
+            return ""
 
     def cmake_args(self):
         args = []
