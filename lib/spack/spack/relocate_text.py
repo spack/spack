@@ -68,7 +68,7 @@ class TextFilePrefixReplacer(PrefixReplacer):
         if data == new_data:
             return
         f.seek(0)
-        f.write()
+        f.write(new_data)
         f.truncate()
 
 
