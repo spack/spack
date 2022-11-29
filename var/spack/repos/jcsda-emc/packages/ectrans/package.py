@@ -21,7 +21,7 @@ class Ectrans(CMakePackage):
 
     version('develop', branch='develop', no_cache=True)
     version('main', branch='main', no_cache=True)
-    version("1.1.0", sha256="bc287604cd36ca32618f21767f4a8b85249e3506")
+    version("1.1.0", sha256="3c9848bb65033fbe6d791084ee347b3adf71d5dfe6d3c11385000017b6469a3e")
     # Defined for spack use only
     version('1.0.0', commit='ee1d307f1e47e1dd0b5ea91663a41df8a94cafb3')
 
