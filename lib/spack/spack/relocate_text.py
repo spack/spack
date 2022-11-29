@@ -65,7 +65,7 @@ class TextFilePrefixReplacer(PrefixReplacer):
 
         data = f.read()
         new_data = re.sub(self.regex, replacement, data)
-        if data == new_data:
+        if id(data) == id(new_data):
             return
         f.seek(0)
         f.write(new_data)
