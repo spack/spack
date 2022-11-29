@@ -221,6 +221,7 @@ class Boost(Package):
         "clanglibcpp",
         default=False,
         description="Compile with clang libc++ instead of libstdc++",
+        when="@1.73.0:",
         is_library=False,
     )
 
