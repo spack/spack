@@ -24,7 +24,7 @@ class Infernal(AutotoolsPackage):
     depends_on("mpi", when="+mpi")
 
     # https://github.com/EddyRivasLab/infernal/issues/30
-    conflicts("target=aarch64:", msg="hmmer is only available for x86_64 and PowerPC")
+    conflicts("target=aarch64:", msg="infernal is only available for x86_64 and PowerPC")
 
     def configure_args(self):
         args = []
