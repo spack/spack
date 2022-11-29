@@ -34,7 +34,6 @@ class Amdlibm(SConsPackage):
     variant("verbose", default=False, description="Building with verbosity")
 
     # Mandatory dependencies
-    depends_on("python@3.6.2", when="%aocc@3.2.0:", type=("build", "run"))
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("scons@3.1.2:", type=("build"))
     depends_on("mpfr", type=("link"))

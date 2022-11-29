@@ -528,10 +528,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # These are default values for instance variables.
     #
 
-    #: A list or set of build time test functions to be called when tests
-    #: are executed or 'None' if there are no such test functions.
-    build_time_test_callbacks = None  # type: Optional[List[str]]
-
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
@@ -539,10 +535,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Most Spack packages are used to install source or binary code while
     #: those that do not can be used to install a set of other Spack packages.
     has_code = True
-
-    #: A list or set of install time test functions to be called when tests
-    #: are executed or 'None' if there are no such test functions.
-    install_time_test_callbacks = None  # type: Optional[List[str]]
 
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
@@ -553,6 +545,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # FIXME: this is a bad object-oriented design, should be moved to Clang.
     #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
+
+    #: Keep -Werror flags, matches config:flags:keep_werror to override config
+    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
+    keep_werror = None  # type: Optional[str]
 
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
@@ -2455,12 +2451,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 try:
                     fn = getattr(builder, name)
 
-                    msg = ("RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name),)
+                    msg = "RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name)
                     print_test_message(logger, msg, True)
 
                     fn()
                 except AttributeError as e:
-                    msg = ("RUN-TESTS: method not implemented [{0}]".format(name),)
+                    msg = "RUN-TESTS: method not implemented [{0}]".format(name)
                     print_test_message(logger, msg, True)
 
                     builder.pkg.test_failures.append((e, msg))

@@ -24,11 +24,3 @@ class PyPlatformdirs(PythonPackage):
     depends_on("py-setuptools-scm@5:+toml", when="@:2.5.1", type="build")
     depends_on("py-hatchling@0.22.0:", when="@2.5.2:", type="build")
     depends_on("py-hatch-vcs", when="@2.5.2:", type="build")
-
-    @when("^python@:3.6")
-    def setup_build_environment(self, env):
-        """Python 3.6 needs a little help with setup.cfg re:
-
-        https://github.com/platformdirs/platformdirs/issues/50
-        """
-        env.set("LC_ALL", "en_US.UTF-8")
