@@ -300,8 +300,8 @@ class Root(CMakePackage):
     # Incompatible variants
     if sys.platform != "darwin":
         conflicts("+opengl", when="~x", msg="OpenGL requires X")
-        version, _, _ = platform.mac_ver()
-        major_version = version.split('.')[0]
+        version = platform.mac_ver()(0)
+        major_version = int(version.split('.')(0))
         if major_version >= 13:
             conflicts(":6.26.09", msg="macOS 13 support was added in 6.26.10")
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
