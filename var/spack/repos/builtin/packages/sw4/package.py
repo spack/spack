@@ -18,9 +18,9 @@ class Sw4(MakefilePackage):
 
     # tags = ["e4s"]
 
+    version("master", branch="master")
     version("3.0-beta", tag="v3.0-beta")
     version("developer", branch="developer")
-    version("master", branch="master")
 
     variant("openmp", default=True, description="build with OpenMP")
     variant("hdf5", default=True, description="build with HDF5")
