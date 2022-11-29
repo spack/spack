@@ -99,7 +99,8 @@ class Berkeleygw(MakefilePackage):
         filter_file(
             r"cd testsuite \&\& \$\(MAKE\) check$",
             "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 TEMPDIRPATH=%s && \
-             $(MAKE) check-parallel" % join_path(self.build_directory, 'testsuite', 'tmp'),
+             $(MAKE) check-parallel"
+            % join_path(self.build_directory, "testsuite", "tmp"),
             "Makefile",
         )
 
@@ -111,15 +112,21 @@ class Berkeleygw(MakefilePackage):
         )
 
         # slightly raise tolerance of some tests
-        si_epm_tests = ['Si', 'Si_cplx_spin']
+        si_epm_tests = ["Si", "Si_cplx_spin"]
         if self.version >= Version("3.0"):
-            si_epm_tests.append('Si_hdf5')
+            si_epm_tests.append("Si_hdf5")
         for test in si_epm_tests:
-            filter_file("Precision : 6e-15", "Precision : 7e-15",
-                        join_path('testsuite', 'Si-EPM', test + '.test'))
-        for test in ['Si_subspace', 'Si_subspace_cplx', 'Si_subspace_cplx_spin']:
-            filter_file("Precision : 6e-15", "Precision : 7e-15",
-                        join_path('testsuite', 'Si-EPM_subspace', test + '.test'))
+            filter_file(
+                "Precision : 6e-15",
+                "Precision : 7e-15",
+                join_path("testsuite", "Si-EPM", test + ".test"),
+            )
+        for test in ["Si_subspace", "Si_subspace_cplx", "Si_subspace_cplx_spin"]:
+            filter_file(
+                "Precision : 6e-15",
+                "Precision : 7e-15",
+                join_path("testsuite", "Si-EPM_subspace", test + ".test"),
+            )
         filter_file("Precision : 8e-15", "Precision : 9e-15", "testsuite/GaAs-EPM/GaAs.test")
 
     def build(self, spec, prefix):
