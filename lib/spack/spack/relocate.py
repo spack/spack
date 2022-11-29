@@ -810,6 +810,7 @@ def utf8_paths_to_single_binary_regex(prefixes):
 def _replace_prefix_text_file(file, regex, prefix_to_prefix):
     """Given a text file opened in rb+, substitute all old with new prefixes and write
     in-place (file size may grow or shrink)."""
+
     def replacement(match):
         return match.group(1) + prefix_to_prefix[match.group(2)] + match.group(3)
 
