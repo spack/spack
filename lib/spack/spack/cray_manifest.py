@@ -61,9 +61,17 @@ def compiler_from_entry(entry):
 def spec_from_entry(entry):
     arch_str = ""
     if "arch" in entry:
+        local_platform = spack.spec.ArchSpec.default_arch().platform
+        spec_platform = entry["arch"]["platform"]
+        # Note that Cray systems are now treated as Linux. Specs
+        # in the manifest which specify "cray" as the platform
+        # should be registered in the DB as "linux"
+        if local_platform == "linux" and spec_platform.lower() == "cray":
+            spec_platform = "linux"
+
         arch_format = "arch={platform}-{os}-{target}"
         arch_str = arch_format.format(
-            platform=entry["arch"]["platform"],
+            platform=spec_platform,
             os=entry["arch"]["platform_os"],
             target=entry["arch"]["target"]["name"],
         )
