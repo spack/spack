@@ -63,7 +63,12 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         description="Ultra safety checks - " "used for increased robustness and self-diagnostics",
     )
     variant("ginkgo", default=False, description="Enable/disable ginkgo solver")
-    variant("cusolver_lu", default=False, when="@0.7.1:", description="Enable/disable cuSovler LU refactorization")
+    variant(
+        "cusolver_lu",
+        default=False,
+        when="@0.7.1:",
+        description="Enable/disable cuSovler LU refactorization",
+    )
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
@@ -97,7 +102,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cuda@11:", when="@develop:+cuda")
     conflicts("+cusolver_lu", when="~cuda", msg="Cusolver LU refactorization requires CUDA")
-    conflicts("+cusolver_lu", when="~suite-sparse", msg="Cusolver LU refactorization requires KLU from SuiteSparse library")
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
