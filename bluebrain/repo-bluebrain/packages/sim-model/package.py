@@ -69,7 +69,7 @@ class SimModel(Package):
         # pass include and link flags for all dependency libraries
         # Compiler wrappers are not used to have a more reproducible building
         if dependencies is None:
-            dependencies = self.spec.dependencies_dict('link').keys()
+            dependencies = self.spec._dependencies_dict('link').keys()
         for dep in set(dependencies):
             libs = self.spec[dep].libs
             link_flag += " {0} {1}".format(
@@ -80,7 +80,7 @@ class SimModel(Package):
 
         if '+profile' in self.spec:
             include_flag += ' -DENABLE_TAU_PROFILER'
-        output_dir = os.path.basename(self.nrnivmodl_outdir)
+        output_dir = os.path.basename(self.spec["neuron"].package.archdir)
         include_flag_raw = include_flag
         link_flag_raw = link_flag
 
@@ -121,7 +121,7 @@ class SimModel(Package):
         with working_dir('build_' + self.mech_name, create=True):
             force_symlink(mods_location, 'mod')
             which('nrnivmodl-core')(*(nrnivmodl_params + ['mod']))
-            output_dir = os.path.basename(self.nrnivmodl_outdir)
+            output_dir = os.path.basename(self.spec["neuron"].package.archdir)
             mechlib = find_libraries('libcorenrnmech' + self.lib_suffix + '*',
                                      output_dir)
             assert len(mechlib.names) == 1,\
@@ -135,10 +135,6 @@ class SimModel(Package):
         lib/ <- hoc, mod and lib*mech*.so
         share/ <- neuron & coreneuron mod.c's (modc and modc_core)
         """
-        mkdirp(prefix.bin)
-        mkdirp(prefix.lib)
-        mkdirp(prefix.share.modc)
-
         self._install_binaries()
 
         if install_src:
@@ -146,8 +142,13 @@ class SimModel(Package):
 
     def _install_binaries(self, mech_name=None):
         # Install special
+        mkdirp(self.spec.prefix.bin)
+        mkdirp(self.spec.prefix.lib)
+        mkdirp(self.spec.prefix.share.modc)
+
         mech_name = mech_name or self.mech_name
-        arch = os.path.basename(self.nrnivmodl_outdir)
+        nrnivmodl_outdir = self.spec["neuron"].package.archdir
+        arch = os.path.basename(nrnivmodl_outdir)
         prefix = self.prefix
 
         if self.spec.satisfies('+coreneuron'):
@@ -165,7 +166,7 @@ class SimModel(Package):
         shutil.copy(join_path(arch, 'special'), prefix.bin)
 
         # Install libnrnmech - might have several links
-        libnrnmech_path = self.nrnivmodl_outdir
+        libnrnmech_path = nrnivmodl_outdir
         for f in find(libnrnmech_path,
                       'libnrnmech.*',
                       recursive=False):
@@ -189,7 +190,7 @@ class SimModel(Package):
     def _install_src(self, prefix):
         """Copy original and translated c mods
         """
-        arch = os.path.basename(self.nrnivmodl_outdir)
+        arch = os.path.basename(self.spec["neuron"].package.archdir)
         mkdirp(prefix.lib.mod, prefix.lib.hoc, prefix.lib.python)
         copy_all('mod', prefix.lib.mod)
         copy_all('hoc', prefix.lib.hoc)

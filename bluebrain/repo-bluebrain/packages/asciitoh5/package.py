@@ -35,7 +35,7 @@ class Asciitoh5(Package):
             include_flag = ' -I%s' % (spec['hdf5'].prefix.include)
             which('nrnivmodl')('-incflags', include_flag, '-loadflags',
                                link_flag, 'lib/mod')
-            archdir = os.path.basename(self.nrnivmodl_outdir)
+            archdir = os.path.basename(spec["neuron"].archdir)
             src = join_path(prefix, archdir, 'special')
             dest = join_path(prefix.bin, 'special')
             symlink(src, dest)
