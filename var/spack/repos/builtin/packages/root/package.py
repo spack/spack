@@ -292,7 +292,9 @@ class Root(CMakePackage):
 
     # Python incompatibilities
     conflicts("^python@3.7:", when="@:6.13 +python", msg="Python 3.7+ support was added in 6.14")
-    conflicts("^python@3.11:", when="@:6.26.09 +python", msg="Python 3.11+ support was added in 6.26.10")
+    conflicts(
+        "^python@3.11:", when="@:6.26.09 +python", msg="Python 3.11+ support was added in 6.26.10"
+    )
 
     # See https://github.com/root-project/root/issues/9297
     conflicts("target=ppc64le:", when="@:6.24")
@@ -316,7 +318,11 @@ class Root(CMakePackage):
     conflicts("+vmc", when="@6.26:", msg="VMC was removed in ROOT v6.26.00.")
 
     # nlohmann_json incompatibilities
-    conflicts("^nlohmann-json@3.11:", when="@:6.26.07", msg="nlohmann_json 3.11+ support was added in 6.26.08")
+    conflicts(
+        "^nlohmann-json@3.11:",
+        when="@:6.26.07",
+        msg="nlohmann_json 3.11+ support was added in 6.26.08"
+    )
 
     # Clang incompatibilities
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
