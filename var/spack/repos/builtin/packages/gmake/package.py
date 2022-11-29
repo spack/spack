@@ -5,7 +5,7 @@
 
 import re
 
-from spack.build_environment import MakeExecutable
+from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
 
 
@@ -64,6 +64,9 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
         when="@:4.2.1",
     )
 
+    # See https://savannah.gnu.org/bugs/?57962
+    patch("findprog-in-ignore-directories.patch", when="@4.3")
+
     tags = ["build-tools"]
 
     executables = ["^g?make$"]
@@ -86,5 +89,9 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
             symlink("make", "gmake")
 
     def setup_dependent_package(self, module, dspec):
-        module.make = MakeExecutable(self.spec.prefix.bin.make, make_jobs)
-        module.gmake = MakeExecutable(self.spec.prefix.bin.gmake, make_jobs)
+        module.make = MakeExecutable(
+            self.spec.prefix.bin.make, determine_number_of_jobs(parallel=dspec.package.parallel)
+        )
+        module.gmake = MakeExecutable(
+            self.spec.prefix.bin.gmake, determine_number_of_jobs(parallel=dspec.package.parallel)
+        )

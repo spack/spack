@@ -734,7 +734,7 @@ def concretize_specs_together(*abstract_specs, **kwargs):
     Returns:
         List of concretized specs
     """
-    if spack.config.get("config:concretizer") == "original":
+    if spack.config.get("config:concretizer", "clingo") == "original":
         return _concretize_specs_together_original(*abstract_specs, **kwargs)
     return _concretize_specs_together_new(*abstract_specs, **kwargs)
 

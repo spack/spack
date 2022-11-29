@@ -16,6 +16,7 @@ class RAromaLight(RPackage):
 
     bioc = "aroma.light"
 
+    version("3.28.0", commit="7749dd7033e9885ec2546a5cac0562bac2fea04d")
     version("3.26.0", commit="7ead7517a77bc8b4b4b42aace69957a17e8fe016")
     version("3.24.0", commit="3ff48b8f546acc9803b3c652363cac78d3b81ae5")
     version("3.20.0", commit="02cde7fa166259bce73c396a87dca2ecc8249c39")

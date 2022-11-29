@@ -11,14 +11,14 @@ class Sperr(CMakePackage):
     perform either error-bounded or size-bounded data compression"""
 
     homepage = "https://github.com/NCAR/SPERR"
+    url = "https://github.com/NCAR/SPERR/archive/refs/tags/v0.5.tar.gz"
     git = homepage
 
-    version("2022.07.18", commit="640305d049db9e9651ebdd773e6936e2c028ff3a")
-    version("2022.05.26", commit="7894a5fe1b5ca5a4aaa952d1779dfc31fd741243")
+    version("0.5", sha256="20ad48c0e7599d3e5866e024d0c49648eb817f72ad5459f5468122cf14a97171")
 
     depends_on("git", type="build")
     depends_on("zstd", type=("build", "link"), when="+zstd")
-    depends_on("pkgconf", type=("build"), when="+zstd")
+    depends_on("pkgconfig", type=("build"), when="+zstd")
 
     variant("shared", description="build shared libaries", default=True)
     variant("zstd", description="use Zstd for more compression", default=True)

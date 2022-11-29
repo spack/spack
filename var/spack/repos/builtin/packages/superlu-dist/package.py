@@ -20,6 +20,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="master")
     version("amd", branch="amd")
+    version("8.1.2", sha256="7b16c442bb01ea8b298c0aab9a2584aa4615d09786aac968cb2f3118c058206b")
     version("8.1.1", sha256="766d70b84ece79d88249fe10ff51d2a397a29f274d9fd1e4a4ac39179a9ef23f")
     version("8.1.0", sha256="9308844b99a7e762d5704934f7e9f79daf158b0bfc582994303c2e0b31518b34")
     version("8.0.0", sha256="ad0682ef425716d5880c7f7c905a8701428b09c82ceaf87b3c386ff4d70efb05")
@@ -122,12 +123,15 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             if cuda_arch[0] != "none":
                 append_define("CMAKE_CUDA_ARCHITECTURES", cuda_arch[0])
 
-        if "+rocm" in spec and spec.satisfies("@amd"):
+        if "+rocm" in spec and (spec.satisfies("@amd") or spec.satisfies("@8:")):
             append_define("TPL_ENABLE_HIPLIB", True)
             append_define("HIP_ROOT_DIR", spec["hip"].prefix)
             rocm_archs = spec.variants["amdgpu_target"].value
+            mpiinc = spec["mpi"].prefix.include
             if "none" not in rocm_archs:
-                append_define("HIP_HIPCC_FLAGS", "--amdgpu-target=" + ",".join(rocm_archs))
+                append_define(
+                    "HIP_HIPCC_FLAGS", "--amdgpu-target=" + ",".join(rocm_archs) + " -I/" + mpiinc
+                )
 
         append_from_variant("BUILD_SHARED_LIBS", "shared")
         return cmake_args

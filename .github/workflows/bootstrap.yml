@@ -42,7 +42,8 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions-v0.3
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -79,7 +80,8 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions-v0.3
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -143,7 +145,8 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions-v0.3
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -160,7 +163,8 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           export PATH=/usr/local/opt/bison@2.7/bin:$PATH
-          spack bootstrap untrust github-actions-v0.3
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -210,7 +214,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           set -ex
-          for ver in '2.7' '3.6' '3.7' '3.8' '3.9' '3.10' ; do
+          for ver in '3.6' '3.7' '3.8' '3.9' '3.10' ; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
             echo "Testing $ver_dir"
@@ -261,7 +265,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap disable spack-install
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -298,7 +302,8 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
-          spack bootstrap untrust github-actions-v0.3
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -315,7 +320,7 @@ jobs:
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap disable spack-install
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -333,7 +338,8 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
-          spack bootstrap untrust github-actions-v0.3
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
