@@ -133,10 +133,6 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     @run_after("install")
     def install_python(self):
         """Install everything from build directory."""
-        # Truncated version of PythonPipBuilder.install
-
-        args = PythonPipBuilder.std_args(self) + ["--prefix=" + prefix, "."]
-
-        pip = inspect.getmodule(self).pip
-        with fs.working_dir(self.build_directory):
+        args = std_pip_args + ["--prefix=" + prefix, "."]
+        with working_dir(self.build_directory):
             pip(*args)
