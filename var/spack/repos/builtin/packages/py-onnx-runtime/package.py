@@ -5,9 +5,7 @@
 
 import inspect
 
-import llnl.util.filesystem as fs
 from spack.package import *
-from spack.build_systems.python import PythonPipBuilder
 
 
 class PyOnnxRuntime(CMakePackage, PythonExtension):
