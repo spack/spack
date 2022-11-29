@@ -44,8 +44,10 @@ class UfsWeatherModelEnv(BundlePackage):
     depends_on("libjpeg-turbo~shared", type="run", when="~shared")
     depends_on("libpng~shared", type="run", when="~shared")
 
-    depends_on("esmf~debug", type="run", when="~debug")
-    depends_on("esmf+debug", type="run", when="+debug")
+    depends_on("esmf~debug~shared", type="run", when="~debug~shared")
+    depends_on("esmf~debug+shared", type="run", when="~debug+shared")
+    depends_on("esmf+debug~shared", type="run", when="+debug~shared")
+    depends_on("esmf+debug+shared", type="run", when="+debug+shared")
     depends_on("mapl~pnetcdf~debug~shared", type="run", when="~debug~shared")
     depends_on("mapl~pnetcdf~debug+shared", type="run", when="~debug+shared")
     depends_on("mapl~pnetcdf+debug~shared", type="run", when="+debug~shared")
