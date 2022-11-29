@@ -98,7 +98,8 @@ class Berkeleygw(MakefilePackage):
         # use parallelization in tests
         filter_file(
             r"cd testsuite \&\& \$\(MAKE\) check$",
-            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 TEMPDIRPATH=%s && \
+            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 \
+             SAVETESTDIRS=yes TEMPDIRPATH=%s && \
              $(MAKE) check-parallel"
             % join_path(self.build_directory, "testsuite", "tmp"),
             "Makefile",
@@ -260,14 +261,5 @@ class Berkeleygw(MakefilePackage):
 
         make("all-flavors", *buildopts)
 
-    @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def check_build(self):
-        with working_dir(self.build_directory):
-            make("check")
-
     def install(self, spec, prefix):
         make("install", "INSTDIR=%s" % prefix)
-
-    def installcheck(self):
-        pass
