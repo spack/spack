@@ -83,7 +83,7 @@ class Gnuplot(AutotoolsPackage):
         ]
 
         options += self.with_or_without("readline", "prefix")
-        
+
         if "+pbm" in spec:
             options.append("--with-bitmap-terminals")
         else:
