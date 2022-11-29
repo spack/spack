@@ -34,6 +34,7 @@ import copy
 import functools
 import os
 import re
+import stat
 import sys
 from contextlib import contextmanager
 from typing import Dict, List, Optional
@@ -43,7 +44,7 @@ from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, rename
+from llnl.util.filesystem import force_remove, join_path, mkdirp, rename
 
 import spack.compilers
 import spack.paths
@@ -110,6 +111,8 @@ scopes_metavar = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 overrides_base_name = "overrides-"
+
+is_windows = sys.platform == "win32"
 
 
 def first_existing(dictionary, keys):
@@ -1342,6 +1345,9 @@ def collect_urls(base_url: str) -> list:
 def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) -> str:
     """Retrieve configuration file(s) at the specified URL.
 
+    Retrieved files will be read-only to prevent inadvertent local
+    modifications.
+
     Arguments:
         url: URL for a configuration (yaml) file or a directory containing
             yaml file(s)
@@ -1372,16 +1378,24 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
     paths = []
     for config_url in config_links:
         basename = os.path.basename(config_url)
-        if skip_existing and basename in existing_files:
-            tty.warn(
+        have_file = basename in existing_files
+        if skip_existing and have_file:
+            tty.debug(
                 "Will not fetch configuration from {0} since a version already"
-                "exists in {1}".format(config_url, dest_dir)
+                " exists in {1}".format(config_url, dest_dir)
             )
             path = os.path.join(dest_dir, basename)
         else:
+            if have_file:
+                force_remove(join_path(dest_dir, basename))
+
             path = _fetch_file(config_url)
 
         if path:
+            # The file should be read-only to prevent inadvertent modifications
+            if not is_windows:
+                os.chmod(path, stat.S_IRUSR | stat.S_IRGRP)
+
             paths.append(path)
 
     if paths:

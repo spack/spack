@@ -1358,7 +1358,12 @@ def mock_collect_urls(mock_config_data, monkeypatch):
 
 @pytest.mark.parametrize(
     "url,skip",
-    [(github_url.format("tree"), True), ("{0}/compilers.yaml".format(gitlab_url), True)],
+    [
+        (github_url.format("tree"), True),
+        ("{0}/compilers.yaml".format(gitlab_url), True),
+        (github_url.format("tree"), False),
+        ("{0}/compilers.yaml".format(gitlab_url), False),
+    ],
 )
 def test_config_fetch_remote_configs_skip(
     tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, skip
@@ -1369,8 +1374,9 @@ def test_config_fetch_remote_configs_skip(
     def check_contents(filename, expected):
         with open(filename, "r") as fd:
             lines = fd.readlines()
+            print("%s (expect %s):\n%s\n" % (filename, expected, lines))
             if expected:
-                assert lines[0] == "compilers:"
+                assert lines[0] == expected
             else:
                 assert not lines
 
@@ -1382,7 +1388,7 @@ def test_config_fetch_remote_configs_skip(
     touchp(path)
 
     # Do NOT replace the existing cached configuration file if skipping
-    expected = None if skip else "compilers:"
+    expected = None if skip else "compilers:\n"
 
     with spack.config.override("config:url_fetch_method", "curl"):
         path = spack.config.fetch_remote_configs(url, dest_dir, skip)
