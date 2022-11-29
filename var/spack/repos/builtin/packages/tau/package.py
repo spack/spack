@@ -164,14 +164,23 @@ class Tau(Package):
             if compiler_path:
                 compiler_path = compiler_path + "/bin/"
         os.environ["PATH"] = ":".join([compiler_path, os.environ["PATH"]])
-
+        tau_cxx=self.compiler.cxx
+        if tau_cxx.startswith("g++-"):
+            tau_cxx="g++"
+        tau_cc=self.compiler.cc
+        if tau_cc.startswith("gcc-"):
+            tau_cc="gcc"
         compiler_options = [
-            "-c++=%s" % os.path.basename(self.compiler.cxx),
-            "-cc=%s" % os.path.basename(self.compiler.cc),
+            "-c++=%s" % tau_cxx,
+            "-cc=%s" % tau_cc,
         ]
 
         if "+fortran" in spec and self.compiler.fc:
-            compiler_options.append("-fortran=%s" % os.path.basename(self.compiler.fc))
+            tau_fc=os.path.basename(self.compiler.fc)
+            if tau_fc.startswith("gfortran-"):
+                tau_fc="gfortran"
+            compiler_options.append("-fortran=%s" % tau_fc)
+
 
         ##########
 
