@@ -7,8 +7,9 @@ import warnings
 
 from spack.package import *
 
-
-linkage_url = "https://mamba.readthedocs.io/en/latest/developer_zone/build_locally.html#build-micromamba"
+linkage_url = (
+    "https://mamba.readthedocs.io/en/latest/developer_zone/build_locally.html#build-micromamba"
+)
 
 
 class Micromamba(CMakePackage):
@@ -74,8 +75,9 @@ class Micromamba(CMakePackage):
         #
         #     libarchive/archive_digest.c:191: undefined reference to `mbedtls_sha512_free'
         #
-        # These shouldn't be necessary, since they are already in 'libarchive crypto=mbedtls xar=libxml2'
-        # But even adding them doesn't fix it.
+        # These shouldn't be necessary,
+        # since they are already in 'libarchive crypto=mbedtls xar=libxml2'
+        # but even adding them doesn't fix it.
         #
         #     depends_on("libxml2", type="link")
         #     depends_on("mbedtls", type="link")
@@ -139,10 +141,10 @@ class Micromamba(CMakePackage):
             self.define("BUILD_STATIC", linkage == "static"),
             self.define("BUILD_STATIC_DEPS", linkage == "full_static"),
             self.define("BUILD_SHARED", linkage == "dynamic"),
-            self.define("MICROMAMBA_LINKAGE", linkage.upper())
+            self.define("MICROMAMBA_LINKAGE", linkage.upper()),
         ]
 
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
         Executable("micromamba")("--version")
