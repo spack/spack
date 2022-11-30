@@ -40,7 +40,6 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("5.3", sha256="d7b3ad4bee48ac32f5bef39650a88f8f2c23a3050b17130c63966283edced89b")
 
     depends_on("mpi")
-    variant("ddt", description="Enable/Disable support for ddt", default=False)
     variant("papi", description="Enable/Disable support for papi", default=False)
     variant("graphing", description="Enable/Disable support for graphing", default=False)
     depends_on("papi",when='+papi')
@@ -62,8 +61,6 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
             if "none" not in rocm_arch:
                 config_args.append("HCC_AMDGPU_TARGET=" + " ".join(self.hip_flags(rocm_arch)))
 
-        #if "+ddt" in spec:
-        #    config_args.extend(["--enable-cuda", "--with-cuda=%s" % spec["cuda"].prefix])
         if "+papi" in spec:
             config_args.extend(["--enable-papi", "--with-papi=%s" % spec["papi"].prefix])
         if "+graphing" in spec:
