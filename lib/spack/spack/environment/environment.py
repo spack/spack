@@ -907,6 +907,10 @@ class Environment(object):
             self._repo = make_repo_path(self.repos_path)
         return self._repo
 
+    def do_clean(self):
+        """Clean up any cached include files."""
+        fs.remove_directory_contents(self.config_stage_dir)
+
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.
 
@@ -2399,6 +2403,18 @@ def no_active_environment():
         # TODO: we don't handle `use_env_repo` here.
         if env:
             activate(env)
+
+
+def clear_included_configs():
+    """Clear any cached config include files for the active environment."""
+    env = active_environment()
+    if env:
+        try:
+            env.do_clean()
+        except Exception as e:
+            tty.error(
+                "{0}: Cannot clear included configs: {1}".format(e.__class__.__name__, str(e))
+            )
 
 
 class SpackEnvironmentError(spack.error.SpackError):

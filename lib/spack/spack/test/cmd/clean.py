@@ -11,6 +11,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.caches
+import spack.environment
 import spack.main
 import spack.package_base
 import spack.stage
@@ -109,3 +110,23 @@ def test_remove_python_cache(tmpdir, monkeypatch):
 
     for d in [source_dir, var_dir]:
         _check_files(d)
+
+
+def test_remove_env_includes(tmpdir):
+    cache_dir = fs.join_path(tmpdir, "var", "spack", "environment", "included")
+    cache_files = ["config.yaml", "packages.yaml"]
+
+    fs.mkdirp(cache_dir)
+    for f in cache_files:
+        fs.touch(fs.join_path(cache_dir, f))
+
+    env = spack.environment.Environment(cache_dir)
+    spack.environment.activate(env)
+
+    # Assumes the test automatically uses spack.test.conftest.MockCache
+    # with destroy() as a noop.
+    spack.cmd.clean.remove_downloads()
+
+    # Ensure the cached files no longer exist
+    for f in cache_files:
+        fs.touch(fs.join_path(cache_dir, f))

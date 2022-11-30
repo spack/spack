@@ -88,6 +88,17 @@ def remove_python_cache():
                     shutil.rmtree(dname)
 
 
+def remove_downloads():
+    """Remove all (relevant) cached download files.
+
+    This removes files in the fetch cache and, if relevant, the active
+    environment's included configuration files cache."""
+    tty.msg("Removing cached downloads")
+    spack.caches.fetch_cache.destroy()
+    tty.msg("Removing environment's cached included config files")
+    spack.environment.clear_included_configs()
+
+
 def clean(parser, args):
     # If nothing was set, activate the default
     if not any(
@@ -119,9 +130,9 @@ def clean(parser, args):
         if os.path.exists(extract_tmp):
             tty.debug("Removing {0}".format(extract_tmp))
             shutil.rmtree(extract_tmp)
+
     if args.downloads:
-        tty.msg("Removing cached downloads")
-        spack.caches.fetch_cache.destroy()
+        remove_downloads()
 
     if args.failures:
         tty.msg("Removing install failure marks")

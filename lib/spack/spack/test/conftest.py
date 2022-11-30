@@ -449,6 +449,9 @@ class MockCache(object):
     def fetcher(self, target_path, digest, **kwargs):
         return MockCacheFetcher()
 
+    def destroy(self):
+        pass
+
 
 class MockCacheFetcher(object):
     def fetch(self):
