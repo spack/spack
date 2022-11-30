@@ -516,7 +516,7 @@ class Eccodes(CMakePackage):
                 "HAVE_MEMFS=0",
                 *find(self.root_cmakelists_dir, "include.ctest.sh.in", recursive=True),
                 string=True,
-                backup=False
+                backup=False,
             )
 
     def cmake_args(self):
