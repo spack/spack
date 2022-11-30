@@ -73,7 +73,7 @@ spack:
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
   gitlab-ci:
-    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01 # new image
     script:
       - uname -a || true
       - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
@@ -192,7 +192,7 @@ spack:
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
     service-job-attributes:
-      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
