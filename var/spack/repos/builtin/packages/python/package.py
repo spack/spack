@@ -42,7 +42,7 @@ class Python(Package):
 
     #: phase
     install_targets = ["install"]
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
 
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version(
@@ -233,7 +233,7 @@ class Python(Package):
     conflicts("%nvhpc")
 
     # Used to cache various attributes that are expensive to compute
-    _config_vars = {}  # type: Dict[str, Dict[str, str]]
+    _config_vars: Dict[str, Dict[str, str]] = {}
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = "spack-build"
