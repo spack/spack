@@ -944,10 +944,11 @@ class Environment(object):
                         # Do NOT re-stage configuration files over existing
                         # ones with the same name since there is a risk of
                         # losing changes (e.g., from 'spack config update').
-                        tty.warn(
+                        tty.debug(
                             "Will not re-stage configuration from {0} to avoid "
-                            "losing changes to the already staged file of the "
-                            "same name.".format(config_path)
+                            "losing changes to the already staged {1}".format(
+                                config_path, basename
+                            )
                         )
 
                         # Recognize the configuration stage directory
