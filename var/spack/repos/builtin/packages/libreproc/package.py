@@ -20,8 +20,8 @@ class Libreproc(CMakePackage):
     variant("shared", default=True, description="Build shared libraries, otherwise static")
 
     depends_on("cmake@3.14:", type="build")
-    depends_on("zlib+shared", type="run", when="+shared")
-    depends_on("zlib~shared", type="build", when="~shared")
+    depends_on("zlib+shared", type=("link", "run"), when="+shared")
+    depends_on("zlib~shared", type="link", when="~shared")
 
     def cmake_args(self):
         return [

@@ -12,7 +12,7 @@ class Micromamba(CMakePackage):
     Micromamba is faster and more standalone than Miniconda."""
 
     homepage = "https://mamba.readthedocs.io/"
-    url = "https://github.com/mamba-org/mamba"
+    url = "https://github.com/mamba-org/mamba/archive/micromamba-1.0.0.tar.gz"
 
     maintainers = ["charmoniumQ"]
 
@@ -22,49 +22,50 @@ class Micromamba(CMakePackage):
 
     with when("~shared"):
         # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L276
-        depends_on("curl", type="build")
-        depends_on("libssh2~shared", type="build")
-        depends_on("krb5~shared", type="build")
-        depends_on("openssl", type="build")
-        depends_on("libarchive", type="build")
-        depends_on("iconv", type="build")
-        depends_on("bzip2", type="build")
-        depends_on("lz4", type="build")
-        depends_on("zstd", type="build")
-        depends_on("zlib", type="build")
-        depends_on("xz libs=static", type="build")
-        depends_on("lzo", type="build")
-        depends_on("libsolv~shared", type="build")
-        depends_on("nghttp2", type="build")
-        depends_on("yaml-cpp~shared", type="build")
-        depends_on("libreproc+cxx~shared", type="build")
+        depends_on("curl", type="link")
+        depends_on("libssh2~shared", type="link")
+        depends_on("krb5~shared", type="link")
+        depends_on("openssl", type="link")
+        depends_on("libarchive", type="link")
+        depends_on("iconv", type="link")
+        depends_on("bzip2", type="link")
+        depends_on("lz4", type="link")
+        depends_on("zstd", type="link")
+        depends_on("zlib", type="link")
+        depends_on("xz libs=static", type="link")
+        depends_on("lzo", type="link")
+        depends_on("libsolv+conda~shared", type="link")
+        depends_on("nghttp2", type="link")
+        depends_on("yaml-cpp~shared", type="link")
+        depends_on("libreproc+cxx~shared", type="link")
         # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L342
-        depends_on("fmt", type="build")
-        depends_on("spdlog~shared", type="build")
+        depends_on("fmt", type="link")
+        depends_on("spdlog~shared", type="link")
 
         # Not specified, but needed:
-        depends_on("tl-expected@b74fecd", type="build")
-        depends_on("nlohmann-json", type="build")
+        depends_on("tl-expected@b74fecd", type="link")
+        depends_on("nlohmann-json", type="link")
+        depends_on("cpp-termcolor", type="link")
+        depends_on("cli11@2.2:", type="link")
 
     # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L423
     with when("+shared"):
-        depends_on("libsolv", type="build")
-        depends_on("curl", type="build")
-        depends_on("libarchive", type="build")
-        depends_on("openssl", type="build")
-        depends_on("yaml-cpp", type="build")
-        depends_on("libreproc+cxx", type="build")
-        depends_on("tl-expected@b74fecd", type="build")
-        depends_on("fmt", type="build")
-        depends_on("spdlog", type="build")
+        depends_on("libsolv+conda", type=("link", "run"))
+        depends_on("curl", type=("link", "run"))
+        depends_on("libarchive", type=("link", "run"))
+        depends_on("openssl", type=("link", "run"))
+        depends_on("yaml-cpp", type=("link", "run"))
+        depends_on("libreproc+cxx", type=("link", "run"))
+        depends_on("tl-expected@b74fecd", type=("link", "run"))
+        depends_on("fmt", type=("link", "run"))
+        depends_on("spdlog", type=("link", "run"))
 
         # Not specified, but needed
-        depends_on("nlohmann-json", type="build")
+        depends_on("nlohmann-json", type="link")
+        depends_on("cpp-termcolor", type="link")
+        depends_on("cli11@2.2:", type="link")
 
     patch("fix-threads.patch")
-
-    def url_for_version(self, version):
-        return f"{self.url}/archive/refs/tags/micromamba-{version}.tar.gz"
 
     def cmake_args(self):
         # See https://mamba.readthedocs.io/en/latest/developer_zone/build_locally.html#build-micromamba
@@ -82,3 +83,8 @@ class Micromamba(CMakePackage):
                 "-DBUILD_SHARED=ON",
                 "-DMICROMAMBA_LINKAGE=DYNAMIC",
             ]
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        Executable("mamba")("--version")

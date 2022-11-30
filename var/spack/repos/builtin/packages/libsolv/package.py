@@ -17,19 +17,15 @@ class Libsolv(CMakePackage):
     version("0.7.22", sha256="968aef452b5493751fa0168cd58745a77c755e202a43fe8d549d791eb16034d5")
 
     variant("shared", default=True, description="Build shared libraries, otherwise build static")
+    variant("conda", default=False, description="Include solv/conda.h, otherwise not")
 
-    depends_on("expat", type="build")
-    depends_on("zlib+shared", type="run", when="+shared")
-    depends_on("zlib~shared", type="build", when="~shared")
+    depends_on("expat", type="link")
+    depends_on("zlib+shared", type=("link", "run"), when="+shared")
+    depends_on("zlib~shared", type="link", when="~shared")
 
     def cmake_args(self):
-        if "+shared" in self.spec:
-            return [
-                "-DENABLE_STATIC=OFF",
-                "-DDISABLE_DYNAMIC=OFF",
-            ]
-        else:
-            return [
-                "-DENABLE_STATIC=ON",
-                "-DDISABLE_DYNAMIC=ON",
-            ]
+        return [
+            self.define("ENABLE_STATIC", "~shared" in self.spec),
+            self.define("DISABLE_DYNAMIC", "~shared" in self.spec),
+            self.define_from_variant("ENABLE_CONDA", "conda"),
+        ]
