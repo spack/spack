@@ -15,7 +15,10 @@ linkage_url = (
 class Micromamba(CMakePackage):
     """Mamba is a fast, robust, and cross-platform package manager (Miniconda alternative).
 
-    Micromamba is faster and more standalone than Miniconda."""
+    Micromamba is faster than Miniconda, and it is a standalone
+    executable, whereas Miniconda pulls in its own Python environment.
+
+    """
 
     homepage = "https://mamba.readthedocs.io/"
     url = "https://github.com/mamba-org/mamba/archive/micromamba-1.1.0.tar.gz"
