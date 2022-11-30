@@ -33,7 +33,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ["keitat", "sethrj", "kuberry", "jwillenbring"]
+    maintainers = ["keitat", "sethrj", "kuberry", "jwillenbring", "psakievich"]
 
     tags = ["e4s"]
 
