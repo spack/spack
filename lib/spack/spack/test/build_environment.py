@@ -437,12 +437,19 @@ dt-diamond-left:
 
 
 def test_parallel_false_is_not_propagating(default_mock_concretization):
-    # Package A has parallel = False and depends on B which instead can be built in parallel
+    """Test that parallel=False is not propagating to dependencies"""
+    # a foobar=bar (parallel = False)
+    # |
+    # b (parallel =True)
     s = default_mock_concretization("a foobar=bar")
-    for spec in s.traverse():
-        expected_jobs = spack.build_environment.determine_number_of_jobs(spec.package.parallel)
-        spack.build_environment.set_module_variables_for_package(spec.package)
-        assert spec.package.module.make_jobs == expected_jobs
+
+    spack.build_environment.set_module_variables_for_package(s.package)
+    assert s["a"].package.module.make_jobs == 1
+
+    spack.build_environment.set_module_variables_for_package(s["b"].package)
+    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        s["b"].package.parallel
+    )
 
 
 @pytest.mark.parametrize(
