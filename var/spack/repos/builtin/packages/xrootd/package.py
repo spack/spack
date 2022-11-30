@@ -84,8 +84,8 @@ class Xrootd(CMakePackage):
     patch("python-support.patch", level=1, when="@:4.8+python")
     # https://github.com/xrootd/xrootd/pull/1805
     patch(
-        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1805.patch",
-        sha256="dc27f5cc1791430a1877afe75808a1110cb3b979b5f4ce0fe60c72443d38eb45",
+        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1805.patch?full_index=1",
+        sha256="2655e2d609d80bf9c9ab58557f4f6940408a1af9c686e7aa214ac0348c89c8fa",
         when="@5.5.1",
     )
 
