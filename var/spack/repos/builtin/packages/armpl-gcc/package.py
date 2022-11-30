@@ -201,23 +201,25 @@ class ArmplGcc(Package):
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
+    def lib_suffix(self):
+        suffix = ""
+        suffix += "_ilp64" if self.spec.satisfies("+ilp64") else ""
+        suffix += "_mp" if self.spec.satisfies("threads=openmp") else ""
+        return suffix
+
+    @property
     def blas_libs(self):
 
         armpl_prefix = get_armpl_prefix(self.spec)
 
-        shared = True if "+shared" in self.spec else False
-        if "+ilp64" in self.spec and self.spec.satisfies("threads=openmp"):
-            libname = "libarmpl_ilp64_mp"
-        elif "+ilp64" in self.spec:
-            libname = "libarmpl_ilp64"
-        elif self.spec.satisfies("threads=openmp"):
-            libname = "libarmpl_mp"
-        else:
-            libname = "libarmpl"
+        libname = "libarmpl" + self.lib_suffix
 
         # Get ArmPL Lib
         armpl_libs = find_libraries(
-            [libname, "libamath", "libastring"], root=armpl_prefix, shared=shared, recursive=True
+            [libname, "libamath", "libastring"],
+            root=armpl_prefix,
+            shared=self.spec.satisfies("+shared"),
+            recursive=True,
         )
 
         armpl_libs += find_system_libraries(["libm"])
@@ -239,11 +241,9 @@ class ArmplGcc(Package):
     @property
     def headers(self):
         armpl_dir = get_armpl_prefix(self.spec)
-        suffix = "include"
-        if self.spec.satisfies("+ilp64"):
-            suffix += "_ilp64"
-        if self.spec.satisfies("threads=openmp"):
-            suffix += "_mp"
+
+        suffix = "include" + self.lib_suffix
+
         incdir = join_path(armpl_dir, suffix)
 
         hlist = find_all_headers(incdir)
@@ -253,3 +253,12 @@ class ArmplGcc(Package):
     def setup_run_environment(self, env):
         armpl_dir = get_armpl_prefix(self.spec)
         env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+
+    @run_after("install")
+    def check_install(self):
+        armpl_dir = get_armpl_prefix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, "examples")
+        # run example makefile
+        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
+        # clean up
+        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "clean")
