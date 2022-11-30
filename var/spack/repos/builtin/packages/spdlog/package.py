@@ -58,6 +58,9 @@ class Spdlog(CMakePackage):
     depends_on("fmt@7:", when="@1.7: +fmt_external")
     depends_on("fmt@8:", when="@1.9: +fmt_external")
 
+    # Can only use one fmtlib per spec: the one bundled here, or the "real" one (fmt)
+    conflicts("fmt", when="@1.4.0: ~fmt_external")
+
     def cmake_args(self):
         args = []
 
