@@ -12,21 +12,23 @@ class Micromamba(CMakePackage):
     Micromamba is faster and more standalone than Miniconda."""
 
     homepage = "https://mamba.readthedocs.io/"
-    url = "https://github.com/mamba-org/mamba/archive/micromamba-1.0.0.tar.gz"
+    url = "https://github.com/mamba-org/mamba/archive/micromamba-1.1.0.tar.gz"
 
     maintainers = ["charmoniumQ"]
 
-    version("1.0.0", sha256="7303d983b49a1a52b302ceae355af1c05afef3a07aa3ad6dd27c36d64c43f991")
+    version("1.1.0", sha256="e2392cd90221234ae8ea92b37f40829fbe36d80278056269aa1994a5efe7f530")
 
-    variant("shared", default=True, description="Link with shared libraries, otherwise static")
+    variant(
+        "linkage",
+        default="dynamic",
+        description="See MICROMAMBA_LINKAGE in https://mamba.readthedocs.io/en/latest/developer_zone/build_locally.html#build-micromamba",
+        values=("dynamic", "static", "full_static"),
+        multi=False,
+    )
 
-    with when("~shared"):
-        # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L276
-        depends_on("curl", type="link")
-        depends_on("libssh2~shared", type="link")
-        depends_on("krb5~shared", type="link")
-        depends_on("openssl", type="link")
-        depends_on("libarchive", type="link")
+    with when("linkage=static"):
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L276
+        depends_on("libarchive crypto=mbedtls xar=libxml2", type="link")
         depends_on("iconv", type="link")
         depends_on("bzip2", type="link")
         depends_on("lz4", type="link")
@@ -38,21 +40,55 @@ class Micromamba(CMakePackage):
         depends_on("nghttp2", type="link")
         depends_on("yaml-cpp~shared", type="link")
         depends_on("libreproc+cxx~shared", type="link")
-        # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L342
+
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L342
         depends_on("fmt", type="link")
         depends_on("spdlog~shared", type="link")
 
-        # Not specified, but needed:
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/error_handling.hpp#L9
+        depends_on("tl-expected@b74fecd", type="link")
+
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/validate.hpp#L13
+        depends_on("nlohmann-json", type="link")
+
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/src/core/context.cpp#L7
+        depends_on("cpp-termcolor", type="link")
+
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/micromamba/src/common_options.hpp#L12
+        depends_on("cli11@2.2:", type="link")
+
+        # Experimentally, these are also required for libarchive
+        depends_on("libxml2", type="link")
+        depends_on("mbedtls", type="link")
+
+    with when("linkage=full_static"):
+        # See linkage=static for source
+        depends_on("libarchive crypto=mbedtls xar=libxml2", type="link")
+        depends_on("iconv", type="link")
+        depends_on("bzip2", type="link")
+        depends_on("lz4", type="link")
+        depends_on("zstd", type="link")
+        depends_on("zlib", type="link")
+        depends_on("xz libs=static", type="link")
+        depends_on("lzo", type="link")
+        depends_on("libsolv+conda~shared", type="link")
+        depends_on("nghttp2", type="link")
+        depends_on("yaml-cpp~shared", type="link")
+        depends_on("libreproc+cxx~shared", type="link")
+        depends_on("fmt", type="link")
+        depends_on("spdlog~shared", type="link")
         depends_on("tl-expected@b74fecd", type="link")
         depends_on("nlohmann-json", type="link")
         depends_on("cpp-termcolor", type="link")
         depends_on("cli11@2.2:", type="link")
+        depends_on("libxml2", type="link")
+        depends_on("mbedtls", type="link")
 
-    # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L423
-    with when("+shared"):
+    with when("linkage=dynamic"):
+        # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L423
         depends_on("libsolv+conda", type=("link", "run"))
         depends_on("curl", type=("link", "run"))
-        depends_on("libarchive", type=("link", "run"))
+        depends_on("libarchive crypto=mbedtls xar=libxml2", type=("link", "run"))
         depends_on("openssl", type=("link", "run"))
         depends_on("yaml-cpp", type=("link", "run"))
         depends_on("libreproc+cxx", type=("link", "run"))
@@ -60,7 +96,7 @@ class Micromamba(CMakePackage):
         depends_on("fmt", type=("link", "run"))
         depends_on("spdlog", type=("link", "run"))
 
-        # Not specified, but needed
+        # See linkage=shared for usage location
         depends_on("nlohmann-json", type="link")
         depends_on("cpp-termcolor", type="link")
         depends_on("cli11@2.2:", type="link")
@@ -69,22 +105,24 @@ class Micromamba(CMakePackage):
 
     def cmake_args(self):
         # See https://mamba.readthedocs.io/en/latest/developer_zone/build_locally.html#build-micromamba
-        if "~shared" in self.spec:
-            return [
-                "-DBUILD_LIBMAMBA=ON",
-                "-DBUILD_STATIC_DEPS=ON",
-                "-DBUILD_MICROMAMBA=ON",
-                "-DMICROMAMBA_LINKAGE=FULL_STATIC",
-            ]
+        if "linkage=dynamic" in self.spec:
+            linkage = "dynamic"
+        elif "linkage=static" in self.spec:
+            linkage = "static"
+        elif "linkage=full_static" in self.spec:
+            linkage = "full_static"
         else:
-            return [
-                "-DBUILD_LIBMAMBA=ON",
-                "-DBUILD_MICROMAMBA=ON",
-                "-DBUILD_SHARED=ON",
-                "-DMICROMAMBA_LINKAGE=DYNAMIC",
-            ]
+            raise ValueError(f"Unknown linkage type {self.spec}")
+        return [
+            self.define("BUILD_LIBMAMBA", True),
+            self.define("BUILD_MICROMAMBA", True),
+            self.define("BUILD_STATIC", linkage == "static"),
+            self.define("BUILD_STATIC_DEPS", linkage == "full_static"),
+            self.define("BUILD_SHARED", linkage == "dynamic"),
+            self.define("MICROMAMBA_LINKAGE", linkage.upper())
+        ]
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        Executable("mamba")("--version")
+        Executable("micromamba")("--version")
