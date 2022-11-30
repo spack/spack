@@ -325,6 +325,13 @@ class TestConcretize(object):
         assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
         assert not set(cmake.compiler_flags["fflags"])
 
+    def test_compiler_flags_from_compiler_and_dependent(self):
+        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
+        client.concretize()
+        cmake = client["cmake"]
+        for spec in [client, cmake]:
+            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
+
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
         spec.concretize()
