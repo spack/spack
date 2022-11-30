@@ -15,14 +15,18 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@9.4.0]
+      compiler: [gcc@11.1.0]
       providers:
         blas: [openblas]
         mpi: [mpich]
       target: [ppc64le]
-      variants: +mpi
+      variants: +mpi cuda_arch=70
+    tbb:
+      require: "intel-tbb"
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
+    cuda:
+      version: [11.7.0]
     elfutils:
       variants: +bzip2 ~nls +xz
     hdf5:
@@ -37,29 +41,73 @@ spack:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    paraview:
+      # Don't build GUI support or GLX rendering for HPC/container deployments
+      require: "@5.11 ~qt+osmesa"
     python:
-      version: [3.8.13]
+      version: [3.7.15]
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
-        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+      require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext
+        +ifpack +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
     mesa:
       version: [21.3.8]
 
+  packages:
+    all:
+      compiler: [gcc@11.1.0]
+      providers:
+        blas: [openblas]
+        mpi: [mpich]
+      target: [ppc64le]
+      variants: +mpi cuda_arch=70
+    tbb:
+      require: intel-tbb
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+    cuda:
+      version: [11.7.0]
+    elfutils:
+      variants: +bzip2 ~nls +xz
+    hdf5:
+      variants: +fortran +hl +shared
+    libfabric:
+      variants: fabrics=sockets,tcp,udp,rxm
+    libunwind:
+      variants: +pic +xz
+    mpich:
+      variants: ~wrapperrpath
+    ncurses:
+      variants: +termlib
+    openblas:
+      variants: threads=openmp
+    paraview:
+      require: '@5.11 ~qt+osmesa'
+    python:
+      version: [3.7.15]
+    trilinos:
+      require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
+        +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
+        +phalanx +rol +rythmos +sacado +stk +shards +shylu +stratimikos +teko +tempus
+        +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    xz:
+      variants: +pic
+    mesa:
+      version: [21.3.8]
+    faodel:
+      require: ~tcmalloc # needed for ppc64le
+
   specs:
   # CPU
   - adios
-  - adios2
   - alquimia
   - aml
   - amrex
   - arborx
-  - archer
   - argobots
-  - ascent
   - axom
   - bolt
   - butterflypack
@@ -68,12 +116,10 @@ spack:
   - chai ~benchmarks ~tests
   - charliecloud
   - conduit
-  - darshan-runtime
-  - darshan-util
   - datatransferkit
   - dyninst
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # +paraview fails: FAILED: VTK/Filters/Statistics/CMakeFiles/FiltersStatistics-objects.dir/vtkPCAStatistics.cxx.o: /tmp/ccgvkIk5.s: Assembler messages: /tmp/ccgvkIk5.s:260012: Error: invalid machine `power10'
   - exaworks
-  - faodel ~tcmalloc
   - flecsi
   - flit
   - flux-core
@@ -85,11 +131,10 @@ spack:
   - gotcha
   - gptune
   - h5bench
-  - hdf5 +fortran +hl +shared
   - hdf5-vol-async
   - heffte +fftw
   - hpctoolkit
-  - hpx networking=mpi
+  - hpx max_cpu_count=512 networking=mpi
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
@@ -113,24 +158,22 @@ spack:
   - openpmd-api
   - papi
   - papyrus
-  - parallel-netcdf
   - parsec ~cuda
   - pdt
   - petsc
   - phist
   - plasma
   - plumed
-  - precice
-  - pruners-ninja
   - pumi
-  - py-cinemasci
+  - py-h5py
   - py-jupyterhub
-  - py-libensemble
+  - py-libensemble +mpi +nlopt
   - py-petsc4py
   - py-warpx ^warpx dims=2
   - py-warpx ^warpx dims=3
   - py-warpx ^warpx dims=rz
   - qthreads scheduler=distrib
+  - quantum-espresso
   - raja
   - rempi
   - scr
@@ -143,71 +186,71 @@ spack:
   - superlu-dist
   - swig
   - swig@4.0.2-fortran
-  - sz
   - tasmanian
   - tau +mpi +python
+  - trilinos@13.0.1 +belos +ifpack2 +stokhos
   - turbine
-  - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
-    +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
-    +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
-    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - umap
   - umpire
-  - unifyfs
   - upcxx
-  - veloc
-  - vtk-m
   - wannier90
-  - zfp
 
   # CUDA
-  - adios2 +cuda cuda_arch=70
-  - amrex +cuda cuda_arch=70
-  - arborx +cuda cuda_arch=70 ^kokkos +wrapper
-  - ascent +cuda cuda_arch=70
-  - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=70
-  - caliper +cuda cuda_arch=70
-  - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire@6.0.0 ~shared
-  - flecsi +cuda cuda_arch=70
+  - amrex +cuda
+  - arborx +cuda ^kokkos +wrapper
+  - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda
+  - caliper +cuda
+  - chai ~benchmarks ~tests +cuda ^umpire ~shared
+  - ecp-data-vis-sdk +cuda cuda_arch=70 +adios2 +hdf5 ~paraview +vtkm +zfp # +paraview fails:  FAILED: VTK/Filters/Statistics/CMakeFiles/FiltersStatistics-objects.dir/vtkPCAStatistics.cxx.o; /tmp/ccjmJhb6.s: Assembler messages: /tmp/ccjmJhb6.s:260012: Error: invalid machine `power10'
+  - flecsi +cuda
   - flux-core +cuda
-  - ginkgo +cuda cuda_arch=70
-  - heffte +cuda cuda_arch=70
+  - ginkgo +cuda
+  - heffte +cuda
   - hpctoolkit +cuda
-  - hpx +cuda cuda_arch=70
-  - hypre +cuda cuda_arch=70
-  - kokkos +wrapper +cuda cuda_arch=70
-  - kokkos-kernels +cuda cuda_arch=70 ^kokkos +wrapper +cuda cuda_arch=70
-  - magma +cuda cuda_arch=70
-  - mfem +cuda cuda_arch=70
+  - hpx max_cpu_count=512 +cuda
+  - hypre +cuda
+  - kokkos +wrapper +cuda
+  - kokkos-kernels +cuda ^kokkos +wrapper +cuda
+  - magma +cuda
+  - mfem +cuda
+  - omega-h +cuda
   - papi +cuda
-  - parsec +cuda cuda_arch=70
-  - petsc +cuda cuda_arch=70
-  - raja +cuda cuda_arch=70
-  - slate +cuda cuda_arch=70
-  - slepc +cuda cuda_arch=70
-  - strumpack ~slate +cuda cuda_arch=70
-  - sundials +cuda cuda_arch=70
-  - superlu-dist +cuda cuda_arch=70
-  - tasmanian +cuda cuda_arch=70
+  - petsc +cuda
+  - py-torch +cuda
+  - raja +cuda
+  - slate +cuda
+  - slepc +cuda
+  - strumpack ~slate +cuda
+  - sundials +cuda
+  - superlu-dist +cuda
+  - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +cuda cuda_arch=70
-  - umpire ~shared +cuda cuda_arch=70
-  - vtk-m +cuda cuda_arch=70
-  - zfp +cuda cuda_arch=70
+  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
+  - umpire ~shared +cuda
+  - parsec +cuda
 
-  # CPU failures
-  # - bricks           # bricks: VSBrick-mpi9pt.py-Scalar-4x4x4x4-1:2306:17: error: 'buf0' was not declared in this scope
-  # - geopm            # /usr/include/ppc64le-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  # - loki             # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
-  # - paraview +qt     # llvm@14
-  # - variorum         # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
-  # ----
+  # CPU FAILURES
+  # - archer                  # llvm@8
+  # - bricks                  # bricks
+  # - geopm                   # geopm
+  # - loki                    # loki
+  # - precice                 # precice
+  # - pruners-ninja           # pruners-ninja
+  # - variorum                # Intel/variorum_cpuid.c:11:5: error: impossible constraint in 'asm'
+  # --
+  # bricks: VSBrick-7pt.py-Scalar-8x8x8-1:30:3: error: 'vfloat512' was not declared in this scope
+  # fltk: /usr/bin/ld: ../lib/libfltk_png.a(pngrutil.o): in function `png_read_filter_row': pngrutil.c:(.text.png_read_filter_row+0x90): undefined reference to `png_init_filter_functions_vsx'
+  # geopm: libtool.m4: error: problem compiling CXX test program
+  # llvm@8: clang/lib/Lex/Lexer.cpp:2547:34: error: ISO C++ forbids declaration of 'type name' with no type [-fpermissive]
+  # loki: include/loki/SmallObj.h:462:57: error: ISO C++17 does not allow dynamic exception specifications
+  # precice: /tmp/ccYNMwgE.s: Assembler messages: /tmp/ccYNMwgE.s:278115: Error: invalid machine `power10'
+  # pruners-ninja: test/ninja_test_util.c:34: multiple definition of `a';
 
-  # CUDA failures
-  # - dealii +cuda cuda_arch=70           # fltk
-  # - bricks +cuda                        # bricks
-  # ----
-  # fltk: gl_draw.cxx:120:13: warning: 'void get_list(int)' defined but not used [-Wunused-function]
+  # CUDA FAILURES
+  # - bricks +cuda              # bricks
+  # - dealii +cuda              # fltk
+  # --
+  # bricks: VSBrick-7pt.py-Scalar-8x8x8-1:30:3: error: 'vfloat512' was not declared in this scope
 
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s-power" }
@@ -225,7 +268,7 @@ spack:
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
-    image: ecpe4s/ubuntu20.04-runner-ppc64le:2022-10-01
+    image: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
 
     match_behavior: first
     mappings:
@@ -399,7 +442,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: ecpe4s/ubuntu20.04-runner-ppc64le:2022-10-01
+      image: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
       tags: ["spack", "public", "ppc64le"]
 
     signing-job-attributes:
