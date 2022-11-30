@@ -19,6 +19,8 @@ class SingularityHpc(PythonPackage):
     version("0.1.16", sha256="00aca234259b962914987ec725181dafc11096fa721d610485615585753d769f")
     version("0.1.12", sha256="760cbcae7b07b319ff6147938578648ce6f0af760701e62bf5f88649ef08f793")
 
+    depends_on("singularity@3:", type="run")
+
     depends_on("python@3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pytest-runner", type="build")
@@ -26,6 +28,5 @@ class SingularityHpc(PythonPackage):
     depends_on("py-spython@0.2.0:", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-jsonschema", type=("build", "run"))
-    depends_on("py-ruamel.yaml", type=("build", "run"))
+    depends_on("py-ruamel-yaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("singularity@3:", type="run")
