@@ -335,7 +335,7 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-            if not web_util.url_exists(url, self.curl):
+            if not web_util.url_exists(url):
                 tty.debug("URL does not exist: " + url)
                 continue
 
