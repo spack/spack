@@ -13,9 +13,12 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.builder
+import spack.config
+import spack.detection
 import spack.multimethod
 import spack.package_base
 import spack.spec
+import spack.store
 from spack.directives import build_system, depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.version import Version
@@ -233,12 +236,40 @@ class PythonPackage(PythonExtension):
             if "python" in self.spec.root:
                 python = self.spec.root["python"]
             else:
-                python = spack.spec.Spec("python")
-                repo = spack.repo.path.repo_for_pkg(python)
-                python.namespace = repo.namespace
-                python._mark_concrete()
-                python.external_path = self.prefix
+                python = self.get_external_python_for_prefix()
+                if not python.concrete:
+                    repo = spack.repo.path.repo_for_pkg(python)
+                    python.namespace = repo.namespace
+                    python._mark_concrete()
+                    python.external_path = self.prefix
             self.spec.add_dependency_edge(python, ("build", "link", "run"))
+
+    def get_external_python_for_prefix(self):
+        python_externals_installed = [
+            s for s in spack.store.db.query("python") if s.prefix == self.prefix
+        ]
+        if python_externals_installed:
+            return python_externals_installed[0]
+
+        python_external_config = spack.config.get("packages:python:externals", [])
+        python_externals_configured = [
+            spack.spec.Spec(item["spec"]) for item in python_external_config
+            if item["prefix"] == self.prefix
+        ]
+        if python_externals_configured:
+            return python_externals_configured[0]
+
+        python_externals_detection = spack.detection.by_executable(
+            [spack.repo.path.get_pkg_class("python")], path_hints=[self.prefix]
+        )
+
+        python_externals_detected = [
+            d.spec for d in python_externals_detection.get("python", []) if d.prefix == self.prefix
+        ]
+        if python_externals_detected:
+            return python_externals_detected[0]
+
+        raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
 
     @property
     def headers(self):

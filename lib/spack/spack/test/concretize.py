@@ -14,6 +14,7 @@ import llnl.util.lang
 
 import spack.compilers
 import spack.concretize
+import spack.detection
 import spack.error
 import spack.hash_types as ht
 import spack.platforms
@@ -1940,7 +1941,9 @@ class TestConcretize(object):
             assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
 
     def test_external_python_extensions_have_dependency(self):
-        """Test that python extensions have access to a python dependency"""
+        """Test that python extensions have access to a python dependency
+
+        when python is otherwise in the DAG"""
         external_conf = {
             "py-extension1": {
                 "buildable": False,
@@ -1953,3 +1956,48 @@ class TestConcretize(object):
 
         assert "python" in spec["py-extension1"]
         assert spec["python"] == spec["py-extension1"]["python"]
+
+    def test_external_python_extension_find_dependency_from_config(self):
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": "/fake"}],
+            },
+            "python": {
+                "externals": [{"spec": "python@configured", "prefix": "/fake"}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == "/fake"
+        # The spec is not equal to spack.spec.Spec("python@configured") because it gets a
+        # namespace and an external prefix before marking concrete
+        assert spec["python"].satisfies("python@configured")
+
+    def test_external_python_extension_find_dependency_from_detection(self, monkeypatch):
+        """Test that python extensions have access to a python dependency
+
+        when python isn't otherwise in the DAG"""
+        python_spec = spack.spec.Spec("python@detected")
+        prefix = "/fake"
+
+        def find_fake_python(classes, path_hints):
+            return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
+
+        monkeypatch.setattr(spack.detection, "by_executable", find_fake_python)
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": "%s" % prefix}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == prefix
+        assert spec["python"] == python_spec
