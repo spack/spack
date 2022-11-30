@@ -176,7 +176,6 @@ spack:
   - hypre +cuda cuda_arch=80
   - kokkos +wrapper +cuda cuda_arch=80
   - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
-  - lammps +cuda cuda_arch=80
   - magma +cuda cuda_arch=80
   - mfem +cuda cuda_arch=80
   - omega-h +cuda cuda_arch=80
@@ -230,14 +229,15 @@ spack:
   - upcxx +rocm amdgpu_target=gfx90a
 
   # CPU failures
-  #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- loki                                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
-  #- paraview +qt                                 # llvm@14
-  #- pruners-ninja                                # test/ninja_test_util.c:34: multiple definition of `a';
-  #- rempi                                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
+  # - geopm                                 # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
+  # - loki                                  # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
+  # - paraview +qt                          # llvm@14
+  # - pruners-ninja                         # test/ninja_test_util.c:34: multiple definition of `a';
+  # - rempi                                 # rempi_message_manager.h:53:3: error: 'string' does not name a type
 
   # CUDA failures
-  #- parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+  # - parsec +cuda cuda_arch=80             # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+  # - lammps +cuda cuda_arch=80             # need driver
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
