@@ -1965,7 +1965,7 @@ class TestConcretize(object):
             },
             "python": {
                 "externals": [{"spec": "python@configured", "prefix": "/fake"}],
-            }
+            },
         }
         spack.config.set("packages", external_conf)
 

@@ -253,7 +253,8 @@ class PythonPackage(PythonExtension):
 
         python_external_config = spack.config.get("packages:python:externals", [])
         python_externals_configured = [
-            spack.spec.Spec(item["spec"]) for item in python_external_config
+            spack.spec.Spec(item["spec"])
+            for item in python_external_config
             if item["prefix"] == self.prefix
         ]
         if python_externals_configured:
