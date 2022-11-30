@@ -62,7 +62,7 @@ class Psrchive(AutotoolsPackage):
         args.append("--with-epsic-dir={}".format(spec["epsic"].prefix))
         args.append("--with-epsic-include-dir={}".format(spec["epsic"].prefix.include))
         args.append("--with-epsic-lib-dir={}".format(spec["epsic"].prefix.lib))
-        args.append("--with-psrcat={0}".format(spec["psrcat"].prefix + "bin/psrcat"))
+        args.append("--with-psrcat={0}".format(spec["psrcat"].prefix.bin.psrcat))
         args.append("--with-fftw3-dir={0}".format(spec["fftw"].prefix))
 
         if spec.satisfies("+mpi"):
