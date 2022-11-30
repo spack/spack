@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import warnings
+
 from spack.package import *
 
 
@@ -24,17 +26,21 @@ class Micromamba(CMakePackage):
     variant(
         "linkage",
         default="dynamic",
-        description=(
-            "Whether to use dynamic linkage, partially static, or fully static. "
-            "'Patially static' means static to libmamba and dynamic to other deps."
-            f"See MICROMAMBA_LINKAGE in {linkage_url}."
+        description=f"See MICROMAMBA_LINKAGE in {linkage_url}.",
+        values=(
+            "dynamic",
+            "static",
+            "full_static",
         ),
-        values=("dynamic", "static", "full_static"),
         multi=False,
     )
 
     with when("linkage=full_static"):
         # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L276
+        depends_on("curl libs=static", type="link")
+        depends_on("libssh2~shared", type="link")
+        depends_on("krb5~shared", type="link")
+        depends_on("openssl~shared", type="link")
         depends_on("libarchive crypto=mbedtls xar=libxml2", type="link")
         depends_on("iconv", type="link")
         depends_on("bzip2", type="link")
@@ -64,14 +70,20 @@ class Micromamba(CMakePackage):
         # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/micromamba/src/common_options.hpp#L12
         depends_on("cli11@2.2:", type="link")
 
-        # Experimentally, these are also required for libarchive
-        depends_on("libxml2", type="link")
-        depends_on("mbedtls", type="link")
+        # Currently fails with:
+        #
+        #     libarchive/archive_digest.c:191: undefined reference to `mbedtls_sha512_free'
+        #
+        # These shouldn't be necessary, since they are already in 'libarchive crypto=mbedtls xar=libxml2'
+        # But even adding them doesn't fix it.
+        #
+        #     depends_on("libxml2", type="link")
+        #     depends_on("mbedtls", type="link")
 
     with when("linkage=dynamic"):
         # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L423
         depends_on("libsolv+conda", type=("link", "run"))
-        depends_on("curl", type=("link", "run"))
+        depends_on("curl libs=shared", type=("link", "run"))
         depends_on("libarchive crypto=mbedtls xar=libxml2", type=("link", "run"))
         depends_on("openssl", type=("link", "run"))
         depends_on("yaml-cpp", type=("link", "run"))
@@ -79,7 +91,6 @@ class Micromamba(CMakePackage):
         depends_on("tl-expected@b74fecd", type=("link", "run"))
         depends_on("fmt", type=("link", "run"))
         depends_on("spdlog", type=("link", "run"))
-
         # See linkage=shared for usage location
         depends_on("nlohmann-json", type="link")
         depends_on("cpp-termcolor", type="link")
@@ -97,7 +108,7 @@ class Micromamba(CMakePackage):
         # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L420
         # See linkage=dynamic for what that entails.
         depends_on("libsolv+conda", type=("link", "run"))
-        depends_on("curl", type=("link", "run"))
+        depends_on("curl libs=shared", type=("link", "run"))
         depends_on("libarchive crypto=mbedtls xar=libxml2", type=("link", "run"))
         depends_on("openssl", type=("link", "run"))
         depends_on("yaml-cpp", type=("link", "run"))
@@ -118,6 +129,7 @@ class Micromamba(CMakePackage):
         elif "linkage=static" in self.spec:
             linkage = "static"
         elif "linkage=full_static" in self.spec:
+            warnings.warn("Full static does not work yet!")
             linkage = "full_static"
         else:
             raise ValueError(f"Unknown linkage type {self.spec}")
