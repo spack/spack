@@ -47,7 +47,7 @@ class Psrchive(AutotoolsPackage):
     depends_on("pgplot")
 
     depends_on("mpi", when="+mpi")
-    depends_on("intel-mkl", when="+mkl")
+    depends_on("mkl", when="+mkl")
     depends_on("armadillo", when="+armadillo")
     depends_on("cfitsio", when="+cfitsio")
     depends_on("eigen", when="+eigen")
