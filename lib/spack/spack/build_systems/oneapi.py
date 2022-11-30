@@ -103,11 +103,12 @@ class IntelOneApiPackage(Package):
 
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
-        env.extend(
-            EnvironmentModifications.from_sourcing_file(
-                join_path(self.component_prefix, "env", "vars.sh")
+        if not self.spec.external_modules:
+            env.extend(
+                EnvironmentModifications.from_sourcing_file(
+                    join_path(self.component_prefix, "env", "vars.sh")
+                )
             )
-        )
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
