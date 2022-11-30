@@ -569,7 +569,7 @@ def add(name, url, scope, args={}):
     mirror_data = url
     key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
     # On creation, assume connection data is set for both
-    if any(value for value in key_values if value in args):
+    if any(getattr(args, value, None) for value in key_values if value in args):
         url_dict = {
             "url": url,
             "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
