@@ -436,20 +436,20 @@ dt-diamond-left:
     assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) & external_lib_paths)
 
 
-def test_parallel_false_is_not_propagating(config, mock_packages):
-    class AttributeHolder(object):
-        pass
+def test_parallel_false_is_not_propagating(default_mock_concretization):
+    """Test that parallel=False is not propagating to dependencies"""
+    # a foobar=bar (parallel = False)
+    # |
+    # b (parallel =True)
+    s = default_mock_concretization("a foobar=bar")
 
-    # Package A has parallel = False and depends on B which instead
-    # can be built in parallel
-    s = spack.spec.Spec("a foobar=bar")
-    s.concretize()
+    spack.build_environment.set_module_variables_for_package(s.package)
+    assert s["a"].package.module.make_jobs == 1
 
-    for spec in s.traverse():
-        expected_jobs = spack.config.get("config:build_jobs") if s.package.parallel else 1
-        m = AttributeHolder()
-        spack.build_environment._set_variables_for_single_module(s.package, m)
-        assert m.make_jobs == expected_jobs
+    spack.build_environment.set_module_variables_for_package(s["b"].package)
+    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        s["b"].package.parallel
+    )
 
 
 @pytest.mark.parametrize(
