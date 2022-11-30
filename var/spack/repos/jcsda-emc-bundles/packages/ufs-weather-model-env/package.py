@@ -24,10 +24,8 @@ class UfsWeatherModelEnv(BundlePackage):
     variant("python", default=True, description="Build Python dependencies")
     variant("shared", default=True, description="Build dynamic libraries when possible")
 
-    depends_on("base-env+shared+python", type="run", when="+shared+python")
-    depends_on("base-env+shared~python", type="run", when="+shared~python")
-    depends_on("base-env~shared+python", type="run", when="~shared+python")
-    depends_on("base-env~shared~python", type="run", when="~shared~python")
+    depends_on("base-env+shared", type="run", when="+shared")
+    depends_on("base-env+shared", type="run", when="+shared")
 
     depends_on("ufs-pyenv", type="run", when="+python")
 

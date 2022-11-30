@@ -18,7 +18,6 @@ class BaseEnv(BundlePackage):
 
     version("1.0.0")
 
-    variant("python", default=True, description="Include Python")
     variant("shared", default=True, description="Build shared libraries as much as possible")
 
     # Basic utilities
