@@ -19,6 +19,5 @@ class Psrcat(MakefilePackage):
         makeit()
 
     def install(self, spec, prefix):
-        bindir = prefix + "/bin/"
-        mkdir(bindir)
-        copy("psrcat", bindir)
+        mkdirp(prefix.bin)
+        install("psrcat", bindir)
