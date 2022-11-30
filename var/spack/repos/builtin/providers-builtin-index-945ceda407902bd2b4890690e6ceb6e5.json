@@ -1,0 +1,3627 @@
+{
+  "provider_index": {
+    "providers": {
+      "blas": [
+        [
+          {
+            "name": "blas",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "cray-libsci",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "amdblis",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "cblas": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "blis",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "cblas": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "flexiblas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openblas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "netlib-xblas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "plain_blas": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "atlas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mkl": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "nvhpc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "blas": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "essl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "blis",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "blas": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "fujitsu-ssl2",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-oneapi-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "clblast",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "netlib": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "veclibfort",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "armpl-gcc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "amdblis",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "blas": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "netlib-lapack",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "external-blas": false
+              },
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "fftw-api": [
+        [
+          {
+            "name": "fftw-api",
+            "version": "3",
+            "concrete": false
+          },
+          [
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                "composer.2017:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mkl": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "fftw",
+              "versions": [
+                "3:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "cray-fftw",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "fujitsu-fftw",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                "cluster.2017:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mkl": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-oneapi-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-mkl",
+              "versions": [
+                "2017:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                "professional.2017:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mkl": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "armpl-gcc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "amdfftw",
+              "versions": [
+                "2:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "fftw-api",
+            "version": "2",
+            "concrete": false
+          },
+          [
+            {
+              "name": "fftw",
+              "version": "2.1.5",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "lapack": [
+        [
+          {
+            "name": "lapack",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "nvhpc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "lapack": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "netlib-lapack",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "atlas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "cray-libsci",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "fujitsu-ssl2",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "libflame",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "lapack2flame": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mkl": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-oneapi-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "flexiblas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openblas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "armpl-gcc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "amdlibflame",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "lapack2flame": true
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.6.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "atlas",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "netlib-lapack",
+              "version": "3.6.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.9.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.9.0",
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-mkl",
+              "version": "2020.4",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.7.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.7.0",
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-mkl",
+              "version": "11.3",
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openblas",
+              "version": "0.2.20",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.10.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.10.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.10.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.10.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.9.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.9.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.8.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.8.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.7.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.7.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.6.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.6.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.5.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.5.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.4.2",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.4.2",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.4.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.4.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.4.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.4.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.3.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "netlib-lapack",
+              "version": "3.3.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "versions": [
+              "3.9.1:"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "openblas",
+              "versions": [
+                "0.3.15:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lapack",
+            "version": "3.2.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "veclibfort",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "flame": [
+        [
+          {
+            "name": "flame",
+            "version": "5.2",
+            "concrete": false
+          },
+          [
+            {
+              "name": "libflame",
+              "version": "5.2.0",
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "amdlibflame",
+              "versions": [
+                "2:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "flame",
+            "version": "5.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "libflame",
+              "version": "5.1.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "scalapack": [
+        [
+          {
+            "name": "scalapack",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "amdscalapack",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "cray-libsci",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mpi": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "netlib-scalapack",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "fujitsu-ssl2",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-oneapi-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "cluster": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mkl": true
+              },
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "gl": [
+        [
+          {
+            "name": "gl",
+            "version": "4.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "apple-gl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "gl",
+            "version": "4.5",
+            "concrete": false
+          },
+          [
+            {
+              "name": "glx",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "osmesa",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "gl",
+            "version": "4.6",
+            "concrete": false
+          },
+          [
+            {
+              "name": "wgl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "glu": [
+        [
+          {
+            "name": "glu",
+            "version": "1.3",
+            "concrete": false
+          },
+          [
+            {
+              "name": "apple-glu",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mesa-glu",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "glu",
+            "versions": [
+              ":1.3"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "openglu",
+              "versions": [
+                "1.3:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "glu",
+            "versions": [
+              ":1.2"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "openglu",
+              "versions": [
+                "1.2:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "glu",
+            "versions": [
+              ":1.1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "openglu",
+              "versions": [
+                "1.1:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "glu",
+            "versions": [
+              ":1.0"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "openglu",
+              "versions": [
+                "1.0:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "unwind": [
+        [
+          {
+            "name": "unwind",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "libunwind",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "apple-libunwind",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "uuid": [
+        [
+          {
+            "name": "uuid",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "libuuid",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "ossp-uuid",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "util-linux-uuid",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "apple-libuuid",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "yacc": [
+        [
+          {
+            "name": "yacc",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "byacc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "bison",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "mpi": [
+        [
+          {
+            "name": "mpi",
+            "version": "3",
+            "concrete": false
+          },
+          [
+            {
+              "name": "cray-mpich",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "cray-mvapich2",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              "3.1:"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "fujitsu-mpi",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpt",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "msmpi",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "nvhpc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mpi": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "spectrum-mpi",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mvapich2",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mvapich2-gdr",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mvapich2x",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mpi": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "hpcx-mpi",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-mpi",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mpi-serial",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openmpi",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":3.1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mvapich2",
+              "versions": [
+                "2.3:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mpt",
+              "versions": [
+                "3:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mpilander",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-oneapi-mpi",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mpich",
+              "versions": [
+                ":3.2"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openmpi",
+              "versions": [
+                "2.0.0:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mvapich2-gdr",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mvapich2x",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":4.0"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpich",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":3.0"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "openmpi",
+              "versions": [
+                "1.7.5:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mvapich2",
+              "versions": [
+                "2.1:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mpich",
+              "versions": [
+                ":3.1"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":2.2"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpich",
+              "versions": [
+                ":1.2"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openmpi",
+              "version": "1.6.5",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":2.1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpich",
+              "versions": [
+                ":1.1"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":2.0"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpich",
+              "versions": [
+                ":1.0"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "version": "3.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpitrampoline",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "mpi",
+            "versions": [
+              ":1.3"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpt",
+              "versions": [
+                "1:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "opencl": [
+        [
+          {
+            "name": "opencl",
+            "versions": [
+              ":1.2"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "cuda",
+              "versions": [
+                "7:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "opencl",
+            "versions": [
+              ":1.1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "cuda",
+              "versions": [
+                ":6"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "opencl",
+            "versions": [
+              ":3.0"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "ocl-icd",
+              "versions": [
+                "2.2.13:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "headers": true
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "opencl",
+            "versions": [
+              ":2.2"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "ocl-icd",
+              "version": "2.2.12",
+              "namespace": "builtin",
+              "parameters": {
+                "headers": true
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "opencl",
+            "versions": [
+              ":2.1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "ocl-icd",
+              "versions": [
+                "2.2.8:2.2.11"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "headers": true
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "opencl",
+            "versions": [
+              ":2.0"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "ocl-icd",
+              "versions": [
+                "2.2.3:2.2.7"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "headers": true
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "opencl",
+            "version": "2.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "pocl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false,
+              "dependencies": [
+                {
+                  "name": "llvm",
+                  "hash": "yk2nrvp2xjsd7n5ha5t36fjrdkkn32jj",
+                  "type": []
+                }
+              ]
+            }
+          ]
+        ],
+        [
+          {
+            "name": "opencl",
+            "version": "3.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "pocl",
+              "versions": [
+                "3:"
+              ],
+              "namespace": "builtin",
+              "concrete": false,
+              "dependencies": [
+                {
+                  "name": "llvm",
+                  "hash": "u2e6vkkfrmj7a7yv3t6giqgc44w2hpkv",
+                  "type": []
+                }
+              ]
+            }
+          ]
+        ]
+      ],
+      "elf": [
+        [
+          {
+            "name": "elf",
+            "version": "1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "elfutils",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "elf",
+            "version": "0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "libelf",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "awk": [
+        [
+          {
+            "name": "awk",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gawk",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mawk",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "golang": [
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "go",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "gcc",
+              "versions": [
+                "4.6:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "4.7.1:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "4.8:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.1.2"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "4.8.2:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.2"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "4.9:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.4"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "5:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.6.1"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "6:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.8"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "7:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.10"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "8:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.12"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "9:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.14"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "10:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.16"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "11:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.18"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                "11:"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "golang",
+            "versions": [
+              ":1.4-bootstrap-20171003"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "go-bootstrap",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "go-external-or-gccgo-bootstrap": [
+        [
+          {
+            "name": "go-external-or-gccgo-bootstrap",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "go-bootstrap",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "gcc",
+              "versions": [
+                "10.4.0:10",
+                "11.3.0:"
+              ],
+              "arch": {
+                "platform": null,
+                "platform_os": null,
+                "target": "aarch64:"
+              },
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "go"
+                ]
+              },
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "D": [
+        [
+          {
+            "name": "D",
+            "version": "2",
+            "concrete": false
+          },
+          [
+            {
+              "name": "gcc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "languages": [
+                  "d"
+                ]
+              },
+              "concrete": false
+            },
+            {
+              "name": "ldc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "sycl": [
+        [
+          {
+            "name": "sycl",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "hipsycl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "java": [
+        [
+          {
+            "name": "java",
+            "version": "8",
+            "concrete": false
+          },
+          [
+            {
+              "name": "openjdk",
+              "versions": [
+                "1.8.0:1.8"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "jdk",
+              "versions": [
+                "1.8.0:1.8"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "ibm-java",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "icedtea",
+              "versions": [
+                "3.4.0:3"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "14",
+            "concrete": false
+          },
+          [
+            {
+              "name": "jdk",
+              "versions": [
+                "14.0:14"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "13",
+            "concrete": false
+          },
+          [
+            {
+              "name": "jdk",
+              "versions": [
+                "13.0:13"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "12",
+            "concrete": false
+          },
+          [
+            {
+              "name": "jdk",
+              "versions": [
+                "12.0:12"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "11",
+            "concrete": false
+          },
+          [
+            {
+              "name": "jdk",
+              "versions": [
+                "11.0:11"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openjdk",
+              "versions": [
+                "11.0:11"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "10",
+            "concrete": false
+          },
+          [
+            {
+              "name": "jdk",
+              "versions": [
+                "10.0:10"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openjdk",
+              "versions": [
+                "10.0:10"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "9",
+            "concrete": false
+          },
+          [
+            {
+              "name": "openjdk",
+              "versions": [
+                "9.0:9"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "jdk",
+              "versions": [
+                "9.0:9"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "7",
+            "concrete": false
+          },
+          [
+            {
+              "name": "jdk",
+              "versions": [
+                "1.7.0:1.7"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "17",
+            "concrete": false
+          },
+          [
+            {
+              "name": "openjdk",
+              "versions": [
+                "17.0:17"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "java",
+            "version": "16",
+            "concrete": false
+          },
+          [
+            {
+              "name": "openjdk",
+              "versions": [
+                "16.0:16"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "daal": [
+        [
+          {
+            "name": "daal",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "daal": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-daal",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-oneapi-dal",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "ipp": [
+        [
+          {
+            "name": "ipp",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "intel-oneapi-ipp",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "ipp": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-ipp",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "mkl": [
+        [
+          {
+            "name": "mkl",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "mkl": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-oneapi-mkl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "onedal": [
+        [
+          {
+            "name": "onedal",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "intel-oneapi-dal",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "tbb": [
+        [
+          {
+            "name": "tbb",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "intel-oneapi-tbb",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "intel-parallel-studio",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "tbb": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "intel-tbb",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "szip": [
+        [
+          {
+            "name": "szip",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "libaec",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "libszip",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "iconv": [
+        [
+          {
+            "name": "iconv",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "libiconv",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "libc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "iconv": true
+              },
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "rpc": [
+        [
+          {
+            "name": "rpc",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "libc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "rpc": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "libtirpc",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "fuse": [
+        [
+          {
+            "name": "fuse",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "libfuse",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "macfuse",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "jpeg": [
+        [
+          {
+            "name": "jpeg",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "libjpeg",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "libjpeg-turbo",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "libllvm": [
+        [
+          {
+            "name": "libllvm",
+            "version": "14",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "14.0.0:14"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "llvm-amdgpu",
+              "versions": [
+                "5:"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "13",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "13.0.0:13"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "llvm-amdgpu",
+              "versions": [
+                "4.3:4.9"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "12",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm-amdgpu",
+              "versions": [
+                "3.9:4.2"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "llvm",
+              "versions": [
+                "12.0.0:12"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "11",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm-amdgpu",
+              "versions": [
+                "3.5:3.8"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "llvm",
+              "versions": [
+                "11.0.0:11"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "10",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "10.0.0:10"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "9",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "9.0.0:9"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "8",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "8.0.0:8"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "7",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "7.0.0:7"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "6",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "6.0.0:6"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "5",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "5.0.0:5"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "4",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "4.0.0:4"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "libllvm",
+            "version": "3",
+            "concrete": false
+          },
+          [
+            {
+              "name": "llvm",
+              "versions": [
+                "3.0.0:3"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "lua-lang": [
+        [
+          {
+            "name": "lua-lang",
+            "version": "5.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "lua",
+              "versions": [
+                "5.1:5.1.99"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "lua-luajit",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "lualinks": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "lua-luajit-openresty",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "lualinks": true
+              },
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lua-lang",
+            "version": "5.2",
+            "concrete": false
+          },
+          [
+            {
+              "name": "lua",
+              "versions": [
+                "5.2:5.2.99"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lua-lang",
+            "version": "5.3",
+            "concrete": false
+          },
+          [
+            {
+              "name": "lua",
+              "versions": [
+                "5.3:5.3.99"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "lua-lang",
+            "version": "5.4",
+            "concrete": false
+          },
+          [
+            {
+              "name": "lua",
+              "versions": [
+                "5.4:5.4.99"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "luajit": [
+        [
+          {
+            "name": "luajit",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "lua-luajit-openresty",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "lua-luajit",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "mariadb-client": [
+        [
+          {
+            "name": "mariadb-client",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mariadb",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mariadb-c-client",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "mysql-client": [
+        [
+          {
+            "name": "mysql-client",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mysql",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mariadb",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mariadb-c-client",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "libglx": [
+        [
+          {
+            "name": "libglx",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mesa18",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "glx": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "opengl",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "mesa",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "glx": true
+              },
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "libosmesa": [
+        [
+          {
+            "name": "libosmesa",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mesa",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "osmesa": true
+              },
+              "concrete": false
+            },
+            {
+              "name": "mesa18",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "parameters": {
+                "osmesa": true
+              },
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "mpe": [
+        [
+          {
+            "name": "mpe",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "mpe2",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "pbs": [
+        [
+          {
+            "name": "pbs",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "torque",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "openpbs",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "pkgconfig": [
+        [
+          {
+            "name": "pkgconfig",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "pkg-config",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "pkgconf",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "pil": [
+        [
+          {
+            "name": "pil",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "py-pillow-simd",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "9.2.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "9.2.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "9.1.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "9.1.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "9.1.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "9.1.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "9.0.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "9.0.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "9.0.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "9.0.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "8.4.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "8.4.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "8.0.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "8.0.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "7.2.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "7.2.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "7.0.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "7.0.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "6.2.2",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "6.2.2",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "6.2.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "6.2.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "6.2.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "6.2.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "6.0.0",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "6.0.0",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "5.4.1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow",
+              "version": "5.4.1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "6.2.2.post1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow-simd",
+              "version": "6.2.2.post1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "7.0.0.post3",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow-simd",
+              "version": "7.0.0.post3",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ],
+        [
+          {
+            "name": "pil",
+            "version": "9.0.0.post1",
+            "concrete": false
+          },
+          [
+            {
+              "name": "py-pillow-simd",
+              "version": "9.0.0.post1",
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "xxd": [
+        [
+          {
+            "name": "xxd",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "vim",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            },
+            {
+              "name": "xxd-standalone",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ],
+      "ziglang": [
+        [
+          {
+            "name": "ziglang",
+            "versions": [
+              ":"
+            ],
+            "concrete": false
+          },
+          [
+            {
+              "name": "zig",
+              "versions": [
+                ":"
+              ],
+              "namespace": "builtin",
+              "concrete": false
+            }
+          ]
+        ]
+      ]
+    }
+  }
+}
