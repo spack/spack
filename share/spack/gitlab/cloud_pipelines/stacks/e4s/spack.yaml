@@ -192,7 +192,6 @@ spack:
   - tau +mpi +cuda
   - trilinos@13.4.0 +cuda cuda_arch=80
   - umpire ~shared +cuda cuda_arch=80
-  - upcxx +cuda cuda_arch=80
 
   # ROCm
   - amrex +rocm amdgpu_target=gfx90a
@@ -238,6 +237,7 @@ spack:
 
   # CUDA failures
   # - parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+  # - upcxx +cuda cuda_arch=80                     # needs driver
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
