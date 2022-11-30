@@ -54,7 +54,7 @@ class Gnuplot(AutotoolsPackage):
     variant("readline", default=True, description="Build with readline")
 
     # required dependencies
-    depends_on("readline")
+    depends_on("readline", when="+readline")
     depends_on("pkgconfig", type="build")
     depends_on("libxpm")
     depends_on("iconv")
