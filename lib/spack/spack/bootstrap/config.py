@@ -150,19 +150,20 @@ def _ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
-        with spack.platforms.prevent_cray_detection():
-            with spack.platforms.use_platform(spack.platforms.real_host()):
-                with spack.repo.use_repositories(spack.paths.packages_path):
-                    with spack.store.use_store(bootstrap_store_path):
-                        # Default configuration scopes excluding command line
-                        # and builtin but accounting for platform specific scopes
-                        config_scopes = _bootstrap_config_scopes()
-                        with spack.config.use_configuration(*config_scopes):
-                            # We may need to compile code from sources, so ensure we
-                            # have compilers for the current platform
-                            _add_compilers_if_missing()
-                            spack.config.set("bootstrap", user_configuration["bootstrap"])
-                            spack.config.set("config", user_configuration["config"])
-                            with spack.modules.disable_modules():
-                                with spack_python_interpreter():
-                                    yield
+        with spack.platforms.prevent_cray_detection(), spack.platforms.use_platform(
+            spack.platforms.real_host()
+        ), spack.repo.use_repositories(spack.paths.packages_path), spack.store.use_store(
+            bootstrap_store_path
+        ):
+            # Default configuration scopes excluding command line
+            # and builtin but accounting for platform specific scopes
+            config_scopes = _bootstrap_config_scopes()
+            with spack.config.use_configuration(*config_scopes):
+                # We may need to compile code from sources, so ensure we
+                # have compilers for the current platform
+                _add_compilers_if_missing()
+                spack.config.set("bootstrap", user_configuration["bootstrap"])
+                spack.config.set("config", user_configuration["config"])
+                with spack.modules.disable_modules():
+                    with spack_python_interpreter():
+                        yield
