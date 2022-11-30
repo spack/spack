@@ -12,6 +12,7 @@ class PyKiwisolver(PythonPackage):
     homepage = "https://github.com/nucleic/kiwi"
     pypi = "kiwisolver/kiwisolver-1.1.0.tar.gz"
 
+    version("1.4.4", sha256="d41997519fcba4a1e46eb4a2fe31bc12f0ff957b2b81bac28db24744f333e955")
     version("1.3.2", sha256="fc4453705b81d03568d5b808ad8f09c77c47534f6ac2e72e733f9ca4714aa75c")
     version("1.3.1", sha256="950a199911a8d94683a6b10321f9345d5a3a8433ec58b217ace979e18f16e248")
     version("1.3.0", sha256="14f81644e1f3bf01fbc8b9c990a7889e9bb4400c4d0ff9155aa0bdd19cce24a9")
@@ -24,4 +25,8 @@ class PyKiwisolver(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"), when="@1.3.2:")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@61.2:", when="@1.4.4:", type="build")
+    depends_on("py-setuptools-scm@3.4.3:+toml", when="@1.4.4:", type="build")
     depends_on("py-cppy@1.1.0:", type="build", when="@1.2.0:")
+    depends_on("py-cppy@1.2.0:", type="build", when="@1.4.4:")
+    depends_on("py-typing-extensions", when="@1.4.4: ^python@:3.7", type=("build", "run"))
