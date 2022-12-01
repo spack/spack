@@ -76,12 +76,13 @@ class Mvapich(AutotoolsPackage):
         "For IB/RoCE systems, use the ucx netmod, for interconnects supported "
         "by libfabrics, use the ofi netmod. For more info, visit the "
         "homepage url.",
-        default="mrail",
+        default="ofi",
         values=(
             "ofi",
             "ucx",
-            "ucr",
+            #       "ucr",
         ),
+        multi=False,
     )
 
     variant(
@@ -101,9 +102,10 @@ class Mvapich(AutotoolsPackage):
     depends_on("libpciaccess", when=(sys.platform != "darwin"))
     depends_on("libxml2")
     depends_on("cuda", when="+cuda")
-    depends_on("rdma-core", when="netmod=ucr")
+    # depends_on("rdma-core", when="netmod=ucr")
     depends_on("libfabric", when="netmod=ofi")
     depends_on("slurm", when="process_managers=slurm")
+    depends_on("ucx", when="netmod=ucx")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
@@ -116,94 +118,6 @@ class Mvapich(AutotoolsPackage):
             output = Executable(exe)("-a", output=str, error=str)
             match = re.search(r"^MVAPICH2 (\S+)", output)
         return match.group(1) if match else None
-
-    @classmethod
-    def determine_variants(cls, exes, version):
-        def get_spack_compiler_spec(path):
-            spack_compilers = spack.compilers.find_compilers([path])
-            for spack_compiler in spack_compilers:
-                if os.path.dirname(spack_compiler.cc) == path:
-                    return spack_compiler.spec
-            return None
-
-        results = []
-        for exe in exes:
-            variants = ""
-            if exe.endswith("mpichversion"):
-                output = Executable(exe)(output=str, error=str)
-            elif exe.endswith("mpiname"):
-                output = Executable(exe)("-a", output=str, error=str)
-
-            if re.search(r"--enable-wrapper-rpath=yes", output):
-                variants += "+wrapperrpath"
-            else:
-                variants += "~wrapperrpath"
-
-            if (
-                re.search(r"--disable-fast", output)
-                and re.search(r"--enable-error-checking=runtime", output)
-                and re.search(r"--enable-error-messages", output)
-                and re.search(r"--enable-g", output)
-                and re.search(r"--enable-debuginfo", output)
-            ):
-                variants += "+debug"
-            else:
-                variants += "~debug"
-
-            if re.search("--enable-cuda", output):
-                variants += "+cuda"
-            else:
-                variants += "~cuda"
-
-            if re.search("--enable-registration-cache", output):
-                variants += "+regcache"
-            else:
-                variants += "~regcache"
-
-            match = re.search(r"--enable-threads=(\S+)", output)
-            if match:
-                variants += " threads=" + match.group(1)
-
-            match = re.search(r"--with-ch3-rank-bits=(\S+)", output)
-            if match:
-                variants += " ch3_rank_bits=" + match.group(1)
-
-            pms = []
-            if re.search(r"--with-pm=slurm", output):
-                pms.append("slurm")
-            if re.search(r"--with-pm=[A-Za-z0-9:]*hydra", output):
-                pms.append("hydra")
-            if re.search(r"--with-pm=[A-Za-z0-9:]*gforker", output):
-                pms.append("gforker")
-            if re.search(r"--with-pm=[A-Za-z0-9:]*remshell", output):
-                pms.append("remshell")
-            if pms:
-                variants += " process_managers=" + ",".join(pms)
-
-            netmod = {
-                "ofi": "ch4:ofi",
-                "ucx": "ch4:ucx",
-                "ucr": "ch4:ucr",
-            }
-            for fabric_name, conf_flag in netmod.items():
-                if re.search(r"--with-device=" + conf_flag, output):
-                    variants += " netmod=" + fabric_name
-                    break
-
-            used_fs = []
-            for fs in ("lustre", "gpfs", "nfs", "ufs"):
-                if re.search("--with-file-system=[a-zA-Z0-9+]*" + fs, output):
-                    used_fs.append(fs)
-            if used_fs:
-                variants += " file_systems=" + ",".join(used_fs)
-
-            match = re.search(r"CC: (\S+)", output)
-            if match:
-                comp_spec = get_spack_compiler_spec(os.path.dirname(match.group(1)))
-                if comp_spec:
-                    variants += " %" + str(comp_spec)
-            results.append(variants)
-        return results
 
     @property
     def libs(self):
@@ -247,10 +161,10 @@ class Mvapich(AutotoolsPackage):
             opts = ["--with-device=ch4:ofi"]
         elif "netmod=ucx" in self.spec:
             opts = ["--with-device=ch4:ucx"]
-        elif "netmod=ucr" in self.spec:
-            opts = ["--with-device=ch4:ucr"]
-        elif "netmod=mrail" in self.spec:
-            opts = ["--with-device=ch3:mrail", "--with-rdma=gen2", "--disable-mcast"]
+        # elif "netmod=ucr" in self.spec:
+        #    opts = ["--with-device=ch4:ucr"]
+        # elif "netmod=mrail" in self.spec:
+        #    opts = ["--with-device=ch3:mrail", "--with-rdma=gen2", "--disable-mcast"]
         return opts
 
     @property
