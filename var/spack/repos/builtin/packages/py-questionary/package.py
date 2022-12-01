@@ -17,4 +17,5 @@ class PyQuestionary(PythonPackage):
 
     depends_on("python@3.6:3.9", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-poetry", type="build")
     depends_on("py-prompt-toolkit@2.0:3", type=("build", "run"))

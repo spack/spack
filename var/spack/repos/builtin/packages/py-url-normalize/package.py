@@ -18,6 +18,6 @@ class PyUrlNormalize(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-poetry-core@1.0.0:", type="build")
+    depends_on("py-poetry@1.0.0:", type="build")
 
     depends_on("py-six", type=("build", "run"))
