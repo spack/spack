@@ -43,6 +43,8 @@ class Doxygen(CMakePackage):
 
     executables = ["doxygen"]
 
+    maintainers = ["sethrj"]
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("-v", output=str, error=str)
