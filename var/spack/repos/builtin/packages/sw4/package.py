@@ -8,11 +8,10 @@ import os
 from spack.package import *
 
 class Sw4(MakefilePackage):
-    """This package builds SW4 with HDF5, PROJ, and ZFP."""
+    """This package builds SW4 with MPI, OpenMP, HDF5, FFTW, PROJ, and ZFP."""
 
     homepage = "https://github.com/geodynamics/sw4"
-    # git = "https://github.com/geodynamics/sw4.git"
-    git = "https://github.com/houjun/sw4.git"
+    git = "https://github.com/geodynamics/sw4.git"
 
     maintainers = ["houjun", "andersp"]
 
