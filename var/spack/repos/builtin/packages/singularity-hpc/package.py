@@ -19,7 +19,16 @@ class SingularityHpc(PythonPackage):
     version("0.1.16", sha256="00aca234259b962914987ec725181dafc11096fa721d610485615585753d769f")
     version("0.1.12", sha256="760cbcae7b07b319ff6147938578648ce6f0af760701e62bf5f88649ef08f793")
 
-    depends_on("singularity@3:", type="run")
+    variant(
+        "platform",
+        default="none",
+        description="Container platform installed by Spack for this package",
+        values=("none", "singularityce", "singularity"),
+        multi=False,
+    )
+
+    depends_on("singularityce@3:", when="platform=singularityce", type="run")
+    depends_on("singularity@3:", when="platform=singularity", type="run")
 
     depends_on("python@3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
