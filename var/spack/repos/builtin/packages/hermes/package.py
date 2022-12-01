@@ -18,9 +18,9 @@ class Hermes(CMakePackage):
 
     version("master", branch="master")
     version(
-        "0.8.0-beta",
-        url="https://github.com/HDFGroup/hermes/archive/v0.7.0-beta.tar.gz",
-        sha256="697c8b0ca2d94512326d1dc8d1895d3d37fbff708013d7bf578a3158b06cb158",
+        "0.9.0-beta",
+        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v0.9.0-beta.tar.gz",
+        sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     )
 
     variant("vfd", default=False, description="Enable HDF5 VFD")
