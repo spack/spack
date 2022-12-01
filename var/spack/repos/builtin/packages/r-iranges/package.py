@@ -18,6 +18,8 @@ class RIranges(RPackage):
 
     bioc = "IRanges"
 
+    version("2.32.0", commit="2b5c9fc706c8cdc96f0c46508087863df1502f81")
+    version("2.30.1", commit="ead506a14d6cc89ac2f14b55a4b04496755e4e50")
     version("2.30.0", commit="9b5f3ca12812fb76c23b1550aa3a794384384d9b")
     version("2.28.0", commit="d85ee908a379e12d1e32599e999c71ab37c25e57")
     version("2.24.1", commit="6c61fddf4c5830f69a0f7f108888c67cd0a12b19")

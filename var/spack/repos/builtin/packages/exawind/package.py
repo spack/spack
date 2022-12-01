@@ -12,7 +12,7 @@ class Exawind(CMakePackage):
     homepage = "https://github.com/Exawind/exawind-driver"
     git = "https://github.com/Exawind/exawind-driver.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers = ["jrood-nrel", "psakievich"]
 
     tags = ["ecp", "ecp-apps"]
 

@@ -83,7 +83,12 @@ const int garply_version_minor = %s;
             f.write(garply_cc % prefix.config)
         with open("%s/garply/garplinator.cc" % self.stage.source_path, "w") as f:
             f.write(garplinator_cc)
-        gpp = which("/usr/bin/g++")
+        gpp = which(
+            "g++",
+            path=":".join(
+                [s for s in os.environ["PATH"].split(os.pathsep) if "lib/spack/env" not in s]
+            ),
+        )
         if sys.platform == "darwin":
             gpp = which("/usr/bin/clang++")
         gpp(

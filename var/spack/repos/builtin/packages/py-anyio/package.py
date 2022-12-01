@@ -22,10 +22,6 @@ class PyAnyio(PythonPackage):
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm+toml@3.4:", type="build")
     depends_on("py-wheel@0.29:", type="build")
-    depends_on("py-contextvars", when="@3.4: ^python@:3.6", type=("build", "run"))
-    depends_on("py-dataclasses", when="^python@:3.6", type=("build", "run"))
     depends_on("py-idna@2.8:", type=("build", "run"))
     depends_on("py-sniffio@1.1:", type=("build", "run"))
     depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
-
-    depends_on("py-async-generator", when="@:3.2 ^python@:3.6", type=("build", "run"))

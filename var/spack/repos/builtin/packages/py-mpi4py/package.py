@@ -17,6 +17,8 @@ class PyMpi4py(PythonPackage):
     git = "https://github.com/mpi4py/mpi4py.git"
 
     version("master", branch="master")
+    version("3.1.4", sha256="17858f2ebc623220d0120d1fa8d428d033dde749c4bc35b33d81a66ad7f93480")
+    version("3.1.3", sha256="f1e9fae1079f43eafdd9f817cdb3fd30d709edc093b5d5dada57a461b2db3008")
     version("3.1.2", sha256="40dd546bece8f63e1131c3ceaa7c18f8e8e93191a762cd446a8cfcf7f9cce770")
     version("3.1.1", sha256="e11f8587a3b93bb24c8526addec664b586b965d83c0882b884c14dc3fd6b9f5c")
     version("3.1.0", sha256="134fa2b2fe6d8f91bcfcc2824cfd74b55ca3dcbff4d185b1bda009beea9232ec")
@@ -28,10 +30,9 @@ class PyMpi4py(PythonPackage):
 
     depends_on("python@2.6:2.7,3.2:")
     depends_on("python@2.7:2.8,3.5:", when="@3.1:")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@40.9:", type="build")
     depends_on("mpi")
     depends_on("py-cython@0.27.0:", when="@master", type="build")
-    depends_on("py-3to2", when="@3.1: ^python@:2", type="build")
 
     @when("@3.1:")
     def install_options(self, spec, prefix):

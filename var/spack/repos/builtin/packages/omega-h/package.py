@@ -20,6 +20,11 @@ class OmegaH(CMakePackage, CudaPackage):
     tags = ["e4s"]
     version("main", branch="main")
     version(
+        "scorec.10.6.0",
+        commit="f376fad4741b55a4b2482218eb3437d719b7c72e",
+        git="https://github.com/SCOREC/omega_h.git",
+    )
+    version(
         "scorec.10.1.0",
         commit="e88912368e101d940f006019585701a704295ab0",
         git="https://github.com/SCOREC/omega_h.git",
@@ -54,16 +59,16 @@ class OmegaH(CMakePackage, CudaPackage):
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on("cuda", when="+cuda")
     conflicts(
-        "cuda@11.2:",
+        "cuda@11.2",
         when="@scorec.10.1.0:",
-        msg="Thrust is broken in CUDA >= 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
+        msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
     # the sandia repo has a fix for cuda > 11.2 support
     #  see github.com/sandialabs/omega_h/pull/373
     conflicts(
-        "cuda@11.2:",
+        "cuda@11.2",
         when="@:9.34.4",
-        msg="Thrust is broken in CUDA >= 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
+        msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
@@ -97,7 +102,10 @@ class OmegaH(CMakePackage, CudaPackage):
             cuda_arch_list = self.spec.variants["cuda_arch"].value
             cuda_arch = cuda_arch_list[0]
             if cuda_arch != "none":
-                args.append("-DOmega_h_CUDA_ARCH={0}".format(cuda_arch))
+                if "scorec" in str(self.spec.version):
+                    args.append("-DOmega_h_CUDA_ARCH={0}".format(cuda_arch))
+                else:
+                    args.append("-DCMAKE_CUDA_FLAGS=-arch=sm_{0}".format(cuda_arch))
         else:
             args.append("-DOmega_h_USE_CUDA:BOOL=OFF")
         if "+trilinos" in self.spec:

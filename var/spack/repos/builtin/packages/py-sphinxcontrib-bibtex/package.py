@@ -11,6 +11,7 @@ class PySphinxcontribBibtex(PythonPackage):
 
     pypi = "sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
 
+    version("2.5.0", sha256="71b42e5db0e2e284f243875326bf9936aa9a763282277d75048826fef5b00eaa")
     version("2.4.2", sha256="65b023ee47f35f1f03ac4d71c824e67c624c7ecac1bb26e83623271a01f9da86")
     version("2.2.1", sha256="00d474092e04b1d941e645cf6c027632a975cd0b9337cf47d379f63a5928f334")
     version("2.2.0", sha256="7500843e154d76983c23bca5ca7380965e0725c46b8f484c1322d0b58a6ce3b2")
@@ -35,4 +36,4 @@ class PySphinxcontribBibtex(PythonPackage):
     depends_on("py-sphinx@2.1:", type=("build", "run"), when="@2.1.3:")
     depends_on("py-oset@0.1.3:", type=("build", "run"), when="@:2.0.0")
     depends_on("py-docutils@0.8:", type=("build", "run"), when="@2.1.0:")
-    depends_on("py-dataclasses", when="@2.2.0: ^python@:3.6", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", when="@2.5.0: ^python@:3.9", type=("build", "run"))

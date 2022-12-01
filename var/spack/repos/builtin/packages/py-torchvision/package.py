@@ -18,6 +18,7 @@ class PyTorchvision(PythonPackage):
     maintainers = ["adamjstewart"]
 
     version("main", branch="main")
+    version("0.14.0", sha256="be1621c85c56eb40537cb74e6ec5d8e58ed8b69f8374a58bcb6ec413cb540c8b")
     version("0.13.1", sha256="c32fab734e62c7744dadeb82f7510ff58cc3bca1189d17b16aa99b08afc42249")
     version("0.13.0", sha256="2fe9139150800820d02c867a0b64b7c7fbc964d48d76fae235d6ef9215eabcf4")
     version("0.12.0", sha256="99e6d3d304184895ff4f6152e2d2ec1cbec89b3e057d9c940ae0125546b04e91")
@@ -47,7 +48,12 @@ class PyTorchvision(PythonPackage):
         "backend",
         default="pil",
         description="Image backend",
-        values=("pil", "accimage", "png", "jpeg"),
+        values=[
+            "pil",
+            "accimage",
+            conditional("png", when="@0.8:"),
+            conditional("jpeg", when="@0.8:"),
+        ],
         multi=False,
     )
 
@@ -68,6 +74,7 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@1.13.0", when="@0.14.0", type=("build", "link", "run"))
     depends_on("py-torch@1.12.1", when="@0.13.1", type=("build", "link", "run"))
     depends_on("py-torch@1.12.0", when="@0.13.0", type=("build", "link", "run"))
     depends_on("py-torch@1.11.0", when="@0.12.0", type=("build", "link", "run"))
@@ -102,15 +109,13 @@ class PyTorchvision(PythonPackage):
     depends_on("pil@5.3:8.2,8.4:", when="@0.13: backend=pil", type=("build", "run"))
     depends_on("py-accimage", when="backend=accimage", type=("build", "run"))
     depends_on("libpng@1.6.0:", when="backend=png")
-    depends_on("jpeg")
+    depends_on("jpeg")  # seems to be required for all backends
+
+    depends_on("ffmpeg@3.1:4.4", when="@0.4.2:0.12.0")
+    depends_on("ffmpeg@3.1:", when="@13.0:")
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
-
-    depends_on("ffmpeg@3.1:", when="@0.4.2:")
-
-    conflicts("backend=png", when="@:0.7")
-    conflicts("backend=jpeg", when="@:0.7")
 
     def setup_build_environment(self, env):
         include = []
@@ -138,10 +143,10 @@ class PyTorchvision(PythonPackage):
         if "+cuda" in self.spec["py-torch"]:
             env.set("FORCE_CUDA", 1)
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            pytorch_cuda_arch = ";".join(
+            torch_cuda_arch_list = ";".join(
                 "{0:.1f}".format(float(i) / 10.0)
                 for i in self.spec["py-torch"].variants["cuda_arch"].value
             )
-            env.set("TORCH_CUDA_ARCH_LIST", pytorch_cuda_arch)
+            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
         else:
             env.set("FORCE_CUDA", 0)

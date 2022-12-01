@@ -37,15 +37,14 @@ as input.
 """
 import ast
 import collections
+import collections.abc
 import inspect
 import itertools
 import pickle
 import re
-
-from six.moves.urllib.request import urlopen
+from urllib.request import urlopen
 
 import llnl.util.lang
-from llnl.util.compat import Sequence
 
 import spack.config
 import spack.patch
@@ -81,7 +80,7 @@ class Error(object):
         return hash(value)
 
 
-class AuditClass(Sequence):
+class AuditClass(collections.abc.Sequence):
     def __init__(self, group, tag, description, kwargs):
         """Return an object that acts as a decorator to register functions
         associated with a specific class of sanity checks.
@@ -288,7 +287,7 @@ def _check_build_test_callbacks(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
-        test_callbacks = pkg_cls.build_time_test_callbacks
+        test_callbacks = getattr(pkg_cls, "build_time_test_callbacks", None)
 
         if test_callbacks and "test" in test_callbacks:
             msg = '{0} package contains "test" method in ' "build_time_test_callbacks"
@@ -503,6 +502,33 @@ def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
     return errors
 
 
+@package_properties
+def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
+    """Ensure that methods modifying the build environment are ported to builder classes."""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        buildsystem_variant, _ = pkg_cls.variants["build_system"]
+        buildsystem_names = [getattr(x, "value", x) for x in buildsystem_variant.values]
+        builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in buildsystem_names]
+        module = pkg_cls.module
+        has_builders_in_package_py = any(
+            getattr(module, name, False) for name in builder_cls_names
+        )
+        if not has_builders_in_package_py:
+            continue
+
+        for method_name in ("setup_build_environment", "setup_dependent_build_environment"):
+            if hasattr(pkg_cls, method_name):
+                msg = (
+                    "Package '{}' need to move the '{}' method from the package class to the"
+                    " appropriate builder class".format(pkg_name, method_name)
+                )
+                errors.append(error_cls(msg, []))
+
+    return errors
+
+
 @package_https_directives
 def _linting_package_file(pkgs, error_cls):
     """Check for correctness of links"""
@@ -660,7 +686,13 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
                 errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
                 continue
 
-            vspec = variant.make_default()
+            try:
+                vspec = variant.make_default()
+            except spack.variant.MultipleValuesInExclusiveVariantError:
+                error_msg = "Cannot create a default value for the variant '{}' in package '{}'"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
+                continue
+
             try:
                 variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
             except spack.variant.InvalidVariantValueError:

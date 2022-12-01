@@ -4,30 +4,33 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
+import collections.abc
 import contextlib
 import errno
 import functools
 import importlib
+import importlib.machinery  # novm
+import importlib.util
 import inspect
 import itertools
 import os
 import os.path
+import random
 import re
 import shutil
 import stat
+import string
 import sys
-import tempfile
 import traceback
 import types
+import uuid
 from typing import Dict  # novm
 
 import ruamel.yaml as yaml
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.compat import Mapping
 from llnl.util.filesystem import working_dir
 
 import spack.caches
@@ -37,6 +40,7 @@ import spack.patch
 import spack.provider_index
 import spack.spec
 import spack.tag
+import spack.util.file_cache
 import spack.util.naming as nm
 import spack.util.path
 from spack.util.executable import which
@@ -75,125 +79,23 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-# The code below is needed to have a uniform Loader interface that could cover both
-# Python 2.7 and Python 3.X when we load Spack packages as Python modules, e.g. when
-# we do "import spack.pkg.builtin.mpich" in package recipes.
-if sys.version_info[0] == 2:
-    import imp
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
+    def __init__(self, fullname, path, prepend=None):
+        super(_PrependFileLoader, self).__init__(fullname, path)
+        self.prepend = prepend
 
-    @contextlib.contextmanager
-    def import_lock():
-        try:
-            imp.acquire_lock()
-            yield
-        finally:
-            imp.release_lock()
+    def path_stats(self, path):
+        stats = super(_PrependFileLoader, self).path_stats(path)
+        if self.prepend:
+            stats["size"] += len(self.prepend) + 1
+        return stats
 
-    def load_source(fullname, path, prepend=None):
-        """Import a Python module from source.
-
-        Load the source file and add it to ``sys.modules``.
-
-        Args:
-            fullname (str): full name of the module to be loaded
-            path (str): path to the file that should be loaded
-            prepend (str or None): some optional code to prepend to the
-                loaded module; e.g., can be used to inject import statements
-
-        Returns:
-            the loaded module
-        """
-        with import_lock():
-            with prepend_open(path, text=prepend) as f:
-                return imp.load_source(fullname, path, f)
-
-    @contextlib.contextmanager
-    def prepend_open(f, *args, **kwargs):
-        """Open a file for reading, but prepend with some text prepended
-
-        Arguments are same as for ``open()``, with one keyword argument,
-        ``text``, specifying the text to prepend.
-
-        We have to write and read a tempfile for the ``imp``-based importer,
-        as the ``file`` argument to ``imp.load_source()`` requires a
-        low-level file handle.
-
-        See the ``importlib``-based importer for a faster way to do this in
-        later versions of python.
-        """
-        text = kwargs.get("text", None)
-
-        with open(f, *args) as f:
-            with tempfile.NamedTemporaryFile(mode="w+") as tf:
-                if text:
-                    tf.write(text + "\n")
-                tf.write(f.read())
-                tf.seek(0)
-                yield tf.file
-
-    class _PrependFileLoader(object):
-        def __init__(self, fullname, path, prepend=None):
-            # Done to have a compatible interface with Python 3
-            #
-            # All the object attributes used in this method must be defined
-            # by a derived class
-            pass
-
-        def package_module(self):
-            try:
-                module = load_source(self.fullname, self.package_py, prepend=self._package_prepend)
-            except SyntaxError as e:
-                # SyntaxError strips the path from the filename, so we need to
-                # manually construct the error message in order to give the
-                # user the correct package.py where the syntax error is located
-                msg = "invalid syntax in {0:}, line {1:}"
-                raise SyntaxError(msg.format(self.package_py, e.lineno))
-
-            module.__package__ = self.repo.full_namespace
-            module.__loader__ = self
-            return module
-
-        def load_module(self, fullname):
-            # Compatibility method to support Python 2.7
-            if fullname in sys.modules:
-                return sys.modules[fullname]
-
-            namespace, dot, module_name = fullname.rpartition(".")
-
-            try:
-                module = self.package_module()
-            except Exception as e:
-                raise ImportError(str(e))
-
-            module.__loader__ = self
-            sys.modules[fullname] = module
-            if namespace != fullname:
-                parent = sys.modules[namespace]
-                if not hasattr(parent, module_name):
-                    setattr(parent, module_name, module)
-
-            return module
-
-else:
-    import importlib.machinery  # novm
-
-    class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
-        def __init__(self, fullname, path, prepend=None):
-            super(_PrependFileLoader, self).__init__(fullname, path)
-            self.prepend = prepend
-
-        def path_stats(self, path):
-            stats = super(_PrependFileLoader, self).path_stats(path)
-            if self.prepend:
-                stats["size"] += len(self.prepend) + 1
-            return stats
-
-        def get_data(self, path):
-            data = super(_PrependFileLoader, self).get_data(path)
-            if path != self.path or self.prepend is None:
-                return data
-            else:
-                return self.prepend.encode() + b"\n" + data
+    def get_data(self, path):
+        data = super(_PrependFileLoader, self).get_data(path)
+        if path != self.path or self.prepend is None:
+            return data
+        else:
+            return self.prepend.encode() + b"\n" + data
 
 
 class RepoLoader(_PrependFileLoader):
@@ -223,22 +125,6 @@ class SpackNamespaceLoader(object):
     def exec_module(self, module):
         module.__loader__ = self
 
-    def load_module(self, fullname):
-        # Compatibility method to support Python 2.7
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-        module = SpackNamespace(fullname)
-        self.exec_module(module)
-
-        namespace, dot, module_name = fullname.rpartition(".")
-        sys.modules[fullname] = module
-        if namespace != fullname:
-            parent = sys.modules[namespace]
-            if not hasattr(parent, module_name):
-                setattr(parent, module_name, module)
-
-        return module
-
 
 class ReposFinder(object):
     """MetaPathFinder class that loads a Python module corresponding to a Spack package
@@ -247,9 +133,6 @@ class ReposFinder(object):
     """
 
     def find_spec(self, fullname, python_path, target=None):
-        # This function is Python 3 only and will not be called by Python 2.7
-        import importlib.util
-
         # "target" is not None only when calling importlib.reload()
         if target is not None:
             raise RuntimeError('cannot reload module "{0}"'.format(fullname))
@@ -287,12 +170,6 @@ class ReposFinder(object):
             return SpackNamespaceLoader()
 
         return None
-
-    def find_module(self, fullname, python_path=None):
-        # Compatibility method to support Python 2.7
-        if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
-            return None
-        return self.compute_loader(fullname)
 
 
 #
@@ -479,7 +356,7 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(Mapping):
+class FastPackageChecker(collections.abc.Mapping):
     """Cache that maps package names to the stats obtained on the
     'package.py' files associated with them.
 
@@ -572,9 +449,12 @@ class FastPackageChecker(Mapping):
         return len(self._packages_to_stats)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Indexer(object):
+class Indexer(metaclass=abc.ABCMeta):
     """Adaptor for indexes that need to be generated when repos are updated."""
+
+    def __init__(self, repository):
+        self.repository = repository
+        self.index = None
 
     def create(self):
         self.index = self._create()
@@ -616,10 +496,10 @@ class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
 
     def _create(self):
-        return spack.tag.TagIndex()
+        return spack.tag.TagIndex(self.repository)
 
     def read(self, stream):
-        self.index = spack.tag.TagIndex.from_json(stream)
+        self.index = spack.tag.TagIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
         self.index.update_package(pkg_fullname)
@@ -632,14 +512,17 @@ class ProviderIndexer(Indexer):
     """Lifecycle methods for virtual package providers."""
 
     def _create(self):
-        return spack.provider_index.ProviderIndex()
+        return spack.provider_index.ProviderIndex(repository=self.repository)
 
     def read(self, stream):
-        self.index = spack.provider_index.ProviderIndex.from_json(stream)
+        self.index = spack.provider_index.ProviderIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
         name = pkg_fullname.split(".")[-1]
-        if spack.repo.path.is_virtual(name, use_index=False):
+        is_virtual = (
+            not self.repository.exists(name) or self.repository.get_pkg_class(name).virtual
+        )
+        if is_virtual:
             return
         self.index.remove_provider(pkg_fullname)
         self.index.update(pkg_fullname)
@@ -652,7 +535,7 @@ class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
 
     def _create(self):
-        return spack.patch.PatchCache()
+        return spack.patch.PatchCache(repository=self.repository)
 
     def needs_update(self):
         # TODO: patches can change under a package and we should handle
@@ -662,7 +545,7 @@ class PatchIndexer(Indexer):
         return False
 
     def read(self, stream):
-        self.index = spack.patch.PatchCache.from_json(stream)
+        self.index = spack.patch.PatchCache.from_json(stream, repository=self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -687,7 +570,7 @@ class RepoIndex(object):
 
     """
 
-    def __init__(self, package_checker, namespace):
+    def __init__(self, package_checker, namespace, cache):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
@@ -696,6 +579,7 @@ class RepoIndex(object):
 
         self.indexers = {}
         self.indexes = {}
+        self.cache = cache
 
     def add_indexer(self, name, indexer):
         """Add an indexer to the repo index.
@@ -740,24 +624,23 @@ class RepoIndex(object):
         cache_filename = "{0}/{1}-index.json".format(name, self.namespace)
 
         # Compute which packages needs to be updated in the cache
-        misc_cache = spack.caches.misc_cache
-        index_mtime = misc_cache.mtime(cache_filename)
+        index_mtime = self.cache.mtime(cache_filename)
         needs_update = self.checker.modified_since(index_mtime)
 
-        index_existed = misc_cache.init_entry(cache_filename)
+        index_existed = self.cache.init_entry(cache_filename)
         if index_existed and not needs_update:
             # If the index exists and doesn't need an update, read it
-            with misc_cache.read_transaction(cache_filename) as f:
+            with self.cache.read_transaction(cache_filename) as f:
                 indexer.read(f)
 
         else:
             # Otherwise update it and rewrite the cache file
-            with misc_cache.write_transaction(cache_filename) as (old, new):
+            with self.cache.write_transaction(cache_filename) as (old, new):
                 indexer.read(old) if old else indexer.create()
 
                 # Compute which packages needs to be updated **again** in case someone updated them
                 # while we waited for the lock
-                new_index_mtime = misc_cache.mtime(cache_filename)
+                new_index_mtime = self.cache.mtime(cache_filename)
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
@@ -781,7 +664,8 @@ class RepoPath(object):
         repos (list): list Repo objects or paths to put in this RepoPath
     """
 
-    def __init__(self, *repos):
+    def __init__(self, *repos, **kwargs):
+        cache = kwargs.get("cache", spack.caches.misc_cache)
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
 
@@ -792,8 +676,8 @@ class RepoPath(object):
         # Add each repo to this path.
         for repo in repos:
             try:
-                if isinstance(repo, six.string_types):
-                    repo = Repo(repo)
+                if isinstance(repo, str):
+                    repo = Repo(repo, cache=cache)
                 self.put_last(repo)
             except RepoError as e:
                 tty.warn(
@@ -884,7 +768,7 @@ class RepoPath(object):
     def provider_index(self):
         """Merged ProviderIndex from all Repos in the RepoPath."""
         if self._provider_index is None:
-            self._provider_index = spack.provider_index.ProviderIndex()
+            self._provider_index = spack.provider_index.ProviderIndex(repository=self)
             for repo in reversed(self.repos):
                 self._provider_index.merge(repo.provider_index)
 
@@ -894,7 +778,7 @@ class RepoPath(object):
     def tag_index(self):
         """Merged TagIndex from all Repos in the RepoPath."""
         if self._tag_index is None:
-            self._tag_index = spack.tag.TagIndex()
+            self._tag_index = spack.tag.TagIndex(repository=self)
             for repo in reversed(self.repos):
                 self._tag_index.merge(repo.tag_index)
 
@@ -904,7 +788,7 @@ class RepoPath(object):
     def patch_index(self):
         """Merged PatchIndex from all Repos in the RepoPath."""
         if self._patch_index is None:
-            self._patch_index = spack.patch.PatchCache()
+            self._patch_index = spack.patch.PatchCache(repository=self)
             for repo in reversed(self.repos):
                 self._patch_index.update(repo.patch_index)
 
@@ -933,7 +817,6 @@ class RepoPath(object):
         """Given a spec, get the repository for its package."""
         # We don't @_autospec this function b/c it's called very frequently
         # and we want to avoid parsing str's into Specs unnecessarily.
-        namespace = None
         if isinstance(spec, spack.spec.Spec):
             namespace = spec.namespace
             name = spec.name
@@ -946,7 +829,7 @@ class RepoPath(object):
         if namespace:
             fullspace = python_package_for_repo(namespace)
             if fullspace not in self.by_namespace:
-                raise UnknownNamespaceError(namespace)
+                raise UnknownNamespaceError(namespace, name=name)
             return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
@@ -991,20 +874,34 @@ class RepoPath(object):
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def is_virtual(self, pkg_name, use_index=True):
-        """True if the package with this name is virtual, False otherwise.
-
-        Set `use_index` False when calling from a code block that could
-        be run during the computation of the provider index."""
+    def _have_name(self, pkg_name):
         have_name = pkg_name is not None
         if have_name and not isinstance(pkg_name, str):
             raise ValueError("is_virtual(): expected package name, got %s" % type(pkg_name))
-        if use_index:
-            return have_name and pkg_name in self.provider_index
-        else:
-            return have_name and (
-                not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
-            )
+        return have_name
+
+    def is_virtual(self, pkg_name):
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function use the provider index. If calling from a code block that
+        is used to construct the provider index use the ``is_virtual_safe`` function.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
+        have_name = self._have_name(pkg_name)
+        return have_name and pkg_name in self.provider_index
+
+    def is_virtual_safe(self, pkg_name):
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function doesn't use the provider index.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
+        have_name = self._have_name(pkg_name)
+        return have_name and (not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -1023,7 +920,7 @@ class Repo(object):
 
     """
 
-    def __init__(self, root):
+    def __init__(self, root, cache=None):
         """Instantiate a package repository from a filesystem path.
 
         Args:
@@ -1078,6 +975,7 @@ class Repo(object):
 
         # Indexes for this repository, computed lazily
         self._repo_index = None
+        self._cache = cache or spack.caches.misc_cache
 
     def real_name(self, import_name):
         """Allow users to import Spack packages using Python identifiers.
@@ -1189,10 +1087,10 @@ class Repo(object):
     def index(self):
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
-            self._repo_index = RepoIndex(self._pkg_checker, self.namespace)
-            self._repo_index.add_indexer("providers", ProviderIndexer())
-            self._repo_index.add_indexer("tags", TagIndexer())
-            self._repo_index.add_indexer("patches", PatchIndexer())
+            self._repo_index = RepoIndex(self._pkg_checker, self.namespace, cache=self._cache)
+            self._repo_index.add_indexer("providers", ProviderIndexer(self))
+            self._repo_index.add_indexer("tags", TagIndexer(self))
+            self._repo_index.add_indexer("patches", PatchIndexer(self))
         return self._repo_index
 
     @property
@@ -1291,8 +1189,25 @@ class Repo(object):
         return self._pkg_checker.last_mtime()
 
     def is_virtual(self, pkg_name):
-        """True if the package with this name is virtual, False otherwise."""
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function use the provider index. If calling from a code block that
+        is used to construct the provider index use the ``is_virtual_safe`` function.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
         return pkg_name in self.provider_index
+
+    def is_virtual_safe(self, pkg_name):
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function doesn't use the provider index.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
+        return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
     def get_pkg_class(self, pkg_name):
         """Get the class for the package out of its module.
@@ -1318,6 +1233,41 @@ class Repo(object):
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
+
+        new_cfg_settings = (
+            spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
+        )
+
+        overridden_attrs = getattr(cls, "overridden_attrs", {})
+        attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
+        # Clear any prior changes to class attributes in case the config has
+        # since changed
+        for key, val in overridden_attrs.items():
+            setattr(cls, key, val)
+        for key in attrs_exclusively_from_config:
+            delattr(cls, key)
+
+        # Keep track of every class attribute that is overridden by the config:
+        # if the config changes between calls to this method, we make sure to
+        # restore the original config values (in case the new config no longer
+        # sets attributes that it used to)
+        new_overridden_attrs = {}
+        new_attrs_exclusively_from_config = set()
+        for key, val in new_cfg_settings.items():
+            if hasattr(cls, key):
+                new_overridden_attrs[key] = getattr(cls, key)
+            else:
+                new_attrs_exclusively_from_config.add(key)
+
+            setattr(cls, key, val)
+        if new_overridden_attrs:
+            setattr(cls, "overridden_attrs", dict(new_overridden_attrs))
+        elif hasattr(cls, "overridden_attrs"):
+            delattr(cls, "overridden_attrs")
+        if new_attrs_exclusively_from_config:
+            setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
+        elif hasattr(cls, "attrs_exclusively_from_config"):
+            delattr(cls, "attrs_exclusively_from_config")
 
         return cls
 
@@ -1392,9 +1342,19 @@ def create_or_construct(path, namespace=None):
     return Repo(path)
 
 
-def _path(repo_dirs=None):
+def _path(configuration=None):
     """Get the singleton RepoPath instance for Spack."""
-    repo_dirs = repo_dirs or spack.config.get("repos")
+    configuration = configuration or spack.config.config
+    return create(configuration=configuration)
+
+
+def create(configuration):
+    """Create a RepoPath from a configuration object.
+
+    Args:
+        configuration (spack.config.Configuration): configuration object
+    """
+    repo_dirs = configuration.get("repos")
     if not repo_dirs:
         raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
     return RepoPath(*repo_dirs)
@@ -1404,7 +1364,8 @@ def _path(repo_dirs=None):
 path = llnl.util.lang.Singleton(_path)
 
 # Add the finder to sys.meta_path
-sys.meta_path.append(ReposFinder())
+REPOS_FINDER = ReposFinder()
+sys.meta_path.append(REPOS_FINDER)
 
 
 def all_package_names(include_virtuals=False):
@@ -1413,34 +1374,65 @@ def all_package_names(include_virtuals=False):
 
 
 @contextlib.contextmanager
-def additional_repository(repository):
-    """Adds temporarily a repository to the default one.
-
-    Args:
-        repository: repository to be added
-    """
-    path.put_first(repository)
-    yield
-    path.remove(repository)
-
-
-@contextlib.contextmanager
-def use_repositories(*paths_and_repos):
+def use_repositories(*paths_and_repos, **kwargs):
     """Use the repositories passed as arguments within the context manager.
 
     Args:
         *paths_and_repos: paths to the repositories to be used, or
             already constructed Repo objects
-
+        override (bool): if True use only the repositories passed as input,
+            if False add them to the top of the list of current repositories.
     Returns:
         Corresponding RepoPath object
     """
     global path
-    path, saved = RepoPath(*paths_and_repos), path
+    # TODO (Python 2.7): remove this kwargs on deprecation of Python 2.7 support
+    override = kwargs.get("override", True)
+    paths = [getattr(x, "root", x) for x in paths_and_repos]
+    scope_name = "use-repo-{}".format(uuid.uuid4())
+    repos_key = "repos:" if override else "repos"
+    spack.config.config.push_scope(
+        spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
+    )
+    path, saved = create(configuration=spack.config.config), path
     try:
         yield path
     finally:
+        spack.config.config.remove_scope(scope_name=scope_name)
         path = saved
+
+
+class MockRepositoryBuilder(object):
+    """Build a mock repository in a directory"""
+
+    def __init__(self, root_directory, namespace=None):
+        namespace = namespace or "".join(random.choice(string.ascii_uppercase) for _ in range(10))
+        self.root, self.namespace = create_repo(str(root_directory), namespace)
+
+    def add_package(self, name, dependencies=None):
+        """Create a mock package in the repository, using a Jinja2 template.
+
+        Args:
+            name (str): name of the new package
+            dependencies (list): list of ("dep_spec", "dep_type", "condition") tuples.
+                Both "dep_type" and "condition" can default to ``None`` in which case
+                ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
+        """
+        dependencies = dependencies or []
+        context = {"cls_name": spack.util.naming.mod_to_class(name), "dependencies": dependencies}
+        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
+        text = template.render(context)
+        package_py = self.recipe_filename(name)
+        fs.mkdirp(os.path.dirname(package_py))
+        with open(package_py, "w") as f:
+            f.write(text)
+
+    def remove(self, name):
+        package_py = self.recipe_filename(name)
+        shutil.rmtree(os.path.dirname(package_py))
+
+    def recipe_filename(self, name):
+        return os.path.join(self.root, "packages", name, "package.py")
 
 
 class RepoError(spack.error.SpackError):
@@ -1471,7 +1463,7 @@ class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
     def __init__(self, name, repo=None):
-        msg = None
+        msg = "Attempting to retrieve anonymous package."
         long_msg = None
         if name:
             if repo:
@@ -1488,8 +1480,6 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = long_msg.format(name)
             else:
                 long_msg = "You may need to run 'spack clean -m'."
-        else:
-            msg = "Attempting to retrieve anonymous package."
 
         super(UnknownPackageError, self).__init__(msg, long_msg)
         self.name = name
@@ -1498,8 +1488,12 @@ class UnknownPackageError(UnknownEntityError):
 class UnknownNamespaceError(UnknownEntityError):
     """Raised when we encounter an unknown namespace"""
 
-    def __init__(self, namespace):
-        super(UnknownNamespaceError, self).__init__("Unknown namespace: %s" % namespace)
+    def __init__(self, namespace, name=None):
+        msg, long_msg = "Unknown namespace: {}".format(namespace), None
+        if name == "yaml":
+            long_msg = "Did you mean to specify a filename with './{}.{}'?"
+            long_msg = long_msg.format(namespace, name)
+        super(UnknownNamespaceError, self).__init__(msg, long_msg)
 
 
 class FailedConstructorError(RepoError):

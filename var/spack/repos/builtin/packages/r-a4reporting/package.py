@@ -14,6 +14,7 @@ class RA4reporting(RPackage):
 
     bioc = "a4Reporting"
 
+    version("1.46.0", commit="00b82d25bef4d518ae92f615d3a6f7931c0618dc")
     version("1.44.0", commit="bfe83507daf53e2e327474ea3012f0dc920efac1")
     version("1.42.0", commit="b0d715b9cdac80bc412f0a9a6b33941c4a7582bb")
     version("1.38.0", commit="cd3cf244e7a299b2485684ed15519cbbda1c590f")

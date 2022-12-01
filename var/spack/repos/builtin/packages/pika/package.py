@@ -17,7 +17,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
 
-    version("0.9.0", branch="c349b2a96476d6974d2421288ca4d2e14ef9e5897d44cd7d5343165faa2d1299")
+    version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
+    version("0.9.0", sha256="c349b2a96476d6974d2421288ca4d2e14ef9e5897d44cd7d5343165faa2d1299")
     version("0.8.0", sha256="058e82d7c8f95badabe52bbb4682d55aadf340d67ced1226c0673b4529adc182")
     version("0.7.0", sha256="e1bf978c88515f7af28ee47f98b795ffee521c15b39877ea4cfb405f31d507ed")
     version("0.6.0", sha256="cb4ebd7b92da39ec4df7b0d05923b94299d6ee2f2f49752923ffa2266ca76568")
@@ -98,7 +99,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
-    depends_on("whip", when="@0.9:")
+    conflicts("tracy-client@0.9:", when="@:0.9")
+    depends_on("whip+rocm", when="@0.9: +rocm")
+    depends_on("whip+cuda", when="@0.9: +cuda")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
@@ -150,7 +153,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
                 args += [self.define("__skip_rocmclang", True)]
         if self.spec.satisfies("@0.8: +rocm"):
             rocm_archs = spec.variants["amdgpu_target"].value
-            rocm_archs = ";".join(rocm_archs)
-            args.append(self.define("CMAKE_HIP_ARCHITECTURES", rocm_archs))
+            if "none" not in rocm_archs:
+                rocm_archs = ";".join(rocm_archs)
+                args.append(self.define("CMAKE_HIP_ARCHITECTURES", rocm_archs))
 
         return args

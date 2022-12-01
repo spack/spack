@@ -19,13 +19,16 @@ class RGooglesheets4(RPackage):
 
     cran = "googlesheets4"
 
+    version("1.0.1", sha256="284ecbce98944093cb065c1b0b32074eae7b45fd74b87d7815c7ca6deca76591")
     version("1.0.0", sha256="0a107d76aac99d6db48d97ce55810c1412b2197f457b8476f676169a36c7cc7a")
 
     depends_on("r@3.3:", type=("build", "run"))
+    depends_on("r@3.4:", type=("build", "run"), when="@1.0.1:")
     depends_on("r-cellranger", type=("build", "run"))
     depends_on("r-cli@3.0.0:", type=("build", "run"))
     depends_on("r-curl", type=("build", "run"))
     depends_on("r-gargle@1.2.0", type=("build", "run"))
+    depends_on("r-gargle@1.2.0:", type=("build", "run"), when="@1.0.1:")
     depends_on("r-glue@1.3.0:", type=("build", "run"))
     depends_on("r-googledrive@2.0.0:", type=("build", "run"))
     depends_on("r-httr", type=("build", "run"))
@@ -34,5 +37,6 @@ class RGooglesheets4(RPackage):
     depends_on("r-purrr", type=("build", "run"))
     depends_on("r-rematch2", type=("build", "run"))
     depends_on("r-rlang@0.4.11:", type=("build", "run"))
+    depends_on("r-rlang@1.0.2:", type=("build", "run"), when="@1.0.1:")
     depends_on("r-tibble@2.1.1:", type=("build", "run"))
     depends_on("r-vctrs@0.2.3:", type=("build", "run"))

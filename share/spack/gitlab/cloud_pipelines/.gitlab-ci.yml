@@ -33,6 +33,9 @@ default:
 .generate:
   stage: generate
   script:
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
     - . "./share/spack/setup-env.sh"
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
@@ -41,6 +44,8 @@ default:
       --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  after_script:
+    - cat /proc/loadavg || true
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -91,6 +96,9 @@ protected-publish:
   extends: [ ".protected" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
+  retry:
+    max: 2
+    when: ["runner_system_failure", "stuck_or_timeout_failure"]
   variables:
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
@@ -267,11 +275,11 @@ e4s-mac-protected-build:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
 
 e4s-protected-generate:
   extends: [ ".e4s", ".protected-generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -531,9 +539,11 @@ radiuss-aws-aarch64-protected-build:
 
 data-vis-sdk-pr-generate:
   extends: [ ".data-vis-sdk", ".pr-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 data-vis-sdk-protected-generate:
   extends: [ ".data-vis-sdk", ".protected-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 data-vis-sdk-pr-build:
   extends: [ ".data-vis-sdk", ".pr-build" ]
