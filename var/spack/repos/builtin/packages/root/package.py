@@ -170,7 +170,9 @@ class Root(CMakePackage):
     variant(
         "veccore", default=False, description="Enable support for VecCore SIMD abstraction library"
     )
-    variant("vmc", when="@:6.25", default=False, description="Enable the Virtual Monte Carlo interface")
+    variant(
+        "vmc", when="@:6.25", default=False, description="Enable the Virtual Monte Carlo interface"
+    )
     variant(
         "webgui",
         default=True,
