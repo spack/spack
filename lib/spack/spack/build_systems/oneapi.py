@@ -103,6 +103,8 @@ class IntelOneApiPackage(Package):
 
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
+        # Only modify the environment if package is not an external provided via
+        # environment module.
         if not self.spec.external_modules:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
