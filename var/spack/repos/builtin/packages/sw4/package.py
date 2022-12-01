@@ -14,7 +14,6 @@ class Sw4(MakefilePackage):
     git = "https://github.com/geodynamics/sw4.git"
 
     maintainers = ["houjun", "andersp"]
-
     # tags = ["e4s"]
 
     version("3.0-beta2", tag="v3.0-beta2")
@@ -64,14 +63,14 @@ class Sw4(MakefilePackage):
         if spec.compiler.name in ["clang", "apple-clang", "gcc"]:
             fc = Executable(self.compiler.fc)
             libgfortran = fc(
-            	"--print-file-name", "libgfortran." + dso_suffix, output=str
+                "--print-file-name", "libgfortran." + dso_suffix, output=str
             ).strip()
             if libgfortran == "libgfortran." + dso_suffix:
-            	libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
-            os.environ["EXTRA_LINK_FLAGS"] += " -L{0} -lgfortran ".format(os.path.dirname(libgfortran))
+                libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
+            os.environ["EXTRA_LINK_FLAGS"] += \
+                    " -L{0} -lgfortran ".format(os.path.dirname(libgfortran))
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install("optimize_mp/sw4", prefix.bin)
         install_tree("pytest", prefix.test)
-
