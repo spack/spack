@@ -103,9 +103,7 @@ class DarshanUtil(AutotoolsPackage):
 
     @run_after("install")
     def _copy_test_inputs(self):
-        test_inputs = [
-            self.test_log_path
-        ]
+        test_inputs = [self.test_log_path]
         self.cache_extra_test_sources(test_inputs)
 
     def _test_parser(self):
@@ -120,9 +118,7 @@ class DarshanUtil(AutotoolsPackage):
             r"MPI-IO\s+-1\s+\w+\s+MPIIO_INDEP_OPENS\s+\d+",
             r"STDIO\s+0\s+\w+\s+STDIO_OPENS\s+\d+",
         ]
-        logname = self.test_suite.current_test_cache_dir.join(
-            self.test_log_path
-        )
+        logname = self.test_suite.current_test_cache_dir.join(self.test_log_path)
         exe = "darshan-parser"
         options = [logname]
         status = [0]
