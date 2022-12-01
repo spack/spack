@@ -441,25 +441,6 @@ def needs_text_relocation(m_type, m_subtype):
     return m_type == "text"
 
 
-def _replace_prefix_text(filename, compiled_prefixes):
-    """Replace all the occurrences of the old install prefix with a
-    new install prefix in text files that are utf-8 encoded.
-
-    Args:
-        filename (str): target text file (utf-8 encoded)
-        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are
-        precompiled regex of the old prefixes and the values are the new
-        prefixes (uft-8 encoded)
-    """
-    with open(filename, "rb+") as f:
-        data = f.read()
-        f.seek(0)
-        for orig_prefix_rexp, new_bytes in compiled_prefixes.items():
-            data = orig_prefix_rexp.sub(new_bytes, data)
-        f.write(data)
-        f.truncate()
-
-
 def apply_binary_replacements(f, prefix_to_prefix, suffix_safety_size=7):
     """
     Given a file opened in rb+ mode, apply the string replacements as
@@ -816,10 +797,32 @@ def utf8_path_to_binary_regex(prefix):
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
 
 
+def byte_strings_to_single_binary_regex(prefixes):
+    all_prefixes = b"|".join(re.escape(p) for p in prefixes)
+    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
+
+
 def utf8_paths_to_single_binary_regex(prefixes):
     """Create a (binary) regex that matches any input path in utf8"""
-    all_prefixes = b"|".join(re.escape(prefix).encode("utf-8") for prefix in prefixes)
-    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
+    return byte_strings_to_single_binary_regex(p.encode("utf-8") for p in prefixes)
+
+
+def _replace_prefix_text_file(file, regex, prefix_to_prefix):
+    """Given a text file opened in rb+, substitute all old with new prefixes and write
+    in-place (file size may grow or shrink)."""
+
+    def replacement(match):
+        return match.group(1) + prefix_to_prefix[match.group(2)] + match.group(3)
+
+    data = file.read()
+    file.seek(0)
+    file.write(re.sub(regex, replacement, data))
+    file.truncate()
+
+
+def _replace_prefix_text(filename, regex, prefix_to_prefix):
+    with open(filename, "rb+") as f:
+        _replace_prefix_text_file(f, regex, prefix_to_prefix)
 
 
 def unsafe_relocate_text(files, prefixes, concurrency=32):
@@ -841,21 +844,15 @@ def unsafe_relocate_text(files, prefixes, concurrency=32):
     # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
     # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
 
-    compiled_prefixes = collections.OrderedDict({})
+    # Transform to binary string
+    prefix_to_prefix = OrderedDict(
+        (k.encode("utf-8"), v.encode("utf-8")) for (k, v) in prefixes.items()
+    )
 
-    for orig_prefix, new_prefix in prefixes.items():
-        if orig_prefix != new_prefix:
-            orig_prefix_rexp = utf8_path_to_binary_regex(orig_prefix)
-            new_bytes = b"\\1%s\\2" % new_prefix.replace("\\", r"\\").encode("utf-8")
-            compiled_prefixes[orig_prefix_rexp] = new_bytes
+    # Create a regex of the form (pre check)(prefix 1|prefix 2|prefix 3)(post check).
+    regex = byte_strings_to_single_binary_regex(prefix_to_prefix.keys())
 
-    # Do relocations on text that refers to the install tree
-    # multiprocesing.ThreadPool.map requires single argument
-
-    args = []
-    for filename in files:
-        args.append((filename, compiled_prefixes))
-
+    args = [(filename, regex, prefix_to_prefix) for filename in files]
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
     try:
         tp.map(llnl.util.lang.star(_replace_prefix_text), args)
