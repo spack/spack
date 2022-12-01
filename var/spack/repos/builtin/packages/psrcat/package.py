@@ -8,7 +8,7 @@ from spack.package import *
 
 class Psrcat(MakefilePackage):
     """ATNF Pulsar Catalogue
-    A catalogue of pulsars provided by the Australian Telescope National 
+    A catalogue of pulsars provided by the Australian Telescope National
     Facility"""
 
     homepage = "https://www.atnf.csiro.au/research/pulsar/psrcat/"
