@@ -13,6 +13,7 @@ class Ultraliser(CMakePackage):
     git = "https://github.com/BlueBrain/Ultraliser.git"
 
     version('develop', branch="master")
+    version('0.4.0', tag="v0.4.0")
     version('0.3.0', tag="v0.3.0")
 
     depends_on('libtiff')
