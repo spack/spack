@@ -53,7 +53,6 @@ import spack.build_systems.meson
 import spack.build_systems.python
 import spack.builder
 import spack.config
-import spack.install_test
 import spack.main
 import spack.package_base
 import spack.paths
@@ -1075,19 +1074,18 @@ def _setup_pkg_and_run(
                 # 'pkg' is not defined yet
                 pass
         elif context == "test":
-            logfile = os.path.join(
-                pkg.test_suite.stage, spack.install_test.TestSuite.test_log_name(pkg.spec)
-            )
+            logfile = os.path.join(pkg.test_suite.stage, pkg.test_suite.test_log_name(pkg.spec))
 
         error_msg = str(exc)
         if isinstance(exc, (spack.multimethod.NoSuchMethodError, AttributeError)):
+            process = "test the installation" if context == "test" else "build from sources"
             error_msg = (
-                "The '{}' package cannot find an attribute while trying to build "
-                "from sources. This might be due to a change in Spack's package format "
+                "The '{}' package cannot find an attribute while trying to {}. "
+                "This might be due to a change in Spack's package format "
                 "to support multiple build-systems for a single package. You can fix this "
-                "by updating the build recipe, and you can also report the issue as a bug. "
+                "by updating the {} recipe, and you can also report the issue as a bug. "
                 "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
-            ).format(pkg.name)
+            ).format(pkg.name, process, context)
             error_msg = colorize("@*R{{{}}}".format(error_msg))
             error_msg = "{}\n\n{}".format(str(exc), error_msg)
 

@@ -1065,15 +1065,26 @@ class Repo(object):
 
         # Install patch files needed by the package.
         fs.mkdirp(path)
-        for patch in itertools.chain.from_iterable(spec.package.patches.values()):
-            if patch.path:
-                if os.path.exists(patch.path):
-                    fs.install(patch.path, path)
-                else:
-                    tty.warn("Patch file did not exist: %s" % patch.path)
+        try:
+            for patch in itertools.chain.from_iterable(spec.package.patches.values()):
+
+                if patch.path:
+                    if os.path.exists(patch.path):
+                        fs.install(patch.path, path)
+                    else:
+                        tty.warn("Patch file did not exist: %s" % patch.path)
+        except AssertionError as e:
+            # virtual specs won't have patches to install
+            tty.debug(
+                "Could not copy patch files for virtual package {0}: {1}".format(spec.name, str(e))
+            )
 
         # Install the package.py file itself.
-        fs.install(self.filename_for_package_name(spec.name), path)
+        try:
+            fs.install(self.filename_for_package_name(spec.name), path)
+        except IOError as e:
+            # package-less virtuals won't have a package.py to copy
+            tty.debug("Could not copy package.py for {0}: {1}".format(spec.name, str(e)))
 
     def purge(self):
         """Clear entire package instance cache."""

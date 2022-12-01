@@ -714,9 +714,8 @@ spack:
             e.concretize()
 
     err = str(exc)
-    assert "missing include" in err
-    assert "/no/such/directory" in err
-    assert os.path.join("no", "such", "file.yaml") in err
+    print(err)
+    assert "2 missing include path" in err
     assert ev.active_environment() is None
 
 

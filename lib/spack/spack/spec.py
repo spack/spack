@@ -1632,7 +1632,9 @@ class Spec(object):
 
     @property
     def package(self):
-        assert self.concrete, "Spec.package can only be called on concrete specs"
+        assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
+            self.name
+        )
         if not self._package:
             self._package = spack.repo.path.get(self)
         return self._package

@@ -26,7 +26,9 @@ class PrintingPackage(Package):
 
         print("AFTER INSTALL")
 
-    def test(self):
-        print("BEFORE TEST")
-        self.run_test("true")  # run /bin/true
-        print("AFTER TEST")
+    def test_print(self):
+        """Test python print example."""
+        python = which("python")
+        # Have to include output and error args to retain for test reporting
+        python("-c", 'print("Running test_print")', output=str.split, error=str.split)
+        python("-c", 'print("And a second command")', output=str.split, error=str.split)

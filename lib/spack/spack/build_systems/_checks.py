@@ -12,6 +12,7 @@ import spack.installer
 import spack.relocate
 import spack.spec
 import spack.store
+from spack.install_test import test_phase_callbacks
 
 
 def sanity_check_prefix(builder: spack.builder.Builder):
@@ -108,7 +109,7 @@ def execute_build_time_tests(builder: spack.builder.Builder):
         builder: builder prescribing the test callbacks. The name of the callbacks is
             stored as a list of strings in the ``build_time_test_callbacks`` attribute.
     """
-    builder.pkg.run_test_callbacks(builder, builder.build_time_test_callbacks, "build")
+    test_phase_callbacks(builder, "build", builder.build_time_test_callbacks)
 
 
 def execute_install_time_tests(builder: spack.builder.Builder):
@@ -118,7 +119,7 @@ def execute_install_time_tests(builder: spack.builder.Builder):
         builder: builder prescribing the test callbacks. The name of the callbacks is
             stored as a list of strings in the ``install_time_test_callbacks`` attribute.
     """
-    builder.pkg.run_test_callbacks(builder, builder.install_time_test_callbacks, "install")
+    test_phase_callbacks(builder, "install", builder.install_time_test_callbacks)
 
 
 class BaseBuilder(spack.builder.Builder):

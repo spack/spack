@@ -87,7 +87,10 @@ def test_test_uninstalled(mock_packages, install_mockery, mock_test_stage):
 
 @pytest.mark.parametrize(
     "arguments,status,msg",
-    [({}, "SKIPPED", "Skipped"), ({"externals": True}, "NO-TESTS", "No tests")],
+    [
+        ({}, spack.install_test.TestStatus.SKIPPED, "Skipped"),
+        ({"externals": True}, spack.install_test.TestStatus.NO_TESTS, "No tests"),
+    ],
 )
 def test_test_external(
     mock_packages, install_mockery, mock_test_stage, monkeypatch, arguments, status, msg
@@ -101,7 +104,7 @@ def test_test_external(
     test_suite = spack.install_test.TestSuite([spec])
     test_suite(**arguments)
 
-    ensure_results(test_suite.results_file, status)
+    ensure_results(test_suite.results_file, str(status))
     if arguments:
         ensure_results(test_suite.log_file_for_spec(spec), msg)
 
@@ -181,3 +184,32 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
     with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
         spack.install_test.get_test_suite(name)
     assert "many suites named" in str(exc_info)
+
+
+@pytest.mark.parametrize(
+    "virtuals,names",
+    [
+        (False, False),
+        (False, True),
+        (True, False),
+        (True, True),
+    ],
+)
+def test_test_functions(mock_packages, install_mockery, virtuals, names):
+    spec = spack.spec.Spec("printing-package").concretized()
+    expected = "printing-package.test_print" if names else "test_print"
+
+    def check_results(fns):
+        tests = fns if names else [f.__name__ for f in fns]
+        assert len(tests) == 1, "expecting only one test function"
+        assert tests[0] == expected
+
+    fns = spack.install_test.test_functions(spec.package, add_virtuals=virtuals, names=names)
+    check_results(fns)
+
+    fns = spack.install_test.test_functions(
+        spec.package.__class__,
+        add_virtuals=virtuals,
+        names=names,
+    )
+    check_results(fns)

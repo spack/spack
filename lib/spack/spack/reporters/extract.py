@@ -18,7 +18,8 @@ returns_regexp = re.compile(r"\[([0-9 ,]*)\]")
 skip_msgs = ["Testing package", "Results for", "Detected the following"]
 skip_regexps = [re.compile(r"{0}".format(msg)) for msg in skip_msgs]
 
-status_values = ["FAILED", "PASSED", "NO-TESTS"]
+# Status values need to match those in spack.install_test.TestStatus
+status_values = ["FAILED", "PASSED", "NO_TESTS"]
 status_regexps = [re.compile(r"^({0})".format(stat)) for stat in status_values]
 
 
@@ -96,14 +97,13 @@ def status(line):
         match = regex.search(line)
         if match:
             stat = match.group(0)
-            stat = "notrun" if stat == "NO-TESTS" else stat
+            stat = "notrun" if stat == "NO_TESTS" else stat
             return stat.lower()
 
 
 def extract_test_parts(default_name, outputs):
     parts = []
     part = {}
-    testdesc = ""
     last_time = None
     curr_time = None
     for line in outputs:
@@ -137,39 +137,28 @@ def extract_test_parts(default_name, outputs):
                 if msg.startswith("Installing"):
                     continue
 
-                # New command means the start of a new test part
-                if msg.startswith("'") and msg.endswith("'"):
+                # New test: means new test part assumed to be in the form
+                # "test: <name>: <desc>".
+                if msg.startswith("test:"):
                     # Update the last part processed
                     process_part_end(part, curr_time, last_time)
 
                     part = new_part()
-                    part["command"] = msg
-                    part["name"] = part_name(msg)
+                    desc = msg.split(":")
+                    part["name"] = desc[1].strip()
+                    part["desc"] = ":".join(desc[2:]).strip()
                     parts.append(part)
 
-                    # Save off the optional test description if it was
-                    # tty.debuged *prior to* the command and reset
-                    if testdesc:
-                        part["desc"] = testdesc
-                        testdesc = ""
-
+                # Command should be a command associated with the last test part
+                elif msg.startswith("'") and msg.endswith("'"):
+                    if part["command"]:
+                        part["command"] += "; " + msg.replace("'", "")
+                    else:
+                        part["command"] = msg.replace("'", "")
                 else:
                     # Update the last part processed since a new log message
                     # means a non-test action
                     process_part_end(part, curr_time, last_time)
-
-                    if testdesc:
-                        # We had a test description but no command so treat
-                        # as a new part (e.g., some import tests)
-                        part = new_part()
-                        part["name"] = "_".join(testdesc.split())
-                        part["command"] = "unknown"
-                        part["desc"] = testdesc
-                        parts.append(part)
-                        process_part_end(part, curr_time, curr_time)
-
-                    # Assuming this is a description for the next test part
-                    testdesc = msg
 
             else:
                 tty.debug("Did not recognize test output '{0}'".format(line))

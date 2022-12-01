@@ -17,5 +17,9 @@ class TestFail(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-    def test(self):
-        self.run_test("true", expected=["not in the output"])
+    def test_noop(self):
+        """trigger test failure"""
+        python = which("python")
+
+        # Deliberately trigger a command failure
+        python("-c", "noop", output=str.split, error=str.split)
