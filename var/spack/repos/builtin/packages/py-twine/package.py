@@ -19,7 +19,7 @@ class PyTwine(PythonPackage):
     depends_on("python@3.7:", when="@4:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@45:", when="@3.4.1:", type="build")
-    depends_on("py-setuptools@0.7.0:", type=("build", "run"))
+    depends_on("py-setuptools@0.7.0:", type="build")
     depends_on("py-setuptools-scm+toml@6:", when="@3.4.2:", type="build")
 
     depends_on("py-pkginfo@1.8.1:", when="@3.7:", type=("build", "run"))
