@@ -63,11 +63,12 @@ class Sw4(MakefilePackage):
         # From spack/trilinos
         if spec.compiler.name in ["clang", "apple-clang", "gcc"]:
             fc = Executable(self.compiler.fc)
-            libgfortran = fc( "--print-file-name", "libgfortran." + dso_suffix, output=str).strip()
+            libgfortran = fc("--print-file-name", "libgfortran." + dso_suffix, output=str).strip()
             if libgfortran == "libgfortran." + dso_suffix:
                 libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
             os.environ["EXTRA_LINK_FLAGS"] += " -L{0} -lgfortran ".format(
-                os.path.dirname(libgfortran))
+                os.path.dirname(libgfortran)
+            )
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
