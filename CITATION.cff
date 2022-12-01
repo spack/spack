@@ -16,7 +16,7 @@
 #               Collette, Michael R. and Lee, Gregory L. and
 #               Moody, Adam and de Supinski, Bronis R. and Futral, Scott},
 #     doi = {10.1145/2807591.2807623},
-#     month = {November 15-20},
+#     month = {11},
 #     note = {LLNL-CONF-669890},
 #     series = {Supercomputing 2015 (SC’15)},
 #     title = {{The Spack Package Manager: Bringing Order to HPC Software Chaos}},
@@ -25,7 +25,7 @@
 # }
 #
 # And here's the CITATION.cff format:
-#
+# https://github.com/citation-file-format/citation-file-format/blob/main/schema-guide.md
 cff-version: 1.2.0
 message: "If you are referencing Spack in a publication, please cite the paper below."
 preferred-citation:
@@ -53,6 +53,6 @@ preferred-citation:
     city: "Austin"
     region: "Texas"
     country: "USA"
-  month: November 15-20
+  month: 11
   year: 2015
   notes: LLNL-CONF-669890
