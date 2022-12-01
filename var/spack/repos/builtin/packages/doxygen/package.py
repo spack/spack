@@ -39,6 +39,8 @@ class Doxygen(CMakePackage):
 
     variant("mscgen", default=False, description="Build with support for code graphs from mscgen.")
 
+    tags = ["build-tools"]
+
     executables = ["doxygen"]
 
     @classmethod
