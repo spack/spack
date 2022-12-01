@@ -25,7 +25,7 @@ class Psrchive(AutotoolsPackage):
     # version specified in
     # https://github.com/lwa-project/pulsar/blob/master/SoftwareStack.md
     # as of Nov 23 2022
-    version("10-17-2020", commit="ca12b4a279f3d4adcca223508116d9d270df8cc6")
+    version("2020-10-17", commit="ca12b4a279f3d4adcca223508116d9d270df8cc6")
 
     variant("mpi", default=True, description="Compile with MPI")
     variant("mkl", default=False, description="Compile with MKL")
