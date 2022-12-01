@@ -17,15 +17,15 @@ class PySpython(PythonPackage):
     version("0.2.14", sha256="49e22fbbdebe456b27ca17d30061489db8e0f95e62be3623267a23b85e3ce0f0")
 
     variant(
-        "platform",
+        "runtime",
         default="none",
-        description="Container platform installed by Spack for this package",
+        description="Container runtime installed by Spack for this package",
         values=("none", "singularityce", "singularity"),
         multi=False,
     )
 
-    depends_on("singularityce@3.5.2:", when="platform=singularityce", type="run")
-    depends_on("singularity@3.5.2:", when="platform=singularity", type="run")
+    depends_on("singularityce@3.5.2:", when="runtime=singularityce", type="run")
+    depends_on("singularity@3.5.2:", when="runtime=singularity", type="run")
 
     depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
