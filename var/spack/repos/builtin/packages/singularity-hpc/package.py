@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class SingularityHpc(PythonPackage):
-    """Local filesystem registry for containers (intended for HPC) 
+    """Local filesystem registry for containers (intended for HPC)
     using Lmod or Environment Modules. Works for users and admins.
     """
 
