@@ -95,11 +95,15 @@ class DarshanUtil(AutotoolsPackage):
     @property
     def test_log_path(self):
         if self.version < Version("3.4.1"):
-            return join_path("darshan-test", "example-output",
-                "mpi-io-test-x86_64-{0}.darshan".format(self.version))
+            return join_path(
+                "darshan-test",
+                "example-output",
+                "mpi-io-test-x86_64-{0}.darshan".format(self.version)
+            )
         else:
-            return join_path("darshan-util", "pydarshan", "darshan", "tests", "input",
-                "sample.darshan")
+            return join_path(
+                "darshan-util", "pydarshan", "darshan", "tests", "input", "sample.darshan"
+            )
 
     @run_after("install")
     def _copy_test_inputs(self):
