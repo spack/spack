@@ -19,6 +19,7 @@ class PyRequestsCache(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-poetry@1.0.0:", type="build")
 
     depends_on("py-requests@2.22:", type=("build", "run"))
     depends_on("py-urllib3@1.25.5:", type=("build", "run"))
