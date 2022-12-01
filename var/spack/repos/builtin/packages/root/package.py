@@ -297,6 +297,7 @@ class Root(CMakePackage):
     # Incompatible variants
     if sys.platform != "darwin":
         conflicts("+opengl", when="~x", msg="OpenGL requires X")
+    conflicts("+math", when="~gsl", msg="Math requires GSL")
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
