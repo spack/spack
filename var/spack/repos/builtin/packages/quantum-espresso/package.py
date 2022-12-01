@@ -582,7 +582,7 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
                 filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
 
         # QE 6.6 and later has parallel builds fixed
-        if spec.satisfies("@:6.5"):
+        if spec.satisfies("@:6.7"):
             parallel_build_on = False
         else:
             parallel_build_on = True
