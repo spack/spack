@@ -7,6 +7,7 @@ import os
 
 from spack.package import *
 
+
 class Sw4(MakefilePackage):
     """This package builds SW4 with MPI, OpenMP, HDF5, FFTW, PROJ, and ZFP."""
 
@@ -39,36 +40,34 @@ class Sw4(MakefilePackage):
     depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     def edit(self, spec, prefix):
-        os.environ["CXX"]               = spec["mpi"].mpicxx
-        os.environ["FC"]                = spec["mpi"].mpifc
-        os.environ["proj"]              = "yes"
-        os.environ["openmp"]            = "yes"
-        os.environ["hdf5"]              = "yes"
-        os.environ["zfp"]               = "yes"
-        os.environ["fftw"]              = "yes"
-        os.environ["SW4ROOT"]           = spec["proj"].prefix
-        os.environ["HDF5ROOT"]          = spec["hdf5"].prefix
-        os.environ["H5ZROOT"]           = spec["h5z-zfp"].prefix
-        os.environ["ZFPROOT"]           = spec["zfp"].prefix
-        os.environ["FFTWHOME"]          = spec["fftw"].prefix
-        os.environ["EXTRA_LINK_FLAGS"]  = "-lstdc++ -lm -ldl "
+        os.environ["CXX"] = spec["mpi"].mpicxx
+        os.environ["FC"] = spec["mpi"].mpifc
+        os.environ["proj"] = "yes"
+        os.environ["openmp"] = "yes"
+        os.environ["hdf5"] = "yes"
+        os.environ["zfp"] = "yes"
+        os.environ["fftw"] = "yes"
+        os.environ["SW4ROOT"] = spec["proj"].prefix
+        os.environ["HDF5ROOT"] = spec["hdf5"].prefix
+        os.environ["H5ZROOT"] = spec["h5z-zfp"].prefix
+        os.environ["ZFPROOT"] = spec["zfp"].prefix
+        os.environ["FFTWHOME"] = spec["fftw"].prefix
+        os.environ["EXTRA_LINK_FLAGS"] = "-lstdc++ -lm -ldl "
         os.environ["EXTRA_LINK_FLAGS"] += spec["blas"].libs.ld_flags + " "
         os.environ["EXTRA_LINK_FLAGS"] += spec["blas"].libs.ld_flags + " "
 
         if "+openmp" in spec:
             if spec.satisfies("%apple-clang"):
                 os.environ["EXTRA_LINK_FLAGS"] += spec["llvm-openmp"].libs.ld_flags + " "
-    
+
         # From spack/trilinos
         if spec.compiler.name in ["clang", "apple-clang", "gcc"]:
             fc = Executable(self.compiler.fc)
-            libgfortran = fc(
-                "--print-file-name", "libgfortran." + dso_suffix, output=str
-            ).strip()
+            libgfortran = fc( "--print-file-name", "libgfortran." + dso_suffix, output=str).strip()
             if libgfortran == "libgfortran." + dso_suffix:
                 libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
-            os.environ["EXTRA_LINK_FLAGS"] += \
-                    " -L{0} -lgfortran ".format(os.path.dirname(libgfortran))
+            os.environ["EXTRA_LINK_FLAGS"] += " -L{0} -lgfortran ".format(
+                os.path.dirname(libgfortran))
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
