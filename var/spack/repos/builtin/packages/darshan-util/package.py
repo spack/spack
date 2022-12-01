@@ -98,7 +98,7 @@ class DarshanUtil(AutotoolsPackage):
             return join_path(
                 "darshan-test",
                 "example-output",
-                "mpi-io-test-x86_64-{0}.darshan".format(self.version)
+                "mpi-io-test-x86_64-{0}.darshan".format(self.version),
             )
         else:
             return join_path(
