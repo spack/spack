@@ -72,7 +72,6 @@ class NeurodamusCore(SimModel):
     depends_on("hdf5~mpi", when='+hdf5~mpi')
     depends_on('reportinglib',         when='+report')
     depends_on('libsonata-report',     when='+report')
-    depends_on('reportinglib+profile', when='+report+profile')
     depends_on('synapsetool',          when='+synapsetool')
     depends_on('py-mvdtool',           when='+mvdtool', type='run')
     # If external & static, we must bring their dependencies.

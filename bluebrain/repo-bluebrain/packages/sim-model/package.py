@@ -33,21 +33,18 @@ class SimModel(Package):
     homepage = ""
 
     variant('coreneuron',  default=False, description="Enable CoreNEURON Support")
-    variant('profile',     default=False, description="Enable profiling using Tau")
     variant('caliper',     default=False, description="Enable Caliper instrumentation")
 
     # neuron/corenrn get linked automatically when using nrnivmodl[-core]
     # Dont duplicate the link dependency (only 'build' and 'run')
     depends_on('neuron+mpi', type=('build', 'run'))
-    depends_on('coreneuron', when='+coreneuron', type=('build', 'run'))
-    depends_on('neuron+profile', when='+profile', type=('build', 'run'))
-    depends_on('coreneuron+profile', when='+coreneuron+profile', type=('build', 'run'))
-    depends_on('tau', when='+profile')
+    depends_on('coreneuron', when='+coreneuron ^neuron@:8.99', type=('build', 'run'))
+    depends_on('coreneuron+caliper', when='+coreneuron+caliper ^neuron@:8.99', type=('build', 'run'))
     depends_on('neuron+caliper', when='+caliper', type=('build', 'run'))
-    depends_on('coreneuron+caliper', when='+coreneuron+caliper', type=('build', 'run'))
     depends_on('gettext', when='^neuron+binary')
 
     conflicts('^neuron~python', when='+coreneuron')
+    conflicts('^neuron~coreneuron', when='+coreneuron')
 
     phases = ('build', 'install')
 
@@ -61,6 +58,21 @@ class SimModel(Package):
     @property
     def lib_suffix(self):
         return ('_' + self.mech_name) if self.mech_name else ''
+
+    @property
+    def nrnivmodl_core_exe(self):
+        """with +coreneuron variant enabled in neuron, nrnivmodl-core
+           binary can come from two places: coreneuron or neuron. Depending
+           upon the spec that user has used, grab appropriate nrnivmodl-core
+           binary. Note that `which` uses $PATH to find out binary and it could
+           be "wrong" one i.e. coreneuron built under neuron may not have linked
+           with sonatareport and reportinglib.
+           TODO: this is temporary change until we move to 9.0a soon.
+        """
+        if self.spec.satisfies('^coreneuron'):
+            return which("nrnivmodl-core", path=self.spec['coreneuron'].prefix.bin, required=True)
+        else:
+            return which("nrnivmodl-core", path=self.spec['neuron'].prefix.bin, required=True)
 
     def _build_mods(self, mods_location, link_flag='', include_flag='',
                     corenrn_mods=None, dependencies=None):
@@ -78,8 +90,6 @@ class SimModel(Package):
             )
             include_flag += " -I " + str(self.spec[dep].prefix.include)
 
-        if '+profile' in self.spec:
-            include_flag += ' -DENABLE_TAU_PROFILER'
         output_dir = os.path.basename(self.nrnivmodl_outdir)
         include_flag_raw = include_flag
         link_flag_raw = link_flag
@@ -106,11 +116,15 @@ class SimModel(Package):
         return include_flag_raw, link_flag_raw
 
     def _nrnivmodlcore_params(self, inc_flags, link_flags):
-        return ['-n', self.mech_name, '-i', inc_flags, '-l', link_flags]
+        return ['-n', 'ext', '-i', inc_flags, '-l', link_flags]
 
     def _coreneuron_include_flag(self):
-        return ' -DENABLE_CORENEURON' \
-            + ' -I%s' % self.spec['coreneuron'].prefix.include
+        if self.spec.satisfies('^coreneuron'):
+            return ' -DENABLE_CORENEURON' \
+                + ' -I%s' % self.spec['coreneuron'].prefix.include
+        else:
+            return ' -DENABLE_CORENEURON' \
+                + ' -I%s' % self.spec['neuron'].prefix.include
 
     def __build_mods_coreneuron(self, mods_location, link_flag, include_flag):
         mods_location = os.path.abspath(mods_location)
@@ -120,9 +134,9 @@ class SimModel(Package):
         nrnivmodl_params = self._nrnivmodlcore_params(include_flag, link_flag)
         with working_dir('build_' + self.mech_name, create=True):
             force_symlink(mods_location, 'mod')
-            which('nrnivmodl-core')(*(nrnivmodl_params + ['mod']))
+            self.nrnivmodl_core_exe(*(nrnivmodl_params + ['mod']))
             output_dir = os.path.basename(self.nrnivmodl_outdir)
-            mechlib = find_libraries('libcorenrnmech' + self.lib_suffix + '*',
+            mechlib = find_libraries('libcorenrnmech_ext*',
                                      output_dir)
             assert len(mechlib.names) == 1,\
                 'Error creating corenrnmech. Found: ' + str(mechlib.names)
@@ -159,7 +173,7 @@ class SimModel(Package):
                     which('nrnivmech_install.sh', path=".")(prefix)
                 else:
                     # Set dest to install
-                    which('nrnivmodl-core')("-d", prefix, 'mod')
+                    self.nrnivmodl_core_exe("-d", prefix, '-n', 'ext', 'mod')
 
         # Install special
         shutil.copy(join_path(arch, 'special'), prefix.bin)

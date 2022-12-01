@@ -72,7 +72,6 @@ class NeurodamusModel(SimModel):
     depends_on('hdf5+mpi')
     depends_on('reportinglib')
     depends_on('libsonata-report')
-    depends_on('reportinglib+profile', when='+profile')
     depends_on('synapsetool+mpi', when='+synapsetool')
     depends_on('py-mvdtool+mpi', type='run', when='+mvdtool')
 
@@ -167,7 +166,7 @@ class NeurodamusModel(SimModel):
 
         # Create rebuild script
         if spec.satisfies('+coreneuron'):
-            nrnivmodlcore_call = str(which("nrnivmodl-core"))
+            nrnivmodlcore_call = str(self.nrnivmodl_core_exe)
             for param in self._nrnivmodlcore_params(include_flag, link_flag):
                 nrnivmodlcore_call += " '%s'" % param
             include_flag += " " + self._coreneuron_include_flag()
@@ -269,13 +268,13 @@ if [ -n "{nrnivmodlcore_call}" ]; then
         fi
     done
     {nrnivmodlcore_call} _core_mods
-    libpath=$(dirname */libcorenrnmech*)
-    extra_loadflags="-L $(pwd)/$libpath -lcorenrnmech -Wl,-rpath=\\$ORIGIN"
+    libpath=$(dirname */libcorenrnmech_ext*)
+    extra_loadflags="-L $(pwd)/$libpath -lcorenrnmech_ext -Wl,-rpath=\\$ORIGIN"
 
     echo "Your build supports CoreNeuron. However in some systems
         the coreneuron mods might not be loadable without a location hint.
         In case you get an error such as
-            'libcorenrnmech.so: cannot open shared object file
+            'libcorenrnmech_ext.so: cannot open shared object file
         please run the command:
             export LD_LIBRARY_PATH=$libpath:\\$LD_LIBRARY_PATH"
 fi
