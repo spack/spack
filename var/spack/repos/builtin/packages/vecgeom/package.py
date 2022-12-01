@@ -60,7 +60,11 @@ class Vecgeom(CMakePackage, CudaPackage):
     depends_on("veccore@0.4.2", when="@:1.0")
 
     conflicts("+cuda", when="@:1.1.5")
-    conflicts("%gcc@11.3:", when="+cuda ^cuda@:11.6", msg="vecgeom's CUDA support cannot be built with GCC >= 11.3 using CUDA < 11.7")
+    conflicts(
+        "%gcc@11.3:",
+        when="+cuda ^cuda@:11.6",
+        msg="vecgeom's CUDA support cannot be built with GCC >= 11.3 using CUDA < 11.7"
+    )
     conflicts("cxxstd=14", when="@1.2:")
     conflicts("cxxstd=11", when="@1.2:")
 
