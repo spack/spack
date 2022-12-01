@@ -66,11 +66,6 @@ _active_environment = None
 #: default path where environments are stored in the spack tree
 default_env_path = os.path.join(spack.paths.var_path, "environments")
 
-# ensure that this base directory exists since we require the root directory to be created
-# in our checks
-if not os.path.isdir(default_env_path):
-    os.mkdir(default_env_path)
-
 
 #: Name of the input yaml file for an environment
 manifest_name = "spack.yaml"
@@ -271,10 +266,14 @@ def create(name, init_file=None, with_view=None, keep_relative=False):
         # double check that the root path exists before we check the full environment name
         # we need to be a bit more pedantic and not create automatically since this is a user
         # configurable path that can be subject to user input errors
-        raise SpackEnvironmentError(
-            "The environments_root '{er}' does not exist.  Please create the directory or provide "
-            "a valid path in the config.yaml".format(er=env_root_path())
-        )
+        if env_root_path() == default_env_path:
+            # we can just create the default path since it is internal to spack
+            os.mkdir(default_env_path)
+        else:
+            raise SpackEnvironmentError(
+                "The environments_root '{er}' does not exist.  Please create the directory or "
+                "provide a valid path in the config.yaml".format(er=env_root_path())
+            )
     validate_env_name(name)
     if exists(name):
         raise SpackEnvironmentError("'%s': environment already exists" % name)
