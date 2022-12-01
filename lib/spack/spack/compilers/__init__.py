@@ -27,7 +27,6 @@ import spack.spec
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
-win_exe_ext = ".exe"
 _path_instance_vars = ["cc", "cxx", "f77", "fc"]
 _flags_instance_vars = ["cflags", "cppflags", "cxxflags", "fflags"]
 _other_instance_vars = [
@@ -342,6 +341,7 @@ def compilers_for_spec(
     """This gets all compilers that satisfy the supplied CompilerSpec.
     Returns an empty list if none are found.
     """
+    # import pdb; pdb.set_trace()
     if use_cache:
         config = all_compilers_config(scope, init_config)
     else:

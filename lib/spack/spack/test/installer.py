@@ -27,10 +27,6 @@ import spack.util.lock as lk
 is_windows = sys.platform == "win32"
 
 
-@pytest.fixture
-def windows_exe_bat():
-    spack.compilers.win_exe_ext = ".bat"
-
 def _mock_repo(root, namespace):
     """Create an empty repository at the specified root
 
@@ -492,7 +488,7 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
 
 
 def test_bootstrapping_compilers_with_different_names_from_spec(
-    install_mockery, mutable_config, mock_fetch, windows_exe_bat
+    install_mockery, mutable_config, mock_fetch
 ):
     with spack.config.override("config:install_missing_compilers", True):
         with spack.concretize.disable_compiler_existence_check():
