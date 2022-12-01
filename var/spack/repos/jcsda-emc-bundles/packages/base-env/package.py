@@ -39,7 +39,8 @@ class BaseEnv(BundlePackage):
     depends_on("netcdf-fortran~shared", type="run", when="~shared")
     depends_on("parallel-netcdf+shared", type="run", when="+shared")
     depends_on("parallel-netcdf~shared", type="run", when="~shared")
-    depends_on("parallelio+fortran~pnetcdf~shared", type="run")
+    depends_on("parallelio+fortran~pnetcdf+shared", type="run", when="+shared")
+    depends_on("parallelio+fortran~pnetcdf~shared", type="run", when="~shared")
     depends_on("nccmp", type="run")
 
     # Python
