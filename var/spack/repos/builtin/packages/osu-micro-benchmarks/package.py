@@ -42,9 +42,10 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("mpi")
     variant("papi", description="Enable/Disable support for papi", default=False)
     variant("graphing", description="Enable/Disable support for graphing", default=False)
-    depends_on("papi",when='+papi')
-    depends_on("gnuplot",when="+graphing")
-    depends_on("imagemagick",when="+graphing")
+    depends_on("papi", when="+papi")
+    depends_on("gnuplot", when="+graphing")
+    depends_on("imagemagick", when="+graphing")
+
     def configure_args(self):
         spec = self.spec
         config_args = ["CC=%s" % spec["mpi"].mpicc, "CXX=%s" % spec["mpi"].mpicxx]
@@ -64,8 +65,13 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
         if "+papi" in spec:
             config_args.extend(["--enable-papi", "--with-papi=%s" % spec["papi"].prefix])
         if "+graphing" in spec:
-            config_args.extend(["--with-convert=%s/bin" % spec["imagemagick"].prefix, "--with-gnuplot=%s/bin" % spec["gnuplot"].prefix])
-        
+            config_args.extend(
+                [
+                    "--with-convert=%s/bin" % spec["imagemagick"].prefix,
+                    "--with-gnuplot=%s/bin" % spec["gnuplot"].prefix,
+                ]
+            )
+
         # librt not available on darwin (and not required)
         if not sys.platform == "darwin":
             config_args.append("LDFLAGS=-lrt")
