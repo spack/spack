@@ -12,12 +12,13 @@ class Fiat(CMakePackage):
 
     homepage = "https://github.com/ecmwf-ifs/fiat"
     git = "https://github.com/ecmwf-ifs/fiat.git"
+    url = "https://github.com/ecmwf-ifs/fiat/archive/1.0.0.tar.gz"
 
     maintainers = ["climbfuji"]
 
     version("main", branch="main", no_cache=True)
     # Defined for spack use only
-    version("1.0.0", commit="1295120464c3905e5edcbb887e4921686653eab8", preferred=True)
+    version("1.0.0", commit="1295120464c3905e5edcbb887e4921686653eab8")
 
     variant(
         "build_type",
