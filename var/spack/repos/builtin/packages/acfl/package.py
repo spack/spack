@@ -276,3 +276,12 @@ class Acfl(Package):
         env.prepend_path("PATH", join_path(arm_dir, "bin"))
         env.prepend_path("CPATH", join_path(arm_dir, "include"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
+
+    @run_after("install")
+    def check_install(self):
+        armpl_dir = get_armpl_prefix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, "examples")
+        # run example makefile
+        make("-C", armpl_example_dir, "CC=" + self.cc, "F90=" + self.fortran)
+        # clean up
+        make("-C", armpl_example_dir, "clean")
