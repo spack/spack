@@ -8,7 +8,9 @@ from spack.package import *
 
 
 class PyFlitScm(PythonPackage):
-    """A PEP 518 build backend that uses setuptools_scm to generate a version file from your version control system, then flit to build the package.
+    """A PEP 518 build backend that uses setuptools_scm
+    to generate a version file from your version control system,
+    then flit to build the package.
     """
 
     homepage = "https://gitlab.com/WillDaSilva/flit_scm"

@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyAttmap(PythonPackage):
-    """Key-value mapping that supports nested attribute-style access
-    """
+    """Key-value mapping that supports nested attribute-style access."""
 
     homepage = "https://github.com/pepkit/attmap/"
     pypi = "attmap/attmap-0.13.2.tar.gz"

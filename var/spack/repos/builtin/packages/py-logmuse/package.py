@@ -2,8 +2,7 @@ from spack.package import *
 
 
 class PyLogmuse(PythonPackage):
-    """A small logging setup package.
-    """
+    """A small logging setup package."""
 
     homepage = "https://github.com/databio/logmuse/"
     pypi = "logmuse/logmuse-0.2.7.tar.gz"

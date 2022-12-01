@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyCattrs(PythonPackage):
-    """An open source Python library for structuring and unstructuring data.
-    """
+    """An open source Python library for structuring and unstructuring data."""
 
     homepage = "https://github.com/python-attrs/cattrs"
     pypi = "cattrs/cattrs-22.2.0.tar.gz"

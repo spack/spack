@@ -7,8 +7,9 @@ from spack.package import *
 
 
 class PyQuestionary(PythonPackage):
-    """Questionary is a Python library for effortlessly building pretty
-    command line interfaces."""
+    """Questionary is a Python library for effortlessly building
+    pretty command line interfaces.
+    """
 
     homepage = "https://github.com/tmbo/questionary"
     pypi = "questionary/questionary-1.9.0.tar.gz"

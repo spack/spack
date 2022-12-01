@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyExceptiongroup(PythonPackage):
-    """A backport of the BaseExceptionGroup and ExceptionGroup classes from Python 3.11.
-    """
+    """A backport of the BaseExceptionGroup and ExceptionGroup classes from Python 3.11."""
 
     homepage = "https://github.com/agronholm/exceptiongroup"
     pypi = "exceptiongroup/exceptiongroup-1.0.4.tar.gz"

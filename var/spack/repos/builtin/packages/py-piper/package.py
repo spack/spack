@@ -8,7 +8,8 @@ from spack.package import *
 
 
 class PyPiper(PythonPackage):
-    """A lightweight python toolkit for gluing together restartable, robust shell pipelines.
+    """A lightweight python toolkit for gluing together restartable,
+    robust shell pipelines.
     """
 
     homepage = "https://github.com/databio/pypiper"

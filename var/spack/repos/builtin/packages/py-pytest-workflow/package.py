@@ -8,7 +8,9 @@ from spack.package import *
 
 
 class PyPytestWorkflow(PythonPackage):
-    """A workflow-system agnostic testing framework that aims to make pipeline/workflow testing easy by using YAML files for the test configuration.
+    """A workflow-system agnostic testing framework
+    that aims to make pipeline/workflow testing easy
+    by using YAML files for the test configuration.
     """
 
     homepage = "https://github.com/LUMC/pytest-workflow"

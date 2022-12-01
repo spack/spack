@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyOyaml(PythonPackage):
-    """Ordered YAML: a drop-in replacement for PyYAML which preserves dict ordering.
-    """
+    """Ordered YAML: a drop-in replacement for PyYAML which preserves dict ordering."""
 
     homepage = "https://github.com/wimglenn/oyaml"
     pypi = "oyaml/oyaml-1.0.tar.gz"

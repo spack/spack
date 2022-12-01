@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyUbiquerg(PythonPackage):
-    """Tools for work (erg) everywhere (ubique).
-    """
+    """Tools for work (erg) everywhere (ubique)."""
 
     homepage = "https://github.com/pepkit/ubiquerg"
     pypi = "ubiquerg/ubiquerg-0.6.2.tar.gz"

@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyRefgenie(PythonPackage):
-    """Refgenie manages storage, access, and transfer of reference genome resources.
-    """
+    """Refgenie manages storage, access, and transfer of reference genome resources."""
 
     homepage = "http://refgenie.databio.org"
     pypi = "refgenie/refgenie-0.12.1.tar.gz"

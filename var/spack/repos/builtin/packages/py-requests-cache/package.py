@@ -8,7 +8,8 @@ from spack.package import *
 
 
 class PyRequestsCache(PythonPackage):
-    """A persistent HTTP cache that provides an easy way to get better performance with the python requests library.
+    """A persistent HTTP cache that provides an easy way
+    to get better performance with the python requests library.
     """
 
     homepage = "https://github.com/requests-cache/requests-cache"

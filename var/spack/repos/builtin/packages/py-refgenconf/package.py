@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyRefgenconf(PythonPackage):
-    """A Python object for standardized reference genome assets.
-    """
+    """A Python object for standardized reference genome assets."""
 
     homepage = "https://github.com/refgenie/refgenconf"
     pypi = "refgenconf/refgenconf-0.12.2.tar.gz"

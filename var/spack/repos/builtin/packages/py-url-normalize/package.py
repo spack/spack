@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyUrlNormalize(PythonPackage):
-    """URL normalization for Python
-    """
+    """URL normalization for Python."""
 
     homepage = "https://github.com/niksite/url-normalize"
     pypi = "url-normalize/url-normalize-1.4.3.tar.gz"
