@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PySpython(PythonPackage):
-    """The Python API for working with Singularity containers.
-    """
+    """The Python API for working with Singularity containers."""
 
     homepage = "https://github.com/singularityhub/singularity-cli"
     pypi = "spython/spython-0.2.14.tar.gz"
