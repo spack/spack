@@ -88,6 +88,7 @@ module_type_configuration = {
                 "include": array_of_strings,
                 "exclude": array_of_strings,
                 "exclude_implicits": {"type": "boolean", "default": False},
+                "exclude_upstream_autoloads": {"type": "boolean", "default": False},
                 "defaults": array_of_strings,
                 "naming_scheme": {"type": "string"},  # Can we be more specific here?
                 "projections": projections_scheme,

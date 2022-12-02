@@ -519,6 +519,14 @@ class BaseConfiguration(object):
         installed_implicitly = not spec._installed_explicitly()
         excluded_as_implicit = exclude_implicits and installed_implicitly
 
+        # Should I exclude the module because it's upstream?
+        exclude_upstreams = conf.get("exclude_upstream_autoloads", None)
+        try:
+            upstream = spec.installed_upstream
+        except spack.repo.UnknownPackageError:
+            upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        excluded_as_upstream = exclude_upstreams and upstream
+
         def debug_info(line_header, match_list):
             if match_list:
                 msg = "\t{0} : {1}".format(line_header, spec.cshort_spec)
@@ -529,11 +537,15 @@ class BaseConfiguration(object):
         debug_info("INCLUDE", include_matches)
         debug_info("EXCLUDE", exclude_matches)
 
+        if excluded_as_upstream:
+            msg = "\tEXCLUDED_AS_UPSTREAM : {0}".format(spec.cshort_spec)
+            tty.debug(msg)
+
         if excluded_as_implicit:
             msg = "\tEXCLUDED_AS_IMPLICIT : {0}".format(spec.cshort_spec)
             tty.debug(msg)
 
-        is_excluded = exclude_matches or excluded_as_implicit
+        is_excluded = exclude_matches or excluded_as_implicit or excluded_as_upstream
         if not include_matches and is_excluded:
             return True
 
