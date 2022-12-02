@@ -15,6 +15,7 @@ class Libvips(AutotoolsPackage):
     url = "https://github.com/libvips/libvips/releases/download/v8.9.0/vips-8.9.0.tar.gz"
     git = "https://github.com/libvips/libvips.git"
 
+    version("8.13.3", sha256="4eff5cdc8dbe1a05a926290a99014e20ba386f5dcca38d9774bef61413435d4c")
     version("8.10.5", sha256="a4eef2f5334ab6dbf133cd3c6d6394d5bdb3e76d5ea4d578b02e1bc3d9e1cfd8")
     version("8.9.1", sha256="45633798877839005016c9d3494e98dee065f5cb9e20f4552d3b315b8e8bce91")
     version("8.9.0", sha256="97334a5e70aff343d2587f23cb8068fc846a58cd937c89a446142ccf00ea0349")
