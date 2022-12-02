@@ -83,7 +83,7 @@ class NetcdfC(AutotoolsPackage):
     variant("parallel-tests", default=True, description="Run extra parallel IO tests", when="netcdf-c+mpi")
     variant("cdf5", default=True, description="Enable CDF5 support")
     variant("netcdf-4", default=True, description="Build with netCDF 4")
-    variant("doxygen", default=True, description="Enable generation of documentation")
+    variant("doxygen", default=False, description="Enable generation of documentation")
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
