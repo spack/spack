@@ -50,12 +50,6 @@ class PyScipy(PythonPackage):
     version("1.2.2", sha256="a4331e0b8dab1ff75d2c67b5158a8bb9a83c799d7140094dda936d876c7cfbb1")
     version("1.2.1", sha256="e085d1babcb419bbe58e2e805ac61924dac4ca45a07c9fa081144739e500aa3c")
     version("1.1.0", sha256="878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1")
-    version("1.0.0", sha256="87ea1f11a0e9ec08c264dc64551d501fa307289460705f6fccd84cbfc7926d10")
-    version("0.19.1", sha256="a19a2ca7a7336495ec180adeaa0dfdcf41e96dbbee90d51c3ed828ba570884e6")
-    version("0.18.1", sha256="8ab6e9c808bf2fb3e8576cd8cf07226d9cdc18b012c06d9708429a821ac6634e")
-    version("0.17.0", sha256="f600b755fb69437d0f70361f9e560ab4d304b1b66987ed5a28bdd9dd7793e089")
-    version("0.15.1", sha256="a212cbc3b79e9a563aa45fc5c517b3499198bd7eb7e7be1e047568a5f48c259a")
-    version("0.15.0", sha256="0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1")
 
     # TODO: remove once pip build supports BLAS/LAPACK specification
     # https://github.com/mesonbuild/meson-python/pull/167
@@ -95,10 +89,7 @@ class PyScipy(PythonPackage):
     depends_on("py-numpy@1.16.5:+blas+lapack", when="@1.6:1.6.1", type=("build", "link", "run"))
     depends_on("py-numpy@1.14.5:+blas+lapack", when="@1.5.0:1.5", type=("build", "link", "run"))
     depends_on("py-numpy@1.13.3:+blas+lapack", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("py-numpy@1.8.2:+blas+lapack", when="@0.19:1.2", type=("build", "link", "run"))
-    depends_on("py-numpy@1.7.1:+blas+lapack", when="@0.18.0:0.18", type=("build", "link", "run"))
-    depends_on("py-numpy@1.6.2:+blas+lapack", when="@0.16:0.17", type=("build", "link", "run"))
-    depends_on("py-numpy@1.5.1:+blas+lapack", when="@:0.15", type=("build", "link", "run"))
+    depends_on("py-numpy@1.8.2:+blas+lapack", when="@:1.2", type=("build", "link", "run"))
     depends_on("python@3.8:3.11", when="@1.9:", type=("build", "link", "run"))
     depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
     depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
@@ -106,8 +97,7 @@ class PyScipy(PythonPackage):
     depends_on("python@3.7:", when="@1.6:1.6.1", type=("build", "link", "run"))
     depends_on("python@3.6:", when="@1.5.0:1.5", type=("build", "link", "run"))
     depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@0.18:1.2", type=("build", "link", "run"))
-    depends_on("python@2.6:2.8,3.2:", when="@:0.17", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # NOTE: scipy should use the same BLAS/LAPACK as numpy.
@@ -192,18 +182,13 @@ class PyScipy(PythonPackage):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
         # FIXME: MKL support doesn't work, why?
-        if (
-            spec["blas"].name == "intel-mkl"
-            or spec["blas"].name == "intel-parallel-studio"
-            or spec["blas"].name == "intel-oneapi-mkl"
-        ):
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             blas = "mkl-dynamic-lp64-seq"
-        if (
-            spec["lapack"].name == "intel-mkl"
-            or spec["lapack"].name == "intel-parallel-studio"
-            or spec["lapack"].name == "intel-oneapi-mkl"
-        ):
+        if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             lapack = "mkl-dynamic-lp64-seq"
+
+        if spec["blas"].name in ["blis", "amdblis"]:
+            blas = "blis"
 
         args = [
             "setup",

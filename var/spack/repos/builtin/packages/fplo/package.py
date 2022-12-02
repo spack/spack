@@ -128,10 +128,7 @@ class Fplo(MakefilePackage):
 
             # build python
             with working_dir("PYTHON"):
-                if "^python@:2" in self.spec:
-                    make()
-                else:
-                    make("python3")
+                make("python3")
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):

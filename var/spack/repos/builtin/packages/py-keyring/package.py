@@ -35,9 +35,6 @@ class PyKeyring(PythonPackage):
     depends_on("py-setuptools-scm@1.15:", type="build")
     depends_on("py-entrypoints", when="@18", type=("build", "run"))
     depends_on("py-secretstorage@3.2:", when="@21: platform=linux", type=("build", "run"))
-    depends_on(
-        "py-secretstorage@:2", when="@18 ^python@:3.4 platform=linux", type=("build", "run")
-    )
     depends_on("py-secretstorage", when="platform=linux", type=("build", "run"))
     depends_on("py-jeepney@0.4.2:", when="@21: platform=linux", type=("build", "run"))
     depends_on("py-importlib-metadata@3.6:", when="@23: ^python@:3.9", type=("build", "run"))
