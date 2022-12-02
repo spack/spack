@@ -43,7 +43,7 @@ class Rocminfo(CMakePackage):
         "4.5.0",
         sha256="421ed55192780eb478f0341fd1ce47a0dd3ffafbec9d7a02109a411878a58ee5",
         deprecated=True,
-        )
+    )
     version(
         "4.3.1",
         sha256="d042947d3f29e943a2e3294a2a2d759ca436cebe31151ce048e49bc4f02d6993",
