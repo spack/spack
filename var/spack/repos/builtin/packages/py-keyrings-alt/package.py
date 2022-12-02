@@ -21,3 +21,5 @@ class PyKeyringsAlt(PythonPackage):
     depends_on("py-setuptools@56:", when="@4.2:", type="build")
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm+toml@3.4.1:", type="build")
+
+    depends_on("py-jaraco-classes", when="@4.1.2:", type=("build", "run"))
