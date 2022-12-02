@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import sys
 
 import pytest
 
@@ -123,6 +124,7 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
     assert value == expected
 
 
+@pytest.mark.skipif(sys.platform == "win32")
 @pytest.mark.regression("33928")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 @pytest.mark.disable_clean_stage_check
