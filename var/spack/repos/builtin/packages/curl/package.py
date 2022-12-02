@@ -8,12 +8,12 @@ import os
 import re
 import sys
 
-from spack.build_systems.nmake import NMakeBuilder
 from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.nmake import NMakeBuilder
 from spack.package import *
 
 
-class Curl(NMakePackage ,AutotoolsPackage):
+class Curl(NMakePackage, AutotoolsPackage):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
@@ -267,7 +267,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
             else:
                 return "--without-darwinssl"
 
-
     def configure(self, spec, prefix):
         options = getattr(self, "configure_flag_args", [])
         options += ["--prefix={0}".format(prefix)]
@@ -281,6 +280,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         params += self.build_targets
         with working_dir(self.build_directory):
             make(*params)
+
 
 class NMakeBuilder(NMakeBuilder):
     phases = ["install"]
