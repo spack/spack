@@ -87,7 +87,7 @@ def env_root_path():
 
 def check_disallowed_env_config_mods(scopes):
     for scope in scopes:
-        with spack.config.override(scope):
+        with spack.config.use_configuration(scope):
             if spack.config.get("config:environments_root"):
                 raise SpackEnvironmentError(
                     "Spack environments are prohibited from modifying 'config:environments_root' "
