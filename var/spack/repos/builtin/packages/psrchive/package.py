@@ -67,16 +67,30 @@ class Psrchive(AutotoolsPackage):
 
         if spec.satisfies("+mpi"):
             args.append("--with-mpi-dir={0}".format(spec["mpi"].prefix))
+        else:
+            args.append("--without-mpi")
         if spec.satisfies("+mkl"):
             args.append("--with-mkl-dir={0}".format(spec["mkl"].prefix))
+        else:
+            args.append("--without-mkl")
         if spec.satisfies("+armadillo"):
             args.append("--with-armadillo-dir={0}".format(spec["armadillo"].prefix))
+        else:
+            args.append("--without-armadillo")
         if spec.satisfies("+cfitsio"):
             args.append("--with-cfitsio-dir={0}".format(spec["cfitsio"].prefix))
+        else:
+            args.append("--without-cfitsio")
         if spec.satisfies("+eigen"):
             args.append("--with-eigen-dir={0}".format(spec["eigen"].prefix))
+        else:
+            args.append("--without-eigen")
         if spec.satisfies("+xml"):
             args.append("--with-xml-prefix={0}".format(spec["libxml2"].prefix))
+        else:
+            args.append("--without-xml")
         if spec.satisfies("+qt"):
             args.append("--with-qt-dir={0}".format(spec["qt"].prefix))
+        else:
+            args.append("--without-qt")
         return args
