@@ -86,7 +86,7 @@ class Silo(AutotoolsPackage):
     conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
 
     # zfp include missing
-    patch("zfp_error.patch", when="@4.11: +hdf5")
+    patch("zfp_error.patch", when="@4.11 +hdf5")
 
     def flag_handler(self, name, flags):
         spec = self.spec
