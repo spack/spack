@@ -17,7 +17,7 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["SN-neutronics proxy-app"]
 
-    maintainers = ["vsrana"]
+    maintainers = ["vsrana01"]
 
     version("spackify", branch="feature/spackify", submodules=False)
     version("1.2.4", submodules=False, tag="v1.2.4")
