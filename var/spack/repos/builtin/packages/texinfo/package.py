@@ -55,6 +55,13 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     patch("nvhpc.patch", when="%nvhpc")
 
+    @property
+    def build_targets(self):
+        targets = []
+        if self.spec.satisfies('@7.0:'):
+            targets.append("CFLAGS={}".format(self.compiler.c11_flag))
+        return targets
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
