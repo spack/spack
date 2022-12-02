@@ -39,7 +39,11 @@ class Doxygen(CMakePackage):
 
     variant("mscgen", default=False, description="Build with support for code graphs from mscgen.")
 
+    tags = ["build-tools"]
+
     executables = ["doxygen"]
+
+    maintainers = ["sethrj"]
 
     @classmethod
     def determine_version(cls, exe):
