@@ -158,6 +158,7 @@ class Julia(MakefilePackage):
     depends_on("unwind")
     depends_on("utf8proc")
     depends_on("zlib +shared +pic +optimize")
+    depends_on("ncurses")
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
