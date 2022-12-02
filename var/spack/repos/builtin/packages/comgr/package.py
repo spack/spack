@@ -30,6 +30,7 @@ class Comgr(CMakePackage):
     version(
         "5.0.2",
         sha256="20d733f70d8edb573d8c92707f663d7d46dcaff08026cd6addbb83266679f92a",
+        deprecated=True,
     )
     version(
         "5.0.0",
