@@ -598,9 +598,7 @@ class Llvm(CMakePackage, CudaPackage):
                     [
                         define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
                         # work around bad libelf detection in libomptarget
-                        define(
-                            "LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include
-                        ),
+                        define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include),
                     ]
                 )
         else:
@@ -737,9 +735,7 @@ class Llvm(CMakePackage, CudaPackage):
                 cmake_args.extend(
                     [
                         define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
-                        define(
-                            "LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include
-                        ),
+                        define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include),
                         self.stage.source_path + "/openmp",
                     ]
                 )
