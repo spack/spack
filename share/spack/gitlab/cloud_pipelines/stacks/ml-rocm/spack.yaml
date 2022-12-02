@@ -33,9 +33,8 @@ spack:
     - py-transformers
 
     # JAX
-    # https://github.com/google/jax/issues/12614
-    # - py-jax
-    # - py-jaxlib
+    - py-jax
+    - py-jaxlib
 
     # Keras
     - py-keras

@@ -321,6 +321,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on("cuda@:10.2", when="+cuda @:2.3")
     depends_on("cuda@:11.4", when="+cuda @2.4:2.7")
+    # avoid problem fixed by commit a76f797b9cd4b9b15bec4c503b16236a804f676f
+    depends_on("cuda@:11.7.0", when="+cuda @:2.9")
     depends_on("cudnn", when="+cuda")
     depends_on("cudnn@:7", when="@:2.2 +cuda")
     # depends_on('tensorrt', when='+tensorrt')
