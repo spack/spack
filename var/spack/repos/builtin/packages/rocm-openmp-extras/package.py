@@ -153,17 +153,61 @@ class RocmOpenmpExtras(Package):
     version("5.2.0", sha256=versions_dict["5.2.0"]["aomp"])
     version("5.1.3", sha256=versions_dict["5.1.3"]["aomp"])
     version("5.1.0", sha256=versions_dict["5.1.0"]["aomp"])
-    version("5.0.2", sha256=versions_dict["5.0.2"]["aomp"])
-    version("5.0.0", sha256=versions_dict["5.0.0"]["aomp"])
-    version("4.5.2", sha256=versions_dict["4.5.2"]["aomp"])
-    version("4.5.0", sha256=versions_dict["4.5.0"]["aomp"])
-    version("4.3.1", sha256=versions_dict["4.3.1"]["aomp"])
-    version("4.3.0", sha256=versions_dict["4.3.0"]["aomp"])
-    version("4.2.0", sha256=versions_dict["4.2.0"]["aomp"])
-    version("4.1.0", sha256=versions_dict["4.1.0"]["aomp"])
-    version("4.0.0", sha256=versions_dict["4.0.0"]["aomp"])
-    version("3.10.0", sha256=versions_dict["3.10.0"]["aomp"])
-    version("3.9.0", sha256=versions_dict["3.9.0"]["aomp"])
+    version(
+        "5.0.2",
+        sha256=versions_dict["5.0.2"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256=versions_dict["5.0.0"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256=versions_dict["4.5.2"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256=versions_dict["4.5.0"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "4.3.1",
+        sha256=versions_dict["4.3.1"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "4.3.0",
+        sha256=versions_dict["4.3.0"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "4.2.0",
+        sha256=versions_dict["4.2.0"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "4.1.0",
+        sha256=versions_dict["4.1.0"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "4.0.0",
+        sha256=versions_dict["4.0.0"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "3.10.0",
+        sha256=versions_dict["3.10.0"]["aomp"],
+        deprecated=True,
+    )
+    version(
+        "3.9.0",
+        sha256=versions_dict["3.9.0"]["aomp"],
+        deprecated=True,
+    )
 
     depends_on("cmake@3:", type="build")
     depends_on("py-setuptools", type="build")
