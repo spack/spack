@@ -16,6 +16,7 @@ class REnrichplot(RPackage):
 
     bioc = "enrichplot"
 
+    version("1.18.0", commit="61ea941784a1ed6cc604af1c1cc4532b8b5fcea7")
     version("1.16.2", commit="eeb21345288d96c116ac308649fa772d03760259")
     version("1.16.1", commit="cff77b622b2312be546714ec437aa4bc585bac87")
     version("1.14.1", commit="ccf3a6d9b7cd9cffd8de6d6263efdffe59d2ec36")
@@ -27,9 +28,11 @@ class REnrichplot(RPackage):
     depends_on("r@3.4.0:", type=("build", "run"))
     depends_on("r@3.5.0:", type=("build", "run"), when="@1.10.2:")
     depends_on("r-aplot", type=("build", "run"), when="@1.14.1:")
+    depends_on("r-aplot@0.1.4:", type=("build", "run"), when="@1.18.0:")
     depends_on("r-dose@3.5.1:", type=("build", "run"))
     depends_on("r-dose@3.13.1:", type=("build", "run"), when="@1.8.1:")
     depends_on("r-dose@3.16.0:", type=("build", "run"), when="@1.12.3:")
+    depends_on("r-ggnewscale", type=("build", "run"), when="@1.18.0:")
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-ggraph", type=("build", "run"))
     depends_on("r-igraph", type=("build", "run"))
@@ -37,6 +40,7 @@ class REnrichplot(RPackage):
     depends_on("r-purrr", type=("build", "run"), when="@1.2.0:")
     depends_on("r-rcolorbrewer", type=("build", "run"), when="@1.2.0:")
     depends_on("r-reshape2", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"), when="@1.18.0:")
     depends_on("r-scatterpie", type=("build", "run"), when="@1.10.2:")
     depends_on("r-shadowtext", type=("build", "run"), when="@1.10.2:")
     depends_on("r-gosemsim", type=("build", "run"))
@@ -52,3 +56,4 @@ class REnrichplot(RPackage):
     depends_on("r-gridextra", type=("build", "run"), when="@1.2.0:1.4.0")
     depends_on("r-cowplot", type=("build", "run"))
     depends_on("r-cowplot", when="@:1.16.1")
+    depends_on("r-cowplot", when="@:1.16.2")

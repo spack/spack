@@ -2,13 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Schema for config.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
-import six
 
 from llnl.util.lang import union_dicts
 
@@ -20,6 +18,12 @@ properties = {
         "type": "object",
         "default": {},
         "properties": {
+            "flags": {
+                "type": "object",
+                "properties": {
+                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]},
+                },
+            },
             "shared_linking": {
                 "anyOf": [
                     {"type": "string", "enum": ["rpath", "runpath"]},
@@ -125,7 +129,7 @@ def update(data):
     changed = False
 
     install_tree = data.get("install_tree", None)
-    if isinstance(install_tree, six.string_types):
+    if isinstance(install_tree, str):
         # deprecated short-form install tree
         # add value as `root` in updated install_tree
         data["install_tree"] = {"root": install_tree}
@@ -149,7 +153,7 @@ def update(data):
         changed = True
 
     shared_linking = data.get("shared_linking", None)
-    if isinstance(shared_linking, six.string_types):
+    if isinstance(shared_linking, str):
         # deprecated short-form shared_linking: rpath/runpath
         # add value as `type` in updated shared_linking
         data["shared_linking"] = {"type": shared_linking, "bind": False}

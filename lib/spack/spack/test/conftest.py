@@ -17,7 +17,6 @@ import stat
 import sys
 import tempfile
 import xml.etree.ElementTree
-from typing import Dict  # novm
 
 import py
 import pytest
@@ -26,6 +25,7 @@ import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
 import llnl.util.lang
+import llnl.util.lock
 import llnl.util.tty as tty
 from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
@@ -1604,6 +1604,30 @@ repo:
     shutil.rmtree(str(repodir))
 
 
+@pytest.fixture(scope="function")
+def mock_clone_repo(tmpdir_factory):
+    """Create a cloned repository."""
+    repo_namespace = "mock_clone_repo"
+    repodir = tmpdir_factory.mktemp(repo_namespace)
+    yaml = repodir.join("repo.yaml")
+    yaml.write(
+        """
+repo:
+    namespace: mock_clone_repo
+"""
+    )
+
+    shutil.copytree(
+        os.path.join(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
+        os.path.join(str(repodir), spack.repo.packages_dir_name),
+    )
+
+    with spack.repo.use_repositories(str(repodir)) as repo:
+        yield repo, repodir
+
+    shutil.rmtree(str(repodir))
+
+
 ##########
 # Class and fixture to work around problems raising exceptions in directives,
 # which cause tests like test_from_list_url to hang for Python 2.x metaclass
@@ -1616,7 +1640,6 @@ repo:
 class MockBundle(object):
     has_code = False
     name = "mock-bundle"
-    versions = {}  # type: Dict
 
 
 @pytest.fixture
@@ -1666,6 +1689,19 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set("config:test_stage", tmp_stage)
 
     yield tmp_stage
+
+
+@pytest.fixture(autouse=True)
+def inode_cache():
+    llnl.util.lock.file_tracker.purge()
+    yield
+    # TODO: it is a bug when the file tracker is non-empty after a test,
+    # since it means a lock was not released, or the inode was not purged
+    # when acquiring the lock failed. So, we could assert that here, but
+    # currently there are too many issues to fix, so look for the more
+    # serious issue of having a closed file descriptor in the cache.
+    assert not any(f.fh.closed for f in llnl.util.lock.file_tracker._descriptors.values())
+    llnl.util.lock.file_tracker.purge()
 
 
 @pytest.fixture(autouse=True)
@@ -1852,3 +1888,27 @@ def binary_with_rpaths(prefix_tmpdir):
         return executable
 
     return _factory
+
+
+@pytest.fixture(scope="session")
+def concretized_specs_cache():
+    """Cache for mock concrete specs"""
+    return {}
+
+
+@pytest.fixture
+def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+    """Return the default mock concretization of a spec literal, obtained using the mock
+    repository and the mock configuration.
+
+    This fixture is unsafe to call in a test when either the default configuration or mock
+    repository are not used or have been modified.
+    """
+
+    def _func(spec_str, tests=False):
+        key = spec_str, tests
+        if key not in concretized_specs_cache:
+            concretized_specs_cache[key] = spack.spec.Spec(spec_str).concretized(tests=tests)
+        return concretized_specs_cache[key].copy()
+
+    return _func

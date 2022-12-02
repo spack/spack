@@ -28,6 +28,3 @@ class PyAzureIdentity(PythonPackage):
     depends_on("py-msal@1.0.0:1", type=("build", "run"))
     depends_on("py-msal-extensions@0.1.3:0.1", type=("build", "run"))
     depends_on("py-six@1.6:", type=("build", "run"))
-    depends_on("py-azure-nspkg", when="^python@:2", type=("build", "run"))
-    depends_on("py-mock", when="^python@:3.2", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

@@ -44,7 +44,7 @@ class Precice(CMakePackage):
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("petsc", default=True, description="Enable PETSc support")
-    variant("python", default=False, description="Enable Python support")
+    variant("python", default=False, description="Enable Python support", when="@2:")
     variant("shared", default=True, description="Build shared libraries")
 
     depends_on("cmake@3.5:", type="build")
@@ -73,13 +73,8 @@ class Precice(CMakePackage):
     depends_on("petsc@3.6:", when="+petsc")
     depends_on("petsc@3.12:", when="+petsc@2.1.0:")
 
-    # Python 3 support was added in version 2.0
-    depends_on("python@2.7:2.8", when="@:1.9+python", type=("build", "run"))
-    depends_on("python@3:", when="@2:+python", type=("build", "run"))
-
-    # numpy 1.17+ requires Python 3
-    depends_on("py-numpy@:1.16", when="@:1.9+python", type=("build", "run"))
-    depends_on("py-numpy@1.17:", when="@2:+python", type=("build", "run"))
+    depends_on("python@3:", when="+python", type=("build", "run"))
+    depends_on("py-numpy@1.17:", when="+python", type=("build", "run"))
 
     # We require C++14 compiler support
     conflicts("%gcc@:4")

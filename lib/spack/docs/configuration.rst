@@ -416,6 +416,8 @@ Spack understands several special variables. These are:
   ArchSpec. E.g. ``skylake`` or ``neoverse-n1``.
 * ``$target_family``. The target family for the current host, as
   detected by ArchSpec. E.g. ``x86_64`` or ``aarch64``.
+* ``$date``: the current date in the format YYYY-MM-DD
+
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:

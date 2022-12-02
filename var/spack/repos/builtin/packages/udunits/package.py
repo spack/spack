@@ -33,3 +33,7 @@ class Udunits(AutotoolsPackage):
     )
 
     depends_on("expat")
+
+    @property
+    def libs(self):
+        return find_libraries(["libudunits2"], root=self.prefix, recursive=True, shared=True)
