@@ -38,12 +38,12 @@ class HipRocclr(CMakePackage):
         deprecated=True,
     )
     version(
-        "5.0.0", 
+        "5.0.0",
         sha256="6b72faf8819628a5c109b2ade515ab9009606d10f11316f0d7e4c4c998d7f724",
         deprecated=True,
     )
     version(
-        "4.5.2", 
+        "4.5.2",
         sha256="6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1",
         deprecated=True,
     )

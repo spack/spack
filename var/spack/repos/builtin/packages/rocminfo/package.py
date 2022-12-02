@@ -36,7 +36,7 @@ class Rocminfo(CMakePackage):
     )
     version(
         "4.5.2",
-        sha256="5ea839cd1f317cbc72ea1e3634a75f33a458ba0cb5bf48377f08bb329c29222d"
+        sha256="5ea839cd1f317cbc72ea1e3634a75f33a458ba0cb5bf48377f08bb329c29222d",
         deprecated=True,
     )
     version(

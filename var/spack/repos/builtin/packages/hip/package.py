@@ -50,7 +50,7 @@ class Hip(CMakePackage):
         "4.5.0",
         sha256="4026f31fb4f8050e9aa9d4294f29c3410bfb38422dbbae4236ccd65fed4d55b2",
         deprecated=True,
-        )
+    )
     version(
         "4.3.1",
         sha256="955311193819f487f9a2d64bffe07c4b8c3a0dc644dc3ad984f7c66a325bdd6f",
