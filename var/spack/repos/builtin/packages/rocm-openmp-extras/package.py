@@ -5,7 +5,6 @@
 
 import os
 import re
-from typing import Dict
 
 from spack.package import *
 
