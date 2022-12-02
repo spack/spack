@@ -99,7 +99,9 @@ def getuid():
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     if is_windows:
-        if os.path.exists(dst):
+        # Windows path existence checks will sometimes fail on junctions/links/symlinks
+        # so check for that case
+        if os.path.exists(dst) or os.path.islink(dst):
             os.remove(dst)
     os.rename(src, dst)
 
