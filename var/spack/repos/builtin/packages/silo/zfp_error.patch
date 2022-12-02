@@ -5,7 +5,7 @@ diff -ru silo/src/hdf5_drv/silo_hdf5.c silo.fixed/src/hdf5_drv/silo_hdf5.c
  #endif
  #ifdef HAVE_ZFP
  #include "H5Zzfp.h"
-+#include "zfp.h"
++extern void zfp_init_zfp();
  #endif
  
  /* Defining these to check overhead of PROTECT */
