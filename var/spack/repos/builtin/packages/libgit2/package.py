@@ -85,6 +85,7 @@ class Libgit2(CMakePackage):
     depends_on("openssl", when="https=system platform=cray")
     depends_on("openssl", when="https=openssl")
     depends_on("curl", when="+curl")
+    depends_on("pcre", when="@0.99:")
 
     conflicts("+curl", when="@0.28:")
 
