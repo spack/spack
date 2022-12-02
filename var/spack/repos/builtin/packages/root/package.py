@@ -132,6 +132,7 @@ class Root(CMakePackage):
     variant("math", default=True, description="Build the new libMathMore extended math library")
     variant(
         "memstat",
+        when="@:6.17",
         default=False,
         description="Enable a memory stats utility to detect memory leaks",
     )
@@ -150,7 +151,7 @@ class Root(CMakePackage):
     variant("pythia6", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
-    variant("qt4", default=False, description="Enable Qt graphics backend")
+    variant("qt4", when="@:6.17", default=False, description="Enable Qt graphics backend")
     variant("r", default=False, description="Enable R ROOT bindings")
     variant("rpath", default=True, description="Enable RPATH")
     variant("roofit", default=True, description="Build the libRooFit advanced fitting package")
@@ -159,7 +160,7 @@ class Root(CMakePackage):
     variant("spectrum", default=False, description="Enable support for TSpectrum")
     variant("sqlite", default=False, description="Enable SQLite support")
     variant("ssl", default=False, description="Enable SSL encryption support")
-    variant("table", default=False, description="Build libTable contrib library")
+    variant("table", when="@:6.17", default=False, description="Build libTable contrib library")
     variant("tbb", default=True, description="TBB multi-threading support")
     variant("threads", default=True, description="Enable using thread library")
     variant("tmva", default=False, description="Build TMVA multi variate analysis library")
@@ -169,7 +170,9 @@ class Root(CMakePackage):
     variant(
         "veccore", default=False, description="Enable support for VecCore SIMD abstraction library"
     )
-    variant("vmc", default=False, description="Enable the Virtual Monte Carlo interface")
+    variant(
+        "vmc", when="@:6.25", default=False, description="Enable the Virtual Monte Carlo interface"
+    )
     variant(
         "webgui",
         default=True,
@@ -297,18 +300,12 @@ class Root(CMakePackage):
     # Incompatible variants
     if sys.platform != "darwin":
         conflicts("+opengl", when="~x", msg="OpenGL requires X")
+    conflicts("+math", when="~gsl", msg="Math requires GSL")
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root " "requires at least C++14")
     conflicts("cxxstd=20", when="@:6.25.01", msg="C++20 support was added " "in 6.25.02")
-
-    # Feature removed in 6.18:
-    for pkg in ("memstat", "qt4", "table"):
-        conflicts("+" + pkg, when="@6.18.00:", msg="Obsolete option +{0} selected.".format(pkg))
-
-    # Feature removed in 6.26.00:
-    conflicts("+vmc", when="@6.26:", msg="VMC was removed in ROOT v6.26.00.")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
