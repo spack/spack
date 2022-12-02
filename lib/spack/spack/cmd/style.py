@@ -16,7 +16,9 @@ import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
 import spack.bootstrap
+import spack.config
 import spack.paths
+import spack.repo
 from spack.util.executable import which
 
 description = "runs source code style checks on spack"
@@ -206,6 +208,10 @@ def cwd_relative(path, args):
     return os.path.relpath(os.path.join(args.root, path), args.initial_working_dir)
 
 
+def prefix_relative(path, args):
+    return os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root)
+
+
 def rewrite_and_print_output(
     output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
@@ -252,12 +258,14 @@ def print_tool_result(tool, returncode):
 def run_flake8(flake8_cmd, file_list, args):
     returncode = 0
     output = ""
+
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
     for chunk in grouper(file_list, 100):
         output = flake8_cmd(
             # always run with config from running spack prefix
             "--config=%s" % os.path.join(spack.paths.prefix, ".flake8"),
+            *excludes_for_repos(args),
             *chunk,
             fail_on_error=False,
             output=str,
@@ -399,13 +407,7 @@ def style(parser, args):
     if not os.path.exists(spack_script):
         tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
 
-    file_list = args.files
-    if file_list:
-
-        def prefix_relative(path):
-            return os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root)
-
-        file_list = [prefix_relative(p) for p in file_list]
+    file_list = [prefix_relative(p, args) for p in args.files]
 
     # process --tool and --skip arguments
     selected = set(tool_names)
@@ -444,3 +446,37 @@ def style(parser, args):
         tty.error(color.colorize("@*{spack style found errors}"))
 
     return return_code
+
+
+def repos():
+    roots = spack.config.get("repos")
+    repos = []
+    for r in roots:
+        try:
+            repos.append(spack.repo.Repo(r))
+        except spack.repo.RepoError:
+            continue
+
+    return repos
+
+
+_repos = repos()
+
+_excludes = ["F403", "F405", "F821"]
+
+
+def excludes_for_repos(args):
+    """Construct a flake8 command-line argument with more lenient rule
+    exclusions for all packages in known repos."""
+
+    excludes_string = ",".join(_excludes)
+    ignore_args = []
+    per_file_ignores = [
+        "{path}:{excludes}".format(path=path, excludes=excludes_string)
+        for path in [
+            "%s/packages/*/package.py" % prefix_relative(repo.root, args) for repo in _repos
+        ]
+    ]
+    if len(per_file_ignores):
+        ignore_args.append("--per-file-ignores=%s" % " ".join(per_file_ignores))
+    return ignore_args
