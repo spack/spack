@@ -241,6 +241,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             "-Dprefix={0}".format(prefix),
             "-Dlocincpth=" + self.spec["gdbm"].prefix.include,
             "-Dloclibpth=" + self.spec["gdbm"].prefix.lib,
+            "-Dcc=" + spack_cc,
         ]
 
         # Extensions are installed into their private tree via
