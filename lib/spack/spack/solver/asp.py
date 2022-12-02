@@ -1017,17 +1017,35 @@ class SpackSolverSetup(object):
                 values = [variant.default]
 
             for value in sorted(values):
+                if getattr(value, "when", True) is not True:  # when=True means unconditional
+                    condition_spec = spack.spec.Spec("{0}={1}".format(name, value))
+                    if value.when is False:
+                        # This value is a conflict
+                        # Cannot just prevent listing it as a possible value because it could
+                        # also come in as a possible value from the command line
+                        trigger_id = self.condition(
+                            condition_spec,
+                            name=pkg.name,
+                            msg="invalid variant value {0}={1}".format(name, value),
+                        )
+                        constraint_id = self.condition(
+                            spack.spec.Spec(),
+                            name=pkg.name,
+                            msg="empty (total) conflict constraint",
+                        )
+                        msg = "variant {0}={1} is conditionally disabled".format(name, value)
+                        self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, msg))
+                    else:
+                        imposed = spack.spec.Spec(value.when)
+                        imposed.name = pkg.name
+
+                        self.condition(
+                            required_spec=condition_spec,
+                            imposed_spec=imposed,
+                            name=pkg.name,
+                            msg="%s variant %s value %s when %s" % (pkg.name, name, value, when),
+                        )
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
-                if hasattr(value, "when"):
-                    required = spack.spec.Spec("{0}={1}".format(name, value))
-                    imposed = spack.spec.Spec(value.when)
-                    imposed.name = pkg.name
-                    self.condition(
-                        required_spec=required,
-                        imposed_spec=imposed,
-                        name=pkg.name,
-                        msg="%s variant %s value %s when %s" % (pkg.name, name, value, when),
-                    )
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))
