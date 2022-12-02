@@ -182,18 +182,13 @@ class PyScipy(PythonPackage):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
         # FIXME: MKL support doesn't work, why?
-        if (
-            spec["blas"].name == "intel-mkl"
-            or spec["blas"].name == "intel-parallel-studio"
-            or spec["blas"].name == "intel-oneapi-mkl"
-        ):
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             blas = "mkl-dynamic-lp64-seq"
-        if (
-            spec["lapack"].name == "intel-mkl"
-            or spec["lapack"].name == "intel-parallel-studio"
-            or spec["lapack"].name == "intel-oneapi-mkl"
-        ):
+        if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             lapack = "mkl-dynamic-lp64-seq"
+
+        if spec["blas"].name in ["blis", "amdblis"]:
+            blas = "blis"
 
         args = [
             "setup",
