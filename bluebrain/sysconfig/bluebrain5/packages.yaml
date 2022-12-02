@@ -155,7 +155,7 @@ packages:
     compiler: [gcc@11.2.0]
     target: [skylake]
     providers:
-      mpi: [hpe-mpi, intel-mpi, mvapich2]
-      scalapack:: [intel-mkl]
-      lapack:: [intel-mkl]
-      blas:: [intel-mkl]
+      mpi: [hpe-mpi, intel-oneapi-mpi, mvapich2]
+      scalapack:: [intel-oneapi-mkl]
+      lapack:: [intel-oneapi-mkl]
+      blas:: [intel-oneapi-mkl]
