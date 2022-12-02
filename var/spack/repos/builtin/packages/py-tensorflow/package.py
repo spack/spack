@@ -428,7 +428,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     patch(
         "https://github.com/tensorflow/tensorflow/pull/56691.patch?full_index=1",
         sha256="9964c0d00ff0c11796d21a88855c8618dc51ac174c14c2b8415d9af0b385f488",
-        when="@2.10.0:2.10",
+        when="@2.10",
     )
 
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
