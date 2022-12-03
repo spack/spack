@@ -13,6 +13,7 @@ class PyMne(PythonPackage):
     pypi = "mne/mne-0.23.4.tar.gz"
     git = "https://github.com/mne-tools/mne-python.git"
 
+    version("1.2.3", sha256="b300dcee69ffb878cdbc5c02490e877df385c1b9482622e3aa1da06a604a6e37")
     version("1.2.2", sha256="d40743d6ca7ae3919a557166fd5fc4c00a9719e40c07346baad57964e15f02bb")
     version("0.23.4", sha256="ecace5caacf10961ebb74cc5e0ead4d4dbc55fed006eab1e644da144092354e9")
     version("0.18.2", sha256="aa2e72ad3225efdad39b05e67cd5c88dbd5c3fabf5e1705e459347131f114bc6")
