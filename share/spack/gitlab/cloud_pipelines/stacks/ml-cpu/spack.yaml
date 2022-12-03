@@ -20,7 +20,7 @@ spack:
       variants: ~cuda~rocm
 
   definitions:
-    packages:
+    - packages:
       # Horovod
       - py-horovod
 
@@ -86,7 +86,7 @@ spack:
       # - r-xgboost
       - xgboost
 
-    targets:
+    - targets:
       - x86_64_v3
       - aarch64
 
