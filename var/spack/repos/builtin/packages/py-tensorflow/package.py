@@ -420,6 +420,19 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
         when="@2.9:2.10.0",
     )
+
+    # Version 2.10 produces an error related to cuBLAS:
+    # E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register
+    # cuBLAS factory: Attempting to register factory for plugin cuBLAS when one
+    # has already been registered
+    # See https://github.com/tensorflow/tensorflow/issues/57663
+    # This is fixed for 2.11 but 2.10 needs the following patch.
+    patch(
+        "https://github.com/tensorflow/tensorflow/pull/56691.patch?full_index=1",
+        sha256="d635ea6d6c1571505871d0caba3e2cd939ea0f4aff972095d552913a8109def3",
+        when="@2.10",
+    )
+
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
     patch("io_bazel_rules_docker2.patch", when="@1.15:2.0")
     # Avoide build error: "name 'new_http_archive' is not defined"
