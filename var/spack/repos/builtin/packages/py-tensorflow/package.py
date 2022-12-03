@@ -427,7 +427,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # This is fixed for 2.11 but 2.10 needs the following patch.
     patch(
         "https://github.com/tensorflow/tensorflow/pull/56691.patch?full_index=1",
-        sha256="9964c0d00ff0c11796d21a88855c8618dc51ac174c14c2b8415d9af0b385f488",
+        sha256="d635ea6d6c1571505871d0caba3e2cd939ea0f4aff972095d552913a8109def3",
         when="@2.10",
     )
 
