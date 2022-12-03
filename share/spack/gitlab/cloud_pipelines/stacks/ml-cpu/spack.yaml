@@ -87,13 +87,13 @@ spack:
       - xgboost
 
     - targets:
-      - x86_64_v3
-      - aarch64
+      - target=x86_64_v3
+      - target=aarch64
 
   specs:
     - matrix:
       - [$packages]
-      - [target=$targets]
+      - [$targets]
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-cpu" }
 
