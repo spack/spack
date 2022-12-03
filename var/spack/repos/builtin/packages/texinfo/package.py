@@ -23,6 +23,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     tags = ["build-tools"]
 
+    version("7.0.1", sha256="53c01dd34c9bf116866d03aabd38c5cd9ee95ac10043d61aa33dec0d27825d8d")
     version("7.0", sha256="9261d4ee11cdf6b61895e213ffcd6b746a61a64fe38b9741a3aaa73125b35170")
     version("6.8", sha256="8e09cf753ad1833695d2bac0f57dc3bd6bcbbfbf279450e1ba3bc2d7fb297d08")
     version("6.7", sha256="a52d05076b90032cb2523673c50e53185938746482cf3ca0213e9b4b50ac2d3e")
@@ -34,7 +35,10 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     version("5.1", sha256="50e8067f9758bb2bf175b69600082ac4a27c464cb4bcd48a578edd3127216600")
     version("5.0", sha256="2c579345a39a2a0bb4b8c28533f0b61356504a202da6a25d17d4d866af7f5803")
 
+    variant("nls", default=True, description="Enable Native Language Support")
+
     depends_on("perl")
+    depends_on("gettext@0.19:", type="build", when="+nls")
 
     # sanity check
     sanity_check_is_file = [
@@ -60,3 +64,15 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"info \(GNU texinfo\)\s+(\S+)", output)
         return match.group(1) if match else None
+
+    def configure_args(self):
+        return self.enable_or_disable("nls")
+
+    def setup_build_environment(self, env):
+        if "+nls" in self.spec:
+            # The AM_GNU_GETTEXT([external]) m4 macro only appends -I to
+            # CPPFLAGS but not CFLAGS per
+            # https://www.gnu.org/software/gettext/manual/html_node/AM_005fGNU_005fGETTEXT.html
+            # therefore one needs to manually append that flag that here.  The
+            # macro is in spack-src/tp/Texinfo/XS/configure.ac
+            env.append_flags("CFLAGS", "-I{0}".format(self.spec["gettext"].prefix.include))
