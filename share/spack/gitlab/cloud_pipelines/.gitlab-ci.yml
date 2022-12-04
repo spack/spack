@@ -889,8 +889,8 @@ ml-linux-x86_64-rocm-protected-build:
 
 .ml-darwin-aarch64-cpu-generate:
   extends: .ml-darwin-aarch64-cpu
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
-  tags: ["spack", "aws", "public", "medium", "aarch64"]
+  tags:
+  - lambda
 
 ml-darwin-aarch64-cpu-pr-generate:
   extends: [ ".ml-darwin-aarch64-cpu-generate", ".pr-generate"]
