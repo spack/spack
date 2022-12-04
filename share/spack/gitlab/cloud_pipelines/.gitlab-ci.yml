@@ -760,9 +760,9 @@ tutorial-protected-build:
     - artifacts: True
       job: tutorial-protected-generate
 
-########################################
-# Machine Learning (CPU) - Linux x86_64
-########################################
+#######################################
+# Machine Learning - Linux x86_64 (CPU)
+#######################################
 .ml-linux-x86_64-cpu:
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
@@ -801,7 +801,7 @@ ml-linux-x86_64-cpu-protected-build:
       job: ml-linux-x86_64-cpu-protected-generate
 
 ########################################
-# Machine Learning (CUDA) - Linux x86_64
+# Machine Learning - Linux x86_64 (CUDA)
 ########################################
 .ml-linux-x86_64-cuda:
   variables:
@@ -841,7 +841,7 @@ ml-linux-x86_64-cuda-protected-build:
       job: ml-linux-x86_64-cuda-protected-generate
 
 ########################################
-# Machine Learning (ROCm) - Linux x86_64
+# Machine Learning - Linux x86_64 (ROCm)
 ########################################
 .ml-linux-x86_64-rocm:
   variables:
