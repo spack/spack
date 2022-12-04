@@ -801,7 +801,7 @@ ml-cpu-linux-x86_64-protected-build:
       job: ml-cpu-linux-x86_64-protected-generate
 
 ########################################
-# Machine Learning (CUDA)
+# Machine Learning (CUDA) - Linux x86_64
 ########################################
 .ml-cuda-linux-x86_64:
   variables:
@@ -841,7 +841,7 @@ ml-cuda-linux-x86_64-protected-build:
       job: ml-cuda-linux-x86_64-protected-generate
 
 ########################################
-# Machine Learning (ROCm)
+# Machine Learning (ROCm) - Linux x86_64
 ########################################
 .ml-rocm-linux-x86_64:
   variables:
