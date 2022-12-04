@@ -16,7 +16,6 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@11.2.0]
       target: [aarch64]
       variants: ~cuda+rocm amdgpu_target=gfx90a
     gl:

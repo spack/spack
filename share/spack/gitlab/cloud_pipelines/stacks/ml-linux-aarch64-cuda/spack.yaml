@@ -16,7 +16,6 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@11.2.0]
       target: [aarch64]
       variants: ~rocm+cuda cuda_arch=80
     llvm:
