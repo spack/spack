@@ -893,3 +893,124 @@ ml-linux-x86_64-rocm-protected-build:
   needs:
     - artifacts: True
       job: ml-linux-x86_64-rocm-protected-generate
+
+########################################
+# Machine Learning - Linux aarch64 (CPU)
+########################################
+.ml-linux-aarch64-cpu:
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-aarch64-cpu
+
+.ml-linux-aarch64-cpu-generate:
+  extends: .ml-linux-aarch64-cpu
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
+
+ml-linux-aarch64-cpu-pr-generate:
+  extends: [ ".ml-linux-aarch64-cpu-generate", ".pr-generate"]
+
+ml-linux-aarch64-cpu-protected-generate:
+  extends: [ ".ml-linux-aarch64-cpu-generate", ".protected-generate"]
+
+ml-linux-aarch64-cpu-pr-build:
+  extends: [ ".ml-linux-aarch64-cpu", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-cpu-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-cpu-pr-generate
+
+ml-linux-aarch64-cpu-protected-build:
+  extends: [ ".ml-linux-aarch64-cpu", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-cpu-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-cpu-protected-generate
+
+#########################################
+# Machine Learning - Linux aarch64 (CUDA)
+#########################################
+.ml-linux-aarch64-cuda:
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-aarch64-cuda
+
+.ml-linux-aarch64-cuda-generate:
+  extends: .ml-linux-aarch64-cuda
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
+
+ml-linux-aarch64-cuda-pr-generate:
+  extends: [ ".ml-linux-aarch64-cuda-generate", ".pr-generate"]
+
+ml-linux-aarch64-cuda-protected-generate:
+  extends: [ ".ml-linux-aarch64-cuda-generate", ".protected-generate"]
+
+ml-linux-aarch64-cuda-pr-build:
+  extends: [ ".ml-linux-aarch64-cuda", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-cuda-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-cuda-pr-generate
+
+ml-linux-aarch64-cuda-protected-build:
+  extends: [ ".ml-linux-aarch64-cuda", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-cuda-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-cuda-protected-generate
+
+#########################################
+# Machine Learning - Linux aarch64 (ROCm)
+#########################################
+.ml-linux-aarch64-rocm:
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-aarch64-rocm
+
+.ml-linux-aarch64-rocm-generate:
+  extends: .ml-linux-aarch64-rocm
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
+
+ml-linux-aarch64-rocm-pr-generate:
+  extends: [ ".ml-linux-aarch64-rocm-generate", ".pr-generate"]
+
+ml-linux-aarch64-rocm-protected-generate:
+  extends: [ ".ml-linux-aarch64-rocm-generate", ".protected-generate"]
+
+ml-linux-aarch64-rocm-pr-build:
+  extends: [ ".ml-linux-aarch64-rocm", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-rocm-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-rocm-pr-generate
+
+ml-linux-aarch64-rocm-protected-build:
+  extends: [ ".ml-linux-aarch64-rocm", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-aarch64-rocm-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-aarch64-rocm-protected-generate
+>>>>>>> 6e464fa187 (ML CI: Linux aarch64)
