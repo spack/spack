@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import Optional
+
 import llnl.util.lang
 
 import spack.error
@@ -37,18 +39,18 @@ class Platform(object):
     """
 
     # Subclass sets number. Controls detection order
-    priority = None  # type: int
+    priority: Optional[int] = None
 
     #: binary formats used on this platform; used by relocation logic
     binary_formats = ["elf"]
 
-    front_end = None  # type: str
-    back_end = None  # type: str
-    default = None  # type: str # The default back end target.
+    front_end: Optional[str] = None
+    back_end: Optional[str] = None
+    default: Optional[str] = None  # The default back end target.
 
-    front_os = None  # type: str
-    back_os = None  # type: str
-    default_os = None  # type: str
+    front_os: Optional[str] = None
+    back_os: Optional[str] = None
+    default_os: Optional[str] = None
 
     reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
     reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]

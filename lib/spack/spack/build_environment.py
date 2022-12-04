@@ -41,6 +41,7 @@ import shutil
 import sys
 import traceback
 import types
+from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
@@ -287,7 +288,7 @@ def clean_environment():
 def _add_werror_handling(keep_werror, env):
     keep_flags = set()
     # set of pairs
-    replace_flags = []  # type: List[Tuple[str,str]]
+    replace_flags: List[Tuple[str, str]] = []
     if keep_werror == "all":
         keep_flags.add("-Werror*")
     else:
