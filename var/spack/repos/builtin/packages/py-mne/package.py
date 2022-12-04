@@ -42,8 +42,8 @@ class PyMne(PythonPackage):
     depends_on("py-jinja2", when="@1:", type=("build", "run"))
 
     with when("+hdf5"):
-        depends_on("py-h5io", when="@1:", type=("build", "run"))
-        depends_on("py-pymatreader", when="@1:", type=("build", "run"))
+        depends_on("py-h5io", type=("build", "run"))
+        depends_on("py-pymatreader", type=("build", "run"))
 
     with when("+full"):
         # requirements.txt with versions specified in README.rst (marked with *)
