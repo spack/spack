@@ -18,7 +18,10 @@ spack:
     all:
       compiler: [gcc@11.2.0]
       target: [x86_64_v3]
-      variants: ~cuda~rocm
+      variants: ~rocm+cuda cuda_arch=80
+    llvm:
+      # https://github.com/spack/spack/issues/27999
+      require: ~cuda
 
   specs:
     # Horovod
@@ -86,7 +89,7 @@ spack:
     # - r-xgboost
     - xgboost
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml-cpu" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-cuda-linux-x86_64" }
 
   gitlab-ci:
     script:
