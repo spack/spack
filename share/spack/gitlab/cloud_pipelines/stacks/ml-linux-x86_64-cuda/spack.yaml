@@ -18,12 +18,10 @@ spack:
     all:
       compiler: [gcc@11.2.0]
       target: [x86_64_v3]
-      variants: ~cuda+rocm amdgpu_target=gfx90a
-    gl:
-      require: "osmesa"
-    py-torch:
-      # Does not yet support Spack-installed ROCm
-      require: ~rocm
+      variants: ~rocm+cuda cuda_arch=80
+    llvm:
+      # https://github.com/spack/spack/issues/27999
+      require: ~cuda
 
   specs:
     # Horovod
@@ -43,31 +41,30 @@ spack:
     - py-keras2onnx
 
     # PyTorch
-    # Does not yet support Spack-install ROCm
-    # - py-botorch
-    # - py-efficientnet-pytorch
-    # - py-gpytorch
-    # - py-kornia
-    # - py-pytorch-gradual-warmup-lr
-    # - py-pytorch-lightning
-    # - py-segmentation-models-pytorch
-    # - py-timm
-    # - py-torch
-    # - py-torch-cluster
-    # - py-torch-geometric
-    # - py-torch-nvidia-apex
-    # - py-torch-scatter
-    # - py-torch-sparse
-    # - py-torch-spline-conv
-    # - py-torchaudio
-    # - py-torchdata
-    # - py-torchfile
-    # - py-torchgeo
-    # - py-torchmeta
-    # - py-torchmetrics
-    # - py-torchtext
-    # - py-torchvision
-    # - py-vector-quantize-pytorch
+    - py-botorch
+    - py-efficientnet-pytorch
+    - py-gpytorch
+    - py-kornia
+    - py-pytorch-gradual-warmup-lr
+    - py-pytorch-lightning
+    - py-segmentation-models-pytorch
+    - py-timm
+    - py-torch
+    - py-torch-cluster
+    - py-torch-geometric
+    - py-torch-nvidia-apex
+    - py-torch-scatter
+    - py-torch-sparse
+    - py-torch-spline-conv
+    - py-torchaudio
+    - py-torchdata
+    - py-torchfile
+    - py-torchgeo
+    - py-torchmeta
+    - py-torchmetrics
+    - py-torchtext
+    - py-torchvision
+    - py-vector-quantize-pytorch
 
     # scikit-learn
     - py-scikit-learn
@@ -92,7 +89,7 @@ spack:
     # - r-xgboost
     - xgboost
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml-rocm-linux-x86_64" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-linux-x86_64-cuda" }
 
   gitlab-ci:
     script:
@@ -118,10 +115,8 @@ spack:
     match_behavior: first
     mappings:
       - match:
-          - llvm-amdgpu
           - llvm
           - py-torch
-          - rocblas
         runner-attributes:
           tags: [ "spack", "huge", "x86_64_v4" ]
           variables:

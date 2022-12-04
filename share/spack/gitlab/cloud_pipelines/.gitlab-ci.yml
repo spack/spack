@@ -763,119 +763,119 @@ tutorial-protected-build:
 ########################################
 # Machine Learning (CPU) - Linux x86_64
 ########################################
-.ml-cpu-linux-x86_64:
+.ml-linux-x86_64-cpu:
   variables:
-    SPACK_CI_STACK_NAME: ml-cpu-linux-x86_64
+    SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
 
-.ml-cpu-linux-x86_64-generate:
-  extends: .ml-cpu-linux-x86_64
+.ml-linux-x86_64-cpu-generate:
+  extends: .ml-linux-x86_64-cpu
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
-ml-cpu-linux-x86_64-pr-generate:
-  extends: [ ".ml-cpu-linux-x86_64-generate", ".pr-generate"]
+ml-linux-x86_64-cpu-pr-generate:
+  extends: [ ".ml-linux-x86_64-cpu-generate", ".pr-generate"]
 
-ml-cpu-linux-x86_64-protected-generate:
-  extends: [ ".ml-cpu-linux-x86_64-generate", ".protected-generate"]
+ml-linux-x86_64-cpu-protected-generate:
+  extends: [ ".ml-linux-x86_64-cpu-generate", ".protected-generate"]
 
-ml-cpu-linux-x86_64-pr-build:
-  extends: [ ".ml-cpu-linux-x86_64", ".pr-build" ]
+ml-linux-x86_64-cpu-pr-build:
+  extends: [ ".ml-linux-x86_64-cpu", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-cpu-linux-x86_64-pr-generate
+        job: ml-linux-x86_64-cpu-pr-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-cpu-linux-x86_64-pr-generate
+      job: ml-linux-x86_64-cpu-pr-generate
 
-ml-cpu-linux-x86_64-protected-build:
-  extends: [ ".ml-cpu-linux-x86_64", ".protected-build" ]
+ml-linux-x86_64-cpu-protected-build:
+  extends: [ ".ml-linux-x86_64-cpu", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-cpu-linux-x86_64-protected-generate
+        job: ml-linux-x86_64-cpu-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-cpu-linux-x86_64-protected-generate
+      job: ml-linux-x86_64-cpu-protected-generate
 
 ########################################
 # Machine Learning (CUDA) - Linux x86_64
 ########################################
-.ml-cuda-linux-x86_64:
+.ml-linux-x86_64-cuda:
   variables:
-    SPACK_CI_STACK_NAME: ml-cuda-linux-x86_64
+    SPACK_CI_STACK_NAME: ml-linux-x86_64-cuda
 
-.ml-cuda-linux-x86_64-generate:
-  extends: .ml-cuda-linux-x86_64
+.ml-linux-x86_64-cuda-generate:
+  extends: .ml-linux-x86_64-cuda
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
-ml-cuda-linux-x86_64-pr-generate:
-  extends: [ ".ml-cuda-linux-x86_64-generate", ".pr-generate"]
+ml-linux-x86_64-cuda-pr-generate:
+  extends: [ ".ml-linux-x86_64-cuda-generate", ".pr-generate"]
 
-ml-cuda-linux-x86_64-protected-generate:
-  extends: [ ".ml-cuda-linux-x86_64-generate", ".protected-generate"]
+ml-linux-x86_64-cuda-protected-generate:
+  extends: [ ".ml-linux-x86_64-cuda-generate", ".protected-generate"]
 
-ml-cuda-linux-x86_64-pr-build:
-  extends: [ ".ml-cuda-linux-x86_64", ".pr-build" ]
+ml-linux-x86_64-cuda-pr-build:
+  extends: [ ".ml-linux-x86_64-cuda", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-cuda-linux-x86_64-pr-generate
+        job: ml-linux-x86_64-cuda-pr-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-cuda-linux-x86_64-pr-generate
+      job: ml-linux-x86_64-cuda-pr-generate
 
-ml-cuda-linux-x86_64-protected-build:
-  extends: [ ".ml-cuda-linux-x86_64", ".protected-build" ]
+ml-linux-x86_64-cuda-protected-build:
+  extends: [ ".ml-linux-x86_64-cuda", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-cuda-linux-x86_64-protected-generate
+        job: ml-linux-x86_64-cuda-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-cuda-linux-x86_64-protected-generate
+      job: ml-linux-x86_64-cuda-protected-generate
 
 ########################################
 # Machine Learning (ROCm) - Linux x86_64
 ########################################
-.ml-rocm-linux-x86_64:
+.ml-linux-x86_64-rocm:
   variables:
-    SPACK_CI_STACK_NAME: ml-rocm-linux-x86_64
+    SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
 
-.ml-rocm-linux-x86_64-generate:
-  extends: .ml-rocm-linux-x86_64
+.ml-linux-x86_64-rocm-generate:
+  extends: .ml-linux-x86_64-rocm
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
-ml-rocm-linux-x86_64-pr-generate:
-  extends: [ ".ml-rocm-linux-x86_64-generate", ".pr-generate"]
+ml-linux-x86_64-rocm-pr-generate:
+  extends: [ ".ml-linux-x86_64-rocm-generate", ".pr-generate"]
 
-ml-rocm-linux-x86_64-protected-generate:
-  extends: [ ".ml-rocm-linux-x86_64-generate", ".protected-generate"]
+ml-linux-x86_64-rocm-protected-generate:
+  extends: [ ".ml-linux-x86_64-rocm-generate", ".protected-generate"]
 
-ml-rocm-linux-x86_64-pr-build:
-  extends: [ ".ml-rocm-linux-x86_64", ".pr-build" ]
+ml-linux-x86_64-rocm-pr-build:
+  extends: [ ".ml-linux-x86_64-rocm", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-rocm-linux-x86_64-pr-generate
+        job: ml-linux-x86_64-rocm-pr-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-rocm-linux-x86_64-pr-generate
+      job: ml-linux-x86_64-rocm-pr-generate
 
-ml-rocm-linux-x86_64-protected-build:
-  extends: [ ".ml-rocm-linux-x86_64", ".protected-build" ]
+ml-linux-x86_64-rocm-protected-build:
+  extends: [ ".ml-linux-x86_64-rocm", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-rocm-linux-x86_64-protected-generate
+        job: ml-linux-x86_64-rocm-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: ml-rocm-linux-x86_64-protected-generate
+      job: ml-linux-x86_64-rocm-protected-generate
