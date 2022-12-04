@@ -86,7 +86,7 @@ spack:
     # - r-xgboost
     - xgboost
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml-cpu-linux-aarch64" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-linux-aarch64-cpu" }
 
   gitlab-ci:
     script:

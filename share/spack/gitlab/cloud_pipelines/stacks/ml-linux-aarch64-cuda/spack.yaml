@@ -89,7 +89,7 @@ spack:
     # - r-xgboost
     - xgboost
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml-cuda-linux-aarch64" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-linux-aarch64-cuda" }
 
   gitlab-ci:
     script:
