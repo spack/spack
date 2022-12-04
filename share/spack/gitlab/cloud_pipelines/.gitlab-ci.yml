@@ -879,3 +879,43 @@ ml-linux-x86_64-rocm-protected-build:
   needs:
     - artifacts: True
       job: ml-linux-x86_64-rocm-protected-generate
+
+########################################
+# Machine Learning - macOS aarch64 (CPU)
+########################################
+.ml-darwin-aarch64-cpu:
+  variables:
+    SPACK_CI_STACK_NAME: ml-darwin-aarch64-cpu
+
+.ml-darwin-aarch64-cpu-generate:
+  extends: .ml-darwin-aarch64-cpu
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
+
+ml-darwin-aarch64-cpu-pr-generate:
+  extends: [ ".ml-darwin-aarch64-cpu-generate", ".pr-generate"]
+
+ml-darwin-aarch64-cpu-protected-generate:
+  extends: [ ".ml-darwin-aarch64-cpu-generate", ".protected-generate"]
+
+ml-darwin-aarch64-cpu-pr-build:
+  extends: [ ".ml-darwin-aarch64-cpu", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-darwin-aarch64-cpu-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-darwin-aarch64-cpu-pr-generate
+
+ml-darwin-aarch64-cpu-protected-build:
+  extends: [ ".ml-darwin-aarch64-cpu", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-darwin-aarch64-cpu-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-darwin-aarch64-cpu-protected-generate

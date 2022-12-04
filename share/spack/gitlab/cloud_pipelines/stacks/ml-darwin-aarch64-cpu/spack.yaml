@@ -1,0 +1,123 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: $SPACK_ROOT/opt/spack
+      padded_length: 512
+      projections:
+        all: "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
+  packages:
+    all:
+      target: [m1]
+      variants: ~cuda~rocm
+
+  specs:
+    # Horovod
+    - py-horovod
+
+    # Hugging Face
+    - py-transformers
+
+    # JAX
+    - py-jax
+    - py-jaxlib
+
+    # Keras
+    - py-keras
+    - py-keras-applications
+    - py-keras-preprocessing
+    - py-keras2onnx
+
+    # PyTorch
+    - py-botorch
+    - py-efficientnet-pytorch
+    - py-gpytorch
+    - py-kornia
+    - py-pytorch-gradual-warmup-lr
+    - py-pytorch-lightning
+    - py-segmentation-models-pytorch
+    - py-timm
+    - py-torch
+    - py-torch-cluster
+    - py-torch-geometric
+    - py-torch-nvidia-apex
+    - py-torch-scatter
+    - py-torch-sparse
+    - py-torch-spline-conv
+    - py-torchaudio
+    - py-torchdata
+    - py-torchfile
+    - py-torchgeo
+    - py-torchmeta
+    - py-torchmetrics
+    - py-torchtext
+    - py-torchvision
+    - py-vector-quantize-pytorch
+
+    # scikit-learn
+    - py-scikit-learn
+    - py-scikit-learn-extra
+
+    # TensorBoard
+    - py-tensorboard
+    - py-tensorboard-data-server
+    - py-tensorboard-plugin-wit
+    - py-tensorboardx
+
+    # TensorFlow
+    - py-tensorflow
+    - py-tensorflow-datasets
+    - py-tensorflow-estimator
+    - py-tensorflow-hub
+    - py-tensorflow-metadata
+    - py-tensorflow-probability
+
+    # XGBoost
+    - py-xgboost
+    # - r-xgboost
+    - xgboost
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
+
+  gitlab-ci:
+    script:
+      - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - spack arch
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+
+    match_behavior: first
+    mappings:
+      - match: ['os=monterey']
+        runner-attributes:
+          tags:
+          - lambda
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
+    service-job-attributes:
+      before_script:
+      - export SPACK_USER_CACHE_PATH=$(pwd)/.spack-user-cache
+      - export SPACK_USER_CONFIG_PATH=$(pwd)/.spack-user-config
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      tags:
+      - lambda
+
+  cdash:
+    build-group: Machine Learning
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure
