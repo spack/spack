@@ -196,18 +196,18 @@ class SpecParser:
         """
         return list(filter(lambda x: x.kind != TokenType.WS, tokenize(self.literal_str)))
 
-    def next_spec(self, spec_buffer: Optional[spack.spec.Spec] = None) -> spack.spec.Spec:
+    def next_spec(self, initial_spec: Optional[spack.spec.Spec] = None) -> spack.spec.Spec:
         """Return the next spec parsed from text.
 
         Args:
-            spec_buffer: buffer where to parse the spec. If None a new one
+            initial_spec: object where to parse the spec. If None a new one
                 will be created.
 
         Return
             The spec that was parsed
         """
-        spec_buffer = spec_buffer or spack.spec.Spec()
-        root_spec = SpecNodeParser(self.ctx).parse(spec_buffer)
+        initial_spec = initial_spec or spack.spec.Spec()
+        root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
         while True:
             if self.ctx.accept(TokenType.DEPENDENCY):
                 dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
@@ -241,50 +241,50 @@ class SpecNodeParser:
         self.has_compiler = False
         self.has_version = False
 
-    def parse(self, spec_buffer: spack.spec.Spec) -> spack.spec.Spec:
+    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
         """Parse a single spec node from a stream of tokens
 
         Args:
-            spec_buffer: buffer where to parse the spec
+            initial_spec: object to be constructed
 
         Return
-            The buffer passed as argument
+            The object passed as argument
         """
         import spack.environment  # Needed to retrieve by hash
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
         if self.ctx.accept(TokenType.UNQUALIFIED_PACKAGE_NAME):
-            spec_buffer.name = self.ctx.current_token.value
+            initial_spec.name = self.ctx.current_token.value
         elif self.ctx.accept(TokenType.FULLY_QUALIFIED_PACKAGE_NAME):
             parts = self.ctx.current_token.value.split(".")
             name = parts[-1]
             namespace = ".".join(parts[:-1])
-            spec_buffer.name = name
-            spec_buffer.namespace = namespace
+            initial_spec.name = name
+            initial_spec.namespace = namespace
         elif self.ctx.accept(TokenType.FILENAME):
-            return FileParser(self.ctx).parse(spec_buffer)
+            return FileParser(self.ctx).parse(initial_spec)
 
         while True:
             if self.ctx.accept(TokenType.COMPILER):
                 if self.has_compiler:
                     # TODO: Improve error reporting
                     raise spack.spec.DuplicateCompilerSpecError(
-                        f"{spec_buffer} cannot have multiple compilers"
+                        f"{initial_spec} cannot have multiple compilers"
                     )
 
                 compiler_name = self.ctx.current_token.value[1:]
-                spec_buffer.compiler = spack.spec.CompilerSpec(compiler_name, ":")
+                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name, ":")
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
                 if self.has_compiler:
                     # TODO: Improve error reporting
                     raise spack.spec.DuplicateCompilerSpecError(
-                        f"{spec_buffer} cannot have multiple compilers"
+                        f"{initial_spec} cannot have multiple compilers"
                     )
 
                 compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
-                spec_buffer.compiler = spack.spec.CompilerSpec(compiler_name, compiler_version)
+                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name, compiler_version)
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.VERSION) or self.ctx.accept(
                 TokenType.VERSION_HASH_PAIR
@@ -292,40 +292,40 @@ class SpecNodeParser:
                 if self.has_version:
                     # TODO: Improve error reporting here
                     raise spack.spec.MultipleVersionError(
-                        f"{spec_buffer} cannot have multiple versions"
+                        f"{initial_spec} cannot have multiple versions"
                     )
 
                 version_list = spack.version.VersionList()
                 version_list.add(spack.version.from_string(self.ctx.current_token.value[1:]))
-                spec_buffer.versions = version_list
+                initial_spec.versions = version_list
 
                 # Add a git lookup method for GitVersions
                 if (
-                    spec_buffer.name
-                    and spec_buffer.versions.concrete
-                    and isinstance(spec_buffer.version, spack.version.GitVersion)
+                    initial_spec.name
+                    and initial_spec.versions.concrete
+                    and isinstance(initial_spec.version, spack.version.GitVersion)
                 ):
-                    spec_buffer.version.generate_git_lookup(spec_buffer.fullname)
+                    initial_spec.version.generate_git_lookup(initial_spec.fullname)
 
                 self.has_version = True
             elif self.ctx.accept(TokenType.BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0] == "+"
-                spec_buffer._add_flag(
+                initial_spec._add_flag(
                     self.ctx.current_token.value[1:], variant_value, propagate=False
                 )
             elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0:2] == "++"
-                spec_buffer._add_flag(
+                initial_spec._add_flag(
                     self.ctx.current_token.value[2:], variant_value, propagate=True
                 )
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
                 value = value.strip("'\"")
-                spec_buffer._add_flag(name, value, propagate=False)
+                initial_spec._add_flag(name, value, propagate=False)
             elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("==", maxsplit=1)
                 value = value.strip("'\"")
-                spec_buffer._add_flag(name, value, propagate=True)
+                initial_spec._add_flag(name, value, propagate=True)
             elif self.ctx.accept(TokenType.DAG_HASH):
                 dag_hash = self.ctx.current_token.value[1:]
                 matches = []
@@ -341,18 +341,18 @@ class SpecNodeParser:
                         f"Multiple packages specify hash beginning '{dag_hash}'.", *matches
                     )
                 spec_by_hash = matches[0]
-                if not spec_by_hash.satisfies(spec_buffer):
-                    raise spack.spec.InvalidHashError(spec_buffer, spec_by_hash.dag_hash())
-                spec_buffer._dup(spec_by_hash)
+                if not spec_by_hash.satisfies(initial_spec):
+                    raise spack.spec.InvalidHashError(initial_spec, spec_by_hash.dag_hash())
+                initial_spec._dup(spec_by_hash)
 
                 # When we receive an hash, and we checked that it matches the
                 # literal constraint that people added in front of it, we need
                 # to return it immediately
-                return spec_buffer
+                return initial_spec
             else:
                 break
 
-        return spec_buffer
+        return initial_spec
 
 
 class FileParser:
@@ -363,14 +363,14 @@ class FileParser:
     def __init__(self, ctx):
         self.ctx = ctx
 
-    def parse(self, spec_buffer: spack.spec.Spec) -> spack.spec.Spec:
+    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
         """Parse a spec tree from a specfile.
 
         Args:
-            spec_buffer: buffer where to parse the spec
+            initial_spec: object where to parse the spec
 
         Return
-            The buffer passed as argument
+            The initial_spec passed as argument, once constructed
         """
         file = pathlib.Path(self.ctx.current_token.value)
 
@@ -383,8 +383,8 @@ class FileParser:
                 spec_from_file = spack.spec.Spec.from_json(stream)
             else:
                 spec_from_file = spack.spec.Spec.from_yaml(stream)
-        spec_buffer._dup(spec_from_file)
-        return spec_buffer
+        initial_spec._dup(spec_from_file)
+        return initial_spec
 
 
 def parse(text: str) -> List[spack.spec.Spec]:
@@ -400,17 +400,17 @@ def parse(text: str) -> List[spack.spec.Spec]:
 
 
 def parse_one_or_raise(
-    text: str, spec_buffer: Optional[spack.spec.Spec] = None
+    text: str, initial_spec: Optional[spack.spec.Spec] = None
 ) -> spack.spec.Spec:
     """Parse exactly one spec from text and return it, or raise
 
     Args:
         text (str): text to be parsed
-        spec_buffer: buffer where to parse the spec. If None a new one will be created.
+        initial_spec: buffer where to parse the spec. If None a new one will be created.
     """
     stripped_text = text.strip()
     parser = SpecParser(stripped_text)
-    result = parser.next_spec(spec_buffer)
+    result = parser.next_spec(initial_spec)
     last_token = parser.ctx.current_token
 
     if last_token is not None and last_token.end != len(stripped_text):
