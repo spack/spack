@@ -29,7 +29,6 @@ import os
 import os.path
 import sys
 import uuid
-from typing import List
 
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
