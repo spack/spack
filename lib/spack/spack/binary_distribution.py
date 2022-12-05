@@ -266,9 +266,6 @@ class BinaryCacheIndex(object):
                 None, just assumes all configured mirrors.
         """
         if find_hash not in self._mirrors_for_spec:
-            # Not found in the cached index, pull the latest from the server.
-            self.update(with_cooldown=True)
-        if find_hash not in self._mirrors_for_spec:
             return None
         results = self._mirrors_for_spec[find_hash]
         if not mirrors_to_check:
