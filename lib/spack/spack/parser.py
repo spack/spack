@@ -6,7 +6,7 @@
 import pathlib
 import re
 from enum import Enum, auto
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Match, Optional
 
 from llnl.util.tty import color
 
@@ -18,25 +18,23 @@ import spack.version
 #: Valid name for specs and variants. Here we are not using
 #: the previous "w[\w.-]*" since that would match most
 #: characters that can be part of a word in any language
-VALID_NAME_WITHOUT_DOTS = r"[a-zA-Z_0-9][a-zA-Z_0-9\-]*"
-VALID_NAME_WITH_DOTS = rf"{VALID_NAME_WITHOUT_DOTS}(\.{VALID_NAME_WITHOUT_DOTS})+"
-VALID_GIT_VERSION = rf"(((git.)?({VALID_NAME_WITH_DOTS}))|({VALID_NAME_WITHOUT_DOTS}))"
+PACKAGE_NAME_WITHOUT_DOTS = r"[a-zA-Z_0-9][a-zA-Z_0-9\-]*"
+PACKAGE_NAME_WITH_DOTS = rf"{PACKAGE_NAME_WITHOUT_DOTS}(\.{PACKAGE_NAME_WITHOUT_DOTS})+"
+GIT_VERSION = rf"(((git.)?({PACKAGE_NAME_WITH_DOTS}))|({PACKAGE_NAME_WITHOUT_DOTS}))"
 
-VALID_NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
+NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
-VALID_HASH = r"[a-zA-Z_0-9]+"
+HASH = r"[a-zA-Z_0-9]+"
 
 #: A filename starts either with a "." or a "/" or a "{name}/"
-VALID_FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
+FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
 
-VALID_VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
-VALID_QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
+VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
+QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
 
-VALID_VERSION = r"([a-zA-Z_0-9-.][a-zA-Z_0-9-.]*)"
-VALID_VERSION_RANGE = rf"({VALID_VERSION}:{VALID_VERSION}|:{VALID_VERSION}|{VALID_VERSION}:|:)"
-VALID_VERSION_LIST = (
-    rf"({VALID_VERSION_RANGE}|{VALID_VERSION})([,]({VALID_VERSION_RANGE}|{VALID_VERSION}))*"
-)
+VERSION = r"([a-zA-Z_0-9-.][a-zA-Z_0-9-.]*)"
+VERSION_RANGE = rf"({VERSION}:{VERSION}|:{VERSION}|{VERSION}:|:)"
+VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})([,]({VERSION_RANGE}|{VERSION}))*"
 
 
 class TokenType(Enum):
@@ -99,23 +97,23 @@ TOKEN_REGEXES = [
     # Dependency
     rf"(?P<{TokenType.DEPENDENCY}>\^)",
     # Version regexes
-    rf"(?P<{TokenType.VERSION_HASH_PAIR}>@({VALID_GIT_VERSION}={VALID_VERSION}))",
-    rf"(?P<{TokenType.VERSION}>@({VALID_VERSION_LIST}))",
+    rf"(?P<{TokenType.VERSION_HASH_PAIR}>@({GIT_VERSION}={VERSION}))",
+    rf"(?P<{TokenType.VERSION}>@({VERSION_LIST}))",
     # Variant regexes
-    rf"(?P<{TokenType.PROPAGATED_BOOL_VARIANT}>(\+\+|~~|--){VALID_NAME})",
-    rf"(?P<{TokenType.BOOL_VARIANT}>[~+-]{VALID_NAME})",
-    rf"(?P<{TokenType.PROPAGATED_KEY_VALUE_PAIR}>({VALID_NAME}==({VALID_VALUE}|{VALID_QUOTED_VALUE})))",  # noqa: E501
-    rf"(?P<{TokenType.KEY_VALUE_PAIR}>({VALID_NAME}=({VALID_VALUE}|{VALID_QUOTED_VALUE})))",
+    rf"(?P<{TokenType.PROPAGATED_BOOL_VARIANT}>(\+\+|~~|--){NAME})",
+    rf"(?P<{TokenType.BOOL_VARIANT}>[~+-]{NAME})",
+    rf"(?P<{TokenType.PROPAGATED_KEY_VALUE_PAIR}>({NAME}==({VALUE}|{QUOTED_VALUE})))",  # noqa: E501
+    rf"(?P<{TokenType.KEY_VALUE_PAIR}>({NAME}=({VALUE}|{QUOTED_VALUE})))",
     # Compiler regexes
-    rf"(?P<{TokenType.COMPILER_AND_VERSION}>%({VALID_NAME})([\s]*)@({VALID_VERSION_LIST}))",
-    rf"(?P<{TokenType.COMPILER}>%({VALID_NAME}))",
+    rf"(?P<{TokenType.COMPILER_AND_VERSION}>%({NAME})([\s]*)@({VERSION_LIST}))",
+    rf"(?P<{TokenType.COMPILER}>%({NAME}))",
     # Filename
-    rf"(?P<{TokenType.FILENAME}>({VALID_FILENAME}))",
+    rf"(?P<{TokenType.FILENAME}>({FILENAME}))",
     # Spec name regexes
-    rf"(?P<{TokenType.FULLY_QUALIFIED_PACKAGE_NAME}>{VALID_NAME_WITH_DOTS})",
-    rf"(?P<{TokenType.UNQUALIFIED_PACKAGE_NAME}>{VALID_NAME_WITHOUT_DOTS})",
+    rf"(?P<{TokenType.FULLY_QUALIFIED_PACKAGE_NAME}>{PACKAGE_NAME_WITH_DOTS})",
+    rf"(?P<{TokenType.UNQUALIFIED_PACKAGE_NAME}>{PACKAGE_NAME_WITHOUT_DOTS})",
     # DAG hash
-    rf"(?P<{TokenType.DAG_HASH}>/({VALID_HASH}))",
+    rf"(?P<{TokenType.DAG_HASH}>/({HASH}))",
     # White spaces (the lowest priority)
     rf"(?P<{TokenType.WS}>\s+)",
 ]
@@ -139,7 +137,7 @@ def tokenize(text: str) -> Iterator[Token]:
             end of the input text.
     """
     scanner = ALL_TOKENS.scanner(text)  # type: ignore[attr-defined]
-    match: Optional[re.Match] = None
+    match: Optional[Match] = None
     for match in iter(scanner.match, None):
         yield Token(
             STR_TO_TOKEN[match.lastgroup],  # type: ignore[attr-defined]
