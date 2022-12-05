@@ -6,7 +6,7 @@
 import urllib.error
 import urllib.request
 import urllib.response
-from io import BufferedReader, IOBase
+from io import BufferedReader, BytesIO, IOBase
 
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
@@ -42,7 +42,7 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-def _s3_open(url):
+def _s3_open(url, method="GET"):
     parsed = url_util.parse(url)
     s3 = s3_util.get_s3_session(url, method="fetch")
 
@@ -52,27 +52,36 @@ def _s3_open(url):
     if key.startswith("/"):
         key = key[1:]
 
-    obj = s3.get_object(Bucket=bucket, Key=key)
+    if method == "GET":
+        obj = s3.get_object(Bucket=bucket, Key=key)
+        # NOTE(opadron): Apply workaround here (see above)
+        stream = WrapStream(obj["Body"])
+    elif method == "HEAD":
+        obj = s3.head_object(Bucket=bucket, Key=key)
+        stream = BytesIO()
+    else:
+        raise urllib.error.URLError(
+            "Only GET and HEAD verbs are currently supported for the s3:// scheme"
+        )
 
-    # NOTE(opadron): Apply workaround here (see above)
-    stream = WrapStream(obj["Body"])
     headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
     return url, headers, stream
 
 
-class UrllibS3Handler(urllib.request.HTTPSHandler):
+class UrllibS3Handler(urllib.request.BaseHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
-        from botocore.exceptions import ClientError  # type: ignore[import]
 
         try:
-            url, headers, stream = _s3_open(orig_url)
+            from botocore.exceptions import ClientError  # type: ignore[import]
+        except ImportError:
+            raise urllib.error.URLError(
+                "Cannot open {} because botocore is not installed", orig_url
+            )
+
+        try:
+            url, headers, stream = _s3_open(orig_url, method=req.method)
             return urllib.response.addinfourl(stream, headers, url)
         except ClientError as err:
             raise urllib.error.URLError(err) from err
-
-
-S3OpenerDirector = urllib.request.build_opener(UrllibS3Handler())
-
-open = S3OpenerDirector.open

@@ -26,6 +26,8 @@ from llnl.util.filesystem import mkdirp, rename, working_dir
 import spack
 import spack.config
 import spack.error
+import spack.gcs_handler
+import spack.s3_handler
 import spack.url
 import spack.util.crypto
 import spack.util.gcs as gcs_util
@@ -37,11 +39,14 @@ from spack.util.path import convert_to_posix_path
 
 
 def _urlopen():
-    # One opener when SSL is enabled
-    with_ssl = build_opener(HTTPSHandler(context=ssl.create_default_context()))
+    s3 = spack.s3_handler.UrllibS3Handler()
+    gcs = spack.gcs_handler.GCSHandler()
 
-    # One opener when SSL is disabled
-    without_ssl = build_opener(HTTPSHandler(context=ssl._create_unverified_context()))
+    # One opener with HTTPS ssl enabled
+    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl.create_default_context()))
+
+    # One opener with HTTPS ssl disabled
+    without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
 
     # And dynamically dispatch based on the config:verify_ssl.
     def dispatch_open(*args, **kwargs):
@@ -76,25 +81,6 @@ class LinkParser(HTMLParser):
             for attr, val in attrs:
                 if attr == "href":
                     self.links.append(val)
-
-
-def uses_ssl(parsed_url):
-    if parsed_url.scheme == "https":
-        return True
-
-    if parsed_url.scheme == "s3":
-        endpoint_url = os.environ.get("S3_ENDPOINT_URL")
-        if not endpoint_url:
-            return True
-
-        if url_util.parse(endpoint_url, scheme="https").scheme == "https":
-            return True
-
-    elif parsed_url.scheme == "gs":
-        tty.debug("(uses_ssl) GCS Blob is https")
-        return True
-
-    return False
 
 
 def read_from_url(url, accept_content_type=None):
@@ -372,33 +358,14 @@ def url_exists(url, curl=None):
     Returns (bool): True if it exists; False otherwise.
     """
     tty.debug("Checking existence of {0}".format(url))
-    url_result = url_util.parse(url)
-
-    # Check if a local file
-    local_path = url_util.local_file_path(url_result)
-    if local_path:
-        return os.path.exists(local_path)
-
-    # Check if Amazon Simple Storage Service (S3) .. urllib-based fetch
-    if url_result.scheme == "s3":
-        # Check for URL-specific connection information
-        s3 = s3_util.get_s3_session(url_result, method="fetch")
-
-        try:
-            s3.head_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
-            return True
-        except s3.ClientError as err:
-            if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
-                return False
-            raise
-
-    # Check if Google Storage .. urllib-based fetch
-    if url_result.scheme == "gs":
-        gcs = gcs_util.GCSBlob(url_result)
-        return gcs.exists()
+    url = url_util.parse(url)
 
     # Otherwise, use the configured fetch method
-    if spack.config.get("config:url_fetch_method") == "curl":
+    if spack.config.get("config:url_fetch_method") == "curl" and url.scheme in (
+        "http",
+        "https",
+        "ftp",
+    ):
         curl_exe = _curl(curl)
         if not curl_exe:
             return False
@@ -700,26 +667,6 @@ def spider(root_urls, depth=0, concurrency=32):
         tp.join()
 
     return pages, links
-
-
-def _open(req, *args, **kwargs):
-    global open
-    url = req
-    try:
-        url = url.get_full_url()
-    except AttributeError:
-        pass
-
-    if url_util.parse(url).scheme == "s3":
-        import spack.s3_handler
-
-        return spack.s3_handler.open(req, *args, **kwargs)
-    elif url_util.parse(url).scheme == "gs":
-        import spack.gcs_handler
-
-        return spack.gcs_handler.gcs_open(req, *args, **kwargs)
-
-    return open(req, *args, **kwargs)
 
 
 def find_versions_of_archive(
