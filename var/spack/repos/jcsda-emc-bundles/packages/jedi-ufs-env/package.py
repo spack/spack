@@ -17,13 +17,15 @@ class JediUfsEnv(BundlePackage):
     version("1.0.0")
 
     depends_on("jedi-base-env", type="run")
-    depends_on("fms@release-jcsda", type="run")
+    depends_on("fms@2022.02+fpic", type="run")
 
     depends_on("bacio", type="run")
     depends_on("g2", type="run")
     depends_on("g2tmpl", type="run")
     depends_on("ip", type="run")
-    depends_on("sp", type="run")
+    depends_on("nemsio", type="run")
+    depends_on("sigio", type="run")
+    depends_on("w3emc", type="run")
     depends_on("w3nco", type="run")
 
     depends_on("esmf~debug", type="run")
