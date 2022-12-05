@@ -27,10 +27,26 @@ class Rocrand(CMakePackage):
     version("5.2.0", sha256="ab3057e7c17a9fbe584f89ef98ec92a74d638a98d333e7d0f64daf7bc9051e38")
     version("5.1.3", sha256="4a19e1bcb60955a02a73ad64594c23886d6749afe06b0104e2b877dbe02c8d1c")
     version("5.1.0", sha256="0c6f114a775d0b38be71f3f621a10bde2104a1f655d5d68c5fecb79b8b51a815")
-    version("5.0.2", sha256="2dbce2a7fb273c2f9456c002adf3a510b9ec79f2ff32dfccdd59948f3ddb1505")
-    version("5.0.0", sha256="356a03a74d6d5df3ae2d38da07929f23d90bb4dee71f88792c25c25069e673bc")
-    version("4.5.2", sha256="1523997a21437c3b74d47a319d81f8cc44b8e96ec5174004944f2fb4629900db")
-    version("4.5.0", sha256="fd391f81b9ea0b57808d93e8b72d86eec1b4c3529180dfb99ed6d3e2aa1285c2")
+    version(
+        "5.0.2",
+        sha256="2dbce2a7fb273c2f9456c002adf3a510b9ec79f2ff32dfccdd59948f3ddb1505",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="356a03a74d6d5df3ae2d38da07929f23d90bb4dee71f88792c25c25069e673bc",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="1523997a21437c3b74d47a319d81f8cc44b8e96ec5174004944f2fb4629900db",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="fd391f81b9ea0b57808d93e8b72d86eec1b4c3529180dfb99ed6d3e2aa1285c2",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="b3d6ae0cdbbdfb56a73035690f8cb9e173fec1ccaaf9a4c5fdbe5e562e50c901",

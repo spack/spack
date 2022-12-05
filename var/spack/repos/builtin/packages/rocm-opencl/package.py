@@ -34,10 +34,26 @@ class RocmOpencl(CMakePackage):
     version("5.2.0", sha256="80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0")
     version("5.1.3", sha256="44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31")
     version("5.1.0", sha256="362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927")
-    version("5.0.2", sha256="3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95")
-    version("5.0.0", sha256="2aa3a628b336461f83866c4e76225ef5338359e31f802987699d6308515ae1be")
-    version("4.5.2", sha256="96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d")
-    version("4.5.0", sha256="3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8")
+    version(
+        "5.0.2",
+        sha256="3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="2aa3a628b336461f83866c4e76225ef5338359e31f802987699d6308515ae1be",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca",

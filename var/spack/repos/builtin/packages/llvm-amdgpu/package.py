@@ -27,10 +27,26 @@ class LlvmAmdgpu(CMakePackage):
     version("5.2.0", sha256="0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f")
     version("5.1.3", sha256="d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128")
     version("5.1.0", sha256="db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10")
-    version("5.0.2", sha256="99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf")
-    version("5.0.0", sha256="bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413")
-    version("4.5.2", sha256="36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f")
-    version("4.5.0", sha256="b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97")
+    version(
+        "5.0.2",
+        sha256="99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f",
