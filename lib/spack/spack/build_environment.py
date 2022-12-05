@@ -50,6 +50,7 @@ from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
+import spack.build_systems.python
 import spack.builder
 import spack.config
 import spack.install_test
