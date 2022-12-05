@@ -24,12 +24,13 @@ class SingularityHpc(PythonPackage):
         "runtime",
         default="none",
         description="Container runtime installed by Spack for this package",
-        values=("none", "singularityce", "singularity"),
+        values=("none", "singularityce", "singularity", "podman"),
         multi=False,
     )
 
     depends_on("singularityce@3:", when="runtime=singularityce", type="run")
     depends_on("singularity@3:", when="runtime=singularity", type="run")
+    depends_on("podman", when="runtime=podman", type="run")
 
     depends_on("python@3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
