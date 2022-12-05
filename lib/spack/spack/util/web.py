@@ -391,10 +391,9 @@ def url_exists(url, curl=None):
         try:
             s3.head_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
             return True
-        except s3.ClientError as err:
-            if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
-                return False
-            raise
+        except s3.ClientError as e:
+            tty.debug("Failure reading URL: " + str(e))
+            return False
 
     # Check if Google Storage .. urllib-based fetch
     if url_result.scheme == "gs":
