@@ -28,7 +28,11 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     executables = ["^swig$"]
 
     version("master", git="https://github.com/swig/swig.git")
-    version("4.1.1", sha256="2af08aced8fcd65cdb5cc62426768914bedc735b1c250325203716f78e39ac9b")
+    version(
+        "4.1.1",
+        sha256="2af08aced8fcd65cdb5cc62426768914bedc735b1c250325203716f78e39ac9b",
+        preferred=True
+    )
     version("4.1.0", sha256="d6a9a8094e78f7cfb6f80a73cc271e1fe388c8638ed22668622c2c646df5bb3d")
     version("4.0.2", sha256="d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc")
     version("4.0.1", sha256="7a00b4d0d53ad97a14316135e2d702091cd5f193bb58bcfcd8bc59d41e7887a9")
@@ -43,6 +47,16 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     version("1.3.40", sha256="1945b3693bcda6777bd05fef1015a0ad1a4604cde4a4a0a368b61ccfd143ac09")
     version("fortran", branch="master", git="https://github.com/swig-fortran/swig.git")
     version(
+        "4.1.1-fortran",
+        sha256="417ea6adde3e6bf7825b2f670d2eac36257cc50db0e2f84c5bd4d67a16a7e88f",
+        url="https://github.com/swig-fortran/swig/archive/refs/tags/v4.1.1+fortran.tar.gz",
+    )
+    version(
+        "4.1.0-fortran",
+        sha256="f15521b10e7ef3b2a41dd0d81de0b1355a94495e481d201db4247e073a6f2d9b",
+        url="https://github.com/swig-fortran/swig/archive/refs/tags/v4.1.0+fortran.tar.gz",
+    )
+    version(
         "4.1.dev1-fortran",
         sha256="d9020319771879b41f9545e95f9d252a3ffc379832dded14c385e5cd823e526d",
         url="https://github.com/swig-fortran/swig/archive/refs/tags/v4.1.0-dev1+fortran.tar.gz",
@@ -56,14 +70,16 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     depends_on("pcre")
     depends_on("zlib")
 
-    AUTOCONF_VERSIONS = ["@master", "@fortran", "@4.0.2-fortran", "@4.1.dev1-fortran"]
+    AUTOCONF_VERSIONS = "@" + ",".join([
+        "master", "fortran", "4.0.2-fortran", "4.1.dev1-fortran", "4.1.0-fortran", "4.1.1-fortran"
+    ])
 
     # Git releases do *not* include configure script
-    for _version in AUTOCONF_VERSIONS:
-        depends_on("autoconf", type="build", when=_version)
-        depends_on("automake", type="build", when=_version)
-        depends_on("libtool", type="build", when=_version)
-        depends_on("yacc", type="build", when=_version)
+    depends_on("autoconf", type="build", when=AUTOCONF_VERSIONS)
+    depends_on("automake", type="build", when=AUTOCONF_VERSIONS)
+    depends_on("libtool", type="build", when=AUTOCONF_VERSIONS)
+    depends_on("yacc", type="build", when=AUTOCONF_VERSIONS)
+
     # Need newer 'automake' to support newer platforms
     for _target in ["ppc64le", "aarch64"]:
         depends_on("automake@1.15:", type="build", when="target={0}:".format(_target))
@@ -130,8 +146,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         with working_dir(self.prefix.bin):
             os.symlink("swig", "swig{0}".format(self.spec.version.up_to(2)))
 
-    for _version in Swig.AUTOCONF_VERSIONS:
-
-        @when(_version)
-        def autoreconf(self, pkg, spec, prefix):
-            which("sh")("./autogen.sh")
+    @when(Swig.AUTOCONF_VERSIONS)
+    def autoreconf(self, pkg, spec, prefix):
+        which("sh")("./autogen.sh")
