@@ -145,17 +145,14 @@ build_priority_offset = 200
 fixed_priority_offset = 100
 
 
-def build_criteria_names(costs, tuples):
+def build_criteria_names(costs, arg_tuples):
     """Construct an ordered mapping from criteria names to costs."""
     # pull optimization criteria names out of the solution
     priorities_names = []
 
     num_fixed = 0
     num_high_fixed = 0
-    for pred, args in tuples:
-        if pred != "opt_criterion":
-            continue
-
+    for args in arg_tuples:
         priority, name = args[:2]
         priority = int(priority)
 
@@ -255,13 +252,33 @@ def _id(thing):
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
-        self.args = () if args is None else args
+        self.args = () if args is None else tuple(args)
 
     def _cmp_key(self):
         return (self.name, self.args)
 
     def __call__(self, *args):
-        return AspFunction(self.name, args)
+        """Return a new instance of this function with added arguments.
+
+        Note that calls are additive, so you can do things like::
+
+            >>> attr = AspFunction("attr")
+            attr()
+
+            >>> attr("version")
+            attr("version")
+
+            >>> attr("version")("foo")
+            attr("version", "foo")
+
+            >>> v = AspFunction("attr", "version")
+            attr("version")
+
+            >>> v("foo", "bar")
+            attr("version", "foo", "bar")
+
+        """
+        return AspFunction(self.name, self.args + args)
 
     def symbol(self, positive=True):
         def argify(arg):
@@ -537,6 +554,36 @@ def bootstrap_clingo():
         from clingo import parse_files
 
 
+def stringify(sym):
+    """Stringify symbols from clingo models.
+
+    This will turn a ``clingo.Symbol`` into a string, or a sequence of ``clingo.Symbol``
+    objects into a tuple of strings.
+
+    """
+    # TODO: simplify this when we no longer have to support older clingo versions.
+    if isinstance(sym, (list, tuple)):
+        return tuple(stringify(a) for a in sym)
+
+    if clingo_cffi:
+        # Clingo w/ CFFI will throw an exception on failure
+        try:
+            return sym.string
+        except RuntimeError:
+            return str(sym)
+    else:
+        return sym.string or str(sym)
+
+
+def extract_args(model, predicate_name):
+    """Extract the arguments to predicates with the provided name from a model.
+
+    Pull out all the predicates with name ``predicate_name`` from the model, and return
+    their stringified arguments as tuples.
+    """
+    return [stringify(sym.arguments) for sym in model if sym.name == predicate_name]
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
@@ -592,14 +639,27 @@ class PyclingoDriver(object):
         if choice:
             self.assumptions.append(atom)
 
-    def solve(self, setup, specs, reuse=None, namespace=False, output=None, control=None):
+    def handle_error(self, msg, *args):
+        """Handle an error state derived by the solver."""
+        msg = msg.format(*args)
+
+        # For variant formatting, we sometimes have to construct specs
+        # to format values properly. Find/replace all occurances of
+        # Spec(...) with the string representation of the spec mentioned
+        specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
+        for spec_str in specs_to_construct:
+            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
+
+        # TODO: this raises early -- we should handle multiple errors if there are any.
+        raise UnsatisfiableSpecError(msg)
+
+    def solve(self, setup, specs, reuse=None, output=None, control=None):
         """Set up the input and solve for dependencies of ``specs``.
 
         Arguments:
             setup (SpackSolverSetup): An object to set up the ASP problem.
             specs (list): List of ``Spec`` objects to solve for.
             reuse (None or list): list of concrete specs that can be reused
-            namespace (bool): enable node namespacing
             output (None or OutputConfiguration): configuration object to set
                 the output of this solve.
             control (clingo.Control): configuration for the solver. If None,
@@ -688,32 +748,40 @@ class PyclingoDriver(object):
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
 
-        def stringify(x):
-            if clingo_cffi:
-                # Clingo w/ CFFI will throw an exception on failure
-                try:
-                    return x.string
-                except RuntimeError:
-                    return str(x)
-            else:
-                return x.string or str(x)
-
         if result.satisfiable:
-            # build spec from the best model
+            # get the best model
             builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
             min_cost, best_model = min(models)
-            tuples = [(sym.name, [stringify(a) for a in sym.arguments]) for sym in best_model]
-            answers = builder.build_specs(tuples)
+
+            # first check for errors
+            error_args = extract_args(best_model, "error")
+            errors = sorted((int(priority), msg, args) for priority, msg, *args in error_args)
+            for _, msg, args in errors:
+                self.handle_error(msg, *args)
+
+            # build specs from spec attributes in the model
+            spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
+            answers = builder.build_specs(spec_attrs)
 
             # add best spec to the results
             result.answers.append((list(min_cost), 0, answers))
-            result.criteria = build_criteria_names(min_cost, tuples)
+
+            # get optimization criteria
+            criteria_args = extract_args(best_model, "opt_criterion")
+            result.criteria = build_criteria_names(min_cost, criteria_args)
 
             # record the number of models the solver considered
             result.nmodels = len(models)
 
             # record the possible dependencies in the solve
             result.possible_dependencies = setup.pkgs
+
+            # print any unknown functions in the model
+            for sym in best_model:
+                if sym.name not in ("attr", "error", "opt_criterion"):
+                    tty.debug(
+                        "UNKNOWN SYMBOL: %s(%s)" % (sym.name, ", ".join(stringify(sym.arguments)))
+                    )
 
         elif cores:
             result.control = self.control
@@ -762,10 +830,6 @@ class SpackSolverSetup(object):
 
         # whether to add installed/binary hashes to the solve
         self.tests = tests
-
-        # whether to namespace nodes in the solve
-        # set by setup()
-        self.namespace = None
 
         # If False allows for input specs that are not solved
         self.concretize_everything = True
@@ -841,14 +905,14 @@ class SpackSolverSetup(object):
         assert spec.name, msg
 
         if spec.concrete:
-            return [fn.version(spec.name, spec.version)]
+            return [fn.attr("version", spec.name, spec.version)]
 
         if spec.versions == spack.version.ver(":"):
             return []
 
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
-        return [fn.node_version_satisfies(spec.name, spec.versions)]
+        return [fn.attr("node_version_satisfies", spec.name, spec.versions)]
 
     def target_ranges(self, spec, single_target_fn):
         target = spec.architecture.target
@@ -858,7 +922,7 @@ class SpackSolverSetup(object):
             return [single_target_fn(spec.name, target)]
 
         self.target_constraints.add(target)
-        return [fn.node_target_satisfies(spec.name, target)]
+        return [fn.attr("node_target_satisfies", spec.name, target)]
 
     def conflict_rules(self, pkg):
         default_msg = "{0} '{1}' conflicts with '{2}'"
@@ -1022,17 +1086,35 @@ class SpackSolverSetup(object):
                 values = [variant.default]
 
             for value in sorted(values):
+                if getattr(value, "when", True) is not True:  # when=True means unconditional
+                    condition_spec = spack.spec.Spec("{0}={1}".format(name, value))
+                    if value.when is False:
+                        # This value is a conflict
+                        # Cannot just prevent listing it as a possible value because it could
+                        # also come in as a possible value from the command line
+                        trigger_id = self.condition(
+                            condition_spec,
+                            name=pkg.name,
+                            msg="invalid variant value {0}={1}".format(name, value),
+                        )
+                        constraint_id = self.condition(
+                            spack.spec.Spec(),
+                            name=pkg.name,
+                            msg="empty (total) conflict constraint",
+                        )
+                        msg = "variant {0}={1} is conditionally disabled".format(name, value)
+                        self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, msg))
+                    else:
+                        imposed = spack.spec.Spec(value.when)
+                        imposed.name = pkg.name
+
+                        self.condition(
+                            required_spec=condition_spec,
+                            imposed_spec=imposed,
+                            name=pkg.name,
+                            msg="%s variant %s value %s when %s" % (pkg.name, name, value, when),
+                        )
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
-                if hasattr(value, "when"):
-                    required = spack.spec.Spec("{0}={1}".format(name, value))
-                    imposed = spack.spec.Spec(value.when)
-                    imposed.name = pkg.name
-                    self.condition(
-                        required_spec=required,
-                        imposed_spec=imposed,
-                        name=pkg.name,
-                        msg="%s variant %s value %s when %s" % (pkg.name, name, value, when),
-                    )
 
             if variant.sticky:
                 self.gen.fact(fn.variant_sticky(pkg.name, name))
@@ -1084,7 +1166,7 @@ class SpackSolverSetup(object):
         # requirements trigger the condition
         requirements = self.spec_clauses(named_cond, body=True, required_from=name)
         for pred in requirements:
-            self.gen.fact(fn.condition_requirement(condition_id, pred.name, *pred.args))
+            self.gen.fact(fn.condition_requirement(condition_id, *pred.args))
 
         if imposed_spec:
             self.impose(condition_id, imposed_spec, node=node, name=name)
@@ -1095,9 +1177,9 @@ class SpackSolverSetup(object):
         imposed_constraints = self.spec_clauses(imposed_spec, body=body, required_from=name)
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
-            if not node and pred.name in ("node", "virtual_node"):
+            if not node and pred.args[0] in ("node", "virtual_node"):
                 continue
-            self.gen.fact(fn.imposed_constraint(condition_id, pred.name, *pred.args))
+            self.gen.fact(fn.imposed_constraint(condition_id, *pred.args))
 
     def package_provider_rules(self, pkg):
         for provider_name in sorted(set(s.name for s in pkg.provided.keys())):
@@ -1354,40 +1436,35 @@ class SpackSolverSetup(object):
 
         # TODO: do this with consistent suffixes.
         class Head(object):
-            node = fn.node
-            node_namespace = fn.node_namespace
-            virtual_node = fn.virtual_node
-            node_platform = fn.node_platform_set
-            node_os = fn.node_os_set
-            node_target = fn.node_target_set
-            variant_value = fn.variant_set
-            node_compiler = fn.node_compiler_set
-            node_compiler_version = fn.node_compiler_version_set
-            node_flag = fn.node_flag_set
-            node_flag_propagate = fn.node_flag_propagate
-            variant_propagate = fn.variant_propagate
+            node = fn.attr("node")
+            virtual_node = fn.attr("virtual_node")
+            node_platform = fn.attr("node_platform_set")
+            node_os = fn.attr("node_os_set")
+            node_target = fn.attr("node_target_set")
+            variant_value = fn.attr("variant_set")
+            node_compiler = fn.attr("node_compiler_set")
+            node_compiler_version = fn.attr("node_compiler_version_set")
+            node_flag = fn.attr("node_flag_set")
+            node_flag_propagate = fn.attr("node_flag_propagate")
+            variant_propagate = fn.attr("variant_propagate")
 
         class Body(object):
-            node = fn.node
-            node_namespace = fn.node_namespace
-            virtual_node = fn.virtual_node
-            node_platform = fn.node_platform
-            node_os = fn.node_os
-            node_target = fn.node_target
-            variant_value = fn.variant_value
-            node_compiler = fn.node_compiler
-            node_compiler_version = fn.node_compiler_version
-            node_flag = fn.node_flag
-            node_flag_propagate = fn.node_flag_propagate
-            variant_propagate = fn.variant_propagate
+            node = fn.attr("node")
+            virtual_node = fn.attr("virtual_node")
+            node_platform = fn.attr("node_platform")
+            node_os = fn.attr("node_os")
+            node_target = fn.attr("node_target")
+            variant_value = fn.attr("variant_value")
+            node_compiler = fn.attr("node_compiler")
+            node_compiler_version = fn.attr("node_compiler_version")
+            node_flag = fn.attr("node_flag")
+            node_flag_propagate = fn.attr("node_flag_propagate")
+            variant_propagate = fn.attr("variant_propagate")
 
         f = Body if body else Head
 
         if spec.name:
             clauses.append(f.node(spec.name) if not spec.virtual else f.virtual_node(spec.name))
-
-        if self.namespace and spec.namespace:
-            clauses.append(f.node_namespace(spec.name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -1449,8 +1526,11 @@ class SpackSolverSetup(object):
 
             elif spec.compiler.versions:
                 clauses.append(
-                    fn.node_compiler_version_satisfies(
-                        spec.name, spec.compiler.name, spec.compiler.versions
+                    fn.attr(
+                        "node_compiler_version_satisfies",
+                        spec.name,
+                        spec.compiler.name,
+                        spec.compiler.versions,
                     )
                 )
                 self.compiler_version_constraints.add(spec.compiler)
@@ -1466,8 +1546,8 @@ class SpackSolverSetup(object):
         if spec.concrete:
             # older specs do not have package hashes, so we have to do this carefully
             if getattr(spec, "_package_hash", None):
-                clauses.append(fn.package_hash(spec.name, spec._package_hash))
-            clauses.append(fn.hash(spec.name, spec.dag_hash()))
+                clauses.append(fn.attr("package_hash", spec.name, spec._package_hash))
+            clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies
         if transitive:
@@ -1481,18 +1561,18 @@ class SpackSolverSetup(object):
                     for dtype in dspec.deptypes:
                         # skip build dependencies of already-installed specs
                         if concrete_build_deps or dtype != "build":
-                            clauses.append(fn.depends_on(spec.name, dep.name, dtype))
+                            clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
 
                             # Ensure Spack will not coconcretize this with another provider
                             # for the same virtual
                             for virtual in dep.package.virtuals_provided:
-                                clauses.append(fn.virtual_node(virtual.name))
+                                clauses.append(fn.attr("virtual_node", virtual.name))
                                 clauses.append(fn.provider(dep.name, virtual.name))
 
                     # imposing hash constraints for all but pure build deps of
                     # already-installed concrete specs.
                     if concrete_build_deps or dspec.deptypes != ("build",):
-                        clauses.append(fn.hash(dep.name, dep.dag_hash()))
+                        clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
 
                 # if the spec is abstract, descend into dependencies.
                 # if it's concrete, then the hashes above take care of dependency
@@ -1929,7 +2009,7 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def setup(self, driver, specs, reuse=None, namespace=False):
+    def setup(self, driver, specs, reuse=None):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1940,7 +2020,6 @@ class SpackSolverSetup(object):
             driver (PyclingoDriver): driver instance of this solve
             specs (list): list of Specs to solve
             reuse (None or list): list of concrete specs that can be reused
-            namespace (bool): enable namespace matching in the solve
         """
         self._condition_id_counter = itertools.count()
 
@@ -1992,10 +2071,6 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
-
-        self.namespace = namespace
-        if namespace:
-            self.gen.fact(fn.enable_node_namespace())
 
         if reuse:
             self.gen.h1("Reusable specs")
@@ -2054,12 +2129,13 @@ class SpackSolverSetup(object):
             self.gen.h2("Spec: %s" % str(spec))
             self.gen.fact(fn.literal(idx))
 
-            root_fn = fn.virtual_root(spec.name) if spec.virtual else fn.root(spec.name)
-            self.gen.fact(fn.literal(idx, root_fn.name, *root_fn.args))
+            self.gen.fact(fn.literal(idx, "virtual_root" if spec.virtual else "root", spec.name))
             for clause in self.spec_clauses(spec):
-                self.gen.fact(fn.literal(idx, clause.name, *clause.args))
-                if clause.name == "variant_set":
-                    self.gen.fact(fn.literal(idx, "variant_default_value_from_cli", *clause.args))
+                self.gen.fact(fn.literal(idx, *clause.args))
+                if clause.args[0] == "variant_set":
+                    self.gen.fact(
+                        fn.literal(idx, "variant_default_value_from_cli", *clause.args[1:])
+                    )
 
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())
@@ -2068,8 +2144,20 @@ class SpackSolverSetup(object):
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
 
-    #: Attributes that don't need actions
-    ignored_attributes = ["opt_criterion"]
+    #: Regex for attributes that don't need actions b/c they aren't used to construct specs.
+    ignored_attributes = re.compile(
+        "|".join(
+            [
+                r"^.*_propagate$",
+                r"^.*_satisfies$",
+                r"^.*_set$",
+                r"^package_hash$",
+                r"^root$",
+                r"^virtual_node$",
+                r"^virtual_root$",
+            ]
+        )
+    )
 
     def __init__(self, specs, hash_lookup=None):
         self._specs = {}
@@ -2084,17 +2172,11 @@ class SpecBuilder(object):
 
     def hash(self, pkg, h):
         if pkg not in self._specs:
-            try:
-                self._specs[pkg] = self._hash_lookup[h]
-            except Exception as e:
-                tty.die("solver hash lookup failure for ", pkg, ": ", e)
+            self._specs[pkg] = self._hash_lookup[h]
 
     def node(self, pkg):
         if pkg not in self._specs:
             self._specs[pkg] = spack.spec.Spec(pkg)
-
-    def node_namespace(self, pkg, namespace):
-        self._specs[pkg].namespace = namespace
 
     def _arch(self, pkg):
         arch = self._specs[pkg].architecture
@@ -2111,17 +2193,6 @@ class SpecBuilder(object):
 
     def node_target(self, pkg, target):
         self._arch(pkg).target = target
-
-    def error(self, priority, msg, *args):
-        msg = msg.format(*args)
-
-        # For variant formatting, we sometimes have to construct specs
-        # to format values properly. Find/replace all occurances of
-        # Spec(...) with the string representation of the spec mentioned
-        specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
-        for spec_str in specs_to_construct:
-            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
-        raise UnsatisfiableSpecError(msg)
 
     def variant_value(self, pkg, name, value):
         # FIXME: is there a way not to special case 'dev_path' everywhere?
@@ -2247,10 +2318,7 @@ class SpecBuilder(object):
     @staticmethod
     def sort_fn(function_tuple):
         name = function_tuple[0]
-        if name == "error":
-            priority = function_tuple[1][0]
-            return (-5, priority)
-        elif name == "hash":
+        if name == "hash":
             return (-4, 0)
         elif name == "node":
             return (-3, 0)
@@ -2265,18 +2333,18 @@ class SpecBuilder(object):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
-        self.function_tuples = function_tuples
-        self.function_tuples.sort(key=self.sort_fn)
+        self.function_tuples = sorted(set(function_tuples), key=self.sort_fn)
 
         self._specs = {}
-        for name, args in function_tuples:
-            if name in SpecBuilder.ignored_attributes:
+        for name, args in self.function_tuples:
+            if SpecBuilder.ignored_attributes.match(name):
                 continue
 
             action = getattr(self, name, None)
+
             # print out unknown actions so we can display them for debugging
             if not action:
-                msg = "%s(%s)" % (name, ", ".join(str(a) for a in args))
+                msg = 'UNKNOWN SYMBOL: attr("%s", %s)' % (name, ", ".join(str(a) for a in args))
                 tty.debug(msg)
                 continue
 
@@ -2317,10 +2385,8 @@ class SpecBuilder(object):
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
         roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
-        tty.debug("roots list: {0}".format(",".join([root.name for root in roots])))
         roots = dict((id(r), r) for r in roots)
         for root in roots.values():
-            tty.debug("Injecting roots for: {0}".format(root.name))
             spack.spec.Spec.inject_patches_variant(root)
 
         # Add external paths to specs with just external modules
@@ -2393,7 +2459,6 @@ class Solver(object):
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", False)
-        self.namespace = spack.config.get("concretizer:enable_node_namespace", False)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -2456,9 +2521,7 @@ class Solver(object):
         reusable_specs.extend(self._reusable_specs())
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        result, _, _ = self.driver.solve(
-            setup, specs, reuse=reusable_specs, namespace=self.namespace, output=output
-        )
+        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
     def solve_in_rounds(
@@ -2495,7 +2558,7 @@ class Solver(object):
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
-                setup, input_specs, reuse=reusable_specs, namespace=self.namespace, output=output
+                setup, input_specs, reuse=reusable_specs, output=output
             )
             yield result
 

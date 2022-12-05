@@ -22,7 +22,6 @@ class Libcatalyst(CMakePackage):
     version("2021-05-12", commit="8456ccd6015142b5a7705f79471361d4f5644fa7")
 
     variant("mpi", default=False, description="Enable MPI support")
-    variant("python3", default=False, description="Enable Python3 support")
 
     depends_on("mpi", when="+mpi")
 

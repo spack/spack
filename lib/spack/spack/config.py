@@ -36,7 +36,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import List  # novm
+from typing import List
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -737,7 +737,7 @@ def override(path_or_scope, value=None):
 
 #: configuration scopes added on the command line
 #: set by ``spack.main.main()``.
-command_line_scopes = []  # type: List[str]
+command_line_scopes: List[str] = []
 
 
 def _add_platform_scope(cfg, scope_type, name, path):
@@ -1000,7 +1000,7 @@ def read_config_file(filename, schema=None):
 
     if not os.path.exists(filename):
         # Ignore nonexistent files.
-        tty.debug("Skipping nonexistent config path {0}".format(filename))
+        tty.debug("Skipping nonexistent config path {0}".format(filename), level=3)
         return None
 
     elif not os.path.isfile(filename):

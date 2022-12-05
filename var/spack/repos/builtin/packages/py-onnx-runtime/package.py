@@ -27,6 +27,7 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     depends_on("cmake@3.1:", type="build")
     depends_on("ninja", type="build")
     depends_on("python", type=("build", "run"))
+    depends_on("py-pip", type="build")
     depends_on("protobuf")
     # https://github.com/microsoft/onnxruntime/pull/11639
     depends_on("protobuf@:3.19", when="@:1.11")
@@ -137,4 +138,7 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
 
     @run_after("install")
     def install_python(self):
-        PythonPackage.install(self, self.spec, self.prefix)
+        """Install everything from build directory."""
+        args = std_pip_args + ["--prefix=" + prefix, "."]
+        with working_dir(self.build_directory):
+            pip(*args)

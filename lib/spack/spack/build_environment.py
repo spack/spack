@@ -41,6 +41,7 @@ import shutil
 import sys
 import traceback
 import types
+from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
@@ -287,7 +288,7 @@ def clean_environment():
 def _add_werror_handling(keep_werror, env):
     keep_flags = set()
     # set of pairs
-    replace_flags = []  # type: List[Tuple[str,str]]
+    replace_flags: List[Tuple[str, str]] = []
     if keep_werror == "all":
         keep_flags.add("-Werror*")
     else:
@@ -563,13 +564,17 @@ def determine_number_of_jobs(
     return min(max_cpus, config_default)
 
 
-def _set_variables_for_single_module(pkg, module):
-    """Helper function to set module variables for single module."""
+def set_module_variables_for_package(pkg):
+    """Populate the Python module of a package with some useful global names.
+    This makes things easier for package writers.
+    """
     # Put a marker on this module so that it won't execute the body of this
     # function again, since it is not needed
     marker = "_set_run_already_called"
-    if getattr(module, marker, False):
+    if getattr(pkg.module, marker, False):
         return
+
+    module = ModuleChangePropagator(pkg)
 
     jobs = determine_number_of_jobs(parallel=pkg.parallel)
 
@@ -638,20 +643,7 @@ def _set_variables_for_single_module(pkg, module):
     # Put a marker on this module so that it won't execute the body of this
     # function again, since it is not needed
     setattr(m, marker, True)
-
-
-def set_module_variables_for_package(pkg):
-    """Populate the module scope of install() with some useful functions.
-    This makes things easier for package writers.
-    """
-    # If a user makes their own package repo, e.g.
-    # spack.pkg.mystuff.libelf.Libelf, and they inherit from an existing class
-    # like spack.pkg.original.libelf.Libelf, then set the module variables
-    # for both classes so the parent class can still use them if it gets
-    # called. parent_class_modules includes pkg.module.
-    modules = parent_class_modules(pkg.__class__)
-    for mod in modules:
-        _set_variables_for_single_module(pkg, mod)
+    module.propagate_changes_to_mro()
 
 
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwargs):
@@ -759,25 +751,6 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
     return list(dedupe(filter_system_paths(rpaths)))
-
-
-def parent_class_modules(cls):
-    """
-    Get list of superclass modules that descend from spack.package_base.PackageBase
-
-    Includes cls.__module__
-    """
-    if not issubclass(cls, spack.package_base.PackageBase) or issubclass(
-        spack.package_base.PackageBase, cls
-    ):
-        return []
-    result = []
-    module = sys.modules.get(cls.__module__)
-    if module:
-        result = [module]
-    for c in cls.__bases__:
-        result.extend(parent_class_modules(c))
-    return result
 
 
 def load_external_modules(pkg):

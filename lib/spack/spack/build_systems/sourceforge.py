@@ -14,7 +14,7 @@ class SourceforgePackage(spack.package_base.PackageBase):
     packages."""
 
     #: Path of the package in a Sourceforge mirror
-    sourceforge_mirror_path = None  # type: Optional[str]
+    sourceforge_mirror_path: Optional[str] = None
 
     #: List of Sourceforge mirrors used by Spack
     base_mirrors = [
