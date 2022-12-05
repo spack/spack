@@ -288,7 +288,7 @@ def clean_environment():
 def _add_werror_handling(keep_werror, env):
     keep_flags = set()
     # set of pairs
-    replace_flags = []  # type: List[Tuple[str,str]]
+    replace_flags: List[Tuple[str, str]] = []
     if keep_werror == "all":
         keep_flags.add("-Werror*")
     else:
@@ -564,13 +564,17 @@ def determine_number_of_jobs(
     return min(max_cpus, config_default)
 
 
-def _set_variables_for_single_module(pkg, module):
-    """Helper function to set module variables for single module."""
+def set_module_variables_for_package(pkg):
+    """Populate the Python module of a package with some useful global names.
+    This makes things easier for package writers.
+    """
     # Put a marker on this module so that it won't execute the body of this
     # function again, since it is not needed
     marker = "_set_run_already_called"
-    if getattr(module, marker, False):
+    if getattr(pkg.module, marker, False):
         return
+
+    module = ModuleChangePropagator(pkg)
 
     jobs = determine_number_of_jobs(parallel=pkg.parallel)
 
@@ -639,20 +643,7 @@ def _set_variables_for_single_module(pkg, module):
     # Put a marker on this module so that it won't execute the body of this
     # function again, since it is not needed
     setattr(m, marker, True)
-
-
-def set_module_variables_for_package(pkg):
-    """Populate the module scope of install() with some useful functions.
-    This makes things easier for package writers.
-    """
-    # If a user makes their own package repo, e.g.
-    # spack.pkg.mystuff.libelf.Libelf, and they inherit from an existing class
-    # like spack.pkg.original.libelf.Libelf, then set the module variables
-    # for both classes so the parent class can still use them if it gets
-    # called. parent_class_modules includes pkg.module.
-    modules = parent_class_modules(pkg.__class__)
-    for mod in modules:
-        _set_variables_for_single_module(pkg, mod)
+    module.propagate_changes_to_mro()
 
 
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwargs):
@@ -760,25 +751,6 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
     return list(dedupe(filter_system_paths(rpaths)))
-
-
-def parent_class_modules(cls):
-    """
-    Get list of superclass modules that descend from spack.package_base.PackageBase
-
-    Includes cls.__module__
-    """
-    if not issubclass(cls, spack.package_base.PackageBase) or issubclass(
-        spack.package_base.PackageBase, cls
-    ):
-        return []
-    result = []
-    module = sys.modules.get(cls.__module__)
-    if module:
-        result = [module]
-    for c in cls.__bases__:
-        result.extend(parent_class_modules(c))
-    return result
 
 
 def load_external_modules(pkg):
@@ -1001,22 +973,9 @@ def modifications_from_dependencies(
             if set_package_py_globals:
                 set_module_variables_for_package(dpkg)
 
-            # Allow dependencies to modify the module
-            # Get list of modules that may need updating
-            modules = []
-            for cls in inspect.getmro(type(spec.package)):
-                module = cls.module
-                if module == spack.package_base:
-                    break
-                modules.append(module)
-
-            # Execute changes as if on a single module
-            # copy dict to ensure prior changes are available
-            changes = spack.util.pattern.Bunch()
-            dpkg.setup_dependent_package(changes, spec)
-
-            for module in modules:
-                module.__dict__.update(changes.__dict__)
+            current_module = ModuleChangePropagator(spec.package)
+            dpkg.setup_dependent_package(current_module, spec)
+            current_module.propagate_changes_to_mro()
 
             if context == "build":
                 builder = spack.builder.create(dpkg)
@@ -1462,3 +1421,51 @@ def write_log_summary(out, log_type, log, last=None):
         # If no errors are found but warnings are, display warnings
         out.write("\n%s found in %s log:\n" % (plural(nwar, "warning"), log_type))
         out.write(make_log_context(warnings))
+
+
+class ModuleChangePropagator:
+    """Wrapper class to accept changes to a package.py Python module, and propagate them in the
+    MRO of the package.
+
+    It is mainly used as a substitute of the ``package.py`` module, when calling the
+    "setup_dependent_package" function during build environment setup.
+    """
+
+    _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")
+
+    def __init__(self, package):
+        self._set_self_attributes("package", package)
+        self._set_self_attributes("current_module", package.module)
+
+        #: Modules for the classes in the MRO up to PackageBase
+        modules_in_mro = []
+        for cls in inspect.getmro(type(package)):
+            module = cls.module
+
+            if module == self.current_module:
+                continue
+
+            if module == spack.package_base:
+                break
+
+            modules_in_mro.append(module)
+        self._set_self_attributes("modules_in_mro", modules_in_mro)
+        self._set_self_attributes("_set_attributes", {})
+
+    def _set_self_attributes(self, key, value):
+        super().__setattr__(key, value)
+
+    def __getattr__(self, item):
+        return getattr(self.current_module, item)
+
+    def __setattr__(self, key, value):
+        if key in ModuleChangePropagator._PROTECTED_NAMES:
+            msg = f'Cannot set attribute "{key}" in ModuleMonkeyPatcher'
+            return AttributeError(msg)
+
+        setattr(self.current_module, key, value)
+        self._set_attributes[key] = value
+
+    def propagate_changes_to_mro(self):
+        for module_in_mro in self.modules_in_mro:
+            module_in_mro.__dict__.update(self._set_attributes)
