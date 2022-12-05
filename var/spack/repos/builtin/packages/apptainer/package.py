@@ -38,7 +38,9 @@ class Apptainer(SingularityBase):
         "https://apptainer.org/docs/admin/main/admin_quickstart.html#apptainer-security",
     )
 
-    # Hijack the edit stage to run mconfig.
+    # This overrides SingularityBase (found in ../singularityce/package.py)
+    # Because Apptainer's mconfig has no option `--without-conmon`
+    # https://github.com/apptainer/apptainer/blob/v1.0.2/mconfig
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             confstring = "./mconfig --prefix=%s" % prefix
