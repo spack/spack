@@ -355,7 +355,9 @@ def url_exists(url, curl=None):
     url_result = url_util.parse(url)
 
     # Use curl if configured to do so
-    use_curl = spack.config.get("config:url_fetch_method", "urllib") == "curl" and url_result.scheme not in ("gs", "s3")
+    use_curl = spack.config.get(
+        "config:url_fetch_method", "urllib"
+    ) == "curl" and url_result.scheme not in ("gs", "s3")
     if use_curl:
         curl_exe = _curl(curl)
         if not curl_exe:

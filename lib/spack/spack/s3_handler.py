@@ -76,5 +76,5 @@ def _s3_open(url, method="GET"):
 class UrllibS3Handler(urllib.request.BaseHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
-        url, headers, stream = _s3_open(orig_url, method=req.method)
+        url, headers, stream = _s3_open(orig_url, method=req.get_method())
         return urllib.response.addinfourl(stream, headers, url)
