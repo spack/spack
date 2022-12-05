@@ -40,6 +40,7 @@ class Berkeleygw(MakefilePackage):
     # https://github.com/spack/spack/pull/33948#issuecomment-1323805817
     variant("mpi", default=True, description="Build with MPI and ScaLAPACK support")
     variant("elpa", default=True, description="Build with ELPA support")
+    variant("python", default=True, description="Build with Python support")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("hdf5", default=True, description="Builds with HDF5 support")
     variant("debug", default=False, description="Builds with DEBUG flag")
@@ -55,6 +56,12 @@ class Berkeleygw(MakefilePackage):
     depends_on("elpa~openmp", when="+elpa~openmp")
     depends_on("fftw-api@3+openmp", when="+openmp")
     depends_on("fftw-api@3~openmp", when="~openmp")
+
+    # in order to run the installed python scripts
+    depends_on("python", type=("build", "run"), when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-setuptools", type=("build", "run"), when="+python")
+    depends_on("py-h5py", type=("build", "run"), when="+hdf5+python")
 
     depends_on("perl", type="test")
 
@@ -91,7 +98,10 @@ class Berkeleygw(MakefilePackage):
         # use parallelization in tests
         filter_file(
             r"cd testsuite \&\& \$\(MAKE\) check$",
-            "cd testsuite && $(MAKE) check-parallel",
+            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 \
+             SAVETESTDIRS=yes TEMPDIRPATH=%s && \
+             $(MAKE) check-parallel"
+            % join_path(self.build_directory, "tmp"),
             "Makefile",
         )
 
@@ -102,10 +112,23 @@ class Berkeleygw(MakefilePackage):
             "testsuite/run_testsuite.sh",
         )
 
-    def setup_build_environment(self, env):
-        if self.run_tests:
-            env.set("OMP_NUM_THREADS", "2")
-            env.set("BGW_TEST_MPI_NPROCS", "2")
+        # slightly raise tolerance of some tests
+        si_epm_tests = ["Si", "Si_cplx_spin"]
+        if self.version >= Version("3.0"):
+            si_epm_tests.append("Si_hdf5")
+        for test in si_epm_tests:
+            filter_file(
+                "Precision : 6e-15",
+                "Precision : 7e-15",
+                join_path("testsuite", "Si-EPM", test + ".test"),
+            )
+        for test in ["Si_subspace", "Si_subspace_cplx", "Si_subspace_cplx_spin"]:
+            filter_file(
+                "Precision : 6e-15",
+                "Precision : 7e-15",
+                join_path("testsuite", "Si-EPM_subspace", test + ".test"),
+            )
+        filter_file("Precision : 8e-15", "Precision : 9e-15", "testsuite/GaAs-EPM/GaAs.test")
 
     def build(self, spec, prefix):
 
