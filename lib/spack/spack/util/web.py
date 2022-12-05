@@ -15,10 +15,9 @@ import shutil
 import ssl
 import sys
 import traceback
-
-import six
-from six.moves.urllib.error import URLError
-from six.moves.urllib.request import Request, urlopen
+from html.parser import HTMLParser
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -39,16 +38,10 @@ from spack.util.path import convert_to_posix_path
 #: User-Agent used in Request objects
 SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
 
-if sys.version_info < (3, 0):
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParseError, HTMLParser  # novm
-else:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
 
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
+# Also, HTMLParseError is deprecated and never raised.
+class HTMLParseError(Exception):
+    pass
 
 
 class LinkParser(HTMLParser):
@@ -85,16 +78,9 @@ def uses_ssl(parsed_url):
     return False
 
 
-__UNABLE_TO_VERIFY_SSL = (lambda pyver: ((pyver < (2, 7, 9)) or ((3,) < pyver < (3, 4, 3))))(
-    sys.version_info
-)
-
-
 def read_from_url(url, accept_content_type=None):
     url = url_util.parse(url)
     context = None
-
-    verify_ssl = spack.config.get("config:verify_ssl")
 
     # Timeout in seconds for web requests
     timeout = spack.config.get("config:connect_timeout", 10)
@@ -102,18 +88,13 @@ def read_from_url(url, accept_content_type=None):
     # Don't even bother with a context unless the URL scheme is one that uses
     # SSL certs.
     if uses_ssl(url):
-        if verify_ssl:
-            if __UNABLE_TO_VERIFY_SSL:
-                # User wants SSL verification, but it cannot be provided.
-                warn_no_ssl_cert_checking()
-            else:
-                # User wants SSL verification, and it *can* be provided.
-                context = ssl.create_default_context()  # novm
+        if spack.config.get("config:verify_ssl"):
+            # User wants SSL verification, and it *can* be provided.
+            context = ssl.create_default_context()
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            if not __UNABLE_TO_VERIFY_SSL:
-                context = ssl._create_unverified_context()
+            context = ssl._create_unverified_context()
 
     url_scheme = url.scheme
     url = url_util.format(url)
@@ -161,22 +142,11 @@ def read_from_url(url, accept_content_type=None):
     return response.geturl(), response.headers, response
 
 
-def warn_no_ssl_cert_checking():
-    tty.warn(
-        "Spack will not check SSL certificates. You need to update "
-        "your Python to enable certificate verification."
-    )
-
-
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
     if sys.platform == "win32":
         if remote_path[1] == ":":
             remote_path = "file://" + remote_path
     remote_url = url_util.parse(remote_path)
-    verify_ssl = spack.config.get("config:verify_ssl")
-
-    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_url):
-        warn_no_ssl_cert_checking()
 
     remote_file_path = url_util.local_file_path(remote_url)
     if remote_file_path is not None:
@@ -676,11 +646,6 @@ def spider(root_urls, depth=0, concurrency=32):
         except HTMLParseError as e:
             # This error indicates that Python's HTML parser sucks.
             msg = "Got an error parsing HTML."
-
-            # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
-            if sys.version_info[:3] < (2, 7, 3):
-                msg += " Use Python 2.7.3 or newer for better HTML parsing."
-
             tty.warn(msg, url, "HTMLParseError: " + str(e))
 
         except Exception as e:
@@ -693,7 +658,7 @@ def spider(root_urls, depth=0, concurrency=32):
 
         return pages, links, subcalls
 
-    if isinstance(root_urls, six.string_types):
+    if isinstance(root_urls, str):
         root_urls = [root_urls]
 
     # Clear the local cache of visited pages before starting the search
@@ -740,10 +705,7 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    # Note: 'context' parameter was only introduced starting
-    # with versions 2.7.9 and 3.4.3 of Python.
-    if __UNABLE_TO_VERIFY_SSL:
-        del kwargs["context"]
+    del kwargs["context"]
 
     opener = urlopen
     if url_util.parse(url).scheme == "s3":
@@ -784,7 +746,7 @@ def find_versions_of_archive(
         list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
         concurrency (int): maximum number of concurrent requests
-        reference_package (spack.package_base.Package or None): a spack package
+        reference_package (spack.package_base.PackageBase or None): a spack package
             used as a reference for url detection.  Uses the url_for_version
             method on the package to produce reference urls which, if found,
             are preferred.

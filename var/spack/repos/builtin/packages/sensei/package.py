@@ -44,7 +44,7 @@ class Sensei(CMakePackage):
         description="Enable VTKm adaptors and endpoints",
         when="@4: +catalyst",
     )
-    variant("python", default=False, description="Enable Python bindings")
+    variant("python", default=False, description="Enable Python bindings", when="@3:")
     variant(
         "miniapps", default=False, description="Enable the parallel 3D and oscillators miniapps"
     )
@@ -54,8 +54,7 @@ class Sensei(CMakePackage):
     # version 3, SENSEI supports Python 3.
     depends_on("paraview+mpi", when="+catalyst")
     depends_on("paraview+hdf5", when="+catalyst+hdf5")
-    depends_on("paraview+python", when="@:2 +catalyst+python")
-    depends_on("paraview+python3", when="@3: +catalyst+python")
+    depends_on("paraview+python", when="+catalyst+python")
 
     depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
@@ -82,9 +81,7 @@ class Sensei(CMakePackage):
     # HDF5
     depends_on("hdf5", when="+hdf5")
 
-    # SENSEI 3 supports Python 3, earlier versions upport only Python 2
-    depends_on("python@:2.7.16", when="@:2.1.1 +python", type=("build", "run"))
-    depends_on("python@3:", when="@3: +python", type=("build", "run"))
+    depends_on("python@3:", when="+python", type=("build", "run"))
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python", type=("build", "run"))
@@ -142,6 +139,8 @@ class Sensei(CMakePackage):
 
         if "+python" in spec:
             args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))
+            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
+            args.append(self.define("Python3_EXECUTABLE", spec["python"].command.path))
             if spec.satisfies("@3:"):
                 args.append(self.define("SENSEI_PYTHON_VERSION", 3))
             args.append(self.define_from_variant("ENABLE_CATALYST_PYTHON", "catalyst"))

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack.compiler import UnsupportedCompilerFlag
 from spack.package import *
@@ -26,7 +27,7 @@ class Clingo(CMakePackage):
 
     version("master", branch="master", submodules=True)
     version("spack", commit="2a025667090d71b2c9dce60fe924feb6bde8f667", submodules=True)
-
+    version("5.6.2", sha256="81eb7b14977ac57c97c905bd570f30be2859eabc7fe534da3cdc65eaca44f5be")
     version("5.5.2", sha256="a2a0a590485e26dce18860ac002576232d70accc5bfcb11c0c22e66beb23baa6")
     version("5.5.1", sha256="b9cf2ba2001f8241b8b1d369b6f353e628582e2a00f13566e51c03c4dd61f67e")
     version("5.5.0", sha256="c9d7004a0caec61b636ad1c1960fbf339ef8fdee9719321fc1b6b210613a8499")
@@ -64,6 +65,8 @@ class Clingo(CMakePackage):
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=cray")
 
     patch("python38.patch", when="@5.3:5.4.0")
+    patch("size-t.patch", when="%msvc")
+    patch("vs2022.patch", when="%msvc@19.30:")
 
     def patch(self):
         # Doxygen is optional but can't be disabled with a -D, so patch
@@ -118,3 +121,9 @@ class Clingo(CMakePackage):
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
 
         return args
+
+    def win_add_library_dependent(self):
+        if "+python" in self.spec:
+            return [os.path.join(self.prefix, self.spec["python"].package.platlib)]
+        else:
+            return []

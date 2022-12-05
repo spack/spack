@@ -241,28 +241,28 @@ case "$command" in
         mode=cpp
         debug_flags="-g"
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe)
+    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe|craycc)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         debug_flags="-g"
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++)
+    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++|crayCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         debug_flags="-g"
         ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang|crayftn)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         debug_flags="-g"
         ;;
-    f77|xlf|xlf_r|pgf77|amdflang)
+    f77|xlf|xlf_r|pgf77)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -438,6 +438,47 @@ while [ $# -ne 0 ]; do
     if [ -z "$1" ]; then
         shift
         continue
+    fi
+
+    if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
+        # NOTE: the eval is required to allow `|` alternatives inside the variable
+        eval "\
+        case \"\$1\" in
+            $SPACK_COMPILER_FLAGS_KEEP)
+                append other_args_list \"\$1\"
+                shift
+                continue
+                ;;
+        esac
+        "
+    fi
+    # the replace list is a space-separated list of pipe-separated pairs,
+    # the first in each pair is the original prefix to be matched, the
+    # second is the replacement prefix
+    if [ -n "${SPACK_COMPILER_FLAGS_REPLACE}" ] ; then
+        for rep in ${SPACK_COMPILER_FLAGS_REPLACE} ; do
+            before=${rep%|*}
+            after=${rep#*|}
+            eval "\
+            stripped=\"\${1##$before}\"
+            "
+            if [ "$stripped" = "$1" ] ; then
+                continue
+            fi
+
+            replaced="$after$stripped" 
+
+            # it matched, remove it
+            shift
+
+            if [ -z "$replaced" ] ; then
+                # completely removed, continue OUTER loop
+                continue 2
+            fi
+
+            # re-build argument list with replacement
+            set -- "$replaced" "$@"
+        done
     fi
 
     case "$1" in

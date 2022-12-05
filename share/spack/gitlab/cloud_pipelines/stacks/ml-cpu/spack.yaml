@@ -6,6 +6,7 @@ spack:
     unify: false
 
   config:
+    build_jobs: 32
     concretizer: clingo
     install_tree:
       root: /home/software/spack
@@ -16,17 +17,19 @@ spack:
   packages:
     all:
       compiler: [gcc@11.2.0]
-      target: [x86_64_v4]
+      target: [x86_64_v3]
       variants: ~cuda~rocm
 
   specs:
     # Horovod
     - py-horovod
 
+    # Hugging Face
+    - py-transformers
+
     # JAX
-    # https://github.com/google/jax/issues/12614
-    # - py-jax
-    # - py-jaxlib
+    - py-jax
+    - py-jaxlib
 
     # Keras
     - py-keras
@@ -87,16 +90,26 @@ spack:
 
   gitlab-ci:
     script:
+      - uname -a || true
+      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - nproc
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
+      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+    after_script:
+      - cat /proc/loadavg || true
 
+    match_behavior: first
     mappings:
       - match:
           - llvm

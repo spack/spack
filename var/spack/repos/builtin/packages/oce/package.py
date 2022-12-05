@@ -10,9 +10,9 @@ from spack.package import *
 
 
 class Oce(Package):
-    """Open CASCADE Community Edition:
-    patches/improvements/experiments contributed by users over the official
-    Open CASCADE library.
+    """Open CASCADE Community Edition
+
+    UNMAINTAINED: see https://github.com/tpaviot/oce/issues/745#issuecomment-992285943
     """
 
     homepage = "https://github.com/tpaviot/oce"
@@ -32,9 +32,11 @@ class Oce(Package):
     variant("X11", default=False, description="Build with X11 enabled")
 
     depends_on("cmake@2.8:", type="build")
-    depends_on("tbb", when="+tbb")
-    conflicts("intel-tbb@2021.1:")
-    conflicts("intel-oneapi-tbb@2021.1:")
+
+    with when("+tbb"):
+        depends_on("tbb")
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
+        conflicts("intel-oneapi-tbb@2021.1:")
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see
