@@ -100,6 +100,11 @@ class Sensei(CMakePackage):
     patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
     patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")
     patch("sensei-version-detection-pr75.patch", when="@4.0.0")
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/SENSEI-insitu/SENSEI/pull/88.patch?full_index=1",
+        sha256="6e5a190d4d3275c248b11b9258b79ddf2e5f0dc1b028b23dcdbdc13f9ea46813",
+        when="@4.0.0 +python ^swig@4.1:",
+    )
 
     def cmake_args(self):
         spec = self.spec
