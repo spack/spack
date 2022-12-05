@@ -20,6 +20,7 @@ class Opencv(CMakePackage, CudaPackage):
 
     version("master", branch="master")
     version("4.6.0", sha256="1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277")
+    version("4.5.5", sha256="a1cfdcf6619387ca9e232687504da996aaa9f7b5689986b8331ec02cb61d28ad")
     version(
         "4.5.4",
         sha256="c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d",
@@ -117,6 +118,7 @@ class Opencv(CMakePackage, CudaPackage):
         "4.5.1",
         "4.5.2",
         "4.5.4",
+        "4.5.5",
         "4.6.0",
     ]
     for cv in contrib_vers:
@@ -124,7 +126,7 @@ class Opencv(CMakePackage, CudaPackage):
             name="contrib",
             git="https://github.com/opencv/opencv_contrib.git",
             tag="{0}".format(cv),
-            when="@{0}".format(cv),
+            when="@{0} +contrib".format(cv),
         )
 
     # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
@@ -782,6 +784,7 @@ class Opencv(CMakePackage, CudaPackage):
         description="Enable -ffast-math (not recommended for GCC 4.6.x)",
     )
     variant("nonfree", default=False, description="Enable non-free algorithms")
+    variant("contrib", default=True, description="Install extra OpenCV modules")
 
     # Required (dependencies)
     depends_on("cmake@3.5.1:", type="build")
@@ -921,12 +924,14 @@ class Opencv(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            self.define(
-                "OPENCV_EXTRA_MODULES_PATH",
-                join_path(self.stage.source_path, "opencv_contrib/modules"),
-            ),
             self.define("BUILD_opencv_core", "on"),
         ]
+        
+        if self.spec.satisfies("+contrib"):
+            args += self.define(
+                "OPENCV_EXTRA_MODULES_PATH",
+                join_path(self.stage.source_path, "opencv_contrib/modules"),
+            )
 
         # OpenCV pre-built apps
         apps_list = []
