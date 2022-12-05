@@ -398,9 +398,9 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
 
     # write to YAML and read back in -- new specs will *only* contain
     # their sub-DAGs, and won't contain the dependent that patched them
-    libelf = spack.spec.Spec.from_yaml(spec["libelf"].to_yaml())
-    libdwarf = spack.spec.Spec.from_yaml(spec["libdwarf"].to_yaml())
-    fake = spack.spec.Spec.from_yaml(spec["fake"].to_yaml())
+    libelf = Spec.from_json(spec["libelf"].to_json())
+    libdwarf = Spec.from_json(spec["libdwarf"].to_json())
+    fake = Spec.from_json(spec["fake"].to_json())
 
     # make sure we can still read patches correctly for these specs
     check_multi_dependency_patch_specs(

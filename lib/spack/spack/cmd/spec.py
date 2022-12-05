@@ -5,8 +5,6 @@
 
 from __future__ import print_function
 
-import sys
-
 import llnl.util.lang as lang
 import llnl.util.tty as tty
 
@@ -33,15 +31,6 @@ for further documentation regarding the spec syntax, see:
 """
     arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
     format_group = subparser.add_mutually_exclusive_group()
-    format_group.add_argument(
-        "-y",
-        "--yaml",
-        action="store_const",
-        dest="format",
-        default=None,
-        const="yaml",
-        help="print concrete spec as YAML",
-    )
     format_group.add_argument(
         "-j",
         "--json",
@@ -111,12 +100,8 @@ def spec(parser, args):
             tty.die("spack spec requires at least one spec or an active environment")
 
     for (input, output) in specs:
-        # With -y, just print YAML to output.
         if args.format:
-            if args.format == "yaml":
-                # use write because to_yaml already has a newline.
-                sys.stdout.write(output.to_yaml(hash=ht.dag_hash))
-            elif args.format == "json":
+            if args.format == "json":
                 print(output.to_json(hash=ht.dag_hash))
             else:
                 print(output.format(args.format))

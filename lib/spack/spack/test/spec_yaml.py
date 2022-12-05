@@ -23,16 +23,9 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.spack_json as sjson
-import spack.util.spack_yaml as syaml
 import spack.version
 from spack.spec import Spec, save_dependency_specfiles
-from spack.util.spack_yaml import SpackYAMLError, syaml_dict
-
-
-def check_yaml_round_trip(spec):
-    yaml_text = spec.to_yaml()
-    spec_from_yaml = Spec.from_yaml(yaml_text)
-    assert spec.eq_dag(spec_from_yaml)
+from spack.util.spack_yaml import syaml_dict
 
 
 def check_json_round_trip(spec):
@@ -43,7 +36,6 @@ def check_json_round_trip(spec):
 
 def test_simple_spec():
     spec = Spec("mpileaks")
-    check_yaml_round_trip(spec)
     check_json_round_trip(spec)
 
 
@@ -71,19 +63,7 @@ def test_read_spec_from_signed_json():
 def test_normal_spec(mock_packages):
     spec = Spec("mpileaks+debug~opt")
     spec.normalize()
-    check_yaml_round_trip(spec)
     check_json_round_trip(spec)
-
-
-@pytest.mark.parametrize(
-    "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
-)
-def test_invalid_yaml_spec(invalid_yaml):
-    with pytest.raises(SpackYAMLError) as e:
-        Spec.from_yaml(invalid_yaml)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing YAML spec:")
-    assert invalid_yaml in exc_msg
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
@@ -98,44 +78,37 @@ def test_invalid_json_spec(invalid_json, error_message):
 def test_external_spec(config, mock_packages):
     spec = Spec("externaltool")
     spec.concretize()
-    check_yaml_round_trip(spec)
     check_json_round_trip(spec)
 
     spec = Spec("externaltest")
     spec.concretize()
-    check_yaml_round_trip(spec)
     check_json_round_trip(spec)
 
 
 def test_ambiguous_version_spec(mock_packages):
     spec = Spec("mpileaks@1.0:5.0,6.1,7.3+debug~opt")
     spec.normalize()
-    check_yaml_round_trip(spec)
     check_json_round_trip(spec)
 
 
 def test_concrete_spec(config, mock_packages):
     spec = Spec("mpileaks+debug~opt")
     spec.concretize()
-    check_yaml_round_trip(spec)
     check_json_round_trip(spec)
 
 
 def test_yaml_multivalue(config, mock_packages):
     spec = Spec('multivalue-variant foo="bar,baz"')
     spec.concretize()
-    check_yaml_round_trip(spec)
     check_json_round_trip(spec)
 
 
 def test_yaml_subdag(config, mock_packages):
     spec = Spec("mpileaks^mpich+debug")
     spec.concretize()
-    yaml_spec = Spec.from_yaml(spec.to_yaml())
     json_spec = Spec.from_json(spec.to_json())
 
     for dep in ("callpath", "mpich", "dyninst", "libdwarf", "libelf"):
-        assert spec[dep].eq_dag(yaml_spec[dep])
         assert spec[dep].eq_dag(json_spec[dep])
 
 
@@ -185,7 +158,6 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         # Dict & corresponding YAML & JSON from the original spec.
         #
         spec_dict = spec.to_dict()
-        spec_yaml = spec.to_yaml()
         spec_json = spec.to_json()
 
         #
@@ -195,10 +167,8 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         reversed_spec_dict = reverse_all_dicts(spec.to_dict())
 
         #
-        # Dump to YAML and JSON
+        # Dump to JSON
         #
-        yaml_string = syaml.dump(spec_dict, default_flow_style=False)
-        reversed_yaml_string = syaml.dump(reversed_spec_dict, default_flow_style=False)
         json_string = sjson.dump(spec_dict)
         reversed_json_string = sjson.dump(reversed_spec_dict)
 
@@ -206,47 +176,34 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         # Do many consistency checks
         #
 
-        # spec yaml is ordered like the spec dict
-        assert yaml_string == spec_yaml
+        # spec json is ordered like the spec dict
         assert json_string == spec_json
 
         # reversed string is different from the original, so it
         # *would* generate a different hash
-        assert yaml_string != reversed_yaml_string
         assert json_string != reversed_json_string
 
         # build specs from the "wrongly" ordered data
-        round_trip_yaml_spec = Spec.from_yaml(yaml_string)
         round_trip_json_spec = Spec.from_json(json_string)
-        round_trip_reversed_yaml_spec = Spec.from_yaml(reversed_yaml_string)
-        round_trip_reversed_json_spec = Spec.from_yaml(reversed_json_string)
+        round_trip_reversed_json_spec = Spec.from_json(reversed_json_string)
 
         # Strip spec if we stripped the yaml
         spec = spec.copy(deps=ht.dag_hash.deptype)
 
         # specs are equal to the original
-        assert spec == round_trip_yaml_spec
         assert spec == round_trip_json_spec
 
-        assert spec == round_trip_reversed_yaml_spec
         assert spec == round_trip_reversed_json_spec
-        assert round_trip_yaml_spec == round_trip_reversed_yaml_spec
         assert round_trip_json_spec == round_trip_reversed_json_spec
         # dag_hashes are equal
-        assert spec.dag_hash() == round_trip_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_json_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
 
         # dag_hash is equal after round-trip by dag_hash
         spec.concretize()
-        round_trip_yaml_spec.concretize()
         round_trip_json_spec.concretize()
-        round_trip_reversed_yaml_spec.concretize()
         round_trip_reversed_json_spec.concretize()
-        assert spec.dag_hash() == round_trip_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_json_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
 
 
@@ -333,11 +290,11 @@ def reverse_all_dicts(data):
         return data
 
 
-def check_specs_equal(original_spec, spec_yaml_path):
-    with open(spec_yaml_path, "r") as fd:
-        spec_yaml = fd.read()
-        spec_from_yaml = Spec.from_yaml(spec_yaml)
-        return original_spec.eq_dag(spec_from_yaml)
+def check_specs_equal(original_spec, spec_path):
+    with open(spec_path, "r") as fd:
+        spec_json = fd.read()
+        spec_from_json = Spec.from_json(spec_json)
+        return original_spec.eq_dag(spec_from_json)
 
 
 def test_save_dependency_spec_jsons_subset(tmpdir, config):
@@ -362,67 +319,6 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
 
         assert check_specs_equal(b_spec, os.path.join(output_path, "b.json"))
         assert check_specs_equal(c_spec, os.path.join(output_path, "c.json"))
-
-
-def test_legacy_yaml(tmpdir, install_mockery, mock_packages):
-    """Tests a simple legacy YAML with a dependency and ensures spec survives
-    concretization."""
-    yaml = """
-spec:
-- a:
-    version: '2.0'
-    arch:
-      platform: linux
-      platform_os: rhel7
-      target: x86_64
-    compiler:
-      name: gcc
-      version: 8.3.0
-    namespace: builtin.mock
-    parameters:
-      bvv: true
-      foo:
-      - bar
-      foobar: bar
-      cflags: []
-      cppflags: []
-      cxxflags: []
-      fflags: []
-      ldflags: []
-      ldlibs: []
-    dependencies:
-      b:
-        hash: iaapywazxgetn6gfv2cfba353qzzqvhn
-        type:
-        - build
-        - link
-    hash: obokmcsn3hljztrmctbscmqjs3xclazz
-    full_hash: avrk2tqsnzxeabmxa6r776uq7qbpeufv
-    build_hash: obokmcsn3hljztrmctbscmqjs3xclazy
-- b:
-    version: '1.0'
-    arch:
-      platform: linux
-      platform_os: rhel7
-      target: x86_64
-    compiler:
-      name: gcc
-      version: 8.3.0
-    namespace: builtin.mock
-    parameters:
-      cflags: []
-      cppflags: []
-      cxxflags: []
-      fflags: []
-      ldflags: []
-      ldlibs: []
-    hash: iaapywazxgetn6gfv2cfba353qzzqvhn
-    full_hash: qvsxvlmjaothtpjluqijv7qfnni3kyyg
-    build_hash: iaapywazxgetn6gfv2cfba353qzzqvhy
-"""
-    spec = Spec.from_yaml(yaml)
-    concrete_spec = spec.concretized()
-    assert concrete_spec.eq_dag(spec)
 
 
 #: A well ordered Spec dictionary, using ``OrderdDict``.

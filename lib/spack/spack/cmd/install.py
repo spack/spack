@@ -459,10 +459,7 @@ def concrete_specs_from_file(args):
     result = []
     for file in args.specfiles:
         with open(file, "r") as f:
-            if file.endswith("yaml") or file.endswith("yml"):
-                s = spack.spec.Spec.from_yaml(f)
-            else:
-                s = spack.spec.Spec.from_json(f)
+            s = spack.spec.Spec.from_json(f)
 
         concretized = s.concretized()
         if concretized.dag_hash() != s.dag_hash():

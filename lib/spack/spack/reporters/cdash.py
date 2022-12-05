@@ -22,6 +22,7 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
+import spack.spec
 from spack.error import SpackError
 from spack.reporter import Reporter
 from spack.reporters.extract import extract_test_parts
@@ -92,7 +93,7 @@ class CDash(Reporter):
             packages = []
             for file in args.specfiles:
                 with open(file, "r") as f:
-                    s = spack.spec.Spec.from_yaml(f)
+                    s = spack.spec.Spec.from_json(f)
                     packages.append(s.format())
         self.install_command = " ".join(packages)
         self.base_buildname = args.cdash_build or self.install_command

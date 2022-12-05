@@ -763,7 +763,7 @@ class SimpleFilesystemView(FilesystemView):
 def get_spec_from_file(filename):
     try:
         with open(filename, "r") as f:
-            return spack.spec.Spec.from_yaml(f)
+            return spack.spec.Spec.from_json(f)
     except IOError:
         return None
 

@@ -46,15 +46,6 @@ def setup_parser(subparser):
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
     subparser.add_argument(
-        "-y",
-        "--yaml",
-        action="store_const",
-        dest="format",
-        default=None,
-        const="yaml",
-        help="print concrete spec as yaml",
-    )
-    subparser.add_argument(
         "-j",
         "--json",
         action="store_const",
@@ -121,11 +112,7 @@ def _process_result(result, show, required_format, kwargs):
     # dump the solutions as concretized specs
     if "solutions" in show:
         for spec in result.specs:
-            # With -y, just print YAML to output.
-            if required_format == "yaml":
-                # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
-            elif required_format == "json":
+            if required_format == "json":
                 sys.stdout.write(spec.to_json(hash=ht.dag_hash))
             else:
                 sys.stdout.write(spec.tree(color=sys.stdout.isatty(), **kwargs))
@@ -163,7 +150,7 @@ def solve(parser, args):
                 % (d, ", ".join(show_options + ("all",)))
             )
 
-    # Format required for the output (JSON, YAML or None)
+    # Format required for the output (JSON or None)
     required_format = args.format
 
     # If we have an active environment, pick the specs from there
