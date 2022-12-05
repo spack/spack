@@ -27,6 +27,8 @@ class Apptainer(SingularityBase):
     git = "https://github.com/apptainer/apptainer.git"
 
     version("main", branch="main")
+
+    version("1.1.3", sha256="c7bf7f4d5955e1868739627928238d02f94ca9fd0caf110b0243d65548427899")
     version("1.0.2", sha256="2d7a9d0a76d5574459d249c3415e21423980d9154ce85e8c34b0600782a7dfd3")
 
     singularity_org = "apptainer"
@@ -35,3 +37,14 @@ class Apptainer(SingularityBase):
         "https://apptainer.org/docs/admin/main/security.html",
         "https://apptainer.org/docs/admin/main/admin_quickstart.html#apptainer-security",
     )
+
+    # Hijack the edit stage to run mconfig.
+    def edit(self, spec, prefix):
+        with working_dir(self.build_directory):
+            confstring = "./mconfig --prefix=%s" % prefix
+            if "~suid" in spec:
+                confstring += " --without-suid"
+            if "~network" in spec:
+                confstring += " --without-network"
+            configure = Executable(confstring)
+            configure()
