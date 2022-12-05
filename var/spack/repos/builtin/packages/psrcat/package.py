@@ -22,4 +22,4 @@ class Psrcat(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install("psrcat", bindir)
+        install("psrcat", prefix.bin)
