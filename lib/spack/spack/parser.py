@@ -37,12 +37,8 @@ VERSION_RANGE = rf"({VERSION}:{VERSION}|:{VERSION}|{VERSION}:|:)"
 VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})([,]({VERSION_RANGE}|{VERSION}))*"
 
 
-class TokenType(enum.Enum):
-    """Enumeration of the different token kinds in the spec grammar.
-
-    Order of declaration is extremely important, since text containing specs is parsed with a
-    single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
-    """
+class TokenBase(enum.Enum):
+    """Base class for an enum type with a regex value"""
 
     def __new__(cls, *args, **kwargs):
         # See
@@ -54,13 +50,24 @@ class TokenType(enum.Enum):
     def __init__(self, regex):
         self.regex = regex
 
+    def __str__(self):
+        return f"{self._name_}"
+
+
+class TokenType(TokenBase):
+    """Enumeration of the different token kinds in the spec grammar.
+
+    Order of declaration is extremely important, since text containing specs is parsed with a
+    single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
+    """
+
     # Dependency
     DEPENDENCY = r"(\^)"
     # Version
     VERSION_HASH_PAIR = rf"(@({GIT_VERSION}={VERSION}))"
     VERSION = rf"(@({VERSION_LIST}))"
     # Variants
-    PROPAGATED_BOOL_VARIANT = rf"(\+\+|~~|--){NAME})"
+    PROPAGATED_BOOL_VARIANT = rf"((\+\+|~~|--){NAME})"
     BOOL_VARIANT = rf"([~+-]{NAME})"
     PROPAGATED_KEY_VALUE_PAIR = rf"({NAME}==({VALUE}|{QUOTED_VALUE}))"
     KEY_VALUE_PAIR = rf"({NAME}=({VALUE}|{QUOTED_VALUE}))"
@@ -76,11 +83,13 @@ class TokenType(enum.Enum):
     DAG_HASH = rf"(/({HASH}))"
     # White spaces
     WS = r"(\s+)"
+
+
+class ErrorTokenType(TokenBase):
+    """Enum with regexes for error analysis"""
+
     # Unexpected character
     UNEXPECTED = r"(.[\s]*)"
-
-    def __str__(self):
-        return f"{self._name_}"
 
 
 class Token:
@@ -107,39 +116,14 @@ class Token:
 
 
 #: List of all the regexes used to match spec parts, in order of precedence
-TOKEN_REGEXES = [
-    # Dependency
-    rf"(?P<{TokenType.DEPENDENCY}>{TokenType.DEPENDENCY.regex})",
-    # Version regexes
-    rf"(?P<{TokenType.VERSION_HASH_PAIR}>{TokenType.VERSION_HASH_PAIR.regex})",
-    rf"(?P<{TokenType.VERSION}>{TokenType.VERSION.regex})",
-    # Variant regexes
-    rf"(?P<{TokenType.PROPAGATED_BOOL_VARIANT}>{TokenType.PROPAGATED_BOOL_VARIANT.regex}",
-    rf"(?P<{TokenType.BOOL_VARIANT}>{TokenType.BOOL_VARIANT.regex})",
-    rf"(?P<{TokenType.PROPAGATED_KEY_VALUE_PAIR}>{TokenType.PROPAGATED_KEY_VALUE_PAIR.regex})",  # noqa: E501
-    rf"(?P<{TokenType.KEY_VALUE_PAIR}>{TokenType.KEY_VALUE_PAIR.regex})",
-    # Compiler regexes
-    rf"(?P<{TokenType.COMPILER_AND_VERSION}>{TokenType.COMPILER_AND_VERSION.regex})",
-    rf"(?P<{TokenType.COMPILER}>{TokenType.COMPILER.regex})",
-    # Filename
-    rf"(?P<{TokenType.FILENAME}>{TokenType.FILENAME.regex})",
-    # Spec name regexes
-    rf"(?P<{TokenType.FULLY_QUALIFIED_PACKAGE_NAME}>{TokenType.FULLY_QUALIFIED_PACKAGE_NAME.regex})",  # noqa: E501
-    rf"(?P<{TokenType.UNQUALIFIED_PACKAGE_NAME}>{TokenType.UNQUALIFIED_PACKAGE_NAME.regex})",
-    # DAG hash
-    rf"(?P<{TokenType.DAG_HASH}>{TokenType.DAG_HASH.regex})",
-    # White spaces (the lowest priority)
-    rf"(?P<{TokenType.WS}>{TokenType.WS.regex})",
-]
-
+TOKEN_REGEXES = [rf"(?P<{token}>{token.regex})" for token in TokenType]
+#: List of all valid regexes followed by error analysis regexes
 ERROR_HANDLING_REGEXES = TOKEN_REGEXES + [
-    rf"(?P<{TokenType.UNEXPECTED}>{TokenType.UNEXPECTED.regex})",
+    rf"(?P<{token}>{token.regex})" for token in ErrorTokenType
 ]
-
-#: Maps a string representation to the corresponding token kind
-STR_TO_TOKEN = {str(x): x for x in TokenType}
-
+#: Regex to scan a valid text
 ALL_TOKENS = re.compile("|".join(TOKEN_REGEXES))
+#: Regex to analyze an invalid text
 ANALYSIS_REGEX = re.compile("|".join(ERROR_HANDLING_REGEXES))
 
 
@@ -154,7 +138,7 @@ def tokenize(text: str) -> Iterator[Token]:
     match: Optional[Match] = None
     for match in iter(scanner.match, None):
         yield Token(
-            STR_TO_TOKEN[match.lastgroup],  # type: ignore[attr-defined]
+            TokenType.__members__[match.lastgroup],  # type: ignore[attr-defined]
             match.group(),  # type: ignore[attr-defined]
             match.start(),  # type: ignore[attr-defined]
             match.end(),  # type: ignore[attr-defined]
@@ -451,7 +435,7 @@ class SpecTokenizationError(SpecSyntaxError):
 
         underline = "\n"
         for match in matches:
-            if match.lastgroup == str(TokenType.UNEXPECTED):
+            if match.lastgroup == str(ErrorTokenType.UNEXPECTED):
                 underline += f"{'^' * (match.end() - match.start())}"
                 continue
             underline += f"{' ' * (match.end() - match.start())}"
