@@ -293,10 +293,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # To avoid translating line endings (\n to \r\n and vis versa)
             # we force os.open to ignore translations and use the line endings
             # the file comes with
-            extra_kwargs = {
-                "errors": "surrogateescape",
-                "newline": ""
-                }
+            extra_kwargs = {"errors": "surrogateescape", "newline": ""}
 
             # Open as a text file and filter until the end of the file is
             # reached or we found a marker in the line if it was specified

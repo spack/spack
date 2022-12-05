@@ -25,11 +25,11 @@ def test_list_cli_output_format(mock_tty_stdout):
     # restore this test
     if not sys.platform == "win32":
         out_str = dedent(
-        """\
+            """\
     mpileaks
     ==> 1 packages
     """
-    )
+        )
     else:
         out_str = dedent(
             """\

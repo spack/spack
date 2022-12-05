@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from spack.package import *
 
 
@@ -26,7 +27,7 @@ class IntelOneapiCompilers(Package):
         mkdirp(self.compiler_search_prefix)
         comp = self.compiler_search_prefix.icx
         if sys.platform == "win32":
-            comp = comp+".bat"
+            comp = comp + ".bat"
             comp_string = "@echo off\necho oneAPI DPC++ Compiler %s" % str(spec.version)
         else:
             comp_string = '#!/bin/bash\necho "oneAPI DPC++ Compiler %s"' % str(spec.version)
