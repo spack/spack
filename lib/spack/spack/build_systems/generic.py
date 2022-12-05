@@ -35,10 +35,10 @@ class GenericBuilder(BaseBuilder):
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ()  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = ()
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = ("archive_files",)  # type: Tuple[str, ...]
+    legacy_attributes: Tuple[str, ...] = ("archive_files",)
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
     spack.builder.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)

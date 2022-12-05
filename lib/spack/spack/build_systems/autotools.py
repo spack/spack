@@ -138,7 +138,7 @@ class AutotoolsBuilder(BaseBuilder):
     patch_libtool = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsBuilder.build` phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsBuilder.install` phase
     install_targets = ["install"]
 
@@ -152,7 +152,7 @@ class AutotoolsBuilder(BaseBuilder):
     force_autoreconf = False
 
     #: Options to be passed to autoreconf when using the default implementation
-    autoreconf_extra_args = []  # type: List[str]
+    autoreconf_extra_args: List[str] = []
 
     #: If False deletes all the .la files in the prefix folder after the installation.
     #: If True instead it installs them.

@@ -11,7 +11,7 @@ import re
 import shlex
 import sys
 from textwrap import dedent
-from typing import List, Tuple
+from typing import List, Match, Tuple
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -165,18 +165,15 @@ class _UnquotedFlags(object):
         )
     )
 
-    def __init__(self, all_unquoted_flag_pairs):
-        # type: (List[Tuple[re.Match, str]]) -> None
+    def __init__(self, all_unquoted_flag_pairs: List[Tuple[Match[str], str]]):
         self._flag_pairs = all_unquoted_flag_pairs
 
-    def __bool__(self):
-        # type: () -> bool
+    def __bool__(self) -> bool:
         return bool(self._flag_pairs)
 
     @classmethod
-    def extract(cls, sargs):
-        # type: (str) -> _UnquotedFlags
-        all_unquoted_flag_pairs = []  # type: List[Tuple[re.Match, str]]
+    def extract(cls, sargs: str) -> "_UnquotedFlags":
+        all_unquoted_flag_pairs: List[Tuple[Match[str], str]] = []
         prev_flags_arg = None
         for arg in shlex.split(sargs):
             if prev_flags_arg is not None:
@@ -184,8 +181,7 @@ class _UnquotedFlags(object):
             prev_flags_arg = cls.flags_arg_pattern.match(arg)
         return cls(all_unquoted_flag_pairs)
 
-    def report(self):
-        # type: () -> str
+    def report(self) -> str:
         single_errors = [
             "({0}) {1} {2} => {3}".format(
                 i + 1,

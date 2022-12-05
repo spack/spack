@@ -235,8 +235,7 @@ class VersionBase(object):
         "string",
     ]
 
-    def __init__(self, string):
-        # type: (str) -> None
+    def __init__(self, string: str) -> None:
         if not isinstance(string, str):
             string = str(string)
 

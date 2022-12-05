@@ -65,7 +65,7 @@ class Timer(object):
             now: function that gives the seconds since e.g. epoch
         """
         self._now = now
-        self._timers = OrderedDict()  # type: OrderedDict[str,Interval]
+        self._timers: OrderedDict[str, Interval] = OrderedDict()
 
         # _global is the overal timer since the instance was created
         self._timers[global_timer_name] = Interval(self._now(), end=None)

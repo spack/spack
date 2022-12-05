@@ -72,7 +72,7 @@ class NMakeBuilder(BaseBuilder):
     )
 
     #: Targets for ``make`` during the :py:meth:`~.NMakeBuilder.build` phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets for ``make`` during the :py:meth:`~.NMakeBuilder.install` phase
     install_targets = ["install"]
 

@@ -95,7 +95,7 @@ class MesonBuilder(BaseBuilder):
         "build_directory",
     )
 
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     install_targets = ["install"]
 
     build_time_test_callbacks = ["check"]

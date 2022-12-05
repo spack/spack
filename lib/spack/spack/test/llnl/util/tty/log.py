@@ -11,10 +11,8 @@ import os
 import signal
 import sys
 import time
-from typing import TYPE_CHECKING, Optional  # novm
-
-if TYPE_CHECKING:
-    from types import ModuleType  # novm
+from types import ModuleType
+from typing import Optional
 
 import pytest
 
@@ -24,7 +22,7 @@ import llnl.util.tty.pty as pty
 
 from spack.util.executable import which
 
-termios = None  # type: Optional[ModuleType]
+termios: Optional[ModuleType] = None
 try:
     import termios as term_mod
 

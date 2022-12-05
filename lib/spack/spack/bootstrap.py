@@ -16,6 +16,7 @@ import re
 import sys
 import sysconfig
 import uuid
+from typing import List
 
 import archspec.cpu
 
@@ -84,10 +85,10 @@ def _try_import_from_store(module, query_spec, query_info=None):
 
     for candidate_spec in installed_specs:
         pkg = candidate_spec["python"].package
-        module_paths = [
+        module_paths: List[str] = [
             os.path.join(candidate_spec.prefix, pkg.purelib),
             os.path.join(candidate_spec.prefix, pkg.platlib),
-        ]  # type: list[str]
+        ]
         path_before = list(sys.path)
 
         # NOTE: try module_paths first and last, last allows an existing version in path

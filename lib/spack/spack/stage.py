@@ -49,9 +49,7 @@ _source_path_subdir = "spack-src"
 stage_prefix = "spack-stage-"
 
 
-def create_stage_root(path):
-    # type: (str) -> None
-
+def create_stage_root(path: str) -> None:
     """Create the stage root directory and ensure appropriate access perms."""
     assert os.path.isabs(path) and len(path.strip()) > 1
 
@@ -235,7 +233,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {}  # type: Dict[str, spack.util.lock.Lock]
+    stage_locks: Dict[str, spack.util.lock.Lock] = {}
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True

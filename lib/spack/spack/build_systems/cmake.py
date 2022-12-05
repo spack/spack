@@ -153,13 +153,13 @@ class CMakeBuilder(BaseBuilder):
     """
 
     #: Phases of a CMake package
-    phases = ("cmake", "build", "install")  # type: Tuple[str, ...]
+    phases: Tuple[str, ...] = ("cmake", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("cmake_args", "check")  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = ("cmake_args", "check")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = (
+    legacy_attributes: Tuple[str, ...] = (
         "generator",
         "build_targets",
         "install_targets",
@@ -169,7 +169,7 @@ class CMakeBuilder(BaseBuilder):
         "std_cmake_args",
         "build_dirname",
         "build_directory",
-    )  # type: Tuple[str, ...]
+    )
 
     #: The build system generator to use.
     #:
@@ -182,7 +182,7 @@ class CMakeBuilder(BaseBuilder):
     generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
 
     #: Targets to be used during the build phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets to be used during the install phase
     install_targets = ["install"]
     #: Callback names for build-time test
