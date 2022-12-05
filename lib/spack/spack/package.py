@@ -8,6 +8,14 @@
 
 Everything in this module is automatically imported into Spack package files.
 """
+from os import chdir, environ, getcwd, makedirs, mkdir, remove, removedirs
+from shutil import move, rmtree
+
+# Emulate some shell commands for convenience
+env = environ
+cd = chdir
+pwd = getcwd
+
 # import most common types used in packages
 from typing import Dict, List, Optional
 
@@ -15,6 +23,9 @@ import llnl.util.filesystem
 from llnl.util.filesystem import *
 
 import spack.util.executable
+
+# These props will be overridden when the build env is set up.
+from spack.build_environment import MakeExecutable
 from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.bundle import BundlePackage
@@ -83,3 +94,10 @@ from spack.variant import (
     disjoint_sets,
 )
 from spack.version import Version, ver
+
+# These are just here for editor support; they will be replaced when the build env
+# is set up.
+make = MakeExecutable("make", jobs=1)
+gmake = MakeExecutable("gmake", jobs=1)
+ninja = MakeExecutable("ninja", jobs=1)
+configure = Executable(join_path(".", "configure"))
