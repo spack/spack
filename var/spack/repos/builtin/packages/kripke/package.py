@@ -15,7 +15,7 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://computing.llnl.gov/projects/co-design/kripke"
     git = "https://github.com/LLNL/Kripke.git"
 
-    tags = ["SN-neutronics proxy-app"]
+    tags = ["proxy-app"]
 
     maintainers = ["vsrana01"]
 
@@ -28,8 +28,6 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("mpi", default=True, description="Build with MPI.")
     variant("openmp", default=False, description="Build with OpenMP enabled.")
-    variant("rocm", default=False, description="Build with ROCM enabled.")
-    variant("cuda", default=False, description="Build with CUDA enabled.")
     variant("caliper", default=False, description="Build with Caliper support enabled.")
 
     depends_on("mpi", when="+mpi")
@@ -39,12 +37,6 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("chai~examples+raja")
     depends_on("raja~exercises~examples")
     depends_on("umpire~examples")
-    depends_on("chai+raja+cuda", when="+cuda")
-    depends_on("raja+cuda", when="+cuda")
-    depends_on("umpire+cuda", when="+cuda")
-    depends_on("chai+raja+rocm", when="+rocm")
-    depends_on("raja+rocm", when="+rocm")
-    depends_on("umpire+rocm", when="+rocm")
 
     def cmake_args(self):
         spec = self.spec
