@@ -28,9 +28,13 @@ class SingularityHpc(PythonPackage):
         multi=False,
     )
 
-    depends_on("singularityce@3:", when="runtime=singularityce", type="run")
-    depends_on("singularity@3:", when="runtime=singularity", type="run")
-    depends_on("podman", when="runtime=podman", type="run")
+    variant(
+        "modules",
+        default="none",
+        description="Module system installed by Spack for this package",
+        values=("none", "lmod", "environment-modules"),
+        multi=False,
+    )
 
     depends_on("python@3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -41,3 +45,10 @@ class SingularityHpc(PythonPackage):
     depends_on("py-jsonschema", type=("build", "run"))
     depends_on("py-ruamel-yaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
+
+    depends_on("singularityce@3:", when="runtime=singularityce", type="run")
+    depends_on("singularity@3:", when="runtime=singularity", type="run")
+    depends_on("podman", when="runtime=podman", type="run")
+
+    depends_on("lmod", when="modules=lmod", type="run")
+    depends_on("environment-modules", when="modules=environment-modules", type="run")
