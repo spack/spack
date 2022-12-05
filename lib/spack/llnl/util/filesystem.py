@@ -2281,7 +2281,7 @@ class WindowsSimulatedRPath(object):
     def _link(self, path, dest):
         file_name = os.path.basename(path)
         dest_file = os.path.join(dest, file_name)
-        if os.path.exists(dest):
+        if os.path.exists(dest) and not dest_file == path:
             try:
                 symlink(path, dest_file)
             # For py2 compatibility, we have to catch the specific Windows error code
