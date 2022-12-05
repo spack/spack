@@ -28,6 +28,15 @@ class MorphoKit(CMakePackage):
     depends_on('libsonata', when='@0.3.3:')  # for utilities
     depends_on('highfive@2.4.0:', when='@0.3.3:')  # for utilities
 
+    # The HighFive update is needed for paged HDF5 features. Unfortunately, the
+    # page buffer is artificially unsupported in pHDF5. Hence, we depend on a
+    # particular, patched version of HDF5.
+    depends_on('highfive@2.6.0:', when='@0.3.5:')
+    depends_on('hdf5@1.12.1:+page_buffer_patch', when='@0.3.5:')
+
+    # MPI is needed for the morphology merger.
+    depends_on('mpi', when='@0.3.5:')
+
     depends_on('boost', when='@0.2.0')
 
     patch('h5.patch', when='@0.3.2')
