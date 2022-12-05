@@ -192,7 +192,7 @@ class PythonPackage(PythonExtension):
     """Specialized class for packages that are built using pip."""
 
     #: Package name, version, and extension on PyPI
-    pypi = None  # type: Optional[str]
+    pypi: Optional[str] = None
 
     maintainers = ["adamjstewart", "pradyunsg"]
 
@@ -219,7 +219,7 @@ class PythonPackage(PythonExtension):
         # package manually
         depends_on("py-wheel", type="build")
 
-    py_namespace = None  # type: Optional[str]
+    py_namespace: Optional[str] = None
 
     @lang.classproperty
     def homepage(cls):

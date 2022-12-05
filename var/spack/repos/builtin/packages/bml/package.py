@@ -7,20 +7,28 @@ from spack.package import *
 
 
 class Bml(CMakePackage):
-    """The basic matrix library (bml) is a collection of various matrix data
-    formats (in dense and sparse) and their associated algorithms for basic
-    matrix operations."""
+    """The basic matrix library (bml) is an implementation of various matrix data
+    formats (dense and sparse) and their associated algorithms for basic
+    matrix operations used electronic structure solvers."""
 
     homepage = "https://lanl.github.io/bml/"
-    url = "https://github.com/lanl/bml/tarball/v1.2.2"
+    url = "https://github.com/lanl/bml/archive/refs/tags/v2.2.0.tar.gz"
     git = "https://github.com/lanl/bml.git"
 
-    version("develop", branch="master")
-    version("1.3.1", sha256="17145eda96aa5e550dcbff1ee7ce62b45723af8210b1ab70c5975ec792fa3d13")
-    version("1.3.0", sha256="d9465079fe77210eb2af2dcf8ed96802edf5bb76bfbfdbcc97e206c8cd460b07")
-    version("1.2.3", sha256="9a2ee6c47d2445bfdb34495497ea338a047e9e4767802af47614d9ff94b0c523")
-    version("1.2.2", sha256="89ab78f9fe8395fe019cc0495a1d7b69875b5708069faeb831ddb9a6a9280a8a")
-    version("1.1.0", sha256="29162f1f7355ad28b44d3358206ccd3c7ac7794ee13788483abcbd2f8063e7fc")
+    maintainers = ["jeanlucf22"]
+
+    version("master", branch="master")
+    version("2.2.0", sha256="41703eee605bcb0ce3bcb5dde5914363aaa382393138ab24f02acf84f670fad0")
+    version("2.1.2", sha256="d5bb4726759eb35ec66fae7b6ce8b4978cee33fa879aed314bf7aa1fa7eece91")
+    version("2.1.1", sha256="412cdc1609e8d66d4a47799806c0974ed3f84c25f09132ad2821a173e8d89261")
+    version("2.1.0", sha256="f95f0289d055a91d8499e2a37f785f69ca3b86dc6cf16726ee6c433b8b8a7f62")
+    version("2.0.1", sha256="ffb590b745888bbf1ff1892e920c29dd3edd7b29405ade3a738df4db5b1e2370")
+    version("2.0.0", sha256="dd9454f825605ee849b68e80bf28c2eaec0d0dd1d491807895352eb08e616bd9")
+    version("1.3.1", sha256="d9cbf95467f7a97d0eaa5a1a7a16481a160464c930a593bce4f2a32b012e2c24")
+    version("1.3.0", sha256="c2d3de0021b314b3fbdaa5445b96109dc22b1ae5c78363eac08fbde692ffe1ad")
+    version("1.2.3", sha256="8106b8ba3d1fb402b98fcfb0110e00ac18264b240b47320268888fc27971aeab")
+    version("1.2.2", sha256="babc2fd0229397e418be00f3691277e86f549b5a23cadbcee66078595e9176a0")
+    version("1.1.0", sha256="a90ede19d80ed870f0bf1588875a9f371484d89006a7296010d8d791da3eac33")
 
     variant("shared", default=True, description="Build shared libs")
     variant("mpi", default=True, description="Build with MPI Support")

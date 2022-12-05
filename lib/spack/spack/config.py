@@ -36,12 +36,10 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import List  # novm
+from typing import List
 
 import ruamel.yaml as yaml
-import six
 from ruamel.yaml.error import MarkedYAMLError
-from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -358,7 +356,7 @@ class InternalConfigScope(ConfigScope):
     def _process_dict_keyname_overrides(data):
         """Turn a trailing `:' in a key name into an override attribute."""
         result = {}
-        for sk, sv in iteritems(data):
+        for sk, sv in data.items():
             if sk.endswith(":"):
                 key = syaml.syaml_str(sk[:-1])
                 key.override = True
@@ -739,7 +737,7 @@ def override(path_or_scope, value=None):
 
 #: configuration scopes added on the command line
 #: set by ``spack.main.main()``.
-command_line_scopes = []  # type: List[str]
+command_line_scopes: List[str] = []
 
 
 def _add_platform_scope(cfg, scope_type, name, path):
@@ -984,7 +982,7 @@ def validate(data, schema, filename=None):
             line_number = e.instance.lc.line + 1
         else:
             line_number = None
-        raise six.raise_from(ConfigFormatError(e, data, filename, line_number), e)
+        raise ConfigFormatError(e, data, filename, line_number) from e
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
     return test_data
@@ -1002,7 +1000,7 @@ def read_config_file(filename, schema=None):
 
     if not os.path.exists(filename):
         # Ignore nonexistent files.
-        tty.debug("Skipping nonexistent config path {0}".format(filename))
+        tty.debug("Skipping nonexistent config path {0}".format(filename), level=3)
         return None
 
     elif not os.path.isfile(filename):
@@ -1151,7 +1149,7 @@ def merge_yaml(dest, source):
         # come *before* dest in OrderdDicts
         dest_keys = [dk for dk in dest.keys() if dk not in source]
 
-        for sk, sv in iteritems(source):
+        for sk, sv in source.items():
             # always remove the dest items. Python dicts do not overwrite
             # keys on insert, so this ensures that source keys are copied
             # into dest along with mark provenance (i.e., file/line info).

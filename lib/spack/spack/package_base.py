@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This is where most of the action happens in Spack.
 
 The spack package class structure is based strongly on Homebrew
@@ -18,6 +17,7 @@ import functools
 import glob
 import hashlib
 import inspect
+import io
 import os
 import re
 import shutil
@@ -27,9 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
-
-import six
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -66,13 +64,12 @@ from spack.util.prefix import Prefix
 from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
-if sys.version_info[0] >= 3:
-    FLAG_HANDLER_RETURN_TYPE = Tuple[
-        Optional[Iterable[str]],
-        Optional[Iterable[str]],
-        Optional[Iterable[str]],
-    ]
-    FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
+FLAG_HANDLER_RETURN_TYPE = Tuple[
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+]
+FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -131,7 +128,7 @@ def preferred_version(pkg):
     return sorted(pkg.versions, key=key_fn).pop()
 
 
-class WindowsRPathMeta(object):
+class WindowsRPath(object):
     """Collection of functionality surrounding Windows RPATH specific features
 
     This is essentially meaningless for all other platforms
@@ -257,7 +254,7 @@ class DetectablePackageMeta(object):
                         variants = [variants]
 
                     for variant in variants:
-                        if isinstance(variant, six.string_types):
+                        if isinstance(variant, str):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
                         spec_str = "{0}@{1} {2}".format(cls.name, version_str, variant_str)
@@ -444,7 +441,7 @@ def test_log_pathname(test_stage, spec):
     return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
 
 
-class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewMixin, object)):
+class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -549,6 +546,10 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
 
+    #: Keep -Werror flags, matches config:flags:keep_werror to override config
+    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
+    keep_werror: Optional[str] = None
+
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
 
@@ -563,17 +564,17 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: for it. Note: accepts both file names and directory names, for example
     #: ``["libcuda.so", "stubs"]`` will ensure libcuda.so and all libraries in the
     #: stubs directory are not bound by path."""
-    non_bindable_shared_objects = []  # type: List[str]
+    non_bindable_shared_objects: List[str] = []
 
     #: List of prefix-relative file paths (or a single path). If these do
     #: not exist after install, or if they exist but are not files,
     #: sanity checks fail.
-    sanity_check_is_file = []  # type: List[str]
+    sanity_check_is_file: List[str] = []
 
     #: List of prefix-relative directory paths (or a single path). If
     #: these do not exist after install, or if they exist but are not
     #: directories, sanity checks will fail.
-    sanity_check_is_dir = []  # type: List[str]
+    sanity_check_is_dir: List[str] = []
 
     #: Boolean. Set to ``True`` for packages that require a manual download.
     #: This is currently used by package sanity tests and generation of a
@@ -581,7 +582,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     manual_download = False
 
     #: Set of additional options used when fetching package versions.
-    fetch_options = {}  # type: Dict[str, Any]
+    fetch_options: Dict[str, Any] = {}
 
     #
     # Set default licensing information
@@ -599,12 +600,12 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: looking for a license. All file paths must be relative to the
     #: installation directory. More complex packages like Intel may require
     #: multiple licenses for individual components. Defaults to the empty list.
-    license_files = []  # type: List[str]
+    license_files: List[str] = []
 
     #: List of strings. Environment variables that can be set to tell the
     #: software where to look for a license if it is not in the usual location.
     #: Defaults to the empty list.
-    license_vars = []  # type: List[str]
+    license_vars: List[str] = []
 
     #: String. A URL pointing to license setup instructions for the software.
     #: Defaults to the empty string.
@@ -617,17 +618,17 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     _patches_by_hash = None
 
     #: Package homepage where users can find more information about the package
-    homepage = None  # type: str
+    homepage: Optional[str] = None
 
     #: Default list URL (place to find available versions)
-    list_url = None  # type: str
+    list_url: Optional[str] = None
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0
 
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
-    maintainers = []  # type: List[str]
+    maintainers: List[str] = []
 
     #: List of attributes to be excluded from a package's hash.
     metadata_attrs = [
@@ -1653,10 +1654,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(sorted(hash_content))).digest()
         ).lower()
-
-        # convert from bytes if running python 3
-        if sys.version_info[0] >= 3:
-            b32_hash = b32_hash.decode("utf-8")
+        b32_hash = b32_hash.decode("utf-8")
 
         return b32_hash
 
@@ -1866,7 +1864,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 be copied to the corresponding location(s) under the install
                 testing directory.
         """
-        paths = [srcs] if isinstance(srcs, six.string_types) else srcs
+        paths = [srcs] if isinstance(srcs, str) else srcs
 
         for path in paths:
             src_path = os.path.join(self.stage.source_path, path)
@@ -1996,7 +1994,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                     print(line.rstrip("\n"))
 
                 if exc_type is spack.util.executable.ProcessError:
-                    out = six.StringIO()
+                    out = io.StringIO()
                     spack.build_environment.write_log_summary(
                         out, "test", self.test_log_file, last=1
                     )
@@ -2018,9 +2016,9 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 return False
 
     def _run_test_helper(self, runner, options, expected, status, installed, purpose):
-        status = [status] if isinstance(status, six.integer_types) else status
-        expected = [expected] if isinstance(expected, six.string_types) else expected
-        options = [options] if isinstance(options, six.string_types) else options
+        status = [status] if isinstance(status, int) else status
+        expected = [expected] if isinstance(expected, str) else expected
+        options = [options] if isinstance(options, str) else options
 
         if purpose:
             tty.msg(purpose)
@@ -2075,24 +2073,21 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         return self.install_log_path if self.spec.installed else self.log_path
 
     @classmethod
-    def inject_flags(cls, name, flags):
-        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
+    def inject_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
         return flags, None, None
 
     @classmethod
-    def env_flags(cls, name, flags):
-        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
+    def env_flags(cls: Type, name: str, flags: Iterable[str]):
         """
         flag_handler that adds all flags to canonical environment variables.
         """
         return None, flags, None
 
     @classmethod
-    def build_system_flags(cls, name, flags):
-        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
+    def build_system_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that passes flags to the build system arguments.  Any
         package using `build_system_flags` must also implement
@@ -2171,18 +2166,16 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         """
         pass
 
-    _flag_handler = None  # type: Optional[FLAG_HANDLER_TYPE]
+    _flag_handler: Optional[FLAG_HANDLER_TYPE] = None
 
     @property
-    def flag_handler(self):
-        # type: () -> FLAG_HANDLER_TYPE
+    def flag_handler(self) -> FLAG_HANDLER_TYPE:
         if self._flag_handler is None:
             self._flag_handler = PackageBase.inject_flags
         return self._flag_handler
 
     @flag_handler.setter
-    def flag_handler(self, var):
-        # type: (FLAG_HANDLER_TYPE) -> None
+    def flag_handler(self, var: FLAG_HANDLER_TYPE):
         self._flag_handler = var
 
     # The flag handler method is called for each of the allowed compiler flags.
@@ -2361,7 +2354,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
 
         doc = re.sub(r"\s+", " ", cls.__doc__)
         lines = textwrap.wrap(doc, 72)
-        results = six.StringIO()
+        results = io.StringIO()
         for line in lines:
             results.write((" " * indent) + line + "\n")
         return results.getvalue()
@@ -2453,12 +2446,12 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 try:
                     fn = getattr(builder, name)
 
-                    msg = ("RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name),)
+                    msg = "RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name)
                     print_test_message(logger, msg, True)
 
                     fn()
                 except AttributeError as e:
-                    msg = ("RUN-TESTS: method not implemented [{0}]".format(name),)
+                    msg = "RUN-TESTS: method not implemented [{0}]".format(name)
                     print_test_message(logger, msg, True)
 
                     builder.pkg.test_failures.append((e, msg))

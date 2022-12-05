@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class LibjpegTurbo(Package):
+class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
     accelerate baseline JPEG compression and decompression.
 
@@ -18,6 +18,7 @@ class LibjpegTurbo(Package):
     homepage = "https://libjpeg-turbo.org/"
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
 
+    version("2.1.4", sha256="a78b05c0d8427a90eb5b4eb08af25309770c8379592bb0b8a863373128e6143f")
     version("2.1.3", sha256="dbda0c685942aa3ea908496592491e5ec8160d2cf1ec9d5fd5470e50768e7859")
     version("2.1.2", sha256="e7fdc8a255c45bc8fbd9aa11c1a49c23092fcd7379296aeaeb14d3343a3d1bed")
     version("2.1.1", sha256="20e9cd3e5f517950dfb7a300ad344543d88719c254407ffb5ad88d891bf701c4")
@@ -46,50 +47,41 @@ class LibjpegTurbo(Package):
 
     provides("jpeg")
 
+    build_system(
+        conditional("autotools", when="@:1.5.3"),
+        conditional("cmake", when="@1.5.90:"),
+        default="cmake",
+    )
+
+    variant("shared", default=True, description="Build shared libs")
+    variant("static", default=True, description="Build static libs")
+    variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
+
     # Can use either of these. But in the current version of the package
     # only nasm is used. In order to use yasm an environmental variable
     # NASM must be set.
     # TODO: Implement the selection between two supported assemblers.
     # depends_on('yasm', type='build')
     depends_on("nasm", type="build")
-    depends_on("autoconf", type="build", when="@1.3.1:1.5.3")
-    depends_on("automake", type="build", when="@1.3.1:1.5.3")
-    depends_on("libtool", type="build", when="@1.3.1:1.5.3")
-    depends_on("cmake", type="build", when="@1.5.90:")
+    with when("build_system=autotools"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+
+    with when("build_system=cmake"):
+        depends_on("cmake", type="build", when="@1.5.90:")
 
     @property
     def libs(self):
         return find_libraries("libjpeg*", root=self.prefix, recursive=True)
 
-    def flag_handler(self, name, flags):
-        if self.spec.satisfies("@1.5.90:"):
-            return (None, None, flags)
-        else:
-            # compiler flags for earlier version are injected into the
-            # spack compiler wrapper
-            return (flags, None, None)
 
-    def flags_to_build_system_args(self, flags):
-        # This only handles cflags, other flags are discarded
-        cmake_flag_args = []
-        if "cflags" in flags and flags["cflags"]:
-            cmake_flag_args.append("-DCMAKE_C_FLAGS={0}".format(" ".join(flags["cflags"])))
-        self.cmake_flag_args = cmake_flag_args
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("ENABLE_SHARED", "shared"),
+            self.define_from_variant("ENABLE_STATIC", "static"),
+            self.define_from_variant("WITH_JPEG8", "jpeg8"),
+        ]
 
-    @when("@1.3.1:1.5.3")
-    def install(self, spec, prefix):
-        autoreconf("-ifv")
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
-
-    @when("@1.5.90:")
-    def install(self, spec, prefix):
-        cmake_args = ["-GUnix Makefiles"]
-        if hasattr(self, "cmake_flag_args"):
-            cmake_args.extend(self.cmake_flag_args)
-        cmake_args.extend(std_cmake_args)
-        with working_dir("spack-build", create=True):
-            cmake("..", *cmake_args)
-            make()
-            make("install")
+        return args

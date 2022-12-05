@@ -252,12 +252,8 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
     # The order should be maintained
     phases = [x["name"] for x in times["phases"]]
-    total = sum([x["seconds"] for x in times["phases"]])
-    for name in ["one", "two", "three", "install"]:
-        assert name in phases
-
-    # Give a generous difference threshold
-    assert abs(total - times["total"]["seconds"]) < 5
+    assert phases == ["stage", "one", "two", "three", "install"]
+    assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 
 def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):

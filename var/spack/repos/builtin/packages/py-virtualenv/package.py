@@ -44,9 +44,6 @@ class PyVirtualenv(PythonPackage):
     depends_on("py-platformdirs@2.4:2", when="@20.16.4:", type=("build", "run"))
     depends_on("py-six@1.9.0:1", when="@20.10.0", type=("build", "run"))
     depends_on("py-importlib-metadata@0.12:", when="@20.10.0: ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-resources@1:", when="@20.10.0: ^python@:3.6", type=("build", "run"))
     depends_on(
         "py-importlib-metadata@4.8.3:", when="@20.16.4: ^python@:3.7", type=("build", "run")
     )
-    depends_on("py-importlib-resources@5.4:", when="@20.16.4: ^python@:3.6", type=("build", "run"))
-    depends_on("py-pathlib2", when="@20.10.0 ^python@:3.3", type=("build", "run"))

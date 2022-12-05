@@ -18,4 +18,3 @@ class PyLogilabCommon(PythonPackage):
     extends("python", ignore=r"bin/pytest")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.4.0:", type=("build", "run"))
-    depends_on("py-unittest2@0.5.1:", type=("build", "run"), when="^python@:2.7")

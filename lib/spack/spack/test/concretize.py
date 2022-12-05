@@ -840,7 +840,6 @@ class TestConcretize(object):
             ("py-extension3@1.0 ^python@3.5.1", ["patchelf@0.10"], []),
         ],
     )
-    @pytest.mark.skipif(sys.version_info[:2] == (3, 5), reason="Known failure with Python3.5")
     def test_conditional_dependencies(self, spec_str, expected, unexpected):
         s = Spec(spec_str).concretized()
 
@@ -955,7 +954,6 @@ class TestConcretize(object):
         assert s.satisfies("^cumulative-vrange-bottom@2.2")
 
     @pytest.mark.regression("9937")
-    @pytest.mark.skipif(sys.version_info[:2] == (3, 5), reason="Known failure with Python3.5")
     def test_dependency_conditional_on_another_dependency_state(self):
         root_str = "variant-on-dependency-condition-root"
         dep_str = "variant-on-dependency-condition-a"
@@ -1225,9 +1223,6 @@ class TestConcretize(object):
             second_spec.concretize()
         assert first_spec.dag_hash() != second_spec.dag_hash()
 
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     @pytest.mark.regression("20292")
     @pytest.mark.parametrize(
         "context",
@@ -1486,21 +1481,25 @@ class TestConcretize(object):
         assert ver("2.7.21") == Spec("python@2.7.21").concretized().version
 
     @pytest.mark.parametrize(
-        "spec_str",
+        "spec_str,valid",
         [
-            "conditional-values-in-variant@1.62.0 cxxstd=17",
-            "conditional-values-in-variant@1.62.0 cxxstd=2a",
-            "conditional-values-in-variant@1.72.0 cxxstd=2a",
+            ("conditional-values-in-variant@1.62.0 cxxstd=17", False),
+            ("conditional-values-in-variant@1.62.0 cxxstd=2a", False),
+            ("conditional-values-in-variant@1.72.0 cxxstd=2a", False),
             # Ensure disjoint set of values work too
-            "conditional-values-in-variant@1.72.0 staging=flexpath",
+            ("conditional-values-in-variant@1.72.0 staging=flexpath", False),
+            # Ensure conditional values set False fail too
+            ("conditional-values-in-variant foo=bar", False),
+            ("conditional-values-in-variant foo=foo", True),
         ],
     )
-    def test_conditional_values_in_variants(self, spec_str):
+    def test_conditional_values_in_variants(self, spec_str, valid):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer doesn't resolve conditional values in variants")
 
         s = Spec(spec_str)
-        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+        raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
+        with llnl.util.lang.nullcontext() if valid else raises:
             s.concretize()
 
     def test_conditional_values_in_conditional_variant(self):
@@ -1552,9 +1551,6 @@ class TestConcretize(object):
             s = Spec("python target=k10").concretized()
         assert s.satisfies("target=k10")
 
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     @pytest.mark.regression("29201")
     def test_delete_version_and_reuse(self, mutable_database, repo_with_changing_recipe):
         """Test that we can reuse installed specs with versions not
@@ -1573,9 +1569,6 @@ class TestConcretize(object):
         assert root.dag_hash() == new_root.dag_hash()
 
     @pytest.mark.regression("29201")
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     def test_installed_version_is_selected_only_for_reuse(
         self, mutable_database, repo_with_changing_recipe
     ):
@@ -1841,9 +1834,6 @@ class TestConcretize(object):
             s.concretized()
 
     @pytest.mark.regression("31484")
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
         """Test that external specs that are in the DB can be reused."""
         if spack.config.get("config:concretizer") == "original":

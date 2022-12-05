@@ -28,16 +28,14 @@ The available directives are:
   * ``version``
 
 """
+import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Set  # novm
-
-import six
+from typing import List, Set
 
 import llnl.util.lang
 import llnl.util.tty.color
-from llnl.util.compat import Sequence
 
 import spack.error
 import spack.patch
@@ -124,9 +122,9 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_dict_names = set()  # type: Set[str]
-    _directives_to_be_executed = []  # type: List[str]
-    _when_constraints_from_context = []  # type: List[str]
+    _directive_dict_names: Set[str] = set()
+    _directives_to_be_executed: List[str] = []
+    _when_constraints_from_context: List[str] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -234,10 +232,10 @@ class DirectiveMeta(type):
         """
         global directive_names
 
-        if isinstance(dicts, six.string_types):
+        if isinstance(dicts, str):
             dicts = (dicts,)
 
-        if not isinstance(dicts, Sequence):
+        if not isinstance(dicts, collections.abc.Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
 
@@ -300,7 +298,7 @@ class DirectiveMeta(type):
 
                 # ...so if it is not a sequence make it so
                 values = result
-                if not isinstance(values, Sequence):
+                if not isinstance(values, collections.abc.Sequence):
                     values = (values,)
 
                 DirectiveMeta._directives_to_be_executed.extend(values)
@@ -391,7 +389,7 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, six.string_types) else p for p in patches]
+    patches = [patch(p) if isinstance(p, str) else p for p in patches]
     assert all(callable(p) for p in patches)
 
     # this is where we actually add the dependency to this package

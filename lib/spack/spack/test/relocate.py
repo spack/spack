@@ -158,14 +158,21 @@ def copy_binary(prefix_like):
 
 @pytest.mark.requires_executables("/usr/bin/gcc", "patchelf", "strings", "file")
 @skip_unless_linux
-def test_file_is_relocatable(source_file, is_relocatable):
+def test_ensure_binary_is_relocatable(source_file, is_relocatable):
     compiler = spack.util.executable.Executable("/usr/bin/gcc")
     executable = str(source_file).replace(".c", ".x")
     compiler_env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
     compiler(str(source_file), "-o", executable, env=compiler_env)
 
     assert spack.relocate.is_binary(executable)
-    assert spack.relocate.file_is_relocatable(executable) is is_relocatable
+
+    try:
+        spack.relocate.ensure_binary_is_relocatable(executable)
+        relocatable = True
+    except spack.relocate.InstallRootStringError:
+        relocatable = False
+
+    assert relocatable == is_relocatable
 
 
 @pytest.mark.requires_executables("patchelf", "strings", "file")
@@ -173,14 +180,14 @@ def test_file_is_relocatable(source_file, is_relocatable):
 def test_patchelf_is_relocatable():
     patchelf = os.path.realpath(spack.relocate._patchelf())
     assert llnl.util.filesystem.is_exe(patchelf)
-    assert spack.relocate.file_is_relocatable(patchelf)
+    spack.relocate.ensure_binary_is_relocatable(patchelf)
 
 
 @skip_unless_linux
-def test_file_is_relocatable_errors(tmpdir):
+def test_ensure_binary_is_relocatable_errors(tmpdir):
     # The file passed in as argument must exist...
     with pytest.raises(ValueError) as exc_info:
-        spack.relocate.file_is_relocatable("/usr/bin/does_not_exist")
+        spack.relocate.ensure_binary_is_relocatable("/usr/bin/does_not_exist")
     assert "does not exist" in str(exc_info.value)
 
     # ...and the argument must be an absolute path to it
@@ -189,7 +196,7 @@ def test_file_is_relocatable_errors(tmpdir):
 
     with llnl.util.filesystem.working_dir(str(tmpdir)):
         with pytest.raises(ValueError) as exc_info:
-            spack.relocate.file_is_relocatable("delete.me")
+            spack.relocate.ensure_binary_is_relocatable("delete.me")
         assert "is not an absolute path" in str(exc_info.value)
 
 
@@ -338,12 +345,6 @@ def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpd
 
     # Some compilers add rpaths so ensure changes included in final result
     assert "$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib" in rpaths_for(new_binary)
-
-
-def test_raise_if_not_relocatable(monkeypatch):
-    monkeypatch.setattr(spack.relocate, "file_is_relocatable", lambda x: False)
-    with pytest.raises(spack.relocate.InstallRootStringError):
-        spack.relocate.raise_if_not_relocatable(["an_executable"], allow_root=False)
 
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
@@ -604,3 +605,60 @@ def test_ordered_replacement():
             # expect failure
             suffix_safety_size=7,
         )
+
+
+def test_inplace_text_replacement():
+    def replace_and_expect(prefix_to_prefix, before: bytes, after: bytes):
+        f = io.BytesIO(before)
+        prefix_to_prefix = OrderedDict(prefix_to_prefix)
+        regex = spack.relocate.byte_strings_to_single_binary_regex(prefix_to_prefix.keys())
+        spack.relocate._replace_prefix_text_file(f, regex, prefix_to_prefix)
+        f.seek(0)
+        assert f.read() == after
+
+    replace_and_expect(
+        [
+            (b"/first/prefix", b"/first-replacement/prefix"),
+            (b"/second/prefix", b"/second-replacement/prefix"),
+        ],
+        b"Example: /first/prefix/subdir and /second/prefix/subdir",
+        b"Example: /first-replacement/prefix/subdir and /second-replacement/prefix/subdir",
+    )
+
+    replace_and_expect(
+        [
+            (b"/replace/in/order", b"/first"),
+            (b"/replace/in", b"/second"),
+            (b"/replace", b"/third"),
+        ],
+        b"/replace/in/order/x /replace/in/y /replace/z",
+        b"/first/x /second/y /third/z",
+    )
+
+    replace_and_expect(
+        [
+            (b"/replace", b"/third"),
+            (b"/replace/in", b"/second"),
+            (b"/replace/in/order", b"/first"),
+        ],
+        b"/replace/in/order/x /replace/in/y /replace/z",
+        b"/third/in/order/x /third/in/y /third/z",
+    )
+
+    replace_and_expect(
+        [(b"/my/prefix", b"/replacement")],
+        b"/dont/replace/my/prefix #!/dont/replace/my/prefix",
+        b"/dont/replace/my/prefix #!/dont/replace/my/prefix",
+    )
+
+    replace_and_expect(
+        [(b"/my/prefix", b"/replacement")],
+        b"Install path: /my/prefix.",
+        b"Install path: /replacement.",
+    )
+
+    replace_and_expect(
+        [(b"/my/prefix", b"/replacement")],
+        b"#!/my/prefix",
+        b"#!/replacement",
+    )

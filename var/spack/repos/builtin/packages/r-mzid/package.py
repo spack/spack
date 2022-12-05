@@ -17,6 +17,7 @@ class RMzid(RPackage):
 
     bioc = "mzID"
 
+    version("1.36.0", commit="d6525edce3389fd4a05ff5fd42e9d611f00a545d")
     version("1.34.0", commit="bef64db159a0a4d241ba2ba271f70266c1522b2b")
     version("1.32.0", commit="d4146385b54f4d8361e23fc2c2aef79e952f4730")
     version("1.28.0", commit="cd006631c8222ce5b4af0577a7401b39cc58fd9c")

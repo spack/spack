@@ -221,7 +221,6 @@ class Opencv(CMakePackage, CudaPackage):
         "objc_bindings_generator",
         "objdetect",
         "photo",
-        "python2",
         "python3",
         "python_bindings_generator",
         "python_tests",
@@ -277,7 +276,7 @@ class Opencv(CMakePackage, CudaPackage):
     with when("+java"):
         conflicts("~imgproc")
         conflicts("~java_bindings_generator")
-        conflicts("~python2~python3")
+        conflicts("~python3")
 
     with when("+java_bindings_generator"):
         depends_on("java")
@@ -298,16 +297,7 @@ class Opencv(CMakePackage, CudaPackage):
     with when("+photo"):
         conflicts("~imgproc")
 
-    with when("+python2"):
-        conflicts("+python3")
-        conflicts("~python_bindings_generator")
-        depends_on("python@2.7:2.8", type=("build", "link", "run"))
-        depends_on("py-setuptools", type="build")
-        depends_on("py-numpy", type=("build", "run"))
-        extends("python", when="+python2")
-
     with when("+python3"):
-        conflicts("+python2")
         conflicts("~python_bindings_generator")
         depends_on("python@3.2:", type=("build", "link", "run"))
         depends_on("py-setuptools", type="build")
@@ -557,7 +547,7 @@ class Opencv(CMakePackage, CudaPackage):
         conflicts("~imgproc")
 
     with when("+matlab"):
-        conflicts("~python2~python3")
+        conflicts("~python3")
         depends_on("matlab")
         depends_on("py-jinja2")
 
@@ -1085,16 +1075,7 @@ class Opencv(CMakePackage, CudaPackage):
         python_lib = spec["python"].libs[0]
         python_include_dir = spec["python"].headers.directories[0]
 
-        if "+python2" in spec:
-            args.extend(
-                [
-                    self.define("PYTHON2_EXECUTABLE", python_exe),
-                    self.define("PYTHON2_LIBRARY", python_lib),
-                    self.define("PYTHON2_INCLUDE_DIR", python_include_dir),
-                    self.define("PYTHON3_EXECUTABLE", ""),
-                ]
-            )
-        elif "+python3" in spec:
+        if "+python3" in spec:
             args.extend(
                 [
                     self.define("PYTHON3_EXECUTABLE", python_exe),
