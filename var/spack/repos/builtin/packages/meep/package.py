@@ -93,16 +93,6 @@ class Meep(AutotoolsPackage):
         else:
             config_args.append("--without-libctl")
 
-        if "+mpi" in spec:
-            config_args.append("--with-mpi")
-        else:
-            config_args.append("--without-mpi")
-
-        if "+hdf5" in spec:
-            config_args.append("--with-hdf5")
-        else:
-            config_args.append("--without-hdf5")
-
         if "+python" in spec:
             config_args.append("--with-python")
         else:
@@ -112,6 +102,8 @@ class Meep(AutotoolsPackage):
         if "+single" in spec:
             config_args.append("--enable-single")
 
+        config_args.extend(self.with_or_without("mpi"))
+        config_args.extend(self.with_or_without("hdf5"))
         config_args.extend(self.with_or_without("openmp"))
 
         if spec.satisfies("@1.21.0:"):
