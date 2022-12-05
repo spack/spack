@@ -78,16 +78,9 @@ def uses_ssl(parsed_url):
     return False
 
 
-__UNABLE_TO_VERIFY_SSL = (lambda pyver: ((pyver < (2, 7, 9)) or ((3,) < pyver < (3, 4, 3))))(
-    sys.version_info
-)
-
-
 def read_from_url(url, accept_content_type=None):
     url = url_util.parse(url)
     context = None
-
-    verify_ssl = spack.config.get("config:verify_ssl")
 
     # Timeout in seconds for web requests
     timeout = spack.config.get("config:connect_timeout", 10)
@@ -95,18 +88,13 @@ def read_from_url(url, accept_content_type=None):
     # Don't even bother with a context unless the URL scheme is one that uses
     # SSL certs.
     if uses_ssl(url):
-        if verify_ssl:
-            if __UNABLE_TO_VERIFY_SSL:
-                # User wants SSL verification, but it cannot be provided.
-                warn_no_ssl_cert_checking()
-            else:
-                # User wants SSL verification, and it *can* be provided.
-                context = ssl.create_default_context()  # novm
+        if spack.config.get("config:verify_ssl"):
+            # User wants SSL verification, and it *can* be provided.
+            context = ssl.create_default_context()
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            if not __UNABLE_TO_VERIFY_SSL:
-                context = ssl._create_unverified_context()
+            context = ssl._create_unverified_context()
 
     url_scheme = url.scheme
     url = url_util.format(url)
@@ -154,22 +142,11 @@ def read_from_url(url, accept_content_type=None):
     return response.geturl(), response.headers, response
 
 
-def warn_no_ssl_cert_checking():
-    tty.warn(
-        "Spack will not check SSL certificates. You need to update "
-        "your Python to enable certificate verification."
-    )
-
-
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
     if sys.platform == "win32":
         if remote_path[1] == ":":
             remote_path = "file://" + remote_path
     remote_url = url_util.parse(remote_path)
-    verify_ssl = spack.config.get("config:verify_ssl")
-
-    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_url):
-        warn_no_ssl_cert_checking()
 
     remote_file_path = url_util.local_file_path(remote_url)
     if remote_file_path is not None:
@@ -728,10 +705,7 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    # Note: 'context' parameter was only introduced starting
-    # with versions 2.7.9 and 3.4.3 of Python.
-    if __UNABLE_TO_VERIFY_SSL:
-        del kwargs["context"]
+    del kwargs["context"]
 
     opener = urlopen
     if url_util.parse(url).scheme == "s3":
