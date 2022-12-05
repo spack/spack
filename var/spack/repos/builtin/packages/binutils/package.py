@@ -126,54 +126,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         match = re.search(r"GNU (nm|readelf).* (\S+)", output)
         return Version(match.group(2)).dotted.up_to(3) if match else None
 
-    def setup_build_environment(self, env):
-
-        if self.spec.satisfies("%cce"):
-            env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
-
-        if "+nls" in self.spec:
-            if "intl" in self.spec["gettext"].libs.names:
-                env.append_flags("LDFLAGS", "-lintl")
-
-    def configure_args(self):
-        spec = self.spec
-
-        args = [
-            "--disable-dependency-tracking",
-            "--disable-werror",
-            "--enable-multilib",
-            "--enable-64-bit-bfd",
-            "--enable-targets=all",
-            "--with-system-zlib",
-            "--with-sysroot=/",
-        ]
-
-        args += self.enable_or_disable("libs")
-        args += self.enable_or_disable("lto")
-        args += self.enable_or_disable("ld")
-        args += self.enable_or_disable("gas")
-        args += self.enable_or_disable("interwork")
-        args += self.enable_or_disable("gold")
-        args += self.enable_or_disable("plugins")
-
-        if "+libiberty" in spec:
-            args.append("--enable-install-libiberty")
-        else:
-            args.append("--disable-install-libiberty")
-
-        if "+nls" in spec:
-            args.append("--enable-nls")
-        else:
-            args.append("--disable-nls")
-
-        # To avoid namespace collisions with Darwin/BSD system tools,
-        # prefix executables with "g", e.g., gar, gnm; see Homebrew
-        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
-        if spec.satisfies("platform=darwin"):
-            args.append("--program-prefix=g")
-
-        return args
-
     @run_after("install")
     def install_headers(self):
         # some packages (like TAU) need the ELF headers, so install them
@@ -283,4 +235,5 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
 
         if "+nls" in self.spec:
-            env.append_flags("LDFLAGS", "-lintl")
+            if "intl" in self.spec["gettext"].libs.names:
+                env.append_flags("LDFLAGS", "-lintl")
