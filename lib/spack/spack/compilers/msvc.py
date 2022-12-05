@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 from distutils.version import StrictVersion
-from typing import Dict, List, Set  # novm
+from typing import Dict, List, Set
 
 import spack.compiler
 import spack.operating_systems.windows_os

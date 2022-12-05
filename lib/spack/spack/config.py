@@ -36,7 +36,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import List  # novm
+from typing import List
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError

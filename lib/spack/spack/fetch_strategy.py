@@ -30,7 +30,7 @@ import re
 import shutil
 import sys
 import urllib.parse
-from typing import List, Optional  # novm
+from typing import List, Optional
 
 import llnl.util
 import llnl.util.filesystem as fs

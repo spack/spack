@@ -8,7 +8,7 @@ non-hierarchical modules.
 """
 import posixpath
 import string
-from typing import Any, Dict  # novm
+from typing import Any, Dict
 
 import llnl.util.tty as tty
 

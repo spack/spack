@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from typing import List  # novm
+from typing import List
 
 import spack.compiler
 

@@ -10,7 +10,7 @@ import platform
 import re
 import shutil
 import tempfile
-from typing import List, Optional, Sequence  # novm
+from typing import List, Optional, Sequence
 
 import llnl.util.lang
 import llnl.util.tty as tty

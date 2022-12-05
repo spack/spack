@@ -91,7 +91,7 @@ def test_module_suffixes(module_suffixes_schema):
     ["compilers", "config", "env", "merged", "mirrors", "modules", "packages", "repos"],
 )
 def test_schema_validation(meta_schema, config_name):
-    import importlib  # novm
+    import importlib
 
     module_name = "spack.schema.{0}".format(config_name)
     module = importlib.import_module(module_name)

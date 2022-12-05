@@ -7,7 +7,7 @@ import os
 import os.path
 import stat
 import subprocess
-from typing import List  # novm
+from typing import List
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
