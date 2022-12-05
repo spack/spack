@@ -28,6 +28,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     executables = ["^swig$"]
 
     version("master", git="https://github.com/swig/swig.git")
+    version("4.1.1", sha256="2af08aced8fcd65cdb5cc62426768914bedc735b1c250325203716f78e39ac9b")
     version("4.1.0", sha256="d6a9a8094e78f7cfb6f80a73cc271e1fe388c8638ed22668622c2c646df5bb3d")
     version("4.0.2", sha256="d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc")
     version("4.0.1", sha256="7a00b4d0d53ad97a14316135e2d702091cd5f193bb58bcfcd8bc59d41e7887a9")
