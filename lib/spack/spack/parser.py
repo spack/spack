@@ -39,7 +39,7 @@ VALID_VERSION_LIST = (
 )
 
 
-class TokenKind(Enum):
+class TokenType(Enum):
     """Enumeration of the different token kinds in the spec grammar"""
 
     # FILENAME
@@ -77,7 +77,7 @@ class Token:
     __slots__ = "kind", "value", "start", "end"
 
     def __init__(
-        self, kind: TokenKind, value: str, start: Optional[int] = None, end: Optional[int] = None
+        self, kind: TokenType, value: str, start: Optional[int] = None, end: Optional[int] = None
     ):
         self.kind = kind
         self.value = value
@@ -97,35 +97,35 @@ class Token:
 #: List of all the regexes used to match spec parts, in order of precedence
 TOKEN_REGEXES = [
     # Dependency
-    rf"(?P<{TokenKind.DEPENDENCY}>\^)",
+    rf"(?P<{TokenType.DEPENDENCY}>\^)",
     # Version regexes
-    rf"(?P<{TokenKind.VERSION_HASH_PAIR}>@({VALID_GIT_VERSION}={VALID_VERSION}))",
-    rf"(?P<{TokenKind.VERSION}>@({VALID_VERSION_LIST}))",
+    rf"(?P<{TokenType.VERSION_HASH_PAIR}>@({VALID_GIT_VERSION}={VALID_VERSION}))",
+    rf"(?P<{TokenType.VERSION}>@({VALID_VERSION_LIST}))",
     # Variant regexes
-    rf"(?P<{TokenKind.PROPAGATED_BOOL_VARIANT}>(\+\+|~~|--){VALID_NAME})",
-    rf"(?P<{TokenKind.BOOL_VARIANT}>[~+-]{VALID_NAME})",
-    rf"(?P<{TokenKind.PROPAGATED_KEY_VALUE_PAIR}>({VALID_NAME}==({VALID_VALUE}|{VALID_QUOTED_VALUE})))",  # noqa: E501
-    rf"(?P<{TokenKind.KEY_VALUE_PAIR}>({VALID_NAME}=({VALID_VALUE}|{VALID_QUOTED_VALUE})))",
+    rf"(?P<{TokenType.PROPAGATED_BOOL_VARIANT}>(\+\+|~~|--){VALID_NAME})",
+    rf"(?P<{TokenType.BOOL_VARIANT}>[~+-]{VALID_NAME})",
+    rf"(?P<{TokenType.PROPAGATED_KEY_VALUE_PAIR}>({VALID_NAME}==({VALID_VALUE}|{VALID_QUOTED_VALUE})))",  # noqa: E501
+    rf"(?P<{TokenType.KEY_VALUE_PAIR}>({VALID_NAME}=({VALID_VALUE}|{VALID_QUOTED_VALUE})))",
     # Compiler regexes
-    rf"(?P<{TokenKind.COMPILER_AND_VERSION}>%({VALID_NAME})([\s]*)@({VALID_VERSION_LIST}))",
-    rf"(?P<{TokenKind.COMPILER}>%({VALID_NAME}))",
+    rf"(?P<{TokenType.COMPILER_AND_VERSION}>%({VALID_NAME})([\s]*)@({VALID_VERSION_LIST}))",
+    rf"(?P<{TokenType.COMPILER}>%({VALID_NAME}))",
     # Filename
-    rf"(?P<{TokenKind.FILENAME}>({VALID_FILENAME}))",
+    rf"(?P<{TokenType.FILENAME}>({VALID_FILENAME}))",
     # Spec name regexes
-    rf"(?P<{TokenKind.FULLY_QUALIFIED_PACKAGE_NAME}>{VALID_NAME_WITH_DOTS})",
-    rf"(?P<{TokenKind.UNQUALIFIED_PACKAGE_NAME}>{VALID_NAME_WITHOUT_DOTS})",
+    rf"(?P<{TokenType.FULLY_QUALIFIED_PACKAGE_NAME}>{VALID_NAME_WITH_DOTS})",
+    rf"(?P<{TokenType.UNQUALIFIED_PACKAGE_NAME}>{VALID_NAME_WITHOUT_DOTS})",
     # DAG hash
-    rf"(?P<{TokenKind.DAG_HASH}>/({VALID_HASH}))",
+    rf"(?P<{TokenType.DAG_HASH}>/({VALID_HASH}))",
     # White spaces (the lowest priority)
-    rf"(?P<{TokenKind.WS}>\s+)",
+    rf"(?P<{TokenType.WS}>\s+)",
 ]
 
 ERROR_HANDLING_REGEXES = TOKEN_REGEXES + [
-    rf"(?P<{TokenKind.UNEXPECTED}>(.[\s]*))",
+    rf"(?P<{TokenType.UNEXPECTED}>(.[\s]*))",
 ]
 
 #: Maps a string representation to the corresponding token kind
-STR_TO_TOKEN = {str(x): x for x in TokenKind}
+STR_TO_TOKEN = {str(x): x for x in TokenType}
 
 MASTER_REGEX = re.compile("|".join(TOKEN_REGEXES))
 ANALYSIS_REGEX = re.compile("|".join(ERROR_HANDLING_REGEXES))
@@ -173,7 +173,7 @@ class TokenContext:
         """Advance one token"""
         self.current_token, self.next_token = self.next_token, next(self.token_stream, None)
 
-    def accept(self, kind: TokenKind):
+    def accept(self, kind: TokenType):
         """If the next token is of the specified kind, advance the stream and return True.
         Otherwise return False.
         """
@@ -190,13 +190,13 @@ class SpecParser:
 
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
-        self.ctx = TokenContext(filter(lambda x: x.kind != TokenKind.WS, tokenize(literal_str)))
+        self.ctx = TokenContext(filter(lambda x: x.kind != TokenType.WS, tokenize(literal_str)))
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
         filtered out.
         """
-        return list(filter(lambda x: x.kind != TokenKind.WS, tokenize(self.literal_str)))
+        return list(filter(lambda x: x.kind != TokenType.WS, tokenize(self.literal_str)))
 
     def next_spec(self, spec_buffer: Optional[spack.spec.Spec] = None) -> spack.spec.Spec:
         """Return the next spec parsed from text.
@@ -211,7 +211,7 @@ class SpecParser:
         spec_buffer = spec_buffer or spack.spec.Spec()
         root_spec = SpecNodeParser(self.ctx).parse(spec_buffer)
         while True:
-            if self.ctx.accept(TokenKind.DEPENDENCY):
+            if self.ctx.accept(TokenType.DEPENDENCY):
                 dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
 
                 if dependency == spack.spec.Spec():
@@ -256,19 +256,19 @@ class SpecNodeParser:
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
-        if self.ctx.accept(TokenKind.UNQUALIFIED_PACKAGE_NAME):
+        if self.ctx.accept(TokenType.UNQUALIFIED_PACKAGE_NAME):
             spec_buffer.name = self.ctx.current_token.value
-        elif self.ctx.accept(TokenKind.FULLY_QUALIFIED_PACKAGE_NAME):
+        elif self.ctx.accept(TokenType.FULLY_QUALIFIED_PACKAGE_NAME):
             parts = self.ctx.current_token.value.split(".")
             name = parts[-1]
             namespace = ".".join(parts[:-1])
             spec_buffer.name = name
             spec_buffer.namespace = namespace
-        elif self.ctx.accept(TokenKind.FILENAME):
+        elif self.ctx.accept(TokenType.FILENAME):
             return FileParser(self.ctx).parse(spec_buffer)
 
         while True:
-            if self.ctx.accept(TokenKind.COMPILER):
+            if self.ctx.accept(TokenType.COMPILER):
                 if self.has_compiler:
                     # TODO: Improve error reporting
                     raise spack.spec.DuplicateCompilerSpecError(
@@ -278,7 +278,7 @@ class SpecNodeParser:
                 compiler_name = self.ctx.current_token.value[1:]
                 spec_buffer.compiler = spack.spec.CompilerSpec(compiler_name, ":")
                 self.has_compiler = True
-            elif self.ctx.accept(TokenKind.COMPILER_AND_VERSION):
+            elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
                 if self.has_compiler:
                     # TODO: Improve error reporting
                     raise spack.spec.DuplicateCompilerSpecError(
@@ -288,8 +288,8 @@ class SpecNodeParser:
                 compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
                 spec_buffer.compiler = spack.spec.CompilerSpec(compiler_name, compiler_version)
                 self.has_compiler = True
-            elif self.ctx.accept(TokenKind.VERSION) or self.ctx.accept(
-                TokenKind.VERSION_HASH_PAIR
+            elif self.ctx.accept(TokenType.VERSION) or self.ctx.accept(
+                TokenType.VERSION_HASH_PAIR
             ):
                 if self.has_version:
                     # TODO: Improve error reporting here
@@ -310,25 +310,25 @@ class SpecNodeParser:
                     spec_buffer.version.generate_git_lookup(spec_buffer.fullname)
 
                 self.has_version = True
-            elif self.ctx.accept(TokenKind.BOOL_VARIANT):
+            elif self.ctx.accept(TokenType.BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0] == "+"
                 spec_buffer._add_flag(
                     self.ctx.current_token.value[1:], variant_value, propagate=False
                 )
-            elif self.ctx.accept(TokenKind.PROPAGATED_BOOL_VARIANT):
+            elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0:2] == "++"
                 spec_buffer._add_flag(
                     self.ctx.current_token.value[2:], variant_value, propagate=True
                 )
-            elif self.ctx.accept(TokenKind.KEY_VALUE_PAIR):
+            elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
                 value = value.strip("'\"")
                 spec_buffer._add_flag(name, value, propagate=False)
-            elif self.ctx.accept(TokenKind.PROPAGATED_KEY_VALUE_PAIR):
+            elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("==", maxsplit=1)
                 value = value.strip("'\"")
                 spec_buffer._add_flag(name, value, propagate=True)
-            elif self.ctx.accept(TokenKind.DAG_HASH):
+            elif self.ctx.accept(TokenType.DAG_HASH):
                 dag_hash = self.ctx.current_token.value[1:]
                 matches = []
                 if spack.environment.active_environment():
@@ -439,7 +439,7 @@ class SpecTokenizationError(SpecSyntaxError):
 
         underline = "\n"
         for match in matches:
-            if match.lastgroup == str(TokenKind.UNEXPECTED):
+            if match.lastgroup == str(TokenType.UNEXPECTED):
                 underline += f"{'^' * (match.end() - match.start())}"
                 continue
             underline += f"{' ' * (match.end() - match.start())}"
