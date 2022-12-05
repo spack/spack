@@ -146,7 +146,7 @@ def checksum(parser, args):
                 re.sub(r".", " ", v_match.group(1)),
                 'url="{0}"'.format(vstring_url_dict[v_match.group(3)]),
                 ")",
-                sep=""
+                sep="",
             )
         else:
             print(line)
