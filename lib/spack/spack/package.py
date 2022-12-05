@@ -21,6 +21,7 @@ from typing import Dict, List, Optional
 
 import llnl.util.filesystem
 from llnl.util.filesystem import *
+from llnl.util.symlink import symlink
 
 import spack.util.executable
 
