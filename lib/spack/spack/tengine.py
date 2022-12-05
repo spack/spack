@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import textwrap
-from typing import List  # novm
+from typing import List
 
 import llnl.util.lang
 

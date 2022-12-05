@@ -32,7 +32,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Set  # novm
+from typing import List, Set
 
 import llnl.util.lang
 import llnl.util.tty.color

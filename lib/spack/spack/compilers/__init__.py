@@ -10,7 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict  # novm
+from typing import Dict
 
 import archspec.cpu
 
