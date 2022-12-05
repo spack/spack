@@ -270,8 +270,6 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec("mpi")
         spec.concretize()
-        # This is a hardcoded value from the conf above so correct
-        # platform specific paths do not need to be used here
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
     def test_external_module(self, monkeypatch):

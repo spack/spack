@@ -122,7 +122,7 @@ def path_to_os_path(*pths):
     """
     ret_pths = []
     for pth in pths:
-        if str in type(pth).__mro__ and not is_path_url(pth):
+        if pth.isinstance(str) and not is_path_url(pth):
             pth = convert_to_platform_path(pth)
         ret_pths.append(pth)
     return ret_pths
