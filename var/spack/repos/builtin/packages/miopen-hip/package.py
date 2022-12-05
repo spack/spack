@@ -26,10 +26,26 @@ class MiopenHip(CMakePackage):
     version("5.2.0", sha256="5fda69426e81df9f8fb6658e579176b9c4fcce3516fc8488d3cfd2b6f6f2b3b4")
     version("5.1.3", sha256="510461f5c5bdbcf8dc889099d1e5960b9f84bd845a9fc9154588a9898c701c1d")
     version("5.1.0", sha256="bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd")
-    version("5.0.2", sha256="e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be")
-    version("5.0.0", sha256="4a46a2bdd11a2597c83cdb0c5e208b81728fab2ff7c585dabfca5aa05ee7a4f7")
-    version("4.5.2", sha256="cb49bdf215ed9881755239b6312d72f829c1a0edf510e6d1fbb206c41f5406fc")
-    version("4.5.0", sha256="be2f5ce962e15e62d427978422498c0ddf821b91fd40777a1ba915a2794d6fda")
+    version(
+        "5.0.2",
+        sha256="e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="4a46a2bdd11a2597c83cdb0c5e208b81728fab2ff7c585dabfca5aa05ee7a4f7",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="cb49bdf215ed9881755239b6312d72f829c1a0edf510e6d1fbb206c41f5406fc",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="be2f5ce962e15e62d427978422498c0ddf821b91fd40777a1ba915a2794d6fda",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="1fb2fd8b24f984174ec5338a58b7964e128b74dafb101373a41c8ed33955251a",

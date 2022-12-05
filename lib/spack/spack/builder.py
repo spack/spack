@@ -466,19 +466,19 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
     """
 
     #: Sequence of phases. Must be defined in derived classes
-    phases = ()  # type: Tuple[str, ...]
+    phases: Tuple[str, ...] = ()
     #: Build system name. Must also be defined in derived classes.
-    build_system = None  # type: Optional[str]
+    build_system: Optional[str] = None
 
-    legacy_methods = ()  # type: Tuple[str, ...]
-    legacy_attributes = ()  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = ()
+    legacy_attributes: Tuple[str, ...] = ()
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
     #: copied in the same directory tree as _spack_build_logfile and
     #: _spack_build_envfile.
-    archive_files = []  # type: List[str]
+    archive_files: List[str] = []
 
     def __init__(self, pkg):
         self.pkg = pkg

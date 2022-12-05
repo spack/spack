@@ -30,10 +30,26 @@ class Rdc(CMakePackage):
     version("5.2.0", sha256="2f35f74485e783f56ea724a7c69ce825f181fcdbe89de453d97ce6a3d3176ae0")
     version("5.1.3", sha256="ac3e594d7b245c787d6d9b63f551ca898d4d9403fbec0e4502f9970575e031b8")
     version("5.1.0", sha256="3cf58cb07ef241b3b73b23af83b6477194884feba642584a491e67deeceff038")
-    version("5.0.2", sha256="9e21fe7e9dd02b69425dab6be22a85469fee072bcebd2d2957633dfad8b45574")
-    version("5.0.0", sha256="68d45a319dc4222d94e1fb1ce10df5f3464de0b745d0d2e9aebbf273493adcc5")
-    version("4.5.2", sha256="1b467e2a473374488292ca1680562ec4e798f43847ea6464453f8f8297f12d8d")
-    version("4.5.0", sha256="e9bc53d068e9a4fdccff587e34c7fe0880f003a18652cd48c29faf031dd2c98f")
+    version(
+        "5.0.2",
+        sha256="9e21fe7e9dd02b69425dab6be22a85469fee072bcebd2d2957633dfad8b45574",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="68d45a319dc4222d94e1fb1ce10df5f3464de0b745d0d2e9aebbf273493adcc5",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="1b467e2a473374488292ca1680562ec4e798f43847ea6464453f8f8297f12d8d",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="e9bc53d068e9a4fdccff587e34c7fe0880f003a18652cd48c29faf031dd2c98f",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="aae028aae61eb0f4dd30708c4bbb8c5c57a426f10dae9b967b81500fb106d981",

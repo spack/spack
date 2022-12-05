@@ -33,10 +33,26 @@ class Hipsolver(CMakePackage):
     version("5.2.0", sha256="96927410e0a2cc0f50172604ef6437e15d2cf4b62d22b2035f13aae21f43dc82")
     version("5.1.3", sha256="96faa799a2db8078b72f9c3b5c199179875a7c20dc1064371b22a6a63397c145")
     version("5.1.0", sha256="697ba2b2814e7ac6f79680e6455b4b5e0def1bee2014b6940f47be7d13c0ae74")
-    version("5.0.2", sha256="cabeada451686ed7904a452c5f8fd3776721507db1c06f426cd8d7189ff4a441")
-    version("5.0.0", sha256="c59a5783dbbcb6a601c0e73d85d4a64d6d2c8f46009c01cb2b9886323f11e02b")
-    version("4.5.2", sha256="9807bf1da0da25940b546cf5d5d6064d46d837907e354e10c6eeb2ef7c296a93")
-    version("4.5.0", sha256="ee1176e977736a6e6fcba507fe6f56fcb3cefd6ba741cceb28464ea8bc476cd8")
+    version(
+        "5.0.2",
+        sha256="cabeada451686ed7904a452c5f8fd3776721507db1c06f426cd8d7189ff4a441",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="c59a5783dbbcb6a601c0e73d85d4a64d6d2c8f46009c01cb2b9886323f11e02b",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="9807bf1da0da25940b546cf5d5d6064d46d837907e354e10c6eeb2ef7c296a93",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="ee1176e977736a6e6fcba507fe6f56fcb3cefd6ba741cceb28464ea8bc476cd8",
+        deprecated=True,
+    )
 
     variant(
         "build_type",
