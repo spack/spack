@@ -52,17 +52,21 @@ def _s3_open(url, method="GET"):
     if key.startswith("/"):
         key = key[1:]
 
-    if method == "GET":
-        obj = s3.get_object(Bucket=bucket, Key=key)
-        # NOTE(opadron): Apply workaround here (see above)
-        stream = WrapStream(obj["Body"])
-    elif method == "HEAD":
-        obj = s3.head_object(Bucket=bucket, Key=key)
-        stream = BytesIO()
-    else:
+    if method not in ("GET", "HEAD"):
         raise urllib.error.URLError(
             "Only GET and HEAD verbs are currently supported for the s3:// scheme"
         )
+
+    try:
+        if method == "GET":
+            obj = s3.get_object(Bucket=bucket, Key=key)
+            # NOTE(opadron): Apply workaround here (see above)
+            stream = WrapStream(obj["Body"])
+        elif method == "HEAD":
+            obj = s3.head_object(Bucket=bucket, Key=key)
+            stream = BytesIO()
+    except s3.ClientError as e:
+        raise urllib.error.URLError(e) from e
 
     headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
@@ -72,16 +76,5 @@ def _s3_open(url, method="GET"):
 class UrllibS3Handler(urllib.request.BaseHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
-
-        try:
-            from botocore.exceptions import ClientError  # type: ignore[import]
-        except ImportError:
-            raise urllib.error.URLError(
-                "Cannot open {} because botocore is not installed", orig_url
-            )
-
-        try:
-            url, headers, stream = _s3_open(orig_url, method=req.method)
-            return urllib.response.addinfourl(stream, headers, url)
-        except ClientError as err:
-            raise urllib.error.URLError(err) from err
+        url, headers, stream = _s3_open(orig_url, method=req.method)
+        return urllib.response.addinfourl(stream, headers, url)

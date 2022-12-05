@@ -344,12 +344,6 @@ def url_exists(url, curl=None):
     Simple Storage Service (`s3`) URLs; otherwise, the configured fetch
     method defined by `config:url_fetch_method` is used.
 
-    If the method is `curl`, it also uses the following configuration option:
-
-        * config:verify_ssl (str): Perform SSL verification
-
-    Otherwise, `urllib` will be used.
-
     Arguments:
         url (str): URL whose existence is being checked
         curl (spack.util.executable.Executable or None): (optional) curl
@@ -358,14 +352,11 @@ def url_exists(url, curl=None):
     Returns (bool): True if it exists; False otherwise.
     """
     tty.debug("Checking existence of {0}".format(url))
-    url = url_util.parse(url)
+    url_result = url_util.parse(url)
 
-    # Otherwise, use the configured fetch method
-    if spack.config.get("config:url_fetch_method") == "curl" and url.scheme in (
-        "http",
-        "https",
-        "ftp",
-    ):
+    # Use curl if configured to do so
+    use_curl = spack.config.get("config:url_fetch_method", "urllib") == "curl" and url_result.scheme not in ("gs", "s3")
+    if use_curl:
         curl_exe = _curl(curl)
         if not curl_exe:
             return False
@@ -378,8 +369,7 @@ def url_exists(url, curl=None):
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
         return curl_exe.returncode == 0
 
-    # If we get here, then the only other fetch method option is urllib.
-    # We try a HEAD request and expect a 200 return code.
+    # Otherwise use urllib.
     try:
         urlopen(
             Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
