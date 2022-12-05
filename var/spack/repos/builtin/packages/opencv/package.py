@@ -926,7 +926,7 @@ class Opencv(CMakePackage, CudaPackage):
         args = [
             self.define("BUILD_opencv_core", "on"),
         ]
-        
+
         if self.spec.satisfies("+contrib"):
             args += self.define(
                 "OPENCV_EXTRA_MODULES_PATH",
