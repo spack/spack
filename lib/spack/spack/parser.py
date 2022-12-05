@@ -127,7 +127,7 @@ ERROR_HANDLING_REGEXES = TOKEN_REGEXES + [
 #: Maps a string representation to the corresponding token kind
 STR_TO_TOKEN = {str(x): x for x in TokenType}
 
-MASTER_REGEX = re.compile("|".join(TOKEN_REGEXES))
+ALL_TOKENS = re.compile("|".join(TOKEN_REGEXES))
 ANALYSIS_REGEX = re.compile("|".join(ERROR_HANDLING_REGEXES))
 
 
@@ -138,7 +138,7 @@ def tokenize(text: str) -> Iterator[Token]:
         SpecTokenizationError: if we can't tokenize anymore, but didn't reach the
             end of the input text.
     """
-    scanner = MASTER_REGEX.scanner(text)  # type: ignore[attr-defined]
+    scanner = ALL_TOKENS.scanner(text)  # type: ignore[attr-defined]
     match: Optional[re.Match] = None
     for match in iter(scanner.match, None):
         yield Token(
