@@ -31,7 +31,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     version(
         "4.1.1",
         sha256="2af08aced8fcd65cdb5cc62426768914bedc735b1c250325203716f78e39ac9b",
-        preferred=True
+        preferred=True,
     )
     version("4.1.0", sha256="d6a9a8094e78f7cfb6f80a73cc271e1fe388c8638ed22668622c2c646df5bb3d")
     version("4.0.2", sha256="d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc")
@@ -70,9 +70,16 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     depends_on("pcre")
     depends_on("zlib")
 
-    AUTOCONF_VERSIONS = "@" + ",".join([
-        "master", "fortran", "4.0.2-fortran", "4.1.dev1-fortran", "4.1.0-fortran", "4.1.1-fortran"
-    ])
+    AUTOCONF_VERSIONS = "@" + ",".join(
+        [
+            "master",
+            "fortran",
+            "4.0.2-fortran",
+            "4.1.dev1-fortran",
+            "4.1.0-fortran",
+            "4.1.1-fortran",
+        ]
+    )
 
     # Git releases do *not* include configure script
     depends_on("autoconf", type="build", when=AUTOCONF_VERSIONS)
