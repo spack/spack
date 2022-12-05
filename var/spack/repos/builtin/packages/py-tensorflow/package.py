@@ -30,10 +30,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     maintainers = ["adamjstewart", "aweits"]
     import_modules = ["tensorflow"]
 
+    version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
     version("2.10.0", sha256="b5a1bb04c84b6fe1538377e5a1f649bb5d5f0b2e3625a3c526ff3a8af88633e8")
+    version("2.9.3", sha256="59d09bd00eef6f07477eea2f50778582edd4b7b2850a396f1fd0c646b357a573")
     version("2.9.2", sha256="8cd7ed82b096dc349764c3369331751e870d39c86e73bbb5374e1664a59dcdf7")
     version("2.9.1", sha256="6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc")
     version("2.9.0", sha256="8087cb0c529f04a4bfe480e49925cd64a904ad16d8ec66b98e2aacdfd53c80ff")
+    version("2.8.4", sha256="c08a222792bdbff9da299c7885561ee27b95d414d1111c426efac4ccdce92cde")
     version("2.8.3", sha256="4b7ecbe50b36887e1615bc2a582cb86df1250004d8bb540e18336d539803b5a7")
     version("2.8.2", sha256="b3f860c02c22a30e9787e2548ca252ab289a76b7778af6e9fa763d4aafd904c7")
     version("2.8.1", sha256="4b487a63d6f0c1ca46a2ac37ba4687eabdc3a260c222616fa414f6df73228cec")
@@ -115,46 +118,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     version("1.1.0", sha256="aad4470f52fa59f54de7b9a2da727429e6755d91d756f245f952698c42a60027")
     version("1.0.1", sha256="deea3c65e0703da96d9c3f1162e464c51d37659dd129396af134e9e8f1ea8c05")
     version("1.0.0", sha256="db8b3b8f4134b7c9c1b4165492ad5d5bb78889fcd99ffdffc325e97da3e8c677")
-    version(
-        "0.12.0",
-        sha256="13a1d4e98c82eae7e26fe75384de1517d6126f63ba5d302392ec02ac3ae4b1b9",
-        deprecated=True,
-    )
-    version(
-        "0.11.0",
-        sha256="24242ff696234bb1e58d09d45169b148525ccb706f980a4a92ddd3b82c7546dc",
-        deprecated=True,
-    )
-    version(
-        "0.10.0",
-        sha256="f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680",
-        deprecated=True,
-    )
-    version(
-        "0.9.0",
-        sha256="3128c396af19518c642d3e590212291e1d93c5b047472a10cf3245b53adac9c9",
-        deprecated=True,
-    )
-    version(
-        "0.8.0",
-        sha256="f201ba7fb7609a6416968d4e1920d87d67be693b5bc7d34b6b4a79860a9a8a4e",
-        deprecated=True,
-    )
-    version(
-        "0.7.1",
-        sha256="ef34121432f7a522cf9f99a56cdd86e370cc5fa3ee31255ca7cb17f36b8dfc0d",
-        deprecated=True,
-    )
-    version(
-        "0.7.0",
-        sha256="43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce",
-        deprecated=True,
-    )
-    version(
-        "0.6.0",
-        sha256="f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657",
-        deprecated=True,
-    )
 
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
@@ -211,16 +174,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("bazel@0.4.5", type="build", when="@1.2:1.3")
     # See call to check_version in WORKSPACE
     depends_on("bazel@0.4.2", type="build", when="@1.0:1.1")
-    depends_on("bazel@0.3.2", type="build", when="@0.12")
-    depends_on("bazel@0.3.0", type="build", when="@0.11")
-    depends_on("bazel@0.2.0", type="build", when="@0.9:0.10")
-    depends_on("bazel@0.1.4", type="build", when="@0.7:0.8")
-    depends_on("bazel@0.1.1", type="build", when="@0.5:0.6")
 
     depends_on("swig", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-future", type="build", when="^python@:2")
 
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
     depends_on("py-absl-py@1:", type=("build", "run"), when="@2.9:")
@@ -277,9 +234,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     )
     depends_on("py-numpy@1.13.3:1.14.5", type=("build", "run"), when="@1.10")
     depends_on("py-numpy@1.12.1:1.14.5", type=("build", "run"), when="@1.4:1.5")
-    depends_on("py-numpy@1.11.0:1.14.5", type=("build", "run"), when="@0.11:1.3")
-    depends_on("py-numpy@1.10.1:1.14.5", type=("build", "run"), when="@0.7.1:0.10 platform=darwin")
-    depends_on("py-numpy@1.8.2:1.14.5", type=("build", "run"), when="@0.5:0.10")
+    depends_on("py-numpy@1.11.0:1.14.5", type=("build", "run"), when="@:1.3")
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@1.15:2.3,2.7:")
     depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")
@@ -290,11 +245,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("py-protobuf@3.4.0:", type=("build", "run"), when="@1.5:1.9")
     depends_on("py-protobuf@3.3.0:", type=("build", "run"), when="@1.3:1.4")
     depends_on("py-protobuf@3.2.0:", type=("build", "run"), when="@1.1:1.2")
-    depends_on("py-protobuf@3.1.0:", type=("build", "run"), when="@0.12.1:1.0")
-    depends_on("py-protobuf@3.1.0", type=("build", "run"), when="@0.12.0")
-    depends_on("py-protobuf@3.0.0", type=("build", "run"), when="@0.11.0")
-    depends_on("py-protobuf@3.0.0b2", type=("build", "run"), when="@0.7.1:0.10")
-    depends_on("py-protobuf@3.0.0a3", type=("build", "run"), when="@0.6:0.7.0")
+    depends_on("py-protobuf@3.1.0:", type=("build", "run"), when="@:1.0")
     depends_on("protobuf@:3.12", when="@:2.4")
     depends_on("protobuf@:3.17")
     # https://github.com/protocolbuffers/protobuf/issues/10051
@@ -354,20 +305,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
 
     # No longer a dependency in latest versions
     depends_on("py-astor@0.6:", type=("build", "run"), when="@1.6:2.1")
-    depends_on("py-backports-weakref@1.0:", type=("build", "run"), when="@1.3: ^python@:3.3")
     depends_on("py-backports-weakref@1.0rc1", type=("build", "run"), when="@1.2")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.5: ^python@:3.3")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.4.0:1.4.1")
     depends_on("py-keras-applications@1.0.8:", type=("build", "run"), when="@1.15:2.1")
     depends_on("py-keras-applications@1.0.6:", type=("build", "run"), when="@1.12:1.14")
     depends_on("py-keras-applications@1.0.5:", type=("build", "run"), when="@1.11")
-    depends_on("py-mock@2:", type=("build", "run"), when="@0.10: ^python@:2")
-    depends_on("py-functools32@3.2.3:", type=("build", "run"), when="@1.15: ^python@:2")
-    depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@3:")
-    depends_on("py-scipy@1.2.2", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@:2")
+    depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0")
     depends_on("py-wheel@0.32:0", type=("build", "run"), when="@2.7")
-    depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6 ^python@3:")
-    depends_on("py-wheel@0.26:", type=("build", "run"), when="@0.6:2.3 ^python@3:")
+    depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-wheel@0.26:", type=("build", "run"), when="@:2.3")
 
     # TODO: add packages for some of these dependencies
     depends_on("mkl", when="+mkl")
@@ -376,9 +321,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on("cuda@:10.2", when="+cuda @:2.3")
     depends_on("cuda@:11.4", when="+cuda @2.4:2.7")
+    # avoid problem fixed by commit a76f797b9cd4b9b15bec4c503b16236a804f676f
+    depends_on("cuda@:11.7.0", when="+cuda @:2.9")
     depends_on("cudnn", when="+cuda")
-    depends_on("cudnn@:6", when="@0.5:0.6 +cuda")
-    depends_on("cudnn@:7", when="@0.7:2.2 +cuda")
+    depends_on("cudnn@:7", when="@:2.2 +cuda")
     # depends_on('tensorrt', when='+tensorrt')
     depends_on("nccl", when="+nccl+cuda")
     depends_on("mpi", when="+mpi")
@@ -388,7 +334,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # Check configure and configure.py to see when these variants are supported
     conflicts("+mkl", when="@:1.0")
     conflicts("+mkl", when="platform=darwin", msg="Darwin is not yet supported")
-    conflicts("+jemalloc", when="@:0")
     conflicts(
         "+jemalloc",
         when="platform=darwin",
@@ -399,17 +344,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         when="platform=cray",
         msg="Currently jemalloc is only support on Linux platform",
     )
-    conflicts("+gcp", when="@:0.8")
-    conflicts("+hdfs", when="@:0.10")
     conflicts("+aws", when="@:1.3")
     conflicts("+kafka", when="@:1.5,2.1:")
     conflicts("+ignite", when="@:1.11,2.1:")
-    conflicts("+xla", when="@:0")
     conflicts("+gdr", when="@:1.3")
     conflicts("+verbs", when="@:1.1")
     conflicts("+ngraph", when="@:1.10")
-    conflicts("+opencl", when="@:0.11")
-    conflicts("+computecpp", when="@:0.11")
     conflicts("+computecpp", when="~opencl")
     conflicts("+cuda", when="platform=darwin", msg="There is no GPU support for macOS")
     conflicts(
@@ -475,15 +415,24 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
     # old downloads are removed from that site immediately after a new release.
     # If the tf mirrors don't work, make sure the fallback is to something existing.
-    patch("url-zlib.patch", when="@0.10.0")
-    # bump to zlib 1.2.13
     patch(
         "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
         sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
         when="@2.9:2.10.0",
     )
-    # TODO: why is this needed?
-    patch("crosstool.patch", when="@0.10.0+cuda")
+
+    # Version 2.10 produces an error related to cuBLAS:
+    # E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register
+    # cuBLAS factory: Attempting to register factory for plugin cuBLAS when one
+    # has already been registered
+    # See https://github.com/tensorflow/tensorflow/issues/57663
+    # This is fixed for 2.11 but 2.10 needs the following patch.
+    patch(
+        "https://github.com/tensorflow/tensorflow/pull/56691.patch?full_index=1",
+        sha256="d635ea6d6c1571505871d0caba3e2cd939ea0f4aff972095d552913a8109def3",
+        when="@2.10",
+    )
+
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
     patch("io_bazel_rules_docker2.patch", when="@1.15:2.0")
     # Avoide build error: "name 'new_http_archive' is not defined"

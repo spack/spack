@@ -16,6 +16,7 @@ class RChamp(RPackage):
 
     bioc = "ChAMP"
 
+    version("2.28.0", commit="3d27ac67a738afea8cc9ece6ea1301120e4b48f7")
     version("2.26.0", commit="1548910bf53e1e5f7a8d80c83b742a94297d8a34")
     version("2.24.0", commit="7ba19da74b61e1c40ced162ba753f0f9b9c7647a")
     version("2.20.1", commit="99ea0463bce59f5b06bcc91f479dcd4065074896")

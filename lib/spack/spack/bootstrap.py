@@ -16,6 +16,7 @@ import re
 import sys
 import sysconfig
 import uuid
+from typing import List
 
 import archspec.cpu
 
@@ -84,18 +85,11 @@ def _try_import_from_store(module, query_spec, query_info=None):
 
     for candidate_spec in installed_specs:
         pkg = candidate_spec["python"].package
-        module_paths = [
+        module_paths: List[str] = [
             os.path.join(candidate_spec.prefix, pkg.purelib),
             os.path.join(candidate_spec.prefix, pkg.platlib),
-        ]  # type: list[str]
+        ]
         path_before = list(sys.path)
-
-        # Python 3.8+ on Windows does not search dependent DLLs in PATH,
-        # so we need to manually add it using os.add_dll_directory
-        # https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
-        if sys.version_info[:2] >= (3, 8) and sys.platform == "win32":
-            if os.path.isdir(candidate_spec.prefix.bin):
-                os.add_dll_directory(candidate_spec.prefix.bin)  # novermin
 
         # NOTE: try module_paths first and last, last allows an existing version in path
         # to be picked up and used, possibly depending on something in the store, first

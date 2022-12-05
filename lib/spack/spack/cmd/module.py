@@ -13,7 +13,7 @@ section = "user environment"
 level = "short"
 
 
-_subcommands = {}  # type: Dict[str, Callable]
+_subcommands: Dict[str, Callable] = {}
 
 
 def setup_parser(subparser):

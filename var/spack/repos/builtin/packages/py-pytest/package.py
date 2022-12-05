@@ -79,11 +79,4 @@ class PyPytest(PythonPackage):
     depends_on("py-toml", when="@6", type=("build", "run"))
     depends_on("py-six@1.10.0:", when="@3.3:4", type=("build", "run"))
     depends_on("py-more-itertools@4.0.0:", when="@3.5.1:5", type=("build", "run"))
-    depends_on(
-        "py-more-itertools@4.0.0:6.0.0", when="@4.2.1:4.6.9 ^python@:2", type=("build", "run")
-    )
-    depends_on("py-funcsigs@1.0:", when="@4.4: ^python@:2", type=("build", "run"))
-    depends_on("py-funcsigs", when="@3.3:4.3 ^python@:2", type=("build", "run"))
-    depends_on("py-pathlib2@2.2.0:", when="@3.7.1: ^python@:3.5", type=("build", "run"))
-    depends_on("py-pathlib2", when="@3.7.0 ^python@:3.5", type=("build", "run"))
     depends_on("py-wcwidth", when="@4.5:5", type=("build", "run"))
