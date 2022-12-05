@@ -77,7 +77,7 @@ class MakefileBuilder(BaseBuilder):
     )
 
     #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.build` phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.install` phase
     install_targets = ["install"]
 
