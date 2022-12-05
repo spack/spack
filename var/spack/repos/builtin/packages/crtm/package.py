@@ -30,6 +30,12 @@ class Crtm(CMakePackage):
         default=False,
         description='Download CRTM coeffecient or "fix" files (several GBs).',
     )
+    variant(
+        "build_type",
+        default="RelWithDebInfo",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+    )
 
     depends_on("cmake@3.15:")
     depends_on("git-lfs")
@@ -56,3 +62,5 @@ class Crtm(CMakePackage):
     version("v2.3-jedi.4", commit="bfede42")
     # Branch release/crtm_jedi_v2.4.0
     version("v2.4_jedi", commit="0ee3593")
+    version("v2.4-jedi.1", commit="8222341") # jcsda public
+    #version("v2.4-jedi.1", commit="af0d875") # jcsda-internal
