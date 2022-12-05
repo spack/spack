@@ -32,8 +32,6 @@ class Libxcrypt(AutotoolsPackage):
 
     patch("truncating-conversion.patch", when="@4.4.30")
 
-    depends_on("perl@5.14:")
-
     def configure_args(self):
         args = [
             # Disable test dependency on Python (Python itself depends on libxcrypt).
