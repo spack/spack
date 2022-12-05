@@ -16,7 +16,7 @@ class PyBasalt(PythonPackage):
     version('0.2.9', tag='v0.2.9', submodules=True, get_full_repo=True)
 
     depends_on('cmake@3.7:')
-    depends_on('rocksdb~static+snappy')
+    depends_on('rocksdb@6.20.3~static+snappy')
 
     depends_on('python@3:')
     depends_on('py-setuptools', type=('build', 'run'))
