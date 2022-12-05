@@ -1,0 +1,18 @@
+diff --git i/src/H5Fint.c w/src/H5Fint.c
+index a8039b2e85..504d75ede2 100644
+--- i/src/H5Fint.c
++++ w/src/H5Fint.c
+@@ -1946,8 +1946,11 @@ H5F_open(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
+             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL,
+                         "collective metadata writes are not supported with page buffering")
+ 
+-        /* Temporary: fail file create when page buffering feature is enabled for parallel */
+-        HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, "page buffering is disabled for parallel")
++        /* The pagebuffer isn't compatible with MPI-IO. */
++        if (H5Pget_driver(fapl_id) == H5FD_MPIO)
++            HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL,
++                        "MPIO is not supported with page buffering")
++
+ #endif /* H5_HAVE_PARALLEL */
+         /* Query for other page buffer cache properties */
+         if (H5P_get(a_plist, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, &page_buf_min_meta_perc) < 0)
