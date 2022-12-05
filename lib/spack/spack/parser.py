@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Parser for spec literals"""
+import enum
 import pathlib
 import re
-from enum import Enum, auto
 from typing import Iterator, List, Match, Optional
 
 from llnl.util.tty import color
@@ -37,33 +37,47 @@ VERSION_RANGE = rf"({VERSION}:{VERSION}|:{VERSION}|{VERSION}:|:)"
 VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})([,]({VERSION_RANGE}|{VERSION}))*"
 
 
-class TokenType(Enum):
-    """Enumeration of the different token kinds in the spec grammar"""
+class TokenType(enum.Enum):
+    """Enumeration of the different token kinds in the spec grammar.
 
-    # FILENAME
-    FILENAME = auto()
-    # DAG hash
-    DAG_HASH = auto()
+    Order of declaration is extremely important, since text containing specs is parsed with a
+    single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
+    """
+
+    def __new__(cls, *args, **kwargs):
+        # See
+        value = len(cls.__members__) + 1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj
+
+    def __init__(self, regex):
+        self.regex = regex
+
     # Dependency
-    DEPENDENCY = auto()
+    DEPENDENCY = r"(\^)"
     # Version
-    VERSION_HASH_PAIR = auto()
-    VERSION = auto()
+    VERSION_HASH_PAIR = rf"(@({GIT_VERSION}={VERSION}))"
+    VERSION = rf"(@({VERSION_LIST}))"
     # Variants
-    PROPAGATED_BOOL_VARIANT = auto()
-    BOOL_VARIANT = auto()
-    KEY_VALUE_PAIR = auto()
-    PROPAGATED_KEY_VALUE_PAIR = auto()
+    PROPAGATED_BOOL_VARIANT = rf"(\+\+|~~|--){NAME})"
+    BOOL_VARIANT = rf"([~+-]{NAME})"
+    PROPAGATED_KEY_VALUE_PAIR = rf"({NAME}==({VALUE}|{QUOTED_VALUE}))"
+    KEY_VALUE_PAIR = rf"({NAME}=({VALUE}|{QUOTED_VALUE}))"
     # Compilers
-    COMPILER_AND_VERSION = auto()
-    COMPILER = auto()
+    COMPILER_AND_VERSION = rf"(%({NAME})([\s]*)@({VERSION_LIST}))"
+    COMPILER = rf"(%({NAME}))"
+    # FILENAME
+    FILENAME = rf"({FILENAME})"
     # Package name
-    UNQUALIFIED_PACKAGE_NAME = auto()
-    FULLY_QUALIFIED_PACKAGE_NAME = auto()
+    FULLY_QUALIFIED_PACKAGE_NAME = rf"({PACKAGE_NAME_WITH_DOTS})"
+    UNQUALIFIED_PACKAGE_NAME = rf"({PACKAGE_NAME_WITHOUT_DOTS})"
+    # DAG hash
+    DAG_HASH = rf"(/({HASH}))"
     # White spaces
-    WS = auto()
+    WS = r"(\s+)"
     # Unexpected character
-    UNEXPECTED = auto()
+    UNEXPECTED = r"(.[\s]*)"
 
     def __str__(self):
         return f"{self._name_}"
@@ -95,31 +109,31 @@ class Token:
 #: List of all the regexes used to match spec parts, in order of precedence
 TOKEN_REGEXES = [
     # Dependency
-    rf"(?P<{TokenType.DEPENDENCY}>\^)",
+    rf"(?P<{TokenType.DEPENDENCY}>{TokenType.DEPENDENCY.regex})",
     # Version regexes
-    rf"(?P<{TokenType.VERSION_HASH_PAIR}>@({GIT_VERSION}={VERSION}))",
-    rf"(?P<{TokenType.VERSION}>@({VERSION_LIST}))",
+    rf"(?P<{TokenType.VERSION_HASH_PAIR}>{TokenType.VERSION_HASH_PAIR.regex})",
+    rf"(?P<{TokenType.VERSION}>{TokenType.VERSION.regex})",
     # Variant regexes
-    rf"(?P<{TokenType.PROPAGATED_BOOL_VARIANT}>(\+\+|~~|--){NAME})",
-    rf"(?P<{TokenType.BOOL_VARIANT}>[~+-]{NAME})",
-    rf"(?P<{TokenType.PROPAGATED_KEY_VALUE_PAIR}>({NAME}==({VALUE}|{QUOTED_VALUE})))",  # noqa: E501
-    rf"(?P<{TokenType.KEY_VALUE_PAIR}>({NAME}=({VALUE}|{QUOTED_VALUE})))",
+    rf"(?P<{TokenType.PROPAGATED_BOOL_VARIANT}>{TokenType.PROPAGATED_BOOL_VARIANT.regex}",
+    rf"(?P<{TokenType.BOOL_VARIANT}>{TokenType.BOOL_VARIANT.regex})",
+    rf"(?P<{TokenType.PROPAGATED_KEY_VALUE_PAIR}>{TokenType.PROPAGATED_KEY_VALUE_PAIR.regex})",  # noqa: E501
+    rf"(?P<{TokenType.KEY_VALUE_PAIR}>{TokenType.KEY_VALUE_PAIR.regex})",
     # Compiler regexes
-    rf"(?P<{TokenType.COMPILER_AND_VERSION}>%({NAME})([\s]*)@({VERSION_LIST}))",
-    rf"(?P<{TokenType.COMPILER}>%({NAME}))",
+    rf"(?P<{TokenType.COMPILER_AND_VERSION}>{TokenType.COMPILER_AND_VERSION.regex})",
+    rf"(?P<{TokenType.COMPILER}>{TokenType.COMPILER.regex})",
     # Filename
-    rf"(?P<{TokenType.FILENAME}>({FILENAME}))",
+    rf"(?P<{TokenType.FILENAME}>{TokenType.FILENAME.regex})",
     # Spec name regexes
-    rf"(?P<{TokenType.FULLY_QUALIFIED_PACKAGE_NAME}>{PACKAGE_NAME_WITH_DOTS})",
-    rf"(?P<{TokenType.UNQUALIFIED_PACKAGE_NAME}>{PACKAGE_NAME_WITHOUT_DOTS})",
+    rf"(?P<{TokenType.FULLY_QUALIFIED_PACKAGE_NAME}>{TokenType.FULLY_QUALIFIED_PACKAGE_NAME.regex})",  # noqa: E501
+    rf"(?P<{TokenType.UNQUALIFIED_PACKAGE_NAME}>{TokenType.UNQUALIFIED_PACKAGE_NAME.regex})",
     # DAG hash
-    rf"(?P<{TokenType.DAG_HASH}>/({HASH}))",
+    rf"(?P<{TokenType.DAG_HASH}>{TokenType.DAG_HASH.regex})",
     # White spaces (the lowest priority)
-    rf"(?P<{TokenType.WS}>\s+)",
+    rf"(?P<{TokenType.WS}>{TokenType.WS.regex})",
 ]
 
 ERROR_HANDLING_REGEXES = TOKEN_REGEXES + [
-    rf"(?P<{TokenType.UNEXPECTED}>(.[\s]*))",
+    rf"(?P<{TokenType.UNEXPECTED}>{TokenType.UNEXPECTED.regex})",
 ]
 
 #: Maps a string representation to the corresponding token kind
