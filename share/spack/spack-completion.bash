@@ -1439,7 +1439,7 @@ _spack_module_tcl_setdefault() {
 _spack_patch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -U --fresh --reuse"
     else
         _all_packages
     fi
