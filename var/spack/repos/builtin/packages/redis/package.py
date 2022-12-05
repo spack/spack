@@ -50,7 +50,7 @@ class Redis(MakefilePackage):
     version("4.0.12", sha256="6447259d2eed426a949c9c13f8fdb2d91fb66d9dc915dd50db13b87f46d93162")
     version("4.0.11", sha256="fc53e73ae7586bcdacb4b63875d1ff04f68c5474c1ddeda78f00e5ae2eed1bbb")
 
-    variant("tls", default=False, description="Builds with TLS support")
+    variant("tls", default=False, when="@6:", description="Builds with TLS support")
     depends_on("openssl@1.1:", type=("build", "link"), when="+tls")
     conflicts("@:6", when="+tls", msg="TLS support requires Redis >= 6.0.")
 
