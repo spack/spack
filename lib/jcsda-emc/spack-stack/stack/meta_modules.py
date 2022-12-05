@@ -88,7 +88,7 @@ def get_matched_dict(root_dir, candidate_list, sub_candidate_list=None):
         matched_name = None
         matched_version = None
         for xdir in dirs:
-            # Partial matches
+            # Partial matches: name/version/
             if ('@' in candidate and xdir == candidate.split('@')[0]) or (xdir == candidate):
                 candidate_dir = os.path.join(root_dir, xdir)
                 # Now that we have the top-level compiler dir
@@ -116,6 +116,10 @@ def get_matched_dict(root_dir, candidate_list, sub_candidate_list=None):
                     sub_matched_dict = get_matched_dict(
                         os.path.join(root_dir, matched_name, matched_version),
                         sub_candidate_list)
+            # Partial matches: name-version/ or name-version-hash/ or ...
+            elif '@' in candidate and xdir.startswith(candidate.replace('@','-')):
+                matched_name = candidate.split('@')[0]
+                matched_version = candidate.split('@')[1]
         if not matched_name or not matched_version:
             continue
         # Compilers for example do not depend on another package
@@ -621,144 +625,176 @@ def setup_meta_modules():
                         f.write(module_content)
                     logging.info("  ... writing {}".format(mpi_module_file))
 
-    # Create python modules
-    for package_name in package_config.keys():
-        if package_name == 'python':
-            if 'externals' in package_config[package_name].keys():
-                # Loop through all external specs and find the
-                # latest version, this is what spack is using
-                python_version = None
-                python_external_spec_index = None
-                for i in range(len(package_config[package_name]['externals'])):
-                    (python_name, python_version_test) = get_name_and_version_from_spec(
-                        package_config[package_name]['externals'][i]['spec'])
-                    if not python_version or \
-                            versiontuple(python_version_test) > versiontuple(python_version):
-                        python_version = python_version_test
-                        python_package_config = package_config[python_name]['externals'][i]
-                logging.debug(
-                    "  ... using external python version {}".format(python_version))
-            # We do not support Python being built by spack
-            else:
-                raise Exception("Package with matching name is incompatible: {}".format(
-                    package_config[package_name]))
+    del package_name
+    # Create python modules. Need to accommodate both external
+    # Python distributions and spack-built Python distributions.
+    # If there is no package config info for Python, then we are
+    # using a spack-built Python without knowing the version - not supported.
+    if not 'python' in package_config.keys():
+        raise Exception("""No information on Python in package config. For external
+Python distributions, specify complete specifications. For spack-built
+Python, list the correct version in the package config""")
+    else:
+        package_name = 'python'
+        if 'externals' in package_config[package_name].keys():
+            # Loop through all external specs and find the
+            # latest version, this is what spack is using
+            spack_python_build = False
+            python_version = None
+            for i in range(len(package_config[package_name]['externals'])):
+                (python_name, python_version_test) = get_name_and_version_from_spec(
+                    package_config[package_name]['externals'][i]['spec'])
+                if not python_version or \
+                        versiontuple(python_version_test) > versiontuple(python_version):
+                    python_version = python_version_test
+                    python_package_config = package_config[python_name]['externals'][i]
+            logging.debug(
+                "  ... using external python version {}".format(python_version))
+        else:
+            spack_python_build = True
+            python_name = 'python'
+            python_version = None
+            python_package_config = None
+            # Loop through versions, pick the most-recent
+            for python_version_test in package_config[package_name]['version']:
+                if not python_version or \
+                        versiontuple(python_version_test) > versiontuple(python_version):
+                    python_version = python_version_test
+            logging.debug(
+                "  ... using spack-built python version {}".format(python_version))
+            # Check that the Python version we determined is indeed what's installed
+            python_candidate_list = ['python@{}'.format(python_version)]
             for compiler_name in compiler_dict.keys():
                 for compiler_version in compiler_dict[compiler_name]:
-                    logging.info("  ... configuring stack python interpreter {}@{} for compiler {}@{}".format(
-                        python_name, python_version, compiler_name, compiler_version))
+                    compiler_install_dir = os.path.join(install_dir, compiler_name, compiler_version)
+                    python_dict = get_matched_dict(compiler_install_dir, python_candidate_list)
+            logging.info(" ... stack python providers: '{}'".format(python_dict))
+            if not python_dict:
+                raise Exception("""No matching Python version found. Make sure that the
+Python version in the package config matches what spack installed.""")
 
-                    # Path and name for lua module file
-                    python_module_dir = os.path.join(
-                        module_dir, compiler_name, compiler_version, 'stack-' + python_name)
-                    python_module_file = os.path.join(
-                        python_module_dir, python_version + MODULE_FILE_EXTENSION[module_choice])
+    for compiler_name in compiler_dict.keys():
+        for compiler_version in compiler_dict[compiler_name]:
+            logging.info("  ... configuring stack python interpreter {}@{} for compiler {}@{}".format(
+                python_name, python_version, compiler_name, compiler_version))
 
-                    substitutes = SUBSTITUTES_TEMPLATE.copy()
-                    #
-                    if 'modules' in python_package_config.keys():
-                        # Existing non-spack modules to load
-                        for module in python_package_config['modules']:
-                            substitutes['MODULELOADS'] += module_load_command(
-                                module_choice, module)
-                            substitutes['MODULEPREREQS'] += module_prereq_command(
-                                module_choice, module)
-                        substitutes['MODULELOADS'] = substitutes['MODULELOADS'].rstrip(
-                            '\n')
-                        substitutes['MODULEPREREQS'] = substitutes['MODULEPREREQS'].rstrip(
-                            '\n')
-                        logging.debug("  ... ... MODULELOADS: {}".format(
-                            substitutes['MODULELOADS']))
-                        logging.debug("  ... ... MODULEPREREQS: {}".format(
-                            substitutes['MODULEPREREQS']))
-                        # python_name_ROOT - replace "-" in python_name with "_" for environment variables
-                        if 'prefix' in python_package_config.keys():
-                            prefix = python_package_config['prefix']
-                            substitutes['PYTHONROOT'] = setenv_command(
-                                module_choice, python_name.replace('-', '_') + "_ROOT", prefix)
-                            logging.debug("  ... ... PYTHONROOT: {}".format(
-                                substitutes['PYTHONROOT']))
-                    elif 'prefix' in python_package_config.keys():
-                        prefix = python_package_config['prefix']
-                        # PATH
-                        bindir = os.path.join(prefix, 'bin')
-                        if os.path.isdir(bindir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "PATH", bindir)
-                        # LD_LIBRARY_PATH AND PKG_CONFIG_PATH - do we need to worry about DYLD_LIBRARY_PATH for macOS?
-                        # Also: PYTHONPATH = check site-packages and dist-packages
-                        libdir = os.path.join(prefix, 'lib')
-                        if os.path.isdir(libdir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "LD_LIBRARY_PATH", libdir)
-                        pkgconfigdir = os.path.join(libdir, 'pkgconfig')
-                        if os.path.isdir(pkgconfigdir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "PKG_CONFIG_PATH", pkgconfigdir)
-                        # Python version for constructing PYTHONPATH is X.Y (major.minor, no patch-level)
-                        python_version_for_pythonpath = python_version[:python_version.rfind(
-                            '.')]
-                        # Check site-packages and dist-packages
-                        pythonpathdir = os.path.join(libdir, 'python{}'.format(
-                            python_version_for_pythonpath), 'site-packages')
-                        if os.path.isdir(pythonpathdir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "PYTHONPATH", pythonpathdir)
-                        pythonpathdir = os.path.join(libdir, 'python{}'.format(
-                            python_version_for_pythonpath), 'dist-packages')
-                        if os.path.isdir(pythonpathdir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "PYTHONPATH", pythonpathdir)
-                        lib64dir = os.path.join(prefix, 'lib64')
-                        if os.path.isdir(lib64dir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "LD_LIBRARY_PATH", lib64dir)
-                        pkgconfig64dir = os.path.join(lib64dir, 'pkgconfig')
-                        if os.path.isdir(pkgconfig64dir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "PKG_CONFIG_PATH", pkgconfig64dir)
-                        pythonpath64dir = os.path.join(lib64dir, 'python{}'.format(
-                            python_version_for_pythonpath), 'site-packages')
-                        if os.path.isdir(pythonpath64dir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "PYTHONPATH", pythonpath64dir)
-                        pythonpath64dir = os.path.join(lib64dir, 'python{}'.format(
-                            python_version_for_pythonpath), 'dist-packages')
-                        if os.path.isdir(pythonpath64dir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "PYTHONPATH", pythonpath64dir)
-                        # MANPATH
-                        mandir = os.path.join(prefix, 'share/man')
-                        if os.path.isdir(mandir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "MANPATH", mandir)
-                        # ACLOCAL_PATH
-                        aclocaldir = os.path.join(prefix, 'share/aclocal')
-                        if os.path.isdir(aclocaldir):
-                            substitutes['ENVVARS'] += prepend_path_command(
-                                module_choice, "ACLOCAL_PATH", aclocaldir)
-                        # python_name_ROOT - replace "-" in 
-                        # python_name with "_" for environment variables
-                        substitutes['PYTHONROOT'] = setenv_command(
-                            module_choice, python_name.replace('-', '_') + "_ROOT", prefix)
-                    else:
-                        raise Exception(
-                            "External packages must have 'prefix' and/or 'modules'")
+            # Path and name for lua module file
+            python_module_dir = os.path.join(
+                module_dir, compiler_name, compiler_version, 'stack-' + python_name)
+            python_module_file = os.path.join(
+                python_module_dir, python_version + MODULE_FILE_EXTENSION[module_choice])
 
-                    # Read compiler lua template into module_content string
-                    with open(PYTHON_TEMPLATES[module_choice]) as f:
-                        module_content = f.read()
+            substitutes = SUBSTITUTES_TEMPLATE.copy()
+            #
+            if spack_python_build:
+                module = 'python/{}'.format(python_version)
+                # Load spack python module
+                substitutes['MODULELOADS'] += module_load_command(
+                    module_choice, module)
+            elif 'modules' in python_package_config.keys():
+                # Existing non-spack modules to load
+                for module in python_package_config['modules']:
+                    substitutes['MODULELOADS'] += module_load_command(
+                        module_choice, module)
+                    substitutes['MODULEPREREQS'] += module_prereq_command(
+                        module_choice, module)
+                substitutes['MODULELOADS'] = substitutes['MODULELOADS'].rstrip(
+                    '\n')
+                substitutes['MODULEPREREQS'] = substitutes['MODULEPREREQS'].rstrip(
+                    '\n')
+                logging.debug("  ... ... MODULELOADS: {}".format(
+                    substitutes['MODULELOADS']))
+                logging.debug("  ... ... MODULEPREREQS: {}".format(
+                    substitutes['MODULEPREREQS']))
+                # python_name_ROOT - replace "-" in python_name with "_" for environment variables
+                if 'prefix' in python_package_config.keys():
+                    prefix = python_package_config['prefix']
+                    substitutes['PYTHONROOT'] = setenv_command(
+                        module_choice, python_name.replace('-', '_') + "_ROOT", prefix)
+                    logging.debug("  ... ... PYTHONROOT: {}".format(
+                        substitutes['PYTHONROOT']))
+            elif 'prefix' in python_package_config.keys():
+                prefix = python_package_config['prefix']
+                # PATH
+                bindir = os.path.join(prefix, 'bin')
+                if os.path.isdir(bindir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "PATH", bindir)
+                # LD_LIBRARY_PATH AND PKG_CONFIG_PATH - do we need to worry about DYLD_LIBRARY_PATH for macOS?
+                # Also: PYTHONPATH = check site-packages and dist-packages
+                libdir = os.path.join(prefix, 'lib')
+                if os.path.isdir(libdir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "LD_LIBRARY_PATH", libdir)
+                pkgconfigdir = os.path.join(libdir, 'pkgconfig')
+                if os.path.isdir(pkgconfigdir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "PKG_CONFIG_PATH", pkgconfigdir)
+                # Python version for constructing PYTHONPATH is X.Y (major.minor, no patch-level)
+                python_version_for_pythonpath = python_version[:python_version.rfind(
+                    '.')]
+                # Check site-packages and dist-packages
+                pythonpathdir = os.path.join(libdir, 'python{}'.format(
+                    python_version_for_pythonpath), 'site-packages')
+                if os.path.isdir(pythonpathdir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "PYTHONPATH", pythonpathdir)
+                pythonpathdir = os.path.join(libdir, 'python{}'.format(
+                    python_version_for_pythonpath), 'dist-packages')
+                if os.path.isdir(pythonpathdir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "PYTHONPATH", pythonpathdir)
+                lib64dir = os.path.join(prefix, 'lib64')
+                if os.path.isdir(lib64dir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "LD_LIBRARY_PATH", lib64dir)
+                pkgconfig64dir = os.path.join(lib64dir, 'pkgconfig')
+                if os.path.isdir(pkgconfig64dir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "PKG_CONFIG_PATH", pkgconfig64dir)
+                pythonpath64dir = os.path.join(lib64dir, 'python{}'.format(
+                    python_version_for_pythonpath), 'site-packages')
+                if os.path.isdir(pythonpath64dir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "PYTHONPATH", pythonpath64dir)
+                pythonpath64dir = os.path.join(lib64dir, 'python{}'.format(
+                    python_version_for_pythonpath), 'dist-packages')
+                if os.path.isdir(pythonpath64dir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "PYTHONPATH", pythonpath64dir)
+                # MANPATH
+                mandir = os.path.join(prefix, 'share/man')
+                if os.path.isdir(mandir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "MANPATH", mandir)
+                # ACLOCAL_PATH
+                aclocaldir = os.path.join(prefix, 'share/aclocal')
+                if os.path.isdir(aclocaldir):
+                    substitutes['ENVVARS'] += prepend_path_command(
+                        module_choice, "ACLOCAL_PATH", aclocaldir)
+                # python_name_ROOT - replace "-" in 
+                # python_name with "_" for environment variables
+                substitutes['PYTHONROOT'] = setenv_command(
+                    module_choice, python_name.replace('-', '_') + "_ROOT", prefix)
+            else:
+                raise Exception(
+                    "External packages must have 'prefix' and/or 'modules'")
 
-                    # Substitute variables in module_content
-                    for key in substitutes.keys():
-                        module_content = module_content.replace(
-                            "@{}@".format(key), substitutes[key])
+            # Read compiler lua template into module_content string
+            with open(PYTHON_TEMPLATES[module_choice]) as f:
+                module_content = f.read()
 
-                    # Write python lua module
-                    if not os.path.isdir(python_module_dir):
-                        os.makedirs(python_module_dir)
-                    with open(python_module_file, 'w') as f:
-                        f.write(module_content)
-                    logging.info("  ... writing {}".format(python_module_file))
+            # Substitute variables in module_content
+            for key in substitutes.keys():
+                module_content = module_content.replace(
+                    "@{}@".format(key), substitutes[key])
+
+            # Write python lua module
+            if not os.path.isdir(python_module_dir):
+                os.makedirs(python_module_dir)
+            with open(python_module_file, 'w') as f:
+                f.write(module_content)
+            logging.info("  ... writing {}".format(python_module_file))
 
     logging.info(
         "Metamodule generation completed successfully in {}".format(meta_module_dir))
