@@ -24,8 +24,9 @@ class Hdf5VolAsync(CMakePackage):
 
     depends_on("mpi")
     depends_on("argobots@main")
-    depends_on("hdf5@1.13: +mpi +threadsafe")
-
+    depends_on("hdf5@1.13.2 +mpi +threadsafe")
+    depends_on("hdf5@1.13.3: +mpi +threadsafe", when="@1.4:")
+    
     def setup_run_environment(self, env):
         env.set("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
         vol_connector = "async under_vol=0;under_info=[]"
