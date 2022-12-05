@@ -32,7 +32,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Set  # novm
+from typing import List, Set
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -122,9 +122,9 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_dict_names = set()  # type: Set[str]
-    _directives_to_be_executed = []  # type: List[str]
-    _when_constraints_from_context = []  # type: List[str]
+    _directive_dict_names: Set[str] = set()
+    _directives_to_be_executed: List[str] = []
+    _when_constraints_from_context: List[str] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
