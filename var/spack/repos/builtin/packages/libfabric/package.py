@@ -159,7 +159,7 @@ class Libfabric(AutotoolsPackage):
         else:
             args.append("--with-kdreg=no")
 
-        for fabric in self.variants['fabrics'][0].values:
+        for fabric in self.variants["fabrics"][0].values:
             if "fabrics={0}".format(fabric.value) in self.spec:
                 args.append("--enable-{0}=yes".format(fabric.value))
             else:
