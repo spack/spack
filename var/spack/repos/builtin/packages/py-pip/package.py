@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class PyPip(Package, PythonExtension):
+class PyPip(Package):
     """The PyPA recommended tool for installing Python packages."""
 
     homepage = "https://pip.pypa.io/"
@@ -74,6 +74,12 @@ class PyPip(Package, PythonExtension):
     )
 
     extends("python")
+    depends_on("python@3.7:", when="@22:", type=("build", "run"))
+    depends_on("python@3.6:", when="@21:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.5:", when="@19.2:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@18:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.3:", when="@10:", type=("build", "run"))
+    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"
