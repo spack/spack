@@ -6,6 +6,7 @@
 
 import sys
 
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 from spack.util.environment import is_system_path
 
@@ -31,6 +32,8 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
+    version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
     version("6.26.04", sha256="a271cf82782d6ed2c87ea5eef6681803f2e69e17b3036df9d863636e9358421e")
     version("6.26.02", sha256="7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb")
@@ -207,6 +210,7 @@ class Root(CMakePackage):
     depends_on("lz4", when="@6.13.02:")  # See cmake_args, below.
     depends_on("ncurses")
     depends_on("nlohmann-json", when="@6.24:")
+    depends_on("nlohmann-json@:3.10", when="@6.24:6.26.07")
     depends_on("pcre")
     depends_on("xxhash", when="@6.13.02:")  # See cmake_args, below.
     depends_on("xz")
@@ -232,6 +236,7 @@ class Root(CMakePackage):
 
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
+    depends_on("python@2.7:3.10", when="@:6.26.09 +python", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"), when="+tmva")
     # This numpy dependency was not intended and will hopefully
     # be fixed in 6.20.06.
@@ -291,9 +296,6 @@ class Root(CMakePackage):
     # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
     conflicts("%gcc@9.0.0:", when="@:6.11")
 
-    # ROOT <6.14 was incompatible with Python 3.7+
-    conflicts("^python@3.7:", when="@:6.13 +python")
-
     # See https://github.com/root-project/root/issues/9297
     conflicts("target=ppc64le:", when="@:6.24")
 
@@ -306,6 +308,16 @@ class Root(CMakePackage):
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root " "requires at least C++14")
     conflicts("cxxstd=20", when="@:6.25.01", msg="C++20 support was added " "in 6.25.02")
+
+    # See https://github.com/root-project/root/issues/11128
+    conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
+
+    # See https://github.com/root-project/root/issues/11714
+    if sys.platform == "darwin" and macos_version() >= Version("13"):
+        conflicts("@:6.26.09", msg="macOS 13 support was added in 6.26.10")
+
+    # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
+    conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
