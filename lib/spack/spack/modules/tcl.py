@@ -8,7 +8,7 @@ non-hierarchical modules.
 """
 import posixpath
 import string
-from typing import Any, Dict  # novm
+from typing import Any, Dict
 
 import llnl.util.tty as tty
 
@@ -23,14 +23,11 @@ from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFi
 def configuration(module_set_name):
     config_path = "modules:%s:tcl" % module_set_name
     config = spack.config.get(config_path, {})
-    if not config and module_set_name == "default":
-        # return old format for backward compatibility
-        return spack.config.get("modules:tcl", {})
     return config
 
 
 # Caches the configuration {spec_hash: configuration}
-configuration_registry = {}  # type: Dict[str, Any]
+configuration_registry: Dict[str, Any] = {}
 
 
 def make_configuration(spec, module_set_name):

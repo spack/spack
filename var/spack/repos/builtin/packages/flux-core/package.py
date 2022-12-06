@@ -20,6 +20,7 @@ class FluxCore(AutotoolsPackage):
     maintainers = ["grondo"]
 
     version("master", branch="master")
+    version("0.45.0", sha256="6550fe682c1686745e1d9c201daf18f9c57691468124565c9252d27823d2fe46")
     version("0.44.0", sha256="6786b258657675ed573907a2a6012f68f2dd5053d7d09eb76b4e7f9943d6d466")
     version("0.43.0", sha256="4b9816d04e8b5b248a8d5e3dac3f9822f8f89831e340f36745e01512d768597b")
     version("0.42.0", sha256="ac64055976cd7cda26e2991174b9a58048bd4fb75c5c2012023050d76c718445")
@@ -109,6 +110,10 @@ class FluxCore(AutotoolsPackage):
 
     variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
+
+    # Restrict flux to Linux based platforms where builds are possible.
+    conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
+    conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
 
     depends_on("libarchive", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")

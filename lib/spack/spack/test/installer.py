@@ -467,6 +467,37 @@ def test_packages_needed_to_bootstrap_compiler_packages(install_mockery, monkeyp
     assert packages
 
 
+def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, monkeypatch):
+    spec = spack.spec.Spec("trivial-install-test-package").concretized()
+    installer = inst.PackageInstaller([(spec.package, {})])
+
+    # Add a task to the queue
+    installer._add_init_task(spec.package, installer.build_requests[0], False, {})
+
+    # monkeypatch to make the list of compilers be what we test
+    def fake_package_list(compiler, architecture, pkgs):
+        return [(spec.package, True)]
+
+    monkeypatch.setattr(inst, "_packages_needed_to_bootstrap_compiler", fake_package_list)
+
+    installer._add_bootstrap_compilers("fake", "fake", "fake", None, {})
+
+    # Check that the only task is now a compiler task
+    assert len(installer.build_pq) == 1
+    assert installer.build_pq[0][1].compiler
+
+
+def test_bootstrapping_compilers_with_different_names_from_spec(
+    install_mockery, mutable_config, mock_fetch
+):
+    with spack.config.override("config:install_missing_compilers", True):
+        with spack.concretize.disable_compiler_existence_check():
+            spec = spack.spec.Spec("trivial-install-test-package%oneapi@22.2.0").concretized()
+            spec.package.do_install()
+
+            assert spack.spec.CompilerSpec("oneapi@22.2.0") in spack.compilers.all_compiler_specs()
+
+
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
     """Test happy path for dump_packages with dependencies."""
 

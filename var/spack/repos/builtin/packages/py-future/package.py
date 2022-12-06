@@ -19,8 +19,6 @@ class PyFuture(PythonPackage):
     version("0.15.2", sha256="3d3b193f20ca62ba7d8782589922878820d0a023b885882deec830adbf639b97")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-importlib", type=("build", "run"), when="^python@:2.6")
-    depends_on("py-argparse", type=("build", "run"), when="^python@:2.6,3.0:3.1")
 
     @property
     def import_modules(self):

@@ -12,11 +12,11 @@ class PySegmentationModelsPytorch(PythonPackage):
     homepage = "https://github.com/qubvel/segmentation_models.pytorch"
     pypi = "segmentation_models_pytorch/segmentation_models_pytorch-0.2.0.tar.gz"
 
+    version("0.3.1", sha256="d4a4817cf48872c3461bb7d22864c00f9d491719a6460adb252c035f9b0e8d51")
     version("0.3.0", sha256="8e00ed1707698d309d23f207aef15f21465e091aa0f1dc8043ec3300f5f67216")
     version("0.2.1", sha256="86744552b04c6bedf7e10f7928791894d8d9b399b9ed58ed1a3236d2bf69ead6")
     version("0.2.0", sha256="247266722c23feeef16b0862456c5ce815e5f0a77f95c2cd624a71bf00d955df")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-torchvision@0.5.0:", type=("build", "run"))
     depends_on("py-pretrainedmodels@0.7.4", type=("build", "run"))

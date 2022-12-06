@@ -24,10 +24,26 @@ class RocmBandwidthTest(CMakePackage):
     version("5.2.0", sha256="046f2a6984c62899f57a557490136fbe7ab28e2fd334750abac71b03609226ef")
     version("5.1.3", sha256="6a6e7fb998c886951db75dcf34dca523d9caaff8d0ccf2b7431504a1808b1ff3")
     version("5.1.0", sha256="18fe51f0ba61760fc89ffc81f737fd4fa20fb4b00df3f35145be77c3e0a6162b")
-    version("5.0.2", sha256="c93f7dbb37233aa32d81057fa8b3fa88d7c7be9b7916430b5ffc701600a5ff45")
-    version("5.0.0", sha256="b33c6a12ad8de1d7ea9b8b380b8fa5db6b601ed426c3d3940134863f7d10740f")
-    version("4.5.2", sha256="559ca7ef582d81047c5dd5a908f3989cb2694e89577f7f556214e324ba65e75e")
-    version("4.5.0", sha256="4d20a6017ca6975df98f3ca61ba95fa0c7c62fbf63cd6abae3396c30a423933f")
+    version(
+        "5.0.2",
+        sha256="c93f7dbb37233aa32d81057fa8b3fa88d7c7be9b7916430b5ffc701600a5ff45",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="b33c6a12ad8de1d7ea9b8b380b8fa5db6b601ed426c3d3940134863f7d10740f",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="559ca7ef582d81047c5dd5a908f3989cb2694e89577f7f556214e324ba65e75e",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="4d20a6017ca6975df98f3ca61ba95fa0c7c62fbf63cd6abae3396c30a423933f",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="a4804c28586457c231594b4e7689872eaf91972119d892325468f3fe8fdbe5ef",

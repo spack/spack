@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections.abc
 import inspect
 import os
 import platform
@@ -9,10 +10,7 @@ import re
 import sys
 from typing import List, Tuple
 
-import six
-
 import llnl.util.filesystem as fs
-from llnl.util.compat import Sequence
 
 import spack.build_environment
 import spack.builder
@@ -155,13 +153,13 @@ class CMakeBuilder(BaseBuilder):
     """
 
     #: Phases of a CMake package
-    phases = ("cmake", "build", "install")  # type: Tuple[str, ...]
+    phases: Tuple[str, ...] = ("cmake", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("cmake_args", "check")  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = ("cmake_args", "check")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = (
+    legacy_attributes: Tuple[str, ...] = (
         "generator",
         "build_targets",
         "install_targets",
@@ -171,7 +169,7 @@ class CMakeBuilder(BaseBuilder):
         "std_cmake_args",
         "build_dirname",
         "build_directory",
-    )  # type: Tuple[str, ...]
+    )
 
     #: The build system generator to use.
     #:
@@ -184,7 +182,7 @@ class CMakeBuilder(BaseBuilder):
     generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
 
     #: Targets to be used during the build phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets to be used during the install phase
     install_targets = ["install"]
     #: Callback names for build-time test
@@ -302,7 +300,7 @@ class CMakeBuilder(BaseBuilder):
             value = "ON" if value else "OFF"
         else:
             kind = "STRING"
-            if isinstance(value, Sequence) and not isinstance(value, six.string_types):
+            if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
                 value = ";".join(str(v) for v in value)
             else:
                 value = str(value)

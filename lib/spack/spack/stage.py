@@ -14,9 +14,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict  # novm
-
-from six import iteritems, string_types
+from typing import Dict
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -51,9 +49,7 @@ _source_path_subdir = "spack-src"
 stage_prefix = "spack-stage-"
 
 
-def create_stage_root(path):
-    # type: (str) -> None
-
+def create_stage_root(path: str) -> None:
     """Create the stage root directory and ensure appropriate access perms."""
     assert os.path.isabs(path) and len(path.strip()) > 1
 
@@ -171,7 +167,7 @@ def get_stage_root():
 
     if _stage_root is None:
         candidates = spack.config.get("config:build_stage")
-        if isinstance(candidates, string_types):
+        if isinstance(candidates, str):
             candidates = [candidates]
 
         resolved_candidates = _resolve_paths(candidates)
@@ -237,7 +233,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {}  # type: Dict[str, spack.util.lock.Lock]
+    stage_locks: Dict[str, spack.util.lock.Lock] = {}
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True
@@ -288,7 +284,7 @@ class Stage(object):
         """
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
-        if isinstance(url_or_fetch_strategy, string_types):
+        if isinstance(url_or_fetch_strategy, str):
             self.fetcher = fs.from_url_scheme(url_or_fetch_strategy)
         elif isinstance(url_or_fetch_strategy, fs.FetchStrategy):
             self.fetcher = url_or_fetch_strategy
@@ -709,7 +705,7 @@ class ResourceStage(Stage):
             else:
                 raise
 
-        for key, value in iteritems(placement):
+        for key, value in placement.items():
             destination_path = os.path.join(target_path, value)
             source_path = os.path.join(self.source_path, key)
 
@@ -903,7 +899,7 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
         "",
         *llnl.util.lang.elide_list(
             ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v]) for v in sorted_versions]
-        )
+        ),
     )
     print()
 

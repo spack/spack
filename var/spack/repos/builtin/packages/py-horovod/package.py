@@ -87,7 +87,6 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@:0.19")
-    depends_on("py-dataclasses", type=("build", "run"), when="@0.20: ^python@:3.6")
     depends_on("py-packaging", type=("build", "run"), when="@0.26:")
 
     # Framework dependencies

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
-from typing import List  # novm
+from typing import List
 
 import llnl.util.filesystem as fs
 
@@ -72,7 +72,7 @@ class NMakeBuilder(BaseBuilder):
     )
 
     #: Targets for ``make`` during the :py:meth:`~.NMakeBuilder.build` phase
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     #: Targets for ``make`` during the :py:meth:`~.NMakeBuilder.install` phase
     install_targets = ["install"]
 
