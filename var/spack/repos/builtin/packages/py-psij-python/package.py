@@ -24,5 +24,4 @@ class PyPsijPython(PythonPackage):
     depends_on("py-filelock", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pystache", type=("build", "run"))
-    depends_on("py-pip@20.2", type=("build", "run"))
-    depends_on("py-setuptools@64.0.0", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
