@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import warnings
-
 from spack.package import *
 
 linkage_url = (
