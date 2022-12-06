@@ -2021,17 +2021,16 @@ def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
 
 def try_direct_fetch(spec, mirrors=None):
     """
-    Try to find the spec directly on the configured mirrors, returning the first hit.
+    Try to find the spec directly on the configured mirrors
     """
     files = [tarball_name(spec, ".spec.json"), tarball_name(spec, ".spec.json.sig")]
     found_specs = []
 
-    for file in files:
-        for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
+    for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
+        for file in files:
+            url = url_util.join(mirror.fetch_url, _build_cache_relative_path, file)
             try:
-                _, _, fs = web_util.read_from_url(
-                    url_util.join(mirror.fetch_url, _build_cache_relative_path, file)
-                )
+                _, _, fs = web_util.read_from_url(url)
             except (URLError, web_util.SpackWebError, HTTPError) as url_err:
                 tty.debug(url_err, level=2)
                 continue
@@ -2044,12 +2043,15 @@ def try_direct_fetch(spec, mirrors=None):
             # concrete on read-in.
             fetched_spec._mark_concrete()
 
-            return [
+            found_specs.append(
                 {
                     "mirror_url": mirror.fetch_url,
                     "spec": fetched_spec,
                 }
-            ]
+            )
+
+            # Stop on first hit per mirror.
+            break
 
     return found_specs
 
