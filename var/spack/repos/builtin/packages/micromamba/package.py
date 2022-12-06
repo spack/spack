@@ -117,11 +117,11 @@ class Micromamba(CMakePackage):
             depends_on("nghttp2", type="link")
             depends_on("yaml-cpp~shared", type="link")
             depends_on("libreproc+cxx~shared", type="link")
-    
+
             # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L342
             depends_on("fmt", type="link")
             depends_on("spdlog~shared", type="link")
-    
+
             # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/error_handling.hpp#L9
             depends_on("tl-expected@2022-11-24", type="link")
 
