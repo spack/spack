@@ -684,34 +684,22 @@ class TestParser:
         with pytest.raises(spack.spec.NoSuchHashError):
             SpecParser(f"/{no_such_hash}").next_spec()
 
-    # TODO: this seems wrong semantics for a string literal
-    # TODO: "/abcde @1.2.10" should parse to 2 specs the second one being anonymous
-    # @pytest.mark.db
-    # def test_redundant_spec(self, database):
-    #     """Check that redundant spec constraints raise errors.
-    #
-    #     TODO (TG): does this need to be an error? Or should concrete
-    #     specs only raise errors if constraints cause a contradiction?
-    #
-    #     """
-    #     mpileaks_zmpi = database.query_one("mpileaks ^zmpi")
-    #     callpath_zmpi = database.query_one("callpath ^zmpi")
-    #     dyninst = database.query_one("dyninst")
-    #
-    #     mpileaks_mpich2 = database.query_one("mpileaks ^mpich2")
-    #
-    #     redundant_specs = [
-    #         # redudant compiler
-    #         "/" + mpileaks_zmpi.dag_hash() + "%" + str(mpileaks_zmpi.compiler),
-    #         # redudant version
-    #         "mpileaks/" + mpileaks_mpich2.dag_hash() + "@" + str(mpileaks_mpich2.version),
-    #         # redundant dependency
-    #         "callpath /" + callpath_zmpi.dag_hash() + "^ libelf",
-    #         # redundant flags
-    #         "/" + dyninst.dag_hash() + ' cflags="-O3 -fPIC"',
-    #     ]
-    #
-    #     self._check_raises(RedundantSpecError, redundant_specs)
+    @pytest.mark.db
+    @pytest.mark.parametrize(
+        "query_str,text_fmt",
+        [
+            ("mpileaks ^zmpi", r"/{hash}%{0.compiler}"),
+            ("callpath ^zmpi", r"callpath /{hash} ^libelf"),
+            ("dyninst", r'/{hash} cflags="-O3 -fPIC"'),
+            ("mpileaks ^mpich2", r"mpileaks/{hash} @{0.version}"),
+        ],
+    )
+    def test_redundant_spec(self, query_str, text_fmt, database):
+        """Check that redundant spec constraints raise errors."""
+        spec = database.query_one(query_str)
+        text = text_fmt.format(spec, hash=spec.dag_hash())
+        with pytest.raises(spack.spec.RedundantSpecError):
+            SpecParser(text).next_spec()
 
     @pytest.mark.parametrize(
         "text,exc_cls",
