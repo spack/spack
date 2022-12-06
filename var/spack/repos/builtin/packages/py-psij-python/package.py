@@ -10,15 +10,17 @@ class PyPsijPython(PythonPackage):
     """ PSI/J is an abstraction layer over cluster schedulers to write scheduler
     agnostic HPC applications."""
 
-    homepage = "https://exaworks.org/"
+    homepage = "https://www.exaworks.org/"
     git = "https://github.com/exaworks/psij-python.git"
-    pypi = "https://files.pythonhosted.org/packages/8d/5b/5e7a36d1d8860c43d6cab7f9eaba6febe9b0328d554da200fa5c7d4a0c98/psij-python-0.1.0.post1.tar.gz"
+    pypi = "psij-python/psij-python-0.1.0.post2.tar.gz"
 
     maintainers = ["andre-merzky"]
 
-    version("0.1.0", sha256="b59a864ddbaacd06d5e226001bcc0530fea8c161")
+    version("0.1.0.post2", sha256="78f4fb147248be479aa6128b583dff9052698c49f36c6e9811b4c3f9db326043")
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-filelock", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
-  # depends_on("py-pystache", type=("build", "run"))
+    depends_on("py-pystache", type=("build", "run"))
+    depends_on("py-pip@20.2", type=("build", "run"))
+    depends_on("py-setuptools@64.0.0", type=("build", "run"))
