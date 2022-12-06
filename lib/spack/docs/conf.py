@@ -76,7 +76,14 @@ apidoc_args = [
     "--output-dir=.",  # Directory to place all output
     "--module-first",  # emit module docs before submodule docs
 ]
-sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/spack"])
+sphinx_apidoc(
+    apidoc_args
+    + [
+        "_spack_root/lib/spack/spack",
+        "_spack_root/lib/spack/spack/test/*.py",
+        "_spack_root/lib/spack/spack/test/cmd/*.py",
+    ]
+)
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
 
 # Enable todo items
