@@ -48,6 +48,7 @@ class Crtm(CMakePackage):
 
     depends_on("ecbuild", type=("build"), when="@v2.3-jedi.4")
     depends_on("ecbuild", type=("build"), when="@v2.4_jedi")
+    depends_on("ecbuild", type=("build"), when="@v2.4-jedi.1")
 
     # ecbuild release v2.4.0 is broken
     # add ecbuild dependency for next release with fix
