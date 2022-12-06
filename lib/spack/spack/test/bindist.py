@@ -5,7 +5,6 @@
 import glob
 import os
 import platform
-import shutil
 import sys
 
 import py
@@ -63,16 +62,6 @@ def test_mirror(mirror_dir):
     mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
     yield mirror_dir
     mirror_cmd("rm", "--scope=site", "test-mirror-func")
-
-
-@pytest.fixture(scope="function")
-def test_legacy_mirror(mutable_config, tmpdir):
-    mirror_dir = tmpdir.join("legacy_yaml_mirror")
-    shutil.copytree(legacy_mirror_dir, mirror_dir.strpath)
-    mirror_url = "file://%s" % mirror_dir
-    mirror_cmd("add", "--scope", "site", "test-legacy-yaml", mirror_url)
-    yield mirror_dir
-    mirror_cmd("rm", "--scope=site", "test-legacy-yaml")
 
 
 @pytest.fixture(scope="module")
@@ -579,19 +568,6 @@ def test_update_sbang(tmpdir, test_mirror):
         assert sbang_style_2_expected == open(str(installed_script_style_2_path)).read()
 
         uninstall_cmd("-y", "/%s" % new_spec.dag_hash())
-
-
-# Need one where the platform has been changed to the test platform.
-def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config, mock_packages):
-    install_cmd(
-        "--no-check-signature",
-        "--cache-only",
-        "-f",
-        legacy_mirror_dir
-        + "/build_cache/test-debian6-core2-gcc-4.5.0-zlib-"
-        + "1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml",
-    )
-    uninstall_cmd("-y", "/t5mczux3tfqpxwmg7egp7axy2jvyulqk")
 
 
 def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
