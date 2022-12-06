@@ -11,6 +11,7 @@ class TlExpected(CMakePackage):
 
     homepage = "https://tl.tartanllama.xyz/en/latest/"
     url = "https://github.com/TartanLlama/expected/archive/1.0.0.tar.gz"
+    git = "https://github.com/TartanLlama/expected.git"
 
     maintainers = ["charmoniumQ"]
 
@@ -19,4 +20,4 @@ class TlExpected(CMakePackage):
     # https://github.com/TartanLlama/expected/issues/114
     # But no new patch version has been released,
     # so I will use the latest commit at the time of writing:
-    version("b74fecd", sha256="c87d54bfbfd9deb11dd58e5ce2960cc9981dcaea675bf1a05e21a52f4321216b")
+    version("2022-11-24", commit="b74fecd4448a1a5549402d17ddc51e39faa5020c")
