@@ -159,11 +159,18 @@ class Libfabric(AutotoolsPackage):
         else:
             args.append("--with-kdreg=no")
 
-        for fabric in self.variants["fabrics"][0].values:
-            if "fabrics={0}".format(fabric.value) in self.spec:
-                args.append("--enable-{0}=yes".format(fabric.value))
+        for fabric in self.fabrics:
+            valid_fabric = fabric
+            if hasattr(fabric, "when"):
+                if fabric.when is True:
+                    # Explicitly extract the True value for downstream use
+                    valid_fabric = "{0}".format(fabric)
+                else:
+                    continue
+            if "fabrics=" + valid_fabric in self.spec:
+                args.append("--enable-{0}=yes".format(valid_fabric))
             else:
-                args.append("--enable-{0}=no".format(fabric.value))
+                args.append("--enable-{0}=no".format(valid_fabric))
 
         return args
 
