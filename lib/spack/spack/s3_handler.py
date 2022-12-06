@@ -70,20 +70,6 @@ class UrllibS3Handler(urllib.request.HTTPSHandler):
             url, headers, stream = _s3_open(orig_url)
             return urllib.response.addinfourl(stream, headers, url)
         except ClientError as err:
-            # if no such [KEY], but [KEY]/index.html exists,
-            # return that, instead.
-            if err.response["Error"]["Code"] == "NoSuchKey":
-                try:
-                    _, headers, stream = _s3_open(url_util.join(orig_url, "index.html"))
-                    return urllib.response.addinfourl(stream, headers, orig_url)
-
-                except ClientError as err2:
-                    if err.response["Error"]["Code"] == "NoSuchKey":
-                        # raise original error
-                        raise urllib.error.URLError(err) from err
-
-                    raise urllib.error.URLError(err2) from err2
-
             raise urllib.error.URLError(err) from err
 
 
