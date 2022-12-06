@@ -29,10 +29,8 @@ import os.path
 import re
 import shutil
 import sys
-from typing import List, Optional  # novm
-
-import six
-import six.moves.urllib.parse as urllib_parse
+import urllib.parse
+from typing import List, Optional
 
 import llnl.util
 import llnl.util.filesystem as fs
@@ -108,12 +106,12 @@ class FetchStrategy(object):
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr = None  # type: Optional[str]
+    url_attr: Optional[str] = None
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
     # optional attributes in version() args.
-    optional_attrs = []  # type: List[str]
+    optional_attrs: List[str] = []
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
@@ -322,7 +320,7 @@ class URLFetchStrategy(FetchStrategy):
             # This must be skipped on Windows due to URL encoding
             # of ':' characters on filepaths on Windows
             if sys.platform != "win32" and url.startswith("file://"):
-                path = urllib_parse.quote(url[len("file://") :])
+                path = urllib.parse.quote(url[len("file://") :])
                 url = "file://" + path
             urls.append(url)
 
@@ -337,7 +335,7 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-            if not web_util.url_exists(url, self.curl):
+            if not web_util.url_exists(url):
                 tty.debug("URL does not exist: " + url)
                 continue
 
@@ -620,7 +618,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         patterns = kwargs.get("exclude", None)
         if patterns is not None:
-            if isinstance(patterns, six.string_types):
+            if isinstance(patterns, str):
                 patterns = [patterns]
             for p in patterns:
                 tar.add_default_arg("--exclude=%s" % p)
@@ -1607,7 +1605,7 @@ def from_url_scheme(url, *args, **kwargs):
     in the given url."""
 
     url = kwargs.get("url", url)
-    parsed_url = urllib_parse.urlparse(url, scheme="file")
+    parsed_url = urllib.parse.urlparse(url, scheme="file")
 
     scheme_mapping = kwargs.get("scheme_mapping") or {
         "file": "url",

@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import six
-
 import llnl.util.lang
 
 import spack.builder
@@ -26,7 +24,7 @@ def sanity_check_prefix(builder):
     pkg = builder.pkg
 
     def check_paths(path_list, filetype, predicate):
-        if isinstance(path_list, six.string_types):
+        if isinstance(path_list, str):
             path_list = [path_list]
 
         for path in path_list:
@@ -89,11 +87,11 @@ def ensure_build_dependencies_or_raise(spec, dependencies, error_msg):
     )
 
     for dep in missing_deps:
-        msg += "    depends_on('{0}', type='build', when='@{1} {2}')\n".format(
+        msg += '    depends_on("{0}", type="build", when="@{1} {2}")\n'.format(
             dep, spec.version, "build_system=autotools"
         )
 
-    msg += "\nUpdate the version (when='@{0}') as needed.".format(spec.version)
+    msg += '\nUpdate the version (when="@{0}") as needed.'.format(spec.version)
     raise RuntimeError(msg)
 
 

@@ -13,14 +13,12 @@ import sys
 import time
 
 import ruamel.yaml as yaml
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 
-import spack.bootstrap
 import spack.compilers
 import spack.concretize
 import spack.config
@@ -679,7 +677,7 @@ class Environment(object):
             self.views = {}
         elif with_view is True:
             self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        elif isinstance(with_view, six.string_types):
+        elif isinstance(with_view, str):
             self.views = {default_view_name: ViewDescriptor(self.path, with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
@@ -776,7 +774,7 @@ class Environment(object):
         # enable_view can be boolean, string, or None
         if enable_view is True or enable_view is None:
             self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        elif isinstance(enable_view, six.string_types):
+        elif isinstance(enable_view, str):
             self.views = {default_view_name: ViewDescriptor(self.path, enable_view)}
         elif enable_view:
             path = self.path
@@ -786,17 +784,12 @@ class Environment(object):
             )
         else:
             self.views = {}
+
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
 
-        # Let `concretization` overrule `concretize:unify` config for now,
-        # but use a translation table to have internally a representation
-        # as if we were using the new configuration
-        translation = {"separately": False, "together": True}
-        try:
-            self.unify = translation[configuration["concretization"]]
-        except KeyError:
-            self.unify = spack.config.get("concretizer:unify", False)
+        # Retrieve unification scheme for the concretizer
+        self.unify = spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get("develop", {})
@@ -1322,30 +1315,25 @@ class Environment(object):
         if user_specs_did_not_change:
             return []
 
-        # Check that user specs don't have duplicate packages
-        counter = collections.defaultdict(int)
-        for user_spec in self.user_specs:
-            counter[user_spec.name] += 1
-
-        duplicates = []
-        for name, count in counter.items():
-            if count > 1:
-                duplicates.append(name)
-
-        if duplicates:
-            msg = (
-                "environment that are configured to concretize specs"
-                " together cannot contain more than one spec for each"
-                " package [{0}]".format(", ".join(duplicates))
-            )
-            raise SpackEnvironmentError(msg)
-
         # Proceed with concretization
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
-        concrete_specs = spack.concretize.concretize_specs_together(*self.user_specs, tests=tests)
+        try:
+            concrete_specs = spack.concretize.concretize_specs_together(
+                *self.user_specs, tests=tests
+            )
+        except spack.error.UnsatisfiableSpecError as e:
+            # "Enhance" the error message for multiple root specs, suggest a less strict
+            # form of concretization.
+            if len(self.user_specs) > 1:
+                e.message += (
+                    ". Consider setting `concretizer:unify` to `when_possible` "
+                    "or `false` to relax the concretizer strictness."
+                )
+            raise
+
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
@@ -1355,6 +1343,8 @@ class Environment(object):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
+        import spack.bootstrap
+
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -1379,7 +1369,7 @@ class Environment(object):
         # Ensure we don't try to bootstrap clingo in parallel
         if spack.config.get("config:concretizer", "clingo") == "clingo":
             with spack.bootstrap.ensure_bootstrap_configuration():
-                spack.bootstrap.ensure_clingo_importable_or_raise()
+                spack.bootstrap.ensure_core_dependencies()
 
         # Ensure all the indexes have been built or updated, since
         # otherwise the processes in the pool may timeout on waiting
@@ -2106,16 +2096,14 @@ class Environment(object):
                 ayl[name][:] = [
                     s
                     for s in ayl.setdefault(name, [])
-                    if (not isinstance(s, six.string_types))
-                    or s.startswith("$")
-                    or Spec(s) in speclist.specs
+                    if (not isinstance(s, str)) or s.startswith("$") or Spec(s) in speclist.specs
                 ]
 
             # Put the new specs into the first active list from the yaml
             new_specs = [
                 entry
                 for entry in speclist.yaml_list
-                if isinstance(entry, six.string_types)
+                if isinstance(entry, str)
                 and not any(entry in ayl[name] for ayl in active_yaml_lists)
             ]
             list_for_new_specs = active_yaml_lists[0].setdefault(name, [])
@@ -2191,7 +2179,7 @@ def yaml_equivalent(first, second):
     elif isinstance(first, list):
         return isinstance(second, list) and _equiv_list(first, second)
     else:  # it's a string
-        return isinstance(second, six.string_types) and first == second
+        return isinstance(second, str) and first == second
 
 
 def _equiv_list(first, second):

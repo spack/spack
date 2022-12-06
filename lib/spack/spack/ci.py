@@ -16,11 +16,9 @@ import sys
 import tempfile
 import time
 import zipfile
-
-from six import iteritems, string_types
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import HTTPHandler, Request, build_opener
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -51,6 +49,7 @@ JOB_RETRY_CONDITIONS = [
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
+SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -215,7 +214,7 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
     def _remove_satisfied_deps(deps, satisfied_list):
         new_deps = {}
 
-        for key, value in iteritems(deps):
+        for key, value in deps.items():
             new_value = set([v for v in value if v not in satisfied_list])
             if new_value:
                 new_deps[key] = new_value
@@ -731,6 +730,12 @@ def generate_gitlab_ci_yaml(
         # won't fetch its index and include in our local cache.
         spack.mirror.add("ci_pr_mirror", remote_mirror_override, cfg.default_modify_scope())
 
+    shared_pr_mirror = None
+    if spack_pipeline_type == "spack_pull_request":
+        stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
+        shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
+        spack.mirror.add("ci_shared_pr_mirror", shared_pr_mirror, cfg.default_modify_scope())
+
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
         proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
@@ -805,6 +810,8 @@ def generate_gitlab_ci_yaml(
         # Clean up remote mirror override if enabled
         if remote_mirror_override:
             spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
+        if spack_pipeline_type == "spack_pull_request":
+            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
 
     all_job_names = []
     output_object = {}
@@ -1167,7 +1174,14 @@ def generate_gitlab_ci_yaml(
         "after_script",
     ]
 
-    service_job_retries = {"max": 2, "when": ["runner_system_failure", "stuck_or_timeout_failure"]}
+    service_job_retries = {
+        "max": 2,
+        "when": [
+            "runner_system_failure",
+            "stuck_or_timeout_failure",
+            "script_failure",
+        ],
+    }
 
     if job_id > 0:
         if temp_storage_url_prefix:
@@ -1287,6 +1301,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
         }
@@ -1762,9 +1777,9 @@ def reproduce_ci_job(url, work_dir):
     download_and_extract_artifacts(url, work_dir)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
-    concrete_env_dir = os.path.dirname(lock_file)
+    repro_lock_dir = os.path.dirname(lock_file)
 
-    tty.debug("Concrete environment directory: {0}".format(concrete_env_dir))
+    tty.debug("Found lock file in: {0}".format(repro_lock_dir))
 
     yaml_files = fs.find(work_dir, ["*.yaml", "*.yml"])
 
@@ -1786,6 +1801,20 @@ def reproduce_ci_job(url, work_dir):
 
     if pipeline_yaml:
         tty.debug("\n{0} is likely your pipeline file".format(yf))
+
+    relative_concrete_env_dir = pipeline_yaml["variables"]["SPACK_CONCRETE_ENV_DIR"]
+    tty.debug("Relative environment path used by cloud job: {0}".format(relative_concrete_env_dir))
+
+    # Using the relative concrete environment path found in the generated
+    # pipeline variable above, copy the spack environment files so they'll
+    # be found in the same location as when the job ran in the cloud.
+    concrete_env_dir = os.path.join(work_dir, relative_concrete_env_dir)
+    os.makedirs(concrete_env_dir, exist_ok=True)
+    copy_lock_path = os.path.join(concrete_env_dir, "spack.lock")
+    orig_yaml_path = os.path.join(repro_lock_dir, "spack.yaml")
+    copy_yaml_path = os.path.join(concrete_env_dir, "spack.yaml")
+    shutil.copyfile(lock_file, copy_lock_path)
+    shutil.copyfile(orig_yaml_path, copy_yaml_path)
 
     # Find the install script in the unzipped artifacts and make it executable
     install_script = fs.find(work_dir, "install.sh")[0]
@@ -1842,6 +1871,7 @@ def reproduce_ci_job(url, work_dir):
         if repro_details:
             mount_as_dir = repro_details["ci_project_dir"]
             mounted_repro_dir = os.path.join(mount_as_dir, rel_repro_dir)
+            mounted_env_dir = os.path.join(mount_as_dir, relative_concrete_env_dir)
 
         # We will also try to clone spack from your local checkout and
         # reproduce the state present during the CI build, and put that into
@@ -1925,7 +1955,7 @@ def reproduce_ci_job(url, work_dir):
     inst_list.append("        $ source {0}/share/spack/setup-env.sh\n".format(spack_root))
     inst_list.append(
         "        $ spack env activate --without-view {0}\n\n".format(
-            mounted_repro_dir if job_image else repro_dir
+            mounted_env_dir if job_image else repro_dir
         )
     )
     inst_list.append("    - Run the install script\n\n")
@@ -1953,7 +1983,7 @@ def process_command(name, commands, repro_dir):
     """
     tty.debug("spack {0} arguments: {1}".format(name, commands))
 
-    if len(commands) == 0 or isinstance(commands[0], string_types):
+    if len(commands) == 0 or isinstance(commands[0], str):
         commands = [commands]
 
     # Create a string [command 1] && [command 2] && ... && [command n] with commands

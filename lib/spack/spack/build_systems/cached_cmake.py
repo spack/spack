@@ -34,22 +34,22 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     #: Phases of a Cached CMake package
     #: Note: the initconfig phase is used for developer builds as a final phase to stop on
-    phases = ("initconfig", "cmake", "build", "install")  # type: Tuple[str, ...]
+    phases: Tuple[str, ...] = ("initconfig", "cmake", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = CMakeBuilder.legacy_methods + (
+    legacy_methods: Tuple[str, ...] = CMakeBuilder.legacy_methods + (
         "initconfig_compiler_entries",
         "initconfig_mpi_entries",
         "initconfig_hardware_entries",
         "std_initconfig_entries",
         "initconfig_package_entries",
-    )  # type: Tuple[str, ...]
+    )
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = CMakeBuilder.legacy_attributes + (
+    legacy_attributes: Tuple[str, ...] = CMakeBuilder.legacy_attributes + (
         "cache_name",
         "cache_path",
-    )  # type: Tuple[str, ...]
+    )
 
     @property
     def cache_name(self):
@@ -205,13 +205,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
             cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
             entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", cudacompiler))
-
-            if spec.satisfies("^mpi"):
-                entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${MPI_CXX_COMPILER}"))
-            else:
-                entries.append(
-                    cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}")
-                )
+            entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}"))
 
         return entries
 

@@ -24,6 +24,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     maintainers = ["mwkrentel"]
 
+    version("0.188", sha256="fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff")
     version("0.187", sha256="e70b0dfbe610f90c4d1fe0d71af142a4e25c3c4ef9ebab8d2d72b65159d454c8")
     version("0.186", sha256="7f6fb9149b1673d38d9178a0d3e0fb8a1ec4f53a9f4c2ff89469609879641177")
     version("0.185", sha256="dc8d3e74ab209465e7f568e1b3bb9a5a142f8656e2b57d10049a73da2ae6b5a6")
@@ -46,6 +47,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # Libraries for reading compressed DWARF sections.
     variant("bzip2", default=False, description="Support bzip2 compressed sections.")
     variant("xz", default=False, description="Support xz (lzma) compressed sections.")
+    variant("zstd", default=False, description="Support zstd compressed sections.", when="@0.182:")
 
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
@@ -69,6 +71,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     depends_on("bzip2", type="link", when="+bzip2")
     depends_on("xz", type="link", when="+xz")
+    depends_on("zstd", type="link", when="+zstd")
     depends_on("zlib", type="link")
     depends_on("gettext", when="+nls")
     depends_on("m4", type="build")
@@ -113,6 +116,8 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
             args.append("--with-lzma=%s" % spec["xz"].prefix)
         else:
             args.append("--without-lzma")
+
+        args.extend(self.with_or_without("zstd", activation_value="prefix"))
 
         # zlib is required
         args.append("--with-zlib=%s" % spec["zlib"].prefix)

@@ -11,9 +11,7 @@ import itertools
 import posixpath
 import re
 import sys
-
-import six.moves.urllib.parse
-from six import string_types
+import urllib.parse
 
 from spack.util.path import (
     canonicalize_path,
@@ -50,7 +48,7 @@ def local_file_path(url):
     If url is a file:// URL, return the absolute path to the local
     file or directory referenced by it.  Otherwise, return None.
     """
-    if isinstance(url, string_types):
+    if isinstance(url, str):
         url = parse(url)
 
     if url.scheme == "file":
@@ -75,23 +73,23 @@ def parse(url, scheme="file"):
         url (str): URL to be parsed
         scheme (str): associated URL scheme
     Returns:
-        (six.moves.urllib.parse.ParseResult): For file scheme URLs, the
+        (urllib.parse.ParseResult): For file scheme URLs, the
         netloc and path components are concatenated and passed through
         spack.util.path.canoncalize_path().  Otherwise, the returned value
         is the same as urllib's urlparse() with allow_fragments=False.
     """
     # guarantee a value passed in is of proper url format. Guarantee
     # allows for easier string manipulation accross platforms
-    if isinstance(url, string_types):
+    if isinstance(url, str):
         require_url_format(url)
         url = escape_file_url(url)
     url_obj = (
-        six.moves.urllib.parse.urlparse(
+        urllib.parse.urlparse(
             url,
             scheme=scheme,
             allow_fragments=False,
         )
-        if isinstance(url, string_types)
+        if isinstance(url, str)
         else url
     )
 
@@ -119,7 +117,7 @@ def parse(url, scheme="file"):
     if sys.platform == "win32":
         path = convert_to_posix_path(path)
 
-    return six.moves.urllib.parse.ParseResult(
+    return urllib.parse.ParseResult(
         scheme=scheme,
         netloc=netloc,
         path=path,
@@ -134,7 +132,7 @@ def format(parsed_url):
 
     Returns a canonicalized format of the given URL as a string.
     """
-    if isinstance(parsed_url, string_types):
+    if isinstance(parsed_url, str):
         parsed_url = parse(parsed_url)
 
     return parsed_url.geturl()
@@ -195,8 +193,7 @@ def join(base_url, path, *extra, **kwargs):
       'file:///opt/spack'
     """
     paths = [
-        (x) if isinstance(x, string_types) else x.geturl()
-        for x in itertools.chain((base_url, path), extra)
+        (x) if isinstance(x, str) else x.geturl() for x in itertools.chain((base_url, path), extra)
     ]
 
     paths = [convert_to_posix_path(x) for x in paths]
@@ -204,7 +201,7 @@ def join(base_url, path, *extra, **kwargs):
     last_abs_component = None
     scheme = ""
     for i in range(n - 1, -1, -1):
-        obj = six.moves.urllib.parse.urlparse(
+        obj = urllib.parse.urlparse(
             paths[i],
             scheme="",
             allow_fragments=False,
@@ -218,7 +215,7 @@ def join(base_url, path, *extra, **kwargs):
                 # Without a scheme, we have to go back looking for the
                 # next-last component that specifies a scheme.
                 for j in range(i - 1, -1, -1):
-                    obj = six.moves.urllib.parse.urlparse(
+                    obj = urllib.parse.urlparse(
                         paths[j],
                         scheme="",
                         allow_fragments=False,
@@ -238,7 +235,7 @@ def join(base_url, path, *extra, **kwargs):
     if last_abs_component is not None:
         paths = paths[last_abs_component:]
         if len(paths) == 1:
-            result = six.moves.urllib.parse.urlparse(
+            result = urllib.parse.urlparse(
                 paths[0],
                 scheme="file",
                 allow_fragments=False,
@@ -248,7 +245,7 @@ def join(base_url, path, *extra, **kwargs):
             # file:// URL component with a relative path, the relative path
             # needs to be resolved.
             if result.scheme == "file" and result.netloc:
-                result = six.moves.urllib.parse.ParseResult(
+                result = urllib.parse.ParseResult(
                     scheme=result.scheme,
                     netloc="",
                     path=posixpath.abspath(result.netloc + result.path),
@@ -306,7 +303,7 @@ def _join(base_url, path, *extra, **kwargs):
         base_path = convert_to_posix_path(base_path)
 
     return format(
-        six.moves.urllib.parse.ParseResult(
+        urllib.parse.ParseResult(
             scheme=scheme,
             netloc=netloc,
             path=base_path,
