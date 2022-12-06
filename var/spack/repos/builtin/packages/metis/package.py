@@ -37,6 +37,7 @@ class Metis(CMakePackage, MakefilePackage):
         variant("gdb", default=False, description="Enable gdb support")
         variant("int64", default=False, description="Use index type of 64 bit")
         variant("real64", default=False, description="Use real type of 64 bit")
+        variant("gkrand", default=True, description="Enable portable random number generator")
 
         # Use the correct path to GKLIB when building out of source
         patch("gklib_path.patch")
@@ -44,6 +45,15 @@ class Metis(CMakePackage, MakefilePackage):
         patch("install_gklib_defs_rename.patch")
         # Disable the "misleading indentation" warning when compiling
         patch("gklib_nomisleadingindentation_warning.patch", when="%gcc@6:")
+        # Patches from petsc's branch of metis to correct gkrand behavior
+        patch(
+            "https://bitbucket.org/petsc/pkg-metis/commits/35497c90782a067954e9cd7c859da1e3b19514a7/raw",
+            sha256="777e6376aab853bcd94884b0c7c54655004cb05e045d2f962e547685ba8c826f",
+        )
+        patch(
+            "https://bitbucket.org/petsc/pkg-metis/commits/3240f52eb8ee5da1a96acd6e1edd2d2b0995bde9/raw",
+            sha256="e3ec936835fa1d3f12fbe09bbaf2dd7a2d3b932891481780be1e6c2aabd5e7f9",
+        )
 
     with when("build_system=makefile"):
         variant("debug", default=False, description="Compile in debug mode")
@@ -188,6 +198,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
         options = [
             self.define_from_variant("SHARED", "shared"),
             self.define_from_variant("GDB", "gdb"),
+            self.define_from_variant("METIS_USE_LONGINDEX", "int64"),
+            self.define_from_variant("METIS_USE_DOUBLEPRECISION", "real64"),
+            self.define_from_variant("GKRAND", "gkrand"),
         ]
 
         if self.spec.satisfies("~shared"):

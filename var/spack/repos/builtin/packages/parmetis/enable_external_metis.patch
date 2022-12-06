@@ -45,7 +45,7 @@ index c1daeeb..07511f6 100644
  #include <parmetis.h>
  
 -#include "../metis/libmetis/gklib_defs.h"
-+#include <gklib_defs.h>
++#include <libmetis/gklib_defs.h>
  
 -#include <mpi.h> 
 +#include <mpi.h>
@@ -65,7 +65,7 @@ index e26cd2d..d156480 100644
  #include <parmetis.h>
  
 -#include "../metis/libmetis/gklib_defs.h"
-+#include <gklib_defs.h>
++#include <libmetis/gklib_defs.h>
  #include "../libparmetis/rename.h"
  #include "../libparmetis/defs.h"
  #include "../libparmetis/struct.h"
