@@ -66,7 +66,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "cusolver_lu",
         default=False,
-        when="@0.7.1:",
+        when="+cuda @0.7.1:",
         description="Enable/disable cuSovler LU refactorization",
     )
     depends_on("lapack")
@@ -101,7 +101,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
     depends_on("cuda@11:", when="@develop:+cuda")
-    conflicts("+cusolver_lu", when="~cuda", msg="Cusolver LU refactorization requires CUDA")
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
