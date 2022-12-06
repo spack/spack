@@ -63,7 +63,7 @@ class EcmwfAtlas(CMakePackage):
     depends_on("fftw-api", when="+fftw")
 
     def cmake_args(self):
-        res = [
+        args = [
             self.define_from_variant('ENABLE_OMP', 'openmp'),
             self.define_from_variant("ENABLE_FCKIT", "fckit"),
             self.define_from_variant("ENABLE_TRANS", "trans"),
@@ -72,5 +72,5 @@ class EcmwfAtlas(CMakePackage):
             "-DPYTHON_EXECUTABLE:FILEPATH=" + self.spec["python"].command.path,
         ]
         if "~shared" in self.spec:
-            res.append("-DBUILD_SHARED_LIBS=OFF")
-        return res
+            args.append("-DBUILD_SHARED_LIBS=OFF")
+        return args
