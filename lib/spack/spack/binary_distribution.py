@@ -1559,7 +1559,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                 continue
 
             # In case the spec.json is not clearsigned, it means it's a legacy
-            # format, where either the signature is in the tarball with binaries, or 
+            # format, where either the signature is in the tarball with binaries, or
             # the package is unsigned. Verification
             # is then postponed.
             spackfile_url = mirror["spackfile"]
