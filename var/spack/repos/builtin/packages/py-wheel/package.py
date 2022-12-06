@@ -72,6 +72,9 @@ class PyWheel(Package, PythonExtension):
     )
 
     extends("python")
+    depends_on("python@2.7:2.8,3.5:", when="@0.34:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@0.30:", type=("build", "run"))
+    depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
     depends_on("py-pip", type="build")
 
     def install(self, spec, prefix):
