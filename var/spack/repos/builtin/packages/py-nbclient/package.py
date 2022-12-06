@@ -27,7 +27,7 @@ class PyNbclient(PythonPackage):
     depends_on("python@3.6.1:", when="@0.5.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", when="@:0.7.0", type="build")
-    depends_on("py-hatchling", when="@0.7.1:", type="build")
+    depends_on("py-hatchling@1.10:", when="@0.7.1:", type="build")
 
     depends_on("py-jupyter-client@6.1.12:", when="@0.7.1:", type=("build", "run"))
     depends_on("py-jupyter-client@6.1.5:", type=("build", "run"))
