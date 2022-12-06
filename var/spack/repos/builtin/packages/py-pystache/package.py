@@ -19,6 +19,4 @@ class PyPystache(PythonPackage):
 
     version("0.6.0", sha256="93bf92b2149a4c4b58d12142e2c4c6dd5c08d89e4c95afccd4b6efe2ee1d470d")
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-pip", type="build")
-    depends_on("py-setuptools@64.0.0", type="build")
+    depends_on("py-setuptools@40.8:", type="build")
