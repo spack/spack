@@ -125,7 +125,7 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="log_output to file conflicts with pytest on Windows"
+    sys.platform == "win32", reason="log_ouput cannot be used in active process on Windows"
 )
 @pytest.mark.regression("33928")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")

@@ -2379,21 +2379,6 @@ def files_in(*search_paths):
     return files
 
 
-@system_path_filter
-def strip_extensions(*paths):
-    """Returns all paths passed as arguments with file extensions removed
-    If a file has no extension it is not modified. This method is predominately
-    for use
-
-    Args:
-        *paths: paths to have file extensions removed
-
-    Returns:
-        List of paths
-    """
-    return [os.path.splitext(x)[0] for x in paths]
-
-
 def is_readable_file(file_path):
     """Return True if the path passed as argument is readable"""
     return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
