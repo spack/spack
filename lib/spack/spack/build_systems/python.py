@@ -41,7 +41,7 @@ class PythonExtension(spack.package_base.PackageBase):
         in the source tarball directory. If the module names are incorrectly
         detected, this property can be overridden by the package.
 
-        Return:
+        Returns:
             list: list of strings of module names
         """
         modules = []
