@@ -37,51 +37,7 @@ class Micromamba(CMakePackage):
         multi=False,
     )
 
-    with when("linkage=full_static"):
-        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L276
-        depends_on("curl libs=static", type="link")
-        depends_on("libssh2~shared", type="link")
-        depends_on("krb5~shared", type="link")
-        depends_on("openssl~shared", type="link")
-        depends_on("libarchive crypto=mbedtls xar=libxml2", type="link")
-        depends_on("iconv", type="link")
-        depends_on("bzip2", type="link")
-        depends_on("lz4", type="link")
-        depends_on("zstd", type="link")
-        depends_on("zlib", type="link")
-        depends_on("xz libs=static", type="link")
-        depends_on("lzo", type="link")
-        depends_on("libsolv+conda~shared", type="link")
-        depends_on("nghttp2", type="link")
-        depends_on("yaml-cpp~shared", type="link")
-        depends_on("libreproc+cxx~shared", type="link")
-
-        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L342
-        depends_on("fmt", type="link")
-        depends_on("spdlog~shared", type="link")
-
-        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/error_handling.hpp#L9
-        depends_on("tl-expected@2022-11-24", type="link")
-
-        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/validate.hpp#L13
-        depends_on("nlohmann-json", type="link")
-
-        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/src/core/context.cpp#L7
-        depends_on("cpp-termcolor", type="link")
-
-        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/micromamba/src/common_options.hpp#L12
-        depends_on("cli11@2.2:", type="link")
-
-        # Currently fails with:
-        #
-        #     libarchive/archive_digest.c:191: undefined reference to `mbedtls_sha512_free'
-        #
-        # These shouldn't be necessary,
-        # since they are already in 'libarchive crypto=mbedtls xar=libxml2'
-        # but even adding them doesn't fix it.
-        #
-        #     depends_on("libxml2", type="link")
-        #     depends_on("mbedtls", type="link")
+    patch("fix-threads.patch")
 
     with when("linkage=dynamic"):
         # See https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L423
@@ -94,9 +50,14 @@ class Micromamba(CMakePackage):
         depends_on("tl-expected@2022-11-24", type="link")
         depends_on("fmt", type="link")
         depends_on("spdlog", type="link")
-        # See linkage=shared for usage location
+
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/validate.hpp#L13
         depends_on("nlohmann-json", type="link")
+
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/src/core/context.cpp#L7
         depends_on("cpp-termcolor", type="link")
+
+        # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/micromamba/src/common_options.hpp#L12
         depends_on("cli11@2.2:", type="link")
 
     with when("linkage=static"):
@@ -123,7 +84,51 @@ class Micromamba(CMakePackage):
         depends_on("cpp-termcolor", type="link")
         depends_on("cli11@2.2:", type="link")
 
-    patch("fix-threads.patch")
+    if False:
+        # This variant currently fails with:
+        #
+        #     libarchive/archive_digest.c:191: undefined reference to `mbedtls_sha512_free'
+        #
+        # These shouldn't be necessary,
+        # since they are already in 'libarchive crypto=mbedtls xar=libxml2'
+        # but even adding them doesn't fix it.
+        #
+        #     depends_on("libxml2", type="link")
+        #     depends_on("mbedtls", type="link")
+        #
+        # However, I wanted to live this variant in the code,
+        # so it serves as a starting point.
+
+        with when("linkage=full_static"):
+            # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L276
+            depends_on("curl libs=static", type="link")
+            depends_on("libssh2~shared", type="link")
+            depends_on("krb5~shared", type="link")
+            depends_on("openssl~shared", type="link")
+            depends_on("libarchive crypto=mbedtls xar=libxml2", type="link")
+            depends_on("iconv", type="link")
+            depends_on("bzip2", type="link")
+            depends_on("lz4", type="link")
+            depends_on("zstd", type="link")
+            depends_on("zlib", type="link")
+            depends_on("xz libs=static", type="link")
+            depends_on("lzo", type="link")
+            depends_on("libsolv+conda~shared", type="link")
+            depends_on("nghttp2", type="link")
+            depends_on("yaml-cpp~shared", type="link")
+            depends_on("libreproc+cxx~shared", type="link")
+    
+            # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/CMakeLists.txt#L342
+            depends_on("fmt", type="link")
+            depends_on("spdlog~shared", type="link")
+    
+            # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/libmamba/include/mamba/core/error_handling.hpp#L9
+            depends_on("tl-expected@2022-11-24", type="link")
+
+            # See linkage=dynamic for usage location
+            depends_on("nlohmann-json", type="link")
+            depends_on("cpp-termcolor", type="link")
+            depends_on("cli11@2.2:", type="link")
 
     def cmake_args(self):
         # See https://mamba.readthedocs.io/en/latest/developer_zone/build_locally.html#build-micromamba
