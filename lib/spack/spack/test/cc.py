@@ -149,7 +149,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 @pytest.fixture(scope="function")
-def wrapper_environment():
+def wrapper_environment(working_env):
     with set_env(
         SPACK_CC=real_cc,
         SPACK_CXX=real_cc,

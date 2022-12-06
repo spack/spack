@@ -30,7 +30,6 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution
-import spack.bootstrap
 import spack.cmd
 import spack.compilers
 import spack.config
@@ -541,8 +540,10 @@ def bootstrap_clingo():
     global clingo, ASTType, parse_files
 
     if not clingo:
+        import spack.bootstrap
+
         with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_clingo_importable_or_raise()
+            spack.bootstrap.ensure_core_dependencies()
             import clingo
 
     from clingo.ast import ASTType

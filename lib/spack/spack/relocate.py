@@ -18,7 +18,6 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.symlink import symlink
 
-import spack.bootstrap
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -92,6 +91,8 @@ class CannotShrinkCString(BinaryTextReplaceError):
 @memoized
 def _patchelf():
     """Return the full path to the patchelf binary, if available, else None."""
+    import spack.bootstrap
+
     if is_macos:
         return None
 
