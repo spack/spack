@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyPsijPython(PythonPackage):
-    """ PSI/J is an abstraction layer over cluster schedulers to write scheduler
+    """PSI/J is an abstraction layer over cluster schedulers to write scheduler
     agnostic HPC applications."""
 
     homepage = "https://www.exaworks.org/"
@@ -16,7 +16,9 @@ class PyPsijPython(PythonPackage):
 
     maintainers = ["andre-merzky"]
 
-    version("0.1.0.post2", sha256="78f4fb147248be479aa6128b583dff9052698c49f36c6e9811b4c3f9db326043")
+    version(
+        "0.1.0.post2", sha256="78f4fb147248be479aa6128b583dff9052698c49f36c6e9811b4c3f9db326043"
+    )
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-filelock", type=("build", "run"))
