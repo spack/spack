@@ -27,7 +27,7 @@ class JediBaseEnv(BundlePackage):
     depends_on("blas", type="run")
     depends_on("boost", type="run")
     depends_on("bufr", type="run")
-    depends_on("crtm@v2.4_jedi", type="run")
+    depends_on("crtm@v2.4-jedi.1", type="run")
     depends_on("ecbuild", type="run")
     depends_on("eccodes", type="run")
     depends_on("eckit", type="run")
