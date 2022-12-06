@@ -2,7 +2,54 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Parser for spec literals"""
+"""Parser for spec literals
+
+Here is the EBNF grammar for a spec::
+
+    spec          = [name] [node_options] { ^ node } |
+                    [name] [node_options] hash |
+                    filename
+
+    node          =  name [node_options] |
+                     [name] [node_options] hash |
+                     filename
+
+    node_options  = [@version_list] [%compiler] { variant }
+
+    hash          = / id
+    filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
+
+    name          = id | namespace id
+    namespace     = { id . }
+
+    variant       = bool_variant | key_value
+    bool_variant  = +id | ++id | ~id | ~~id | -id | --id
+    key_value     = id=id | id=quoted_id | id==id | id==quoted_id
+
+    compiler      = id [@version_list]
+
+    version_list  = (version|version_range) [ { , (version|version_range)} ]
+    version_range = vid:vid | vid: | :vid | :
+    version       = vid
+
+    quoted_id     = " id_with_ws " | ' id_with_ws '
+    id_with_ws    = [a-zA-Z0-9_][a-zA-Z_0-9-.\\s]*
+    vid           = [a-zA-Z0-9_][a-zA-Z_0-9-.]*
+    id            = [a-zA-Z0-9_][a-zA-Z_0-9-]*
+
+Identifiers using the <name>=<value> command, such as architectures and
+compiler flags, require a space before the name.
+
+There is one context-sensitive part: ids in versions may contain '.', while
+other ids may not.
+
+There is one ambiguity: since '-' is allowed in an id, you need to put
+whitespace space before -variant for it to be tokenized properly.  You can
+either use whitespace, or you can just use ~variant since it means the same
+thing.  Spack uses ~variant in directory names and in the canonical form of
+specs to avoid ambiguity.  Both are provided because ~ can cause shell
+expansion when it is the first character in an id typed on the command line.
+"""
 import enum
 import pathlib
 import re
@@ -32,7 +79,7 @@ FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
 VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
 
-VERSION = r"([a-zA-Z_0-9-.][a-zA-Z_0-9-.]*)"
+VERSION = r"([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*)"
 VERSION_RANGE = rf"({VERSION}:{VERSION}|:{VERSION}|{VERSION}:|:)"
 VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})([,]({VERSION_RANGE}|{VERSION}))*"
 

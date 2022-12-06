@@ -47,37 +47,6 @@ line is a spec for a particular installation of the mpileaks package.
 
 6. The architecture to build with.  This is needed on machines where
    cross-compilation is required
-
-Here is the EBNF grammar for a spec::
-
-  spec-list    = { spec [ dep-list ] }
-  dep_list     = { ^ spec }
-  spec         = id [ options ]
-  options      = { @version-list | ++variant | +variant |
-                   --variant | -variant | ~~variant | ~variant |
-                   variant=value | variant==value | %compiler |
-                   arch=architecture | [ flag ]==value | [ flag ]=value}
-  flag         = { cflags | cxxflags | fcflags | fflags | cppflags |
-                   ldflags | ldlibs }
-  variant      = id
-  architecture = id
-  compiler     = id [ version-list ]
-  version-list = version [ { , version } ]
-  version      = id | id: | :id | id:id
-  id           = [A-Za-z0-9_][A-Za-z0-9_.-]*
-
-Identifiers using the <name>=<value> command, such as architectures and
-compiler flags, require a space before the name.
-
-There is one context-sensitive part: ids in versions may contain '.', while
-other ids may not.
-
-There is one ambiguity: since '-' is allowed in an id, you need to put
-whitespace space before -variant for it to be tokenized properly.  You can
-either use whitespace, or you can just use ~variant since it means the same
-thing.  Spack uses ~variant in directory names and in the canonical form of
-specs to avoid ambiguity.  Both are provided because ~ can cause shell
-expansion when it is the first character in an id typed on the command line.
 """
 import collections
 import collections.abc
