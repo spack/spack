@@ -95,8 +95,17 @@ def remove_downloads():
     environment's included configuration files cache."""
     tty.msg("Removing cached downloads")
     spack.caches.fetch_cache.destroy()
-    tty.msg("Removing environment's cached included config files")
-    spack.environment.clear_included_configs()
+    what = "cached, included config files"
+    env = spack.environment.active_environment()
+    if env:
+        tty.msg("Removing {0} for '{1}' environment".format(what, env.name))
+        spack.environment.clear_included_configs()
+    else:
+        tty.warn(
+            "An active environment is required to remove {0}.  "
+            "If you cannot activate (e.g., unsupported schema, permissions),"
+            " try 'spack -e <environment-name> clean -d'.".format(what)
+        )
 
 
 def clean(parser, args):
