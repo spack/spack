@@ -18,12 +18,13 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
     libraries = ["librocalution_hip"]
 
+    version("5.3.3", sha256="3af022250bc25bebdee12bfb8fdbab4b60513b537b9fe15dfa82ded8850c5066")
     version("5.2.3", sha256="8e0d77099bf7dc0d00505e1c936b072a59719102c75398dc1416cbef31902253")
     version("5.2.1", sha256="f246bd5b5d1b5821c29b566610a1c1d5c5cc361e0e5c373b8b04168b05e9b26f")
     version("5.2.0", sha256="a5aac471bbec87d019ad7c6db779c73327ad40ecdea09dc5ab2106e62cd6b7eb")
@@ -131,6 +132,7 @@ class Rocalution(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -163,6 +165,7 @@ class Rocalution(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.3",
     ]:
         for tgt in itertools.chain(["auto"], amdgpu_targets):
             depends_on(

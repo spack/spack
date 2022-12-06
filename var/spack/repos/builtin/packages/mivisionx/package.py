@@ -25,6 +25,7 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.3.3", sha256="378fafcb327e17e0e11fe1d1029d1740d84aaef0fd59614ed7376499b3d716f6")
     version("5.2.3", sha256="bbcdb5808d2bc880486dffa89f4111fb4b1d6dfe9b11fcd46fbd17939d057cf0")
     version("5.2.1", sha256="201996b31f59a8d5e4cc3f17d17a5b81158a34d2a1c833b65ccc3dceb21d176f")
     version("5.2.0", sha256="fee620a1edd3bce18b2cec9ef26ec2afe0a85d6da8a37ed713ab0d1342382503")
@@ -206,6 +207,7 @@ class Mivisionx(CMakePackage):
             "5.2.0",
             "5.2.1",
             "5.2.3",
+            "5.3.3",
         ]:
             depends_on("rocm-opencl@" + ver, when="@" + ver)
             depends_on("miopengemm@" + ver, when="@" + ver)
@@ -221,8 +223,11 @@ class Mivisionx(CMakePackage):
             "5.2.0",
             "5.2.1",
             "5.2.3",
+            "5.3.3",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
+        for ver in ["5.3.3"]:
+            depends_on("migraphx@" + ver, when="@" + ver)
 
     def flag_handler(self, name, flags):
         spec = self.spec

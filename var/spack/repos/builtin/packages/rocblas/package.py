@@ -13,7 +13,7 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
@@ -22,6 +22,7 @@ class Rocblas(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
     version("5.2.3", sha256="36f74ce53b82331a756c42f95f3138498d6f4a66f2fd370cff9ab18281bb12d5")
     version("5.2.1", sha256="6be804ba8d9e491a85063c220cd0ddbf3d13e3b481eee31041c35a938723f4c6")
     version("5.2.0", sha256="b178b7db5f0af55b21b5f744b8825f5e002daec69b4688e50df2bca2fac155bd")
@@ -167,6 +168,7 @@ class Rocblas(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -205,6 +207,7 @@ class Rocblas(CMakePackage):
         ("@5.2.0", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.2.1", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.2.3", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
+        ("@5.3.3", "006a5d653ce0d82fecb05d5e215d053749b57c04"),
     ]:
         resource(
             name="Tensile",

@@ -15,11 +15,12 @@ class Atmi(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/atmi"
     git = "https://github.com/RadeonOpenCompute/atmi.git"
-    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.3.3", sha256="cc1144e4939cea2944f6c72a21406b9dc5b56d933696494074c280df7469834a")
     version("5.2.3", sha256="5f66c59e668cf968e86b556a0a52ee0202d1b370d8406e291a874cbfd200ee17")
     version("5.2.1", sha256="6b33445aa67444c038cd756f855a58a72dd35db57e7b63da37fe78a8585b982b")
     version("5.2.0", sha256="33e77905a607734157d46c736c924c7c50b6b13f2b2ddbf711cb08e37f2efa4f")
@@ -126,6 +127,7 @@ class Atmi(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.3",
     ]:
         depends_on("comgr@" + ver, type="link", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
