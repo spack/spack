@@ -33,6 +33,7 @@ class PyFastfold(PythonPackage):
     depends_on("py-ray@2.0.0:",                 type="run")  # Requirement relaxed (was @2.0.0)
     depends_on("py-pandas",                     type="run")
     depends_on("openmm@7.7.0:+cuda",            type="run")
+    depends_on("py-requests@2.26.0",            type="run")
     # From import errors:
     depends_on("py-setproctitle",               type="run")
     depends_on("py-pdbfixer",                   type="run")
