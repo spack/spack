@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 import spack.platforms.cray
@@ -126,7 +127,7 @@ class Libfabric(AutotoolsPackage):
         results = []
         for exe in exes:
             variants = []
-            output = Executable(exe)("--list", output=str, error=str)
+            output = Executable(exe)("--list", output=str, error=os.devnull)
             # fabrics
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
@@ -158,11 +159,11 @@ class Libfabric(AutotoolsPackage):
         else:
             args.append("--with-kdreg=no")
 
-        for fabric in self.fabrics:
-            if "fabrics=" + fabric in self.spec:
-                args.append("--enable-{0}=yes".format(fabric))
+        for fabric in self.variants['fabrics'][0].values:
+            if "fabrics={0}".format(fabric.value) in self.spec:
+                args.append("--enable-{0}=yes".format(fabric.value))
             else:
-                args.append("--enable-{0}=no".format(fabric))
+                args.append("--enable-{0}=no".format(fabric.value))
 
         return args
 
@@ -179,9 +180,10 @@ def get_options_from_variant(self, name):
     if getattr(values, "feature_values", None):
         values = values.feature_values
     for value in sorted(values):
-        if hasattr(value, "when") and value.when is True:
-            # Explicitly extract the True value for downstream use
-            explicit_values.append("{0}".format(value))
+        if hasattr(value, "when"):
+            if value.when is True:
+                # Explicitly extract the True value for downstream use
+                explicit_values.append("{0}".format(value))
         else:
             explicit_values.append(value)
     return explicit_values
