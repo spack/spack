@@ -3,6 +3,8 @@ spack:
 
   concretizer:
     reuse: false
+    targets:
+      host_compatible: false
     unify: false
 
   config:
