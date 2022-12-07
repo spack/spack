@@ -65,9 +65,9 @@ import spack.version
 #: Valid name for specs and variants. Here we are not using
 #: the previous "w[\w.-]*" since that would match most
 #: characters that can be part of a word in any language
-PACKAGE_NAME_WITHOUT_DOTS = r"[a-zA-Z_0-9][a-zA-Z_0-9\-]*"
-PACKAGE_NAME_WITH_DOTS = rf"{PACKAGE_NAME_WITHOUT_DOTS}(\.{PACKAGE_NAME_WITHOUT_DOTS})+"
-GIT_VERSION = rf"(((git.)?({PACKAGE_NAME_WITH_DOTS}))|({PACKAGE_NAME_WITHOUT_DOTS}))"
+IDENTIFIER = r"[a-zA-Z_0-9][a-zA-Z_0-9\-]*"
+DOTTED_IDENTIFIER = rf"{IDENTIFIER}(\.{IDENTIFIER})+"
+GIT_VERSION = rf"(((git.)?({DOTTED_IDENTIFIER}))|({IDENTIFIER}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
@@ -124,8 +124,8 @@ class TokenType(TokenBase):
     # FILENAME
     FILENAME = rf"({FILENAME})"
     # Package name
-    FULLY_QUALIFIED_PACKAGE_NAME = rf"({PACKAGE_NAME_WITH_DOTS})"
-    UNQUALIFIED_PACKAGE_NAME = rf"({PACKAGE_NAME_WITHOUT_DOTS})"
+    FULLY_QUALIFIED_PACKAGE_NAME = rf"({DOTTED_IDENTIFIER})"
+    UNQUALIFIED_PACKAGE_NAME = rf"({IDENTIFIER})"
     # DAG hash
     DAG_HASH = rf"(/({HASH}))"
     # White spaces
