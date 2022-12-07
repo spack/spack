@@ -6,15 +6,13 @@
 from spack.package import *
 
 
-class PySetuptools(Package):
+class PySetuptools(Package, PythonExtension):
     """A Python utility that aids in the process of downloading, building,
     upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://github.com/pypa/setuptools"
     url = "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-62.3.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/setuptools/"
-
-    maintainers = ["adamjstewart"]
 
     version(
         "65.5.0",
