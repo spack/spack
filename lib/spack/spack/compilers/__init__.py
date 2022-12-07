@@ -633,7 +633,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
                         compiler_id = CompilerID(operating_system, compiler_name, None)
                         detect_version_args = DetectVersionArgs(
                             id=compiler_id,
-                            variation=NameVariation(*match.groups()),
+                            variation=NameVariation(*match.groups()[:2]),
                             language=language,
                             path=full_path,
                         )

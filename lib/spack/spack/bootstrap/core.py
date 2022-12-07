@@ -545,8 +545,8 @@ def ensure_core_dependencies():
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
+        ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
-    ensure_gpg_in_path_or_raise()
 
 
 def all_core_root_specs():
