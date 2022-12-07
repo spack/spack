@@ -11,7 +11,7 @@ class PyPystache(PythonPackage):
     framework-agnostic, logic-free templating system inspired by ctemplate and
     et."""
 
-    homepage = "git@github.com:sarnold/pystache.git"
+    homepage = "https://github.com/sarnold/pystache"
     git = "git@github.com:sarnold/pystache.git"
     pypi = "pystache/pystache-0.6.0.tar.gz"
 
