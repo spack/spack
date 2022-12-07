@@ -274,6 +274,12 @@ class Julia(MakefilePackage):
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
         options.append("USECLANG:={}".format("1" if "%clang" in spec else "0"))
 
+        options.extend([
+            "override CC:={0}".format(spack_cc),
+            "override CXX:={0}".format(spack_cxx),
+            "override FC:={0}".format(spack_fc),
+        ])
+
         # libm or openlibm?
         if spec.variants["openlibm"].value:
             options.append("USE_SYSTEM_LIBM=0")
