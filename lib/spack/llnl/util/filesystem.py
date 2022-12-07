@@ -2278,10 +2278,14 @@ class WindowsSimulatedRPath(object):
         """
         self._addl_rpaths = self._addl_rpaths | set(paths)
 
-    def _link(self, path, dest):
+    def _link(self, path, dest_dir):
+        """Perform link step of simulated rpathing, installing simlinks of file in path to the dest_dir
+        location. This method deliberately prevents the case where a path points to a file inside the dest_dir.
+        This is because it is both meaningless from an rpath perspective, and will cause an error when Developer
+        mode is not enabled"""
         file_name = os.path.basename(path)
-        dest_file = os.path.join(dest, file_name)
-        if os.path.exists(dest) and not dest_file == path:
+        dest_file = os.path.join(dest_dir, file_name)
+        if os.path.exists(dest_dir) and not dest_file == path:
             try:
                 symlink(path, dest_file)
             # For py2 compatibility, we have to catch the specific Windows error code
@@ -2295,7 +2299,7 @@ class WindowsSimulatedRPath(object):
                         "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
                         if already_linked
                         else "library with name %s already exists at location %s."
-                        % (file_name, dest)
+                        % (file_name, dest_dir)
                     )
                     pass
                 else:
