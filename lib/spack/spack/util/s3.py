@@ -4,27 +4,72 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import urllib.parse
+from typing import Any, Dict, Tuple
 
 import spack
+import spack.config
+import spack.mirror
 import spack.util.url as url_util
 
+#: Map (mirror name, method) tuples to s3 client instances.
+s3_client_cache: Dict[Tuple[str, str], Any] = dict()
 
-def get_mirror_connection(url, url_type="push"):
-    connection = {}
-    # Try to find a mirror for potential connection information
-    # Check to see if desired file starts with any of the mirror URLs
-    rebuilt_path = url_util.format(url)
-    # Gather dict of push URLS point to the value of the whole mirror
-    mirror_dict = {x.push_url: x for x in spack.mirror.MirrorCollection().values()}
-    # Ensure most specific URLs (longest) are presented first
-    mirror_url_keys = mirror_dict.keys()
-    mirror_url_keys = sorted(mirror_url_keys, key=len, reverse=True)
-    for mURL in mirror_url_keys:
-        # See if desired URL starts with the mirror's push URL
-        if rebuilt_path.startswith(mURL):
-            connection = mirror_dict[mURL].to_dict()[url_type]
-            break
-    return connection
+
+def get_s3_session(url, method="fetch"):
+    global s3_client_cache
+
+    # Get a (recycled) s3 session for a particular URL
+    url = url_util.parse(url)
+
+    url_str = url_util.format(url)
+
+    def get_mirror_url(mirror):
+        return mirror.fetch_url if method == "fetch" else mirror.push_url
+
+    # Get all configured mirrors that could match.
+    all_mirrors = spack.mirror.MirrorCollection()
+    mirrors = [
+        (name, mirror)
+        for name, mirror in all_mirrors.items()
+        if url_str.startswith(get_mirror_url(mirror))
+    ]
+
+    if not mirrors:
+        name, mirror = None, {}
+    else:
+        # In case we have more than one mirror, we pick the longest matching url.
+        # The heuristic being that it's more specific, and you can have different
+        # credentials for a sub-bucket (if that is a thing).
+        name, mirror = max(
+            mirrors, key=lambda name_and_mirror: len(get_mirror_url(name_and_mirror[1]))
+        )
+
+    key = (name, method)
+
+    # Did we already create a client for this? Then return it.
+    if key in s3_client_cache:
+        return s3_client_cache[key]
+
+    # Otherwise, create it.
+    s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method)
+
+    from boto3 import Session
+    from botocore.exceptions import ClientError
+
+    session = Session(**s3_connection)
+    # if no access credentials provided above, then access anonymously
+    if not session.get_credentials():
+        from botocore import UNSIGNED  # type: ignore[import]
+        from botocore.client import Config  # type: ignore[import]
+
+        s3_client_args["config"] = Config(signature_version=UNSIGNED)
+
+    client = session.client("s3", **s3_client_args)
+    client.ClientError = ClientError
+
+    # Cache the client.
+    s3_client_cache[key] = client
+    return client
 
 
 def _parse_s3_endpoint_url(endpoint_url):
@@ -34,26 +79,34 @@ def _parse_s3_endpoint_url(endpoint_url):
     return endpoint_url
 
 
-def get_mirror_s3_connection_info(connection):
+def get_mirror_s3_connection_info(mirror: spack.mirror.Mirror, method: str):
     s3_connection = {}
-
-    s3_connection_is_dict = connection and isinstance(connection, dict)
-    if s3_connection_is_dict:
-        if connection.get("access_token"):
-            s3_connection["aws_session_token"] = connection["access_token"]
-        if connection.get("access_pair"):
-            s3_connection["aws_access_key_id"] = connection["access_pair"][0]
-            s3_connection["aws_secret_access_key"] = connection["access_pair"][1]
-        if connection.get("profile"):
-            s3_connection["profile_name"] = connection["profile"]
-
     s3_client_args = {"use_ssl": spack.config.get("config:verify_ssl")}
 
-    endpoint_url = os.environ.get("S3_ENDPOINT_URL")
+    # access token
+    if isinstance(mirror, spack.mirror.Mirror):
+        access_token = mirror.get_access_token(method)
+        if access_token:
+            s3_connection["aws_session_token"] = access_token
+
+        # access pair
+        access_pair = mirror.get_access_pair(method)
+        if access_pair and access_pair[0] and access_pair[1]:
+            s3_connection["aws_access_key_id"] = access_pair[0]
+            s3_connection["aws_secret_access_key"] = access_pair[1]
+
+        # profile
+        profile = mirror.get_profile(method)
+        if profile:
+            s3_connection["profile_name"] = profile
+
+        # endpoint url
+        endpoint_url = mirror.get_endpoint_url(method) or os.environ.get("S3_ENDPOINT_URL")
+    else:
+        endpoint_url = os.environ.get("S3_ENDPOINT_URL")
+
     if endpoint_url:
         s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(endpoint_url)
-    elif s3_connection_is_dict and connection.get("endpoint_url"):
-        s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(connection["endpoint_url"])
 
     return (s3_connection, s3_client_args)
 

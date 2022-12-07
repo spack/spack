@@ -44,7 +44,7 @@ class WrapStream(BufferedReader):
 
 def _s3_open(url):
     parsed = url_util.parse(url)
-    s3 = s3_util.create_s3_session(parsed, connection=s3_util.get_mirror_connection(parsed))
+    s3 = s3_util.get_s3_session(url, method="fetch")
 
     bucket = parsed.netloc
     key = parsed.path
