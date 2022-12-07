@@ -290,6 +290,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         else:
             make()
 
+    # The non-filtered config files will need to be used for dependents. This
+    # will have to be inserted in the @INC search space.
+    @property
+    def spack_config(self):
+        return join_path(prefix, "lib", self.version, "spack")
+
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
@@ -347,7 +353,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
-        perl_lib_dirs = []
+        perl_lib_dirs = [self.spack_config]
         for d in dependent_spec.traverse(deptype=deptype):
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
@@ -422,6 +428,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             "-MModule::Loaded", "-MConfig", "-e", "print is_loaded(Config)", output=str
         )
 
+        # Make a copy of config_dot_pm
+        mkdir(self.spack_config)
+        copy(config_dot_pm, self.spack_config)
+
         with self.make_briefly_writable(config_dot_pm):
             match = "cc *=>.*"
             substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
@@ -430,6 +440,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # And the path Config_heavy.pl
         d = os.path.dirname(config_dot_pm)
         config_heavy = join_path(d, "Config_heavy.pl")
+        # copy config_heavy
+        copy(config_heavy, self.spack_config)
 
         with self.make_briefly_writable(config_heavy):
             match = "^cc=.*"
