@@ -2279,9 +2279,12 @@ class WindowsSimulatedRPath(object):
         self._addl_rpaths = self._addl_rpaths | set(paths)
 
     def _link(self, path, dest_dir):
-        """Perform link step of simulated rpathing, installing simlinks of file in path to the dest_dir
-        location. This method deliberately prevents the case where a path points to a file inside the dest_dir.
-        This is because it is both meaningless from an rpath perspective, and will cause an error when Developer
+        """Perform link step of simulated rpathing, installing
+        simlinks of file in path to the dest_dir
+        location. This method deliberately prevents
+        the case where a path points to a file inside the dest_dir.
+        This is because it is both meaningless from an rpath
+        perspective, and will cause an error when Developer
         mode is not enabled"""
         file_name = os.path.basename(path)
         dest_file = os.path.join(dest_dir, file_name)
