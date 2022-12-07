@@ -30,7 +30,6 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution
-import spack.bootstrap
 import spack.cmd
 import spack.compilers
 import spack.config
@@ -541,8 +540,10 @@ def bootstrap_clingo():
     global clingo, ASTType, parse_files
 
     if not clingo:
+        import spack.bootstrap
+
         with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_clingo_importable_or_raise()
+            spack.bootstrap.ensure_core_dependencies()
             import clingo
 
     from clingo.ast import ASTType
@@ -2268,48 +2269,41 @@ class SpecBuilder(object):
         The solver determines wihch flags are on nodes; this routine
         imposes order afterwards.
         """
-        # nodes with no flags get flag order from compiler
         compilers = dict((c.spec, c) for c in all_compilers_in_config())
-        for pkg in self._flag_compiler_defaults:
-            spec = self._specs[pkg]
-            compiler_flags = compilers[spec.compiler].flags
-            for key in spec.compiler_flags:
-                spec_compiler_flags_set = set(spec.compiler_flags.get(key, []))
-                compiler_flags_set = set(compiler_flags.get(key, []))
-
-                assert spec_compiler_flags_set == compiler_flags_set, "%s does not equal %s" % (
-                    spec_compiler_flags_set,
-                    compiler_flags_set,
-                )
-
-                spec.compiler_flags[key] = compiler_flags.get(key, [])
-        # index of all specs (and deps) from the command line by name
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
-        # iterate through specs with specified flags
-        for key, sources in self._flag_sources.items():
-            pkg, flag_type = key
-            spec = self._specs[pkg]
-            compiler_flags = spec.compiler_flags.get(flag_type, [])
+        for spec in self._specs.values():
+            # if bootstrapping, compiler is not in config and has no flags
+            flagmap_from_compiler = {}
+            if spec.compiler in compilers:
+                flagmap_from_compiler = compilers[spec.compiler].flags
 
-            # order is determined by the DAG.  A spec's flags come after
-            # any from its ancestors on the compile line.
-            order = [s.name for s in spec.traverse(order="post", direction="parents")]
+            for flag_type in spec.compiler_flags.valid_compiler_flags():
+                from_compiler = flagmap_from_compiler.get(flag_type, [])
+                from_sources = []
 
-            # sort the sources in our DAG order
-            sorted_sources = sorted(sources, key=lambda s: order.index(s))
+                # order is determined by the  DAG. A spec's flags come after any of its ancestors
+                # on the compile line
+                source_key = (spec.name, flag_type)
+                if source_key in self._flag_sources:
+                    order = [s.name for s in spec.traverse(order="post", direction="parents")]
+                    sorted_sources = sorted(
+                        self._flag_sources[source_key], key=lambda s: order.index(s)
+                    )
 
-            # add flags from each source, lowest to highest precedence
-            flags = []
-            for source_name in sorted_sources:
-                source = cmd_specs[source_name]
-                extend_flag_list(flags, source.compiler_flags.get(flag_type, []))
+                    # add flags from each source, lowest to highest precedence
+                    for source_name in sorted_sources:
+                        source = cmd_specs[source_name]
+                        extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
 
-            assert set(compiler_flags) == set(flags), "%s does not equal %s" % (
-                set(compiler_flags),
-                set(flags),
-            )
-            spec.compiler_flags.update({flag_type: source.compiler_flags[flag_type]})
+                # compiler flags from compilers config are lowest precedence
+                ordered_compiler_flags = from_compiler + from_sources
+                compiler_flags = spec.compiler_flags.get(flag_type, [])
+
+                msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))
+                assert set(compiler_flags) == set(ordered_compiler_flags), msg
+
+                spec.compiler_flags.update({flag_type: ordered_compiler_flags})
 
     def deprecated(self, pkg, version):
         msg = 'using "{0}@{1}" which is a deprecated version'
