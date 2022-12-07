@@ -39,10 +39,26 @@ class Rocsparse(CMakePackage):
     version("5.2.0", sha256="7ed929af16d2502135024a6463997d9a95f03899b8a33aa95db7029575c89572")
     version("5.1.3", sha256="ef9641045b36c9aacc87e4fe7717b41b1e29d97e21432678dce7aca633a8edc2")
     version("5.1.0", sha256="a2f0f8cb02b95993480bd7264fc65e8b11464a90b86f2dcd0dd82a2e6d4bd704")
-    version("5.0.2", sha256="c9d9e1b7859e1c5aa5050f5dfdf86245cbd7c1296c0ce60d9ca5f3e22a9b748b")
-    version("5.0.0", sha256="6d352bf27dbed08e5115a58815aa76c59eb2008ec9dcc921aadf2efe20115d2a")
-    version("4.5.2", sha256="e37af2cd097e239a55a278df534183b5591ef4d985fe1a268a229bd11ada6599")
-    version("4.5.0", sha256="b120e9e17e7e141caee4c8c4288c9d1902bad0cec2ea76458d3ba11343376938")
+    version(
+        "5.0.2",
+        sha256="c9d9e1b7859e1c5aa5050f5dfdf86245cbd7c1296c0ce60d9ca5f3e22a9b748b",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="6d352bf27dbed08e5115a58815aa76c59eb2008ec9dcc921aadf2efe20115d2a",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="e37af2cd097e239a55a278df534183b5591ef4d985fe1a268a229bd11ada6599",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="b120e9e17e7e141caee4c8c4288c9d1902bad0cec2ea76458d3ba11343376938",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="fa5ea64f71e1cfbebe41618cc183f501b387824a6dc58486ab1214d7af5cbef2",
