@@ -62,26 +62,30 @@ packages:
     externals:
     - spec: m4@1.4.16
       prefix: /usr
+  model-neocortex:
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
   mxnet:
     version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
-  neurodamus-base:
-    require:
-      - one_of: ["%intel", "%nvhpc"]
+    variants: cuda_arch=70
+  neurodamus-core:
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-hippocampus:
-    require:
-      - one_of: ["%intel", "%nvhpc"]
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-model:
-    require:
-      - one_of: ["%intel", "%nvhpc"]
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-mousify:
-    require:
-      - one_of: ["%intel", "%nvhpc"]
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-neocortex:
-    require:
-      - one_of: ["%intel", "%nvhpc"]
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-thalamus:
-    require:
-      - one_of: ["%intel", "%nvhpc"]
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
   neuron:
     require:
       - one_of: ["%intel", "%nvhpc"]
