@@ -15,26 +15,26 @@ class PyFastfold(PythonPackage):
 
     maintainers = ["meyersbs"]
 
-    version('0.2.0', sha256='6760dbae9809b8b26219c9477489d34325807be504098901d0375fbdc3103f88')
+    version("0.2.0", sha256="6760dbae9809b8b26219c9477489d34325807be504098901d0375fbdc3103f88")
 
     # From README:
-    depends_on("python@3.8:3.9",                type=("build", "run"))
-    depends_on("cuda@11.1:",                    type=("build", "run"))
-    depends_on("py-torch@1.10:+cuda",           type=("build", "run"))
+    depends_on("python@3.8:3.9", type=("build", "run"))
+    depends_on("cuda@11.1:", type=("build", "run"))
+    depends_on("py-torch@1.10:+cuda", type=("build", "run"))
     # From setup.py:
-    depends_on("py-setuptools",                 type="build")
-    depends_on("py-einops",                     type=("build", "run"))
-    depends_on("py-colossalai",                 type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-einops", type=("build", "run"))
+    depends_on("py-colossalai", type=("build", "run"))
     # From environment.yml (to appease import errors):
-    depends_on("py-scipy@1.7.1:",               type=("build", "run"))  # Req relaxed (was @1.7.1)
-    depends_on("py-dm-tree@0.1.6:",             type=("build", "run"))  # Req relaxed (was @0.1.6)
-    depends_on("py-biopython@1.79:",            type=("build", "run"))  # Req relaxed (was @1.79)
-    depends_on("py-ml-collections@0.1.0:",      type=("build", "run"))  # Req relaxed (was @0.1.0)
-    depends_on("py-ray@2.0.0:",                 type=("build", "run"))  # Req relaxed (was @2.0.0)
-    depends_on("py-pandas",                     type=("build", "run"))
-    depends_on("openmm@7.7.0:+cuda",            type=("build", "run"))
-    depends_on("py-requests@2.26.0",            type=("build", "run"))
+    depends_on("py-scipy@1.7.1:", type=("build", "run"))  # Req relaxed (was @1.7.1)
+    depends_on("py-dm-tree@0.1.6:", type=("build", "run"))  # Req relaxed (was @0.1.6)
+    depends_on("py-biopython@1.79:", type=("build", "run"))  # Req relaxed (was @1.79)
+    depends_on("py-ml-collections@0.1.0:", type=("build", "run"))  # Req relaxed (was @0.1.0)
+    depends_on("py-ray@2.0.0:", type=("build", "run"))  # Req relaxed (was @2.0.0)
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("openmm@7.7.0:+cuda", type=("build", "run"))
+    depends_on("py-requests@2.26.0", type=("build", "run"))
     # From import errors:
-    depends_on("py-setproctitle",               type=("build", "run"))
-    depends_on("py-pdbfixer",                   type=("build", "run"))
-    depends_on("py-pytorch-lightning",          type=("build", "run"))
+    depends_on("py-setproctitle", type=("build", "run"))
+    depends_on("py-pdbfixer", type=("build", "run"))
+    depends_on("py-pytorch-lightning", type=("build", "run"))
