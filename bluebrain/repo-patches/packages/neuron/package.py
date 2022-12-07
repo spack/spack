@@ -69,7 +69,7 @@ class Neuron(CMakePackage):
     depends_on('ninja', type='build')
 
     depends_on("bison",     type="build")
-    depends_on("caliper",   type=("build", "run"), when="+caliper")
+    depends_on("caliper",   type=("build", "link", "run"), when="+caliper")
     depends_on("flex",      type="build")
     depends_on("pkgconfig", type="build")
 
