@@ -299,16 +299,26 @@ def modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
     if idpath:
         new_idpath = paths_to_paths.get(idpath, None)
         if new_idpath and not idpath == new_idpath:
-            args += ["-id", new_idpath]
+            args_to_add = ["-id", new_idpath]
+            if not args_to_add in args:
+                args += [args_to_add]
+
     for dep in deps:
         new_dep = paths_to_paths.get(dep)
         if new_dep and dep != new_dep:
-            args += ["-change", dep, new_dep]
+            args_to_add = ["-change", dep, new_dep]
+            if not args_to_add in args:
+                args += [args_to_add]
 
     for orig_rpath in rpaths:
         new_rpath = paths_to_paths.get(orig_rpath)
         if new_rpath and not orig_rpath == new_rpath:
-            args += ["-rpath", orig_rpath, new_rpath]
+            args_to_add = ["-rpath", orig_rpath, new_rpath]
+            if not args_to_add in args:
+                args += [args_to_add]
+
+    # Flatten list of lists
+    args = [item for subargs in args for item in subargs]
 
     if args:
         args.append(str(cur_path))
