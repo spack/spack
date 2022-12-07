@@ -74,6 +74,8 @@ class QuantumEspresso(CMakePackage, Package):
         depends_on("openblas threads=openmp", when="^openblas")
         depends_on("amdblis threads=openmp", when="^amdblis")
         depends_on("intel-mkl threads=openmp", when="^intel-mkl")
+        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
+        depends_on("acfl threads=openmp", when="^acfl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
@@ -406,6 +408,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         if "+qmcpack" in spec:
             cmake_args.append(self.define("QE_ENABLE_PW2QMCPACK", True))
+
+        if "^armpl-gcc" in spec or "^acfl" in spec:
+            cmake_args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))
+            cmake_args.append(self.define("LAPACK_LIBRARIES", spec["lapack"].libs.joined(";")))
+            # Up to q-e@7.1 set BLA_VENDOR to All to force detection of vanilla scalapack
+            if spec.satisfies("@:7.1"):
+                cmake_args.append(self.define("BLA_VENDOR", "All"))
 
         return cmake_args
 
