@@ -81,9 +81,9 @@ FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
 VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
 
-VERSION = r"([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*)"
-VERSION_RANGE = rf"({VERSION}:{VERSION}|:{VERSION}|{VERSION}:|:)"
-VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})([,]({VERSION_RANGE}|{VERSION}))*"
+VERSION = r"([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
+VERSION_RANGE = rf"({VERSION}\s*:\s*{VERSION}(?!\s*=)|:\s*{VERSION}(?!\s*=)|{VERSION}\s*:|:)"
+VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})(\s*[,]\s*({VERSION_RANGE}|{VERSION}))*"
 
 
 class TokenBase(enum.Enum):
@@ -114,15 +114,15 @@ class TokenType(TokenBase):
     DEPENDENCY = r"(\^)"
     # Version
     VERSION_HASH_PAIR = rf"(@({GIT_VERSION}={VERSION}))"
-    VERSION = rf"(@({VERSION_LIST}))"
+    VERSION = rf"(@\s*({VERSION_LIST}))"
     # Variants
-    PROPAGATED_BOOL_VARIANT = rf"((\+\+|~~|--){NAME})"
-    BOOL_VARIANT = rf"([~+-]{NAME})"
-    PROPAGATED_KEY_VALUE_PAIR = rf"({NAME}==({VALUE}|{QUOTED_VALUE}))"
-    KEY_VALUE_PAIR = rf"({NAME}=({VALUE}|{QUOTED_VALUE}))"
+    PROPAGATED_BOOL_VARIANT = rf"((\+\+|~~|--)\s*{NAME})"
+    BOOL_VARIANT = rf"([~+-]\s*{NAME})"
+    PROPAGATED_KEY_VALUE_PAIR = rf"({NAME}\s*==\s*({VALUE}|{QUOTED_VALUE}))"
+    KEY_VALUE_PAIR = rf"({NAME}\s*=\s*({VALUE}|{QUOTED_VALUE}))"
     # Compilers
-    COMPILER_AND_VERSION = rf"(%({NAME})([\s]*)@({VERSION_LIST}))"
-    COMPILER = rf"(%({NAME}))"
+    COMPILER_AND_VERSION = rf"(%\s*({NAME})([\s]*)@\s*({VERSION_LIST}))"
+    COMPILER = rf"(%\s*({NAME}))"
     # FILENAME
     FILENAME = rf"({FILENAME})"
     # Package name
@@ -325,7 +325,7 @@ class SpecNodeParser:
                     )
 
                 compiler_name = self.ctx.current_token.value[1:]
-                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name, ":")
+                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
@@ -335,7 +335,9 @@ class SpecNodeParser:
                     )
 
                 compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
-                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name, compiler_version)
+                initial_spec.compiler = spack.spec.CompilerSpec(
+                    compiler_name.strip(), compiler_version
+                )
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.VERSION) or self.ctx.accept(
                 TokenType.VERSION_HASH_PAIR
@@ -363,23 +365,25 @@ class SpecNodeParser:
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 variant_value = self.ctx.current_token.value[0] == "+"
                 initial_spec._add_flag(
-                    self.ctx.current_token.value[1:], variant_value, propagate=False
+                    self.ctx.current_token.value[1:].strip(), variant_value, propagate=False
                 )
             elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 variant_value = self.ctx.current_token.value[0:2] == "++"
                 initial_spec._add_flag(
-                    self.ctx.current_token.value[2:], variant_value, propagate=True
+                    self.ctx.current_token.value[2:].strip(), variant_value, propagate=True
                 )
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                value = value.strip("'\"")
+                name = name.strip("'\" ")
+                value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=False)
             elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 name, value = self.ctx.current_token.value.split("==", maxsplit=1)
-                value = value.strip("'\"")
+                name = name.strip("'\" ")
+                value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=True)
             elif not self.has_hash and self.ctx.accept(TokenType.DAG_HASH):
                 dag_hash = self.ctx.current_token.value[1:]

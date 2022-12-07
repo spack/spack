@@ -454,6 +454,60 @@ def specfile_for(default_mock_concretization):
             [Token(TokenType.PROPAGATED_KEY_VALUE_PAIR, value='cflags=="-O3 -g"')],
             'cflags=="-O3 -g"',
         ),
+        # Way too many spaces
+        (
+            "@1.2 : 1.4 , 1.6 ",
+            [Token(TokenType.VERSION, value="@1.2 : 1.4 , 1.6")],
+            "@1.2:1.4,1.6",
+        ),
+        (
+            "@1.2 :   develop",
+            [
+                Token(TokenType.VERSION, value="@1.2 :   develop"),
+            ],
+            "@1.2:develop",
+        ),
+        (
+            "@1.2 :   develop   = foo",
+            [
+                Token(TokenType.VERSION, value="@1.2 :"),
+                Token(TokenType.KEY_VALUE_PAIR, value="develop   = foo"),
+            ],
+            "@1.2: develop=foo",
+        ),
+        (
+            "% intel @ 12.1 : 12.6 + debug",
+            [
+                Token(TokenType.COMPILER_AND_VERSION, value="% intel @ 12.1 : 12.6"),
+                Token(TokenType.BOOL_VARIANT, value="+ debug"),
+            ],
+            "%intel@12.1:12.6+debug",
+        ),
+        (
+            "@ 12.1 : 12.6 + debug - qt_4",
+            [
+                Token(TokenType.VERSION, value="@ 12.1 : 12.6"),
+                Token(TokenType.BOOL_VARIANT, value="+ debug"),
+                Token(TokenType.BOOL_VARIANT, value="- qt_4"),
+            ],
+            "@12.1:12.6+debug~qt_4",
+        ),
+        (
+            "@10.4.0:10,11.3.0:target=aarch64:",
+            [
+                Token(TokenType.VERSION, value="@10.4.0:10,11.3.0:"),
+                Token(TokenType.KEY_VALUE_PAIR, value="target=aarch64:"),
+            ],
+            "@10.4.0:10,11.3.0: arch=None-None-aarch64:",
+        ),
+        (
+            "@:0.4 % nvhpc",
+            [
+                Token(TokenType.VERSION, value="@:0.4"),
+                Token(TokenType.COMPILER, value="% nvhpc"),
+            ],
+            "@:0.4%nvhpc",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip):
