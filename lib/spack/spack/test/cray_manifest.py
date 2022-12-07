@@ -234,6 +234,10 @@ def test_generate_specs_from_manifest():
 
 
 def test_translate_cray_platform_to_linux(monkeypatch):
+    """Manifests might list specs on newer Cray platforms as being "cray",
+    but Spack identifies such platforms as "linux". Make sure we
+    automaticaly transform these entries.
+    """
     test_linux_platform = spack.platforms.test.Test("linux")
 
     def the_host_is_linux():
