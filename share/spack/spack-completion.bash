@@ -408,7 +408,7 @@ _spack_bootstrap() {
 }
 
 _spack_bootstrap_now() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --dev"
 }
 
 _spack_bootstrap_status() {
