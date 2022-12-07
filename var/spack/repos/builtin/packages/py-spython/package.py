@@ -26,7 +26,6 @@ class PySpython(PythonPackage):
     depends_on("singularityce@3.5.2:", when="runtime=singularityce", type="run")
     depends_on("singularity@3.5.2:", when="runtime=singularity", type="run")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-requests", type=("build", "run"))
