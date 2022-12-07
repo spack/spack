@@ -14,7 +14,7 @@ Here is the EBNF grammar for a spec::
                      [name] [node_options] hash |
                      filename
 
-    node_options  = [@version_list] [%compiler] { variant }
+    node_options  = [@(version_list|version_pair)] [%compiler] { variant }
 
     hash          = / id
     filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
@@ -30,9 +30,13 @@ Here is the EBNF grammar for a spec::
 
     compiler      = id [@version_list]
 
+    version_pair  = git_version=vid
     version_list  = (version|version_range) [ { , (version|version_range)} ]
     version_range = vid:vid | vid: | :vid | :
     version       = vid
+
+    git_version   = git.(vid) | git_hash
+    git_hash      = [A-Fa-f0-9]{40}
 
     quoted_id     = " id_with_ws " | ' id_with_ws '
     id_with_ws    = [a-zA-Z0-9_][a-zA-Z_0-9-.\\s]*
