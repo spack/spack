@@ -2,15 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+"""Run unit-tests delegating to pytest.main"""
 from __future__ import division, print_function
 
 import argparse
 import collections
+import collections.abc
 import io
 import os.path
 import re
 import sys
+import time
 
 try:
     import pytest
@@ -18,7 +20,7 @@ except ImportError:
     pytest = None  # type: ignore
 
 import llnl.util.filesystem
-import llnl.util.tty.color as color
+from llnl.util.tty import color
 from llnl.util.tty.colify import colify
 
 import spack.paths
@@ -26,7 +28,112 @@ import spack.paths
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
 level = "long"
-is_windows = sys.platform == "win32"
+
+IS_WINDOWS = sys.platform == "win32"
+
+
+class ConcretizationTimer(collections.abc.MutableMapping):
+    """Timer used to collect concretization times in tests"""
+
+    def __init__(self):
+        self.key = None
+        self.start_time = None
+        self._timers = collections.defaultdict(list)
+
+    def start(self, key):
+        """Start timing a concretization"""
+        self.key = key
+        self.start_time = time.time()
+
+    def end(self):
+        """End timing the current concretization"""
+        elapsed_time = time.time() - self.start_time
+        self._timers[self.key].append(elapsed_time)
+        self.key, self.start_time = None, None
+
+    def __str__(self):
+        total_time = 0
+        result = "Total time spent in concretization {}\n"
+        for spec, times in self._timers.items():
+            total_time += sum(times)
+            line = f"{spec}: concretized {len(times)} times\n"
+            result += line
+        return result.format(llnl.util.lang.pretty_seconds(total_time))
+
+    def __getitem__(self, item):
+        return self._timers.__getitem__(item)
+
+    def __setitem__(self, key, value):
+        self._timers.__setitem__(key, value)
+
+    def __len__(self):
+        return len(self._timers)
+
+    def __delitem__(self, key):
+        self._timers.__delitem__(key)
+
+    def __iter__(self):
+        return self._timers.__iter__()
+
+
+class ConcretizationTimerPlugin:
+    """Plugin to pytest to time concretizations in unit tests"""
+
+    def __init__(self):
+        # Give the plugin a name, so we can reference it later
+        self.__name__ = "concretization_timer"
+        self.timer = ConcretizationTimer()
+
+    @staticmethod
+    def pytest_addoption(parser):
+        """Add the custom options to pytest"""
+        parser.addoption(
+            "--time-concretization",
+            default=False,
+            action="store_true",
+            help="time each concretization during unit-test execution and report a summary",
+        )
+
+    @pytest.fixture(scope="session", autouse=True)
+    def time_concretization(self, request):
+        """Time concretization if an option has been used on the command line"""
+        if not request.config.getoption("--time-concretization"):
+            return
+
+        decorated_fn = spack.spec.Spec.concretize
+
+        def _timed_concretize(another_self, tests=False):
+            self.timer.start(str(another_self))
+            decorated_fn(another_self, tests)
+            self.timer.end()
+
+        spack.spec.Spec.concretize = _timed_concretize
+
+    def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
+        """Print a custom terminal summary for concretization time"""
+        if not config.getoption("--time-concretization"):
+            return
+
+        terminalreporter.ensure_newline()
+        terminalreporter.section("Concretization summary", sep="-", blue=True, bold=True)
+
+        total_time = 0
+        reports = []
+        for spec, times in self.timer.items():
+            partial_time = sum(times)
+            reports.append((partial_time, len(times), str(spec)))
+            total_time += partial_time
+
+        reports.sort(reverse=True)
+        for partial_time, ntimes, spec_str in reports[:20]:
+            line = llnl.util.lang.pretty_seconds(partial_time)
+            line += f"\t{spec_str} [{ntimes} concretization(s)]\n"
+            terminalreporter.write(line)
+
+        result = (
+            f"Total time spent in concretization {llnl.util.lang.pretty_seconds(total_time)}\n"
+        )
+        terminalreporter.line(result, blue=True, bold=True)
 
 
 def setup_parser(subparser):
@@ -212,7 +319,7 @@ def unit_test(parser, args, unknown_args):
     # mock configuration used by unit tests
     # Note: skip on windows here because for the moment,
     # clingo is wholly unsupported from bootstrap
-    if not is_windows:
+    if not IS_WINDOWS:
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_core_dependencies()
             if pytest is None:
@@ -222,7 +329,7 @@ def unit_test(parser, args, unknown_args):
     if args.pytest_help:
         # make the pytest.main help output more accurate
         sys.argv[0] = "spack unit-test"
-        return pytest.main(["-h"])
+        return pytest.main(["-h"], plugins=[ConcretizationTimerPlugin()])
 
     # add back any parsed pytest args we need to pass to pytest
     pytest_args = add_back_pytest_args(args, unknown_args)
@@ -241,4 +348,4 @@ def unit_test(parser, args, unknown_args):
             do_list(args, pytest_args)
             return
 
-        return pytest.main(pytest_args)
+        return pytest.main(pytest_args, plugins=[ConcretizationTimerPlugin()])

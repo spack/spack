@@ -217,13 +217,12 @@ def parse_specs(args, **kwargs):
     unquoted_flags = _UnquotedFlags.extract(sargs)
 
     try:
-        specs = spack.spec.parse(sargs)
-        for spec in specs:
-            if concretize:
-                spec.concretize(tests=tests)  # implies normalize
-            elif normalize:
-                spec.normalize(tests=tests)
-        return specs
+        abstract_specs = spack.spec.parse(sargs)
+        if concretize:
+            return [s.concretized(tests=tests) for s in abstract_specs]
+        if normalize:
+            return [s.normalized(tests=tests) for s in abstract_specs]
+        return abstract_specs
 
     except spack.error.SpecError as e:
 
