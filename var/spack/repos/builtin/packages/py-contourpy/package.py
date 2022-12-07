@@ -19,3 +19,11 @@ class PyContourpy(PythonPackage):
     depends_on("py-pybind11@2.6:", type=("build", "link"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-numpy@1.16:", type=("build", "run"))
+
+    # py-contourpy uses c++-17 flags that cause a problem
+    # with older Intel compilers (@19) in combination with
+    # C++-17 capable backends (gnu@9:). Instead of trying
+    # to figure out what gnu version the Intel compiler
+    # uses as backend, simply refuse to build. See also:
+    # https://bitbucket.org/berkeleylab/upcxx/issues/302/build-failure-for-intel-c-with-std-c-17
+    conflicts("%intel@:19")
