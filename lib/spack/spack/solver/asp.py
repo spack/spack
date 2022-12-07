@@ -639,10 +639,45 @@ class PyclingoDriver(object):
         if choice:
             self.assumptions.append(atom)
 
-    def handle_error(self, msg, *args):
-        """Handle an error state derived by the solver."""
-        msg = msg.format(*args)
+    def _get_cause_tree(self, cause, conditions, condition_causes, literals, indent=''):
+        if cause == "literal":
+            parents = []
+            local = "required from command line"
+        else:
+            parents = [c for c, e in condition_causes if e == cause]
+            local = "required because %s " % conditions[cause]
 
+        return [indent + local] + [
+            c for parent in parents
+            for c in self._get_cause_tree(parent, conditions, condition_causes, literals, indent=indent + '  ')
+        ]
+
+    def get_cause_tree(self, result, best_model, cause):
+        conditions = dict(extract_args(best_model, "condition"))
+        condition_causes = list(extract_args(best_model, "condition_cause"))
+#        for effect, cause in condition_causes:
+#            pass  # uncommenting this section changes outputs
+        return self._get_cause_tree(cause, conditions, condition_causes, [])
+
+    def handle_error(self, result, best_model, msg, *args):
+        """Handle an error state derived by the solver."""
+        msg_args = []
+        cause_args = []
+        canary = False
+
+        for arg in args:
+            if arg == "startcauses":
+                canary=True
+            elif canary:
+                cause_args.append(arg)
+            else:
+                msg_args.append(arg)
+
+        msg = msg.format(*msg_args)
+
+        for cause in set(cause_args):
+            for c in self.get_cause_tree(result, best_model, cause):
+                print(c)
         # For variant formatting, we sometimes have to construct specs
         # to format values properly. Find/replace all occurances of
         # Spec(...) with the string representation of the spec mentioned
@@ -757,7 +792,7 @@ class PyclingoDriver(object):
             error_args = extract_args(best_model, "error")
             errors = sorted((int(priority), msg, args) for priority, msg, *args in error_args)
             for _, msg, args in errors:
-                self.handle_error(msg, *args)
+                self.handle_error(result, best_model, msg, *args)
 
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
@@ -1210,7 +1245,7 @@ class SpackSolverSetup(object):
                 if not deptypes:
                     continue
 
-                msg = "%s depends on %s" % (pkg.name, dep.spec.name)
+                msg = "%s depends on %s" % (pkg.name, dep.spec)
                 if cond != spack.spec.Spec():
                     msg += " when %s" % cond
 

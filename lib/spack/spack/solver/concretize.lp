@@ -28,10 +28,10 @@ opt_criterion(300, "number of input specs not concretized").
 #minimize { 1@300,ID : literal_not_solved(ID) }.
 
 % Map constraint on the literal ID to the correct PSID
-attr(Name, A1)             :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
-attr(Name, A1, A2)         :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
-attr(Name, A1, A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID).
-attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_solved(LiteralID).
+caused_attr("literal", Name, A1)             :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
+caused_attr("literal", Name, A1, A2)         :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
+caused_attr("literal", Name, A1, A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID).
+caused_attr("literal", Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_solved(LiteralID).
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -75,16 +75,16 @@ version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ attr("version", Package, Version) : version_declared(Package, Version) }
- :- attr("node", Package).
-error(2, "No version for '{0}' satisfies '@{1}' and '@{2}'", Package, Version1, Version2)
-  :- attr("node", Package),
-     attr("version", Package, Version1),
-     attr("version", Package, Version2),
+{ caused_attr(Cause, "version", Package, Version) : version_declared(Package, Version) }
+ :- caused_attr(Cause, "node", Package).
+error(2, "No version for '{0}' satisfies '@{1}' and '@{2}'", Package, Version1, Version2, startcauses, Cause1, Cause2, Cause3) :-
+     caused_attr(Cause1, "node", Package),
+     caused_attr(Cause2, "version", Package, Version1),
+     caused_attr(Cause3, "version", Package, Version2),
      Version1 < Version2.  % see[1]
 
-error(2, "No versions available for package '{0}'", Package)
-  :- attr("node", Package), not attr("version", Package, _).
+error(2, "No versions available for package '{0}'", Package, startcauses, Cause)
+  :- caused_attr(Cause, "node", Package), not attr("version", Package, _).
 
 % A virtual package may or may not have a version, but never has more than one
 error(2, "No version for '{0}' satisfies '@{1}' and '@{2}'", Virtual, Version1, Version2)
@@ -94,8 +94,8 @@ error(2, "No version for '{0}' satisfies '@{1}' and '@{2}'", Virtual, Version1, 
      Version1 < Version2. % see[1]
 
 % If we select a deprecated version, mark the package as deprecated
-attr("deprecated", Package, Version) :-
-     attr("version", Package, Version),
+caused_attr(Cause, "deprecated", Package, Version) :-
+     caused_attr(Cause, "version", Package, Version),
      deprecated_version(Package, Version).
 
 possible_version_weight(Package, Weight)
@@ -133,13 +133,13 @@ possible_version_weight(Package, Weight)
 % While this choice rule appears redundant with the initial choice rule for
 % versions, virtual nodes with version constraints require this rule to be
 % able to choose versions
-{ attr("version", Package, Version) : version_satisfies(Package, Constraint, Version) }
-  :- attr("node_version_satisfies", Package, Constraint).
+{ caused_attr(Cause, "version", Package, Version) : version_satisfies(Package, Constraint, Version) }
+  :- caused_attr(Cause, "node_version_satisfies", Package, Constraint).
 
 % If there is at least a version that satisfy the constraint, impose a lower
 % bound on the choice rule to avoid false positives with the error below
-1 { attr("version", Package, Version) : version_satisfies(Package, Constraint, Version) }
-  :- attr("node_version_satisfies", Package, Constraint),
+1 { caused_attr(Cause, "version", Package, Version) : version_satisfies(Package, Constraint, Version) }
+  :- caused_attr(Cause, "node_version_satisfies", Package, Constraint),
      version_satisfies(Package, Constraint, _).
 
 % More specific error message if the version cannot satisfy some constraint
@@ -149,8 +149,8 @@ error(1, "No valid version for '{0}' satisfies '@{1}'", Package, Constraint)
      C = #count{ Version : attr("version", Package, Version), version_satisfies(Package, Constraint, Version)},
      C < 1.
 
-attr("node_version_satisfies", Package, Constraint)
-  :- attr("version", Package, Version), version_satisfies(Package, Constraint, Version).
+caused_attr(Cause, "node_version_satisfies", Package, Constraint)
+  :- caused_attr(Cause, "version", Package, Version), version_satisfies(Package, Constraint, Version).
 
 #defined version_satisfies/3.
 #defined deprecated_version/2.
@@ -174,15 +174,38 @@ condition_holds(ID) :-
   attr(Name, A1, A2, A3)     : condition_requirement(ID, Name, A1, A2, A3);
   attr(Name, A1, A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4).
 
+% Find the causes for each condition
+condition_cause(ID, Cause) :-
+  condition_holds(ID),
+  caused_attr(Cause, Name, A1),
+  condition_requirement(ID, Name, A1).
+condition_cause(ID, Cause) :-
+  condition_holds(ID),
+  caused_attr(Cause, Name, A1, A2),
+  condition_requirement(ID, Name, A1, A2).
+condition_cause(ID, Cause) :-
+  condition_holds(ID),
+  caused_attr(Cause, Name, A1, A2, A3),
+  condition_requirement(ID, Name, A1, A2, A3).
+condition_cause(ID, Cause) :-
+  condition_holds(ID),
+  caused_attr(Cause, Name, A1, A2, A3, A4),
+  condition_requirement(ID, Name, A1, A2, A3, A4).
+
+attr(Name, A1)             :- caused_attr(Cause, Name, A1).
+attr(Name, A1, A2)         :- caused_attr(Cause, Name, A1, A2).
+attr(Name, A1, A2, A3)     :- caused_attr(Cause, Name, A1, A2, A3).
+attr(Name, A1, A2, A3, A4) :- caused_attr(Cause, Name, A1, A2, A3, A4).
+
 % condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
 % is derived. This allows imposed constraints to be canceled in special cases.
 impose(ID) :- condition_holds(ID), not do_not_impose(ID).
 
 % conditions that hold impose constraints on other specs
-attr(Name, A1)             :- impose(ID), imposed_constraint(ID, Name, A1).
-attr(Name, A1, A2)         :- impose(ID), imposed_constraint(ID, Name, A1, A2).
-attr(Name, A1, A2, A3)     :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
-attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3, A4).
+caused_attr(ID, Name, A1)             :- impose(ID), imposed_constraint(ID, Name, A1).
+caused_attr(ID, Name, A1, A2)         :- impose(ID), imposed_constraint(ID, Name, A1, A2).
+caused_attr(ID, Name, A1, A2, A3)     :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+caused_attr(ID, Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3, A4).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", Package), attr("hash", Package, Hash),
@@ -222,7 +245,7 @@ depends_on(Package, Dependency) :- attr("depends_on", Package, Dependency, _).
 % concrete. We chop off dependencies for externals, and dependencies of
 % concrete specs don't need to be resolved -- they arise from the concrete
 % specs themselves.
-dependency_holds(Package, Dependency, Type) :-
+dependency_holds(Package, Dependency, Type, ID) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
   build(Package),
@@ -232,21 +255,21 @@ dependency_holds(Package, Dependency, Type) :-
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
 do_not_impose(ID) :-
-  not dependency_holds(Package, Dependency, _),
+  not dependency_holds(Package, Dependency, _, ID),
   dependency_condition(ID, Package, Dependency).
 
 % declared dependencies are real if they're not virtual AND
 % the package is not an external.
 % They're only triggered if the associated dependnecy condition holds.
-attr("depends_on", Package, Dependency, Type)
- :- dependency_holds(Package, Dependency, Type),
+caused_attr(ID, "depends_on", Package, Dependency, Type)
+ :- dependency_holds(Package, Dependency, Type, ID),
     not virtual(Dependency).
 
 % every root must be a node
-attr("node", Package) :- attr("root", Package).
+caused_attr(Cause, "node", Package) :- caused_attr(Cause, "root", Package).
 
 % dependencies imply new nodes
-attr("node", Dependency) :- attr("node", Package), depends_on(Package, Dependency).
+caused_attr(Cause, "node", Dependency) :- caused_attr(Cause, "node", Package), depends_on(Package, Dependency).
 
 % all nodes in the graph must be reachable from some root
 % this ensures a user can't say `zlib ^libiconv` (neither of which have any
@@ -287,14 +310,14 @@ error(0, Msg) :- attr("node", Package),
 
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
-attr("depends_on", Package, Provider, Type)
-  :- dependency_holds(Package, Virtual, Type),
+caused_attr(Cause, "depends_on", Package, Provider, Type)
+  :- dependency_holds(Package, Virtual, Type, Cause),
      provider(Provider, Virtual),
      not external(Package).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
-attr("virtual_node", Virtual)
-  :- dependency_holds(Package, Virtual, Type),
+caused_attr(Cause, "virtual_node", Virtual)
+  :- dependency_holds(Package, Virtual, Type, Cause),
      virtual(Virtual), not external(Package).
 
 % If there's a virtual node, we must select one and only one provider.
@@ -312,11 +335,11 @@ error(2, "Spec cannot include multiple providers for virtual '{0}'\n    Requeste
      P1 < P2.
 
 % virtual roots imply virtual nodes, and that one provider is a root
-attr("virtual_node", Virtual) :- attr("virtual_root", Virtual).
+caused_attr(Cause, "virtual_node", Virtual) :- caused_attr(Cause, "virtual_root", Virtual).
 
 % If we asked for a virtual root and we have a provider for that,
 % then the provider is the root package.
-attr("root", Package) :- attr("virtual_root", Virtual), provider(Package, Virtual).
+caused_attr(Cause, "root", Package) :- caused_attr(Cause, "virtual_root", Virtual), provider(Package, Virtual).
 
 % If we asked for a root package and that root provides a virtual,
 % the root is a provider for that virtual. This rule is mostly relevant
@@ -395,31 +418,31 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 %-----------------------------------------------------------------------------
 
 % if a package is external its version must be one of the external versions
-{ external_version(Package, Version, Weight):
+{ external_version(Package, Version, Weight, Cause):
     version_declared(Package, Version, Weight, "external") }
-    :- external(Package).
+    :- external(Package, Cause).
 error(2, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
   :- external(Package),
-     not external_version(Package, _, _).
+     not external_version(Package, _, _, _).
 error(2, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
   :- external(Package),
-     external_version(Package, Version1, Weight1),
-     external_version(Package, Version2, Weight2),
+     external_version(Package, Version1, Weight1, _),
+     external_version(Package, Version2, Weight2, _),
      (Version1, Weight1) < (Version2, Weight2). % see[1]
 
-version_weight(Package, Weight) :- external_version(Package, Version, Weight).
-attr("version", Package, Version) :- external_version(Package, Version, Weight).
+version_weight(Package, Weight) :- external_version(Package, Version, Weight, _).
+caused_attr("version", Package, Version) :- external_version(Package, Version, Weight, Cause).
 
 % if a package is not buildable, only externals or hashed specs are allowed
-external(Package) :- buildable_false(Package),
-                     attr("node", Package),
-                     not attr("hash", Package, _).
+external(Package, Cause) :- buildable_false(Package),
+                            caused_attr(Cause, "node", Package),
+                            not attr("hash", Package, _).
 
 % a package is a real_node if it is not external
-real_node(Package) :- attr("node", Package), not external(Package).
+real_node(Package) :- attr("node", Package), not external(Package, _).
 
 % a package is external if we are using an external spec for it
-external(Package) :- attr("external_spec_selected", Package, _).
+external(Package, Cause) :- attr(Cause, "external_spec_selected", Package, _).
 
 % we can't use the weight for an external version if we don't use the
 % corresponding external spec.
@@ -430,9 +453,9 @@ external(Package) :- attr("external_spec_selected", Package, _).
    internal_error("External weight used for internal spec").
 
 % determine if an external spec has been selected
-attr("external_spec_selected", Package, LocalIndex) :-
+caused_attr(Cause, "external_spec_selected", Package, LocalIndex) :-
     external_conditions_hold(Package, LocalIndex),
-    attr("node", Package),
+    caused_attr(Cause, "node", Package),
     not attr("hash", Package, _).
 
 external_conditions_hold(Package, LocalIndex) :-
@@ -506,16 +529,16 @@ error(2, "Cannot satisfy the requirements in packages.yaml for the '{0}' package
 variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
 
-attr("variant_propagate", Package, Variant, Value, Source) :-
+caused_attr(Cause, "variant_propagate", Package, Variant, Value, Source) :-
   attr("node", Package),
   depends_on(Parent, Package),
-  attr("variant_propagate", Parent, Variant, Value, Source),
+  caused_attr(Cause, "variant_propagate", Parent, Variant, Value, Source),
   not attr("variant_set", Package, Variant).
 
-attr("variant_value", Package, Variant, Value) :-
+caused_attr(Cause, "variant_value", Package, Variant, Value) :-
   attr("node", Package),
   variant(Package, Variant),
-  attr("variant_propagate", Package, Variant, Value, _),
+  caused_attr(Cause, "variant_propagate", Package, Variant, Value, _),
   variant_possible_value(Package, Variant, Value).
 
 error(2, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
@@ -537,7 +560,7 @@ error(2, "Cannot set variant '{0}' for package '{1}' because the variant conditi
      build(Package).
 
 % if a variant is sticky and not set its value is the default value
-attr("variant_value", Package, Variant, Value) :-
+caused_attr("default", "variant_value", Package, Variant, Value) :-
   variant(Package, Variant),
   not attr("variant_set", Package, Variant),
   variant_sticky(Package, Variant),
@@ -546,10 +569,10 @@ attr("variant_value", Package, Variant, Value) :-
 
 % at most one variant value for single-valued variants.
 {
-  attr("variant_value", Package, Variant, Value)
+  caused_attr(Cause, "variant_value", Package, Variant, Value)
   : variant_possible_value(Package, Variant, Value)
 }
- :- attr("node", Package),
+ :- caused_attr(Cause, "node", Package),
     variant(Package, Variant),
     build(Package).
 
@@ -570,7 +593,7 @@ error(2, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
      C < 1.
 
 % if a variant is set to anything, it is considered 'set'.
-attr("variant_set", Package, Variant) :- attr("variant_set", Package, Variant, _).
+caused_attr(Cause, "variant_set", Package, Variant) :- caused_attr(Cause, "variant_set", Package, Variant, _).
 
 % A variant cannot have a value that is not also a possible value
 % This only applies to packages we need to build -- concrete packages may
@@ -593,10 +616,10 @@ error(2, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from
 
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
-attr("variant_value", Package, Variant, Value)
+caused_attr(Cause, "variant_value", Package, Variant, Value)
  :- attr("node", Package),
     variant(Package, Variant),
-    attr("variant_set", Package, Variant, Value).
+    caused_attr(Cause, "variant_set", Package, Variant, Value).
 
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
@@ -686,17 +709,17 @@ variant_single_value(Package, "dev_path")
 %-----------------------------------------------------------------------------
 
 % if no platform is set, fall back to the default
-attr("node_platform", Package, Platform)
- :- attr("node", Package),
+caused_attr(Cause, "node_platform", Package, Platform)
+ :- caused_attr(Cause, "node", Package),
     not attr("node_platform_set", Package),
     node_platform_default(Platform).
 
 % setting platform on a node is a hard constraint
-attr("node_platform", Package, Platform)
- :- attr("node", Package), attr("node_platform_set", Package, Platform).
+caused_attr(Cause, "node_platform", Package, Platform)
+ :- attr("node", Package), caused_attr(Cause, "node_platform_set", Package, Platform).
 
 % platform is set if set to anything
-attr("node_platform_set", Package) :- attr("node_platform_set", Package, _).
+caused_attr(Cause, "node_platform_set", Package) :- caused_attr(Cause, "node_platform_set", Package, _).
 
 % each node must have a single platform
 error(2, "No valid platform found for {0}", Package)
@@ -717,7 +740,7 @@ error(2, "Cannot concretize {0} with multiple platforms\n    Requested 'platform
 os(OS) :- os(OS, _).
 
 % one os per node
-{ attr("node_os", Package, OS) : os(OS) } :- attr("node", Package).
+{ caused_attr(Cause, "node_os", Package, OS) : os(OS) } :- caused_attr(Cause, "node", Package).
 
 error(2, "Cannot find valid operating system for '{0}'", Package)
   :- attr("node", Package),
@@ -770,7 +793,9 @@ os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
    internal_error("Reused OS incompatible with build OS").
 
 % If an OS is set explicitly respect the value
-attr("node_os", Package, OS) :- attr("node_os_set", Package, OS), attr("node", Package).
+caused_attr(Cause, "node_os", Package, OS) :-
+  caused_attr(Cause, "node_os_set", Package, OS),
+  attr("node", Package).
 
 #defined os_compatible/2.
 
@@ -779,7 +804,7 @@ attr("node_os", Package, OS) :- attr("node_os_set", Package, OS), attr("node", P
 %-----------------------------------------------------------------------------
 
 % Each node has only one target chosen among the known targets
-{ attr("node_target", Package, Target) : target(Target) } :- attr("node", Package).
+{ caused_attr(Cause, "node_target", Package, Target) : target(Target) } :- caused_attr(Cause, "node", Package).
 
 error(2, "Cannot find valid target for '{0}'", Package)
   :- attr("node", Package),
@@ -800,8 +825,8 @@ error(1, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Tar
 
 % If a node has a target and the target satisfies a constraint, then the target
 % associated with the node satisfies the same constraint
-attr("node_target_satisfies", Package, Constraint)
-  :- attr("node_target", Package, Target), target_satisfies(Constraint, Target).
+caused_attr(Cause, "node_target_satisfies", Package, Constraint)
+  :- caused_attr(Cause, "node_target", Package, Target), target_satisfies(Constraint, Target).
 
 % If a node has a target, all of its dependencies must be compatible with that target
 error(2, "Cannot find compatible targets for {0} and {1}", Package, Dependency)
@@ -838,8 +863,8 @@ error(2, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Targe
      build(Package).
 
 % if a target is set explicitly, respect it
-attr("node_target", Package, Target)
- :- attr("node", Package), attr("node_target_set", Package, Target).
+caused_attr(Cause, "node_target", Package, Target)
+ :- attr("node", Package), caused_attr(Cause, "node_target_set", Package, Target).
 
 % each node has the weight of its assigned target
 node_target_weight(Package, Weight)
@@ -872,8 +897,8 @@ compiler(Compiler) :- compiler_version(Compiler, _).
 
 % There must be only one compiler set per built node. The compiler
 % is chosen among available versions.
-{ attr("node_compiler_version", Package, Compiler, Version) : compiler_version(Compiler, Version) } :-
-    attr("node", Package),
+{ caused_attr(Cause, "node_compiler_version", Package, Compiler, Version) : compiler_version(Compiler, Version) } :-
+    caused_attr(Cause, "node", Package),
     build(Package).
 
 error(2, "No valid compiler version found for '{0}'", Package)
@@ -887,7 +912,7 @@ error(2, "'{0}' compiler constraints '%{1}@{2}' and '%{3}@{4}' are incompatible"
      (Compiler1, Version1) < (Compiler2, Version2). % see[1]
 
 % Sometimes we just need to know the compiler and not the version
-attr("node_compiler", Package, Compiler) :- attr("node_compiler_version", Package, Compiler, _).
+caused_attr(Cause, "node_compiler", Package, Compiler) :- caused_attr(Cause, "node_compiler_version", Package, Compiler, _).
 
 % We can't have a compiler be enforced and select the version from another compiler
 error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
@@ -917,16 +942,16 @@ error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, 
 
 % If the node is associated with a compiler and the compiler satisfy a constraint, then
 % the compiler associated with the node satisfy the same constraint
-attr("node_compiler_version_satisfies", Package, Compiler, Constraint)
-  :- attr("node_compiler_version", Package, Compiler, Version),
+caused_attr(Cause, "node_compiler_version_satisfies", Package, Compiler, Constraint)
+  :- caused_attr(Cause, "node_compiler_version", Package, Compiler, Version),
      compiler_version_satisfies(Compiler, Constraint, Version).
 
 #defined compiler_version_satisfies/3.
 
 % If the compiler version was set from the command line,
 % respect it verbatim
-attr("node_compiler_version", Package, Compiler, Version) :-
-     attr("node_compiler_version_set", Package, Compiler, Version).
+caused_attr(Cause, "node_compiler_version", Package, Compiler, Version) :-
+     caused_attr(Cause, "node_compiler_version_set", Package, Compiler, Version).
 
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
@@ -990,11 +1015,11 @@ can_inherit_flags(Package, Dependency, FlagType)
     not attr("node_flag_set", Dependency, FlagType, _),
     compiler(Compiler), flag_type(FlagType).
 
-node_flag_inherited(Dependency, FlagType, Flag)
+node_flag_inherited(Dependency, FlagType, Flag, Cause)
  :- attr("node_flag_set", Package, FlagType, Flag), can_inherit_flags(Package, Dependency, FlagType),
-    attr("node_flag_propagate", Package, FlagType).
+    caused_attr(Cause, "node_flag_propagate", Package, FlagType).
 % Ensure propagation
-:- node_flag_inherited(Package, FlagType, Flag),
+:- node_flag_inherited(Package, FlagType, Flag, _),
     can_inherit_flags(Package, Dependency, FlagType),
     attr("node_flag_propagate", Package, FlagType).
 
@@ -1008,35 +1033,35 @@ error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source
   Source1 != Source2.
 
 % remember where flags came from
-attr("node_flag_source", Package, FlagType, Package) :- attr("node_flag_set", Package, FlagType, _).
-attr("node_flag_source", Dependency, FlagType, Q)
- :- attr("node_flag_source", Package, FlagType, Q), node_flag_inherited(Dependency, FlagType, _),
-    attr("node_flag_propagate", Package, FlagType).
+caused_attr(Cause, "node_flag_source", Package, FlagType, Package) :- caused_attr(Cause, "node_flag_set", Package, FlagType, _).
+caused_attr(Cause, "node_flag_source", Dependency, FlagType, Q)
+ :- attr("node_flag_source", Package, FlagType, Q), node_flag_inherited(Dependency, FlagType, _, _),
+    caused_attr(Cause, "node_flag_propagate", Package, FlagType).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
-attr("node_flag", Package, FlagType, Flag)
+caused_attr(Cause, "node_flag", Package, FlagType, Flag)
  :- compiler_version_flag(Compiler, Version, FlagType, Flag),
-    attr("node_compiler_version", Package, Compiler, Version),
+    caused_attr(Cause, "node_compiler_version", Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
     compiler_version(Compiler, Version).
 
-attr("node_flag_compiler_default", Package)
+caused_attr(Cause, "node_flag_compiler_default", Package)
  :- not attr("node_flag_set", Package, FlagType, _),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
-    attr("node_compiler_version", Package, Compiler, Version),
+    caused_attr(Cause, "node_compiler_version", Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
     compiler_version(Compiler, Version).
 
 % if a flag is set to something or inherited, it's included
-attr("node_flag", Package, FlagType, Flag) :- attr("node_flag_set", Package, FlagType, Flag).
-attr("node_flag", Package, FlagType, Flag)
- :- node_flag_inherited(Package, FlagType, Flag).
+caused_attr(Cause, "node_flag", Package, FlagType, Flag) :- caused_attr(Cause, "node_flag_set", Package, FlagType, Flag).
+caused_attr(Cause, "node_flag", Package, FlagType, Flag)
+ :- node_flag_inherited(Package, FlagType, Flag, Cause).
 
 % if no node flags are set for a type, there are no flags.
-attr("no_flags", Package, FlagType)
- :- not attr("node_flag", Package, FlagType, _), attr("node", Package), flag_type(FlagType).
+caused_attr(Cause, "no_flags", Package, FlagType)
+ :- not attr("node_flag", Package, FlagType, _), caused_attr(Cause, "node", Package), flag_type(FlagType).
 
 #defined compiler_version_flag/4.
 
