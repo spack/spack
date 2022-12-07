@@ -67,9 +67,10 @@ import spack.version
 #: Valid name for specs and variants. Here we are not using
 #: the previous "w[\w.-]*" since that would match most
 #: characters that can be part of a word in any language
-IDENTIFIER = r"[a-zA-Z_0-9][a-zA-Z_0-9\-]*"
-DOTTED_IDENTIFIER = rf"{IDENTIFIER}(\.{IDENTIFIER})+"
-GIT_VERSION = rf"(((git.)?({DOTTED_IDENTIFIER}))|({IDENTIFIER}))"
+IDENTIFIER = r"([a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
+DOTTED_IDENTIFIER = rf"({IDENTIFIER}(\.{IDENTIFIER})+)"
+GIT_HASH = r"([A-Fa-f0-9]{40})"
+GIT_VERSION = rf"((git\.({DOTTED_IDENTIFIER}|{IDENTIFIER}))|({GIT_HASH}))"
 
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
@@ -113,7 +114,7 @@ class TokenType(TokenBase):
     # Dependency
     DEPENDENCY = r"(\^)"
     # Version
-    VERSION_HASH_PAIR = rf"(@({GIT_VERSION}={VERSION}))"
+    VERSION_HASH_PAIR = rf"(@({GIT_VERSION})=({VERSION}))"
     VERSION = rf"(@\s*({VERSION_LIST}))"
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"((\+\+|~~|--)\s*{NAME})"
