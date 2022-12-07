@@ -21,7 +21,7 @@ class PyPywavelets(PythonPackage):
     depends_on("python@3.8:", when="@1.4.1:", type=("build", "run"))
     depends_on("python@3.5:", when="@1.1.1:", type=("build", "run"))
     depends_on("py-setuptools@:64", type="build")
-    depends_on("py-cython@0.29.24:0.29", when="@1.2:", type="build")
+    depends_on("py-cython@0.29.24:2", when="@1.2:", type="build")
     depends_on("py-cython", type="build")
 
     depends_on("py-numpy@1.17.3:", when="@1.2:", type=("build", "run"))
