@@ -12,7 +12,7 @@ class PyPystache(PythonPackage):
     et."""
 
     homepage = "https://github.com/sarnold/pystache"
-    git = "git@github.com:sarnold/pystache.git"
+    git = "https://github.com/sarnold/pystache"
     pypi = "pystache/pystache-0.6.0.tar.gz"
 
     maintainers = ["adamjstewart"]
