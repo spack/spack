@@ -19,7 +19,7 @@ class Libcatalyst(CMakePackage):
     version("2.0.0-rc3", sha256="8862bd0a4d0be2176b4272f9affda1ea4e5092087acbb99a2fe2621c33834e05")
 
     # master as of 2021-05-12
-    version("2021-05-12", commit="8456ccd6015142b5a7705f79471361d4f5644fa7")
+    version("0.20210512", commit="8456ccd6015142b5a7705f79471361d4f5644fa7")
 
     variant("mpi", default=False, description="Enable MPI support")
 
