@@ -320,7 +320,7 @@ class Database(object):
     ):
         """Create a Database for Spack installations under ``root``.
 
-        A Database is a cache of Specs data from ``$prefix/spec.yaml``
+        A Database is a cache of Specs data from ``$prefix/spec.json``
         files in Spack installation directories.
 
         By default, Database files (data and lock files) are stored
@@ -329,7 +329,7 @@ class Database(object):
 
         The Database will attempt to read an ``index.json`` file in
         ``db_dir``.  If that does not exist, it will create a database
-        when needed by scanning the entire Database root for ``spec.yaml``
+        when needed by scanning the entire Database root for ``spec.json``
         files according to Spack's ``DirectoryLayout``.
 
         Caller may optionally provide a custom ``db_dir`` parameter
@@ -675,7 +675,7 @@ class Database(object):
             raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
     def _read_spec_from_dict(self, hash_key, installs, hash=ht.dag_hash):
-        """Recursively construct a spec from a hash in a YAML database.
+        """Recursively construct a spec from a hash in a json database.
 
         Does not do any locking.
         """
@@ -910,7 +910,7 @@ class Database(object):
         # default it to True if DB was corrupt. This is
         # just to be conservative in case a command like
         # "autoremove" is run by the user after a reindex.
-        tty.debug("RECONSTRUCTING FROM SPEC.YAML: {0}".format(spec))
+        tty.debug("RECONSTRUCTING FROM SPEC.JSON: {0}".format(spec))
         explicit = True
         inst_time = os.stat(spec.prefix).st_ctime
         if old_data is not None:
@@ -950,10 +950,10 @@ class Database(object):
 
             for key, entry in old_data.items():
                 # We already took care of this spec using
-                # `spec.yaml` from its prefix.
+                # `spec.json` from its prefix.
                 if entry.spec in processed_specs:
                     msg = "SKIPPING RECONSTRUCTION FROM OLD DB: {0}"
-                    msg += " [already reconstructed from spec.yaml]"
+                    msg += " [already reconstructed from spec.json]"
                     tty.debug(msg.format(entry.spec))
                     continue
 

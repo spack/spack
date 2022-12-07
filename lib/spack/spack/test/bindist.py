@@ -33,8 +33,6 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-legacy_mirror_dir = os.path.join(test_path, "data", "mirrors", "legacy_yaml")
-
 
 @pytest.fixture(scope="function")
 def cache_directory(tmpdir):

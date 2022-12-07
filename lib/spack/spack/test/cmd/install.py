@@ -381,10 +381,10 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     if concretize:
         spec.concretize()
 
-    specfile = tmpdir.join("spec.yaml")
+    specfile = tmpdir.join("spec.json")
 
     with specfile.open("w") as f:
-        spec.to_yaml(f)
+        spec.to_json(f)
 
     err_msg = "does not contain a concrete spec" if error_code else ""
 
@@ -511,12 +511,12 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
     args = clispecs
 
     for spec in filespecs:
-        filepath = tmpdir.join(spec + ".yaml")
+        filepath = tmpdir.join(spec + ".json")
         args = ["-f", str(filepath)] + args
         s = Spec(spec)
         s.concretize()
         with filepath.open("w") as f:
-            s.to_yaml(f)
+            s.to_json(f)
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0

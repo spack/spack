@@ -523,50 +523,50 @@ class TestSpecSyntax(object):
         self._check_raises(DuplicateArchitectureError, duplicates)
 
     @pytest.mark.usefixtures("config")
-    def test_parse_yaml_simple(self, mock_packages, tmpdir):
+    def test_parse_json_simple(self, mock_packages, tmpdir):
         s = Spec("libdwarf")
         s.concretize()
 
-        specfile = tmpdir.join("libdwarf.yaml")
+        specfile = tmpdir.join("libdwarf.json")
 
         with specfile.open("w") as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_json(hash=ht.dag_hash))
 
-        # Check an absolute path to spec.yaml by itself:
-        #     "spack spec /path/to/libdwarf.yaml"
+        # Check an absolute path to spec.json by itself:
+        #     "spack spec /path/to/libdwarf.json"
         specs = sp.parse(specfile.strpath)
         assert len(specs) == 1
 
-        # Check absolute path to spec.yaml mixed with a clispec, e.g.:
-        #     "spack spec mvapich_foo /path/to/libdwarf.yaml"
+        # Check absolute path to spec.json mixed with a clispec, e.g.:
+        #     "spack spec mvapich_foo /path/to/libdwarf.json"
         specs = sp.parse("mvapich_foo {0}".format(specfile.strpath))
         assert len(specs) == 2
 
     @pytest.mark.usefixtures("config")
     def test_parse_filename_missing_slash_as_spec(self, mock_packages, tmpdir):
-        """Ensure that libelf.yaml parses as a spec, NOT a file."""
+        """Ensure that libelf.json parses as a spec, NOT a file."""
         # TODO: This test is brittle, as it should cover also the JSON case now.
         s = Spec("libelf")
         s.concretize()
 
-        specfile = tmpdir.join("libelf.yaml")
+        specfile = tmpdir.join("libelf.json")
 
         # write the file to the current directory to make sure it exists,
         # and that we still do not parse the spec as a file.
         with specfile.open("w") as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_json(hash=ht.dag_hash))
 
-        # Check the spec `libelf.yaml` in the working directory, which
-        # should evaluate to a spec called `yaml` in the `libelf`
+        # Check the spec `libelf.json` in the working directory, which
+        # should evaluate to a spec called `json` in the `libelf`
         # namespace, NOT a spec for `libelf`.
         with tmpdir.as_cwd():
-            specs = sp.parse("libelf.yaml")
+            specs = sp.parse("libelf.json")
         assert len(specs) == 1
 
         spec = specs[0]
-        assert spec.name == "yaml"
+        assert spec.name == "json"
         assert spec.namespace == "libelf"
-        assert spec.fullname == "libelf.yaml"
+        assert spec.fullname == "libelf.json"
 
         # check that if we concretize this spec, we get a good error
         # message that mentions we might've meant a file.
@@ -574,11 +574,11 @@ class TestSpecSyntax(object):
             spec.concretize()
         assert exc_info.value.long_message
         assert (
-            "Did you mean to specify a filename with './libelf.yaml'?"
+            "Did you mean to specify a filename with './libelf.json'?"
             in exc_info.value.long_message
         )
 
-        # make sure that only happens when the spec ends in yaml
+        # make sure that only happens when the spec ends in json
         with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
             Spec("builtin.mock.doesnotexist").concretize()
         assert not exc_info.value.long_message or (
@@ -586,63 +586,63 @@ class TestSpecSyntax(object):
         )
 
     @pytest.mark.usefixtures("config")
-    def test_parse_yaml_dependency(self, mock_packages, tmpdir):
+    def test_parse_json_dependency(self, mock_packages, tmpdir):
         s = Spec("libdwarf")
         s.concretize()
 
-        specfile = tmpdir.join("libelf.yaml")
+        specfile = tmpdir.join("libelf.json")
 
         with specfile.open("w") as f:
-            f.write(s["libelf"].to_yaml(hash=ht.dag_hash))
+            f.write(s["libelf"].to_json(hash=ht.dag_hash))
 
-        # Make sure we can use yaml path as dependency, e.g.:
-        #     "spack spec libdwarf ^ /path/to/libelf.yaml"
+        # Make sure we can use json path as dependency, e.g.:
+        #     "spack spec libdwarf ^ /path/to/libelf.json"
         specs = sp.parse("libdwarf ^ {0}".format(specfile.strpath))
         assert len(specs) == 1
 
     @pytest.mark.usefixtures("config")
-    def test_parse_yaml_relative_paths(self, mock_packages, tmpdir):
+    def test_parse_json_relative_paths(self, mock_packages, tmpdir):
         s = Spec("libdwarf")
         s.concretize()
 
-        specfile = tmpdir.join("libdwarf.yaml")
+        specfile = tmpdir.join("libdwarf.json")
 
         with specfile.open("w") as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_json(hash=ht.dag_hash))
 
         file_name = specfile.basename
         parent_dir = os.path.basename(specfile.dirname)
 
         # Relative path to specfile
         with fs.working_dir(specfile.dirname):
-            # Test for command like: "spack spec libelf.yaml"
+            # Test for command like: "spack spec libelf.json"
             # This should parse a single spec, but should not concretize.
             # See test_parse_filename_missing_slash_as_spec()
             specs = sp.parse("{0}".format(file_name))
             assert len(specs) == 1
 
-            # Make sure this also works: "spack spec ./libelf.yaml"
+            # Make sure this also works: "spack spec ./libelf.json"
             specs = sp.parse("./{0}".format(file_name))
             assert len(specs) == 1
 
-            # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
+            # Should also be accepted: "spack spec ../<cur-dir>/libelf.json"
             specs = sp.parse("../{0}/{1}".format(parent_dir, file_name))
             assert len(specs) == 1
 
             # Should also handle mixed clispecs and relative paths, e.g.:
-            #     "spack spec mvapich_foo ../<cur-dir>/libelf.yaml"
+            #     "spack spec mvapich_foo ../<cur-dir>/libelf.json"
             specs = sp.parse("mvapich_foo ../{0}/{1}".format(parent_dir, file_name))
             assert len(specs) == 2
 
     @pytest.mark.usefixtures("config")
-    def test_parse_yaml_relative_subdir_path(self, mock_packages, tmpdir):
+    def test_parse_json_relative_subdir_path(self, mock_packages, tmpdir):
         s = Spec("libdwarf")
         s.concretize()
 
-        specfile = tmpdir.mkdir("subdir").join("libdwarf.yaml")
+        specfile = tmpdir.mkdir("subdir").join("libdwarf.json")
 
         with specfile.open("w") as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_json(hash=ht.dag_hash))
 
         file_name = specfile.basename
 
@@ -650,53 +650,53 @@ class TestSpecSyntax(object):
         with tmpdir.as_cwd():
             assert os.path.exists("subdir/{0}".format(file_name))
 
-            # Test for command like: "spack spec libelf.yaml"
+            # Test for command like: "spack spec libelf.json"
             specs = sp.parse("subdir/{0}".format(file_name))
             assert len(specs) == 1
 
     @pytest.mark.usefixtures("config")
-    def test_parse_yaml_dependency_relative_paths(self, mock_packages, tmpdir):
+    def test_parse_json_dependency_relative_paths(self, mock_packages, tmpdir):
         s = Spec("libdwarf")
         s.concretize()
 
-        specfile = tmpdir.join("libelf.yaml")
+        specfile = tmpdir.join("libelf.json")
 
         with specfile.open("w") as f:
-            f.write(s["libelf"].to_yaml(hash=ht.dag_hash))
+            f.write(s["libelf"].to_json(hash=ht.dag_hash))
 
         file_name = specfile.basename
         parent_dir = os.path.basename(specfile.dirname)
 
         # Relative path to specfile
         with fs.working_dir(specfile.dirname):
-            # Test for command like: "spack spec libelf.yaml"
+            # Test for command like: "spack spec libelf.json"
             specs = sp.parse("libdwarf^{0}".format(file_name))
             assert len(specs) == 1
 
-            # Make sure this also works: "spack spec ./libelf.yaml"
+            # Make sure this also works: "spack spec ./libelf.json"
             specs = sp.parse("libdwarf^./{0}".format(file_name))
             assert len(specs) == 1
 
-            # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
+            # Should also be accepted: "spack spec ../<cur-dir>/libelf.json"
             specs = sp.parse("libdwarf^../{0}/{1}".format(parent_dir, file_name))
             assert len(specs) == 1
 
-    def test_parse_yaml_error_handling(self):
+    def test_parse_json_error_handling(self):
         self._check_raises(
             NoSuchSpecFileError,
             [
-                # Single spec that looks like a yaml path
-                "/bogus/path/libdwarf.yaml",
-                "../../libdwarf.yaml",
-                "./libdwarf.yaml",
-                # Dependency spec that looks like a yaml path
-                "libdwarf^/bogus/path/libelf.yaml",
-                "libdwarf ^../../libelf.yaml",
-                "libdwarf^ ./libelf.yaml",
-                # Multiple specs, one looks like a yaml path
-                "mvapich_foo /bogus/path/libelf.yaml",
-                "mvapich_foo ../../libelf.yaml",
-                "mvapich_foo ./libelf.yaml",
+                # Single spec that looks like a json path
+                "/bogus/path/libdwarf.json",
+                "../../libdwarf.json",
+                "./libdwarf.json",
+                # Dependency spec that looks like a json path
+                "libdwarf^/bogus/path/libelf.json",
+                "libdwarf ^../../libelf.json",
+                "libdwarf^ ./libelf.json",
+                # Multiple specs, one looks like a json path
+                "mvapich_foo /bogus/path/libelf.json",
+                "mvapich_foo ../../libelf.json",
+                "mvapich_foo ./libelf.json",
             ],
         )
 
@@ -705,28 +705,28 @@ class TestSpecSyntax(object):
         self._check_raises(
             SpecFilenameError,
             [
-                "/bogus/path/libdwarf.yamlfoobar",
-                "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
+                "/bogus/path/libdwarf.jsonfoobar",
+                "libdwarf^/bogus/path/libelf.jsonfoobar ^/path/to/bogus.json",
             ],
         )
 
     @pytest.mark.usefixtures("config")
-    def test_yaml_spec_not_filename(self, mock_packages, tmpdir):
+    def test_json_spec_not_filename(self, mock_packages, tmpdir):
         with pytest.raises(spack.repo.UnknownPackageError):
-            Spec("builtin.mock.yaml").concretize()
+            Spec("builtin.mock.json").concretize()
 
         with pytest.raises(spack.repo.UnknownPackageError):
-            Spec("builtin.mock.yamlfoobar").concretize()
+            Spec("builtin.mock.jsonfoobar").concretize()
 
     @pytest.mark.usefixtures("config")
-    def test_parse_yaml_variant_error(self, mock_packages, tmpdir):
+    def test_parse_json_variant_error(self, mock_packages, tmpdir):
         s = Spec("a")
         s.concretize()
 
-        specfile = tmpdir.join("a.yaml")
+        specfile = tmpdir.join("a.json")
 
         with specfile.open("w") as f:
-            f.write(s.to_yaml(hash=ht.dag_hash))
+            f.write(s.to_json(hash=ht.dag_hash))
 
         with pytest.raises(RedundantSpecError):
             # Trying to change a variant on a concrete spec is an error

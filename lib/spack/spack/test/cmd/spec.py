@@ -69,8 +69,8 @@ def test_spec_parse_dependency_variant_value():
 
 def test_spec_parse_cflags_quoting():
     """Verify that compiler flags can be provided to a spec from the command line."""
-    output = spec("--yaml", 'gcc cflags="-Os -pipe" cxxflags="-flto -Os"')
-    gh_flagged = spack.spec.Spec.from_yaml(output)
+    output = spec("--json", 'gcc cflags="-Os -pipe" cxxflags="-flto -Os"')
+    gh_flagged = spack.spec.Spec.from_json(output)
 
     assert ["-Os", "-pipe"] == gh_flagged.compiler_flags["cflags"]
     assert ["-flto", "-Os"] == gh_flagged.compiler_flags["cxxflags"]
@@ -109,18 +109,6 @@ def test_spec_parse_unquoted_flags_report():
         'variant [happened during concretization of gcc cflags="-Os" ~pipe]'
     )
     assert cm.endswith('(1) cflags=-Os -pipe => cflags="-Os -pipe"')
-
-
-def test_spec_yaml():
-    output = spec("--yaml", "mpileaks")
-
-    mpileaks = spack.spec.Spec.from_yaml(output)
-    assert "mpileaks" in mpileaks
-    assert "callpath" in mpileaks
-    assert "dyninst" in mpileaks
-    assert "libdwarf" in mpileaks
-    assert "libelf" in mpileaks
-    assert "mpich" in mpileaks
 
 
 def test_spec_json():

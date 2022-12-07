@@ -88,8 +88,6 @@ import re
 import sys
 import warnings
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -2081,20 +2079,15 @@ class Spec(object):
 
         return node
 
-    def to_yaml(self, stream=None, hash=ht.dag_hash):
-        return syaml.dump(self.to_dict(hash), stream=stream, default_flow_style=False)
-
     def to_json(self, stream=None, hash=ht.dag_hash):
         return sjson.dump(self.to_dict(hash), stream)
 
     @staticmethod
     def from_specfile(path):
-        """Construct a spec from aJSON or YAML spec file path"""
+        """Construct a spec from a JSON spec file path"""
         with open(path, "r") as fd:
             file_content = fd.read()
-            if path.endswith(".json"):
-                return Spec.from_json(file_content)
-            return Spec.from_yaml(file_content)
+            return Spec.from_json(file_content)
 
     @staticmethod
     def from_node_dict(node):
@@ -2165,8 +2158,7 @@ class Spec(object):
                 mvar._patches_in_order_of_appearance = patches
 
         # Don't read dependencies here; from_dict() is used by
-        # from_yaml() and from_json() to read the root *and* each dependency
-        # spec.
+        # from_json() to read the root *and* each dependency spec.
 
         return spec
 
@@ -2454,19 +2446,6 @@ class Spec(object):
                 node_spec._build_spec = hash_dict[bhash]["node_spec"]
 
         return hash_dict[root_spec_hash]["node_spec"]
-
-    @staticmethod
-    def from_yaml(stream):
-        """Construct a spec from YAML.
-
-        Args:
-            stream: string or file object to read from.
-        """
-        try:
-            data = yaml.load(stream)
-            return Spec.from_dict(data)
-        except yaml.error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e)) from e
 
     @staticmethod
     def from_json(stream):
@@ -5168,13 +5147,13 @@ class SpecParser(spack.parse.Parser):
 
         The parse logic is as follows:
 
-        1. We require that filenames end in .yaml, which means that no valid
+        1. We require that filenames end in .json, which means that no valid
            filename can be interpreted as a hash (hashes can't have '.')
 
         2. We avoid treating paths like /path/to/spec.json as hashes, or paths
            like subdir/spec.json as ids by lexing filenames before hashes.
 
-        3. For spec names that match file and id regexes, like 'builtin.yaml',
+        3. For spec names that match file and id regexes, like 'builtin.json',
            we backtrack from spec_from_file() and treat them as spec names.
 
         """
@@ -5182,21 +5161,19 @@ class SpecParser(spack.parse.Parser):
 
         # Special case where someone omits a space after a filename. Consider:
         #
-        #     libdwarf^/some/path/to/libelf.yamllibdwarf ^../../libelf.yaml
+        #     libdwarf^/some/path/to/libelf.jsonlibdwarf ^../../libelf.json
         #
         # The error is clearly an omitted space. To handle this, the FILE
-        # regex admits text *beyond* .yaml, and we raise a nice error for
-        # file names that don't end in .yaml.
-        if not (path.endswith(".yaml") or path.endswith(".json")):
-            raise SpecFilenameError("Spec filename must end in .yaml or .json: '{0}'".format(path))
+        # regex admits text *beyond* .json, and we raise a nice error for
+        # file names that don't end in .json.
+        if not path.endswith(".json"):
+            raise SpecFilenameError("Spec filename must end in .json: '{0}'".format(path))
 
         if not os.path.exists(path):
             raise NoSuchSpecFileError("No such spec file: '{0}'".format(path))
 
         with open(path) as f:
-            if path.endswith(".json"):
-                return Spec.from_json(f)
-            return Spec.from_yaml(f)
+            return Spec.from_json(f)
 
     def parse_compiler(self, text):
         self.setup(text)
@@ -5389,23 +5366,13 @@ def parse(string):
     return SpecParser().parse(string)
 
 
-def save_dependency_specfiles(
-    root_spec_info, output_directory, dependencies=None, spec_format="json"
-):
-    """Given a root spec (represented as a yaml object), index it with a subset
-    of its dependencies, and write each dependency to a separate yaml file
+def save_dependency_specfiles(root_spec_info, output_directory, dependencies=None):
+    """Given a root spec (represented as a json object), index it with a subset
+    of its dependencies, and write each dependency to a separate json file
     in the output directory.  By default, all dependencies will be written
     out.  To choose a smaller subset of dependencies to be written, pass a
-    list of package names in the dependencies parameter. If the format of the
-    incoming spec is not json, that can be specified with the spec_format
-    parameter. This can be used to convert from yaml specfiles to the
-    json format."""
-    if spec_format == "json":
-        root_spec = Spec.from_json(root_spec_info)
-    elif spec_format == "yaml":
-        root_spec = Spec.from_yaml(root_spec_info)
-    else:
-        raise SpecParseError("Unrecognized spec format {0}.".format(spec_format))
+    list of package names in the dependencies parameter."""
+    root_spec = Spec.from_json(root_spec_info)
 
     dep_list = dependencies
     if not dep_list:

@@ -24,7 +24,7 @@ from spack.util.path import path_to_os_path
 max_packages = 10
 
 
-def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
+def test_json_directory_layout_parameters(tmpdir, default_mock_concretization):
     """This tests the various parameters that can be used to configure
     the install location"""
     spec = default_mock_concretization("python")
@@ -92,7 +92,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         # If a spec fails to concretize, just skip it.  If it is a
         # real error, it will be caught by concretization tests.
         try:
-            spec = spack.spec.Spec(name).concretized()
+            spec = Spec(name).concretized()
         except Exception:
             continue
 
@@ -123,7 +123,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
 
         # Ensure that specs that come out "normal" are really normal.
         with open(spec_path) as spec_file:
-            read_separately = Spec.from_yaml(spec_file.read())
+            read_separately = Spec.from_json(spec_file.read())
 
         # TODO: revise this when build deps are in dag_hash
         norm = read_separately.copy(deps=stored_deptypes)
@@ -165,7 +165,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
     # Create all the packages that are not in mock.
     installed_specs = {}
     for pkg_name in packages:
-        spec = spack.spec.Spec(pkg_name)
+        spec = Spec(pkg_name)
 
         # If a spec fails to concretize, just skip it.  If it is a
         # real error, it will be caught by concretization tests.
@@ -202,7 +202,7 @@ def test_find(temporary_store, config, mock_packages):
         if name.startswith("external"):
             # External package tests cannot be installed
             continue
-        spec = spack.spec.Spec(name).concretized()
+        spec = Spec(name).concretized()
         installed_specs[spec.name] = spec
         layout.create_install_directory(spec)
 
@@ -214,7 +214,7 @@ def test_find(temporary_store, config, mock_packages):
         assert found_specs[name].eq_dag(spec)
 
 
-def test_yaml_directory_layout_build_path(tmpdir, default_mock_concretization):
+def test_json_directory_layout_build_path(tmpdir, default_mock_concretization):
     """This tests build path method."""
     spec = default_mock_concretization("python")
     layout = DirectoryLayout(str(tmpdir))

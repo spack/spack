@@ -13,7 +13,6 @@ import sys
 from contextlib import contextmanager
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack.config
 import spack.hash_types as ht
@@ -90,8 +89,6 @@ class DirectoryLayout(object):
         self.metadata_dir = ".spack"
         self.deprecated_dir = "deprecated"
         self.spec_file_name = "spec.json"
-        # Use for checking yaml and deprecated types
-        self._spec_file_name_yaml = "spec.yaml"
         self.extension_file_name = "extensions.yaml"
         self.packages_dir = "repos"  # archive of package.py files
         self.manifest_file_name = "install_manifest.json"
@@ -134,9 +131,6 @@ class DirectoryLayout(object):
                 extension = os.path.splitext(path)[-1].lower()
                 if extension == ".json":
                     spec = spack.spec.Spec.from_json(f)
-                elif extension == ".yaml":
-                    # Too late for conversion; spec_file_path() already called.
-                    spec = spack.spec.Spec.from_yaml(f)
                 else:
                     raise SpecReadError(
                         "Did not recognize spec file extension:" " {0}".format(extension)
@@ -153,20 +147,7 @@ class DirectoryLayout(object):
     def spec_file_path(self, spec):
         """Gets full path to spec file"""
         _check_concrete(spec)
-        # Attempts to convert to JSON if possible.
-        # Otherwise just returns the YAML.
-        yaml_path = os.path.join(self.metadata_path(spec), self._spec_file_name_yaml)
-        json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
-            self.write_spec(spec, json_path)
-            try:
-                os.remove(yaml_path)
-            except OSError as err:
-                tty.debug("Could not remove deprecated {0}".format(yaml_path))
-                tty.debug(err)
-        elif os.path.exists(yaml_path):
-            return yaml_path
-        return json_path
+        return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
     def deprecated_file_path(self, deprecated_spec, deprecator_spec=None):
         """Gets full path to spec file for deprecated spec
@@ -186,31 +167,12 @@ class DirectoryLayout(object):
             else os.readlink(deprecated_spec.prefix)
         )
 
-        yaml_path = os.path.join(
-            base_dir,
-            self.metadata_dir,
-            self.deprecated_dir,
-            deprecated_spec.dag_hash() + "_" + self._spec_file_name_yaml,
-        )
-
-        json_path = os.path.join(
+        return os.path.join(
             base_dir,
             self.metadata_dir,
             self.deprecated_dir,
             deprecated_spec.dag_hash() + "_" + self.spec_file_name,
         )
-
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
-            self.write_spec(deprecated_spec, json_path)
-            try:
-                os.remove(yaml_path)
-            except (IOError, OSError) as err:
-                tty.debug("Could not remove deprecated {0}".format(yaml_path))
-                tty.debug(err)
-        elif os.path.exists(yaml_path):
-            return yaml_path
-
-        return json_path
 
     @contextmanager
     def disable_upstream_check(self):
@@ -283,10 +245,6 @@ class DirectoryLayout(object):
             path_elems += [self.metadata_dir, "spec.json"]
             pattern = os.path.join(self.root, *path_elems)
             spec_files = glob.glob(pattern)
-            if not spec_files:  # we're probably looking at legacy yaml...
-                path_elems += [self.metadata_dir, "spec.yaml"]
-                pattern = os.path.join(self.root, *path_elems)
-                spec_files = glob.glob(pattern)
             specs.extend([self.read_spec(s) for s in spec_files])
         return specs
 

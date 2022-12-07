@@ -1475,7 +1475,7 @@ class UnknownPackageError(UnknownEntityError):
             # Special handling for specs that may have been intended as
             # filenames: prompt the user to ask whether they intended to write
             # './<name>'.
-            if name.endswith(".yaml"):
+            if name.endswith(".json"):
                 long_msg = "Did you mean to specify a filename with './{0}'?"
                 long_msg = long_msg.format(name)
             else:
@@ -1490,7 +1490,7 @@ class UnknownNamespaceError(UnknownEntityError):
 
     def __init__(self, namespace, name=None):
         msg, long_msg = "Unknown namespace: {}".format(namespace), None
-        if name == "yaml":
+        if name == "json":
             long_msg = "Did you mean to specify a filename with './{}.{}'?"
             long_msg = long_msg.format(namespace, name)
         super(UnknownNamespaceError, self).__init__(msg, long_msg)
