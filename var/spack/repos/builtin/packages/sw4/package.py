@@ -15,11 +15,10 @@ class Sw4(MakefilePackage):
     git = "https://github.com/geodynamics/sw4.git"
 
     maintainers = ["houjun", "andersp"]
-    # tags = ["e4s"]
 
-    version("3.0-beta2", tag="v3.0-beta2")
     version("master", branch="master")
     version("developer", branch="developer")
+    version("3.0-beta2", tag="v3.0-beta2")
 
     variant("openmp", default=True, description="build with OpenMP")
     variant("hdf5", default=True, description="build with HDF5")
