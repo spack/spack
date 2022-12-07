@@ -63,6 +63,13 @@ def setup_parser(subparser):
         help="allow install root string in binary files " + "after RPATH substitution",
     )
     create.add_argument(
+        "-s",
+        "--skip_on_error",
+        action="store_true",
+        default=False,
+        help="skip packages that contain root string " + " in binary files after RPATH substitution",
+    )
+    create.add_argument(
         "-k", "--key", metavar="key", type=str, default=None, help="Key for signing."
     )
     output = create.add_mutually_exclusive_group(required=True)
@@ -376,6 +383,7 @@ def create_fn(args):
         "relative": args.rel,
         "unsigned": args.unsigned,
         "allow_root": args.allow_root,
+        "skip_on_error": args.skip_on_error,
         "regenerate_index": args.rebuild_index,
     }
     bindist.push(matches, push_url, specs_kwargs, **kwargs)
