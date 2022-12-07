@@ -15,7 +15,7 @@ class PyPystache(PythonPackage):
     git = "https://github.com/sarnold/pystache"
     pypi = "pystache/pystache-0.6.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers = []
 
     version("0.6.0", sha256="93bf92b2149a4c4b58d12142e2c4c6dd5c08d89e4c95afccd4b6efe2ee1d470d")
 
