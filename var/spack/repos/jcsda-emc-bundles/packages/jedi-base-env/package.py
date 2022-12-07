@@ -23,7 +23,7 @@ class JediBaseEnv(BundlePackage):
     variant("python", default=True, description="Build Python libraries")
 
     depends_on("base-env", type="run")
-    depends_on("bison@3:", type="run")
+    depends_on("bison", type="run")
     depends_on("blas", type="run")
     depends_on("boost", type="run")
     depends_on("bufr", type="run")

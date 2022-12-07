@@ -42,7 +42,7 @@ class Crtm(CMakePackage):
     depends_on("netcdf-fortran", when="@2.4.0:")
     depends_on("netcdf-fortran", when="@v2.3-jedi.4")
     depends_on("netcdf-fortran", when="@v2.4-jedi")
-    depends_on("netcdf-fortran", when="@v2.4-jedi")
+    depends_on("netcdf-fortran", when="@v2.4-jedi.1")
 
     depends_on("crtm-fix@2.3.0_emc", when="@2.3.0 +fix")
     depends_on("crtm-fix@2.4.0_emc", when="@2.4.0 +fix")
