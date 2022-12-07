@@ -42,6 +42,6 @@ class Libxcrypt(AutotoolsPackage):
 
     with when("@:4.4.17"):
         depends_on("autoconf", type="build")
-        depends_on("automake", type="build")
+        depends_on("automake@1.14:", type="build")
         depends_on("libtool", type="build")
         depends_on("m4", type="build")
