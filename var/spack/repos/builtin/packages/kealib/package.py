@@ -24,12 +24,13 @@ class Kealib(CMakePackage):
     """
 
     homepage = "http://www.kealib.org/"
-    url = "https://github.com/ubarsc/kealib/releases/download/kealib-1.4.15/kealib-1.4.15.tar.gz"
+    url = "https://github.com/ubarsc/kealib/releases/download/kealib-1.5.0/kealib-1.5.0.tar.gz"
     git = "https://github.com/ubarsc/kealib"
 
     maintainers = ["gillins", "neilflood", "petebunting"]
 
     version("develop", git=git)
+    version("1.5.0", sha256="d19a0fb051019f87fe413bda76472bf4fff8fca52ede92e0ffd983caeafd05b8")
     version("1.4.15", sha256="40f2573c00f005f93c1fa88f1f13bfbd485cbc7a9b3f1c706931e69bff17dae4")
     version("1.4.12", sha256="0b100e36b3e25e57487aa197d7be47f22e1b30afb16a57fdaa5f877696ec321e")
     version("1.4.11", sha256="3d64cdec560c7a338ccb38e3a456db4e3b176ac62f945daa6e332e60fe4eca90")
