@@ -66,7 +66,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         "p2300",
         default=False,
         description="Use P2300 reference implementation for sender/receiver functionality",
-        when="@main",
+        when="@0.9:",
     )
 
     # Build dependencies
