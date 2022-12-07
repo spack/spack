@@ -258,6 +258,12 @@ def clean_test_environment():
 def _verify_executables_noop(*args):
     return None
 
+@pytest.fixture(scope="function")
+def archspec_host_is_spack_test_host(monkeypatch):
+    def _host():
+        return archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
+    monkeypatch.setattr(archspec.cpu, "host", _host)
+
 
 #
 # Disable checks on compiler executable existence

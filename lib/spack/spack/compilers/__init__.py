@@ -722,9 +722,9 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
-        # in order for tests to function, this needs to refer to current host
-        # as determined by Spack, not archspec
-        target = archspec.cpu.TARGETS[str(spack.platforms.host().target("default_target"))]
+        # TODO: johnwparent - revist the following line as per discussion at:
+        # https://github.com/spack/spack/pull/33385/files#r1040036318
+        target = archspec.cpu.host()
         compiler = compiler_cls(spec, operating_system, str(target.family), paths)
         return [compiler]
 
