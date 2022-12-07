@@ -432,7 +432,6 @@ class FileParser:
         """
         file = pathlib.Path(self.ctx.current_token.value)
 
-        # TODO: Improve error messages
         if not file.exists():
             raise spack.spec.NoSuchSpecFileError(f"No such spec file: '{file}'")
 
