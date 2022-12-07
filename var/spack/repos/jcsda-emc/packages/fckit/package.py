@@ -42,7 +42,7 @@ class Fckit(CMakePackage):
     variant('shared', default=True)
 
     def cmake_args(self):
-        res = [
+        args = [
             self.define_from_variant('ENABLE_ECKIT', 'eckit'),
             self.define_from_variant('ENABLE_OMP', 'openmp'),
             "-DPYTHON_EXECUTABLE:FILEPATH=" + self.spec['python'].command.path,
@@ -50,7 +50,7 @@ class Fckit(CMakePackage):
         ]
 
         if '~shared' in self.spec:
-            res.append('-DBUILD_SHARED_LIBS=OFF')
+            args.append('-DBUILD_SHARED_LIBS=OFF')
 
         if self.spec.satisfies('%intel') or self.spec.satisfies('%gcc'):
             cxxlib = 'stdc++'
@@ -58,6 +58,6 @@ class Fckit(CMakePackage):
             cxxlib = 'c++'
         else:
             raise InstallError("C++ library not configured for compiler")
-        res.append('-DECBUILD_CXX_IMPLICIT_LINK_LIBRARIES={}'.format(cxxlib))
+        args.append('-DECBUILD_CXX_IMPLICIT_LINK_LIBRARIES={}'.format(cxxlib))
 
-        return res
+        return args
