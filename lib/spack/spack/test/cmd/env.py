@@ -3186,7 +3186,7 @@ def test_env_include_packages_url(
 def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
     """Test reading a configuration file with invalid (unparseable) YAML
     raises a ConfigFileError."""
-    filename = join_path(tmpdir.strpath, "test.yaml")
+    filename = tmpdir.join("test.yaml")
     with open(filename, "w") as f:
         f.write("spack:\nview")
 
