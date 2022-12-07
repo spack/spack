@@ -30,8 +30,8 @@ class Brion(CMakePackage):
     depends_on('python@3.4:', type=('build', 'run'), when='+python')
     depends_on('py-numpy', type=('build', 'run', 'test'), when='+python')
 
-    depends_on('boost +shared', when='~python')
-    depends_on('boost +shared +python', when='+python')
+    depends_on('boost +shared +date_time', when='~python')
+    depends_on('boost +shared +date_time +python', when='+python')
 
     depends_on('libsonata')
     depends_on('morphio')
