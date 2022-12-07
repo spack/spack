@@ -26,6 +26,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.parser
 import spack.paths
 import spack.spec
 import spack.store
@@ -217,7 +218,7 @@ def parse_specs(args, **kwargs):
     unquoted_flags = _UnquotedFlags.extract(sargs)
 
     try:
-        specs = spack.spec.parse(sargs)
+        specs = spack.parser.parse(sargs)
         for spec in specs:
             if concretize:
                 spec.concretize(tests=tests)  # implies normalize
