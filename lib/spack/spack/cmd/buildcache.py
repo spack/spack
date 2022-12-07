@@ -67,7 +67,8 @@ def setup_parser(subparser):
         "--skip_on_error",
         action="store_true",
         default=False,
-        help="skip packages that contain root string " + " in binary files after RPATH substitution",
+        help="skip packages that contain root string "
+        + " in binary files after RPATH substitution",
     )
     create.add_argument(
         "-k", "--key", metavar="key", type=str, default=None, help="Key for signing."
