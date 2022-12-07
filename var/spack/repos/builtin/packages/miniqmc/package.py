@@ -24,7 +24,7 @@ class Miniqmc(CMakePackage):
     depends_on("lapack")
 
     # Add missing PGI compiler config
-    patch("pgi-cmake.patch", when="@:0.4 %nvhpc")
+    patch("pgi-cmake.patch", when="@:0.4 % nvhpc")
 
     def cmake_args(self):
         args = [

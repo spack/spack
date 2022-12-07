@@ -56,8 +56,8 @@ class Mumps(Package):
         + "(warning: might not be supported by all multithread BLAS)",
     )
 
-    depends_on("scotch +esmumps", when="~ptscotch+scotch")
-    depends_on("scotch +esmumps ~metis +mpi", when="+ptscotch")
+    depends_on("scotch + esmumps", when="~ptscotch+scotch")
+    depends_on("scotch + esmumps ~ metis + mpi", when="+ptscotch")
     depends_on("metis@5:", when="+metis")
     depends_on("parmetis", when="+parmetis")
     depends_on("blas")

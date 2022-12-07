@@ -224,7 +224,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # these versions from properly bootstrapping Go.  (See issue #47771
         # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
         # at least 10.4.  On the 11.x branch, we need at least 11.3:
-        provides("go-external-or-gccgo-bootstrap", when="gcc@10.4.0:10,11.3.0: target=aarch64:")
+        provides("go-external-or-gccgo-bootstrap", when="gcc@10.4.0:10,11.3.0:target=aarch64:")
         # Go is not supported on macOS
         conflicts("platform=darwin", msg="Go not supported on MacOS")
 
