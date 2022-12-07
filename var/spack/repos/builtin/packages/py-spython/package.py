@@ -28,5 +28,4 @@ class PySpython(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-requests", type=("build", "run"))
     depends_on("py-semver@2.8.1:", type=("build", "run"))
