@@ -22,9 +22,11 @@ Here is the EBNF grammar for a spec::
     name          = id | namespace id
     namespace     = { id . }
 
-    variant       = bool_variant | key_value
-    bool_variant  = +id | ++id | ~id | ~~id | -id | --id
-    key_value     = id=id | id=quoted_id | id==id | id==quoted_id
+    variant       = bool_variant | key_value | propagated_bv | propagated_kv
+    bool_variant  =  +id |  ~id |  -id
+    propagated_bv = ++id | ~~id | --id
+    key_value     =  id=id |  id=quoted_id
+    propagated_kv = id==id | id==quoted_id
 
     compiler      = id [@version_list]
 
