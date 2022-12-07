@@ -17,6 +17,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
 
+    version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
     version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
     version("0.9.0", sha256="c349b2a96476d6974d2421288ca4d2e14ef9e5897d44cd7d5343165faa2d1299")
     version("0.8.0", sha256="058e82d7c8f95badabe52bbb4682d55aadf340d67ced1226c0673b4529adc182")
@@ -82,8 +83,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+p2300", when="cxxstd=17")
 
     # Other dependencies
-    depends_on("hwloc@1.11.5:")
     depends_on("boost@1.71:")
+    depends_on("fmt@0.9:", when="@0.11:")
+    depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
     depends_on("jemalloc", when="malloc=jemalloc")
@@ -105,6 +107,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
+        depends_on("fmt cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
