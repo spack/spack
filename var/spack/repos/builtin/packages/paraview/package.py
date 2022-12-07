@@ -196,7 +196,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("lz4")
     depends_on("xz")
     depends_on("zlib")
-    depends_on("libcatalyst", when="+libcatalyst")
+    depends_on("libcatalyst@2:", when="+libcatalyst")
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
