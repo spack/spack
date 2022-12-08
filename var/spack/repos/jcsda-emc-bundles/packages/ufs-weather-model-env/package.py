@@ -22,11 +22,8 @@ class UfsWeatherModelEnv(BundlePackage):
         description="Build a debug version of certain dependencies (ESMF, MAPL)",
     )
     variant("python", default=True, description="Build Python dependencies")
-    variant("shared", default=True, description="Build dynamic libraries when possible")
 
-    depends_on("base-env+shared", type="run", when="+shared")
-    depends_on("base-env~shared", type="run", when="~shared")
-
+    depends_on("base-env", type="run")
     depends_on("ufs-pyenv", type="run", when="+python")
 
     depends_on("fms@2022.01", type="run")
@@ -36,17 +33,11 @@ class UfsWeatherModelEnv(BundlePackage):
     depends_on("g2tmpl", type="run")
     depends_on("ip", type="run")
     depends_on("sp", type="run")
-    depends_on("w3emc", type="run")
+    depends_on("w3nco", type="run")
 
-    depends_on("jasper~shared", type="run", when="~shared")
-    depends_on("libjpeg-turbo~shared", type="run", when="~shared")
-    depends_on("libpng~shared", type="run", when="~shared")
+    depends_on("esmf~debug", type="run", when="~debug")
+    depends_on("esmf+debug", type="run", when="+debug")
+    depends_on("mapl~debug", type="run", when="~debug")
+    depends_on("mapl+debug", type="run", when="+debug")
 
-    depends_on("esmf~debug~shared", type="run", when="~debug~shared")
-    depends_on("esmf~debug+shared", type="run", when="~debug+shared")
-    depends_on("esmf+debug~shared", type="run", when="+debug~shared")
-    depends_on("esmf+debug+shared", type="run", when="+debug+shared")
-    depends_on("mapl~pnetcdf~debug~shared", type="run", when="~debug~shared")
-    depends_on("mapl~pnetcdf~debug+shared", type="run", when="~debug+shared")
-    depends_on("mapl~pnetcdf+debug~shared", type="run", when="+debug~shared")
-    depends_on("mapl~pnetcdf+debug+shared", type="run", when="+debug+shared")
+    # There is no need for install() since there is no code.
