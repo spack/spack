@@ -1975,11 +1975,6 @@ class SpackSolverSetup(object):
         h = spec.dag_hash()
         if spec.name in possible and h not in self.seen_hashes:
             self.reusable_and_possible[h] = spec
-            try:
-                # Only consider installed packages for repo we know
-                spack.repo.path.get(spec)
-            except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError):
-                return
 
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
