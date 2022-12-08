@@ -291,7 +291,7 @@ class Nvhpc(Package):
     # in cuda-toolkit. See also the version table in the release notes at
     # https://docs.nvidia.com/hpc-sdk/hpc-sdk-release-notes/index.html
     provides('cuda@10.2.89,11.0.3,11.8.0',        when='@22.11')
-    provides('cuda@10.2.89,11.0.3,11.7.0',        when='@22.9')
+    provides('cuda@10.2.89,11.0.3,11.7.1',        when='@22.9')
     provides('cuda@10.2.89,11.0.3,11.7.0',        when='@22.7')
     provides('cuda@10.2.89,11.0.3,11.7.0',        when='@22.5')
     provides('cuda@10.2.89,11.0.3,11.6.1',        when='@22.3')
