@@ -54,7 +54,11 @@ class Pixman(AutotoolsPackage):
 
     @property
     def libs(self):
-        return find_libraries("libpixman-1", self.prefix, shared=True, recursive=True)
+        if os.path.exists(self.prefix.lib64):
+            libdir = self.prefix.lib64
+        else:
+            libdir = self.prefix.lib
+        return find_libraries("libpixman-1", libdir, shared=True, recursive=True)
 
     def configure_args(self):
         args = [
