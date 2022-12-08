@@ -4987,7 +4987,7 @@ def save_dependency_specfiles(
             fd.write(dep_spec.to_json(hash=ht.dag_hash))
 
 
-def promote_compiler_props_to_deps(specs: List[Spec]):
+def promote_compiler_props_to_deps(specs):
     """Remove and replace CompilerSpec props with matching Spec deps from the database"""
     compiler_str_to_spec = dict()
 
