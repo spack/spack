@@ -51,9 +51,10 @@ class Gnuplot(AutotoolsPackage):
         description="Enable PBM (Portable Bit Map) and other older bitmap terminals",
     )
     variant("qt", default=False, description="Build with QT")
+    variant("readline", default=True, description="Build with readline")
 
     # required dependencies
-    depends_on("readline")
+    depends_on("readline", when="+readline")
     depends_on("pkgconfig", type="build")
     depends_on("libxpm")
     depends_on("iconv")
@@ -79,8 +80,9 @@ class Gnuplot(AutotoolsPackage):
             "--disable-silent-rules",
             # Per upstream: "--with-tutorial is horribly out of date."
             "--without-tutorial",
-            "--with-readline=%s" % spec["readline"].prefix,
         ]
+
+        options += self.with_or_without("readline", "prefix")
 
         if "+pbm" in spec:
             options.append("--with-bitmap-terminals")
@@ -158,5 +160,7 @@ class Gnuplot(AutotoolsPackage):
         # TODO: --with-aquaterm  depends_on('aquaterm')
         options.append("--without-aquaterm")
 
-        os.environ["LDFLAGS"] = "-Wl,--copy-dt-needed-entries"
+        if spec.satisfies("%gcc@11:"):
+            os.environ["LDFLAGS"] = "-Wl,--copy-dt-needed-entries"
+
         return options

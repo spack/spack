@@ -605,3 +605,60 @@ def test_ordered_replacement():
             # expect failure
             suffix_safety_size=7,
         )
+
+
+def test_inplace_text_replacement():
+    def replace_and_expect(prefix_to_prefix, before: bytes, after: bytes):
+        f = io.BytesIO(before)
+        prefix_to_prefix = OrderedDict(prefix_to_prefix)
+        regex = spack.relocate.byte_strings_to_single_binary_regex(prefix_to_prefix.keys())
+        spack.relocate._replace_prefix_text_file(f, regex, prefix_to_prefix)
+        f.seek(0)
+        assert f.read() == after
+
+    replace_and_expect(
+        [
+            (b"/first/prefix", b"/first-replacement/prefix"),
+            (b"/second/prefix", b"/second-replacement/prefix"),
+        ],
+        b"Example: /first/prefix/subdir and /second/prefix/subdir",
+        b"Example: /first-replacement/prefix/subdir and /second-replacement/prefix/subdir",
+    )
+
+    replace_and_expect(
+        [
+            (b"/replace/in/order", b"/first"),
+            (b"/replace/in", b"/second"),
+            (b"/replace", b"/third"),
+        ],
+        b"/replace/in/order/x /replace/in/y /replace/z",
+        b"/first/x /second/y /third/z",
+    )
+
+    replace_and_expect(
+        [
+            (b"/replace", b"/third"),
+            (b"/replace/in", b"/second"),
+            (b"/replace/in/order", b"/first"),
+        ],
+        b"/replace/in/order/x /replace/in/y /replace/z",
+        b"/third/in/order/x /third/in/y /third/z",
+    )
+
+    replace_and_expect(
+        [(b"/my/prefix", b"/replacement")],
+        b"/dont/replace/my/prefix #!/dont/replace/my/prefix",
+        b"/dont/replace/my/prefix #!/dont/replace/my/prefix",
+    )
+
+    replace_and_expect(
+        [(b"/my/prefix", b"/replacement")],
+        b"Install path: /my/prefix.",
+        b"Install path: /replacement.",
+    )
+
+    replace_and_expect(
+        [(b"/my/prefix", b"/replacement")],
+        b"#!/my/prefix",
+        b"#!/replacement",
+    )
