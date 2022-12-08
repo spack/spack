@@ -18,7 +18,6 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@11.2.0]
       variants: ~cuda~rocm
 
   definitions:
