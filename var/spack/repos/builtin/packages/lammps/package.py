@@ -336,6 +336,7 @@ class Lammps(CMakePackage, CudaPackage):
         "electrode": {"when": "@20220504:"},
         "granular": {},
         "intel": {},
+        "kim": {},
         "kspace": {},
         "kokkos": {},
         "latte": {},
@@ -458,7 +459,6 @@ class Lammps(CMakePackage, CudaPackage):
     variant("jpeg", default=True, description="Build with jpeg support")
     variant("png", default=True, description="Build with png support")
     variant("ffmpeg", default=True, description="Build with ffmpeg support")
-    variant("kim", default=True, description="Build with KIM support")
     variant("openmp", default=True, description="Build with OpenMP")
     variant("opencl", default=False, description="Build with OpenCL")
     variant("exceptions", default=False, description="Build with lammps exceptions")
@@ -602,27 +602,32 @@ class Lammps(CMakePackage, CudaPackage):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "lib"),
             self.define_from_variant("LAMMPS_EXCEPTIONS", "exceptions"),
-            "-D{0}_MPI={1}".format(mpi_prefix, "ON" if "+mpi" in spec else "OFF"),
+            self.define_from_variant("{}_MPI".format(mpi_prefix), "mpi"),
             self.define_from_variant("BUILD_OMP", "openmp"),
             self.define("ENABLE_TESTING", self.run_tests),
         ]
-        if spec.satisfies("+cuda"):
-            args.append("-DPKG_GPU=ON")
-            args.append("-DGPU_API=cuda")
-            cuda_arch = spec.variants["cuda_arch"].value
-            if cuda_arch != "none":
-                args.append("-DGPU_ARCH=sm_{0}".format(cuda_arch[0]))
-            args.append(self.define_from_variant("CUDA_MPS_SUPPORT", "cuda_mps"))
-        elif spec.satisfies("+opencl"):
-            # LAMMPS downloads and bundles its own OpenCL ICD Loader by default
-            args.append("-DUSE_STATIC_OPENCL_LOADER=OFF")
-            args.append("-DPKG_GPU=ON")
-            args.append("-DGPU_API=opencl")
-        else:
-            args.append("-DPKG_GPU=OFF")
+        if "~kokkos" in spec:
+            # LAMMPS can be build with the GPU package OR the KOKKOS package
+            # Using both in a single build is discouraged.
+            # +cuda only implies that one of the two is used
+            # by default it will use the GPU package if kokkos wasn't enabled
+            if "+cuda" in spec:
+                args.append(self.define("PKG_GPU", True))
+                args.append(self.define("GPU_API", "cuda"))
+                cuda_arch = spec.variants["cuda_arch"].value
+                if cuda_arch != "none":
+                    args.append(self.define("GPU_ARCH", "sm_{0}".format(cuda_arch[0])))
+                args.append(self.define_from_variant("CUDA_MPS_SUPPORT", "cuda_mps"))
+            elif "+opencl" in spec:
+                # LAMMPS downloads and bundles its own OpenCL ICD Loader by default
+                args.append(self.define("USE_STATIC_OPENCL_LOADER", False))
+                args.append(self.define("PKG_GPU", True))
+                args.append(self.define("GPU_API", "opencl"))
+            else:
+                args.append(self.define("PKG_GPU", False))
 
         if spec.satisfies("@20180629:+lib"):
-            args.append("-DBUILD_LIB=ON")
+            args.append(self.define("BUILD_LIB", True))
 
         if spec.satisfies("%aocc"):
             cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
@@ -640,55 +645,45 @@ class Lammps(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("WITH_PNG", "png"))
         args.append(self.define_from_variant("WITH_FFMPEG", "ffmpeg"))
 
-        for pkg in self.supported_packages.keys():
-            opt = "-D{0}_{1}".format(pkg_prefix, pkg.replace("-package", "").upper())
-            if "+{0}".format(pkg) in spec:
-                args.append("{0}=ON".format(opt))
-            else:
-                args.append("{0}=OFF".format(opt))
-        if "+kim" in spec:
-            args.append("-DPKG_KIM=ON")
+        for pkg, params in self.supported_packages.items():
+            if "when" not in params or spec.satisfies(params["when"]):
+                opt = "{0}_{1}".format(pkg_prefix, pkg.replace("-package", "").upper())
+                args.append(self.define(opt, "+{0}".format(pkg) in spec))
+
         if "+kspace" in spec:
             # If FFTW3 is selected, then CMake will try to detect, if threaded
             # FFTW libraries are available and enable them by default.
-            if "^fftw" in spec:
-                args.append("-DFFT=FFTW3")
-            if "^mkl" in spec:
-                args.append("-DFFT=MKL")
-            if "^amdfftw" in spec:
+            if "^fftw" in spec or "^cray-fftw" in spec or "^amdfftw" in spec:
                 args.append(self.define("FFT", "FFTW3"))
-            if "^armpl-gcc" in spec:
+            elif "^mkl" in spec:
+                args.append(self.define("FFT", "MKL"))
+            elif "^armpl-gcc" in spec:
                 args.append(self.define("FFT", "FFTW3"))
                 args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
                 args.append(
                     self.define("FFTW3_INCLUDE_DIR", self.spec["fftw-api"].headers.directories[0])
                 )
-            if "^cray-fftw" in spec:
-                args.append("-DFFT=FFTW3")
             # Using the -DFFT_SINGLE setting trades off a little accuracy
             # for reduced memory use and parallel communication costs
             # for transposing 3d FFT data.
-            if spec.satisfies("fftw_precision=single"):
-                args.append("-DFFT_SINGLE=True")
-            else:
-                args.append("-DFFT_SINGLE=False")
+            args.append(self.define("FFT_SINGLE", spec.satisfies("fftw_precision=single")))
 
         if "+kokkos" in spec:
-            args.append("-DEXTERNAL_KOKKOS=ON")
+            args.append(self.define("EXTERNAL_KOKKOS", True))
         if "+user-adios" in spec or "+adios" in spec:
-            args.append("-DADIOS2_DIR={0}".format(self.spec["adios2"].prefix))
+            args.append(self.define("ADIOS2_DIR", self.spec["adios2"].prefix))
         if "+user-plumed" in spec or "+plumed" in spec:
-            args.append("-DDOWNLOAD_PLUMED=no")
+            args.append(self.define("DOWNLOAD_PLUMED", False))
             if "+shared" in self.spec["plumed"]:
-                args.append("-DPLUMED_MODE=shared")
+                args.append(self.define("PLUMED_MODE", "shared"))
             else:
-                args.append("-DPLUMED_MODE=static")
+                args.append(self.define("PLUMED_MODE", "static"))
         if "+user-smd" in spec or "+machdyn" in spec:
-            args.append("-DDOWNLOAD_EIGEN3=no")
-            args.append("-DEIGEN3_INCLUDE_DIR={0}".format(self.spec["eigen"].prefix.include))
+            args.append(self.define("DOWNLOAD_EIGEN3", False))
+            args.append(self.define("EIGEN3_INCLUDE_DIR", self.spec["eigen"].prefix.include))
         if "+user-hdnnp" in spec or "+ml-hdnnp" in spec:
-            args.append("-DDOWNLOAD_N2P2=no")
-            args.append("-DN2P2_DIR={0}".format(self.spec["n2p2"].prefix))
+            args.append(self.define("DOWNLOAD_N2P2", False))
+            args.append(self.define("N2P2_DIR", self.spec["n2p2"].prefix))
 
         return args
 
