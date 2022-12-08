@@ -8,7 +8,6 @@ from typing import Any, Dict, Tuple
 
 import spack
 import spack.config
-import spack.mirror
 import spack.util.url as url_util
 
 #: Map (mirror name, method) tuples to s3 client instances.
@@ -16,6 +15,16 @@ s3_client_cache: Dict[Tuple[str, str], Any] = dict()
 
 
 def get_s3_session(url, method="fetch"):
+    # import boto and friends as late as possible.  We don't want to require boto as a
+    # dependency unless the user actually wants to access S3 mirrors.
+    from boto3 import Session
+    from botocore.exceptions import ClientError
+    from botocore import UNSIGNED
+    from botocore.client import Config
+
+    # Circular dependency
+    from spack.mirror import MirrorCollection
+
     global s3_client_cache
 
     # Get a (recycled) s3 session for a particular URL
@@ -27,7 +36,7 @@ def get_s3_session(url, method="fetch"):
         return mirror.fetch_url if method == "fetch" else mirror.push_url
 
     # Get all configured mirrors that could match.
-    all_mirrors = spack.mirror.MirrorCollection()
+    all_mirrors = MirrorCollection()
     mirrors = [
         (name, mirror)
         for name, mirror in all_mirrors.items()
@@ -53,15 +62,9 @@ def get_s3_session(url, method="fetch"):
     # Otherwise, create it.
     s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method)
 
-    from boto3 import Session
-    from botocore.exceptions import ClientError
-
     session = Session(**s3_connection)
     # if no access credentials provided above, then access anonymously
     if not session.get_credentials():
-        from botocore import UNSIGNED  # type: ignore[import]
-        from botocore.client import Config  # type: ignore[import]
-
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 
     client = session.client("s3", **s3_client_args)
@@ -79,12 +82,16 @@ def _parse_s3_endpoint_url(endpoint_url):
     return endpoint_url
 
 
-def get_mirror_s3_connection_info(mirror: spack.mirror.Mirror, method: str):
+def get_mirror_s3_connection_info(mirror, method):
+    """Create s3 config for session/client from a Mirror instance (or just set defaults
+    when no mirror is given.)"""
+    from spack.mirror import Mirror
+
     s3_connection = {}
     s3_client_args = {"use_ssl": spack.config.get("config:verify_ssl")}
 
     # access token
-    if isinstance(mirror, spack.mirror.Mirror):
+    if isinstance(mirror, Mirror):
         access_token = mirror.get_access_token(method)
         if access_token:
             s3_connection["aws_session_token"] = access_token
@@ -109,31 +116,3 @@ def get_mirror_s3_connection_info(mirror: spack.mirror.Mirror, method: str):
         s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(endpoint_url)
 
     return (s3_connection, s3_client_args)
-
-
-def create_s3_session(url, connection={}):
-    url = url_util.parse(url)
-    if url.scheme != "s3":
-        raise ValueError(
-            "Can not create S3 session from URL with scheme: {SCHEME}".format(SCHEME=url.scheme)
-        )
-
-    # NOTE(opadron): import boto and friends as late as possible.  We don't
-    # want to require boto as a dependency unless the user actually wants to
-    # access S3 mirrors.
-    from boto3 import Session  # type: ignore[import]
-    from botocore.exceptions import ClientError  # type: ignore[import]
-
-    s3_connection, s3_client_args = get_mirror_s3_connection_info(connection)
-
-    session = Session(**s3_connection)
-    # if no access credentials provided above, then access anonymously
-    if not session.get_credentials():
-        from botocore import UNSIGNED  # type: ignore[import]
-        from botocore.client import Config  # type: ignore[import]
-
-        s3_client_args["config"] = Config(signature_version=UNSIGNED)
-
-    client = session.client("s3", **s3_client_args)
-    client.ClientError = ClientError
-    return client
