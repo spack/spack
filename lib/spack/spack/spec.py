@@ -4993,10 +4993,10 @@ def promote_compiler_props_to_deps(specs):
 
     for spec in [s for s in traverse.traverse_nodes(specs)]:
         # Either already processed, or abstract spec
-        if not spec.compiler:
+        if not spec._compiler:
             continue
 
-        compiler_str = str(spec.compiler)
+        compiler_str = str(spec._compiler)
 
         # Look up the query cache
         compiler_spec = compiler_str_to_spec.get(compiler_str, False)
