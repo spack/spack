@@ -69,7 +69,12 @@ class DarshanRuntime(AutotoolsPackage):
 
     variant("mpi", default=True, description="Compile with MPI support")
     variant("hdf5", default=False, description="Compile with HDF5 module", when="@3.2:")
-    variant("parallel-netcdf", default=False, description="Compile with Parallel NetCDF module", when="@3.4.1:")
+    variant(
+        "parallel-netcdf",
+        default=False,
+        description="Compile with Parallel NetCDF module",
+        when="@3.4.1:",
+    )
     variant("apmpi", default=False, description="Compile with AutoPerf MPI module", when="@3.3:")
     variant(
         "apmpi_sync",
