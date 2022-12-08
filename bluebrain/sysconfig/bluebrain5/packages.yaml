@@ -10,8 +10,6 @@ packages:
     variants: +gas+gold+ld+plugins~libiberty
   boost:
     variants: +filesystem+pic+test
-  cmake:
-    version: [3.21.4]
   coreneuron:
     variants: ~gpu
     require: "%intel"
@@ -117,19 +115,19 @@ packages:
     variants: ~fortran
   python:
     variants: +tk
-    version: [3.9.7]
-  py-numpy:
-    version: [1.19.5]  # thanks, tensorflow!
-  py-setuptools:
-    version: [57.4.0]  # last one to provide use_2to3, required by some software
-  py-six:
-    version: [1.15.0]  # thanks, tensorflow!
-  py-tables:
-    variants: +lzo     # leads to compile errors otherwise
-  py-tensorflow:
-    version: [2.5.1]   # For Python 3.9 compatibility
-  py-tensorflow-addons:
-    version: [0.13.0]  # Matches tensorflow
+    version: [3.10.8]
+# py-numpy:
+#   version: [1.19.5]  # thanks, tensorflow!
+# py-setuptools:
+#   version: [57.4.0]  # last one to provide use_2to3, required by some software
+# py-six:
+#   version: [1.15.0]  # thanks, tensorflow!
+# py-tables:
+#   variants: +lzo     # leads to compile errors otherwise
+# py-tensorflow:
+#   version: [2.5.1]   # For Python 3.9 compatibility
+# py-tensorflow-addons:
+#   version: [0.13.0]  # Matches tensorflow
   qt:
     version: [5.14.2]
     variants: ~ssl~sql~tools
@@ -157,8 +155,7 @@ packages:
   trilinos:
     variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
   all:
-    require: "%gcc"
-    compiler: [gcc@11.2.0]
+    require: "%gcc@12.2.0"
     target: [skylake]
     providers:
       mpi: [hpe-mpi, intel-oneapi-mpi, mvapich2]

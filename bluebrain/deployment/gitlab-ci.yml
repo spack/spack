@@ -15,9 +15,9 @@ default:
     bb5_duration: "24:00:00"
     # We will need these resources for parallel building
     bb5_constraint: cpu
-    bb5_cpus_per_task: 8
-    bb5_memory: 80g
-    bb5_ntasks: 2
+    bb5_cpus_per_task: 72
+    bb5_memory: 300g
+    bb5_ntasks: 1
     bb5_exclusive: user
     # We will do this ourselves, will be on GPFS
     GIT_STRATEGY: none
@@ -167,7 +167,9 @@ github_information:
     # A more modern git is required for some Spack checkouts… this may fail
     # for the compilers stage, but the module command always exits with
     # status 0…
-    - module load git
+    #
+    # Modern gmake to have better parallelization of the Spack builds
+    - module load git gmake
     - module list
     # Spack's install procedure will generate a bunch of JUnit test XMl,
     # prepare for that
@@ -208,7 +210,15 @@ github_information:
     - installed-hashes -m|tee missing.txt
     - if [[ -n "$(<missing.txt)" ]]; then
     -     spack fetch -m
-    -     srun -n 1 -J"spack!${CI_EXTERNAL_PULL_REQUEST_IID:+ №}${CI_EXTERNAL_PULL_REQUEST_IID:-}" slurmspack
+    -     spack env depfile > Makefile
+          # This should store all test results in unique XML files.
+          #
+          # If SPACK_INSTALL_FLAGS is passed directly to `make`, other `make` processes
+          # used when building software will inherit the variable and potentially fail.
+          #
+          # Use all cores, Spack will do the right thing here™ and adjust build jobs per
+          # package as needed
+    -     env SPACK_INSTALL_FLAGS="--log-format=junit --log-file=spack_tests/$CI_JOB_STAGE/$CI_JOB_NAME-\$(notdir \$@).xml" make -k -j $SLURM_CPUS_ON_NODE
     - fi
     # We always want to regenerate the modules and compiler configurations,
     # as they may change independenty of package dependencies and shas

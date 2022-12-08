@@ -23,6 +23,7 @@ spack:
           - gdb
           - git
           - git-lfs
+          - gmake
           - graphviz
           - hpctoolkit
           - hpcviewer
@@ -101,6 +102,7 @@ spack:
     - git
     - git-lfs
     - glew
+    - gmake  # Used to parallelize Spack deployment builds
    # BlueBrain TODO: why do we try to build 4.7.1?
    #- gmsh+metis~mpi+oce+openmp+shared
     - graphviz

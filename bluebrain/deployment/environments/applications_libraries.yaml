@@ -24,8 +24,8 @@ spack:
           - py-rtree
           - py-scikit-learn
           - py-scipy
-          - python-dev
           - py-virtualenv
+          - python-dev
         projections:
           all: '{name}/{version}'
           'omega-h+gmsh': '{name}/{version}-gmsh'
@@ -42,24 +42,15 @@ spack:
    #- omega-h+gmsh+trilinos
    #- petsc~int64+mpi
    #- petsc+int64+mpi
-    - py-breathe
     - py-cgal-pybind
-    - py-clustershell
-    - py-cmake-format@0.6.11
-    - py-coverage
     - py-dask-mpi
-    - py-docopt
-    - py-exhale
     - py-flake8
     - py-h5py
     - py-libsonata
-    - py-matplotlib
     - py-mpi4py
     - py-notebook
     - py-numpy
-    - py-pip
     - py-poisson-recon-pybind
-    - py-pre-commit
     - py-rtree
     - py-scikit-learn
     - py-scipy
