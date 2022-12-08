@@ -396,7 +396,7 @@ class Opencv(CMakePackage, CudaPackage):
             default=False,
             description="Include opencv_{0} contrib module".format(mod),
         )
-        conflicts("+{0}".format(variant), when="~contrib")
+        conflicts("+{0}".format(mod), when="~contrib")
 
     # contrib module conflicts and dependencies
     with when("+alphamat"):
