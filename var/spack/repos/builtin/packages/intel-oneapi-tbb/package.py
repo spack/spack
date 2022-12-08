@@ -82,6 +82,10 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     provides("tbb")
 
+    conflicts("target=ppc64:", msg="intel-oneapi-tbb is only available for x86_64")
+    conflicts("target=ppc64le:", msg="intel-oneapi-tbb is only available for x86_64")
+    conflicts("target=aarch64:", msg="intel-oneapi-tbb is only available for x86_64")
+
     @property
     def component_dir(self):
         return "tbb"
