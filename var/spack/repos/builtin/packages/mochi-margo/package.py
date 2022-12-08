@@ -64,3 +64,10 @@ class MochiMargo(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         sh = which("sh")
         sh("./prepare.sh")
+
+    def flag_handler(self, name, flags):
+        if name == "ldflags":
+            flags.append("-pthread")
+            return (None, flags, None)
+
+        return (flags, None, None)
