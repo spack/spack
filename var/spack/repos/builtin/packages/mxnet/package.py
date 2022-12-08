@@ -64,6 +64,7 @@ class Mxnet(CMakePackage, CudaPackage):
 
     version("master", branch="master", submodules=True)
     version("1.master", branch="v1.x", submodules=True)
+
     version(
         "1.8.0",
         sha256="95aff985895aba409c08d5514510ae38b88490cfb6281ab3a5ff0f5826c8db54",
