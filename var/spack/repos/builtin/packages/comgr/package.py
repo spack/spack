@@ -28,10 +28,26 @@ class Comgr(CMakePackage):
     version("5.2.0", sha256="5f63fa93739ee9230756ef93c53019474b6cdddea3b588492d785dae1b08c087")
     version("5.1.3", sha256="3078c10e9a852fe8357712a263ad775b15944e083f93a879935c877511066ac9")
     version("5.1.0", sha256="1cdcfe5acb768ef50fb0026d4ee7ba01e615251ad3c27bb2593cdcf8c070a894")
-    version("5.0.2", sha256="20d733f70d8edb573d8c92707f663d7d46dcaff08026cd6addbb83266679f92a")
-    version("5.0.0", sha256="da1bbc694bd930a504406eb0a0018c2e317d8b2c136fb2cab8de426870efe9a8")
-    version("4.5.2", sha256="e45f387fb6635fc1713714d09364204cd28fea97655b313c857beb1f8524e593")
-    version("4.5.0", sha256="03c5880e0922fcff31306f7da2eb9d3a3709d9b5b75b3524dcfae85f4b181678")
+    version(
+        "5.0.2",
+        sha256="20d733f70d8edb573d8c92707f663d7d46dcaff08026cd6addbb83266679f92a",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="da1bbc694bd930a504406eb0a0018c2e317d8b2c136fb2cab8de426870efe9a8",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="e45f387fb6635fc1713714d09364204cd28fea97655b313c857beb1f8524e593",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="03c5880e0922fcff31306f7da2eb9d3a3709d9b5b75b3524dcfae85f4b181678",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="f1d99550383ed7b3a01d304eedc3d86a8e45b271aa5a80b1dd099c22fda3f745",

@@ -32,10 +32,26 @@ class Hip(CMakePackage):
     version("5.2.0", sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a")
     version("5.1.3", sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973")
     version("5.1.0", sha256="47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266")
-    version("5.0.2", sha256="e23601e6f4f62083899ea6356fffbe88d1deb20fa61f2c970e3c0474cd8886ca")
-    version("5.0.0", sha256="ae12fcda2d955f04a51c9e794bdb0fa96539cda88b6de8e377850e68e7c2a781")
-    version("4.5.2", sha256="c2113dc3c421b8084cd507d91b6fbc0170765a464b71fb0d96bb875df368f160")
-    version("4.5.0", sha256="4026f31fb4f8050e9aa9d4294f29c3410bfb38422dbbae4236ccd65fed4d55b2")
+    version(
+        "5.0.2",
+        sha256="e23601e6f4f62083899ea6356fffbe88d1deb20fa61f2c970e3c0474cd8886ca",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="ae12fcda2d955f04a51c9e794bdb0fa96539cda88b6de8e377850e68e7c2a781",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="c2113dc3c421b8084cd507d91b6fbc0170765a464b71fb0d96bb875df368f160",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="4026f31fb4f8050e9aa9d4294f29c3410bfb38422dbbae4236ccd65fed4d55b2",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="955311193819f487f9a2d64bffe07c4b8c3a0dc644dc3ad984f7c66a325bdd6f",

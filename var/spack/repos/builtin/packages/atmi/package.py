@@ -26,10 +26,26 @@ class Atmi(CMakePackage):
     version("5.2.0", sha256="33e77905a607734157d46c736c924c7c50b6b13f2b2ddbf711cb08e37f2efa4f")
     version("5.1.3", sha256="a43448d77705b2b07e1758ffe8035aa6ba146abc2167984e8cb0f1615797b341")
     version("5.1.0", sha256="6a758f5a8332e6774cd8e14a4e5ce05e43b1e05298d817b4068c35fa1793d333")
-    version("5.0.2", sha256="3aea040f5a246539ab118f2183cf3e802a21e0e6215a53025eda77f382341747")
-    version("5.0.0", sha256="208c1773170722b60b74357e264e698df5871e9d9d490d64011e6ea76750d9cf")
-    version("4.5.2", sha256="c235cfb8bdd89deafecf9123264217b8cc5577a5469e3e1f24587fa820d0792e")
-    version("4.5.0", sha256="64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf")
+    version(
+        "5.0.2",
+        sha256="3aea040f5a246539ab118f2183cf3e802a21e0e6215a53025eda77f382341747",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="208c1773170722b60b74357e264e698df5871e9d9d490d64011e6ea76750d9cf",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="c235cfb8bdd89deafecf9123264217b8cc5577a5469e3e1f24587fa820d0792e",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="4497fa6d33547b946e2a51619f2777ec36e9cff1b07fd534eb8a5ef0d8e30650",

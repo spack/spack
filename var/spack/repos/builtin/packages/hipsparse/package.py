@@ -26,10 +26,26 @@ class Hipsparse(CMakePackage):
     version("5.2.0", sha256="4fdab6ec953c6d2d000687c5979077deafd37208cd722554b5a6ede1e5ba170c")
     version("5.1.3", sha256="6e6a0752654f0d391533df8cedf4b630a78ad34c99087741520c582963ce1602")
     version("5.1.0", sha256="f41329534f2ff477a0db6b7f77a72bb062f117800970c122d676db8b207ce80b")
-    version("5.0.2", sha256="a266e8b3bbdea04617260f51b3d85cc672af6ca417cae0812d04fd9702429c47")
-    version("5.0.0", sha256="0a1754508e06d3a6b17593a71a3c57a3e25d3b46d88573098fda11442853196c")
-    version("4.5.2", sha256="81ca24491fbf2bc8e5aa477a6c38776877579ac9f4241ddadeca76a579a7ebb5")
-    version("4.5.0", sha256="1049c490fc2008d701a16d14e11004e3bc5b4da993aa48b117e3c44be5677e3c")
+    version(
+        "5.0.2",
+        sha256="a266e8b3bbdea04617260f51b3d85cc672af6ca417cae0812d04fd9702429c47",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="0a1754508e06d3a6b17593a71a3c57a3e25d3b46d88573098fda11442853196c",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="81ca24491fbf2bc8e5aa477a6c38776877579ac9f4241ddadeca76a579a7ebb5",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="1049c490fc2008d701a16d14e11004e3bc5b4da993aa48b117e3c44be5677e3c",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="e5757b5213b880237ae0f24616088f79c449c2955cf2133642dbbc9c655f4691",

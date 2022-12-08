@@ -28,10 +28,26 @@ class Rccl(CMakePackage):
     version("5.2.0", sha256="6ee3a04da0d16eb53f768a088633a7d8ecc4416a2d0c07f7ba8426ab7892b060")
     version("5.1.3", sha256="56491257f27b48bf85f4b91434a2a6e49a448337c889db181b02c8a4a260a4bc")
     version("5.1.0", sha256="02b0180857e615326f9cab775573436b9162899ad8e526830f54392b8a51b1f5")
-    version("5.0.2", sha256="a2377ad2332b93d3443a8ee74f4dd9f965ae8cbbfad473f8f57ca17905389a39")
-    version("5.0.0", sha256="80eb70243f11b80e215458a67c278cd5a655f6e486289962b92ba3504e50af5c")
-    version("4.5.2", sha256="36de0d3f3ffad491758d89c208ef72c5be5e0db766053a9c766e9c5c6a33a487")
-    version("4.5.0", sha256="f806f9f65c490abddc562cb4812e12701582bbb449e41cc4797d00e0dedf084e")
+    version(
+        "5.0.2",
+        sha256="a2377ad2332b93d3443a8ee74f4dd9f965ae8cbbfad473f8f57ca17905389a39",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="80eb70243f11b80e215458a67c278cd5a655f6e486289962b92ba3504e50af5c",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="36de0d3f3ffad491758d89c208ef72c5be5e0db766053a9c766e9c5c6a33a487",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="f806f9f65c490abddc562cb4812e12701582bbb449e41cc4797d00e0dedf084e",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="c5db71423dc654e8d2c3111e142e65c89436bc636827d95d41a09a87f44fe246",

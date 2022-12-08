@@ -25,10 +25,26 @@ class Rocfft(CMakePackage):
     version("5.2.0", sha256="ebba280b7879fb4bc529a68072b98d4e815201f90d24144d672094bc241743d4")
     version("5.1.3", sha256="b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618")
     version("5.1.0", sha256="dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68")
-    version("5.0.2", sha256="30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a")
-    version("5.0.0", sha256="c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405")
-    version("4.5.2", sha256="2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1")
-    version("4.5.0", sha256="045c1cf1737db6e7ee332c274dacdb565f99c976ed4cc5626a116878dc80a48c")
+    version(
+        "5.0.2",
+        sha256="30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="045c1cf1737db6e7ee332c274dacdb565f99c976ed4cc5626a116878dc80a48c",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="fcdc4d12b93d967b6f992b4045da98433eabf2ee0ba84fc6b6f81e380584fbc9",

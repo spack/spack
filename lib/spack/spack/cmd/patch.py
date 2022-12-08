@@ -16,6 +16,7 @@ level = "long"
 
 def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["no_checksum", "deprecated", "specs"])
+    arguments.add_concretizer_args(subparser)
 
 
 def patch(parser, args):

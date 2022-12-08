@@ -29,10 +29,26 @@ class Hipblas(CMakePackage):
     version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
     version("5.1.3", sha256="f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1")
     version("5.1.0", sha256="22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92")
-    version("5.0.2", sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646")
-    version("5.0.0", sha256="63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41")
-    version("4.5.2", sha256="82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978")
-    version("4.5.0", sha256="187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e")
+    version(
+        "5.0.2",
+        sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2",
