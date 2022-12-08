@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import subprocess
 
 from spack.package import *
 
@@ -77,13 +76,6 @@ class NetcdfC(AutotoolsPackage):
     variant("dap", default=False, description="Enable DAP support")
     variant("jna", default=False, description="Enable JNA support")
     variant("fsync", default=False, description="Enable fsync support")
-    variant("v2", default=True, description="Build netCDF version 2 API")
-    variant("utilities", default=True, description="Build netCDF utilities ncgen, ncdump, and nccopy")
-    variant("largefile", default=True, description="Enable largefile support")
-    variant("parallel-tests", default=True, description="Run extra parallel IO tests", when="netcdf-c+mpi")
-    variant("cdf5", default=True, description="Enable CDF5 support")
-    variant("netcdf-4", default=True, description="Build with netCDF 4")
-    variant("doxygen", default=False, description="Enable generation of documentation")
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
@@ -161,31 +153,31 @@ class NetcdfC(AutotoolsPackage):
         cppflags = []
         ldflags = []
         libs = []
-        config_args = []
+
+        config_args = [
+            "--enable-v2",
+            "--enable-utilities",
+            "--enable-static",
+            "--enable-largefile",
+            "--enable-netcdf-4",
+        ]
 
         if "+optimize" in self.spec:
             cflags.append("-O2")
 
         config_args.extend(self.enable_or_disable("fsync"))
-        config_args.extend(self.enable_or_disable("v2"))
-        config_args.extend(self.enable_or_disable("utilities"))
-        config_args.extend(self.enable_or_disable("largefile"))
-        config_args.extend(self.enable_or_disable("parallel-tests"))
-        config_args.extend(self.enable_or_disable("cdf5"))
-        config_args.extend(self.enable_or_disable("netcdf-4"))
-        config_args.extend(self.enable_or_disable("doxygen"))
 
         # The flag was introduced in version 4.3.1
         if self.spec.satisfies("@4.3.1:"):
             config_args.append("--enable-dynamic-loading")
 
-        config_args.extend(self.enable_or_disable("shared"))
+        config_args += self.enable_or_disable("shared")
 
         if "+pic" in self.spec:
             cflags.append(self.compiler.cc_pic_flag)
 
-        config_args.extend(self.enable_or_disable("dap"))
-        # config_args.append(self.enable_or_disable('cdmremote'))
+        config_args += self.enable_or_disable("dap")
+        # config_args += self.enable_or_disable('cdmremote')
 
         # if '+dap' in self.spec or '+cdmremote' in self.spec:
         if "+dap" in self.spec:
@@ -209,7 +201,7 @@ class NetcdfC(AutotoolsPackage):
                 config_args.append("--disable-parallel4")
 
         if self.spec.satisfies("@4.3.2:"):
-            config_args.extend(self.enable_or_disable("jna"))
+            config_args += self.enable_or_disable("jna")
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
@@ -219,10 +211,6 @@ class NetcdfC(AutotoolsPackage):
         ldflags.append(hdf5_hl.libs.search_flags)
         if hdf5_hl.satisfies("~shared"):
             libs.append(hdf5_hl.libs.link_flags)
-            h5_pc_cmd = ["pkg-config","hdf5","--static","--libs"]
-            h5_flags = \
-              subprocess.check_output(h5_pc_cmd, encoding="utf8").strip()
-            libs.extend(h5_flags.split()[::-1])
 
         if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")
@@ -237,7 +225,7 @@ class NetcdfC(AutotoolsPackage):
         if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
             config_args.append("CC=%s" % self.spec["mpi"].mpicc)
 
-        config_args.extend(self.enable_or_disable("hdf4"))
+        config_args += self.enable_or_disable("hdf4")
         if "+hdf4" in self.spec:
             hdf4 = self.spec["hdf"]
             cppflags.append(hdf4.headers.cpp_flags)
