@@ -21,6 +21,34 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "22.11": {
+        "Linux-aarch64": (
+            "8c0573e4f5afe072a22f5fda0094f85fa2fff789683e6aad3b273b9f8dd6c3b1",
+            "https://developer.download.nvidia.com/hpc-sdk/22.11/nvhpc_2022_2211_Linux_aarch64_cuda_11.8.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "d5963bde649d7c87a75ef7dbe361526145897f94c8416f630ffaeb2db0ee6674",
+            "https://developer.download.nvidia.com/hpc-sdk/22.11/nvhpc_2022_2211_Linux_ppc64le_cuda_11.8.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "6be15d49a451983234483c5721fa12ad810e83127d2a572b5716ba9a2e2968e9",
+            "https://developer.download.nvidia.com/hpc-sdk/22.11/nvhpc_2022_2211_Linux_x86_64_cuda_11.8.tar.gz",
+        ),
+    },
+    "22.9": {
+        "Linux-aarch64": (
+            "ce4100d0aa01a84d99e480cd55ff8a617778711a3cad14990be95382277344e2",
+            "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_aarch64_cuda_11.7.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "2efe69af519770e2658a5d9805be70d214cff5c3192f09e4a615dcb3ff8760c9",
+            "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_ppc64le_cuda_11.7.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "dbabe51bcee259aeba855ad496c11334c474942b744bddc5dfec9187dffbac58",
+            "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_x86_64_cuda_11.7.tar.gz",
+        ),
+    },
     "22.7": {
         "Linux-aarch64": (
             "3e47c613a6558718c850d00edd700ee85b930807812ab02974773d8a5ed13147",
@@ -274,6 +302,8 @@ class NvhpcSlim(Package):
     # These version numbers are found by matching version.{json,txt} with those
     # in cuda-toolkit. See also the version table in the release notes at
     # https://docs.nvidia.com/hpc-sdk/hpc-sdk-release-notes/index.html
+    provides("cuda@11.8.0", when="@22.11")
+    provides("cuda@11.7.1", when="@22.9")
     provides("cuda@11.7.0", when="@22.7")
     provides("cuda@11.7.0", when="@22.5")
     provides("cuda@11.6.1", when="@22.3")
