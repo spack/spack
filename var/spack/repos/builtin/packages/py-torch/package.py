@@ -338,6 +338,15 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@:1.9.1 ^cuda@11.4.100:",
     )
 
+    # PyTorch does not build with GCC 12 (fixed on master)
+    # See: https://github.com/pytorch/pytorch/issues/77614
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/4a5e339b764261d20fc409071dc7a8b8989aa195.patch?full_index=1",
+        sha256="dc8b3a9bea4693f32d6850ea2ce6ce75e1778538bfba464b50efca92bac425e3",
+        when="@:1.13 %gcc@12:",
+        working_dir="third_party/gloo",
+    )
+
     @when("@1.5.0:")
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208
