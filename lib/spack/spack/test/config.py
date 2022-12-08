@@ -30,9 +30,6 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
-from spack.main import SpackCommand
-
-env = SpackCommand("env")
 
 # sample config data
 config_low = {
@@ -1450,4 +1447,15 @@ def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
     os.chmod(filename, 0o200)
 
     with pytest.raises(spack.config.ConfigFileError, match="not readable"):
+        spack.config.read_config_file(filename)
+
+
+def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
+    """Test reading a configuration file with invalid (unparseable) YAML
+    raises a ConfigFileError."""
+    filename = tmpdir.join("test.yaml")
+    with open(filename, "w") as f:
+        f.write("spack:\nview")
+
+    with pytest.raises(spack.config.ConfigFileError, match="parsing yaml"):
         spack.config.read_config_file(filename)
