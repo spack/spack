@@ -18,9 +18,9 @@ def get_s3_session(url, method="fetch"):
     # import boto and friends as late as possible.  We don't want to require boto as a
     # dependency unless the user actually wants to access S3 mirrors.
     from boto3 import Session
-    from botocore.exceptions import ClientError
     from botocore import UNSIGNED
     from botocore.client import Config
+    from botocore.exceptions import ClientError
 
     # Circular dependency
     from spack.mirror import MirrorCollection
