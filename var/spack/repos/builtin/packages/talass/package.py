@@ -17,6 +17,8 @@ class Talass(CMakePackage):
     homepage = "http://www.cedmav.org/research/topology/72-talass.html"
     git = "https://bitbucket.org/cedmav/talass.git"
 
+    maintainers = ["lpottier"]
+
     version("process-statistics", branch="process-statistics")
     version("2018-10-29", commit="5d459c0dd89e733fa301391908a5b79fe2850ad7")
 
