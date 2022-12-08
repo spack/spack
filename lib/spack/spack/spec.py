@@ -56,7 +56,6 @@ import os
 import re
 import sys
 import warnings
-from typing import List
 
 import ruamel.yaml as yaml
 
