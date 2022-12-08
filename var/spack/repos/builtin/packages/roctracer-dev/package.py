@@ -76,7 +76,8 @@ class RoctracerDev(CMakePackage):
 
     def setup_build_environment(self, build_env):
         spec = self.spec
-        build_env.set("HIP_PATH", spec["hip"].prefix)
+        build_env.set("HIP_PATH", spec["hip"].prefix),
+        build_env.append_flags("CFLAGS", "-fPIC")
 
     def patch(self):
         filter_file(
