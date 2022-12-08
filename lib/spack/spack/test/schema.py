@@ -5,7 +5,6 @@
 
 import json
 import os.path
-import sys
 
 import jsonschema
 import pytest
@@ -87,15 +86,12 @@ def test_module_suffixes(module_suffixes_schema):
 
 
 @pytest.mark.regression("10246")
-@pytest.mark.skipif(
-    sys.version_info < (2, 7), reason="requires python2.7 or higher because of importlib"
-)
 @pytest.mark.parametrize(
     "config_name",
     ["compilers", "config", "env", "merged", "mirrors", "modules", "packages", "repos"],
 )
 def test_schema_validation(meta_schema, config_name):
-    import importlib  # novm
+    import importlib
 
     module_name = "spack.schema.{0}".format(config_name)
     module = importlib.import_module(module_name)

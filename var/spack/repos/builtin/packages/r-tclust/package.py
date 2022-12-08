@@ -16,6 +16,7 @@ class RTclust(RPackage):
 
     cran = "tclust"
 
+    version("1.5-2", sha256="492674b30a465e5f4a22ba0ce5556ed4d8e57b29090f9b5b94ad655d064e6f8b")
     version("1.5-1", sha256="73328b30774bb0767d613d7f2b60b75706b19fab864c712645ea18181f1af327")
     version("1.4-2", sha256="95dcd07dbd16383f07f5cea8561e7f3bf314e4a7483879841103b149fc8c65d9")
     version("1.4-1", sha256="4b0be612c8ecd7b4eb19a44ab6ac8f5d40515600ae1144c55989b6b41335ad9e")

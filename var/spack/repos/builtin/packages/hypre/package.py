@@ -97,6 +97,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocsparse", when="+rocm")
     depends_on("rocthrust", when="+rocm")
     depends_on("rocrand", when="+rocm")
+    depends_on("rocprim", when="+rocm")
     depends_on("umpire", when="+umpire")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
@@ -241,7 +242,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
             rocm_inc = ""
             for pkg in rocm_pkgs:
-                rocm_inc += spec[pkg].headers.include_flags + " "
+                if "^" + pkg in spec:
+                    rocm_inc += spec[pkg].headers.include_flags + " "
             configure_args.extend(
                 [
                     "--with-hip",

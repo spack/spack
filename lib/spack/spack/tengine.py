@@ -4,9 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import textwrap
-from typing import List  # novm
-
-import six
+from typing import List
 
 import llnl.util.lang
 
@@ -22,7 +20,7 @@ class ContextMeta(type):
 
     #: Keeps track of the context properties that have been added
     #: by the class that is being defined
-    _new_context_properties = []  # type: List[str]
+    _new_context_properties: List[str] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Merge all the context properties that are coming from base classes
@@ -57,7 +55,7 @@ class ContextMeta(type):
 context_property = ContextMeta.context_property
 
 
-class Context(six.with_metaclass(ContextMeta, object)):
+class Context(metaclass=ContextMeta):
     """Base class for context classes that are used with the template
     engine.
     """

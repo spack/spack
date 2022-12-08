@@ -113,7 +113,18 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
     dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
-    dav_sdk_depends_on("hdf5-vfd-gds@1.0.2:", when="+cuda+hdf5", propagate=cuda_arch_variants)
+    # hdf5-vfd-gds needs cuda@11.7.1 or later, only enable when 11.7.1+ available.
+    depends_on(
+        "hdf5-vfd-gds@1.0.2:",
+        when="+cuda+hdf5^cuda@11.7.1:",
+    )
+    for cuda_arch in cuda_arch_variants:
+        depends_on(
+            "hdf5-vfd-gds@1.0.2: {0}".format(cuda_arch),
+            when="+cuda+hdf5 {0} ^cuda@11.7.1:".format(cuda_arch),
+        )
+    conflicts("~cuda", when="^hdf5-vfd-gds@1.0.2:")
+    conflicts("~hdf5", when="^hdf5-vfd-gds@1.0.2:")
 
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 
@@ -145,8 +156,12 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("py-cinemasci", when="+cinema")
 
     dav_sdk_depends_on(
-        "paraview@5.10:+mpi+python3+kits+shared", when="+paraview", propagate=["hdf5", "adios2"]
+        "paraview@5.10:+mpi+python+kits+shared+catalyst+libcatalyst",
+        when="+paraview",
+        propagate=["hdf5", "adios2"],
     )
+    dav_sdk_depends_on("libcatalyst+mpi", when="+paraview")
+
     # ParaView needs @5.11: in order to use cuda and be compatible with other
     # SDK packages.
     depends_on("paraview +cuda", when="+paraview +cuda ^paraview@5.11:")

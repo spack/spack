@@ -26,9 +26,7 @@ import os
 import socket
 import sys
 import time
-from typing import Dict  # novm
-
-import six
+from typing import Dict
 
 try:
     import uuid
@@ -53,7 +51,6 @@ from spack.directory_layout import (
     InconsistentInstallDirectoryError,
 )
 from spack.error import SpackError
-from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.version import Version
 
@@ -307,10 +304,10 @@ class Database(object):
 
     """Per-process lock objects for each install prefix."""
 
-    _prefix_locks = {}  # type: Dict[str, lk.Lock]
+    _prefix_locks: Dict[str, lk.Lock] = {}
 
     """Per-process failure (lock) objects for each install prefix."""
-    _prefix_failures = {}  # type: Dict[str, lk.Lock]
+    _prefix_failures: Dict[str, lk.Lock] = {}
 
     def __init__(
         self,
@@ -726,6 +723,15 @@ class Database(object):
                 return True, db._data[hash_key]
         return False, None
 
+    def query_local_by_spec_hash(self, hash_key):
+        """Get a spec by hash in the local database
+
+        Return:
+            (InstallRecord or None): InstallRecord when installed
+                locally, otherwise None."""
+        with self.read_transaction():
+            return self._data.get(hash_key, None)
+
     def _assign_dependencies(self, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
@@ -771,10 +777,7 @@ class Database(object):
             with open(filename, "r") as f:
                 fdata = sjson.load(f)
         except Exception as e:
-            raise six.raise_from(
-                CorruptDatabaseError("error parsing database:", str(e)),
-                e,
-            )
+            raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
         if fdata is None:
             return
@@ -1378,23 +1381,6 @@ class Database(object):
         for spec in self.query():
             if spec.package.extends(extendee_spec):
                 yield spec.package
-
-    @_autospec
-    def activated_extensions_for(self, extendee_spec, extensions_layout=None):
-        """
-        Return the specs of all packages that extend
-        the given spec
-        """
-        if extensions_layout is None:
-            view = YamlFilesystemView(extendee_spec.prefix, spack.store.layout)
-            extensions_layout = view.extensions_layout
-        for spec in self.query():
-            try:
-                extensions_layout.check_activated(extendee_spec, spec)
-                yield spec.package
-            except spack.directory_layout.NoSuchExtensionError:
-                continue
-            # TODO: conditional way to do this instead of catching exceptions
 
     def _get_by_hash_local(self, dag_hash, default=None, installed=any):
         # hash is a full hash and is in the data somewhere

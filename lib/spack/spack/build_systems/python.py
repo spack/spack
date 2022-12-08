@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import spack.builder
 import spack.multimethod
 import spack.package_base
+import spack.spec
 from spack.directives import build_system, depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.version import Version
@@ -176,7 +177,7 @@ class PythonPackage(PythonExtension):
     """Specialized class for packages that are built using pip."""
 
     #: Package name, version, and extension on PyPI
-    pypi = None  # type: Optional[str]
+    pypi: Optional[str] = None
 
     maintainers = ["adamjstewart", "pradyunsg"]
 
@@ -199,7 +200,7 @@ class PythonPackage(PythonExtension):
         # package manually
         depends_on("py-wheel", type="build")
 
-    py_namespace = None  # type: Optional[str]
+    py_namespace: Optional[str] = None
 
     @lang.classproperty
     def homepage(cls):
@@ -217,6 +218,27 @@ class PythonPackage(PythonExtension):
         if cls.pypi:
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
+
+    def update_external_dependencies(self):
+        """
+        Ensure all external python packages have a python dependency
+
+        If another package in the DAG depends on python, we use that
+        python for the dependency of the external. If not, we assume
+        that the external PythonPackage is installed into the same
+        directory as the python it depends on.
+        """
+        # TODO: Include this in the solve, rather than instantiating post-concretization
+        if "python" not in self.spec:
+            if "python" in self.spec.root:
+                python = self.spec.root["python"]
+            else:
+                python = spack.spec.Spec("python")
+                repo = spack.repo.path.repo_for_pkg(python)
+                python.namespace = repo.namespace
+                python._mark_concrete()
+                python.external_path = self.prefix
+            self.spec.add_dependency_edge(python, ("build", "link", "run"))
 
     @property
     def headers(self):

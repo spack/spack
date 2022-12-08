@@ -6,21 +6,15 @@
 from spack.package import *
 
 
-class PyPystache(Package):
+class PyPystache(PythonPackage):
     """Pystache is a Python implementation of Mustache. Mustache is a
     framework-agnostic, logic-free templating system inspired by ctemplate and
     et."""
 
-    homepage = "git@github.com:sarnold/pystache.git"
-    git = "git@github.com:sarnold/pystache.git"
-    pypi = "https://files.pythonhosted.org/packages/3f/e7/8750ba6c6101d6aa5ceeb20c013adf2c6f3554a12c71d75654b468404bfa/pystache-0.6.0.tar.gz"
+    homepage = "https://github.com/sarnold/pystache"
+    git = "https://github.com/sarnold/pystache"
+    pypi = "pystache/pystache-0.6.0.tar.gz"
 
-    list_url = "https://pypi.org/simple/setuptools/"
+    version("0.6.0", sha256="93bf92b2149a4c4b58d12142e2c4c6dd5c08d89e4c95afccd4b6efe2ee1d470d")
 
-    maintainers = ["adamjstewart"]
-
-    version("0.6.0", sha256="880b29367f9d94c8c0f154df5566f03512b4d8c1")
-
-    extends("python")
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-pip", type="build")
+    depends_on("py-setuptools@40.8:", type="build")

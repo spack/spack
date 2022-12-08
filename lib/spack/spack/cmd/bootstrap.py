@@ -5,10 +5,8 @@
 from __future__ import print_function
 
 import os.path
-import platform
 import shutil
 import tempfile
-import warnings
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -16,6 +14,8 @@ import llnl.util.tty.color
 
 import spack
 import spack.bootstrap
+import spack.bootstrap.config
+import spack.bootstrap.core
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
@@ -52,6 +52,7 @@ BINARY_METADATA = {
 
 CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/clingo.json"
 GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/gnupg.json"
+PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/patchelf.json"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
@@ -75,7 +76,8 @@ def _add_scope_option(parser):
 def setup_parser(subparser):
     sp = subparser.add_subparsers(dest="subcommand")
 
-    sp.add_parser("now", help="Spack ready, right now!")
+    now = sp.add_parser("now", help="Spack ready, right now!")
+    now.add_argument("--dev", action="store_true", help="bootstrap dev dependencies too")
 
     status = sp.add_parser("status", help="get the status of Spack")
     status.add_argument(
@@ -111,18 +113,10 @@ def setup_parser(subparser):
     list = sp.add_parser("list", help="list all the sources of software to bootstrap Spack")
     _add_scope_option(list)
 
-    trust = sp.add_parser("trust", help="(DEPRECATED) trust a bootstrapping source")
-    _add_scope_option(trust)
-    trust.add_argument("name", help="name of the source to be trusted")
-
-    untrust = sp.add_parser("untrust", help="(DEPRECATED) untrust a bootstrapping source")
-    _add_scope_option(untrust)
-    untrust.add_argument("name", help="name of the source to be untrusted")
-
     add = sp.add_parser("add", help="add a new source for bootstrapping")
     _add_scope_option(add)
     add.add_argument(
-        "--trust", action="store_true", help="trust the source immediately upon addition"
+        "--trust", action="store_true", help="enable the source immediately upon addition"
     )
     add.add_argument("name", help="name of the new source of software")
     add.add_argument("metadata_dir", help="directory where to find metadata files")
@@ -155,9 +149,9 @@ def _enable_or_disable(args):
         return
 
     if value is True:
-        _trust(args)
+        _enable_source(args)
     else:
-        _untrust(args)
+        _disable_source(args)
 
 
 def _reset(args):
@@ -202,7 +196,7 @@ def _root(args):
 
 
 def _list(args):
-    sources = spack.bootstrap.bootstrapping_sources(scope=args.scope)
+    sources = spack.bootstrap.core.bootstrapping_sources(scope=args.scope)
     if not sources:
         llnl.util.tty.msg("No method available for bootstrapping Spack's dependencies")
         return
@@ -253,8 +247,14 @@ def _list(args):
         _print_method(s, trusted.get(s["name"], None))
 
 
-def _write_trust_state(args, value):
-    name = args.name
+def _write_bootstrapping_source_status(name, enabled, scope=None):
+    """Write if a bootstrapping source is enable or disabled to config file.
+
+    Args:
+        name (str): name of the bootstrapping source.
+        enabled (bool): True if the source is enabled, False if it is disabled.
+        scope (None or str): configuration scope to modify. If none use the default scope.
+    """
     sources = spack.config.get("bootstrap:sources")
 
     matches = [s for s in sources if s["name"] == name]
@@ -276,30 +276,18 @@ def _write_trust_state(args, value):
 
     # Setting the scope explicitly is needed to not copy over to a new scope
     # the entire default configuration for bootstrap.yaml
-    scope = args.scope or spack.config.default_modify_scope("bootstrap")
-    spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(value)), scope=scope)
+    scope = scope or spack.config.default_modify_scope("bootstrap")
+    spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(enabled)), scope=scope)
 
 
-def _deprecate_command(deprecated_cmd, suggested_cmd):
-    msg = (
-        "the 'spack bootstrap {} ...' command is deprecated and will be "
-        "removed in v0.20, use 'spack bootstrap {} ...' instead"
-    )
-    warnings.warn(msg.format(deprecated_cmd, suggested_cmd))
-
-
-def _trust(args):
-    if args.subcommand == "trust":
-        _deprecate_command("trust", "enable")
-    _write_trust_state(args, value=True)
+def _enable_source(args):
+    _write_bootstrapping_source_status(args.name, enabled=True, scope=args.scope)
     msg = '"{0}" is now enabled for bootstrapping'
     llnl.util.tty.msg(msg.format(args.name))
 
 
-def _untrust(args):
-    if args.subcommand == "untrust":
-        _deprecate_command("untrust", "disable")
-    _write_trust_state(args, value=False)
+def _disable_source(args):
+    _write_bootstrapping_source_status(args.name, enabled=False, scope=args.scope)
     msg = '"{0}" is now disabled and will not be used for bootstrapping'
     llnl.util.tty.msg(msg.format(args.name))
 
@@ -312,7 +300,7 @@ def _status(args):
         sections.append("develop")
 
     header = "@*b{{Spack v{0} - {1}}}".format(
-        spack.spack_version, spack.bootstrap.spec_for_current_python()
+        spack.spack_version, spack.bootstrap.config.spec_for_current_python()
     )
     print(llnl.util.tty.color.colorize(header))
     print()
@@ -337,7 +325,7 @@ def _status(args):
 
 
 def _add(args):
-    initial_sources = spack.bootstrap.bootstrapping_sources()
+    initial_sources = spack.bootstrap.core.bootstrapping_sources()
     names = [s["name"] for s in initial_sources]
 
     # If the name is already used error out
@@ -363,11 +351,11 @@ def _add(args):
     msg = 'New bootstrapping source "{0}" added in the "{1}" configuration scope'
     llnl.util.tty.msg(msg.format(args.name, write_scope))
     if args.trust:
-        _trust(args)
+        _enable_source(args)
 
 
 def _remove(args):
-    initial_sources = spack.bootstrap.bootstrapping_sources()
+    initial_sources = spack.bootstrap.core.bootstrapping_sources()
     names = [s["name"] for s in initial_sources]
     if args.name not in names:
         msg = (
@@ -400,7 +388,10 @@ def _mirror(args):
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible
     # TODO: dependencies of a spec
-    root_specs = spack.bootstrap.all_root_specs(development=args.dev) + ["gnuconfig"]
+    root_specs = spack.bootstrap.all_core_root_specs() + ["gnuconfig"]
+    if args.dev:
+        root_specs += spack.bootstrap.BootstrapEnvironment.spack_dev_requirements()
+
     for spec_str in root_specs:
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'
         llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
@@ -443,16 +434,16 @@ def _mirror(args):
         abs_directory, rel_directory = write_metadata(subdir="binaries", metadata=BINARY_METADATA)
         shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), abs_directory)
         shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), abs_directory)
+        shutil.copy(spack.util.path.canonicalize_path(PATCHELF_JSON), abs_directory)
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)
 
 
 def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
-        if platform.system().lower() == "linux":
-            spack.bootstrap.ensure_patchelf_in_path_or_raise()
-        spack.bootstrap.ensure_clingo_importable_or_raise()
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        spack.bootstrap.ensure_core_dependencies()
+        if args.dev:
+            spack.bootstrap.ensure_environment_dependencies()
 
 
 def bootstrap(parser, args):
@@ -463,8 +454,6 @@ def bootstrap(parser, args):
         "reset": _reset,
         "root": _root,
         "list": _list,
-        "trust": _trust,
-        "untrust": _untrust,
         "add": _add,
         "remove": _remove,
         "mirror": _mirror,

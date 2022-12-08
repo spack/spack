@@ -454,7 +454,7 @@ def check_fn(args):
 
     if not specs:
         tty.msg("No specs provided, exiting.")
-        sys.exit(0)
+        return
 
     for spec in specs:
         spec.concretize()
@@ -467,9 +467,10 @@ def check_fn(args):
 
     if not configured_mirrors:
         tty.msg("No mirrors provided, exiting.")
-        sys.exit(0)
+        return
 
-    sys.exit(bindist.check_specs_against_mirrors(configured_mirrors, specs, args.output_file))
+    if bindist.check_specs_against_mirrors(configured_mirrors, specs, args.output_file) == 1:
+        sys.exit(1)
 
 
 def download_fn(args):
@@ -479,11 +480,11 @@ def download_fn(args):
     least one of the required buildcache components."""
     if not args.spec and not args.spec_file:
         tty.msg("No specs provided, exiting.")
-        sys.exit(0)
+        return
 
     if not args.path:
         tty.msg("No download path provided, exiting")
-        sys.exit(0)
+        return
 
     spec = _concrete_spec_from_args(args)
     result = bindist.download_single_spec(spec, args.path)
@@ -531,8 +532,6 @@ def save_specfile_fn(args):
     save_dependency_specfiles(
         root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format
     )
-
-    sys.exit(0)
 
 
 def copy_buildcache_file(src_url, dest_url, local_path=None):
