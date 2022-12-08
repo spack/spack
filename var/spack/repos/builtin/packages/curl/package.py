@@ -75,7 +75,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         values=(
             # 'amissl',
             # 'bearssl',
-            conflicts("gnutls", when="platform=windows"),
+            "gnutls",
             conditional("mbedtls", when="@7.46:"),
             # 'mesalink',
             conditional("nss", when="@:7.81"),
