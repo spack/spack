@@ -22,7 +22,7 @@ import spack.repo
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.solver.asp import UnsatisfiableSpecError
-from spack.spec import Spec
+from spack.spec import ArchSpec, CompilerSpec, Spec
 from spack.version import ver
 
 is_windows = sys.platform == "win32"
@@ -1795,11 +1795,11 @@ class TestConcretize(object):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer cannot reuse")
 
-        root_spec = spack.spec.Spec("b")
+        root_spec = Spec("b")
         s = root_spec.concretized()
         wrong_compiler, wrong_os = s.copy(), s.copy()
-        wrong_compiler.compiler = spack.spec.CompilerSpec("gcc@12.1.0")
-        wrong_os.architecture = spack.spec.ArchSpec("test-ubuntu2204-x86_64")
+        wrong_compiler._compiler = CompilerSpec("gcc@12.1.0")
+        wrong_os.architecture = ArchSpec("test-ubuntu2204-x86_64")
         reusable_specs = [wrong_compiler, wrong_os]
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()

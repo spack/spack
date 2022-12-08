@@ -56,6 +56,7 @@ import os
 import re
 import sys
 import warnings
+from typing import List
 
 import ruamel.yaml as yaml
 
@@ -1264,7 +1265,7 @@ class Spec(object):
         self.versions = vn.VersionList(":")
         self.variants = vt.VariantMap(self)
         self.architecture = None
-        self.compiler = None
+        self._compiler = None
         self.compiler_flags = FlagMap(self)
         self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
         self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
@@ -1329,6 +1330,21 @@ class Spec(object):
     @property
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
+
+    @property
+    def compiler(self):
+        # Legacy compiler as property
+        if self._compiler is not None:
+            return self._compiler
+
+        # Otherwise find a compiler among build deps
+        compiler_names = ("gcc", "llvm", "nvhpc")
+        compiler = next(
+            (s for s in self.dependencies(deptype="build") if s.name in compiler_names), None
+        )
+        if compiler is None:
+            return None
+        return CompilerSpec(compiler.name, compiler.versions)
 
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
@@ -1517,7 +1533,7 @@ class Spec(object):
             raise DuplicateCompilerSpecError(
                 "Spec for '%s' cannot have two compilers." % self.name
             )
-        self.compiler = compiler
+        self._compiler = compiler
 
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
@@ -2083,9 +2099,9 @@ class Spec(object):
             spec.architecture = ArchSpec.from_dict(node)
 
         if "compiler" in node:
-            spec.compiler = CompilerSpec.from_dict(node)
+            spec._compiler = CompilerSpec.from_dict(node)
         else:
-            spec.compiler = None
+            spec._compiler = None
 
         if "parameters" in node:
             for name, values in node["parameters"].items():
@@ -2201,7 +2217,7 @@ class Spec(object):
             else:
                 raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
         if change_spec.compiler:
-            new_spec.compiler = change_spec.compiler
+            new_spec._compiler = change_spec.compiler
         if change_spec.compiler_flags:
             for flagname, flagvals in change_spec.compiler_flags.items():
                 new_spec.compiler_flags[flagname] = flagvals
@@ -3511,7 +3527,7 @@ class Spec(object):
             changed |= self.compiler.constrain(other.compiler)
         elif self.compiler is None:
             changed |= self.compiler != other.compiler
-            self.compiler = other.compiler
+            self._compiler = other.compiler
 
         changed |= self.versions.intersect(other.versions)
         changed |= self.variants.constrain(other.variants)
@@ -3823,7 +3839,7 @@ class Spec(object):
         self.name = other.name
         self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture else None
-        self.compiler = other.compiler.copy() if other.compiler else None
+        self._compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
             self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
             self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
@@ -4969,6 +4985,37 @@ def save_dependency_specfiles(
 
         with open(json_path, "w") as fd:
             fd.write(dep_spec.to_json(hash=ht.dag_hash))
+
+
+def promote_compiler_props_to_deps(specs: List[Spec]):
+    """Remove and replace CompilerSpec props with matching Spec deps from the database"""
+    compiler_str_to_spec = dict()
+
+    for spec in [s for s in traverse.traverse_nodes(specs)]:
+        # Either already processed, or abstract spec
+        if not spec.compiler:
+            continue
+
+        compiler_str = str(spec.compiler)
+
+        # Look up the query cache
+        compiler_spec = compiler_str_to_spec.get(compiler_str, False)
+
+        # Search the database if we can't find any
+        if compiler_spec is False:
+            matches = spack.store.db.query(Spec(compiler_str), installed=True)
+
+            compiler_spec = matches[0] if matches else None
+            compiler_str_to_spec[compiler_str] = compiler_spec
+
+        # No matching compiler
+        if compiler_spec is None:
+            continue
+
+        # Remove the CompilerSpec property, and replace with concrete database match
+        # Notice: technically the compiler should be a build/link type dep.
+        spec._compiler = None
+        spec.add_dependency_edge(compiler_spec, deptype=("build"))
 
 
 class SpecParseError(spack.error.SpecError):

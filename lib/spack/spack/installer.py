@@ -2190,7 +2190,9 @@ class BuildTask(object):
         # a dependency of the build task. Here we add it to self.dependencies
         compiler_spec = self.pkg.spec.compiler
         arch_spec = self.pkg.spec.architecture
-        if not spack.compilers.compilers_for_spec(compiler_spec, arch_spec=arch_spec):
+        if compiler_spec and not spack.compilers.compilers_for_spec(
+            compiler_spec, arch_spec=arch_spec
+        ):
             # The compiler is in the queue, identify it as dependency
             dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
             dep.constrain("platform=%s" % str(arch_spec.platform))
