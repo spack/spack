@@ -18,9 +18,11 @@ class PyFastfold(PythonPackage):
     version("0.2.0", sha256="6760dbae9809b8b26219c9477489d34325807be504098901d0375fbdc3103f88")
 
     # From README:
-    depends_on("python@3.8:3.9", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"))  # Req Relaxed (was @3.8:3.9)
     depends_on("cuda@11.1:", type=("build", "run"))
     depends_on("py-torch@1.10:+cuda", type=("build", "run"))
+    # Needed or py-torch fails to build when python@3.10:
+    depends_on("cudnn@8.0.5:", type=("build", "run"), when="python@3.10:")
     # From setup.py:
     depends_on("py-setuptools", type="build")
     depends_on("py-einops", type=("build", "run"))
@@ -33,7 +35,7 @@ class PyFastfold(PythonPackage):
     depends_on("py-ray@2.0.0:", type=("build", "run"))  # Req relaxed (was @2.0.0)
     depends_on("py-pandas", type=("build", "run"))
     depends_on("openmm@7.7.0:+cuda", type=("build", "run"))
-    depends_on("py-requests@2.26.0", type=("build", "run"))
+    depends_on("py-requests@2.26.0:", type=("build", "run"))  # Req relaxed (was @2.26.0)
     # From import errors:
     depends_on("py-setproctitle", type=("build", "run"))
     depends_on("py-pdbfixer", type=("build", "run"))
