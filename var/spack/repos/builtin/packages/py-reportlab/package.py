@@ -33,8 +33,8 @@ class PyReportlab(PythonPackage):
         filter_file(
             "[FREETYPE_PATHS]",
             "[FREETYPE_PATHS]\n"
-            + "lib={}\n".format(self.spec["freetype"].prefix.lib)
-            + "inc={}\n".format(self.spec["freetype"].prefix.include),
+            + "lib={}\n".format(self.spec["freetype"].libs.directories[0])
+            + "inc={}\n".format(self.spec["freetype"].headers.directories[0]),
             "setup.cfg",
             string=True,
         )
