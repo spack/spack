@@ -77,7 +77,6 @@ class RoctracerDev(CMakePackage):
     def setup_build_environment(self, build_env):
         spec = self.spec
         build_env.set("HIP_PATH", spec["hip"].prefix),
-        build_env.append_flags("CFLAGS", "-fPIC")
 
     def patch(self):
         filter_file(
@@ -100,5 +99,6 @@ class RoctracerDev(CMakePackage):
             "-DCMAKE_MODULE_PATH={0}/cmake_modules".format(self.stage.source_path),
             "-DHSA_RUNTIME_HSA_INC_PATH={0}/include".format(self.spec["hsa-rocr-dev"].prefix),
             "-DROCPROFILER_PATH={0}".format(self.spec["rocprofiler-dev"].prefix),
+            "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
         ]
         return args
