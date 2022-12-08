@@ -16,6 +16,7 @@ class PyMsalExtensions(PythonPackage):
     homepage = "https://github.com/AzureAD/microsoft-authentication-library-for-python"
     pypi = "msal-extensions/msal-extensions-0.2.2.tar.gz"
 
+    version("1.0.0", sha256="c676aba56b0cce3783de1b5c5ecfe828db998167875126ca4b47dc6436451354")
     version("0.2.2", sha256="31414753c484679bb3b6c6401623eb4c3ccab630af215f2f78c1d5c4f8e1d1a9")
     version("0.1.3", sha256="59e171a9a4baacdbf001c66915efeaef372fb424421f1a4397115a3ddd6205dc")
 
