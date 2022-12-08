@@ -30,6 +30,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
         depends_on("glx")
         depends_on("libx11")
         depends_on("libxi")
+        depends_on("libxxf86vm")
     with when("platform=cray"):
         depends_on("glx")
         depends_on("libx11")

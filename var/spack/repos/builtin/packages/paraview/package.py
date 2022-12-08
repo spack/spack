@@ -196,7 +196,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("lz4")
     depends_on("xz")
     depends_on("zlib")
-    depends_on("libcatalyst", when="+libcatalyst")
+    depends_on("libcatalyst@2:", when="+libcatalyst")
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
@@ -237,7 +237,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit.patch", when="@5.8:5.10")
+    patch("vtk-adios2-module-no-kit.patch", when="@5.8:")
 
     # Patch for paraview 5.9.0%xl_r
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591

@@ -8,7 +8,7 @@ non-hierarchical modules.
 """
 import posixpath
 import string
-from typing import Any, Dict  # novm
+from typing import Any, Dict
 
 import llnl.util.tty as tty
 
@@ -27,7 +27,7 @@ def configuration(module_set_name):
 
 
 # Caches the configuration {spec_hash: configuration}
-configuration_registry = {}  # type: Dict[str, Any]
+configuration_registry: Dict[str, Any] = {}
 
 
 def make_configuration(spec, module_set_name):

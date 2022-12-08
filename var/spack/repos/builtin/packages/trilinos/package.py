@@ -232,6 +232,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("+epetraextexperimental")
         conflicts("+epetraextgraphreorderings")
     with when("+teko"):
+        conflicts("~ml")
         conflicts("~stratimikos")
         conflicts("@:12 gotype=long")
     with when("+piro"):

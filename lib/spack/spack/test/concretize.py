@@ -325,6 +325,13 @@ class TestConcretize(object):
         assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
         assert not set(cmake.compiler_flags["fflags"])
 
+    def test_compiler_flags_from_compiler_and_dependent(self):
+        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
+        client.concretize()
+        cmake = client["cmake"]
+        for spec in [client, cmake]:
+            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
+
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
         spec.concretize()
@@ -1481,21 +1488,25 @@ class TestConcretize(object):
         assert ver("2.7.21") == Spec("python@2.7.21").concretized().version
 
     @pytest.mark.parametrize(
-        "spec_str",
+        "spec_str,valid",
         [
-            "conditional-values-in-variant@1.62.0 cxxstd=17",
-            "conditional-values-in-variant@1.62.0 cxxstd=2a",
-            "conditional-values-in-variant@1.72.0 cxxstd=2a",
+            ("conditional-values-in-variant@1.62.0 cxxstd=17", False),
+            ("conditional-values-in-variant@1.62.0 cxxstd=2a", False),
+            ("conditional-values-in-variant@1.72.0 cxxstd=2a", False),
             # Ensure disjoint set of values work too
-            "conditional-values-in-variant@1.72.0 staging=flexpath",
+            ("conditional-values-in-variant@1.72.0 staging=flexpath", False),
+            # Ensure conditional values set False fail too
+            ("conditional-values-in-variant foo=bar", False),
+            ("conditional-values-in-variant foo=foo", True),
         ],
     )
-    def test_conditional_values_in_variants(self, spec_str):
+    def test_conditional_values_in_variants(self, spec_str, valid):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer doesn't resolve conditional values in variants")
 
         s = Spec(spec_str)
-        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+        raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
+        with llnl.util.lang.nullcontext() if valid else raises:
             s.concretize()
 
     def test_conditional_values_in_conditional_variant(self):

@@ -10,7 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict  # novm
+from typing import Dict
 
 import archspec.cpu
 
@@ -41,7 +41,7 @@ _cache_config_file = []
 # TODO: Caches at module level make it difficult to mock configurations in
 # TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
-_compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
+_compiler_cache: Dict[str, "spack.compiler.Compiler"] = {}
 
 _compiler_to_pkg = {
     "clang": "llvm+clang",
