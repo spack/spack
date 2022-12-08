@@ -17,7 +17,6 @@ class PyPiper(PythonPackage):
 
     version("0.12.3", sha256="0ec7d4c4fd9cd1142e87193483c4f92022adbe2cd0f4678f2a1ea8227cdcd9fd")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-attmap@0.12.5:", type=("build", "run"))

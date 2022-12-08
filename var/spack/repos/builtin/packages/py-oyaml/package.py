@@ -15,7 +15,6 @@ class PyOyaml(PythonPackage):
 
     version("1.0", sha256="ed8fc096811f4763e1907dce29c35895d6d5936c4d0400fe843a91133d4744ed")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-pyyaml", type=("build", "run"))
