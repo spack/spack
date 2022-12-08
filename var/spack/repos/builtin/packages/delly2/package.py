@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Delly2(MakefilePackage):
@@ -14,19 +13,26 @@ class Delly2(MakefilePackage):
     short-read massively parallel sequencing data.."""
 
     homepage = "https://github.com/dellytools/delly"
+    url = "https://github.com/dellytools/delly/archive/refs/tags/v1.1.6.tar.gz"
     git = "https://github.com/dellytools/delly.git"
 
+    version("1.1.6", sha256="08961e9c81431eb486476fa71eea94941ad24ec1970b71e5a7720623a39bfd2a")
     version("0.9.1", tag="v0.9.1")
     version("2017-08-03", commit="e32a9cd55c7e3df5a6ae4a91f31a0deb354529fc", deprecated=True)
 
     variant("openmp", default=False, description="Build with openmp support")
 
     depends_on("htslib", type=("build", "link"))
-    depends_on("boost", type=("build", "link"))
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on(
+        "boost@:1.78.0+iostreams+filesystem+system+program_options+date_time",
+        when="@:0.9.1",
+        type=("build", "link"),
+    )
+    depends_on(
+        "boost+iostreams+filesystem+system+program_options+date_time",
+        when="@0.9.1:",
+        type=("build", "link"),
+    )
     depends_on("bcftools", type="run")
 
     def edit(self, spec, prefix):
@@ -49,13 +55,17 @@ class Delly2(MakefilePackage):
             makefile.filter(".boost:", "# .boost:")
         else:
             env["EBROOTHTSLIB"] = self.spec["htslib"].prefix
-            filter_file("BUILT_PROGRAMS =.*$", "BUILT_PROGRAMS = src/delly src/dpe", "Makefile")
+            if self.spec.satisfies("@0.9.1"):
+                filter_file(
+                    "BUILT_PROGRAMS =.*$", "BUILT_PROGRAMS = src/delly src/dpe", "Makefile"
+                )
             filter_file("${SUBMODULES}", "", "Makefile", string=True)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         with working_dir("src"):
             install("delly", prefix.bin)
-            install("dpe", prefix.bin)
+            if self.spec.satisfies("@0.9.1") or self.spec.satisfies("@2017-08-03"):
+                install("dpe", prefix.bin)
             if self.spec.satisfies("@2017-08-03"):
                 install("cov", prefix.bin)
