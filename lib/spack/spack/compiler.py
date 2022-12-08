@@ -599,7 +599,7 @@ class Compiler(object):
         # Windows compilers generally have an extension of some sort
         # as do most files on Windows, handle that case here
         if is_windows:
-            ext = r"\.(exe|bat)+"
+            ext = r"\.(exe|bat)"
             cls_suf = [suf + ext for suf in cls.suffixes]
             ext_suf = [ext]
             suffixes = suffixes + cls.suffixes + cls_suf + ext_suf
