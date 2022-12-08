@@ -16,7 +16,7 @@ class PyOnnxmltools(PythonPackage):
     version(
         "1.11.1",
         url="https://github.com/onnx/onnxmltools/archive/1.11.1.tar.gz",
-        sha256="a739dc2147a2609eff2b2aad4a423b9795a49557c6b4c55b15c9ee323b4a01b7"
+        sha256="a739dc2147a2609eff2b2aad4a423b9795a49557c6b4c55b15c9ee323b4a01b7",
     )
 
     version("1.11.0", sha256="174b857edcc2e4c56adbc7aed5234fff6a0f51a45956eb4c05c9f842c98bfa1f")
