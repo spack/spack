@@ -15,6 +15,7 @@ class Delly2(MakefilePackage):
     homepage = "https://github.com/dellytools/delly"
     url = "https://github.com/dellytools/delly/archive/refs/tags/v1.1.6.tar.gz"
     git = "https://github.com/dellytools/delly.git"
+    maintainers = ["snehring"]
 
     version("1.1.6", sha256="08961e9c81431eb486476fa71eea94941ad24ec1970b71e5a7720623a39bfd2a")
     version("0.9.1", tag="v0.9.1")
