@@ -261,7 +261,7 @@ def read(name):
 def create(name, init_file=None, with_view=None, keep_relative=False):
     """Create a named environment in Spack."""
     if not os.path.isdir(env_root_path()):
-        llnl.util.filesystem.mkdirp(env_root_path())
+        fs.mkdirp(env_root_path())
     validate_env_name(name)
     if exists(name):
         raise SpackEnvironmentError("'%s': environment already exists" % name)
