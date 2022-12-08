@@ -14,7 +14,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict  # novm
+from typing import Dict
 
 import llnl.util.lang
 import llnl.util.tty as tty

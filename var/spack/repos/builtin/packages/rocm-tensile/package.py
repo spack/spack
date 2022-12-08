@@ -23,10 +23,26 @@ class RocmTensile(CMakePackage):
     version("5.2.0", sha256="aa6107944482ad278111d11d2e926393423fc70e7e1838574fe7ad9f553bdacf")
     version("5.1.3", sha256="87020ca268e3a1ed8853f629839d6497764d862bd70b8775e98de439f6c89f1d")
     version("5.1.0", sha256="0ac86a623597152c5b1d8bb5634aad3e55afa51959476aaa5e9869d259ddf375")
-    version("5.0.2", sha256="c6130de3b02f4f10635d18f913b3b88ea754fce2842c680e9caf5a6781da8f37")
-    version("5.0.0", sha256="2a814ee8576ff1f06cc5ac4556300c8e7cbf77ef8c87b56992f3e66d8862f213")
-    version("4.5.2", sha256="da20256224749c0a8b44aaede25fbcd66cfeac483081af5d22f1d1fcf49dffc1")
-    version("4.5.0", sha256="26a27659c864b5372ca4407671c6e8d4be3bbc05c64fc18762ad570cd3b3af1f")
+    version(
+        "5.0.2",
+        sha256="c6130de3b02f4f10635d18f913b3b88ea754fce2842c680e9caf5a6781da8f37",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="2a814ee8576ff1f06cc5ac4556300c8e7cbf77ef8c87b56992f3e66d8862f213",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="da20256224749c0a8b44aaede25fbcd66cfeac483081af5d22f1d1fcf49dffc1",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="26a27659c864b5372ca4407671c6e8d4be3bbc05c64fc18762ad570cd3b3af1f",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="6fce0ac22051a454fe984283766eb473dc50752cd30bad05acb3dbde6ef4f8b1",

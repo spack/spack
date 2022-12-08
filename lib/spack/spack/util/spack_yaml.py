@@ -17,7 +17,7 @@ import collections.abc
 import ctypes
 import io
 import re
-from typing import List  # novm
+from typing import List
 
 import ruamel.yaml as yaml
 from ruamel.yaml import RoundTripDumper, RoundTripLoader
