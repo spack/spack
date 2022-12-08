@@ -29,8 +29,9 @@ class Test(Platform):
     back_os = "debian6"
     default_os = "debian6"
 
-    def __init__(self):
-        super(Test, self).__init__("test")
+    def __init__(self, name=None):
+        name = name or "test"
+        super(Test, self).__init__(name)
         self.add_target(self.default, spack.target.Target(self.default))
         self.add_target(self.front_end, spack.target.Target(self.front_end))
 
