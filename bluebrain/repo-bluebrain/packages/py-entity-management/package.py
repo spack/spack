@@ -19,7 +19,7 @@ class PyEntityManagement(PythonPackage):
 
     depends_on('py-requests', type='run')
     depends_on('py-attrs', type='run')
-    depends_on('py-dateutil', type='run')
+    depends_on('py-python-dateutil', type='run')
     depends_on('py-sparqlwrapper', type='run')
     depends_on('py-rdflib', type='run')
     depends_on('py-pyjwt', type='run')

@@ -37,8 +37,6 @@ packages:
     variants: +binutils+strip
   gmsh:
     variants: ~mmg~fltk
-  hadoop:
-    version: [2.10.1]
   hdf5:
     variants: +cxx+hl
   icu4c:
