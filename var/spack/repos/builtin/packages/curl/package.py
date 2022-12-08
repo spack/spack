@@ -75,7 +75,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         values=(
             # 'amissl',
             # 'bearssl',
-            "gnutls",
+            conflicts("gnutls", when="platform=windows"),
             conditional("mbedtls", when="@7.46:"),
             # 'mesalink',
             conditional("nss", when="@:7.81"),
@@ -84,7 +84,7 @@ class Curl(NMakePackage, AutotoolsPackage):
             # 'schannel',
             "secure_transport",
             # 'wolfssl',
-            "sspi",
+            conditional("sspi", when="platform=windows"),
         ),
         multi=True,
     )
@@ -107,13 +107,7 @@ class Curl(NMakePackage, AutotoolsPackage):
             # curl queries pkgconfig for openssl compilation flags
             depends_on("pkgconfig", type="build")
 
-    with when("platform=windows"):
-        variant(
-            "libs",
-            default="static",
-            values=("static", "dll"),
-            description="Build static or dll libraries",
-        )
+    variant("shared", default=False, description="enable building shared libraries")
 
     conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
@@ -266,20 +260,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
                 return "--with-darwinssl"
             else:
                 return "--without-darwinssl"
-
-    def configure(self, spec, prefix):
-        options = getattr(self, "configure_flag_args", [])
-        options += ["--prefix={0}".format(prefix)]
-        options += self.configure_args()
-
-        with working_dir(self.build_directory, create=True):
-            configure(*options)
-
-    def build(self, spec, prefix):
-        params = ["V=1"]
-        params += self.build_targets
-        with working_dir(self.build_directory):
-            make(*params)
 
 
 class NMakeBuilder(NMakeBuilder):
