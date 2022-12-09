@@ -75,9 +75,11 @@ jobs:
     - name: Build Test
       run: |
         spack compiler find
-        spack external find cmake
         spack external find ninja
-        spack -d install abseil-cpp
+        spack external find cmake
+        spack -d install python
+        spack -d install netlib-lapack
+        spack -d install hdf5
   # TODO: johnwparent - reduce the size of the installer operations
   # make-installer:
   #   runs-on: windows-latest
