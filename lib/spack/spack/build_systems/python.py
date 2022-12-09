@@ -240,11 +240,40 @@ class PythonPackage(PythonExtension):
                 if not python.concrete:
                     repo = spack.repo.path.repo_for_pkg(python)
                     python.namespace = repo.namespace
-                    python._mark_concrete()
+
+                    # Ensure architecture information is present
+                    if not python.architecture:
+                        host_platform = spack.platforms.host()
+                        host_os = host_platform.operating_system("default_os")
+                        host_target = host_platform.target("default_target")
+                        python.architecture = spack.spec.ArchSpec(
+                            str(host_platform), str(host_os), str(host_target)
+                        )
+                    else:
+                        if not python.architecture.platform:
+                            python.architecture.platform = spack.platforms.host()
+                        if not python.architecture.os:
+                            python.architecture.os = "default_os"
+                        if not python.architecture.target:
+                            python.architecture.target = archspec.cpu.host().family
+
+                    # Ensure compiler information is present
+                    if not python.compiler:
+                        python.compiler = self.spec.compiler
+
                     python.external_path = self.prefix
+                    python._mark_concrete()
             self.spec.add_dependency_edge(python, ("build", "link", "run"))
 
     def get_external_python_for_prefix(self):
+        """
+        For an external package that extends python, find the most likely spec for the python
+        it depends on.
+
+        First search: an "installed" external that shares a prefix with this package
+        Second search: a configured external that shares a prefix with this package
+        Third search: search this prefix for a python package
+        """
         python_externals_installed = [
             s for s in spack.store.db.query("python") if s.prefix == self.prefix
         ]
