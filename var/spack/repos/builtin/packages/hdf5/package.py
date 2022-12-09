@@ -573,6 +573,12 @@ class Hdf5(CMakePackage):
             backup=False,
         )
 
+        # HDF5 build incorrectly assign -l to zlib file path
+        filter_file(
+            "-l(/[^\s]+/libz\.a)", r"\1 -lz",
+            *pc_files, when="~shared"
+        )
+
         # Create non-versioned symlinks to the versioned pkg-config files:
         with working_dir(self.prefix.lib.pkgconfig):
             for f in pc_files:
