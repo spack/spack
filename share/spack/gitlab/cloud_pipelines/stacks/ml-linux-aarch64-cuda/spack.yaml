@@ -125,6 +125,7 @@ spack:
     mappings:
       - match:
           - llvm
+          - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "aarch64" ]
           variables:

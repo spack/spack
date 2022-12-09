@@ -907,10 +907,10 @@ ml-linux-x86_64-rocm-protected-build:
   tags: ["spack", "aws", "public", "medium", "aarch64"]
 
 ml-linux-aarch64-cpu-pr-generate:
-  extends: [ ".ml-linux-aarch64-cpu-generate", ".pr-generate"]
+  extends: [ ".ml-linux-aarch64-cpu-generate", ".pr-generate-aarch64"]
 
 ml-linux-aarch64-cpu-protected-generate:
-  extends: [ ".ml-linux-aarch64-cpu-generate", ".protected-generate"]
+  extends: [ ".ml-linux-aarch64-cpu-generate", ".protected-generate-aarch64"]
 
 ml-linux-aarch64-cpu-pr-build:
   extends: [ ".ml-linux-aarch64-cpu", ".pr-build" ]
@@ -947,10 +947,10 @@ ml-linux-aarch64-cpu-protected-build:
   tags: ["spack", "aws", "public", "medium", "aarch64"]
 
 ml-linux-aarch64-cuda-pr-generate:
-  extends: [ ".ml-linux-aarch64-cuda-generate", ".pr-generate"]
+  extends: [ ".ml-linux-aarch64-cuda-generate", ".pr-generate-aarch64"]
 
 ml-linux-aarch64-cuda-protected-generate:
-  extends: [ ".ml-linux-aarch64-cuda-generate", ".protected-generate"]
+  extends: [ ".ml-linux-aarch64-cuda-generate", ".protected-generate-aarch64"]
 
 ml-linux-aarch64-cuda-pr-build:
   extends: [ ".ml-linux-aarch64-cuda", ".pr-build" ]
@@ -987,10 +987,10 @@ ml-linux-aarch64-cuda-protected-build:
   tags: ["spack", "aws", "public", "medium", "aarch64"]
 
 ml-linux-aarch64-rocm-pr-generate:
-  extends: [ ".ml-linux-aarch64-rocm-generate", ".pr-generate"]
+  extends: [ ".ml-linux-aarch64-rocm-generate", ".pr-generate-aarch64"]
 
 ml-linux-aarch64-rocm-protected-generate:
-  extends: [ ".ml-linux-aarch64-rocm-generate", ".protected-generate"]
+  extends: [ ".ml-linux-aarch64-rocm-generate", ".protected-generate-aarch64"]
 
 ml-linux-aarch64-rocm-pr-build:
   extends: [ ".ml-linux-aarch64-rocm", ".pr-build" ]
