@@ -434,15 +434,15 @@ class CudaToolkit(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
-    maintainers = ['ax3l', 'Rombur', 'wyphan']
-    executables = ['^nvcc$']
+    maintainers = ["ax3l", "Rombur", "wyphan"]
+    executables = ["^nvcc$"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1], expand=False)
-            provides('cuda@' + ver, when='@' + ver)
+            provides("cuda@" + ver, when="@" + ver)
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
@@ -453,55 +453,62 @@ class CudaToolkit(Package):
     # macOS NVIDIA drivers at
     # https://www.nvidia.com/en-us/drivers/cuda/mac-driver-archive/ mention
     # Mojave support -- only macOS High Sierra 10.13 is supported.
-    conflicts('arch=darwin-mojave-x86_64')
+    conflicts("arch=darwin-mojave-x86_64")
 
-    variant('dev', default=False, description='Enable development dependencies, i.e to use cuda-gdb')
-    variant('allow-unsupported-compilers', default=False, sticky=True,
-            description='Allow unsupported host compiler and CUDA version combinations')
+    variant(
+        "dev", default=False, description="Enable development dependencies, i.e to use cuda-gdb"
+    )
+    variant(
+        "allow-unsupported-compilers",
+        default=False,
+        sticky=True,
+        description="Allow unsupported host compiler and CUDA version combinations",
+    )
 
-    depends_on('libxml2', when='@10.1.243:')
+    depends_on("libxml2", when="@10.1.243:")
     # cuda-gdb needed libncurses.so.5 before 11.4.0
     # see https://docs.nvidia.com/cuda/archive/11.3.1/cuda-gdb/index.html#common-issues-oss
     # see https://docs.nvidia.com/cuda/archive/11.4.0/cuda-gdb/index.html#release-notes
-    depends_on('ncurses abi=5', type='run', when='@:11.3.99+dev')
+    depends_on("ncurses abi=5", type="run", when="@:11.3.99+dev")
 
-    provides('opencl@:1.2', when='@7:')
-    provides('opencl@:1.1', when='@:6')
+    provides("opencl@:1.2", when="@7:")
+    provides("opencl@:1.1", when="@:6")
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str, error=str)
-        match = re.search(r'Cuda compilation tools, release .*?, V(\S+)',
-                          output)
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"Cuda compilation tools, release .*?, V(\S+)", output)
         return match.group(1) if match else None
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies('@:8.0.61'):
+        if self.spec.satisfies("@:8.0.61"):
             # Perl 5.26 removed current directory from module search path,
             # CUDA 9 has a fix for this, but CUDA 8 and lower don't.
-            env.append_path('PERL5LIB', self.stage.source_path)
+            env.append_path("PERL5LIB", self.stage.source_path)
 
-        if self.spec.satisfies('@10.1.243:'):
-            libxml2_home = self.spec['libxml2'].prefix
-            env.set('LIBXML2HOME', libxml2_home)
-            env.append_path('LD_LIBRARY_PATH', libxml2_home.lib)
+        if self.spec.satisfies("@10.1.243:"):
+            libxml2_home = self.spec["libxml2"].prefix
+            env.set("LIBXML2HOME", libxml2_home)
+            env.append_path("LD_LIBRARY_PATH", libxml2_home.lib)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
+        env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
 
     def setup_run_environment(self, env):
-        env.set('CUDA_HOME', self.prefix)
+        env.set("CUDA_HOME", self.prefix)
 
     def install(self, spec, prefix):
-        if os.path.exists('/tmp/cuda-installer.log'):
+        if os.path.exists("/tmp/cuda-installer.log"):
             try:
-                os.remove('/tmp/cuda-installer.log')
+                os.remove("/tmp/cuda-installer.log")
             except OSError:
-                if spec.satisfies('@10.1:'):
-                    tty.die("The cuda installer will segfault due to the "
-                            "presence of /tmp/cuda-installer.log "
-                            "please remove the file and try again ")
-        runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
+                if spec.satisfies("@10.1:"):
+                    tty.die(
+                        "The cuda installer will segfault due to the "
+                        "presence of /tmp/cuda-installer.log "
+                        "please remove the file and try again "
+                    )
+        runfile = glob(join_path(self.stage.source_path, "cuda*_linux*"))[0]
 
         # Note: NVIDIA does not officially support many newer versions of
         # compilers.  For example, on CentOS 6, you must use GCC 4.4.7 or
@@ -513,60 +520,59 @@ class CudaToolkit(Package):
         # CUDA 10.1 on ppc64le fails to copy some files, the workaround is adapted from
         # https://forums.developer.nvidia.com/t/cuda-10-1-243-10-1-update-2-ppc64le-run-file-installation-issue/82433
         # See also #21170
-        if spec.satisfies('@10.1.243') and platform.machine() == 'ppc64le':
+        if spec.satisfies("@10.1.243") and platform.machine() == "ppc64le":
             includedir = "targets/ppc64le-linux/include"
             os.makedirs(os.path.join(prefix, includedir))
             os.makedirs(os.path.join(prefix, "src"))
             os.symlink(includedir, os.path.join(prefix, "include"))
 
-        install_shell = which('sh')
+        install_shell = which("sh")
 
-        if self.spec.satisfies('@:8.0.61'):
+        if self.spec.satisfies("@:8.0.61"):
             # Perl 5.26 removed current directory from module search path.
             # We are addressing this by exporting `PERL5LIB` earlier, but for some
             # reason, it is not enough. One more file needs to be extracted before
             # running the actual installer. This solution is one of the commonly
             # found on the Internet, when people try to install CUDA <= 8 manually.
             # For example: https://askubuntu.com/a/1087842
-            arguments = [runfile, '--tar', 'mxvf', './InstallUtils.pm']
+            arguments = [runfile, "--tar", "mxvf", "./InstallUtils.pm"]
             install_shell(*arguments)
 
         # CUDA 10.1+ has different cmdline options for the installer
         arguments = [
-            runfile,            # the install script
-            '--silent',         # disable interactive prompts
-            '--override',       # override compiler version checks
-            '--toolkit',        # install CUDA Toolkit
+            runfile,  # the install script
+            "--silent",  # disable interactive prompts
+            "--override",  # override compiler version checks
+            "--toolkit",  # install CUDA Toolkit
         ]
 
-        if spec.satisfies('@7:'):
+        if spec.satisfies("@7:"):
             # use stage dir instead of /tmp
-            mkdir(join_path(self.stage.path, 'tmp'))
-            arguments.append('--tmpdir=%s' % join_path(self.stage.path, 'tmp'))
+            mkdir(join_path(self.stage.path, "tmp"))
+            arguments.append("--tmpdir=%s" % join_path(self.stage.path, "tmp"))
 
-        if spec.satisfies('@10.1:'):
-            arguments.append('--installpath=%s' % prefix)   # Where to install
+        if spec.satisfies("@10.1:"):
+            arguments.append("--installpath=%s" % prefix)  # Where to install
         else:
-            arguments.append('--verbose')                   # Verbose log file
-            arguments.append('--toolkitpath=%s' % prefix)   # Where to install
+            arguments.append("--verbose")  # Verbose log file
+            arguments.append("--toolkitpath=%s" % prefix)  # Where to install
 
         install_shell(*arguments)
 
         try:
-            os.remove('/tmp/cuda-installer.log')
+            os.remove("/tmp/cuda-installer.log")
         except OSError:
             pass
 
     @property
     def libs(self):
-        libs = find_libraries('libcudart', root=self.prefix, shared=True,
-                              recursive=True)
+        libs = find_libraries("libcudart", root=self.prefix, shared=True, recursive=True)
 
         filtered_libs = []
         # CUDA 10.0 provides Compatability libraries for running newer versions
         # of CUDA with older drivers. These do not work with newer drivers.
         for lib in libs:
             parts = lib.split(os.sep)
-            if 'compat' not in parts and 'stubs' not in parts:
+            if "compat" not in parts and "stubs" not in parts:
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)

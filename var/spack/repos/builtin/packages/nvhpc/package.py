@@ -263,8 +263,8 @@ class Nvhpc(Package):
 
     homepage = "https://developer.nvidia.com/hpc-sdk"
 
-    maintainers = ['samcmill']
-    tags = ['e4s']
+    maintainers = ["samcmill"]
+    tags = ["e4s"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
@@ -272,79 +272,82 @@ class Nvhpc(Package):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
-    variant('blas',         default=True,
-            description="Enable BLAS")
-    variant('install_type', default='single',
-            values=('single', 'network'), multi=False,
-            description='Network installs are for installations shared '
-                        'by different operating systems')
-    variant('lapack',       default=True,
-            description="Enable LAPACK")
-    variant('mpi',          default=False,
-            description="Enable MPI")
+    variant("blas", default=True, description="Enable BLAS")
+    variant(
+        "install_type",
+        default="single",
+        values=("single", "network"),
+        multi=False,
+        description="Network installs are for installations shared "
+        "by different operating systems",
+    )
+    variant("lapack", default=True, description="Enable LAPACK")
+    variant("mpi", default=False, description="Enable MPI")
 
-    provides('blas',        when='+blas')
-    provides('lapack',      when='+lapack')
-    provides('mpi',         when='+mpi')
+    provides("blas", when="+blas")
+    provides("lapack", when="+lapack")
+    provides("mpi", when="+mpi")
 
     # These version numbers are found by matching version.{json,txt} with those
     # in cuda-toolkit. See also the version table in the release notes at
     # https://docs.nvidia.com/hpc-sdk/hpc-sdk-release-notes/index.html
-    provides('cuda@10.2.89,11.0.3,11.8.0',        when='@22.11')
-    provides('cuda@10.2.89,11.0.3,11.7.1',        when='@22.9')
-    provides('cuda@10.2.89,11.0.3,11.7.0',        when='@22.7')
-    provides('cuda@10.2.89,11.0.3,11.7.0',        when='@22.5')
-    provides('cuda@10.2.89,11.0.3,11.6.1',        when='@22.3')
-    provides('cuda@10.2.89,11.0.3,11.2.1,11.6.0', when='@22.2')
-    provides('cuda@10.2.89,11.0.3,11.5.1',        when='@22.1')
-    provides('cuda@10.2.89,11.0.3,11.5.1',        when='@21.11')
-    provides('cuda@10.2.89,11.0.3,11.4.1',        when='@21.9')
-    provides('cuda@10.2.89,11.0.3,11.4.0',        when='@21.7')
-    provides('cuda@10.2.89,11.0.3,11.3.0',        when='@21.5')
-    provides('cuda@10.2.89,11.0.3,11.2.1',        when='@21.3')
-    provides('cuda@10.2.89,11.0.3,11.2.0',        when='@21.2')
-    provides('cuda@10.2.89,11.0.3,11.2.0',        when='@21.1')
-    provides('cuda@10.2.89,11.0.3,11.1.1',        when='@20.11')
-    provides('cuda@10.1.243,10.2.89,11.0.3',      when='@20.9')
-    provides('cuda@10.1.243,10.2.89,11.0.2',      when='@20.7')
+    provides("cuda@10.2.89,11.0.3,11.8.0", when="@22.11")
+    provides("cuda@10.2.89,11.0.3,11.7.1", when="@22.9")
+    provides("cuda@10.2.89,11.0.3,11.7.0", when="@22.7")
+    provides("cuda@10.2.89,11.0.3,11.7.0", when="@22.5")
+    provides("cuda@10.2.89,11.0.3,11.6.1", when="@22.3")
+    provides("cuda@10.2.89,11.0.3,11.2.1,11.6.0", when="@22.2")
+    provides("cuda@10.2.89,11.0.3,11.5.1", when="@22.1")
+    provides("cuda@10.2.89,11.0.3,11.5.1", when="@21.11")
+    provides("cuda@10.2.89,11.0.3,11.4.1", when="@21.9")
+    provides("cuda@10.2.89,11.0.3,11.4.0", when="@21.7")
+    provides("cuda@10.2.89,11.0.3,11.3.0", when="@21.5")
+    provides("cuda@10.2.89,11.0.3,11.2.1", when="@21.3")
+    provides("cuda@10.2.89,11.0.3,11.2.0", when="@21.2")
+    provides("cuda@10.2.89,11.0.3,11.2.0", when="@21.1")
+    provides("cuda@10.2.89,11.0.3,11.1.1", when="@20.11")
+    provides("cuda@10.1.243,10.2.89,11.0.3", when="@20.9")
+    provides("cuda@10.1.243,10.2.89,11.0.2", when="@20.7")
 
     # TODO: effectively gcc is a direct dependency of nvhpc, but we cannot express that
     #  properly. For now, add conflicts for non-gcc compilers instead.
     for __compiler in spack.compilers.supported_compilers():
-        if __compiler != 'gcc':
-            conflicts('%{0}'.format(__compiler),
-                      msg='nvhpc must be installed with %gcc')
+        if __compiler != "gcc":
+            conflicts("%{0}".format(__compiler), msg="nvhpc must be installed with %gcc")
 
     def _version_prefix(self):
-        return join_path(
-            self.prefix, 'Linux_%s' % self.spec.target.family, self.version)
+        return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)
 
     def setup_build_environment(self, env):
-        env.set('NVHPC_SILENT', 'true')
-        env.set('NVHPC_ACCEPT_EULA', 'accept')
-        env.set('NVHPC_INSTALL_DIR', self.prefix)
+        env.set("NVHPC_SILENT", "true")
+        env.set("NVHPC_ACCEPT_EULA", "accept")
+        env.set("NVHPC_INSTALL_DIR", self.prefix)
 
-        if self.spec.variants['install_type'].value == 'network':
-            local_dir = join_path(self._version_prefix(), 'share_objects')
-            env.set('NVHPC_INSTALL_TYPE', 'network')
-            env.set('NVHPC_INSTALL_LOCAL_DIR', local_dir)
+        if self.spec.variants["install_type"].value == "network":
+            local_dir = join_path(self._version_prefix(), "share_objects")
+            env.set("NVHPC_INSTALL_TYPE", "network")
+            env.set("NVHPC_INSTALL_LOCAL_DIR", local_dir)
         else:
-            env.set('NVHPC_INSTALL_TYPE', 'single')
+            env.set("NVHPC_INSTALL_TYPE", "single")
 
     def install(self, spec, prefix):
-        compilers_bin = join_path(self._version_prefix(), 'compilers', 'bin')
-        install = Executable('./install')
-        makelocalrc = Executable(join_path(compilers_bin, 'makelocalrc'))
+        compilers_bin = join_path(self._version_prefix(), "compilers", "bin")
+        install = Executable("./install")
+        makelocalrc = Executable(join_path(compilers_bin, "makelocalrc"))
 
         makelocalrc_args = [
-            '-gcc', self.compiler.cc,
-            '-gpp', self.compiler.cxx,
-            '-g77', self.compiler.f77,
-            '-x', compilers_bin
+            "-gcc",
+            self.compiler.cc,
+            "-gpp",
+            self.compiler.cxx,
+            "-g77",
+            self.compiler.f77,
+            "-x",
+            compilers_bin,
         ]
-        if self.spec.variants['install_type'].value == 'network':
-            local_dir = join_path(self._version_prefix(), 'share_objects')
-            makelocalrc_args.extend(['-net', local_dir])
+        if self.spec.variants["install_type"].value == "network":
+            local_dir = join_path(self._version_prefix(), "share_objects")
+            makelocalrc_args.extend(["-net", local_dir])
 
         # Run install script
         install()
@@ -353,65 +356,83 @@ class Nvhpc(Package):
         makelocalrc(*makelocalrc_args)
 
     def setup_run_environment(self, env):
-        prefix = Prefix(join_path(self.prefix,
-                                  'Linux_%s' % self.spec.target.family,
-                                  self.version, 'compilers'))
+        prefix = Prefix(
+            join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
+        )
 
-        env.set('CC',  join_path(prefix.bin, 'nvc'))
-        env.set('CXX', join_path(prefix.bin, 'nvc++'))
-        env.set('F77', join_path(prefix.bin, 'nvfortran'))
-        env.set('FC',  join_path(prefix.bin, 'nvfortran'))
+        env.set("CC", join_path(prefix.bin, "nvc"))
+        env.set("CXX", join_path(prefix.bin, "nvc++"))
+        env.set("F77", join_path(prefix.bin, "nvfortran"))
+        env.set("FC", join_path(prefix.bin, "nvfortran"))
 
-        env.prepend_path('PATH',            prefix.bin)
-        env.prepend_path('LIBRARY_PATH',    prefix.lib)
-        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
-        env.prepend_path('MANPATH',         prefix.man)
+        env.prepend_path("PATH", prefix.bin)
+        env.prepend_path("LIBRARY_PATH", prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", prefix.lib)
+        env.prepend_path("MANPATH", prefix.man)
 
-        if '+mpi' in self.spec:
-            mpi_prefix = Prefix(join_path(self.prefix,
-                                          'Linux_%s' % self.spec.target.family,
-                                          self.version, 'comm_libs', 'mpi'))
-            env.prepend_path('PATH', mpi_prefix.bin)
-            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
+        if "+mpi" in self.spec:
+            mpi_prefix = Prefix(
+                join_path(
+                    self.prefix,
+                    "Linux_%s" % self.spec.target.family,
+                    self.version,
+                    "comm_libs",
+                    "mpi",
+                )
+            )
+            env.prepend_path("PATH", mpi_prefix.bin)
+            env.prepend_path("LD_LIBRARY_PATH", mpi_prefix.lib)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        prefix = Prefix(join_path(self.prefix,
-                                  'Linux_%s' % self.spec.target.family,
-                                  self.version, 'compilers'))
+        prefix = Prefix(
+            join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
+        )
 
-        env.prepend_path('LIBRARY_PATH',    prefix.lib)
-        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+        env.prepend_path("LIBRARY_PATH", prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", prefix.lib)
 
-        if '+mpi' in self.spec:
-            mpi_prefix = Prefix(join_path(self.prefix,
-                                          'Linux_%s' % self.spec.target.family,
-                                          self.version, 'comm_libs', 'mpi'))
+        if "+mpi" in self.spec:
+            mpi_prefix = Prefix(
+                join_path(
+                    self.prefix,
+                    "Linux_%s" % self.spec.target.family,
+                    self.version,
+                    "comm_libs",
+                    "mpi",
+                )
+            )
 
-            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", mpi_prefix.lib)
 
     def setup_dependent_package(self, module, dependent_spec):
-        if '+mpi' in self.spec or self.provides('mpi'):
-            mpi_prefix = Prefix(join_path(self.prefix,
-                                          'Linux_%s' % self.spec.target.family,
-                                          self.version, 'comm_libs', 'mpi'))
+        if "+mpi" in self.spec or self.provides("mpi"):
+            mpi_prefix = Prefix(
+                join_path(
+                    self.prefix,
+                    "Linux_%s" % self.spec.target.family,
+                    self.version,
+                    "comm_libs",
+                    "mpi",
+                )
+            )
 
-            self.spec.mpicc  = join_path(mpi_prefix.bin, 'mpicc')
-            self.spec.mpicxx = join_path(mpi_prefix.bin, 'mpicxx')
-            self.spec.mpif77 = join_path(mpi_prefix.bin, 'mpif77')
-            self.spec.mpifc  = join_path(mpi_prefix.bin, 'mpif90')
+            self.spec.mpicc = join_path(mpi_prefix.bin, "mpicc")
+            self.spec.mpicxx = join_path(mpi_prefix.bin, "mpicxx")
+            self.spec.mpif77 = join_path(mpi_prefix.bin, "mpif77")
+            self.spec.mpifc = join_path(mpi_prefix.bin, "mpif90")
 
     @property
     def libs(self):
-        prefix = Prefix(join_path(self.prefix,
-                                  'Linux_%s' % self.spec.target.family,
-                                  self.version, 'compilers'))
+        prefix = Prefix(
+            join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
+        )
         libs = []
 
-        if '+blas' in self.spec:
-            libs.append('libblas')
+        if "+blas" in self.spec:
+            libs.append("libblas")
 
-        if '+lapack' in self.spec:
-            libs.append('liblapack')
-            libs.append('libnvf')
+        if "+lapack" in self.spec:
+            libs.append("liblapack")
+            libs.append("libnvf")
 
         return find_libraries(libs, root=prefix, recursive=True)

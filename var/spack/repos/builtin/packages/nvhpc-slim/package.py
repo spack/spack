@@ -321,9 +321,7 @@ class NvhpcSlim(Package):
     provides("cuda@11.0.2", when="@20.7")
 
     def _version_prefix(self):
-        return join_path(
-            self.prefix, "Linux_%s" % self.spec.target.family, self.version
-        )
+        return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)
 
     def setup_build_environment(self, env):
         env.set("NVHPC_SILENT", "true")
