@@ -184,7 +184,7 @@ simply run the following commands:
 .. code-block:: console
 
    $ spack env activate myenv
-   $ spack concretize --force
+   $ spack concretize --force --fresh
    $ spack install
 
 The ``--force`` flag tells Spack to overwrite its previous concretization
