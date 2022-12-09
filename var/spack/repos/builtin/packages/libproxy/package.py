@@ -30,7 +30,6 @@ class Libproxy(CMakePackage):
         args = [
             self.define_from_variant("WITH_PERL", "perl"),
             self.define_from_variant("WITH_PYTHON3", "python"),
-            self.define_from_variant("PYTHON3_SITEPKG_DIR:STRING="+join_path(self.prefix.lib,"python","site-packages"), "python"),
             self.define("WITH_DOTNET", False),
             self.define("WITH_PYTHON2", False),
             self.define("WITH_VALA", False),
