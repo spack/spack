@@ -12,6 +12,7 @@ import pytest
 import llnl.util.tty as tty
 
 import spack.config
+import spack.mirror
 import spack.paths
 import spack.util.s3
 import spack.util.web
@@ -246,14 +247,24 @@ class MockS3Client(object):
 
 
 def test_gather_s3_information(monkeypatch, capfd):
-    mock_connection_data = {
-        "access_token": "AAAAAAA",
-        "profile": "SPacKDeV",
-        "access_pair": ("SPA", "CK"),
-        "endpoint_url": "https://127.0.0.1:8888",
-    }
+    mirror = spack.mirror.Mirror.from_dict(
+        {
+            "fetch": {
+                "access_token": "AAAAAAA",
+                "profile": "SPacKDeV",
+                "access_pair": ("SPA", "CK"),
+                "endpoint_url": "https://127.0.0.1:8888",
+            },
+            "push": {
+                "access_token": "AAAAAAA",
+                "profile": "SPacKDeV",
+                "access_pair": ("SPA", "CK"),
+                "endpoint_url": "https://127.0.0.1:8888",
+            },
+        }
+    )
 
-    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(mock_connection_data)
+    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(mirror, "push")
 
     # Session args are used to create the S3 Session object
     assert "aws_session_token" in session_args
@@ -273,10 +284,10 @@ def test_gather_s3_information(monkeypatch, capfd):
 def test_remove_s3_url(monkeypatch, capfd):
     fake_s3_url = "s3://my-bucket/subdirectory/mirror"
 
-    def mock_create_s3_session(url, connection={}):
+    def get_s3_session(url, method="fetch"):
         return MockS3Client()
 
-    monkeypatch.setattr(spack.util.s3, "create_s3_session", mock_create_s3_session)
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
 
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
@@ -292,10 +303,10 @@ def test_remove_s3_url(monkeypatch, capfd):
 
 
 def test_s3_url_exists(monkeypatch, capfd):
-    def mock_create_s3_session(url, connection={}):
+    def get_s3_session(url, method="fetch"):
         return MockS3Client()
 
-    monkeypatch.setattr(spack.util.s3, "create_s3_session", mock_create_s3_session)
+    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
 
     fake_s3_url_exists = "s3://my-bucket/subdirectory/my-file"
     assert spack.util.web.url_exists(fake_s3_url_exists)
