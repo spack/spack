@@ -3823,7 +3823,7 @@ class Spec(object):
                 self.name != other.name
                 and self.versions != other.versions
                 and self.architecture != other.architecture
-                and self.compiler != other.compiler
+                and self._compiler != other._compiler
                 and self.variants != other.variants
                 and self._normal != other._normal
                 and self.concrete != other.concrete
@@ -3838,7 +3838,7 @@ class Spec(object):
         self.name = other.name
         self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture else None
-        self._compiler = other.compiler.copy() if other.compiler else None
+        self._compiler = other._compiler.copy() if other._compiler else None
         if cleardeps:
             self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
             self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
