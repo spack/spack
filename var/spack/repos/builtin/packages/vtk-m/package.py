@@ -188,6 +188,18 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 # vtk-m detectes tbb via TBB_ROOT env var
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
 
+            # mpi support
+            if "+mpi" in spec:
+                if not spec.satisfies("@1.3.0:"):
+                    raise InstallError(
+                        "mpi is not supported for\
+                            vtkm version lower than 1.3"
+                    )
+                options.append("-DVTKm_ENABLE_MPI:BOOL=ON")
+                options.append(self.define("CMAKE_HIP_FLAGS", "-I/opt/cray/pe/mpich/8.1.16/ofi/crayclang/10.0/include -L/opt/cray/pe/mpich/8.1.16/ofi/crayclang/10.0/lib -lmpi -L/opt/cray/pe/mpich/8.1.16/gtl/lib -lmpi_gtl_hsa"))
+            else:
+                options.append("-DVTKm_ENABLE_MPI:BOOL=OFF")
+
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
                 options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
