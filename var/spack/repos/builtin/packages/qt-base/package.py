@@ -82,6 +82,10 @@ class QtBase(CMakePackage):
         depends_on("libproxy")
         depends_on("openssl")
 
+    # qt-base confirmed to build with gcc@8.5.0
+    # also see: https://doc.qt.io/qt-6/linux.html
+    conflicts('%gcc@:7')
+
     @property
     def archive_files(self):
         """Save both the CMakeCache and the config summary."""
