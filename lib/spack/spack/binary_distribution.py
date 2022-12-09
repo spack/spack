@@ -418,7 +418,12 @@ class BinaryCacheIndex(object):
 
         if all_methods_failed:
             raise FetchCacheError(fetch_errors)
-        elif spec_cache_regenerate_needed:
+        if fetch_errors:
+            tty.warn(
+                "The following issues were ignored while updating the indices of binary caches",
+                FetchCacheError(fetch_errors),
+            )
+        if spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
 
     def _fetch_and_cache_index(self, mirror_url, expect_hash=None):
@@ -504,9 +509,9 @@ class BinaryCacheIndex(object):
 
         if fetched_hash is not None and locally_computed_hash != fetched_hash:
             msg = (
-                "Computed hash ({0}) did not match remote ({1}), "
+                "Computed index hash [{0}] did not match remote [{1}, url:{2}] "
                 "indicating error in index transmission"
-            ).format(locally_computed_hash, expect_hash)
+            ).format(locally_computed_hash, fetched_hash, hash_fetch_url)
             errors.append(RuntimeError(msg))
             # We somehow got an index that doesn't match the remote one, maybe
             # the next time we try we'll be successful.
