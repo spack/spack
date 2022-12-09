@@ -60,7 +60,7 @@ class Geant4(CMakePackage):
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
     variant("qt", default=False, description="Enable Qt support")
-    variant("python", default=False, description="Enable Python bindings", when="@10.6.2:10.7")
+    variant("python", default=False, description="Enable Python bindings", when="@10.6.2:11.0")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("vtk", default=False, description="Enable VTK support", when="@11:")
 
