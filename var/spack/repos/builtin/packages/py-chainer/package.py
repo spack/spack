@@ -48,25 +48,33 @@ class PyChainer(PythonPackage):
         if "+mn" in self.spec:
             self.cache_extra_test_sources("examples")
 
-    def test(self):
-        if "+mn" in self.spec:
-            # Run test of ChainerMN
-            test_dir = self.test_suite.current_test_data_dir
+    def test_chainermn(self):
+        """Run the ChainerMN test"""
+        if not "+mn" in self.spec:
+            raise SkipTest("Test only supported when built with +mn")
 
-            mnist_dir = join_path(self.install_test_root, "examples", "chainermn", "mnist")
-            mnist_file = join_path(mnist_dir, "train_mnist.py")
-            mpi_name = self.spec["mpi"].prefix.bin.mpirun
-            python_exe = self.spec["python"].command.path
-            opts = ["-n", "4", python_exe, mnist_file, "-o", test_dir]
-            env["OMP_NUM_THREADS"] = "4"
+        # test_dir = self.test_suite.current_test_data_dir
+        test_dir = "."  # default is the current test directory
 
-            self.run_test(mpi_name, options=opts, work_dir=test_dir)
+        mnist_dir = join_path(self.install_test_root, "examples", "chainermn", "mnist")
+        mnist_file = join_path(mnist_dir, "train_mnist.py")
+        mpi = self.spec["mpi"].prefix.bin.mpirun
+        python = self.spec["python"].command
+        opts = [
+            "-n",
+            "4",
+            python,
+            mnist_file,
+            "-o",
+            test_dir,
+        ]
+        env["OMP_NUM_THREADS"] = "4"
 
-            # check results
-            json_open = open(join_path(test_dir, "log"), "r")
-            json_load = json.load(json_open)
-            v = dict([(d.get("epoch"), d.get("main/accuracy")) for d in json_load])
-            if 1 not in v or 20 not in v:
-                raise RuntimeError("Cannot find epoch 1 or epoch 20")
-            if abs(1.0 - v[1]) < abs(1.0 - v[20]):
-                raise RuntimeError("ChainerMN Test Failed !")
+        mpi(*opts)
+
+        # check results
+        json_open = open(join_path(test_dir, "log"), "r")
+        json_load = json.load(json_open)
+        v = dict([(d.get("epoch"), d.get("main/accuracy")) for d in json_load])
+        assert (1 in v) or (20 in v), "Cannot find epoch 1 or epoch 20"
+        assert abs(1.0 - v[1]) >= abs(1.0 - v[20]), "ChainerMN Test Failed!"

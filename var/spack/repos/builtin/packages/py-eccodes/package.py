@@ -38,12 +38,7 @@ class PyEccodes(PythonPackage):
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_build_environment(env)
 
-    def test(self):
-        super(PyEccodes, self).test()
-
-        self.run_test(
-            self.spec["python"].command.path,
-            ["-m", "eccodes", "selfcheck"],
-            purpose="checking system setup",
-            work_dir="spack-test",
-        )
+    def test_selfcheck(self):
+        """checking system setup"""
+        python = self.spec["python"].command
+        python("-m", "eccodes", "selfcheck")
