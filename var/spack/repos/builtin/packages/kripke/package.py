@@ -17,7 +17,7 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ["vsrana01"]
 
-    version("spackify", branch="feature/spackify", submodules=False)
+    version("develop", branch="develop", submodules=False)
     version("1.2.4", submodules=False, tag="v1.2.4")
     version("1.2.3", submodules=True, tag="v1.2.3")
     version("1.2.2", submodules=True, tag="v1.2.2-CORAL2")
