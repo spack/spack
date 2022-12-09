@@ -83,7 +83,7 @@ class QtBase(CMakePackage):
         depends_on("openssl")
 
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
-    conflicts('%gcc@:7')
+    conflicts("%gcc@:7")
 
     @property
     def archive_files(self):
