@@ -2,12 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import archspec
 import inspect
 import os
 import re
 import shutil
 from typing import Optional
+
+import archspec
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
