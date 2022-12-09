@@ -37,7 +37,5 @@ class Libproxy(CMakePackage):
             self.define("WITH_VALA", False),
         ]
         if "+python" in self.spec:
-            pynver = "python{0}".format(self.spec["python"].version.up_to(2))
-            pysite = join_path(self.prefix.lib, pynver, "site-packages")
-            args.append(self.define("PYTHON3_SITEPKG_DIR", pysite))
+            args.append(self.define("PYTHON3_SITEPKG_DIR", python_platlib))
         return args
