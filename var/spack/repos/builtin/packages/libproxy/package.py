@@ -26,7 +26,7 @@ class Libproxy(CMakePackage):
     depends_on("perl", type=("build", "run"), when="+perl")
     depends_on("python", type=("build", "run"), when="+python")
 
-    extends('python', when='+python')
+    extends("python", when="+python")
 
     def cmake_args(self):
         args = [
@@ -36,7 +36,7 @@ class Libproxy(CMakePackage):
             self.define("WITH_PYTHON2", False),
             self.define("WITH_VALA", False),
         ]
-        if '+python' in self.spec:
+        if "+python" in self.spec:
             pynver = "python{0}".format(self.spec["python"].version.up_to(2))
             pysite = join_path(self.prefix.lib, pynver, "site-packages")
             args.append(self.define("PYTHON3_SITEPKG_DIR", pysite))
