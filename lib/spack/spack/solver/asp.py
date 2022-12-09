@@ -7,6 +7,7 @@ from __future__ import division, print_function
 import collections
 import collections.abc
 import copy
+import enum
 import itertools
 import os
 import pprint
@@ -80,6 +81,14 @@ def default_clingo_control():
     control.configuration.solve.parallel_mode = "1"
     control.configuration.solver.opt_strategy = "usc,one"
     return control
+
+
+class SolverMode(enum.Enum):
+    #: Solve a set of specs unifying over build + link + run dependencies
+    UNIFIED = enum.auto()
+    #: Solve a set of specs unifying over link + run dependencies and return
+    #: abstract build requirements for the concretized specs.
+    SEPARATE_BUILD_DEPENDENCIES = enum.auto()
 
 
 # backward compatibility functions for clingo ASTs
@@ -365,6 +374,7 @@ class Result(object):
         self._concrete_specs_by_input = None
         self._concrete_specs = None
         self._unsolved_specs = None
+        self._all_specs_by_package = None
 
     def format_core(self, core):
         """
@@ -483,17 +493,31 @@ class Result(object):
             self._compute_specs_from_answer_set()
         return self._concrete_specs_by_input
 
+    @property
+    def all_specs_by_package(self):
+        if self._all_specs_by_package is None:
+            self._compute_specs_from_answer_set()
+        return self._all_specs_by_package
+
+    @property
+    def specs_to_be_installed(self):
+        return [
+            spec.root for spec in self.all_specs_by_package.values() if not spec.root.installed
+        ]
+
     def _compute_specs_from_answer_set(self):
         if not self.satisfiable:
             self._concrete_specs = []
             self._unsolved_specs = self.abstract_specs
             self._concrete_specs_by_input = {}
+            self._all_specs_by_package = {}
             return
 
         self._concrete_specs, self._unsolved_specs = [], []
         self._concrete_specs_by_input = {}
         best = min(self.answers)
         opt, _, answer = best
+        self._all_specs_by_package = answer
         for input_spec in self.abstract_specs:
             key = input_spec.name
             if input_spec.virtual:
@@ -653,7 +677,7 @@ class PyclingoDriver(object):
         # TODO: this raises early -- we should handle multiple errors if there are any.
         raise UnsatisfiableSpecError(msg)
 
-    def solve(self, setup, specs, reuse=None, output=None, control=None):
+    def solve(self, setup, specs, reuse=None, output=None, control=None, builder_cls=None):
         """Set up the input and solve for dependencies of ``specs``.
 
         Arguments:
@@ -669,6 +693,7 @@ class PyclingoDriver(object):
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
+        builder_cls = builder_cls or UnifiedSpecBuilder
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         # allow solve method to override the output stream
         if output.out is not None:
@@ -750,7 +775,7 @@ class PyclingoDriver(object):
 
         if result.satisfiable:
             # get the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            builder = builder_cls(specs, hash_lookup=setup.reusable_and_possible)
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -836,6 +861,11 @@ class SpackSolverSetup(object):
 
         # Set during the call to setup
         self.pkgs = None
+
+        # Mode of operation. If SolverMode.SEPARATE_BUILD_DEPENDENCIES we don't
+        # count build dependencies as possible deps, and the answer set contains
+        # build requirements
+        self.mode = SolverMode.UNIFIED
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1213,9 +1243,17 @@ class SpackSolverSetup(object):
                 if not deptypes:
                     continue
 
-                msg = "%s depends on %s" % (pkg.name, dep.spec.name)
+                # If we are solving only for link + run deps we have to treat
+                # build deps differently
+                if "build" in deptypes and self.mode == SolverMode.SEPARATE_BUILD_DEPENDENCIES:
+                    msg = f"{pkg.name} needs {dep.spec} to build"
+                    condition_id = self.condition(cond, name=pkg.name, msg=msg)
+                    self.gen.fact(fn.possible_build_requirement(condition_id, pkg.name, dep.spec))
+                    deptypes.discard("build")
+
+                msg = f"{pkg.name} depends on {dep.spec.name}"
                 if cond != spack.spec.Spec():
-                    msg += " when %s" % cond
+                    msg += f" when {cond}"
 
                 condition_id = self.condition(cond, dep.spec, pkg.name, msg)
                 self.gen.fact(fn.dependency_condition(condition_id, pkg.name, dep.spec.name))
@@ -2022,6 +2060,17 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
+    def dependency_types_in_dag(self):
+        result = ("link", "run")
+
+        if self.mode == SolverMode.UNIFIED:
+            result = result + ("build",)
+
+        if self.tests:
+            result = result + ("test",)
+
+        return result
+
     def setup(self, driver, specs, reuse=None):
         """Generate an ASP program with relevant constraints for specs.
 
@@ -2042,7 +2091,7 @@ class SpackSolverSetup(object):
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
         possible = spack.package_base.possible_dependencies(
-            *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
+            *specs, virtuals=self.possible_virtuals, deptype=self.dependency_types_in_dag()
         )
 
         # Fail if we already know an unreachable node is requested
@@ -2393,13 +2442,8 @@ class SpecBuilder(object):
 
             action(*args)
 
-        # namespace assignment is done after the fact, as it is not
-        # currently part of the solve
-        for spec in self._specs.values():
-            if spec.namespace:
-                continue
-            repo = spack.repo.path.repo_for_pkg(spec)
-            spec.namespace = repo.namespace
+        # Namespace assignment is done after the fact, as it is not currently part of the solve
+        self.assign_namespaces()
 
         # fix flags after all specs are constructed
         self.reorder_flags()
@@ -2407,11 +2451,40 @@ class SpecBuilder(object):
         # inject patches -- note that we' can't use set() to unique the
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
-        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
-        roots = dict((id(r), r) for r in roots)
-        for root in roots.values():
-            spack.spec.Spec.inject_patches_variant(root)
+        roots_to_be_installed = self.inject_patches()
 
+        self.finalize_specs(roots_to_be_installed)
+
+        return self._specs
+
+    def finalize_specs(self, roots_to_be_installed):
+        raise NotImplementedError("Shoulkd be implemented by derived classes")
+
+    def inject_patches(self):
+        """Inject patches in roots which are not yet installed.
+
+        Returns:
+            List of the roots still to be installed
+        """
+        roots_to_be_installed = [
+            spec.root for spec in self._specs.values() if not spec.root.installed
+        ]
+        roots_to_be_installed = dict((id(r), r) for r in roots_to_be_installed)
+        for root in roots_to_be_installed.values():
+            spack.spec.Spec.inject_patches_variant(root)
+        return roots_to_be_installed
+
+    def assign_namespaces(self):
+        """Assign namespaces to recostructed specs."""
+        for spec in self._specs.values():
+            if spec.namespace:
+                continue
+            repo = spack.repo.path.repo_for_pkg(spec)
+            spec.namespace = repo.namespace
+
+
+class UnifiedSpecBuilder(SpecBuilder):
+    def finalize_specs(self, roots_to_be_installed):
         # Add external paths to specs with just external modules
         for s in self._specs.values():
             spack.spec.Spec.ensure_external_path_if_external(s)
@@ -2420,7 +2493,7 @@ class SpecBuilder(object):
             _develop_specs_from_env(s, ev.active_environment())
 
         # mark concrete and assign hashes to all specs in the solve
-        for root in roots.values():
+        for root in self._specs.values():
             root._finalize_concretization()
 
         for s in self._specs.values():
@@ -2433,8 +2506,6 @@ class SpecBuilder(object):
             for spec in root.traverse():
                 if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_git_lookup(spec.fullname)
-
-        return self._specs
 
 
 def _develop_specs_from_env(spec, env):
@@ -2517,8 +2588,8 @@ class Solver(object):
         """
         Arguments:
           specs (list): List of ``Spec`` objects to solve for.
-          out: Optionally write the generate ASP program to a file-like object.
-          timers (bool): Print out coarse fimers for different solve phases.
+          out: Optionally write the generated ASP program to a file-like object.
+          timers (bool): Print out coarse timers for different solve phases.
           stats (bool): Print out detailed stats from clingo.
           tests (bool or tuple): If True, concretize test dependencies for all packages.
             If a tuple of package names, concretize test dependencies for named

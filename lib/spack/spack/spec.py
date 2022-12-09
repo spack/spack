@@ -1539,15 +1539,34 @@ class Spec(object):
         orig = self._dependencies[spec.name]
         try:
             dspec = next(dspec for dspec in orig if deptypes == dspec.deptypes)
-        except StopIteration:
-            raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
-
-        try:
             dspec.spec.constrain(spec)
+        except StopIteration:
+            self.add_dependency_edge(spec, deptypes)
+            return
+            # raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
         except spack.error.UnsatisfiableSpecError:
             raise DuplicateDependencyError(
                 "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
             )
+
+    def add_build_dependency(self, build_dependency):
+        """Add a concrete build dependency to a partially constructed Spec
+
+        Args:
+            build_dependency (Spec): build dependency to be added
+        """
+        assert build_dependency.concrete, "Cannot add an abstract build dependency"
+        dependency_type = ("build",)
+        edges = self._dependencies.get(build_dependency.name, tuple())
+        for edge in edges:
+            try:
+                edge.spec.constrain(build_dependency)
+                edge.update_deptypes(dependency_type)
+                break
+            except spack.error.UnsatisfiableSpecError:
+                continue
+        else:
+            self.add_dependency_edge(build_dependency, dependency_type)
 
     def add_dependency_edge(self, dependency_spec: "Spec", *, deptypes: dp.DependencyArgument):
         """Add a dependency edge to this spec.
@@ -2749,7 +2768,7 @@ class Spec(object):
             raise SpecDeprecatedError(msg)
 
     def _new_concretize(self, tests=False):
-        import spack.solver.asp
+        import spack.solver.iterative
 
         if not self.name:
             raise spack.error.SpecError("Spec has no name; cannot concretize an anonymous spec")
@@ -2757,7 +2776,7 @@ class Spec(object):
         if self._concrete:
             return
 
-        solver = spack.solver.asp.Solver()
+        solver = spack.solver.iterative.IterativeSolver()
         result = solver.solve([self], tests=tests)
         result.raise_if_unsat()
 

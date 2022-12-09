@@ -11,7 +11,7 @@ import spack.spec
 all_deptypes = ("build", "link", "run", "test")
 
 #: Default dependency type if none is specified
-default_deptype = ("build", "link")
+default_deptype = ("link",)
 
 #: Type hint for the arguments accepting a dependency type
 DependencyArgument = Union[str, List[str], Tuple[str, ...]]

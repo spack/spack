@@ -14,6 +14,9 @@
 #show attr/3.
 #show attr/4.
 
+% Build requirements
+#show build_requirement/2.
+
 % names of optimization criteria
 #show opt_criterion/2.
 

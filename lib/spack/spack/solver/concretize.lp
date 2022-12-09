@@ -213,6 +213,19 @@ attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A
 concrete(Package) :- attr("hash", Package, _), attr("node", Package).
 
 %-----------------------------------------------------------------------------
+% Build requirements
+%-----------------------------------------------------------------------------
+attr("build_requirement", Package, Requirement) :- build_requirement(Package, Requirement).
+build_requirement(Package, Requirement) :-
+  condition_holds(ID),
+  possible_build_requirement(ID, Package, Requirement).
+
+% TODO: add error condition coming from feedback
+
+#defined avoid_build_requirement/2.
+#defined possible_build_requirement/3.
+
+%-----------------------------------------------------------------------------
 % Dependency semantics
 %-----------------------------------------------------------------------------
 % Dependencies of any type imply that one package "depends on" another
