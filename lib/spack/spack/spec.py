@@ -1865,8 +1865,8 @@ class Spec(object):
         if self.architecture:
             d.update(self.architecture.to_dict())
 
-        if self.compiler:
-            d.update(self.compiler.to_dict())
+        if self._compiler:
+            d.update(self._compiler.to_dict())
 
         if self.namespace:
             d["namespace"] = self.namespace
