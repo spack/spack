@@ -893,13 +893,13 @@ ml-linux-x86_64-rocm-protected-build:
   - lambda
 
 ml-darwin-aarch64-cpu-pr-generate:
-  extends: [ ".ml-darwin-aarch64-cpu-generate", ".pr-generate"]
+  extends: [ ".ml-darwin-aarch64-cpu-generate", ".mac-pr"]
 
 ml-darwin-aarch64-cpu-protected-generate:
-  extends: [ ".ml-darwin-aarch64-cpu-generate", ".protected-generate"]
+  extends: [ ".ml-darwin-aarch64-cpu-generate", ".mac-protected"]
 
 ml-darwin-aarch64-cpu-pr-build:
-  extends: [ ".ml-darwin-aarch64-cpu", ".pr-build" ]
+  extends: [ ".ml-darwin-aarch64-cpu", ".mac-pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -910,7 +910,7 @@ ml-darwin-aarch64-cpu-pr-build:
       job: ml-darwin-aarch64-cpu-pr-generate
 
 ml-darwin-aarch64-cpu-protected-build:
-  extends: [ ".ml-darwin-aarch64-cpu", ".protected-build" ]
+  extends: [ ".ml-darwin-aarch64-cpu", ".mac-protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
