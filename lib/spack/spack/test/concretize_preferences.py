@@ -270,7 +270,7 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec("mpi")
         spec.concretize()
-        assert spec["mpich"].external_path == os.sep + os.path.join("dummy", "path")
+        assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
     def test_external_module(self, monkeypatch):
         """Test that packages can find externals specified by module
@@ -305,7 +305,7 @@ mpi:
         # ensure that once config is in place, external is used
         spec = Spec("mpi")
         spec.concretize()
-        assert spec["mpich"].external_path == "/dummy/path"
+        assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
     def test_buildable_false(self):
         conf = syaml.load_config(

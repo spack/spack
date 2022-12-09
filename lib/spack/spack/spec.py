@@ -1289,7 +1289,7 @@ class Spec(object):
         # have package.py files for.
         self._normal = normal
         self._concrete = concrete
-        self.external_path = external_path
+        self._external_path = external_path
         self.external_modules = Spec._format_module_list(external_modules)
 
         # This attribute is used to store custom information for
@@ -1325,6 +1325,14 @@ class Spec(object):
         if modules:
             modules = list(modules)
         return modules
+
+    @property
+    def external_path(self):
+        return pth.path_to_os_path(self._external_path)[0]
+
+    @external_path.setter
+    def external_path(self, ext_path):
+        self._external_path = ext_path
 
     @property
     def external(self):

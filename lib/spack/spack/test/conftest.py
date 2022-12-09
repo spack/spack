@@ -259,6 +259,17 @@ def _verify_executables_noop(*args):
     return None
 
 
+def _host():
+    """Mock archspec host so there is no inconsistency on the Windows platform
+    This function cannot be local as it needs to be pickleable"""
+    return archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
+
+
+@pytest.fixture(scope="function")
+def archspec_host_is_spack_test_host(monkeypatch):
+    monkeypatch.setattr(archspec.cpu, "host", _host)
+
+
 #
 # Disable checks on compiler executable existence
 #
