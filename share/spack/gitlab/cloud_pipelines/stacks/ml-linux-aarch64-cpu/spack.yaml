@@ -21,7 +21,7 @@ spack:
       variants: ~cuda~rocm
 
   definitions:
-    - specs:
+    - packages:
       # Horovod
       - py-horovod
 
