@@ -52,6 +52,9 @@ class PyBlack(PythonPackage):
     depends_on("py-ipython@7.8:", when="+jupyter", type=("build", "run"))
     depends_on("py-tokenize-rt@3.2:", when="+jupyter", type=("build", "run"))
 
+    # Needed because this package is used to bootstrap Spack (Spack supports Python 3.6+)
+    depends_on("py-dataclasses@0.6:", when="^python@:3.6", type=("build", "run"))
+
     # see: https://github.com/psf/black/issues/2964
     # note that pip doesn't know this constraint.
     depends_on("py-click@:8.0", when="@:22.2", type=("build", "run"))
