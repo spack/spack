@@ -1,0 +1,11 @@
+--- a/f_check	2022-08-07 15:36:26.000000000 -0500
++++ b/f_check	2022-12-09 14:30:44.692615122 -0600
+@@ -102,7 +102,7 @@
+                             vendor=FLANG
+                             openmp='-fopenmp'
+                             ;;
+-                        *ifx*)
++                        *ifort*|*ifx*)
+                             vendor=INTEL
+                             openmp='-fopenmp'
+                             ;;
