@@ -26,6 +26,8 @@ class Libproxy(CMakePackage):
     depends_on("perl", type=("build", "run"), when="+perl")
     depends_on("python", type=("build", "run"), when="+python")
 
+    extends('python', when='+python')
+
     def cmake_args(self):
         args = [
             self.define_from_variant("WITH_PERL", "perl"),
