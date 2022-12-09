@@ -24,10 +24,26 @@ class Migraphx(CMakePackage):
     version("5.2.0", sha256="33afcdf52c6e0e3a2f939fcf30e87f712b8e8ef3633a3dc03a19fea359704925")
     version("5.1.3", sha256="686e068774500a46b6e6488370bbf5bd0bba6d19ecdb00636f951704d19c9ef2")
     version("5.1.0", sha256="6398efaef18a74f2a475aa21bd34bc7c077332a430ee3f6ba4fde6e6a6aa9f89")
-    version("5.0.2", sha256="3ef48ac03b909d1a1aa1f91f365ce64af2ce66635b6efb5ad0b207dc51ff2fd6")
-    version("5.0.0", sha256="779a91ccfa4c2576251189f0c646ff7707c3646319c7d5dd137872beb52d2953")
-    version("4.5.2", sha256="ecfd9a8e7967076f056d5b6a90b22f8919b82226443769b181193f16ebf58b83")
-    version("4.5.0", sha256="8d243a48406af7f960c03bc28a16fad931de8e008ae848799adae504cc5f1355")
+    version(
+        "5.0.2",
+        sha256="3ef48ac03b909d1a1aa1f91f365ce64af2ce66635b6efb5ad0b207dc51ff2fd6",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="779a91ccfa4c2576251189f0c646ff7707c3646319c7d5dd137872beb52d2953",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="ecfd9a8e7967076f056d5b6a90b22f8919b82226443769b181193f16ebf58b83",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="8d243a48406af7f960c03bc28a16fad931de8e008ae848799adae504cc5f1355",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="e0b04da37aed937a2b2218059c189559a15460c191b5e9b00c7366c81c90b06e",
