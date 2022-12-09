@@ -4988,33 +4988,35 @@ def save_dependency_specfiles(
 
 def promote_compiler_props_to_deps(specs):
     """Remove and replace CompilerSpec props with matching Spec deps from the database"""
-    compiler_str_to_spec = dict()
+    compiler_specs = dict()
 
     for spec in [s for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash())]:
         # Either already processed, or abstract spec
         if not spec._compiler:
             continue
 
-        compiler_str = str(spec._compiler)
+        key = str(spec._compiler)
 
         # Look up the query cache
-        compiler_spec = compiler_str_to_spec.get(compiler_str, False)
+        compiler_spec = compiler_specs.get(key, False)
 
-        # Search the database if we can't find any
         if compiler_spec is False:
-            matches = spack.store.db.query(Spec(compiler_str), installed=True)
-
-            compiler_spec = matches[0] if matches else None
-            compiler_str_to_spec[compiler_str] = compiler_spec
-
-        # No matching compiler
-        if compiler_spec is None:
-            continue
+            try:
+                compiler = spack.compilers.compiler_for_spec(spec._compiler, spec.architecture)
+                compiler_spec = compiler.to_concrete_external_spec()
+                compiler_specs[key] = compiler_spec
+            except spack.compilers.NoCompilerForSpecError:
+                compiler_specs[key] = None
+                continue
 
         # Remove the CompilerSpec property, and replace with concrete database match
         # Notice: technically the compiler should be a build/link type dep.
-        spec._compiler = None
-        spec.add_dependency_edge(compiler_spec, deptype=("build"))
+        try:
+            spec.add_dependency_edge(compiler_spec, deptype="build")
+            spec._compiler = None
+        except spack.error.SpecError:
+            # This means it was already a dep
+            pass
 
 
 class SpecParseError(spack.error.SpecError):
