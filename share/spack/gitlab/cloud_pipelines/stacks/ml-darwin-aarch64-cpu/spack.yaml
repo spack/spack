@@ -15,7 +15,7 @@ spack:
 
   packages:
     all:
-      target: [m1]
+      require: '%apple-clang@13.1.6 target=m1'
       variants: ~cuda~rocm
 
   specs:
