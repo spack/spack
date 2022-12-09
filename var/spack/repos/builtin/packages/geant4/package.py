@@ -21,6 +21,7 @@ class Geant4(CMakePackage):
 
     maintainers = ["drbenmorgan"]
 
+    version("11.1.0", sha256="c4a23f2f502efeab56de43a4412b21f65c7ca1b0877b9bc1d7e845ee12edf70a")
     version("11.0.3", sha256="1e6560b802aa84e17255b83987dfc98a1457154fb603d0f340fae978238de3e7")
     version("11.0.2", sha256="661e1ab6f42e58910472d771e76ffd16a2b411398eed70f39808762db707799e")
     version("11.0.1", sha256="fa76d0774346b7347b1fb1424e1c1e0502264a83e185995f3c462372994f84fa")
@@ -59,7 +60,7 @@ class Geant4(CMakePackage):
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
     variant("qt", default=False, description="Enable Qt support")
-    variant("python", default=False, when="@10.6.2:", description="Enable Python bindings")
+    variant("python", default=False, description="Enable Python bindings", when="@10.6.2:10.7")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("vtk", default=False, description="Enable VTK support", when="@11:")
 
@@ -80,7 +81,8 @@ class Geant4(CMakePackage):
         "10.7.1",
         "10.7.2",
         "10.7.3",
-        "11.0:",
+        "11.0.0:11.0",
+        "11.1:",
     ]:
         depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
 
@@ -96,6 +98,8 @@ class Geant4(CMakePackage):
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
+        depends_on("clhep@2.4.6.0: cxxstd=" + std, when="@11.1: cxxstd=" + std)
+
         depends_on("clhep@2.4.5.1: cxxstd=" + std, when="@11.0.0: cxxstd=" + std)
 
         depends_on("clhep@2.4.4.0: cxxstd=" + std, when="@10.7.0: cxxstd=" + std)
@@ -106,8 +110,9 @@ class Geant4(CMakePackage):
         depends_on("xerces-c netaccessor=curl cxxstd=" + std, when="cxxstd=" + std)
 
         # Vecgeom specific versions for each Geant4 version
-        depends_on("vecgeom@1.1.18:1.1 cxxstd=" + std, when="@11.0.0: +vecgeom cxxstd=" + std)
-        depends_on("vecgeom@1.1.8:1.1 cxxstd=" + std, when="@10.7.0: +vecgeom cxxstd=" + std)
+        depends_on("vecgeom@1.2.0: cxxstd=" + std, when="@11.1: +vecgeom cxxstd=" + std)
+        depends_on("vecgeom@1.1.18:1.1 cxxstd=" + std, when="@11.0.0:11.0 +vecgeom cxxstd=" + std)
+        depends_on("vecgeom@1.1.8:1.1 cxxstd=" + std, when="@10.7.0:10.7 +vecgeom cxxstd=" + std)
         depends_on("vecgeom@1.1.5 cxxstd=" + std, when="@10.6.0:10.6 +vecgeom cxxstd=" + std)
         depends_on("vecgeom@1.1.0 cxxstd=" + std, when="@10.5.0:10.5 +vecgeom cxxstd=" + std)
         depends_on("vecgeom@0.5.2 cxxstd=" + std, when="@10.4.0:10.4 +vecgeom cxxstd=" + std)
