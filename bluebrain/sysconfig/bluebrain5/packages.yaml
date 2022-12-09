@@ -4,11 +4,6 @@ packages:
     externals:
     - spec: autoconf@2.69
       prefix: /usr
-  automake:
-    version: [1.13.4]
-    externals:
-    - spec: automake@1.13.4
-      prefix: /usr
   binutils:
     version: [2.37]
     # Merged GCC / LLVM requirements
@@ -91,6 +86,11 @@ packages:
     variants: +trilinos
   opencv:
     variants: ~gtk~vtk
+  openssh:
+    version: [9.1p1]
+    externals:
+    - spec: openssh@9.1p1
+      prefix: /usr
   openssl:
     version: [1.0.2k]
     externals:
