@@ -4990,7 +4990,7 @@ def promote_compiler_props_to_deps(specs):
     """Remove and replace CompilerSpec props with matching Spec deps from the database"""
     compiler_str_to_spec = dict()
 
-    for spec in [s for s in traverse.traverse_nodes(specs)]:
+    for spec in [s for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash())]:
         # Either already processed, or abstract spec
         if not spec._compiler:
             continue
