@@ -17,6 +17,7 @@ class PyBlack(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("22.12.0", sha256="229351e5a18ca30f447bf724d007f890f97e13af070bb6ad4c0a441cd7596a2f")
     version("22.10.0", sha256="f513588da599943e0cde4e32cc9879e825d58720d6557062d1098c5ad80080e1")
     version("22.8.0", sha256="792f7eb540ba9a17e8656538701d3eb1afcb134e3b45b71f20b25c77a8db7e6e")
     version("22.6.0", sha256="6c6d39e28aed379aec40da1c65434c77d75e65bb59a1e1c283de545fb4e7c6c9")
@@ -24,7 +25,7 @@ class PyBlack(PythonPackage):
     version("22.1.0", sha256="a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5")
 
     # This is the last v21 release, and it's needed to format for Python 2.7
-    version("21.12b0", sha256="77b80f693a569e2e527958459634f18df9b0ba2625ba4e0c2d5da5be42e6f2b3")
+    version("21.12b0", sha256="77b80f693a569e2e527958459634f18df9b0ba2625ba4e0c2d5da5be42e6f2b3", deprecated=True)
 
     variant("colorama", default=False, description="enable colorama support")
     variant("uvloop", default=False, description="enable uvloop support")
@@ -36,8 +37,8 @@ class PyBlack(PythonPackage):
     depends_on("py-hatch-fancy-pypi-readme", when="@22.10:", type="build")
     depends_on("py-setuptools@45:", when="@:22.8", type=("build", "run"))
     depends_on("py-setuptools-scm@6.3.1:+toml", when="@:22.8", type="build")
+    # Needed to ensure that Spack can bootstrap black with Python 3.6
     depends_on("python@3.7:", when="@22.10:", type=("build", "run"))
-    depends_on("python@3.6.2:", type=("build", "run"))
     depends_on("py-click@8:", type=("build", "run"))
     depends_on("py-mypy-extensions@0.4.3:", type=("build", "run"))
     depends_on("py-pathspec@0.9:", type=("build", "run"))
