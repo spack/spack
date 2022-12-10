@@ -575,7 +575,7 @@ class Hdf5(CMakePackage):
 
         # HDF5 build incorrectly assign -l to zlib file path
         filter_file(
-            "-l(/[^\s]+/libz\.a)", r"\1 -lz",
+            "-l(/[^\s]+/libz\.(so,a))", r"\1 -lz",
             *pc_files, when="~shared"
         )
 
