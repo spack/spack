@@ -601,7 +601,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
 
-        cxxflags = spec.compiler_flags["cxxflags"]
+        cxxflags = spec.compiler_flags["cxxflags"].copy()
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
