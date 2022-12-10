@@ -16,12 +16,14 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@7.3.1]
       target: [aarch64]
       variants: ~rocm+cuda cuda_arch=80
     llvm:
       # https://github.com/spack/spack/issues/27999
       require: ~cuda
+    py-torch:
+      # undefined reference to `getauxval'
+      require: ~valgrind
 
   definitions:
     - packages:
@@ -91,7 +93,7 @@ spack:
       - xgboost
 
     - arch:
-      - '%gcc@7.3.1 target=aarch64'
+      - target=aarch64
 
   specs:
     - matrix:
