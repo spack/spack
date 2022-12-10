@@ -649,7 +649,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     test_requires_compiler = False
 
     #: List of test failures encountered during a smoke/install test run.
-    test_failures = None
+    test_failures: List[Tuple[Exception, str]] = []
 
     #: TestSuite instance used to manage smoke/install tests for one or more
     #: specs.
@@ -1993,10 +1993,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 for line in out:
                     print(line.rstrip("\n"))
 
-                if exc_type is spack.util.executable.ProcessError:
+                if exc_type is spack.util.executable.ProcessError and self.test_install_log_path:
                     out = io.StringIO()
                     spack.build_environment.write_log_summary(
-                        out, "test", self.test_log_file, last=1
+                        out, "test", self.test_install_log_path, last=1
                     )
                     m = out.getvalue()
                 else:
