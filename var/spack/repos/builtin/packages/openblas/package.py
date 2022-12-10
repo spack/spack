@@ -445,12 +445,7 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = ["libs", "netlib"]
-
-        # Build shared if variant is set.
-        if "+shared" in self.spec:
-            targets += ["shared"]
-
+        targets = ["all"]
         return self.make_defs + targets
 
     @run_after("build")
