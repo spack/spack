@@ -105,7 +105,7 @@ class OrderedLineLoader(RoundTripLoader):
     """YAML loader specifically intended for reading Spack configuration
     files. It preserves order and line numbers. It also has special-purpose
     logic for handling dictionary keys that indicate a Spack config
-    override: namely any key that contains an "extra" ':' character.
+    override: namely any key that contains an "extra" ':' or '+' character.
 
     Mappings read in by this loader behave like an ordered dict.
     Sequences, mappings, and strings also have new attributes,
@@ -133,6 +133,10 @@ class OrderedLineLoader(RoundTripLoader):
         if value and value.endswith(":") and "@" not in value:
             value = syaml_str(value[:-1])
             value.override = True
+        # Same logic for Spack config explicit merge keys (end with '+')
+        elif value and value.endswith("+") and "@" not in value:
+            value = syaml_str(value[:-1])
+            value.explicit_merge = True
         else:
             value = syaml_str(value)
         mark(value, node)
@@ -186,6 +190,8 @@ class OrderedLineDumper(RoundTripDumper):
     def represent_str(self, data):
         if hasattr(data, "override") and data.override:
             data = data + ":"
+        elif hasattr(data, "explicit_merge") and data.explicit_merge:
+            data = data + "+"
         return super(OrderedLineDumper, self).represent_str(data)
 
 

@@ -38,6 +38,12 @@ config_low = {
         "build_stage": ["path1", "path2", "path3"],
     }
 }
+config_low2 = {
+    "config": {
+        "install_tree": {"root": "install_tree_path"},
+        "build_stage": "path4",
+    }
+}
 
 config_override_all = {"config:": {"install_tree:": {"root": "override_all"}}}
 
@@ -50,6 +56,19 @@ config_override_list = {"config": {"build_stage:": ["pathd", "pathe"]}}
 config_merge_dict = {"config": {"info": {"a": 3, "b": 4}}}
 
 config_override_dict = {"config": {"info:": {"a": 7, "c": 9}}}
+
+config_exmerge_errs = [
+    pytest.param({"config": {"shared_linking+": "new_key"}}, id="scalar"),
+    pytest.param({"config": {"build_stage+": "new_key"}}, id="toscalar"),
+    pytest.param({"config": {"build_stage+": {"a": 12}}}, id="todict1"),
+    pytest.param({"config": {"install_tree": {"root+": {"a": 12}}}}, id="todict2"),
+]
+
+config_exmerge_list = {"config": {"build_stage+": ["pathb", "pathc"]}}
+
+config_exmerge_tolist = {"config": {"build_stage+": ["pathd"]}}
+
+config_exmerge_dict = {"config+": {"info": {"a": 3, "b": 4}}}
 
 
 @pytest.fixture()
@@ -579,6 +598,38 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
     assert spack.config.get("config") == {
         "install_tree": {"root": "install_tree_path"},
         "build_stage": config_override_list["config"]["build_stage:"],
+    }
+
+@pytest.mark.parametrize("config_err", config_exmerge_errs)
+def test_read_config_exmerge_errors(mock_low_high_config, write_config_file, config_err):
+    write_config_file("config", config_low, "low")
+    write_config_file("config", config_err, "high")
+    with pytest.raises(spack.config.ConfigError):
+        spack.config.get("config")
+
+def test_read_config_exmerge_list(mock_low_high_config, write_config_file):
+    write_config_file("config", config_low, "low")
+    write_config_file("config", config_exmerge_list, "high")
+    assert spack.config.get("config") == {
+        "install_tree": {"root": "install_tree_path"},
+        "build_stage": ["pathb", "pathc", "path1", "path2", "path3"],
+    }
+
+def test_read_config_exmerge_tolist(mock_low_high_config, write_config_file):
+    write_config_file("config", config_low2, "low")
+    write_config_file("config", config_exmerge_tolist, "high")
+    assert spack.config.get("config") == {
+        "install_tree": {"root": "install_tree_path"},
+        "build_stage": ["pathd", "path4"],
+    }
+
+def test_read_config_exmerge_dict(mock_low_high_config, write_config_file):
+    write_config_file("config", config_low, "low")
+    write_config_file("config", config_exmerge_dict, "high")
+    assert spack.config.get("config") == {
+        "install_tree": {"root": "install_tree_path"},
+        "build_stage": ["path1", "path2", "path3"],
+        "info": {"a": 3, "b": 4},
     }
 
 
@@ -1183,6 +1234,11 @@ def test_set_bad_path(config):
 def test_bad_path_double_override(config):
     with pytest.raises(syaml.SpackYAMLError, match="Meaningless second override"):
         with spack.config.override("bad::double:override::directive", ""):
+            pass
+
+def test_bad_path_merge_after_override(config):
+    with pytest.raises(syaml.SpackYAMLError, match="Meaningless explicit merge"):
+        with spack.config.override("bad::merge:after:override+:directive", ""):
             pass
 
 
