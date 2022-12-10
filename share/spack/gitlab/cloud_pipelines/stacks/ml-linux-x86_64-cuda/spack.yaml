@@ -16,7 +16,6 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@11.2.0]
       target: [x86_64_v3]
       variants: ~rocm+cuda cuda_arch=80
     llvm:
@@ -91,7 +90,7 @@ spack:
       - xgboost
 
     - arch:
-      - 'target=x86_64_v3'
+      - target=x86_64_v3
 
   specs:
     - matrix:
