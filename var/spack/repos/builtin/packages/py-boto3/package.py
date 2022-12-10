@@ -52,7 +52,7 @@ class PyBoto3(PythonPackage):
     depends_on("py-jmespath@0.7.1:0", when="@:1.20", type=("build", "run"))
     depends_on("py-jmespath@0.7.1:1", type=("build", "run"))
 
-    depends_on("py-s3transfer@0.6.0:0.6", when="@1.24:", type=("build", "run"))
-    depends_on("py-s3transfer@0.5.0:0.5", when="@1.18:1.23", type=("build", "run"))
-    depends_on("py-s3transfer@0.3.0:0.3", when="@1.17", type=("build", "run"))
-    depends_on("py-s3transfer@0.2.0:0.2", when="@:1.10", type=("build", "run"))
+    depends_on("py-s3transfer@0.6", when="@1.24:", type=("build", "run"))
+    depends_on("py-s3transfer@0.5", when="@1.18:1.23", type=("build", "run"))
+    depends_on("py-s3transfer@0.3", when="@1.17", type=("build", "run"))
+    depends_on("py-s3transfer@0.2", when="@:1.10", type=("build", "run"))
