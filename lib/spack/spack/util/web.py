@@ -371,14 +371,13 @@ def url_exists(url, curl=None):
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
         return curl_exe.returncode == 0
 
-    # Otherwise use urllib.
+    # If we get here, then the only other fetch method option is urllib.
+    # So try to "read" from the URL and assume that *any* non-throwing
+    #  response contains the resource represented by the URL.
     try:
-        urlopen(
-            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
-            timeout=spack.config.get("config:connect_timeout", 10),
-        )
+        read_from_url(url)
         return True
-    except URLError as e:
+    except (SpackWebError, URLError) as e:
         tty.debug("Failure reading URL: " + str(e))
         return False
 
