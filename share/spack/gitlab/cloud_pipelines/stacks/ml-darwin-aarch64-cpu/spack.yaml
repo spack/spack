@@ -15,8 +15,7 @@ spack:
 
   packages:
     all:
-      compiler: [apple-clang@13.1.6]
-      target: [m1]
+      target: [aarch64]
       variants: ~cuda~rocm
 
   definitions:
@@ -87,7 +86,7 @@ spack:
       - xgboost
 
     - arch:
-      - '%apple-clang@13.1.6 target=m1'
+      - target=aarch64
 
   specs:
     - matrix:
