@@ -104,9 +104,9 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
         # timestamps)
 
         if "@2.70:" in self.spec:
-            shebang_string = "^#! {0}"
+            shebang_string = "#! {0}"
         else:
-            shebang_string = "^#! {0} -w"
+            shebang_string = "#! {0} -w"
 
         # Revert sbang, so Spack's sbang hook can fix it up
         filter_file(
