@@ -133,10 +133,10 @@ class OrderedLineLoader(RoundTripLoader):
         if value and value.endswith(":") and "@" not in value:
             value = syaml_str(value[:-1])
             value.override = True
-        # Same logic for Spack config explicit merge keys (end with '+')
+        # Same logic for Spack config promoting merge keys (end with '+')
         elif value and value.endswith("+") and "@" not in value:
             value = syaml_str(value[:-1])
-            value.explicit_merge = True
+            value.promoting_merge = True
         else:
             value = syaml_str(value)
         mark(value, node)
@@ -190,7 +190,7 @@ class OrderedLineDumper(RoundTripDumper):
     def represent_str(self, data):
         if hasattr(data, "override") and data.override:
             data = data + ":"
-        elif hasattr(data, "explicit_merge") and data.explicit_merge:
+        elif hasattr(data, "promoting_merge") and data.promoting_merge:
             data = data + "+"
         return super(OrderedLineDumper, self).represent_str(data)
 

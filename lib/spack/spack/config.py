@@ -356,7 +356,7 @@ class InternalConfigScope(ConfigScope):
     @staticmethod
     def _process_dict_keyname_indicators(data):
         """Turn a trailing `:' in a key name into an override attribute.
-        Turn a trailing `+' in a key name into an explicit merge attribute."""
+        Turn a trailing `+' in a key name into a promoting merge attribute."""
         result = {}
         for sk, sv in data.items():
             if sk.endswith(":"):
@@ -364,7 +364,7 @@ class InternalConfigScope(ConfigScope):
                 key.override = True
             elif sk.endswith("+"):
                 key = syaml.syaml_str(sk[:-1])
-                key.explicit_merge = True
+                key.promoting_merge = True
             else:
                 key = sk
 
@@ -1043,15 +1043,15 @@ def _override(string):
     """
     return hasattr(string, "override") and string.override
 
-def _explicit_merge(string):
-    """Test if a spack YAML string is an explicit merge.
+def _promoting_merge(string):
+    """Test if a spack YAML string is a promoting merge.
 
     See ``spack_yaml`` for details.  Keys in Spack YAML can end in `+:`,
-    and if they do, their values are explicitly merged with lower-precedence
-    configs, promoting when needed to make it work.
+    and if they do, prior values are "promoted" to the new value's type and then
+    merged (never overridden). May error if promotion is not possible.
 
     """
-    return hasattr(string, "explicit_merge") and string.explicit_merge
+    return hasattr(string, "promoting_merge") and string.promoting_merge
 
 
 def _mark_internal(data, name):
@@ -1135,9 +1135,8 @@ def merge_yaml(dest, source):
 
     Attributes in dicts are by default recursively merged when possible.
     Config file authors can optionally end any attribute with `+:` instead of
-    `:` to force merging the given value with the previous. The final value
-    will have the same type as the one given to the `+:`-qualified attribute,
-    an error will be raised if the merge is not possible.
+    `:` to promote the previous value to the new values's type before merging.
+    An error will be raised of the merge is not possible.
     """
 
     def they_are(t):
@@ -1166,19 +1165,17 @@ def merge_yaml(dest, source):
             merge = sk in dest
             old_dest_value = dest.pop(sk, None)
 
-            if _explicit_merge(sk):
+            if _promoting_merge(sk):
                 # Promote old_dest_value to the type of sv
                 # Also check the types for sanity
                 if isinstance(sv, list):
                     if merge and not isinstance(old_dest_value, list):
                         old_dest_value = [old_dest_value]
                 elif isinstance(sv, dict):
-                    print(merge, isinstance(old_dest_value, dict))
                     if merge and not isinstance(old_dest_value, dict):
                         raise ConfigError(f"Unable to merge {type(old_dest_value)} with dict for key {sk}")
                 else:
                     raise ConfigError(f"Unable to merge with {type(sv)} for key {sk}")
-                print(old_dest_value, sv, merge)
 
             if merge and not _override(sk):
                 dest[sk] = merge_yaml(old_dest_value, sv)
@@ -1220,11 +1217,11 @@ def process_config_path(path):
         elif front.endswith("+"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
-                    "Meaningless explicit merge `+:` after override indicator `::' in path `{0}'".format(path), ""
+                    "Meaningless promoting merge `+:` after override indicator `::' in path `{0}'".format(path), ""
                 )
             front = front[:-1]
             front = syaml.syaml_str(front)
-            front.explicit_merge = True
+            front.promoting_merge = True
         result.append(front)
     return result
 
