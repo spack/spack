@@ -1826,10 +1826,9 @@ spack:
                     # appear twice, but that a's specific extra tag does appear
                     the_elt = yaml_contents[ci_key]
                     assert the_elt["top"] == "added"
-                    if match_behavior == "merge":
-                        assert the_elt["tags"] == ["specific-a", "specific-a-2"]
-                    else:
-                        assert the_elt["tags"] == ["specific-a", "toplevel"]
+                    assert len(the_elt["tags"]) == 2
+                    assert "specific-a" in the_elt["tags"]
+                    assert ("toplevel" if match_behavior == "first" else "specific-a-2") in the_elt["tags"]
                     assert the_elt["specific"] == "a"
                 if "(specs) dependency-install" in ci_key:
                     # Since the dependency-install match omits any
