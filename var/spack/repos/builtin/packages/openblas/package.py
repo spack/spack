@@ -182,7 +182,9 @@ class Openblas(MakefilePackage):
     )
 
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
-    conflicts("%gcc@7.0.0:7.3,8.0.0:8.2", when="@0.3.11:")
+    # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
+    # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
+    conflicts("%gcc@7:7.3.0,8:8.2", when="@0.3.11:")
 
     # See https://github.com/xianyi/OpenBLAS/issues/3074
     conflicts("%gcc@:10.1", when="@0.3.13 target=ppc64le:")
