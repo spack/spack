@@ -8,18 +8,14 @@ Utility functions for parsing, formatting, and manipulating URLs.
 """
 
 import itertools
+import os
 import posixpath
 import re
 import sys
 import urllib.parse
+import urllib.request
 
-from spack.util.path import (
-    canonicalize_path,
-    convert_to_platform_path,
-    convert_to_posix_path,
-)
-
-is_windows = sys.platform == "win32"
+from spack.util.path import convert_to_posix_path
 
 
 def _split_all(path):
@@ -49,82 +45,22 @@ def local_file_path(url):
     file or directory referenced by it.  Otherwise, return None.
     """
     if isinstance(url, str):
-        url = parse(url)
+        url = urllib.parse.urlparse(url)
 
     if url.scheme == "file":
-        if is_windows:
-            pth = convert_to_platform_path(url.netloc + url.path)
-            if re.search(r"^\\[A-Za-z]:", pth):
-                pth = pth.lstrip("\\")
-            return pth
-        return url.path
+        return urllib.request.url2pathname(url.path)
 
     return None
 
 
-def parse(url, scheme="file"):
-    """Parse a url.
+def path_to_file_url(path):
+    if not os.path.isabs(path):
+        path = os.path.abspath(path)
+    return urllib.parse.urljoin("file:", urllib.request.pathname2url(path))
 
-    Path variable substitution is performed on file URLs as needed. The
-    variables are documented at
-    https://spack.readthedocs.io/en/latest/configuration.html#spack-specific-variables.
 
-    Arguments:
-        url (str): URL to be parsed
-        scheme (str): associated URL scheme
-    Returns:
-        (urllib.parse.ParseResult): For file scheme URLs, the
-        netloc and path components are concatenated and passed through
-        spack.util.path.canoncalize_path().  Otherwise, the returned value
-        is the same as urllib's urlparse() with allow_fragments=False.
-    """
-    # guarantee a value passed in is of proper url format. Guarantee
-    # allows for easier string manipulation accross platforms
-    if isinstance(url, str):
-        require_url_format(url)
-        url = escape_file_url(url)
-    url_obj = (
-        urllib.parse.urlparse(
-            url,
-            scheme=scheme,
-            allow_fragments=False,
-        )
-        if isinstance(url, str)
-        else url
-    )
-
-    (scheme, netloc, path, params, query, _) = url_obj
-
-    scheme = (scheme or "file").lower()
-
-    if scheme == "file":
-
-        # (The user explicitly provides the file:// scheme.)
-        #   examples:
-        #     file://C:\\a\\b\\c
-        #     file://X:/a/b/c
-        path = canonicalize_path(netloc + path)
-        path = re.sub(r"^/+", "/", path)
-        netloc = ""
-
-        drive_ltr_lst = re.findall(r"[A-Za-z]:\\", path)
-        is_win_path = bool(drive_ltr_lst)
-        if is_windows and is_win_path:
-            drive_ltr = drive_ltr_lst[0].strip("\\")
-            path = re.sub(r"[\\]*" + drive_ltr, "", path)
-            netloc = "/" + drive_ltr.strip("\\")
-
-    if sys.platform == "win32":
-        path = convert_to_posix_path(path)
-
-    return urllib.parse.ParseResult(
-        scheme=scheme,
-        netloc=netloc,
-        path=path,
-        params=params,
-        query=query,
-        fragment=None,
-    )
+def file_url_string_to_path(url):
+    return urllib.request.url2pathname(urllib.parse.urlparse(url).path)
 
 
 def format(parsed_url):
@@ -133,7 +69,7 @@ def format(parsed_url):
     Returns a canonicalized format of the given URL as a string.
     """
     if isinstance(parsed_url, str):
-        parsed_url = parse(parsed_url)
+        parsed_url = urllib.parse.urlparse(parsed_url)
 
     return parsed_url.geturl()
 
@@ -179,18 +115,6 @@ def join(base_url, path, *extra, **kwargs):
 
       # For canonicalizing file:// URLs, take care to explicitly differentiate
       # between absolute and relative join components.
-
-      # '$spack' is not an absolute path component
-      join_result = spack.util.url.join('/a/b/c', '$spack') ; join_result
-      'file:///a/b/c/$spack'
-      spack.util.url.format(join_result)
-      'file:///a/b/c/opt/spack'
-
-      # '/$spack' *is* an absolute path component
-      join_result = spack.util.url.join('/a/b/c', '/$spack') ; join_result
-      'file:///$spack'
-      spack.util.url.format(join_result)
-      'file:///opt/spack'
     """
     paths = [
         (x) if isinstance(x, str) else x.geturl() for x in itertools.chain((base_url, path), extra)
@@ -260,7 +184,7 @@ def join(base_url, path, *extra, **kwargs):
 
 
 def _join(base_url, path, *extra, **kwargs):
-    base_url = parse(base_url)
+    base_url = urllib.parse.urlparse(base_url)
     resolve_href = kwargs.get("resolve_href", False)
 
     (scheme, netloc, base_path, params, query, _) = base_url
@@ -365,20 +289,3 @@ def parse_git_url(url):
             raise ValueError("bad port in git url: %s" % url)
 
     return (scheme, user, hostname, port, path)
-
-
-def is_url_format(url):
-    return re.search(r"^(file://|http://|https://|ftp://|s3://|gs://|ssh://|git://|/)", url)
-
-
-def require_url_format(url):
-    if not is_url_format(url):
-        raise ValueError("Invalid url format from url: %s" % url)
-
-
-def escape_file_url(url):
-    drive_ltr = re.findall(r"[A-Za-z]:\\", url)
-    if is_windows and drive_ltr:
-        url = url.replace(drive_ltr[0], "/" + drive_ltr[0])
-
-    return url

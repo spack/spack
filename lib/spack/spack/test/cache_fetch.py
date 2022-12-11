@@ -11,6 +11,7 @@ import pytest
 from llnl.util.filesystem import mkdirp, touch
 
 import spack.config
+import spack.util.url as url_util
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
 from spack.stage import Stage
 
@@ -23,7 +24,7 @@ def test_fetch_missing_cache(tmpdir, _fetch_method):
     testpath = str(tmpdir)
     with spack.config.override("config:url_fetch_method", _fetch_method):
         abs_pref = "" if is_windows else "/"
-        url = "file://" + abs_pref + "not-a-real-cache-file"
+        url = url_util.path_to_file_url(abs_pref + "not-a-real-cache-file")
         fetcher = CacheURLFetchStrategy(url=url)
         with Stage(fetcher, path=testpath):
             with pytest.raises(NoCacheError, match=r"No cache"):
@@ -36,11 +37,7 @@ def test_fetch(tmpdir, _fetch_method):
     testpath = str(tmpdir)
     cache = os.path.join(testpath, "cache.tar.gz")
     touch(cache)
-    if is_windows:
-        url_stub = "{0}"
-    else:
-        url_stub = "/{0}"
-    url = "file://" + url_stub.format(cache)
+    url = url_util.path_to_file_url(cache)
     with spack.config.override("config:url_fetch_method", _fetch_method):
         fetcher = CacheURLFetchStrategy(url=url)
         with Stage(fetcher, path=testpath) as stage:

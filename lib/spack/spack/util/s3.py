@@ -28,7 +28,7 @@ def get_s3_session(url, method="fetch"):
     global s3_client_cache
 
     # Get a (recycled) s3 session for a particular URL
-    url = url_util.parse(url)
+    url = urllib.parse.urlparse(url)
 
     url_str = url_util.format(url)
 

@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import urllib.error
+import urllib.parse
 import urllib.request
 import urllib.response
 from io import BufferedReader, IOBase
 
 import spack.util.s3 as s3_util
-import spack.util.url as url_util
 
 
 # NOTE(opadron): Workaround issue in boto where its StreamingBody
@@ -43,7 +43,7 @@ class WrapStream(BufferedReader):
 
 
 def _s3_open(url):
-    parsed = url_util.parse(url)
+    parsed = urllib.parse.urlparse(url)
     s3 = s3_util.get_s3_session(url, method="fetch")
 
     bucket = parsed.netloc
