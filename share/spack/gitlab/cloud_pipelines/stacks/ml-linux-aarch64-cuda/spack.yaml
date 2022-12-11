@@ -21,9 +21,6 @@ spack:
     llvm:
       # https://github.com/spack/spack/issues/27999
       require: ~cuda
-    py-torch:
-      # undefined reference to `getauxval'
-      require: ~valgrind
 
   definitions:
     - packages:

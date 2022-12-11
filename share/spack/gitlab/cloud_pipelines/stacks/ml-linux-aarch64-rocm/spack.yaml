@@ -22,8 +22,7 @@ spack:
       require: "osmesa"
     py-torch:
       # Does not yet support Spack-installed ROCm
-      # undefined reference to `getauxval'
-      require: ~rocm~valgrind
+      require: ~rocm
 
   definitions:
     - packages:
