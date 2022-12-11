@@ -28,9 +28,8 @@ spack:
     - py-transformers
 
     # JAX
-    # https://github.com/google/jax/issues/12614
-    # - py-jax
-    # - py-jaxlib
+    - py-jax
+    - py-jaxlib
 
     # Keras
     - py-keras
@@ -114,6 +113,7 @@ spack:
     mappings:
       - match:
           - llvm
+          - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "x86_64_v4" ]
           variables:

@@ -17,31 +17,41 @@ class PyAlphafold(PythonPackage, CudaPackage):
     url = "https://github.com/deepmind/alphafold/archive/refs/tags/v2.1.1.tar.gz"
     maintainers = ["aweits"]
 
+    version("2.2.4", sha256="8d756e16f6dc7897331d834aade8493820d0ff6a03bf60ce511bac4756c1b1e8")
     version("2.1.1", sha256="1adb6e213ba9ac321fc1acb1c563ba9b4fc054c1cebe1191bc0e2aaa671dadf7")
 
     conflicts("platform=darwin", msg="alphafold is only supported on Linux")
 
+    # lots of hints on versions and patching taken from docker/Dockerfile
+    # and requirements.txt
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-absl-py@0.13.0:", type=("build", "run"))
+    depends_on("py-absl-py@0.13.0:", type=("build", "run"), when="@2.1.1")
+    depends_on("py-absl-py@1.0.0:", type=("build", "run"), when="@2.2.4")
     depends_on("py-biopython@1.79:", type=("build", "run"))
     depends_on("py-chex@0.0.7:", type=("build", "run"))
-    depends_on("py-dm-haiku@0.0.4:", type=("build", "run"))
+    depends_on("py-dm-haiku@0.0.4:", type=("build", "run"), when="@2.1.1")
+    depends_on("py-dm-haiku@0.0.7:", type=("build", "run"), when="@2.2.4")
     depends_on("py-dm-tree@0.1.6:", type=("build", "run"))
+    depends_on("py-docker", type=("build", "run"))
     depends_on("py-immutabledict@2.0.0:", type=("build", "run"))
-    depends_on("py-jax@0.2.14:", type=("build", "run"))
+    depends_on("py-jax@0.2.14:", type=("build", "run"), when="@2.1.1")
+    depends_on("py-jax@0.3.17:", type=("build", "run"), when="@2.2.4")
     for arch in CudaPackage.cuda_arch_values:
         depends_on(
-            "py-jax@0.2.14:+cuda cuda_arch={0}".format(arch),
+            "py-jax+cuda cuda_arch={0}".format(arch),
             type=("build", "run"),
             when="cuda_arch={0}".format(arch),
         )
     depends_on("py-ml-collections@0.1.0:", type=("build", "run"))
-    depends_on("py-numpy@1.19.5:", type=("build", "run"))
+    depends_on("py-numpy@1.19.5:", type=("build", "run"), when="@2.1.1")
+    depends_on("py-numpy@1.21.6:", type=("build", "run"), when="@2.2.4")
     depends_on("py-pandas@1.3.4:", type=("build", "run"))
+    depends_on("py-protobuf@3.19:", type=("build", "run"), when="@2.2.4")
     depends_on("py-scipy@1.7.0:", type=("build", "run"))
     depends_on("py-pdbfixer@1.7", type=("build", "run"))
-    depends_on("py-tensorflow@2.5:", type=("build", "run"))
+    depends_on("py-tensorflow@2.5:", type=("build", "run"), when="@2.1.1")
+    depends_on("py-tensorflow@2.9:", type=("build", "run"), when="@2.2.4")
     depends_on(
         "openmm@7.5.1+cuda",
         type="run",

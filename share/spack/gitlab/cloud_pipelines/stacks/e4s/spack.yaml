@@ -57,14 +57,12 @@ spack:
   specs:
   # CPU
   - adios
-  - adios2
   - alquimia
   - aml
   - amrex
   - arborx
   - archer
   - argobots
-  - ascent
   - axom
   - bolt
   - bricks
@@ -74,12 +72,11 @@ spack:
   - chai ~benchmarks ~tests
   - charliecloud
   - conduit
-  - darshan-runtime
-  - darshan-util
   - datatransferkit
   - dyninst
+  - ecp-data-vis-sdk ~cuda ~rocm
+    +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
   - exaworks
-  - faodel
   - flecsi
   - flit
   - flux-core
@@ -91,11 +88,10 @@ spack:
   - gotcha
   - gptune
   - h5bench
-  - hdf5 +fortran +hl +shared
   - hdf5-vol-async
   - heffte +fftw
   - hpctoolkit
-  - hpx networking=mpi
+  - hpx max_cpu_count=512 networking=mpi
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
@@ -119,7 +115,6 @@ spack:
   - openpmd-api
   - papi
   - papyrus
-  - parallel-netcdf
   - parsec ~cuda
   - pdt
   - petsc
@@ -128,7 +123,6 @@ spack:
   - plumed
   - precice
   - pumi
-  - py-cinemasci
   - py-jupyterhub
   - py-libensemble
   - py-petsc4py
@@ -148,7 +142,6 @@ spack:
   - superlu-dist
   - swig
   - swig@4.0.2-fortran
-  - sz
   - tasmanian
   - tau +mpi +python
   - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
@@ -158,30 +151,28 @@ spack:
   - turbine
   - umap
   - umpire
-  - unifyfs
   - upcxx
   - variorum
-  - veloc
-  - vtk-m
   - wannier90
-  - zfp
 
   # CUDA
-  - adios2 +cuda cuda_arch=80
   - amrex +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
-  - ascent +cuda cuda_arch=80
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
   - dealii +cuda cuda_arch=80
+  - ecp-data-vis-sdk +cuda cuda_arch=80
+    +adios2 +hdf5 +vtkm +zfp
+    # Removing ascent because Dray is hung in CI.
+    # +ascent
   - flecsi +cuda cuda_arch=80
   - flux-core +cuda
   - ginkgo +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
   - hpctoolkit +cuda
-  - hpx +cuda cuda_arch=80
+  - hpx max_cpu_count=512 +cuda cuda_arch=80
   - hypre +cuda cuda_arch=80
   - kokkos +wrapper +cuda cuda_arch=80
   - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
@@ -201,8 +192,6 @@ spack:
   - tau +mpi +cuda
   - trilinos@13.4.0 +cuda cuda_arch=80
   - umpire ~shared +cuda cuda_arch=80
-  - vtk-m +cuda cuda_arch=80
-  - zfp +cuda cuda_arch=80
 
   # ROCm
   - amrex +rocm amdgpu_target=gfx90a
@@ -210,11 +199,13 @@ spack:
   - cabana +rocm
   - caliper +rocm amdgpu_target=gfx90a
   - chai ~benchmarks +rocm amdgpu_target=gfx90a
+  - ecp-data-vis-sdk +rocm amdgpu_target=gfx90a
+    +vtkm
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
   - hpctoolkit +rocm
-  - hpx +rocm amdgpu_target=gfx90a
+  - hpx max_cpu_count=512 +rocm amdgpu_target=gfx90a
   - hypre +rocm amdgpu_target=gfx90a
   - kokkos +rocm amdgpu_target=gfx90a
   - magma ~cuda +rocm amdgpu_target=gfx90a
@@ -236,7 +227,6 @@ spack:
     +rocm amdgpu_target=gfx90a
   - umpire +rocm amdgpu_target=gfx90a
   - upcxx +rocm amdgpu_target=gfx90a
-  - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
   # CPU failures
   #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
@@ -247,10 +237,6 @@ spack:
 
   # CUDA failures
   #- parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
-
-  # ROCm failures
-  #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
-  #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
@@ -276,8 +262,8 @@ spack:
     after_script:
       - cat /proc/loadavg || true
 
-    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
-    
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+
     broken-tests-packages:
       - gptune
 
@@ -288,6 +274,8 @@ spack:
           - llvm
           - llvm-amdgpu
           - rocblas
+          - paraview
+          - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
           variables:
@@ -297,6 +285,7 @@ spack:
 
       - match:
           - cuda
+          - dray
           - dyninst
           - ginkgo
           - hpx
@@ -461,7 +450,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:

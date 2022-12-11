@@ -19,5 +19,4 @@ class PyLaw(PythonPackage):
     depends_on("python@2.7:2,3.3:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-six@1.13:", type=("build", "run"))
-    depends_on("py-luigi@2.8.2:2", type=("build", "run"), when="^python@:2.7")
-    depends_on("py-luigi@2.8.2:", type=("build", "run"), when="^python@3:")
+    depends_on("py-luigi@2.8.2:", type=("build", "run"))

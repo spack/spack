@@ -30,7 +30,7 @@ import re
 import shutil
 import sys
 import urllib.parse
-from typing import List, Optional  # novm
+from typing import List, Optional
 
 import llnl.util
 import llnl.util.filesystem as fs
@@ -106,12 +106,12 @@ class FetchStrategy(object):
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr = None  # type: Optional[str]
+    url_attr: Optional[str] = None
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
     # optional attributes in version() args.
-    optional_attrs = []  # type: List[str]
+    optional_attrs: List[str] = []
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
@@ -335,7 +335,7 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-            if not web_util.url_exists(url, self.curl):
+            if not web_util.url_exists(url):
                 tty.debug("URL does not exist: " + url)
                 continue
 

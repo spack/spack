@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyWheel(Package):
+class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
@@ -14,8 +14,6 @@ class PyWheel(Package):
         "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
     )
     list_url = "https://pypi.org/simple/wheel/"
-
-    maintainers = ["adamjstewart"]
 
     version(
         "0.37.1",
