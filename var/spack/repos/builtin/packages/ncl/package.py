@@ -293,6 +293,17 @@ class Ncl(Package):
         with open(config_answers_filename, "r") as f:
             config_script(input=f)
 
+        # Modify Site.local to add RPC library if HDF4 is used w/external XDR
+        if "+hdf4" in self.spec:
+            hdf4 = self.spec["hdf"]
+
+            if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
+                filter_file(
+                    "(#define HDFlib.*)",
+                    r"\1 {}".format(hdf4["rpc"].libs.link_flags),
+                    "config/Site.local",
+                )
+
     def prepare_src_tree(self):
         if "+triangle" in self.spec:
             triangle_src = join_path(self.stage.source_path, "triangle_src")
