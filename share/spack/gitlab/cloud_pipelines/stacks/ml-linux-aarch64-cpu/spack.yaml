@@ -18,6 +18,9 @@ spack:
     all:
       target: [aarch64]
       variants: ~cuda~rocm
+    py-torch:
+      # https://github.com/spack/spack/issues/34455
+      require: ~valgrind
 
   definitions:
     - packages:

@@ -21,6 +21,9 @@ spack:
     llvm:
       # https://github.com/spack/spack/issues/27999
       require: ~cuda
+    py-torch:
+      # https://github.com/spack/spack/issues/34455
+      require: ~valgrind
 
   definitions:
     - packages:

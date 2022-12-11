@@ -22,7 +22,8 @@ spack:
       require: "osmesa"
     py-torch:
       # Does not yet support Spack-installed ROCm
-      require: ~rocm
+      # https://github.com/spack/spack/issues/34455
+      require: ~rocm~valgrind
 
   definitions:
     - packages:
