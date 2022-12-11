@@ -62,34 +62,16 @@ spack:
     - [$radiuss]
     - [$compilers]
 
-  gitlab-ci:
-    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-    script:
-      - uname -a || true
-      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-      - nproc
-      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
-      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
-      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
-      - . "./share/spack/setup-env.sh"
-      - spack --version
-      - spack arch
-      - cd ${SPACK_CONCRETE_ENV_DIR}
-      - spack env activate --without-view .
-      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
-      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-      - spack --color=always --backtrace ci rebuild
-    after_script:
-      - cat /proc/loadavg || true
-
-    match_behavior: first
-    mappings:
+  ci:
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+    job-configuration:
+    - match_behavior: first
+      submapping:
       - match:
           - lbann
           - openblas
           - rust
-        runner-attributes:
+        build-job:
           tags: ["spack", "large", "x86_64"]
           variables:
             CI_JOB_SIZE: large
@@ -109,7 +91,7 @@ spack:
           - samrai
           - vtk-h
           - vtk-m
-        runner-attributes:
+        build-job:
           tags: ["spack", "medium", "x86_64"]
           variables:
             CI_JOB_SIZE: "medium"
@@ -163,7 +145,7 @@ spack:
           - util-macros
           - zfp
           - zlib
-        runner-attributes:
+        build-job:
           tags: ["spack", "small", "x86_64"]
           variables:
             CI_JOB_SIZE: "small"
@@ -171,30 +153,49 @@ spack:
             KUBERNETES_MEMORY_REQUEST: "500M"
 
       - match: ['os=ubuntu18.04']
-        runner-attributes:
+        build-job:
           tags: ["spack", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 
-    broken-specs-url: "s3://spack-binaries/broken-specs"
+    - build-job:
+        image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+        script::
+          - uname -a || true
+          - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+          - nproc
+          - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
+          - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
+          - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
+          - . "./share/spack/setup-env.sh"
+          - spack --version
+          - spack arch
+          - cd ${SPACK_CONCRETE_ENV_DIR}
+          - spack env activate --without-view .
+          - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+          - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+          - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+          - spack --color=always --backtrace ci rebuild
+        after_script::
+          - cat /proc/loadavg || true
 
-    service-job-attributes:
-      before_script:
-        - . "./share/spack/setup-env.sh"
-        - spack --version
-      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-      tags: ["spack", "public", "x86_64"]
+      reindex-job:
+        before_script::
+          - . "./share/spack/setup-env.sh"
+          - spack --version
+        image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+        tags: ["spack", "public", "x86_64"]
 
-    signing-job-attributes:
-      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
-      tags: ["spack", "aws"]
-      script:
-        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
-        - /sign.sh
-        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+      signing-job:
+        image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+        tags: ["spack", "aws"]
+        script::
+          - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+          - /sign.sh
+          - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
-  cdash:
-    build-group: RADIUSS
-    url: https://cdash.spack.io
-    project: Spack Testing
-    site: Cloud Gitlab Infrastructure
+    cdash:
+      build-group: RADIUSS
+      url: https://cdash.spack.io
+      project: Spack Testing
+      site: Cloud Gitlab Infrastructure

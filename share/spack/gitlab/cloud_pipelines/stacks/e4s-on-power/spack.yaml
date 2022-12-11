@@ -211,27 +211,11 @@ spack:
 
   mirrors: { "mirror": "s3://spack-binaries/e4s" }
 
-  gitlab-ci:
-
-    script:
-      - uname -a || true
-      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-      - nproc
-      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.powerpc64le-linux-gnu.tar.gz' -o gmake.tar.gz
-      - printf '8096d202fe0a0c400b8c0573c4b9e009f2f10d2fa850a3f495340f16e9c42454 gmake.tar.gz' | sha256sum --check --strict --quiet
-      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
-      - . "./share/spack/setup-env.sh"
-      - spack --version
-      - spack arch
-      - cd ${SPACK_CONCRETE_ENV_DIR}
-      - spack env activate --without-view .
-      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - spack --color=always --backtrace ci rebuild
-    after_script:
-      - cat /proc/loadavg || true
-
-    match_behavior: first
-    mappings:
+  ci:
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    job-configuration:
+    - match_behavior: first
+      submapping:
       - match:
         - cuda
         - dyninst
@@ -247,23 +231,39 @@ spack:
         - vtk-h
         - vtk-m
         - warpx
-        runner-attributes:
+        build-job:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "xlarge", "ppc64le"]
       - match: ['os=ubuntu20.04']
-        runner-attributes:
+        build-job:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "ppc64le"]
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
-    service-job-attributes:
-      before_script:
-        - . "./share/spack/setup-env.sh"
-        - spack --version
-      image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
-      tags: ["spack", "public", "medium", "ppc64le"]
+    - build-job:
+        script::
+          - uname -a || true
+          - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+          - nproc
+          - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.powerpc64le-linux-gnu.tar.gz' -o gmake.tar.gz
+          - printf '8096d202fe0a0c400b8c0573c4b9e009f2f10d2fa850a3f495340f16e9c42454 gmake.tar.gz' | sha256sum --check --strict --quiet
+          - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
+          - . "./share/spack/setup-env.sh"
+          - spack --version
+          - spack arch
+          - cd ${SPACK_CONCRETE_ENV_DIR}
+          - spack env activate --without-view .
+          - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+          - spack --color=always --backtrace ci rebuild
+        after_script::
+          - cat /proc/loadavg || true
+      reindex-job:
+        before_script::
+          - . "./share/spack/setup-env.sh"
+          - spack --version
+        image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
+        tags: ["spack", "public", "medium", "ppc64le"]
 
-  cdash:
-    build-group: New PR testing workflow
-    url: https://cdash.spack.io
-    project: Spack Testing
-    site: Cloud Gitlab Infrastructure
+    cdash:
+      build-group: New PR testing workflow
+      url: https://cdash.spack.io
+      project: Spack Testing
+      site: Cloud Gitlab Infrastructure
