@@ -600,12 +600,14 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
         "build_stage": config_override_list["config"]["build_stage:"],
     }
 
+
 @pytest.mark.parametrize("config_err", config_promerge_errs)
 def test_read_config_promerge_errors(mock_low_high_config, write_config_file, config_err):
     write_config_file("config", config_low, "low")
     write_config_file("config", config_err, "high")
     with pytest.raises(spack.config.ConfigError):
         spack.config.get("config")
+
 
 def test_read_config_promerge_list(mock_low_high_config, write_config_file):
     write_config_file("config", config_low, "low")
@@ -615,6 +617,7 @@ def test_read_config_promerge_list(mock_low_high_config, write_config_file):
         "build_stage": ["pathb", "pathc", "path1", "path2", "path3"],
     }
 
+
 def test_read_config_promerge_tolist(mock_low_high_config, write_config_file):
     write_config_file("config", config_low2, "low")
     write_config_file("config", config_promerge_tolist, "high")
@@ -622,6 +625,7 @@ def test_read_config_promerge_tolist(mock_low_high_config, write_config_file):
         "install_tree": {"root": "install_tree_path"},
         "build_stage": ["pathd", "path4"],
     }
+
 
 def test_read_config_promerge_dict(mock_low_high_config, write_config_file):
     write_config_file("config", config_low, "low")
@@ -1235,6 +1239,7 @@ def test_bad_path_double_override(config):
     with pytest.raises(syaml.SpackYAMLError, match="Meaningless second override"):
         with spack.config.override("bad::double:override::directive", ""):
             pass
+
 
 def test_bad_path_merge_after_override(config):
     with pytest.raises(syaml.SpackYAMLError, match="Meaningless promoting merge"):

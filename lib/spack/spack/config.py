@@ -1043,6 +1043,7 @@ def _override(string):
     """
     return hasattr(string, "override") and string.override
 
+
 def _promoting_merge(string):
     """Test if a spack YAML string is a promoting merge.
 
@@ -1173,7 +1174,9 @@ def merge_yaml(dest, source):
                         old_dest_value = [old_dest_value]
                 elif isinstance(sv, dict):
                     if merge and not isinstance(old_dest_value, dict):
-                        raise ConfigError(f"Unable to merge {type(old_dest_value)} with dict for key {sk}")
+                        raise ConfigError(
+                            f"Unable to merge {type(old_dest_value)} with dict for key {sk}"
+                        )
                 else:
                     raise ConfigError(f"Unable to merge with {type(sv)} for key {sk}")
 
@@ -1217,7 +1220,10 @@ def process_config_path(path):
         elif front.endswith("+"):
             if seen_override_in_path:
                 raise syaml.SpackYAMLError(
-                    "Meaningless promoting merge `+:` after override indicator `::' in path `{0}'".format(path), ""
+                    "Meaningless promoting merge `+:` after override indicator `::' in path `{0}'".format(
+                        path
+                    ),
+                    "",
                 )
             front = front[:-1]
             front = syaml.syaml_str(front)

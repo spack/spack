@@ -384,6 +384,7 @@ def _can_build_spec(spec):
         return True
     return any(spec.satisfies(m) for m in bounds)
 
+
 def _remove_attributes(src_dict, dest_dict):
     if "tags" in src_dict and "tags" in dest_dict:
         # For 'tags', we remove any tags that are listed for removal
@@ -403,6 +404,7 @@ def _apply_job_config(job, kind, *, spec=None):
         elif key in config:
             job = cfg.merge_yaml(job, config[key])
         elif spec is not None and "submapping" in config:
+
             def match_clause(clause):
                 if any(spec.satisfies(m) for m in clause["match"]):
                     _remove_attributes(clause.get(rm_key, {}), job)
@@ -423,12 +425,14 @@ def _apply_job_config(job, kind, *, spec=None):
                 raise ValueError(behavior)
     return job
 
+
 def _finalize_job(job, reserved_tags=None):
     if "tags" in job:
         if reserved_tags is not None:
             job["tags"] = _remove_reserved_tags(job["tags"])
             job["tags"].extend(reserved_tags)
         job["tags"] = list(set(job["tags"]))
+
 
 def _format_job_needs(
     phase_name,
@@ -584,7 +588,7 @@ def generate_gitlab_ci_yaml(
             env.write()
 
     if not cfg.get("ci"):
-        tty.die("Environment does not have \"ci\" section")
+        tty.die('Environment does not have "ci" section')
 
     cdash_config = cfg.get("ci:cdash", None)
     if cdash_config is not None:
@@ -842,7 +846,11 @@ def generate_gitlab_ci_yaml(
                         continue
 
                 if not _can_build_spec(release_spec):
-                    tty.warn("Spec {0} does not match any entry in ci:build-if-matches, skipping it".format(release_spec))
+                    tty.warn(
+                        "Spec {0} does not match any entry in ci:build-if-matches, skipping it".format(
+                            release_spec
+                        )
+                    )
                     continue
 
                 job_object = {
@@ -1149,9 +1157,7 @@ def generate_gitlab_ci_yaml(
             final_job = {
                 "stage": "stage-rebuild-index",
                 "script": [
-                    "spack buildcache update-index --keys -d {0}".format(
-                        remote_mirror.push_url
-                    )
+                    "spack buildcache update-index --keys -d {0}".format(remote_mirror.push_url)
                 ],
                 "when": "always",
                 "retry": copy.deepcopy(service_job_retries),

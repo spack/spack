@@ -13,7 +13,6 @@ from llnl.util.lang import union_dicts
 
 import spack.schema.cdash
 
-
 remove_attributes_schema = {
     "type": "object",
     "additionalProperties": False,
@@ -28,38 +27,62 @@ attributes_schema = {
     "type": "object",
 }
 
-jobconfig_schema = { "anyOf": [
-    # Global generated job attributes, apply to all jobs
-    {"type": "object", "additionalProperties": False, "required": ["any-job"], "properties": {
-        "any-job": attributes_schema,
-    }},
-    attributes_schema,
-    # Attributes applied to jobs based on type
-    { "type": "object", "additionalProperties": False, "properties": {
-        "build-job": attributes_schema,
-        "reindex-job": attributes_schema,
-        "noop-job": attributes_schema,
-        "cleanup-job": attributes_schema,
-        "signing-job": attributes_schema,
-    }},
-    # Attributes applied to spec-specific jobs based on spec matching
-    { "type": "object", "additionalProperties": False, "properties": {
-        "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
-        "submapping": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["match"],
-                "additionalProperties": False,
-                "properties": {
-                    "match": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
-                    "build-job-remove": remove_attributes_schema,
-                    "build-job": attributes_schema,
+jobconfig_schema = {
+    "anyOf": [
+        # Global generated job attributes, apply to all jobs
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["any-job"],
+            "properties": {
+                "any-job": attributes_schema,
+            },
+        },
+        attributes_schema,
+        # Attributes applied to jobs based on type
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "build-job": attributes_schema,
+                "reindex-job": attributes_schema,
+                "noop-job": attributes_schema,
+                "cleanup-job": attributes_schema,
+                "signing-job": attributes_schema,
+            },
+        },
+        # Attributes applied to spec-specific jobs based on spec matching
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "match_behavior": {
+                    "type": "string",
+                    "enum": ["first", "merge"],
+                    "default": "first",
+                },
+                "submapping": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["match"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "match": {
+                                "anyOf": [
+                                    {"type": "string"},
+                                    {"type": "array", "items": {"type": "string"}},
+                                ]
+                            },
+                            "build-job-remove": remove_attributes_schema,
+                            "build-job": attributes_schema,
+                        },
+                    },
                 },
             },
         },
-    }},
-]}
+    ]
+}
 
 core_shared_properties = union_dicts(
     {
@@ -88,8 +111,10 @@ core_shared_properties = union_dicts(
             },
         },
         "pipeline-attributes": {"type": "object"},
-        "build-if-matches": {"anyOf": [{"type": "null"}, {"type": "array", "items": {"type": "string"}}]},
-        "job-configuration": { "type": "array", "items": jobconfig_schema },
+        "build-if-matches": {
+            "anyOf": [{"type": "null"}, {"type": "array", "items": {"type": "string"}}]
+        },
+        "job-configuration": {"type": "array", "items": jobconfig_schema},
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
         "broken-tests-packages": {

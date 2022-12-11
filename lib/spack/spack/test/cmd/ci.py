@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import contextlib
 import filecmp
 import json
 import os
 import shutil
 import sys
-import contextlib
 
 import pytest
 from jsonschema import ValidationError, validate
@@ -25,13 +25,13 @@ import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
+import spack.util.environment as env_util
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-import spack.util.environment as env_util
 from spack.schema.buildcache_spec import schema as specfile_schema
-from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.ci import schema as ci_schema
+from spack.schema.database_index import schema as db_idx_schema
 from spack.spec import CompilerSpec, Spec
 from spack.util.executable import which
 from spack.util.pattern import Bunch
@@ -919,6 +919,7 @@ def activate_rebuild_env(tmpdir, pkg_name, rebuild_env):
     with ev.read("test"):
         with env_util.set_env(**environ):
             yield
+
 
 @pytest.mark.parametrize("broken_tests", [True, False])
 def test_ci_rebuild_mock_success(
@@ -1828,7 +1829,9 @@ spack:
                     assert the_elt["top"] == "added"
                     assert len(the_elt["tags"]) == 2
                     assert "specific-a" in the_elt["tags"]
-                    assert ("toplevel" if match_behavior == "first" else "specific-a-2") in the_elt["tags"]
+                    assert (
+                        "toplevel" if match_behavior == "first" else "specific-a-2"
+                    ) in the_elt["tags"]
                     assert the_elt["specific"] == "a"
                 if "(specs) dependency-install" in ci_key:
                     # Since the dependency-install match omits any
