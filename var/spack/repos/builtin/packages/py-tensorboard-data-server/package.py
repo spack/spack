@@ -26,6 +26,11 @@ class PyTensorboardDataServer(PythonPackage):
         sha256="878bbd60fd9c38216a372792f02a65c1b422b6c546050fdf335b264ab263cd8a",
         when="@0.6.1",
     )
+    patch(
+        "https://github.com/tensorflow/tensorboard/pull/6101.patch?full_index=1",
+        sha256="4b3bcc2ed656699e9faad7937d013b65fa65fed58fbe58d2ae38e0e7b8006ad8",
+        when="@0.6.1",
+    )
 
     def setup_build_environment(self, env):
         env.set("CARGO_HOME", self.stage.source_path)
