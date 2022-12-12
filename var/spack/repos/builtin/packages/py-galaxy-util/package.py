@@ -21,3 +21,5 @@ class PyGalaxyUtil(PythonPackage):
 
     depends_on("python@3.7:3.10", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+
+    depends_on("py-boltons", type=("build", "run"))
