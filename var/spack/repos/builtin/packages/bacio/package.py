@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Bacio(CMakePackage):
-    """The bacio ibrary performs binary I/O for the NCEP models, processing
+    """The bacio library performs binary I/O for the NCEP models, processing
     unformatted byte-addressable data records, and transforming the little
     endian files and big endian files."""
 
@@ -39,3 +39,6 @@ class Bacio(CMakePackage):
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         return args
+
+    def patch(self):
+        filter_file('2\.4\.0',str(self.spec.version),"VERSION",when="bacio@2.4.1")
