@@ -21,8 +21,8 @@ class PySchemaSalad(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-ruamel.yaml@0.17.6:0.17.21", when="^python@3.7:", type=("build", "run"))
-    depends_on("py-ruamel.yaml@0.16.12:0.17.21", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.17.6:0.17.21", when="^python@3.7:", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.16.12:0.17.21", type=("build", "run"))
     depends_on("py-rdflib@4.2.2:6.999999", type=("build", "run"))
     depends_on("py-rdflib@4.2.2:5.999999", when="^python@:3.6", type=("build", "run"))
     depends_on("py-rdflib-jsonld@0.4.0:0.6.0", when="^python@:3.6", type=("build", "run"))

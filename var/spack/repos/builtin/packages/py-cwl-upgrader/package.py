@@ -18,8 +18,8 @@ class PyCwlUpgrader(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-ruamel.yaml@0.16.0:0.17.22", when="^python@3.10:", type=("build", "run"))
-    depends_on("py-ruamel.yaml@0.15.98:0.17.22", when="^python@3.9:", type=("build", "run"))
-    depends_on("py-ruamel.yaml@0.15.78:0.17.22", when="^python@3.8:", type=("build", "run"))
-    depends_on("py-ruamel.yaml@0.15.71:0.17.22", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.16.0:0.17.22", when="^python@3.10:", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.15.98:0.17.22", when="^python@3.9:", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.15.78:0.17.22", when="^python@3.8:", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.15.71:0.17.22", type=("build", "run"))
     depends_on("py-schema-salad", type=("build", "run"))

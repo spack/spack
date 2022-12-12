@@ -26,4 +26,4 @@ class PyCwlUtils(PythonPackage):
     depends_on("py-rdflib", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-cachecontrol", type=("build", "run"))
-    depends_on("py-py-schema-salad@8.3.20220825114525:8.999999", type=("build", "run"))
+    depends_on("py-schema-salad@8.3.20220825114525:8.999999", type=("build", "run"))

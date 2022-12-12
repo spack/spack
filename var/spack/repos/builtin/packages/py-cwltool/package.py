@@ -26,8 +26,8 @@ class PyCwltool(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-requests@2.4.3:", type=("build", "run"))
-    depends_on("py-ruamel.yaml@0.16.0:0.17.21", when="^python@3.10:", type=("build", "run"))
-    depends_on("py-ruamel.yaml@0.15:0.17.21", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.16.0:0.17.21", when="^python@3.10:", type=("build", "run"))
+    depends_on("py-ruamel-yaml@0.15:0.17.21", type=("build", "run"))
     depends_on("py-rdflib@4.2.2:6.2.999999", type=("build", "run"))
     depends_on("py-rdflib@4.2.2:5.999999", when="^python@:3.6", type=("build", "run"))
     depends_on("py-shellescape@3.4.1:3.8.999999", type=("build", "run"))
