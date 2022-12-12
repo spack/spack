@@ -182,9 +182,8 @@ condition_holds(ID) :-
   attr(Name, A1, A2, A3)     : condition_requirement(ID, Name, A1, A2, A3);
   attr(Name, A1, A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4).
 
-% condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
-% is derived. This allows imposed constraints to be canceled in special cases.
-impose(ID) :- condition_holds(ID), not do_not_impose(ID).
+% condition_holds(ID) implies all imposed_constraints.
+impose(ID) :- condition_holds(ID).
 
 % conditions that hold impose constraints on other specs
 attr(Name, A1)             :- impose(ID), imposed_constraint(ID, Name, A1).
@@ -229,25 +228,14 @@ depends_on(Package, Dependency) :- attr("depends_on", Package, Dependency, _).
 % a dependency holds if its condition holds and if it is not external or
 % concrete. We chop off dependencies for externals, and dependencies of
 % concrete specs don't need to be resolved -- they arise from the concrete
-% specs themselves.
-dependency_holds(Package, Dependency, Type) :-
-  dependency_condition(ID, Package, Dependency),
-  dependency_type(ID, Type),
-  build(Package),
-  not external(Package),
-  condition_holds(ID).
-
-% We cut off dependencies of externals (as we don't really know them).
-% Don't impose constraints on dependencies that don't exist.
-do_not_impose(ID) :-
-  not dependency_holds(Package, Dependency, _),
-  dependency_condition(ID, Package, Dependency).
+% specs themselves. This attr is used in constraints from dependency conditions
+attr("spack_installed", Package) :- build(Package), not external(Package).
 
 % declared dependencies are real if they're not virtual AND
 % the package is not an external.
 % They're only triggered if the associated dependnecy condition holds.
 attr("depends_on", Package, Dependency, Type)
- :- dependency_holds(Package, Dependency, Type),
+ :- attr("dependency_holds", Package, Dependency, Type),
     not virtual(Dependency).
 
 % every root must be a node
@@ -296,13 +284,13 @@ error(1, Msg) :- attr("node", Package),
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 attr("depends_on", Package, Provider, Type)
-  :- dependency_holds(Package, Virtual, Type),
+  :- attr("dependency_holds", Package, Virtual, Type),
      provider(Provider, Virtual),
      not external(Package).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
 attr("virtual_node", Virtual)
-  :- dependency_holds(Package, Virtual, Type),
+  :- attr("dependency_holds", Package, Virtual, Type),
      virtual(Virtual), not external(Package).
 
 % If there's a virtual node, we must select one and only one provider.

@@ -1294,11 +1294,13 @@ class SpackSolverSetup(object):
                     msg += " when %s" % cond
 
                 condition_id = self.condition(cond, dep.spec, pkg.name, msg)
-                self.gen.fact(fn.dependency_condition(condition_id, pkg.name, dep.spec.name))
+                self.gen.fact(fn.condition_requirement(condition_id, "spack_installed", pkg.name))
 
                 for t in sorted(deptypes):
                     # there is a declared dependency of type t
-                    self.gen.fact(fn.dependency_type(condition_id, t))
+                    self.gen.fact(fn.imposed_constraint(
+                        condition_id, "dependency_holds", pkg.name, dep.spec.name, t
+                    ))
 
                 self.gen.newline()
 
