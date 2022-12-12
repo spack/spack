@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class NfCoreTools(PythonPackage):
-    """A python package with helper tools for the nf-core community.
-    """
+    """A python package with helper tools for the nf-core community."""
 
     homepage = "https://nf-co.re/tools"
     pypi = "nf-core/nf-core-2.7.1.tar.gz"
