@@ -425,25 +425,15 @@ external(Package) :- attr("external_spec_selected", Package, _).
 
 % determine if an external spec has been selected
 attr("external_spec_selected", Package, LocalIndex) :-
-    external_conditions_hold(Package, LocalIndex),
+    attr("external_conditions_hold", Package, LocalIndex),
     attr("node", Package),
     not attr("hash", Package, _).
-
-external_conditions_hold(Package, LocalIndex) :-
-    possible_external(ID, Package, LocalIndex), condition_holds(ID).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
 error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
  :- external(Package),
-    not external_conditions_hold(Package, _).
-
-#defined possible_external/3.
-#defined external_spec_index/3.
-#defined external_spec_condition/3.
-#defined external_spec_condition/4.
-#defined external_spec_condition/5.
-#defined external_spec_condition/6.
+    not attr("external_conditions_hold", Package, _).
 
 %-----------------------------------------------------------------------------
 % Config required semantics
@@ -653,7 +643,7 @@ variant_default_not_used(Package, Variant, Value)
 external_with_variant_set(Package, Variant, Value)
  :- attr("variant_value", Package, Variant, Value),
     condition_requirement(ID, "variant_value", Package, Variant, Value),
-    possible_external(ID, Package, _),
+    imposed_constraint(ID, "external_conditions_hold", Package, _),
     external(Package),
     attr("node", Package).
 

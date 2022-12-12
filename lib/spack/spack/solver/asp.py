@@ -1452,7 +1452,9 @@ class SpackSolverSetup(object):
             for local_idx, spec in enumerate(external_specs):
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
                 condition_id = self.condition(spec, msg=msg)
-                self.gen.fact(fn.possible_external(condition_id, pkg_name, local_idx))
+                self.gen.fact(fn.imposed_constraint(
+                    condition_id, "external_conditions_hold", pkg_name, local_idx
+                ))
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -2399,6 +2401,7 @@ class SpecBuilder(object):
                 r"^root$",
                 r"^virtual_node$",
                 r"^virtual_root$",
+                r"^.*holds?$",
             ]
         )
     )
