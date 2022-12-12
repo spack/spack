@@ -24,4 +24,3 @@ class PyGravity(PythonPackage):
     depends_on("py-ruamel-yaml", type=("build", "run"))
     depends_on("py-pydantic", type=("build", "run"))
     depends_on("py-jsonref", type=("build", "run"))
-
