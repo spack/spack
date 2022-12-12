@@ -7,17 +7,30 @@ from spack.package import *
 
 
 class Geos(CMakePackage):
-    """GEOS (Geometry Engine - Open Source) is a C++ port of the Java
-    Topology Suite (JTS). As such, it aims to contain the complete
-    functionality of JTS in C++. This includes all the OpenGIS
-    Simple Features for SQL spatial predicate functions and spatial
-    operators, as well as specific JTS enhanced topology functions."""
+    """GEOS (Geometry Engine, Open Source).
 
-    homepage = "https://trac.osgeo.org/geos/"
+    GEOS is a C/C++ library for computational geometry with a focus on algorithms used in
+    geographic information systems (GIS) software. It implements the OGC Simple Features
+    geometry model and provides all the spatial functions in that standard as well as many
+    others. GEOS is a core dependency of PostGIS, QGIS, GDAL, and Shapely.
+    """
+
+    homepage = "https://libgeos.org/"
     url = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
+    git = "https://github.com/libgeos/geos.git"
 
     maintainers = ["adamjstewart"]
 
+    version("3.11.1", sha256="6d0eb3cfa9f92d947731cc75f1750356b3bdfc07ea020553daf6af1c768e0be2")
+    version("3.11.0", sha256="79ab8cabf4aa8604d161557b52e3e4d84575acdc0d08cb09ab3f7aaefa4d858a")
+    version("3.10.4", sha256="d6fc11bcfd265cbf2714199174e4c3392d657551e5fd84c74c07c863b29357e3")
+    version("3.10.3", sha256="3c141b07d61958a758345d5f54e3c735834b2f4303edb9f67fb26914f0d44770")
+    version("3.10.2", sha256="50bbc599ac386b4c2b3962dcc411f0040a61f204aaef4eba7225ecdd0cf45715")
+    version("3.10.1", sha256="a8148eec9636814c8ab0f8f5266ce6f9b914ed65b0d083fc43bb0bbb01f83648")
+    version("3.10.0", sha256="097d70e3c8f688e59633ceb8d38ad5c9b0d7ead5729adeb925dbc489437abe13")
+    version("3.9.4", sha256="70dff2530d8cd2dfaeeb91a5014bd17afb1baee8f0e3eb18e44d5b4dbea47b14")
+    version("3.9.3", sha256="f8b2314e311456f7a449144efb5e3188c2a28774752bc50fc882a3cd5c89ee35")
+    version("3.9.2", sha256="44a5a9be21d7d473436bf621c2ddcc3cf5a8bbe3c786e13229618a3b9d861297")
     version("3.9.1", sha256="7e630507dcac9dc07565d249a26f06a15c9f5b0c52dd29129a0e3d381d7e382a")
     version("3.8.1", sha256="4258af4308deb9dbb5047379026b4cd9838513627cb943a44e16c40e42ae17f7")
     version("3.7.2", sha256="2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707")
@@ -38,6 +51,7 @@ class Geos(CMakePackage):
     version("3.3.4", sha256="cd5400aa5f3fe32246dfed5d238c5017e1808162c865c016480b3e6c07271904")
     version("3.3.3", sha256="dfcf4bd70ab212a5b7bad21d01b84748f101a545092b56dafdc3882ef3bddec9")
 
+    depends_on("cmake@3.13:", when="@3.10:", type="build")
     depends_on("cmake@3.8:", type="build")
     depends_on("ninja", type="build")
 
@@ -46,7 +60,7 @@ class Geos(CMakePackage):
     patch(
         "https://github.com/libgeos/geos/pull/461.patch?full_index=1",
         sha256="ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35",
-        when="@3.8:",
+        when="@3.8:3.9",
     )
 
     @property
