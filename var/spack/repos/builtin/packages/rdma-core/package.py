@@ -65,10 +65,10 @@ class RdmaCore(CMakePackage):
     @classmethod
     def determine_version(cls, lib):
         match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d+(?:\.\d+)?)", lib)
-        if match and match.group(1) == '0':
+        if match and match.group(1) == "0":
             # On some systems there is a truncated shared library name that does not
             # sufficient version information, return a clear indicator of that
-            return 'unknown_ver'
+            return "unknown_ver"
 
         return match.group(1) if match else None
 
