@@ -32,7 +32,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Set  # novm
+from typing import List, Set
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -495,6 +495,8 @@ def provides(*specs, **kwargs):
     """
 
     def _execute_provides(pkg):
+        import spack.parser  # Avoid circular dependency
+
         when = kwargs.get("when")
         when_spec = make_when_spec(when)
         if not when_spec:
@@ -505,7 +507,7 @@ def provides(*specs, **kwargs):
         when_spec.name = pkg.name
 
         for string in specs:
-            for provided_spec in spack.spec.parse(string):
+            for provided_spec in spack.parser.parse(string):
                 if pkg.name == provided_spec.name:
                     raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
 

@@ -9,6 +9,7 @@ import pytest
 
 import spack.error
 import spack.package_base
+import spack.parser
 import spack.repo
 import spack.util.hash as hashutil
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
@@ -961,7 +962,7 @@ class TestSpecDag(object):
 
     def test_invalid_literal_spec(self):
         # Can't give type 'build' to a top-level spec
-        with pytest.raises(spack.spec.SpecParseError):
+        with pytest.raises(spack.parser.SpecSyntaxError):
             Spec.from_literal({"foo:build": None})
 
         # Can't use more than one ':' separator

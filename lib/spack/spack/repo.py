@@ -9,7 +9,7 @@ import contextlib
 import errno
 import functools
 import importlib
-import importlib.machinery  # novm
+import importlib.machinery
 import importlib.util
 import inspect
 import itertools
@@ -24,7 +24,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Dict  # novm
+from typing import Dict
 
 import ruamel.yaml as yaml
 
@@ -79,7 +79,7 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):
     def __init__(self, fullname, path, prepend=None):
         super(_PrependFileLoader, self).__init__(fullname, path)
         self.prepend = prepend
@@ -144,7 +144,7 @@ class ReposFinder(object):
         loader = self.compute_loader(fullname)
         if loader is None:
             return None
-        return importlib.util.spec_from_loader(fullname, loader)  # novm
+        return importlib.util.spec_from_loader(fullname, loader)
 
     def compute_loader(self, fullname):
         # namespaces are added to repo, and package modules are leaves.
