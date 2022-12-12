@@ -14,6 +14,7 @@ class PyPytorchLightning(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("1.8.4", sha256="c2771f966fc1b909cdfd1d603a87b8c84a3d5ff7aacf35b2c0260f697ec0c8be")
     version("1.8.3", sha256="c12293da19810a08e4f81a40145760fb29514449ef5d294fa1ef741553cdf217")
     version("1.8.2", sha256="480f3396cd63888c4e5ec2f21c02fe662a2b035d9634e6f31fcf1197a36ebd15")
     version("1.8.1", sha256="5b60e5eb84dd16ee8dc408286f0074ab475bed385b09a702d678ccbde91e4818")
@@ -69,7 +70,8 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-packaging", when="@:1.2", type=("build", "run"))
     depends_on("py-typing-extensions@4.0.0:", when="@1.6:", type=("build", "run"))
     depends_on("py-typing-extensions", when="@1.4:1.5", type=("build", "run"))
-    depends_on("py-lightning-utilities@0.3", when="@1.8:", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.3,0.4.1:0.4", when="@1.8.4:", type=("build", "run"))
+    depends_on("py-lightning-utilities@0.3", when="@1.8.0:1.8.3", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-lightning-lite@1.8.0", when="@1.8.0", type=("build", "run"))
