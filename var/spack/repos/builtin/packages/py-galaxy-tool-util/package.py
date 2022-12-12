@@ -56,7 +56,7 @@ class PyGalaxyToolUtil(PythonPackage):
     # depends_on("py-mako", type=("build", "run"))
     # depends_on("py-markdown", type=("build", "run"))
     # depends_on("py-markupsafe", type=("build", "run"))
-    # depends_on("py-mercurial", type=("build", "run"))
+    # depends_on("mercurial", type=("build", "run"))
     # depends_on("py-mrcfile", type=("build", "run"))
     # depends_on("py-nodeenv", type=("build", "run"))
     # depends_on("py-numpy", type=("build", "run"))
