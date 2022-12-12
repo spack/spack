@@ -84,7 +84,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.8:", type="build")
     depends_on("cmake@3.9:", when="+cuda", type="build")
-    depends_on("cmake@:3.20", when="+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
@@ -198,6 +197,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ",".join(archs)
                 entries.append(
                     cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
+                )
+                entries.append(
+                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))

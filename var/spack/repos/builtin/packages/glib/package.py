@@ -20,6 +20,8 @@ class Glib(Package):
 
     homepage = "https://developer.gnome.org/glib/"
     url = "https://download.gnome.org/sources/glib/2.53/glib-2.53.1.tar.xz"
+    list_url = "https://download.gnome.org/sources/glib"
+    list_depth = 1
 
     maintainers = ["michaelkuhn"]
 
