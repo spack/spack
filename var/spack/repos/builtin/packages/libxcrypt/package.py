@@ -31,7 +31,6 @@ class Libxcrypt(AutotoolsPackage):
     variant("obsolete_api", default=False, when="@4.4.30:")
 
     patch("truncating-conversion.patch", when="@4.4.30")
-    depends_on("perl", type="build", when="@4.3.30:")
 
     depends_on("perl-open", type="build", when="@4.4.30:")
 
