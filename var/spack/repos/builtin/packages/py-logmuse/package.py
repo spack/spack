@@ -11,4 +11,3 @@ class PyLogmuse(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
