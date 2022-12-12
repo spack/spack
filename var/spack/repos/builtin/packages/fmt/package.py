@@ -106,4 +106,7 @@ class Fmt(CMakePackage):
         # and call to build "doc" target
         args.append("-DFMT_DOC=OFF")
 
+        # Don't build tests
+        args.append(self.define("FMT_TEST", self.run_tests))
+
         return args
