@@ -3,13 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import platform
-
 import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
 
-linux_versions = [
+versions = [
     {
         "version": "2022.2.1",
         "cpp": {
@@ -134,16 +132,15 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
             )
 
-    if platform.system() == "Linux":
-        for v in linux_versions:
-            version(v["version"], expand=False, **v["cpp"])
-            resource(
-                name="fortran-installer",
-                placement="fortran-installer",
-                when="@{0}".format(v["version"]),
-                expand=False,
-                **v["ftn"]
-            )
+    for v in versions:
+        version(v["version"], expand=False, **v["cpp"])
+        resource(
+            name="fortran-installer",
+            placement="fortran-installer",
+            when="@{0}".format(v["version"]),
+            expand=False,
+            **v["ftn"],
+        )
 
     @property
     def component_dir(self):
