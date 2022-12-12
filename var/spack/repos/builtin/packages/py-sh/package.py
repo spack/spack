@@ -13,7 +13,7 @@ class PySh(PythonPackage):
     pypi = "sh/sh-1.12.9.tar.gz"
 
     version("1.14.3", sha256="e4045b6c732d9ce75d571c79f5ac2234edd9ae4f5fa9d59b09705082bdca18c7")
-    version('1.13.1', sha256='97a3d2205e3c6a842d87ebbc9ae93acae5a352b1bc4609b428d0fd5bb9e286a3')
+    version("1.13.1", sha256="97a3d2205e3c6a842d87ebbc9ae93acae5a352b1bc4609b428d0fd5bb9e286a3")
     version("1.12.9", sha256="579aa19bae7fe86b607df1afaf4e8537c453d2ce3d84e1d3957e099359a51677")
     version("1.11", sha256="590fb9b84abf8b1f560df92d73d87965f1e85c6b8330f8a5f6b336b36f0559a4")
 
