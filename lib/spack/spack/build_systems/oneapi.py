@@ -10,6 +10,7 @@ from os.path import basename, dirname, isdir
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
 
+from spack.directives import variant
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -24,6 +25,13 @@ class IntelOneApiPackage(Package):
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
     redistribute_source = False
+
+    # Add variant to toggle environment modifications from vars.sh
+    variant("envmods",
+            default=True,
+            description="Toggles environment modifications",
+            values=(True, False),
+            )
 
     @staticmethod
     def update_description(cls):
