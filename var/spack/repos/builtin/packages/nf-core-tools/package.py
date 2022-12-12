@@ -20,7 +20,7 @@ class NfCoreTools(PythonPackage):
 
     depends_on("nextflow@21.10.3:", when="@2.2:", type="run")
 
-    depends_on("python@3.7:", when="@2.5:", type=("build", "run"))
+    depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-setuptools@40.6:", type="build")
 
     depends_on("py-click", type=("build", "run"))
