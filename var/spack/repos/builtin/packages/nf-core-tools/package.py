@@ -18,9 +18,9 @@ class NfCoreTools(PythonPackage):
     version("2.6", sha256="47d4df906a60006249284bbf0bb84cdec48303a699c7c0d0a26f404a50e0811a")
     version("2.5.1", sha256="0303f6e3810ba1bc6ac843566ee9dea6b5edbf3527437dec5854b8c437456a4f")
 
-    depends_on("nextflow@21.10.3:", when="@2.2:", type="run")
+    depends_on("nextflow@21.10.3:", type="run")
 
-    depends_on("python@3.7:", when="@2.5:", type=("build", "run"))
+    depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-setuptools@40.6:", type="build")
 
     depends_on("py-click", type=("build", "run"))
