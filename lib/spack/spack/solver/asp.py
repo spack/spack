@@ -1266,7 +1266,9 @@ class SpackSolverSetup(object):
             for when in whens:
                 msg = "%s provides %s when %s" % (pkg.name, provided, when)
                 condition_id = self.condition(when, provided, pkg.name, msg)
-                self.gen.fact(fn.provider_condition(condition_id, when.name, provided.name))
+                self.gen.fact(fn.imposed_constraint(
+                    condition_id, "virtual_condition_holds", pkg.name, provided.name
+                ))
             self.gen.newline()
 
     def package_dependencies_rules(self, pkg):

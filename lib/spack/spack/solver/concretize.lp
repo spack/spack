@@ -330,17 +330,11 @@ attr("root", Package) :- attr("virtual_root", Virtual), provider(Package, Virtua
 % for environments that are concretized together (e.g. where we
 % asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
 % be the mpi provider)
-provider(Package, Virtual) :- attr("node", Package), virtual_condition_holds(Package, Virtual).
-
-% The provider provides the virtual if some provider condition holds.
-virtual_condition_holds(Provider, Virtual) :-
-   provider_condition(ID, Provider, Virtual),
-   condition_holds(ID),
-   virtual(Virtual).
+provider(Package, Virtual) :- attr("node", Package), attr("virtual_condition_holds", Package, Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
-:- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual),
+:- provider(Package, Virtual), not attr("virtual_condition_holds", Package, Virtual),
    internal_error("Virtual when provides not respected").
 
 #defined possible_provider/2.
@@ -382,14 +376,8 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 
 % do not warn if generated program contains none of these.
 #defined possible_provider/2.
-#defined provider_condition/3.
-#defined required_provider_condition/3.
-#defined required_provider_condition/4.
-#defined required_provider_condition/5.
-#defined required_provider_condition/6.
 #defined declared_dependency/3.
 #defined virtual/1.
-#defined virtual_condition_holds/2.
 #defined external/1.
 #defined external_spec/2.
 #defined external_version_declared/4.
