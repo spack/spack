@@ -12,11 +12,13 @@ class PyParamiko(PythonPackage):
     homepage = "https://www.paramiko.org/"
     pypi = "paramiko/paramiko-2.7.1.tar.gz"
 
+    version("2.12.0", sha256="376885c05c5d6aa6e1f4608aac2a6b5b0548b1add40274477324605903d9cd49")
     version("2.7.1", sha256="920492895db8013f6cc0179293147f830b8c7b21fdfc839b6bad760c27459d9f")
     version("2.1.2", sha256="5fae49bed35e2e3d45c4f7b0db2d38b9ca626312d91119b3991d0ecf8125e310")
 
     variant("invoke", default=False, description="Enable invoke support")
 
+    # https://github.com/paramiko/paramiko/blob/2.12.0/setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-bcrypt@3.1.3:", when="@2.7:", type=("build", "run"))
     depends_on("py-cryptography@1.1:", type=("build", "run"))
