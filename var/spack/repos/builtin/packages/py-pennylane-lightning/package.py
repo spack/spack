@@ -20,4 +20,4 @@ class PyPennylaneLightning(PythonPackage):
 
     depends_on("py-ninja", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    #depends_on("py-pennylane@0.19:", type=("build", "run"))
+    #depends_on("py-pennylane@0.19:", type=("build", "run"))  # circular dep
