@@ -30,7 +30,6 @@ class IntelOneApiPackage(Package):
     variant("envmods",
             default=True,
             description="Toggles environment modifications",
-            values=(True, False),
             )
 
     @staticmethod
@@ -111,7 +110,7 @@ class IntelOneApiPackage(Package):
 
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
-        if not self.spec.external_modules:
+        if "+envmods" in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
                     join_path(self.component_prefix, "env", "vars.sh")
