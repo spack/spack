@@ -116,7 +116,7 @@ class Dyninst(CMakePackage):
             "-DBoost_ROOT_DIR=%s" % spec["boost"].prefix,
             "-DElfUtils_ROOT_DIR=%s" % spec["elf"].prefix,
             "-DLibIberty_ROOT_DIR=%s" % spec["libiberty"].prefix,
-            "-DTBB_ROOT_DIR=%s" % spec["tbb"].prefix,
+            "-DTBB_ROOT_DIR=%s" % spec["tbb"].prefix.tbb,
             self.define("LibIberty_LIBRARIES", spec["libiberty"].libs),
         ]
 
