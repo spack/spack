@@ -10,7 +10,7 @@ class PyMlflow(PythonPackage):
     """MLflow: A Platform for ML Development and Productionization."""
 
     homepage = "https://pypi.org/project/mlflow/"
-    pypi = "mlflow/mlflow-2.0.1.tar.gz")
+    pypi = "mlflow/mlflow-2.0.1.tar.gz"
 
     version('2.0.1', sha256='7ce6caf3c6acb022d6f5ce8a0995a92be1db524ae16aade1f83da661cdf993de')
     version('1.17.0', sha256='4898c58899e3101e09e2b37cf5bee7db04c5d73389a56942d3ef5a5e4396799e')
