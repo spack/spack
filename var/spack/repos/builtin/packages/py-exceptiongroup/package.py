@@ -16,5 +16,4 @@ class PyExceptiongroup(PythonPackage):
     version("1.0.4", sha256="bd14967b79cd9bdb54d97323216f8fdf533e278df937aa2a90089e7d6e06e5ec")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     depends_on("py-flit-scm", type="build")
