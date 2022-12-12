@@ -203,6 +203,28 @@ attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A
    not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag),
    internal_error("imposed hash without imposing all flag values").
 
+% associated conditions by cause -> effect
+condition_cause(Effect, Cause) :-
+  condition_holds(Effect), condition_holds(Cause),
+  attr(Name, A1),
+  condition_requirement(Effect, Name, A1),
+  imposed_constraint(Cause, Name, A1).
+condition_cause(Effect, Cause) :-
+  condition_holds(Effect), condition_holds(Cause),
+  attr(Name, A1, A2),
+  condition_requirement(Effect, Name, A1, A2),
+  imposed_constraint(Cause, Name, A1, A2).
+condition_cause(Effect, Cause) :-
+  condition_holds(Effect), condition_holds(Cause),
+  attr(Name, A1, A2, A3),
+  condition_requirement(Effect, Name, A1, A2, A3),
+  imposed_constraint(Cause, Name, A1, A2, A3).
+condition_cause(Effect, Cause) :-
+  condition_holds(Effect), condition_holds(Cause),
+  attr(Name, A1, A2, A3, A4),
+  condition_requirement(Effect, Name, A1, A2, A3, A4),
+  imposed_constraint(Cause, Name, A1, A2, A3, A4).
+
 #defined condition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
