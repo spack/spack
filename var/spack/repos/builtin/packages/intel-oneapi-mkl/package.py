@@ -134,6 +134,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             env.append_path("__INTEL_POST_FFLAGS", flag, separator=" ")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
+        # Only if environment modifications are desired (default is +envmods)
         if "+envmods" in self.spec:
             env.set("MKLROOT", self.component_prefix)
             env.append_path("PKG_CONFIG_PATH", self.component_prefix.lib.pkgconfig)

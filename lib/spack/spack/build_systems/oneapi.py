@@ -110,6 +110,7 @@ class IntelOneApiPackage(Package):
 
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
+        # Only if environment modifications are desired (default is +envmods)
         if "+envmods" in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
