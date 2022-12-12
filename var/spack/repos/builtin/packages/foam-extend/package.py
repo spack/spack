@@ -55,6 +55,7 @@ class FoamExtend(Package):
 
     homepage = "http://www.extend-project.de/"
 
+    version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
     version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
     version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git")
