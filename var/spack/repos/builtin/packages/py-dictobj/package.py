@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyDictObj(PythonPackage):
+class PyDictobj(PythonPackage):
     """A set of Python dictionary objects where keys can be accessed as instance attributes."""
 
     homepage = "https://github.com/grimwm/py-dictobj"

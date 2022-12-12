@@ -8,8 +8,7 @@ from spack.package import *
 
 
 class PyCwlUpgrader(PythonPackage):
-    """Common Workflow Language standalone document upgrader
-    """
+    """Common Workflow Language standalone document upgrader"""
 
     homepage = "https://github.com/common-workflow-language/cwl-upgrader"
     pypi = "cwl-upgrader/cwl-upgrader-1.2.4.tar.gz"
