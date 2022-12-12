@@ -10,12 +10,13 @@ class PyPyld(PythonPackage):
     """This library is an implementation of the JSON-LD specification in
     Python.
     """
+
     homepage = "https://github.com/digitalbazaar/pyld"
     pypi = "PyLD/PyLD-2.0.3.tar.gz"
 
-    version('2.0.3', sha256='287445f888c3a332ccbd20a14844c66c2fcbaeab3c99acd506a0788e2ebb2f82')
+    version("2.0.3", sha256="287445f888c3a332ccbd20a14844c66c2fcbaeab3c99acd506a0788e2ebb2f82")
 
-    depends_on('py-cachetools', type=('build', 'run'))
-    depends_on('py-frozendict', type=('build', 'run'))
-    depends_on('py-lxml', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build'))
+    depends_on("py-cachetools", type=("build", "run"))
+    depends_on("py-frozendict", type=("build", "run"))
+    depends_on("py-lxml", type=("build", "run"))
+    depends_on("py-setuptools", type=("build"))
