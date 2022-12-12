@@ -33,5 +33,3 @@ class PyStrawberryfields(PythonPackage):
     depends_on("py-urllib3@1.25.3:", type=("build", "run"))
     #depends_on("py-quantum-xir@0.1.1:", type=("build", "run"))
     #depends_on("py-xanadu-cloud-client@0.2.1:", type=("build", "run"))
-
-    depends_on("", type="run")
