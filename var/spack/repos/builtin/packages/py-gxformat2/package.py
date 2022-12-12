@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Py(PythonPackage):
+class PyGxformat2(PythonPackage):
     """Galaxy Workflow Format 2 Descriptions"""
 
     homepage = "https://github.com/galaxyproject/gxformat2"

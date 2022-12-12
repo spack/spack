@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Py(PythonPackage):
+class PyGunicorn(PythonPackage):
     """WSGI HTTP Server for UNIX"""
 
     homepage = "https://gunicorn.org"
