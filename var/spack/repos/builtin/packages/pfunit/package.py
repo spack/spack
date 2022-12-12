@@ -98,6 +98,9 @@ class Pfunit(CMakePackage):
         # Then version down to 4.0.0 does not
         elif version >= Version("4"):
             url = url_base + "/releases/download/v{0}/pFUnit-{0}.tar"
+        # Version 3.3.0 has a v unlike all other 3 releases
+        elif version == Version("3.3.0"):
+            url = url_base + "/archive/v{0}.tar.gz"
         else:
             url = url_base + "/archive/{0}.tar.gz"
 
