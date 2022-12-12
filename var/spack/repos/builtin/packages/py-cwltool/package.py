@@ -15,11 +15,11 @@ class PyCwltool(PythonPackage):
 
     version(
         "3.1.20221201130942",
-        sha256="0152d8cdf6acaf3620f557b442941f577bff2851d9e2e866e6051ea48a37bdbe"
+        sha256="0152d8cdf6acaf3620f557b442941f577bff2851d9e2e866e6051ea48a37bdbe",
     )
     version(
         "3.1.20221109155812",
-        sha256="82676ea315ce84fc4057d92c040af15dde3e897527ea4ae70c1033b0eca20c2a"
+        sha256="82676ea315ce84fc4057d92c040af15dde3e897527ea4ae70c1033b0eca20c2a",
     )
 
     depends_on("python@3.6:", type=("build", "run"))

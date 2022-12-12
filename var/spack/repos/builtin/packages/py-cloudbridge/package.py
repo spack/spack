@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyCloudBridge(PythonPackage):
+class PyCloudbridge(PythonPackage):
     """A simple layer of abstraction over multiple cloud providers."""
 
     homepage = "http://cloudbridge.cloudve.org"

@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyCloudAuthz(PythonPackage):
+class PyCloudauthz(PythonPackage):
     """Implements means of authorization delegation on cloud-based resource providers."""
 
     homepage = "https://github.com/galaxyproject/cloudauthz"
