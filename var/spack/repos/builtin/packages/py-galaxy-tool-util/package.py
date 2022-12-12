@@ -73,7 +73,6 @@ class PyGalaxyToolUtil(PythonPackage):
     # depends_on("py-pylibmagic", type=("build", "run"))
     # depends_on("py-pyparsing", type=("build", "run"))
     # depends_on("py-pysam", type=("build", "run"))
-    # depends_on("py-python", type=("build", "run"))
     # depends_on("py-python-dateutil", type=("build", "run"))
     # depends_on("py-python-magic", type=("build", "run"))
     # depends_on("py-python-multipart", type=("build", "run"))
