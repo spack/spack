@@ -20,6 +20,8 @@ class FluxCore(AutotoolsPackage):
     maintainers = ["grondo"]
 
     version("master", branch="master")
+    version("0.46.1", sha256="a7873fd49889c11f12e62d59eb992d4a089ddfde8566789f79eca1dfae1a5ffa")
+    version("0.46.0", sha256="8e51ca3e6e6525e9014ce0c135f529df7770cc12fa94c1ee03e8c5b45b48468e")
     version("0.45.0", sha256="6550fe682c1686745e1d9c201daf18f9c57691468124565c9252d27823d2fe46")
     version("0.44.0", sha256="6786b258657675ed573907a2a6012f68f2dd5053d7d09eb76b4e7f9943d6d466")
     version("0.43.0", sha256="4b9816d04e8b5b248a8d5e3dac3f9822f8f89831e340f36745e01512d768597b")
