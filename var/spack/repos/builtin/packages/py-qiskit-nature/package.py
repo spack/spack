@@ -26,4 +26,3 @@ class PyQiskitNature(PythonPackage):
     depends_on("py-psutil@5:", type=("build", "run"))
     depends_on("py-h5py@:3.2", type=("build", "run"))
     depends_on("py-scikit-learn@0.20.0:", type=("build", "run"))
-    depends_on("py-dataclasses", when="python@:3.6", type=("build", "run"))
