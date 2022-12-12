@@ -547,6 +547,10 @@ class IntelParallelStudio(IntelPackage):
     provides("mpi", when="+mpi")
     provides("tbb", when="+tbb")
 
+    conflicts("target=ppc64:", msg="intel-parallel-studio is only available for x86_64")
+    conflicts("target=ppc64le:", msg="intel-parallel-studio is only available for x86_64")
+    conflicts("target=aarch64:", msg="intel-parallel-studio is only available for x86_64")
+
     # For TBB, static linkage is not and has never been supported by Intel:
     # https://www.threadingbuildingblocks.org/faq/there-version-tbb-provides-statically-linked-libraries
     conflicts("+tbb", when="~shared")
@@ -588,7 +592,7 @@ class IntelParallelStudio(IntelPackage):
                 "F77": spack_f77,
                 "F90": spack_fc,
                 "FC": spack_fc,
-            }
+            },
         )
 
     def setup_run_environment(self, env):
