@@ -22,5 +22,3 @@ class PyQutipQip(PythonPackage):
     depends_on("py-numpy@1.12:", type=("build", "run"))
     depends_on("py-scipy@1.0:", type=("build", "run"))
     depends_on("py-qutip@4.5:", type=("build", "run"))
-
-    depends_on("", type="run")
