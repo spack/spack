@@ -18,7 +18,7 @@ class Pfunit(CMakePackage):
     url = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/releases/download/v4.6.1/pFUnit-v4.6.1.tar"
     git = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit.git"
 
-    maintainers = ["mathomp4", "tclune", "citibeth"]
+    maintainers = ["mathomp4", "tclune"]
 
     version("4.6.1", sha256="19de22ff0542ca900aaf2957407f24d7dadaccd993ea210beaf22032d3095add")
     version("4.6.0", sha256="7c768ea3a2d16d8ef6229b25bd7756721c24a18db779c7422afde0e3e2248d72")
