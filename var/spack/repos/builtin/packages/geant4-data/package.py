@@ -86,7 +86,6 @@ class Geant4Data(BundlePackage):
         ],
         "10.6.0:10.6": [
             "g4ndl@4.6",
-            "g4emlow@7.9",
             "g4emlow@7.9.1",
             "g4photonevaporation@5.5",
             "g4radioactivedecay@5.4",
