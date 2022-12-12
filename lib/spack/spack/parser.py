@@ -59,6 +59,7 @@ expansion when it is the first character in an id typed on the command line.
 import enum
 import pathlib
 import re
+import sys
 from typing import Iterator, List, Match, Optional
 
 from llnl.util.tty import color
@@ -68,6 +69,7 @@ import spack.spec
 import spack.variant
 import spack.version
 
+IS_WINDOWS = sys.platform == "win32"
 #: Valid name for specs and variants. Here we are not using
 #: the previous "w[\w.-]*" since that would match most
 #: characters that can be part of a word in any language
@@ -80,8 +82,13 @@ NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
 HASH = r"[a-zA-Z_0-9]+"
 
-#: A filename starts either with a "." or a "/" or a "{name}/"
-FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
+#: A filename starts either with a "." or a "/" or a "{name}/,
+# or on Windows, a drive letter followed by a colon and "\"
+# or "." or {name}\
+if not IS_WINDOWS:
+    FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
+else:
+    FILENAME = r"(\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)([a-zA-Z0-9-_\.\\]*)(\.json|\.yaml)"
 
 VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
