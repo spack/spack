@@ -94,6 +94,7 @@ class Openblas(MakefilePackage):
 
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
+    patch("f_check-intel.patch", when="@0.3.21 %intel")
 
     # OpenBLAS >=3.0 has an official way to disable internal parallel builds
     patch("make.patch", when="@0.2.16:0.2.20")
