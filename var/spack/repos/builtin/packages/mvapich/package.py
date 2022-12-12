@@ -27,8 +27,7 @@ class Mvapich(AutotoolsPackage):
     version("3.0a", "71f6593bfbfe9a9f6f5c750904461f007bf74bec479544e4da375b7d4a56b2ac")
 
     provides("mpi")
-    provides("mpi@:3.1", when="@2.3:")
-    provides("mpi@:3.0", when="@2.1:")
+    provides("mpi@:3.1")
 
     variant("wrapperrpath", default=True, description="Enable wrapper rpath")
     variant("debug", default=False, description="Enable debug info and error messages at run-time")
@@ -80,7 +79,6 @@ class Mvapich(AutotoolsPackage):
         values=(
             "ofi",
             "ucx",
-            #       "ucr",
         ),
         multi=False,
     )
@@ -102,7 +100,6 @@ class Mvapich(AutotoolsPackage):
     depends_on("libpciaccess", when=(sys.platform != "darwin"))
     depends_on("libxml2")
     depends_on("cuda", when="+cuda")
-    # depends_on("rdma-core", when="netmod=ucr")
     depends_on("libfabric", when="netmod=ofi")
     depends_on("slurm", when="process_managers=slurm")
     depends_on("ucx", when="netmod=ucx")
@@ -161,10 +158,6 @@ class Mvapich(AutotoolsPackage):
             opts = ["--with-device=ch4:ofi"]
         elif "netmod=ucx" in self.spec:
             opts = ["--with-device=ch4:ucx"]
-        # elif "netmod=ucr" in self.spec:
-        #    opts = ["--with-device=ch4:ucr"]
-        # elif "netmod=mrail" in self.spec:
-        #    opts = ["--with-device=ch3:mrail", "--with-rdma=gen2", "--disable-mcast"]
         return opts
 
     @property
