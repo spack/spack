@@ -2300,17 +2300,26 @@ class SpackSolverSetup(object):
         self.define_target_constraints()
 
     def literal_specs(self, specs):
-        for idx, spec in enumerate(specs):
+        for spec in specs:
             self.gen.h2("Spec: %s" % str(spec))
-            self.gen.fact(fn.literal(idx))
 
-            self.gen.fact(fn.literal(idx, "virtual_root" if spec.virtual else "root", spec.name))
+            # cannot use self.condition because it requires condition requirements
+            condition_id = next(self._condition_id_counter)
+            self.gen.fact(fn.condition(condition_id, "%s is provided as input spec" % spec))
+            self.gen.fact(fn.literal(condition_id))
+
+            self.gen.fact(fn.condition_requirement(condition_id, "literal_solved", condition_id))
+
+            self.gen.fact(fn.imposed_constraint(
+                condition_id, "virtual_root" if spec.virtual else "root", spec.name
+            ))
+
             for clause in self.spec_clauses(spec):
-                self.gen.fact(fn.literal(idx, *clause.args))
+                self.gen.fact(fn.imposed_constraint(condition_id, *clause.args))
                 if clause.args[0] == "variant_set":
-                    self.gen.fact(
-                        fn.literal(idx, "variant_default_value_from_cli", *clause.args[1:])
-                    )
+                    self.gen.fact(fn.imposed_constraint(
+                        condition_id, "variant_default_value_from_cli", *clause.args[1:]
+                    ))
 
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())
@@ -2404,6 +2413,7 @@ class SpecBuilder(object):
                 r"^virtual_node$",
                 r"^virtual_root$",
                 r"^.*holds?$",
+                r"^literal.*$",
             ]
         )
     )
