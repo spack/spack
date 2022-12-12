@@ -18,7 +18,7 @@ class PySphinxcontribApplehelp(PythonPackage):
     # 'sphinx' requires 'sphinxcontrib-applehelp' at build-time, but
     # 'sphinxcontrib-applehelp' requires 'sphinx' at run-time. Don't bother trying to
     # import any modules for this package.
-    import_modules = []  # type: List[str]
+    import_modules: List[str] = []
 
     version("1.0.2", sha256="a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58")
     version("1.0.1", sha256="edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897")
