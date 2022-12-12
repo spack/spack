@@ -25,7 +25,7 @@ class NfCoreTools(PythonPackage):
 
     depends_on("py-click", type=("build", "run"))
     depends_on("py-filetype", type=("build", "run"))
-    #depends_on("py-galaxy-tool-util", type=("build", "run"))
+    # depends_on("py-galaxy-tool-util", type=("build", "run"))
     depends_on("py-gitpython", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-jsonschema@3.0:", type=("build", "run"))
