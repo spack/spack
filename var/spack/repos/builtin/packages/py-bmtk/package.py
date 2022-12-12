@@ -12,6 +12,7 @@ class PyBmtk(PythonPackage):
     homepage = "https://github.com/AllenInstitute/bmtk"
     pypi = "bmtk/bmtk-1.0.5.tar.gz"
 
+    version('1.0.7', sha256='11e85098cf3c940a3d64718645f4a24ee13c8a47438ef5d28e054cb27ee01702')
     version('1.0.5', sha256='e0cb47b334467a6d124cfb99bbc67cc88f39f0291f4c39929f50d153130642a4')
 
     depends_on('py-setuptools', type='build')
