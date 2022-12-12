@@ -12,7 +12,7 @@ class Nextflow(Package):
     homepage = "https://www.nextflow.io"
     url = "https://github.com/nextflow-io/nextflow/releases/download/v21.04.3/nextflow"
 
-    maintainers = ["dialvarezs"]
+    maintainers = ["dialvarezs", "marcodelapierre"]
 
     version(
         "22.10.3",
