@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984
+    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -42,7 +42,7 @@ jobs:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984
+    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -66,7 +66,7 @@ jobs:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984
+    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -90,7 +90,7 @@ jobs:
   #   - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
   #     with:
   #       fetch-depth: 0
-  #   - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984
+  #   - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
   #     with:
   #       python-version: 3.9
   #   - name: Install Python packages
@@ -121,7 +121,7 @@ jobs:
   #     run:
   #       shell: pwsh
   #   steps:
-  #   - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984
+  #   - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
   #     with:
   #       python-version: 3.9
   #   - name: Install Python packages
