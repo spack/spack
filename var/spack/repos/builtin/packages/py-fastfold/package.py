@@ -21,8 +21,6 @@ class PyFastfold(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))  # Req Relaxed (was @3.8:3.9)
     depends_on("cuda@11.1:", type=("build", "run"))
     depends_on("py-torch@1.10:+cuda", type=("build", "run"))
-    # Needed or py-torch fails to build when python@3.10:
-    depends_on("cudnn@8.0.5:", type=("build", "run"), when="python@3.10:")
     # From setup.py:
     depends_on("py-setuptools", type="build")
     depends_on("py-einops", type=("build", "run"))
