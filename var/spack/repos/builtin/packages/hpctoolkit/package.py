@@ -166,6 +166,21 @@ class Hpctoolkit(AutotoolsPackage):
 
     flag_handler = AutotoolsPackage.build_system_flags
 
+    def patch(self):
+        if self.spec.satisfies("^hip@5.3.0:"):
+            filter_file(
+                'ROCM_HSA_IFLAGS="-I$ROCM_HSA/include/hsa"',
+                'ROCM_HSA_IFLAGS="-I$ROCM_HSA/include"',
+                "configure",
+                string=True,
+            )
+            filter_file(
+                "#include <hsa.h>",
+                "#include <hsa/hsa.h>",
+                "src/tool/hpcrun/gpu/amd/roctracer-api.c",
+                string=True,
+            )
+
     def configure_args(self):
         spec = self.spec
 

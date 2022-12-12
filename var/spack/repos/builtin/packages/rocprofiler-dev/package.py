@@ -13,12 +13,13 @@ class RocprofilerDev(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
     git = "https://github.com/ROCm-Developer-Tools/rocprofiler.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["librocprofiler64"]
 
+    version("5.3.0", sha256="b0905a329dc1c97a362b951f3f8ef5da9d171cabb001ed4253bd59a2742e7d39")
     version("5.2.3", sha256="4ed22e86633ab177eed85fed8994fcb71017c4c4774998e4d3fc36b6c0a15eac")
     version("5.2.1", sha256="c6768ec428590aadfb0e7ef6e22b8dc5ac8ed97babeb56db07f2d5d41cd122e2")
     version("5.2.0", sha256="1f4db27b56ef1863d4c9e1d96bac9117d66be45156d0637cfe4fd38cae61a23a")
@@ -123,6 +124,7 @@ class RocprofilerDev(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -133,6 +135,7 @@ class RocprofilerDev(CMakePackage):
 
     # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
     patch("fix-includes.patch")
+    patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3.0")
 
     def patch(self):
         filter_file(

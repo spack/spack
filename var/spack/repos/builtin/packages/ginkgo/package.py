@@ -87,6 +87,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @master")
     patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @1.4.0")
 
+    # Add missing include statement
+    patch("thrust-count-header.patch", when="+rocm @1.5.0:")
+
     def setup_build_environment(self, env):
         spec = self.spec
         if "+oneapi" in spec:

@@ -16,11 +16,12 @@ class RocmValidationSuite(CMakePackage):
     compatible platform."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.3.0", sha256="d6afb8a5f4eaf860fd510bcfe65e735cbf96d4b8817c758ea7aee84d4c994382")
     version("5.2.3", sha256="5dfbd41c694bf2eb4368edad8653dc60ec2927d174fc7aaa5fa416156c5f921f")
     version("5.2.1", sha256="a0ea3ab9cbb8ac17bfa4537713a4d7075f869949bfdead4565a46f75864bd4a9")
     version("5.2.0", sha256="2dfef5d66f544230957ac9aaf647b2f1dccf3cc7592cc322cae9fbdcf3321365")
@@ -108,8 +109,12 @@ class RocmValidationSuite(CMakePackage):
     patch("002-remove-force-setting-hip-inc-path.patch", when="@4.1.0:4.3.2")
     patch("003-cmake-change-to-remove-installs-and-sudo.patch", when="@4.1.0:4.3.2")
     patch("004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch", when="@4.3.0:4.3.2")
-    patch("005-cleanup-path-reference-donot-download-googletest-yaml.patch", when="@4.5.0:")
-    patch("006-library-path.patch", when="@4.5.0:")
+    patch("005-cleanup-path-reference-donot-download-googletest-yaml.patch", when="@4.5.0:5.2")
+    patch("006-library-path.patch", when="@4.5.0:5.2")
+    patch(
+        "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.3.patch",
+        when="@5.3.0:",
+    )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib", type="link")
@@ -141,6 +146,7 @@ class RocmValidationSuite(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)
