@@ -505,7 +505,7 @@ class Stage(object):
 
         def print_errors(errors):
             for msg in errors:
-                tty.warn(msg)
+                tty.debug(msg)
 
         errors = []
         for fetcher in generate_fetchers():
@@ -518,8 +518,8 @@ class Stage(object):
                 # Don't bother reporting when something is not cached.
                 continue
             except spack.error.SpackError as e:
-                errors.append("Fetching from {0} failed: {1}".format(fetcher, str(e)))
-                tty.warn(e)
+                errors.append("Fetching from {0} failed.".format(fetcher))
+                tty.debug(e)
                 continue
         else:
             print_errors(errors)
