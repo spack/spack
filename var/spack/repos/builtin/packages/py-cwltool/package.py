@@ -21,6 +21,10 @@ class PyCwltool(PythonPackage):
         "3.1.20221109155812",
         sha256="82676ea315ce84fc4057d92c040af15dde3e897527ea4ae70c1033b0eca20c2a",
     )
+    version(
+        "3.1.20211107152837",
+        sha256="ae1cd4626b5330457b1a62bcb2580f36f530264a80222f2cc17cf65899ebf04e",
+    )
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

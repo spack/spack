@@ -29,5 +29,3 @@ class PyPulsarGalaxyLib(PythonPackage):
     depends_on("py-paramiko", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"))
     depends_on("py-pydantic-tes@0.1.5:", type=("build", "run"))
-
-    # depends_on("", type="run")
