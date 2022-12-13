@@ -7,18 +7,20 @@
 from spack.package import *
 
 
-class Py(PythonPackage):
-    """
-    """
+class PyPylibmagic(PythonPackage):
+    """scikit-build project with CMake for compiling libmagic"""
 
-    homepage = ""
-    pypi = ""
+    homepage = "https://github.com/kratsg/pylibmagic"
+    pypi = "pylibmagic/pylibmagic-0.2.2.tar.gz"
 
-    version("", sha256="")
+    version("0.2.2", sha256="17551b5259db4045c63e595577d42df172e35147e26160a47f4a5ba3933281e7")
 
-    depends_on("python", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools_scm@3.4:+toml", type="build")
+    depends_on("py-scikit-build", type="build")
+    depends_on("cmake", type="build")
+    depends_on("ninja", type="build")
 
-    depends_on("", type=("build", "run"))
-
-    depends_on("", type="run")
+    depends_on("py-importlib-resources", when="^python@:3.8", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7:", when="^python@:3.7", type=("build", "run"))

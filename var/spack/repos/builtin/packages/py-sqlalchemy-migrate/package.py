@@ -7,18 +7,20 @@
 from spack.package import *
 
 
-class Py(PythonPackage):
-    """
-    """
+class PySqlalchemyMigrate(PythonPackage):
+    """Database schema migration for SQLAlchemy"""
 
-    homepage = ""
-    pypi = ""
+    homepage = "http://www.openstack.org/"
+    pypi = "sqlalchemy-migrate/sqlalchemy-migrate-0.13.0.tar.gz"
 
-    version("", sha256="")
+    version("0.13.0", sha256="0bc02e292a040ade5e35a01d3ea744119e1309cdddb704fdb99bac13236614f8")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-pbr@1.8:", type="build")
 
-    depends_on("", type=("build", "run"))
+    depends_on("py-sqlalchemy@0.9.6:", type=("build", "run"))
+    depends_on("py-decorator", type=("build", "run"))
+    depends_on("py-six@1.7.0:", type=("build", "run"))
+    depends_on("py-sqlparse", type=("build", "run"))
+    depends_on("py-tempita@0.4:", type=("build", "run"))
 
-    depends_on("", type="run")

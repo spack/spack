@@ -7,18 +7,12 @@
 from spack.package import *
 
 
-class Py(PythonPackage):
-    """
-    """
+class PyRoutes(PythonPackage):
+    """Routing Recognition and Generation Tools"""
 
-    homepage = ""
-    pypi = ""
+    homepage = "https://routes.readthedocs.io/"
+    pypi = "routes/Routes-2.5.1.tar.gz"
 
-    version("", sha256="")
+    version("2.5.1", sha256="b6346459a15f0cbab01a45a90c3d25caf980d4733d628b4cc1952b865125d053")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
-    depends_on("", type=("build", "run"))
-
-    depends_on("", type="run")

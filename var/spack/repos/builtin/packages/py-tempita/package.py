@@ -7,12 +7,12 @@
 from spack.package import *
 
 
-class PyPycryptodome(PythonPackage):
-    """Cryptographic library for Python"""
+class PyTempita(PythonPackage):
+    """A very small text templating language"""
 
-    homepage = "https://www.pycryptodome.org"
-    pypi = "pycryptodome/pycryptodome-3.16.0.tar.gz"
+    homepage = "https://pypi.org/project/Tempita"
+    pypi = "tempita/Tempita-0.5.2.tar.gz"
 
-    version("3.16.0", sha256="0e45d2d852a66ecfb904f090c3f87dc0dfb89a499570abad8590f10d9cffb350")
+    version("0.5.2", sha256="cacecf0baa674d356641f1d406b8bff1d756d739c46b869a54de515d08e6fc9c")
 
     depends_on("py-setuptools", type="build")

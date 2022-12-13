@@ -7,18 +7,12 @@
 from spack.package import *
 
 
-class Py(PythonPackage):
-    """
-    """
+class PyZipstreamNew(PythonPackage):
+    """Zipfile generator that takes input files as well as streams"""
 
-    homepage = ""
-    pypi = ""
+    homepage = "https://github.com/arjan-s/python-zipstream"
+    pypi = "zipstream-new/zipstream-new-1.1.8.tar.gz"
 
-    version("", sha256="")
+    version("1.1.8", sha256="b031fe181b94e51678389d26b174bc76382605a078d7d5d8f5beae083f111c76")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
-    depends_on("", type=("build", "run"))
-
-    depends_on("", type="run")
