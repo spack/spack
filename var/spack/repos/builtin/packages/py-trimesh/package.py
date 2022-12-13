@@ -21,7 +21,7 @@ class PyTrimesh(PythonPackage):
         sha256="866e73ea35641ff2af73867c891d7f9b90c75ccb8a3c1e8e06e16ff9af1f8c64",
     )
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@40.8:", type="build")
 
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
