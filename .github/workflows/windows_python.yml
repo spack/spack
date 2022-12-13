@@ -15,7 +15,7 @@ jobs:
   unit-tests:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       with:
         fetch-depth: 0
     - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
@@ -39,7 +39,7 @@ jobs:
   unit-tests-cmd:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       with:
         fetch-depth: 0
     - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
@@ -63,7 +63,7 @@ jobs:
   build-abseil:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       with:
         fetch-depth: 0
     - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
@@ -87,7 +87,7 @@ jobs:
   #       git config --global core.symlinks false
   #     shell:
   #       powershell
-  #   - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+  #   - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
   #     with:
   #       fetch-depth: 0
   #   - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9
