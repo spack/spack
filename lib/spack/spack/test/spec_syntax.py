@@ -12,7 +12,7 @@ import pytest
 import spack.platforms.test
 import spack.spec
 import spack.variant
-from spack.parser import SpecParser, SpecTokenizationError, Token, TokenType, FILENAME
+from spack.parser import FILENAME, SpecParser, SpecTokenizationError, Token, TokenType
 
 is_windows = sys.platform == "win32"
 
@@ -894,15 +894,22 @@ def test_specfile_error_conditions_windows(text, exc_cls):
 
 
 @pytest.mark.skipif(is_windows, reason="Tests unix style file paths")
-@pytest.mark.parametrize("filename",
+@pytest.mark.parametrize(
+    "filename",
     [
         "/absolute/path/to/file.yaml",
         "relative/path/to/file.yaml",
         "./dot/rel/to/file.yaml",
-        pytest.param("c:\\abs\\windows\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)),
-        pytest.param(".\\relative\\dot\\win\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)),
-        pytest.param("relative\\windows\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError))
-    ]
+        pytest.param(
+            "c:\\abs\\windows\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)
+        ),
+        pytest.param(
+            ".\\relative\\dot\\win\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)
+        ),
+        pytest.param(
+            "relative\\windows\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)
+        ),
+    ],
 )
 def test_specfile_parsing_unix(filename):
     match = re.match(FILENAME, filename)
@@ -911,15 +918,18 @@ def test_specfile_parsing_unix(filename):
 
 
 @pytest.mark.skipif(not is_windows, reason="Tests Windows style file paths")
-@pytest.mark.parametrize("filename",
+@pytest.mark.parametrize(
+    "filename",
     [
         "c:\\abs\\windows\\path.yaml",
         ".\\relative\\dot\\win\\path.yaml",
         "relative\\windows\\path.yaml",
-        pytest.param("/absolute/path/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError)),
+        pytest.param(
+            "/absolute/path/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError)
+        ),
         pytest.param("relative/path/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError)),
-        pytest.param("./dot/rel/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError))
-    ]
+        pytest.param("./dot/rel/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError)),
+    ],
 )
 def test_specfile_parsing_windows(filename):
     match = re.match(FILENAME, filename)
