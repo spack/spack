@@ -25,7 +25,7 @@ class PyParamiko(PythonPackage):
     depends_on("py-cryptography@2.5:", when="@2.7:", type=("build", "run"))
     depends_on("py-pyasn1@0.1.7:", when="@:2.1", type=("build", "run"))
     depends_on("py-pynacl@1.0.1:", when="@2.7:", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
+    depends_on("py-six", when="@2.9.3:", type=("build", "run"))
 
     depends_on("py-invoke@1.3:", when="+invoke", type=("build", "run"))
     conflicts("+invoke", when="@2.1.2")
