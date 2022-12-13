@@ -46,10 +46,10 @@ class SConsBuilder(BaseBuilder):
     phases = ("build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("install_args", "build_test")
+    legacy_methods = ("build_test",)
 
     #: Same as legacy_methods, but the signature is different
-    legacy_long_methods = ("build_args",)
+    legacy_long_methods = ("build_args", "install_args")
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = ("build_time_test_callbacks",)
@@ -66,13 +66,13 @@ class SConsBuilder(BaseBuilder):
         args = self.build_args(spec, prefix)
         inspect.getmodule(self.pkg).scons(*args)
 
-    def install_args(self):
+    def install_args(self, spec, prefix):
         """Arguments to pass to install."""
         return []
 
     def install(self, pkg, spec, prefix):
         """Install the package."""
-        args = self.install_args()
+        args = self.install_args(spec, prefix)
 
         inspect.getmodule(self.pkg).scons("install", *args)
 
