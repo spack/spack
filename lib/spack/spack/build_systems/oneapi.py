@@ -37,10 +37,11 @@ class IntelOneApiPackage(Package):
         conflicts(c, msg="This package in only available for x86_64 and Linux")
 
     # Add variant to toggle environment modifications from vars.sh
-    variant("envmods",
-            default=True,
-            description="Toggles environment modifications",
-            )
+    variant(
+        "envmods",
+        default=True,
+        description="Toggles environment modifications",
+    )
 
     @staticmethod
     def update_description(cls):
