@@ -18,7 +18,7 @@ import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from urllib.error import URLError
-from urllib.request import Request, urlopen
+from urllib.request import HTTPSHandler, Request, build_opener
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -27,6 +27,8 @@ from llnl.util.filesystem import mkdirp, rename, working_dir
 import spack
 import spack.config
 import spack.error
+import spack.gcs_handler
+import spack.s3_handler
 import spack.url
 import spack.util.crypto
 import spack.util.gcs as gcs_util
@@ -35,6 +37,28 @@ import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.path import convert_to_posix_path
+
+
+def _urlopen():
+    s3 = spack.s3_handler.UrllibS3Handler()
+    gcs = spack.gcs_handler.GCSHandler()
+
+    # One opener with HTTPS ssl enabled
+    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl.create_default_context()))
+
+    # One opener with HTTPS ssl disabled
+    without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
+
+    # And dynamically dispatch based on the config:verify_ssl.
+    def dispatch_open(*args, **kwargs):
+        opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
+        return opener.open(*args, **kwargs)
+
+    return dispatch_open
+
+
+#: Dispatches to the correct OpenerDirector.open, based on Spack configuration.
+urlopen = llnl.util.lang.Singleton(_urlopen)
 
 #: User-Agent used in Request objects
 SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
@@ -60,72 +84,32 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-def uses_ssl(parsed_url):
-    if parsed_url.scheme == "https":
-        return True
-
-    if parsed_url.scheme == "s3":
-        endpoint_url = os.environ.get("S3_ENDPOINT_URL")
-        if not endpoint_url:
-            return True
-
-        if urllib.parse.urlparse(endpoint_url).scheme == "https":
-            return True
-
-    elif parsed_url.scheme == "gs":
-        tty.debug("(uses_ssl) GCS Blob is https")
-        return True
-
-    return False
-
-
 def read_from_url(url, accept_content_type=None):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
-    context = None
 
     # Timeout in seconds for web requests
     timeout = spack.config.get("config:connect_timeout", 10)
-
-    # Don't even bother with a context unless the URL scheme is one that uses
-    # SSL certs.
-    if uses_ssl(url):
-        if spack.config.get("config:verify_ssl"):
-            # User wants SSL verification, and it *can* be provided.
-            context = ssl.create_default_context()
-        else:
-            # User has explicitly indicated that they do not want SSL
-            # verification.
-            context = ssl._create_unverified_context()
-
-    url_scheme = url.scheme
-    url = url_util.format(url)
-    if sys.platform == "win32" and url_scheme == "file":
-        url = convert_to_posix_path(url)
-    req = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    headers = {"User-Agent": SPACK_USER_AGENT}
 
     content_type = None
-    is_web_url = url_scheme in ("http", "https")
-    if accept_content_type and is_web_url:
+    if accept_content_type and url.scheme in ("http", "https"):
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
         # It would be nice to do this with the HTTP Accept header to avoid
         # one round-trip.  However, most servers seem to ignore the header
         # if you ask for a tarball with Accept: text/html.
-        req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=timeout, context=context)
-
+        req = Request(url.geturl(), headers=headers, method="HEAD")
+        resp = urlopen(req, timeout=timeout)
         content_type = get_header(resp.headers, "Content-type")
 
     # Do the real GET request when we know it's just HTML.
-    req.get_method = lambda: "GET"
-
     try:
-        response = _urlopen(req, timeout=timeout, context=context)
+        response = urlopen(Request(url.geturl(), headers=headers), timeout=timeout)
     except URLError as err:
         raise SpackWebError("Download failed: {ERROR}".format(ERROR=str(err)))
 
-    if accept_content_type and not is_web_url:
+    if accept_content_type and not url.scheme in ("http", "https"):
         content_type = get_header(response.headers, "Content-type")
 
     reject_content_type = accept_content_type and (
@@ -135,7 +119,9 @@ def read_from_url(url, accept_content_type=None):
     if reject_content_type:
         tty.debug(
             "ignoring page {0}{1}{2}".format(
-                url, " with content type " if content_type is not None else "", content_type or ""
+                url.geturl(),
+                " with content type " if content_type is not None else "",
+                content_type or "",
             )
         )
 
@@ -349,12 +335,6 @@ def url_exists(url, curl=None):
     Simple Storage Service (`s3`) URLs; otherwise, the configured fetch
     method defined by `config:url_fetch_method` is used.
 
-    If the method is `curl`, it also uses the following configuration option:
-
-        * config:verify_ssl (str): Perform SSL verification
-
-    Otherwise, `urllib` will be used.
-
     Arguments:
         url (str): URL whose existence is being checked
         curl (spack.util.executable.Executable or None): (optional) curl
@@ -365,31 +345,11 @@ def url_exists(url, curl=None):
     tty.debug("Checking existence of {0}".format(url))
     url_result = urllib.parse.urlparse(url)
 
-    # Check if a local file
-    local_path = url_util.local_file_path(url_result)
-    if local_path:
-        return os.path.exists(local_path)
-
-    # Check if Amazon Simple Storage Service (S3) .. urllib-based fetch
-    if url_result.scheme == "s3":
-        # Check for URL-specific connection information
-        s3 = s3_util.get_s3_session(url_result, method="fetch")
-
-        try:
-            s3.get_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
-            return True
-        except s3.ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchKey":
-                return False
-            raise err
-
-    # Check if Google Storage .. urllib-based fetch
-    if url_result.scheme == "gs":
-        gcs = gcs_util.GCSBlob(url_result)
-        return gcs.exists()
-
-    # Otherwise, use the configured fetch method
-    if spack.config.get("config:url_fetch_method") == "curl":
+    # Use curl if configured to do so
+    use_curl = spack.config.get(
+        "config:url_fetch_method", "urllib"
+    ) == "curl" and url_result.scheme not in ("gs", "s3")
+    if use_curl:
         curl_exe = _curl(curl)
         if not curl_exe:
             return False
@@ -402,13 +362,14 @@ def url_exists(url, curl=None):
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
         return curl_exe.returncode == 0
 
-    # If we get here, then the only other fetch method option is urllib.
-    # So try to "read" from the URL and assume that *any* non-throwing
-    #  response contains the resource represented by the URL.
+    # Otherwise use urllib.
     try:
-        read_from_url(url)
+        urlopen(
+            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
+            timeout=spack.config.get("config:connect_timeout", 10),
+        )
         return True
-    except (SpackWebError, URLError) as e:
+    except URLError as e:
         tty.debug("Failure reading URL: " + str(e))
         return False
 
@@ -689,35 +650,6 @@ def spider(root_urls, depth=0, concurrency=32):
         tp.join()
 
     return pages, links
-
-
-def _urlopen(req, *args, **kwargs):
-    """Wrapper for compatibility with old versions of Python."""
-    url = req
-    try:
-        url = url.get_full_url()
-    except AttributeError:
-        pass
-
-    del kwargs["context"]
-
-    opener = urlopen
-    if urllib.parse.urlparse(url).scheme == "s3":
-        import spack.s3_handler
-
-        opener = spack.s3_handler.open
-    elif urllib.parse.urlparse(url).scheme == "gs":
-        import spack.gcs_handler
-
-        opener = spack.gcs_handler.gcs_open
-
-    try:
-        return opener(req, *args, **kwargs)
-    except TypeError as err:
-        # If the above fails because of 'context', call without 'context'.
-        if "context" in kwargs and "context" in str(err):
-            del kwargs["context"]
-        return opener(req, *args, **kwargs)
 
 
 def find_versions_of_archive(
