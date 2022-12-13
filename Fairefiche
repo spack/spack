@@ -1,0 +1,36 @@
+SPACK ?= spack
+
+.PHONY: all clean
+
+all: /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/env
+
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/env: /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install/ztabimnhh3fnkwjtzkronvhwckvuhw7b
+	echo $MAKEFLAGS
+	@touch $@
+
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/dirs:
+	@mkdir -p /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install-deps
+
+# The spack install commands are of the form:
+# spack -e my_env --no-add --only=package --only=concrete /hash
+# This is an involved way of expressing that Spack should only install
+# an individual concrete spec from the environment without deps.
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install/%: /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install-deps/% | /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/dirs
+	+$(SPACK) -e '/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd' install $(SPACK_BUILDCACHE_FLAG) $(SPACK_INSTALL_FLAGS) --only-concrete --only=package --no-add /$(notdir $@) # $(SPEC)
+	@touch $@
+
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install-deps/%: | /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/dirs
+	@touch $@
+
+# Set a human-readable SPEC variable for each target that has a hash
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/%/ztabimnhh3fnkwjtzkronvhwckvuhw7b: SPEC = ncurses@6.3%gcc@11.2.0~symlinks+termlib abi=none build_system=autotools arch=linux-rhel7-skylake
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/%/ztabimnhh3fnkwjtzkronvhwckvuhw7b: SPACK_BUILDCACHE_FLAG = 
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/%/fwjtmbzpebfsrw3tnelsqgd2agtqmlnr: SPEC = pkgconf@1.8.0%gcc@11.2.0 build_system=autotools arch=linux-rhel7-skylake
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/%/fwjtmbzpebfsrw3tnelsqgd2agtqmlnr: SPACK_BUILDCACHE_FLAG = 
+
+# The Spack DAG expressed in targets:
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install-deps/ztabimnhh3fnkwjtzkronvhwckvuhw7b: /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install/fwjtmbzpebfsrw3tnelsqgd2agtqmlnr
+/gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install-deps/fwjtmbzpebfsrw3tnelsqgd2agtqmlnr: 
+
+clean:
+	rm -rf /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/env /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install/ztabimnhh3fnkwjtzkronvhwckvuhw7b /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install/fwjtmbzpebfsrw3tnelsqgd2agtqmlnr /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install-deps/ztabimnhh3fnkwjtzkronvhwckvuhw7b /gpfs/bbp.cscs.ch/home/matwolf/work/spack/var/spack/environments/teschd/.spack-env/makedeps/.install-deps/fwjtmbzpebfsrw3tnelsqgd2agtqmlnr

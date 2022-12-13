@@ -16,7 +16,8 @@ packages:
       # - one_of: ["%intel", "%nvhpc"]
   cuda:
     # Should match what is provided by NVHPC, too
-    version: [11.6.1]
+    # version: [11.6.1]
+    require: "%gcc"
   curl:
     version: [7.29.0]
     externals:

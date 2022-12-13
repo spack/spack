@@ -24,6 +24,11 @@ spack:
           - py-token-fetch
           - py-visual-cortex-analysis
   packages:
+    cuda:
+      variants: +allow-unsupported-compilers
+      # py-torch doesn't like cuda@12
+      # this may still break: https://github.com/spack/spack/pull/25054#issuecomment-886531664
+      # Using the script from that link, cuda@11.8 supports gcc@:11, cuda@12.0 supports gcc@:12
     hdf5:
       variants: ~mpi+hl
     highfive:
