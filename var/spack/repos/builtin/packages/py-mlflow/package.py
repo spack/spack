@@ -19,7 +19,7 @@ class PyMlflow(PythonPackage):
         "skinny",
         default=False,
         description="Lightweight MLflow package without SQL storage, server, UI, "
-                    "or data science dependencies.",
+        "or data science dependencies.",
     )
 
     depends_on("python@3.6:", type=("build", "run"), when="@1.17.0:")

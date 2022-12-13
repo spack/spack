@@ -8,7 +8,7 @@ from spack.package import *
 
 class PyShap(PythonPackage):
     """SHAP (SHapley Additive exPlanations): a unified approach
-    to explain the output of any machine learning model. """
+    to explain the output of any machine learning model."""
 
     homepage = "https://github.com/slundberg/shap/"
     pypi = "shap/shap-0.41.0.tar.gz"
