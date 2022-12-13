@@ -2402,7 +2402,7 @@ the ``package.py`` recipes). ``test`` dependencies do not affect the package
 hash, as they are only used to construct a test environment *after* building and
 installing a given package installation. Older versions of Spack did not include
 build dependencies in the hash, but this has been 
-`fixed <https://github.com/spack/spack/pull/28504>`_ as of |Spack v0.18|_
+`fixed <https://github.com/spack/spack/pull/28504>`_ as of |Spack v0.18|_.
 
 .. |Spack v0.18| replace:: Spack ``v0.18``
 .. _Spack v0.18: https://github.com/spack/spack/releases/tag/v0.18.0
