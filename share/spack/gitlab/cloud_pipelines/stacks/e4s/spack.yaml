@@ -263,7 +263,7 @@ spack:
       - cat /proc/loadavg || true
 
     image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
-    
+
     broken-tests-packages:
       - gptune
 
@@ -274,6 +274,8 @@ spack:
           - llvm
           - llvm-amdgpu
           - rocblas
+          - paraview
+          - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
           variables:
