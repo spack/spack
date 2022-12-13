@@ -556,7 +556,7 @@ _spack_buildcache_sync() {
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --mirror-url -k --keys"
+    SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
 }
 
 _spack_cd() {
