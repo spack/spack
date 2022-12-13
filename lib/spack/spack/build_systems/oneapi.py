@@ -41,7 +41,7 @@ class IntelOneApiPackage(Package):
             default=True,
             description="Toggles environment modifications",
             )
-    
+
     @staticmethod
     def update_description(cls):
         """Updates oneapi package descriptions with common text."""
