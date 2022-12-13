@@ -148,6 +148,11 @@ class Mesa(MesonPackage):
     # the existence of the function and call it only if it is available.
     patch("handle_missing_set_override_stack_alignment.patch", when="@21.2.3:")
 
+    # ROCm 5.3.0 is providing llvm15. Gallivm coroutine is disabled in mesa upstream version
+    # for llvm-15. Until mesa release is available with this changes below patch is required
+    # in order to move on with ROCm 5.3.0.
+    patch("disable-gallivm-coroutine-for-libllvm15.patch", when="@22.1.2: ^libllvm@15:")
+
     # Explicitly use the llvm-config tool
     def patch(self):
         filter_file(r"_llvm_method = 'auto'", "_llvm_method = 'config-tool'", "meson.build")
