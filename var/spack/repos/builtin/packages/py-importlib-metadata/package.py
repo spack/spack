@@ -13,6 +13,7 @@ class PyImportlibMetadata(PythonPackage):
     pypi = "importlib_metadata/importlib_metadata-1.2.0.tar.gz"
     git = "https://github.com/python/importlib_metadata"
 
+    version("5.1.0", sha256="d5059f9f1e8e41f80e9c56c2ee58811450c31984dfa625329ffd7c0dad88a73b")
     version("4.12.0", sha256="637245b8bab2b6502fcbc752cc4b7a6f6243bb02b31c5c26156ad103d3d45670")
     version("4.11.1", sha256="175f4ee440a0317f6e8d81b7f8d4869f93316170a65ad2b007d2929186c8052c")
     version("4.8.2", sha256="75bdec14c397f528724c1bfd9709d660b33a4d2e77387a3358f20b848bb5e5fb")
