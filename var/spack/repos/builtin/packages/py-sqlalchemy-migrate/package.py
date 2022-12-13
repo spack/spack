@@ -23,4 +23,3 @@ class PySqlalchemyMigrate(PythonPackage):
     depends_on("py-six@1.7.0:", type=("build", "run"))
     depends_on("py-sqlparse", type=("build", "run"))
     depends_on("py-tempita@0.4:", type=("build", "run"))
-

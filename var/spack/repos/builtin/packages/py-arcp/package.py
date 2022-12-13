@@ -16,4 +16,3 @@ class PyArcp(PythonPackage):
     version("0.2.1", sha256="5c17ac7972c9ef82979cc2caf2b3a87c1aefd3fefe9adb8a5dd728ada57715dd")
 
     depends_on("py-setuptools", type="build")
-

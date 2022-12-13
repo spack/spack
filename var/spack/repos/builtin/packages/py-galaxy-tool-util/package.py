@@ -12,7 +12,7 @@ class PyGalaxyToolUtil(PythonPackage):
 
     homepage = "https://github.com/galaxyproject/galaxy"
     pypi = "galaxy-tool-util/galaxy-tool-util-22.1.5.tar.gz"
- 
+
     version("22.1.5", sha256="60e0372f16255c5c11ec5c49dff432ed3beb97123d026f463cf633bc605c0112")
 
     depends_on("python@3.7:3.10", type=("build", "run"))

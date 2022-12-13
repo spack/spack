@@ -23,4 +23,3 @@ class PyTuswsgi(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-webob", type=("build", "run"))
-
