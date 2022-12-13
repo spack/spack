@@ -34,6 +34,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     version("5.0", sha256="2c579345a39a2a0bb4b8c28533f0b61356504a202da6a25d17d4d866af7f5803")
 
     depends_on("perl")
+    depends_on("gettext@0.20.1:", type=("build",), when="@6.7.0:")
 
     # sanity check
     sanity_check_is_file = [
@@ -53,6 +54,12 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     patch("update_locale_handling.patch", when="@6.3:6.5")
 
     patch("nvhpc.patch", when="%nvhpc")
+
+    def configure_args(self):
+        args = []
+        if "@6.7.0:" in self.spec:
+            args.append("--with-libintl-prefix=" + self.spec["gettext"].prefix)
+        return args
 
     @property
     def build_targets(self):
