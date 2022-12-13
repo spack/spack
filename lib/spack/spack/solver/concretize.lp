@@ -108,6 +108,18 @@ error(2, "No versions available for package '{0}'", Package)
   :- attr("node", Package), not attr("version", Package, _).
 
 % A virtual package may or may not have a version, but never has more than one
+% Error to catch how it happens
+error(0, "Version '{0}' of {1} does not satisfy '@{2}'", Version, Virtual, Constraint, startcauses, VersionCause, ConstraintCause)
+ :- attr("virtual_node", Virtual),
+    attr("version", Virtual, Version),
+    imposed_constraint(VersionCause, "node_version_satisfies", Virtual, Version),
+    condition_holds(VersionCause),
+    attr("node_version_satisfies", Virtual, Constraint),
+    imposed_constraint(ConstraintCause, "node_version_satisfies", Virtual, Constraint),
+    condition_holds(ConstraintCause),
+    not version_satisfies(Virtual, Constraint, Version).
+
+% fallback error for structure in case there's another way for it to happen
 error(100, "Cannot select a single version for virtual '{0}'", Virtual)
   :- attr("virtual_node", Virtual),
      2 { attr("version", Virtual, Version) }.
@@ -163,6 +175,14 @@ possible_version_weight(Package, Weight)
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
+error(0, "No valid version for '{0}' satisfies '@{1}'", Package, Constraint, startcauses, ConstraintCause)
+  :- attr("node_version_satisfies", Package, Constraint),
+     imposed_constraint(ConstraintCause, "node_version_satisfies", Package, Constraint),
+     condition_holds(ConstraintCause),
+     C = #count{ Version : attr("version", Package, Version), version_satisfies(Package, Constraint, Version)},
+     C < 1.
+
+% Error for structure of program
 error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", Package, Constraint),
      attr("version", Package, Version),
