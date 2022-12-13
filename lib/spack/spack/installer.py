@@ -48,6 +48,7 @@ import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
 import spack.hooks
+import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
@@ -419,18 +420,24 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=timer.NU
             otherwise, ``False``
         timer (Timer):
     """
+    # Early exit if no mirrors are configured.
+    if not spack.mirror.MirrorCollection():
+        return False
+
     pkg_id = package_id(pkg)
     tty.debug("Searching for binary cache of {0}".format(pkg_id))
 
     timer.start("search")
-    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
+    matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
     timer.stop("search")
 
-    if not matches:
-        return False
-
     return _process_binary_cache_tarball(
-        pkg, pkg.spec, explicit, unsigned, mirrors_for_spec=matches, timer=timer
+        pkg,
+        pkg.spec,
+        explicit,
+        unsigned,
+        mirrors_for_spec=matches,
+        timer=timer,
     )
 
 
