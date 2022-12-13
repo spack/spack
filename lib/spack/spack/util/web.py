@@ -90,42 +90,27 @@ def read_from_url(url, accept_content_type=None):
 
     # Timeout in seconds for web requests
     timeout = spack.config.get("config:connect_timeout", 10)
-    headers = {"User-Agent": SPACK_USER_AGENT}
+    request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
-    content_type = None
-    if accept_content_type and url.scheme in ("http", "https"):
-        # Make a HEAD request first to check the content type.  This lets
-        # us ignore tarballs and gigantic files.
-        # It would be nice to do this with the HTTP Accept header to avoid
-        # one round-trip.  However, most servers seem to ignore the header
-        # if you ask for a tarball with Accept: text/html.
-        req = Request(url.geturl(), headers=headers, method="HEAD")
-        resp = urlopen(req, timeout=timeout)
-        content_type = get_header(resp.headers, "Content-type")
-
-    # Do the real GET request when we know it's just HTML.
     try:
-        response = urlopen(Request(url.geturl(), headers=headers), timeout=timeout)
+        response = urlopen(request, timeout=timeout)
     except URLError as err:
-        raise SpackWebError("Download failed: {ERROR}".format(ERROR=str(err)))
+        raise SpackWebError("Download failed: {}".format(str(err)))
 
-    if accept_content_type and not url.scheme in ("http", "https"):
-        content_type = get_header(response.headers, "Content-type")
+    if accept_content_type:
+        try:
+            content_type = get_header(response.headers, "Content-type")
+            reject_content_type = not content_type.startswith(accept_content_type)
+        except KeyError:
+            content_type = None
+            reject_content_type = True
 
-    reject_content_type = accept_content_type and (
-        content_type is None or not content_type.startswith(accept_content_type)
-    )
-
-    if reject_content_type:
-        tty.debug(
-            "ignoring page {0}{1}{2}".format(
-                url.geturl(),
-                " with content type " if content_type is not None else "",
-                content_type or "",
-            )
-        )
-
-        return None, None, None
+        if reject_content_type:
+            msg = "ignoring page {}".format(url.geturl())
+            if content_type:
+                msg += " with content type {}".format(content_type)
+            tty.debug(msg)
+            return None, None, None
 
     return response.geturl(), response.headers, response
 
