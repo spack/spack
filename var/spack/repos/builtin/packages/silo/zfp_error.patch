@@ -1,0 +1,11 @@
+diff -ru silo/src/hdf5_drv/silo_hdf5.c silo.fixed/src/hdf5_drv/silo_hdf5.c
+--- silo/src/hdf5_drv/silo_hdf5.c	2021-09-09 12:35:00.000000000 -0700
++++ silo.fixed/src/hdf5_drv/silo_hdf5.c	2022-12-02 10:34:34.560531000 -0800
+@@ -198,6 +198,7 @@
+ #endif
+ #ifdef HAVE_ZFP
+ #include "H5Zzfp.h"
++extern void zfp_init_zfp();
+ #endif
+ 
+ /* Defining these to check overhead of PROTECT */
