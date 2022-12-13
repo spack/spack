@@ -27,6 +27,8 @@ class Libproxy(CMakePackage):
 
     extends("python", when="+python")
 
+    conflicts("python@3.9:", when="@:0.4.16")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("WITH_PERL", "perl"),
@@ -38,3 +40,7 @@ class Libproxy(CMakePackage):
         if "+python" in self.spec:
             args.append(self.define("PYTHON3_SITEPKG_DIR", python_platlib))
         return args
+
+    def setup_run_environment(self, env):
+        if "+python" in self.spec:
+            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
