@@ -2444,7 +2444,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
             for name in method_names:
                 try:
-                    fn = getattr(builder, name)
+                    # There are some cases where the callback is not defined in
+                    # the builder *and* properties of the package are required
+                    # (e.g., "test").
+                    runner = builder.pkg if name == "test" else builder
+                    fn = getattr(runner, name)
 
                     msg = "RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name)
                     print_test_message(logger, msg, True)
