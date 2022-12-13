@@ -613,6 +613,18 @@ attr("variant_value", Package, Variant, Value) :-
     variant(Package, Variant),
     build(Package).
 
+error(0, "'{0}' required multiple values for single-valued variant '{1}'\n    Requested 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2, startcauses, Cause1, Cause2)
+  :- attr("node", Package),
+     variant(Package, Variant),
+     variant_single_value(Package, Variant),
+     build(Package),
+     attr("variant_value", Package, Variant, Value1),
+     imposed_constraint(Cause1, "variant_set", Package, Variant, Value1),
+     condition_holds(Cause1),
+     attr("variant_value", Package, Variant, Value2),
+     imposed_constraint(Cause2, "variant_set", Package, Variant, Value2),
+     condition_holds(Cause2),
+     Value1 < Value2. % see[1]
 
 error(100, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
   :- attr("node", Package),
