@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
+import io
+import json
 import os
 import platform
 import shutil
@@ -690,3 +692,96 @@ def test_text_relocate_if_needed(install_mockery, mock_fetch, monkeypatch, capfd
     assert join_path("bin", "exe") in manifest["text_to_relocate"]
     assert join_path("bin", "otherexe") not in manifest["text_to_relocate"]
     assert join_path("bin", "secretexe") not in manifest["text_to_relocate"]
+
+
+def test_read_spec_from_signed_json():
+    spec_dir = os.path.join(test_path, "data", "mirrors", "signed_json")
+    file_name = (
+        "linux-ubuntu18.04-haswell-gcc-8.4.0-"
+        "zlib-1.2.12-g7otk5dra3hifqxej36m5qzm7uyghqgb.spec.json.sig"
+    )
+    spec_path = os.path.join(spec_dir, file_name)
+
+    def check_spec(spec_to_check):
+        assert spec_to_check.name == "zlib"
+        assert spec_to_check._hash == "g7otk5dra3hifqxej36m5qzm7uyghqgb"
+
+    with open(spec_path) as fd:
+        s = Spec.from_dict(bindist.load_possibly_clearsigned_json(fd))
+        check_spec(s)
+
+
+def test_load_clearsigned_json():
+    obj = {"hello": "world"}
+    clearsigned = """\
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{}
+-----BEGIN PGP SIGNATURE-----
+xyz
+-----END PGP SIGNATURE-----""".format(
+        json.dumps(obj)
+    )
+
+    # Should accept strings and streams
+    assert bindist.load_possibly_clearsigned_json(clearsigned) == obj
+    assert bindist.load_possibly_clearsigned_json(io.StringIO(clearsigned)) == obj
+
+
+def test_load_without_clearsigned_json():
+    obj = {"hello": "world"}
+    not_clearsigned = json.dumps(obj)
+
+    # Should accept strings and streams
+    assert bindist.load_possibly_clearsigned_json(not_clearsigned) == obj
+    assert bindist.load_possibly_clearsigned_json(io.StringIO(not_clearsigned)) == obj
+
+
+def test_json_containing_clearsigned_message_is_json():
+    # Test that we don't interpret json with a PGP signed message as a string somewhere
+    # as a clearsigned message. It should just deserialize the json contents.
+    val = """\
+"-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{}
+-----BEGIN PGP SIGNATURE-----
+signature
+-----END PGP SIGNATURE-----
+"""
+    input = json.dumps({"key": val})
+    assert bindist.load_possibly_clearsigned_json(input)["key"] == val
+
+
+def test_clearsign_signature_part_of_json_string():
+    # Check if we can deal with a string in json containing the string that is used
+    # at the start of a PGP signature.
+    obj = {"-----BEGIN PGP SIGNATURE-----": "-----BEGIN PGP SIGNATURE-----"}
+    input = """\
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{}
+-----BEGIN PGP SIGNATURE-----
+signature
+-----END PGP SIGNATURE-----
+""".format(
+        json.dumps(obj)
+    )
+    assert bindist.load_possibly_clearsigned_json(input) == obj
+
+
+def test_broken_clearsign_signature():
+    # In this test there is no PGP signature.
+    obj = {"-----BEGIN PGP SIGNATURE-----": "-----BEGIN PGP SIGNATURE-----"}
+    input = """\
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{}
+""".format(
+        json.dumps(obj)
+    )
+    with pytest.raises(ValueError, match="Could not find PGP signature"):
+        bindist.load_possibly_clearsigned_json(input)

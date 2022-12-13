@@ -190,16 +190,6 @@ default_format = "{name}{@version}"
 default_format += "{%compiler.name}{@compiler.version}{compiler_flags}"
 default_format += "{variants}{arch=architecture}"
 
-#: Regular expression to pull spec contents out of clearsigned signature
-#: file.
-CLEARSIGN_FILE_REGEX = re.compile(
-    (
-        r"^-----BEGIN PGP SIGNED MESSAGE-----"
-        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
-    ),
-    re.MULTILINE | re.DOTALL,
-)
-
 #: specfile format version. Must increase monotonically
 specfile_format_version = 3
 
@@ -2443,27 +2433,6 @@ class Spec(object):
                 sjson.SpackJSONError("error parsing JSON spec:", str(e)),
                 e,
             )
-
-    @staticmethod
-    def extract_json_from_clearsig(data):
-        m = CLEARSIGN_FILE_REGEX.search(data)
-        if m:
-            return sjson.load(m.group(1))
-        return sjson.load(data)
-
-    @staticmethod
-    def from_signed_json(stream):
-        """Construct a spec from clearsigned json spec file.
-
-        Args:
-            stream: string or file object to read from.
-        """
-        data = stream
-        if hasattr(stream, "read"):
-            data = stream.read()
-
-        extracted_json = Spec.extract_json_from_clearsig(data)
-        return Spec.from_dict(extracted_json)
 
     @staticmethod
     def from_detection(spec_str, extra_attributes=None):
