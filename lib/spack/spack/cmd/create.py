@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import re
+import urllib.parse
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -827,8 +828,8 @@ def get_versions(args, name):
 
     valid_url = True
     try:
-        spack.util.url.require_url_format(args.url)
-        if args.url.startswith("file://"):
+        parsed = urllib.parse.urlparse(args.url)
+        if not parsed.scheme or parsed.scheme != "file":
             valid_url = False  # No point in spidering these
     except (ValueError, TypeError):
         valid_url = False

@@ -2,9 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import urllib.parse
 import urllib.response
 
-import spack.util.url as url_util
 import spack.util.web as web_util
 
 
@@ -12,7 +12,7 @@ def gcs_open(req, *args, **kwargs):
     """Open a reader stream to a blob object on GCS"""
     import spack.util.gcs as gcs_util
 
-    url = url_util.parse(req.get_full_url())
+    url = urllib.parse.urlparse(req.get_full_url())
     gcsblob = gcs_util.GCSBlob(url)
 
     if not gcsblob.exists():

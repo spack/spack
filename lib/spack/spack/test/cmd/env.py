@@ -16,6 +16,7 @@ import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
 import spack.cmd.env
+import spack.config
 import spack.environment as ev
 import spack.environment.shell
 import spack.error
@@ -29,7 +30,6 @@ from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
-from spack.util.web import FetchError
 from spack.version import Version
 
 # TODO-27021
@@ -707,9 +707,9 @@ spack:
             e.concretize()
 
     err = str(exc)
-    assert "not retrieve configuration" in err
-    assert os.path.join("no", "such", "directory") in err
-
+    assert "missing include" in err
+    assert "/no/such/directory" in err
+    assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -827,7 +827,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
     env = ev.Environment(tmpdir.strpath)
-    with pytest.raises(FetchError, match="No such file or directory"):
+    with pytest.raises(spack.config.ConfigError, match="missing include path"):
         ev.activate(env)
 
 

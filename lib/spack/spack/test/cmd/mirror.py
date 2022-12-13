@@ -11,6 +11,8 @@ import pytest
 import spack.cmd.mirror
 import spack.config
 import spack.environment as ev
+import spack.spec
+import spack.util.url as url_util
 from spack.main import SpackCommand, SpackCommandError
 
 mirror = SpackCommand("mirror")
@@ -41,15 +43,6 @@ def tmp_scope():
 
     with spack.config.override(spack.config.InternalConfigScope(scope_name)):
         yield scope_name
-
-
-def _validate_url(url):
-    return
-
-
-@pytest.fixture(autouse=True)
-def url_check(monkeypatch):
-    monkeypatch.setattr(spack.util.url, "require_url_format", _validate_url)
 
 
 @pytest.mark.disable_clean_stage_check
@@ -89,7 +82,7 @@ def source_for_pkg_with_hash(mock_packages, tmpdir):
     local_path = os.path.join(str(tmpdir), local_url_basename)
     with open(local_path, "w") as f:
         f.write(s.package.hashed_content)
-    local_url = "file://" + local_path
+    local_url = url_util.path_to_file_url(local_path)
     s.package.versions[spack.version.Version("1.0")]["url"] = local_url
 
 

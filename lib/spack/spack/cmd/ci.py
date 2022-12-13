@@ -356,7 +356,7 @@ def ci_rebuild(args):
             # dependencies from previous stages available since we do not
             # allow pushing binaries to the remote mirror during PR pipelines.
             enable_artifacts_mirror = True
-            pipeline_mirror_url = "file://" + local_mirror_dir
+            pipeline_mirror_url = url_util.path_to_file_url(local_mirror_dir)
             mirror_msg = "artifact buildcache enabled, mirror url: {0}".format(pipeline_mirror_url)
             tty.debug(mirror_msg)
 
