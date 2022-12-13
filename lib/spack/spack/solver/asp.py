@@ -1334,6 +1334,11 @@ class SpackSolverSetup(object):
                             condition_id, "dependency_holds", pkg.name, dep.spec.name, t
                         )
                     )
+                self.gen.fact(
+                    fn.imposed_constraint(
+                        condition_id, "virtual_node" if dep.spec.virtual else "node", dep.spec.name
+                    )
+                )
 
                 self.gen.newline()
 

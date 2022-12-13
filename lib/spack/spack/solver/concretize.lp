@@ -294,9 +294,6 @@ attr("depends_on", Package, Dependency, Type)
 % every root must be a node
 attr("node", Package) :- attr("root", Package).
 
-% dependencies imply new nodes
-attr("node", Dependency) :- attr("node", Package), depends_on(Package, Dependency).
-
 % all nodes in the graph must be reachable from some root
 % this ensures a user can't say `zlib ^libiconv` (neither of which have any
 % dependencies) and get a two-node unconnected graph
@@ -341,10 +338,13 @@ attr("depends_on", Package, Provider, Type)
      provider(Provider, Virtual),
      not external(Package).
 
-% dependencies on virtuals also imply that the virtual is a virtual node
-attr("virtual_node", Virtual)
+% If a package depends on a provider, the provider must be a node
+% nodes that are not indirected by a virtual are instantiated
+% directly from the imposed constraints of the dependency condition
+attr("node", Provider)
   :- attr("dependency_holds", Package, Virtual, Type),
-     virtual(Virtual), not external(Package).
+     provider(Provider, Virtual),
+     not external(Package).
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
