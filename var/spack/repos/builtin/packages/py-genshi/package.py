@@ -16,7 +16,7 @@ class PyGenshi(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-six", type=("build", "run", "test"))
 
-    def test(self):
+    def test_testsuite(self):
         # All the unittests pass for py-genshi@0.7.7 but 14 tests fail for
         # @0.6.1:0.7, many of them related to templates, likely because the
         # template path needs to be setup.  But those versions didn't use tox
