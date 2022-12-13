@@ -6,6 +6,7 @@
 import codecs
 import collections
 import hashlib
+import io
 import json
 import multiprocessing.pool
 import os
@@ -892,6 +893,42 @@ def sign_specfile(key, force, specfile_path):
     spack.util.gpg.sign(key, specfile_path, signed_specfile_path, clearsign=True)
 
 
+def _load_clearsigned_json(stream):
+    # Skip the PGP header
+    stream.readline()
+    stream.readline()
+    json = stream.read()
+    footer_index = json.rfind("-----BEGIN PGP SIGNATURE-----")
+    if footer_index == -1 or not json[footer_index - 1].isspace():
+        raise ValueError("Could not find PGP signature in clearsigned json file.")
+    return sjson.load(json[:footer_index])
+
+
+def _load_possibly_clearsigned_json(stream):
+    if _is_clearsigned_stream(stream):
+        return _load_clearsigned_json(stream)
+    return sjson.load(stream)
+
+
+def _is_clearsigned_stream(stream):
+    curr = stream.tell()
+    header = stream.read(34)
+    stream.seek(curr)
+    return header == "-----BEGIN PGP SIGNED MESSAGE-----"
+
+
+def is_clearsigned_file(path):
+    with open(path, "r") as f:
+        return _is_clearsigned_stream(f)
+
+
+def load_possibly_clearsigned_json(s):
+    """Deserialize JSON from a string or stream s, removing any clearsign
+    header/footer."""
+    s = io.StringIO(s) if isinstance(s, str) else s
+    return _load_possibly_clearsigned_json(s)
+
+
 def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_dir, concurrency):
     """Read all the specs listed in the provided list, using thread given thread parallelism,
         generate the index, and push it to the mirror.
@@ -914,11 +951,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
 
         if spec_file_contents:
             # Need full spec.json name or this gets confused with index.json.
-            if spec_url.endswith(".json.sig"):
-                specfile_json = Spec.extract_json_from_clearsig(spec_file_contents)
-                return Spec.from_dict(specfile_json)
-            if spec_url.endswith(".json"):
-                return Spec.from_json(spec_file_contents)
+            return Spec.from_dict(load_possibly_clearsigned_json(spec_file_contents))
 
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
     try:
@@ -1515,61 +1548,47 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
             }
         )
 
-    tried_to_verify_sigs = []
+    # Only look for json.sig files as a last resort, since we don't generate them
+    # anymore.
+    verification_failure = False
+    for ext in ["json", "json.sig"]:
+        for mirror in mirrors_to_try:
+            # Try to download the specfile. For any legacy version of Spack's buildcache
+            # we definitely require this file.
+            specfile_url = "{0}.{1}".format(mirror["specfile"], ext)
+            specfile_stage = try_fetch(specfile_url)
+            if not specfile_stage:
+                continue
 
-    # Assumes we care more about finding a spec file by preferred ext
-    # than by mirrory priority.  This can be made less complicated as
-    # we remove support for deprecated spec formats and buildcache layouts.
-    for ext in ["json.sig", "json"]:
-        for mirror_to_try in mirrors_to_try:
-            specfile_url = "{0}.{1}".format(mirror_to_try["specfile"], ext)
-            spackfile_url = mirror_to_try["spackfile"]
-            local_specfile_stage = try_fetch(specfile_url)
-            if local_specfile_stage:
-                local_specfile_path = local_specfile_stage.save_filename
-                signature_verified = False
+            specfile_path = specfile_stage.save_filename
 
-                if ext.endswith(".sig") and not unsigned:
-                    # If we found a signed specfile at the root, try to verify
-                    # the signature immediately.  We will not download the
-                    # tarball if we could not verify the signature.
-                    tried_to_verify_sigs.append(specfile_url)
-                    signature_verified = try_verify(local_specfile_path)
-                    if not signature_verified:
-                        tty.warn("Failed to verify: {0}".format(specfile_url))
+            # If it is a clearsign file, we must verify it (unless disabled)
+            should_verify = not unsigned and is_clearsigned_file(specfile_path)
+            if should_verify and not try_verify(specfile_path):
+                verification_failure = True
+                tty.warn("Failed to verify: {0}".format(specfile_url))
+                specfile_stage.destroy()
+                continue
 
-                if unsigned or signature_verified or not ext.endswith(".sig"):
-                    # We will download the tarball in one of three cases:
-                    #     1. user asked for --no-check-signature
-                    #     2. user didn't ask for --no-check-signature, but we
-                    #     found a spec.json.sig and verified the signature already
-                    #     3. neither of the first two cases are true, but this file
-                    #     is *not* a signed json (not a spec.json.sig file).  That
-                    #     means we already looked at all the mirrors and either didn't
-                    #     find any .sig files or couldn't verify any of them.  But it
-                    #     is still possible to find an old style binary package where
-                    #     the signature is a detached .asc file in the outer archive
-                    #     of the tarball, and in that case, the only way to know is to
-                    #     download the tarball.  This is a deprecated use case, so if
-                    #     something goes wrong during the extraction process (can't
-                    #     verify signature, checksum doesn't match) we will fail at
-                    #     that point instead of trying to download more tarballs from
-                    #     the remaining mirrors, looking for one we can use.
-                    tarball_stage = try_fetch(spackfile_url)
-                    if tarball_stage:
-                        return {
-                            "tarball_stage": tarball_stage,
-                            "specfile_stage": local_specfile_stage,
-                            "signature_verified": signature_verified,
-                        }
-
-                local_specfile_stage.destroy()
+            # In case the spec.json is not clearsigned, it means it's a legacy
+            # format, where either the signature is in the tarball with binaries, or
+            # the package is unsigned. Verification
+            # is then postponed.
+            spackfile_url = mirror["spackfile"]
+            tarball_stage = try_fetch(spackfile_url)
+            if tarball_stage:
+                return {
+                    "tarball_stage": tarball_stage,
+                    "specfile_stage": specfile_stage,
+                    "signature_verified": should_verify,  # should_verify implies it was verified
+                }
+            specfile_stage.destroy()
 
     # Falling through the nested loops meeans we exhaustively searched
     # for all known kinds of spec files on all mirrors and did not find
     # an acceptable one for which we could download a tarball.
 
-    if tried_to_verify_sigs:
+    if verification_failure:
         raise NoVerifyException(
             (
                 "Spack found new style signed binary packages, "
@@ -1854,11 +1873,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     specfile_path = download_result["specfile_stage"].save_filename
 
     with open(specfile_path, "r") as inputfile:
-        content = inputfile.read()
-        if specfile_path.endswith(".json.sig"):
-            spec_dict = Spec.extract_json_from_clearsig(content)
-        else:
-            spec_dict = sjson.load(content)
+        spec_dict = load_possibly_clearsigned_json(inputfile)
 
     bchecksum = spec_dict["binary_cache_checksum"]
     filename = download_result["tarball_stage"].save_filename
@@ -2023,54 +2038,35 @@ def try_direct_fetch(spec, mirrors=None):
     """
     specfile_name = tarball_name(spec, ".spec.json")
     signed_specfile_name = tarball_name(spec, ".spec.json.sig")
-    specfile_is_signed = False
     found_specs = []
 
     for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
-        buildcache_fetch_url_json = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path, specfile_name
-        )
-        buildcache_fetch_url_signed_json = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path, signed_specfile_name
-        )
-        try:
-            _, _, fs = web_util.read_from_url(buildcache_fetch_url_signed_json)
-            specfile_is_signed = True
-        except (URLError, web_util.SpackWebError, HTTPError) as url_err:
+        for file in (specfile_name, signed_specfile_name):
+            url = url_util.join(mirror.fetch_url, _build_cache_relative_path, file)
             try:
-                _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
-            except (URLError, web_util.SpackWebError, HTTPError) as url_err_x:
+                _, _, fs = web_util.read_from_url(url)
+            except (URLError, web_util.SpackWebError, HTTPError) as url_err:
                 tty.debug(
-                    "Did not find {0} on {1}".format(
-                        specfile_name, buildcache_fetch_url_signed_json
-                    ),
+                    "Did not find {0} on {1}".format(specfile_name, url),
                     url_err,
                     level=2,
                 )
-                tty.debug(
-                    "Did not find {0} on {1}".format(specfile_name, buildcache_fetch_url_json),
-                    url_err_x,
-                    level=2,
-                )
                 continue
-        specfile_contents = codecs.getreader("utf-8")(fs).read()
 
-        # read the spec from the build cache file. All specs in build caches
-        # are concrete (as they are built) so we need to mark this spec
-        # concrete on read-in.
-        if specfile_is_signed:
-            specfile_json = Spec.extract_json_from_clearsig(specfile_contents)
-            fetched_spec = Spec.from_dict(specfile_json)
-        else:
-            fetched_spec = Spec.from_json(specfile_contents)
-        fetched_spec._mark_concrete()
+            # read the spec from the build cache file. All specs in build caches
+            # are concrete (as they are built) so we need to mark this spec
+            # concrete on read-in.
+            stream = codecs.getreader("utf-8")(fs)
+            fetched_spec = Spec.from_dict(load_possibly_clearsigned_json(stream))
+            fetched_spec._mark_concrete()
 
-        found_specs.append(
-            {
-                "mirror_url": mirror.fetch_url,
-                "spec": fetched_spec,
-            }
-        )
+            found_specs.append(
+                {
+                    "mirror_url": mirror.fetch_url,
+                    "spec": fetched_spec,
+                }
+            )
+            break
 
     return found_specs
 
