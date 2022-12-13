@@ -13,6 +13,7 @@ packages:
   cmake:
     version: [3.21.4]
   coreneuron:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   cuda:
@@ -51,30 +52,38 @@ packages:
     - spec: libtool@2.4.2
       prefix: /usr
   model-neocortex:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   mxnet:
     version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
     variants: cuda_arch=70
   neurodamus-core:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   neurodamus-hippocampus:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   neurodamus-model:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   neurodamus-mousify:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   neurodamus-neocortex:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   neurodamus-thalamus:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   neuron:
+    variants: ~gpu
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   omega-h:
