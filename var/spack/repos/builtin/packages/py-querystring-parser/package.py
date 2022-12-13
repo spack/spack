@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,5 +14,5 @@ class PyQuerystringParser(PythonPackage):
 
     version('1.2.4', sha256='644fce1cffe0530453b43a83a38094dbe422ccba8c9b2f2a1c00280e14ca8a62')
 
-    depends_on('py-six', type=('run'))
+    depends_on('py-six', type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
