@@ -14,6 +14,7 @@ class Libctl(AutotoolsPackage):
     git = "https://github.com/NanoComp/libctl.git"
     url = "https://github.com/NanoComp/libctl/releases/download/v4.2.0/libctl-4.2.0.tar.gz"
 
+    version("4.5.0", sha256="621e46a238c4d5e8ce0866183f8e04abac6e1a94d90932af0d56ee61370ea153")
     version("4.2.0", sha256="0341ad6ea260ecda2efb3d4b679abb3d05ca6211792381979b036177a9291975")
     version(
         "3.2.2",

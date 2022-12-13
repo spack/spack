@@ -15,22 +15,40 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
     generator = "Ninja"
 
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
 
     version("master", branch="amd-stg-open")
+
+    version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
     version("5.2.3", sha256="1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df")
     version("5.2.1", sha256="3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf")
     version("5.2.0", sha256="0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f")
     version("5.1.3", sha256="d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128")
     version("5.1.0", sha256="db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10")
-    version("5.0.2", sha256="99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf")
-    version("5.0.0", sha256="bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413")
-    version("4.5.2", sha256="36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f")
-    version("4.5.0", sha256="b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97")
+    version(
+        "5.0.2",
+        sha256="99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f",
@@ -113,6 +131,7 @@ class LlvmAmdgpu(CMakePackage):
     provides("libllvm@12", when="@3.9:4.2")
     provides("libllvm@13", when="@4.3:4.9")
     provides("libllvm@14", when="@5:5.2")
+    provides("libllvm@15", when="@5.3:")
 
     depends_on("cmake@3.4.3:", type="build", when="@:3.8")
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
@@ -149,6 +168,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ("5.3.0", "f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c"),
         ("5.2.3", "16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a"),
         ("5.2.1", "e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225"),
         ("5.2.0", "901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c"),
@@ -223,7 +243,9 @@ class LlvmAmdgpu(CMakePackage):
 
         if self.spec.satisfies("@5.0.0:"):
             args.append(self.define("CLANG_ENABLE_AMDCLANG", "ON"))
-
+        if self.spec.satisfies("@5.3.0:"):
+            args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;X86"))
+            args.append(self.define("LLLVM_AMDGPU_ALLOW_NPI_TARGETS", True))
         # Enable rocm-device-libs as a external project
         if "+rocm-device-libs" in self.spec:
             dir = os.path.join(self.stage.source_path, "rocm-device-libs")

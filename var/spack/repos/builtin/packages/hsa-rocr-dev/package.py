@@ -17,23 +17,39 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
-
+    version("5.3.0", sha256="b51dbedbe73390e0be748b92158839c82d7fa0e514fede60aa7696dc498facf0")
     version("5.2.3", sha256="978de85d3455207bb82bef2254a4624e9116b1258a8c164d7a7e21a644eff12f")
     version("5.2.1", sha256="448a7409bdc6618332a42b9503122996f26b91768140b710ba99bff8a8c03dd9")
     version("5.2.0", sha256="529e49693dd9f6459586dd0a26f14dd77dbdf8c0b45fb54830b294eba7babd27")
     version("5.1.3", sha256="479340ec34cdffbbdb1002c85a47d1fccd23e8394631a1f001ef6130be08287d")
     version("5.1.0", sha256="a5f7245059c3d28dbc037e1e6fa3f09084e29147096dd61f7ce5560291ab330f")
-    version("5.0.2", sha256="94ce313f3b37e6571778dc6865d73dafa798cbaf4de63b5307382c4a2418e99f")
-    version("5.0.0", sha256="61644365ea2b09fa7ec22f3dbdb74f2b6b1daa34b180138da9e0c856006a373e")
-    version("4.5.2", sha256="d99eddedce0a97d9970932b64b0bb4743e47d2740e8db0288dbda7bec3cefa80")
-    version("4.5.0", sha256="fbf550f243dddfef46a716e360b77c43886fed3eef67215ab9dab1c82f3851ca")
+    version(
+        "5.0.2",
+        sha256="94ce313f3b37e6571778dc6865d73dafa798cbaf4de63b5307382c4a2418e99f",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="61644365ea2b09fa7ec22f3dbdb74f2b6b1daa34b180138da9e0c856006a373e",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="d99eddedce0a97d9970932b64b0bb4743e47d2740e8db0288dbda7bec3cefa80",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="fbf550f243dddfef46a716e360b77c43886fed3eef67215ab9dab1c82f3851ca",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="85fbd1645120b71635844090ce8bd9f7af0a3d1065d5fae476879f99ba0c0475",
@@ -95,6 +111,7 @@ class HsaRocrDev(CMakePackage):
     variant("image", default=True, description="build with or without image support")
 
     depends_on("cmake@3:", type="build")
+    depends_on("pkgconfig", type="build", when="@5.3.0:")
 
     # Note, technically only necessary when='@3.7: +image', but added to all
     # to work around https://github.com/spack/spack/issues/23951
@@ -121,6 +138,7 @@ class HsaRocrDev(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)

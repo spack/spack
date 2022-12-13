@@ -18,6 +18,7 @@ class Geant4Data(BundlePackage):
 
     tags = ["hep"]
 
+    version("11.1.0")
     version("11.0.0")
     version("10.7.3")
     version("10.7.2")
@@ -39,7 +40,20 @@ class Geant4Data(BundlePackage):
     # they generally don't change on the patch level
     # Can move to declaring on a dataset basis if needed
     _datasets = {
-        "11.0:11": [
+        "11.1.0:11.1": [
+            "g4ndl@4.7",
+            "g4emlow@8.2",
+            "g4photonevaporation@5.7",
+            "g4radioactivedecay@5.6",
+            "g4particlexs@4.0",
+            "g4pii@1.3",
+            "g4realsurface@2.2",
+            "g4saiddata@2.0",
+            "g4abla@3.1",
+            "g4incl@1.0",
+            "g4ensdfstate@2.3",
+        ],
+        "11.0.0:11.0": [
             "g4ndl@4.6",
             "g4emlow@8.0",
             "g4photonevaporation@5.7",
@@ -72,7 +86,6 @@ class Geant4Data(BundlePackage):
         ],
         "10.6.0:10.6": [
             "g4ndl@4.6",
-            "g4emlow@7.9",
             "g4emlow@7.9.1",
             "g4photonevaporation@5.5",
             "g4radioactivedecay@5.4",

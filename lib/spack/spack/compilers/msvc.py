@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 from distutils.version import StrictVersion
-from typing import Dict, List, Set  # novm
+from typing import Dict, List, Set
 
 import spack.compiler
 import spack.operating_systems.windows_os
@@ -18,8 +18,8 @@ from spack.compiler import Compiler
 from spack.error import SpackError
 from spack.version import Version
 
-avail_fc_version = set()  # type: Set[str]
-fc_path = dict()  # type: Dict[str, str]
+avail_fc_version: Set[str] = set()
+fc_path: Dict[str, str] = dict()
 
 fortran_mapping = {
     "2021.3.0": "19.29.30133",
@@ -42,16 +42,16 @@ def get_valid_fortran_pth(comp_ver):
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ["cl.exe"]  # type: List[str]
+    cc_names: List[str] = ["cl"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ["cl.exe"]  # type: List[str]
+    cxx_names: List[str] = ["cl"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["ifx.exe"]  # type: List[str]
+    f77_names: List[str] = ["ifx"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["ifx.exe"]  # type: List[str]
+    fc_names: List[str] = ["ifx"]
 
     # Named wrapper links within build_env_path
     # Due to the challenges of supporting compiler wrappers

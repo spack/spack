@@ -91,7 +91,7 @@ spack:
   - hdf5-vol-async
   - heffte +fftw
   - hpctoolkit
-  - hpx networking=mpi
+  - hpx max_cpu_count=512 networking=mpi
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
@@ -172,7 +172,7 @@ spack:
   - ginkgo +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
   - hpctoolkit +cuda
-  - hpx +cuda cuda_arch=80
+  - hpx max_cpu_count=512 +cuda cuda_arch=80
   - hypre +cuda cuda_arch=80
   - kokkos +wrapper +cuda cuda_arch=80
   - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
@@ -205,7 +205,7 @@ spack:
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
   - hpctoolkit +rocm
-  - hpx +rocm amdgpu_target=gfx90a
+  - hpx max_cpu_count=512 +rocm amdgpu_target=gfx90a
   - hypre +rocm amdgpu_target=gfx90a
   - kokkos +rocm amdgpu_target=gfx90a
   - magma ~cuda +rocm amdgpu_target=gfx90a
@@ -262,8 +262,8 @@ spack:
     after_script:
       - cat /proc/loadavg || true
 
-    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
-    
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+
     broken-tests-packages:
       - gptune
 
@@ -274,6 +274,8 @@ spack:
           - llvm
           - llvm-amdgpu
           - rocblas
+          - paraview
+          - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
           variables:
@@ -448,7 +450,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:
