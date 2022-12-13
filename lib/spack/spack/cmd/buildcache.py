@@ -326,6 +326,15 @@ def setup_parser(subparser):
     update_index.set_defaults(func=update_index_fn)
 
 
+def _mirror_url_from_args(args):
+    if args.directory:
+        return spack.mirror.push_url_from_directory(args.directory)
+    if args.mirror_name:
+        return spack.mirror.push_url_from_mirror_name(args.mirror_name)
+    if args.mirror_url:
+        return spack.mirror.push_url_from_mirror_url(args.mirror_url)
+
+
 def _matching_specs(args):
     """Return a list of matching specs read from either a spec file (JSON or YAML),
     a query over the store or a query over the active environment.
@@ -374,15 +383,7 @@ def _concrete_spec_from_args(args):
 
 def create_fn(args):
     """create a binary package and push it to a mirror"""
-    if args.directory:
-        push_url = spack.mirror.push_url_from_directory(args.directory)
-
-    if args.mirror_name:
-        push_url = spack.mirror.push_url_from_mirror_name(args.mirror_name)
-
-    if args.mirror_url:
-        push_url = spack.mirror.push_url_from_mirror_url(args.mirror_url)
-
+    push_url = _mirror_url_from_args(args)
     matches = _matching_specs(args)
 
     msg = "Pushing binary packages to {0}/build_cache".format(push_url)
@@ -713,15 +714,7 @@ def update_index(mirror_url, update_keys=False):
 
 def update_index_fn(args):
     """Update a buildcache index."""
-    if args.directory:
-        push_url = spack.mirror.push_url_from_directory(args.directory)
-
-    if args.mirror_name:
-        push_url = spack.mirror.push_url_from_mirror_name(args.mirror_name)
-
-    if args.mirror_url:
-        push_url = spack.mirror.push_url_from_mirror_url(args.mirror_url)
-
+    push_url = _mirror_url_from_args(args)
     update_index(push_url, update_keys=args.keys)
 
 
