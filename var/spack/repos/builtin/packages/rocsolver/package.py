@@ -36,6 +36,7 @@ class Rocsolver(CMakePackage):
     version("master", branch="master")
 
     version("5.3.3", sha256="d2248b5e2e0b20e08dd1ee5408e38deb02ecd28096dc7c7f2539351df6cb6ad5")
+    version("5.3.0", sha256="4569f860d240d50e94e77d498050f5cafe5ad11daddaead3e7e9eaa1957878a7")
     version("5.2.3", sha256="b278a1640f31fb1905f18dc5127d57e2b1d36fd2b4f39ae811b5537fa6ce87d4")
     version("5.2.1", sha256="74c127efaefec70a14dff6fa0e92276f38a6c313bf1271d68d03a4222d1fc3b6")
     version("5.2.0", sha256="94d46ebe1266eaa05df50c1789dc27d3f2dbf3cb5af156e757777a82ed6ef356")
@@ -161,6 +162,7 @@ class Rocsolver(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
@@ -212,6 +214,8 @@ class Rocsolver(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
 

@@ -24,6 +24,7 @@ class Hipblas(CMakePackage):
     version("master", branch="master")
 
     version("5.3.3", sha256="1ce093fc6bc021ad4fe0b0b93f9501038a7a5a16b0fd4fc485d65cbd220a195e")
+    version("5.3.0", sha256="873d55749479873994679840906c4257316dfb09a6200411204ad4a8c2480565")
     version("5.2.3", sha256="4d66db9b000b6207b5270d90556b724bfdb08ebbfcc675f014287e0be7ee6344")
     version("5.2.1", sha256="ccae36b118b7a1eb4b2f7d65fb163f54ab9c5cf774dbe2ec60971d4f78ae8308")
     version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
@@ -150,6 +151,7 @@ class Hipblas(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
@@ -187,6 +189,8 @@ class Hipblas(CMakePackage):
             args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
         elif self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
 

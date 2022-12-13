@@ -8,7 +8,6 @@ import functools
 import os
 import re
 
-import spack.bootstrap
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -47,6 +46,8 @@ def init(gnupghome=None, force=False):
             global objects are set already
     """
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
+    import spack.bootstrap
+
     if force:
         clear()
 
@@ -59,7 +60,7 @@ def init(gnupghome=None, force=False):
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        spack.bootstrap.ensure_core_dependencies()
         GPG, GPGCONF = _gpg(), _gpgconf()
 
     GPG.add_default_env("GNUPGHOME", GNUPGHOME)

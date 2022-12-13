@@ -29,6 +29,7 @@ class HipRocclr(CMakePackage):
     version("master", branch="main")
 
     version("5.3.3", sha256="f8133a5934f9c53b253d324876d74f08a19e2f5b073bc94a62fe64b0d2183a18")
+    version("5.3.0", sha256="2bf14116b5e2270928265f5d417b3d0f0f2e13cbc8ec5eb8c80d4d4a58ff7e94")
     version("5.2.3", sha256="0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998")
     version("5.2.1", sha256="465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba")
     version("5.2.0", sha256="37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb")
@@ -137,6 +138,7 @@ class HipRocclr(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
         "master",
     ]:
@@ -161,6 +163,7 @@ class HipRocclr(CMakePackage):
     # Add opencl sources thru the below
     for d_version, d_shasum in [
         ("5.3.3", "cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f"),
+        ("5.3.0", "d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e"),
         ("5.2.3", "932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94"),
         ("5.2.1", "eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5"),
         ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),

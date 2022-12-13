@@ -20,6 +20,7 @@ class RocmDeviceLibs(CMakePackage):
     version("master", branch="amd-stg-open")
 
     version("5.3.3", sha256="963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768")
+    version("5.3.0", sha256="f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c")
     version("5.2.3", sha256="16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a")
     version("5.2.1", sha256="e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225")
     version("5.2.0", sha256="901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c")
@@ -135,6 +136,7 @@ class RocmDeviceLibs(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
         "master",
     ]:

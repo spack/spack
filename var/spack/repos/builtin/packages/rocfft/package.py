@@ -20,6 +20,7 @@ class Rocfft(CMakePackage):
     libraries = ["librocfft"]
 
     version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
+    version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
     version("5.2.3", sha256="0cee37886f01f1afb3ae5dad1164c819573c13c6675bff4eb668de334adbff27")
     version("5.2.1", sha256="6302349b6cc610a9a939377e2c7ffba946656a8d43f2e438ff0b3088f0f963ad")
     version("5.2.0", sha256="ebba280b7879fb4bc529a68072b98d4e815201f90d24144d672094bc241743d4")
@@ -141,6 +142,7 @@ class Rocfft(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
@@ -198,4 +200,7 @@ class Rocfft(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         return args

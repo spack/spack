@@ -22,6 +22,7 @@ class RoctracerDev(CMakePackage):
     libraries = ["libroctracer64"]
 
     version("5.3.3", sha256="f2cb1e6bb69ea1a628c04f984741f781ae1d8498dc58e15795bb03015f924d13")
+    version("5.3.0", sha256="36f1da60863a113bb9fe2957949c661f00a702e249bb0523cda1fb755c053808")
     version("5.2.3", sha256="93f4bb7529db732060bc12055aa10dc346a459a1086cddd5d86c7b509301be4f")
     version("5.2.1", sha256="e200b5342bdf840960ced6919d4bf42c8f30f8013513f25a2190ee8767667e59")
     version("5.2.0", sha256="9747356ce61c57d22c2e0a6c90b66a055e435d235ba3459dc3e3f62aabae6a03")
@@ -69,6 +70,7 @@ class RoctracerDev(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -76,6 +78,8 @@ class RoctracerDev(CMakePackage):
         depends_on("rocminfo@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprofiler-dev@" + ver, when="@" + ver)
+
+    patch("0001-include-rocprofiler-dev-path.patch", when="@5.3.0")
 
     @classmethod
     def determine_version(cls, lib):
@@ -90,7 +94,7 @@ class RoctracerDev(CMakePackage):
 
     def setup_build_environment(self, build_env):
         spec = self.spec
-        build_env.set("HIP_PATH", spec["hip"].prefix)
+        build_env.set("HIP_PATH", spec["hip"].prefix),
 
     def patch(self):
         filter_file(
@@ -112,5 +116,7 @@ class RoctracerDev(CMakePackage):
             "-DHIP_VDI=1",
             "-DCMAKE_MODULE_PATH={0}/cmake_modules".format(self.stage.source_path),
             "-DHSA_RUNTIME_HSA_INC_PATH={0}/include".format(self.spec["hsa-rocr-dev"].prefix),
+            "-DROCPROFILER_PATH={0}".format(self.spec["rocprofiler-dev"].prefix),
+            "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
         ]
         return args

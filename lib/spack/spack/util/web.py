@@ -175,9 +175,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         while remote_path.startswith("/"):
             remote_path = remote_path[1:]
 
-        s3 = s3_util.create_s3_session(
-            remote_url, connection=s3_util.get_mirror_connection(remote_url)
-        )
+        s3 = s3_util.get_s3_session(remote_url, method="push")
         s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
@@ -377,9 +375,7 @@ def url_exists(url, curl=None):
     # Check if Amazon Simple Storage Service (S3) .. urllib-based fetch
     if url_result.scheme == "s3":
         # Check for URL-specific connection information
-        s3 = s3_util.create_s3_session(
-            url_result, connection=s3_util.get_mirror_connection(url_result)
-        )  # noqa: E501
+        s3 = s3_util.get_s3_session(url_result, method="fetch")
 
         try:
             s3.get_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
@@ -441,7 +437,7 @@ def remove_url(url, recursive=False):
 
     if url.scheme == "s3":
         # Try to find a mirror for potential connection information
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="push")
         bucket = url.netloc
         if recursive:
             # Because list_objects_v2 can only return up to 1000 items
@@ -551,7 +547,7 @@ def list_url(url, recursive=False):
         ]
 
     if url.scheme == "s3":
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="fetch")
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 

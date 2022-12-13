@@ -408,7 +408,7 @@ _spack_bootstrap() {
 }
 
 _spack_bootstrap_now() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --dev"
 }
 
 _spack_bootstrap_status() {
@@ -1450,7 +1450,7 @@ _spack_pkg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="add list diff added changed removed source hash"
+        SPACK_COMPREPLY="add list diff added changed removed grep source hash"
     fi
 }
 
@@ -1503,6 +1503,15 @@ _spack_pkg_removed() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_pkg_grep() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="--help"
     else
         SPACK_COMPREPLY=""
     fi

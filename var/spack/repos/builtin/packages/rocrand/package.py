@@ -23,6 +23,7 @@ class Rocrand(CMakePackage):
     libraries = ["librocrand"]
 
     version("5.3.3", sha256="b0aae79dce7f6f9ef76ad2594745fe1f589a7b675b22f35b4d2369e7d5e1985a")
+    version("5.3.0", sha256="be4c9f9433415bdfea50d9f47b8afb43ac315f205ed39674f863955a6c256dca")
     version("5.2.3", sha256="01eda8022fab7bafb2c457fe26a9e9c99950ed1b772ae7bf8710b23a90b56e32")
     version("5.2.1", sha256="4b2a7780f0112c12b5f307e1130e6b2c02ab984a0c1b94e9190dae38f0067600")
     version("5.2.0", sha256="ab3057e7c17a9fbe584f89ef98ec92a74d638a98d333e7d0f64daf7bc9051e38")
@@ -149,6 +150,7 @@ class Rocrand(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)

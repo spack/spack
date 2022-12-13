@@ -23,6 +23,7 @@ class Comgr(CMakePackage):
     version("master", branch="amd-stg-open")
 
     version("5.3.3", sha256="6a4ef69e672a077b5909977248445f0eedf5e124af9812993a4d444be030c78b")
+    version("5.3.0", sha256="072f849d79476d87d31d62b962e368762368d540a9da02ee2675963dc4942b2c")
     version("5.2.3", sha256="36d67dbe791d08ad0a02f0f3aedd46059848a0a232c5f999670103b0410c89dc")
     version("5.2.1", sha256="ebeaea8e653fc2b9d67d3271be44690ac7876ee679baa01d47863e75362b8c85")
     version("5.2.0", sha256="5f63fa93739ee9230756ef93c53019474b6cdddea3b588492d785dae1b08c087")
@@ -139,6 +140,7 @@ class Comgr(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
         "master",
     ]:

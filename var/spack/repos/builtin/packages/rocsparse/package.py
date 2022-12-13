@@ -17,7 +17,7 @@ class Rocsparse(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
     git = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
@@ -35,6 +35,7 @@ class Rocsparse(CMakePackage):
     variant("test", default=False, description="Build rocsparse-test client")
 
     version("5.3.3", sha256="4204035e952e20ada4526a94989e8e5c76c04574176fe63a021522862461c800")
+    version("5.3.0", sha256="521ca0e7b52f26edbff8507eb1479dc26019f456756d884d7b8b192c3ea518e8")
     version("5.2.3", sha256="6da3f3303a8ada94c4dbff4b42ee33a2e2883a908ee21c41cb2aa7180382026a")
     version("5.2.1", sha256="01f3535442740221edad2cde0a20b2499c807f6733d5016b33c47f34a5a55c49")
     version("5.2.0", sha256="7ed929af16d2502135024a6463997d9a95f03899b8a33aa95db7029575c89572")
@@ -133,6 +134,7 @@ class Rocsparse(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
@@ -145,7 +147,7 @@ class Rocsparse(CMakePackage):
     patch("0002-fix-gentest-shebang.patch", when="@4.5.0: +test")
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
     patch("0003-fix-navi-1x-rocm-4.5.patch", when="@4.5.0:5.1")
-    patch("0003-fix-navi-1x-rocm-5.2.patch", when="@5.2.0:")
+    patch("0003-fix-navi-1x-rocm-5.2.patch", when="@5.2")
 
     depends_on("googletest@1.11.0:", when="@5.1.0: +test")
     depends_on("googletest@1.10.0:", when="+test")
@@ -333,4 +335,7 @@ class Rocsparse(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         return args
