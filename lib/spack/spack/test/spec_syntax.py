@@ -829,62 +829,121 @@ def test_error_conditions(text, exc_cls):
         SpecParser(text).next_spec()
 
 
-@pytest.mark.skipif(is_windows, reason="Tests unix style paths in spec")
 @pytest.mark.parametrize(
     "text,exc_cls",
     [
         # Specfile related errors
-        (
+        pytest.param(
             "/bogus/path/libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=spack.spec.NoSuchHashError, reason="Unix style path on Windows"
+            ),
         ),
-        ("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        ("./libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        (
+        pytest.param(
+            "../../libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=SpecTokenizationError, reason="Unix style path on Windows"
+            ),
+        ),
+        pytest.param(
+            "./libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=SpecTokenizationError, reason="Unix style path on Windows"
+            ),
+        ),
+        pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=spack.spec.NoSuchHashError, reason="Unix style path on Windows"
+            ),
         ),
-        ("libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        ("libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        (
+        pytest.param(
+            "libfoo ^../../libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=SpecTokenizationError, reason="Unix style path on Windows"
+            ),
+        ),
+        pytest.param(
+            "libfoo ^./libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=SpecTokenizationError, reason="Unix style path on Windows"
+            ),
+        ),
+        pytest.param(
             "/bogus/path/libdwarf.yamlfoobar",
             spack.spec.SpecFilenameError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=spack.spec.NoSuchHashError, reason="Unix style path on Windows"
+            ),
         ),
-        (
+        pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
             spack.spec.SpecFilenameError,
+            marks=pytest.mark.xfail(
+                is_windows, raises=spack.spec.NoSuchHashError, reason="Unix style path on Windows"
+            ),
         ),
-    ],
-)
-def test_specfile_error_conditions_unix(text, exc_cls):
-    with pytest.raises(exc_cls):
-        SpecParser(text).next_spec()
-
-
-@pytest.mark.skipif(not is_windows, reason="Tests Windows style paths in spec")
-@pytest.mark.parametrize(
-    "text,exc_cls",
-    [
-        # Specfile related errors
-        (
+        pytest.param(
             "c:\\bogus\\path\\libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
         ),
-        ("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        (".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        (
+        pytest.param(
+            "..\\..\\libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
+        ),
+        pytest.param(
+            ".\\libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
+        ),
+        pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
         ),
-        ("libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        ("libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError),
-        (
+        pytest.param(
+            "libfoo ^..\\..\\libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
+        ),
+        pytest.param(
+            "libfoo ^.\\libdwarf.yaml",
+            spack.spec.NoSuchSpecFileError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
+        ),
+        pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
             spack.spec.SpecFilenameError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
         ),
-        (
+        pytest.param(
             "libdwarf^c:\\bogus\\path\\libelf.yamlfoobar ^c:\\path\\to\\bogus.yaml",
             spack.spec.SpecFilenameError,
+            marks=pytest.mark.xfail(
+                not is_windows, raises=SpecTokenizationError, reason="Windows style path on unix"
+            ),
         ),
     ],
 )
@@ -893,45 +952,48 @@ def test_specfile_error_conditions_windows(text, exc_cls):
         SpecParser(text).next_spec()
 
 
-@pytest.mark.skipif(is_windows, reason="Tests unix style file paths")
 @pytest.mark.parametrize(
     "filename",
     [
-        "/absolute/path/to/file.yaml",
-        "relative/path/to/file.yaml",
-        "./dot/rel/to/file.yaml",
         pytest.param(
-            "c:\\abs\\windows\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)
+            "c:\\abs\\windows\\path.yaml",
+            marks=pytest.mark.xfail(
+                not is_windows, raises=AssertionError, reason="Windows style path on unix"
+            ),
         ),
         pytest.param(
-            ".\\relative\\dot\\win\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)
+            ".\\relative\\dot\\win\\path.yaml",
+            marks=pytest.mark.xfail(
+                not is_windows, raises=AssertionError, reason="Windows style path on unix"
+            ),
         ),
         pytest.param(
-            "relative\\windows\\path.yaml", marks=pytest.mark.xfail(raises=AssertionError)
+            "relative\\windows\\path.yaml",
+            marks=pytest.mark.xfail(
+                not is_windows, raises=AssertionError, reason="Windows style path on unix"
+            ),
+        ),
+        pytest.param(
+            "/absolute/path/to/file.yaml",
+            marks=pytest.mark.xfail(
+                is_windows, raises=AssertionError, reason="Unix style path on Windows"
+            ),
+        ),
+        pytest.param(
+            "relative/path/to/file.yaml",
+            marks=pytest.mark.xfail(
+                is_windows, raises=AssertionError, reason="Unix style path on Windows"
+            ),
+        ),
+        pytest.param(
+            "./dot/rel/to/file.yaml",
+            marks=pytest.mark.xfail(
+                is_windows, raises=AssertionError, reason="Unix style path on Windows"
+            ),
         ),
     ],
 )
-def test_specfile_parsing_unix(filename):
-    match = re.match(FILENAME, filename)
-    assert match
-    assert match.end() == len(filename)
-
-
-@pytest.mark.skipif(not is_windows, reason="Tests Windows style file paths")
-@pytest.mark.parametrize(
-    "filename",
-    [
-        "c:\\abs\\windows\\path.yaml",
-        ".\\relative\\dot\\win\\path.yaml",
-        "relative\\windows\\path.yaml",
-        pytest.param(
-            "/absolute/path/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError)
-        ),
-        pytest.param("relative/path/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError)),
-        pytest.param("./dot/rel/to/file.yaml", marks=pytest.mark.xfail(raises=AssertionError)),
-    ],
-)
-def test_specfile_parsing_windows(filename):
+def test_specfile_parsing(filename):
     match = re.match(FILENAME, filename)
     assert match
     assert match.end() == len(filename)
