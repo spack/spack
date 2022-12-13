@@ -12,8 +12,11 @@ class Pcre2(AutotoolsPackage):
     pattern matching using the same syntax and semantics as Perl 5."""
 
     homepage = "https://www.pcre.org"
-    url = "https://github.com/PhilipHazel/pcre2/releases/download/pcre2-10.39/pcre2-10.39.tar.bz2"
+    url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.39/pcre2-10.39.tar.bz2"
 
+    version("10.42", sha256="8d36cd8cb6ea2a4c2bb358ff6411b0c788633a2a45dabbf1aeb4b701d1b5e840")
+    version("10.41", sha256="0f78cebd3e28e346475fb92e95fe9999945b4cbaad5f3b42aca47b887fb53308")
+    version("10.40", sha256="14e4b83c4783933dc17e964318e6324f7cae1bc75d8f3c79bc6969f00c159d68")
     version("10.39", sha256="0f03caf57f81d9ff362ac28cd389c055ec2bf0678d277349a1a4bee00ad6d440")
     version("10.36", sha256="a9ef39278113542968c7c73a31cfcb81aca1faa64690f400b907e8ab6b4a665c")
     version("10.35", sha256="9ccba8e02b0ce78046cdfb52e5c177f0f445e421059e43becca4359c669d4613")
