@@ -614,6 +614,23 @@ class ErrorHandler:
     def no_value_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
+    def _get_cause_tree(self, cause, conditions, condition_causes, literals, indent=""):
+        parents = [c for e, c in condition_causes if e == cause]
+        local = "required because %s " % conditions[cause]
+
+        return [indent + local] + [
+            c
+            for parent in parents
+            for c in self._get_cause_tree(
+                parent, conditions, condition_causes, literals, indent=indent + "  "
+            )
+        ]
+
+    def get_cause_tree(self, cause):
+        conditions = dict(extract_args(self.model, "condition"))
+        condition_causes = list(extract_args(self.model, "condition_cause"))
+        return self._get_cause_tree(cause, conditions, condition_causes, [])
+
     def handle_error(self, msg, *args):
         """Handle an error state derived by the solver."""
         if msg == "multiple_values_error":
@@ -622,10 +639,24 @@ class ErrorHandler:
         if msg == "no_value_error":
             return self.no_value_error(*args)
 
+        try:
+            idx = args.index("startcauses")
+        except ValueError:
+            msg_args = args
+            cause_args = []
+        else:
+            msg_args = args[:idx]
+            cause_args = args[idx + 1 :]
+
+        msg = msg.format(*msg_args)
+
+        for cause in set(cause_args):
+            for c in self.get_cause_tree(cause):
+                msg += f"\n{c}"
+
         # For variant formatting, we sometimes have to construct specs
         # to format values properly. Find/replace all occurances of
         # Spec(...) with the string representation of the spec mentioned
-        msg = msg.format(*args)
         specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
         for spec_str in specs_to_construct:
             msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
@@ -1266,9 +1297,11 @@ class SpackSolverSetup(object):
             for when in whens:
                 msg = "%s provides %s when %s" % (pkg.name, provided, when)
                 condition_id = self.condition(when, provided, pkg.name, msg)
-                self.gen.fact(fn.imposed_constraint(
-                    condition_id, "virtual_condition_holds", pkg.name, provided.name
-                ))
+                self.gen.fact(
+                    fn.imposed_constraint(
+                        condition_id, "virtual_condition_holds", pkg.name, provided.name
+                    )
+                )
             self.gen.newline()
 
     def package_dependencies_rules(self, pkg):
@@ -1298,9 +1331,11 @@ class SpackSolverSetup(object):
 
                 for t in sorted(deptypes):
                     # there is a declared dependency of type t
-                    self.gen.fact(fn.imposed_constraint(
-                        condition_id, "dependency_holds", pkg.name, dep.spec.name, t
-                    ))
+                    self.gen.fact(
+                        fn.imposed_constraint(
+                            condition_id, "dependency_holds", pkg.name, dep.spec.name, t
+                        )
+                    )
 
                 self.gen.newline()
 
@@ -1454,9 +1489,11 @@ class SpackSolverSetup(object):
             for local_idx, spec in enumerate(external_specs):
                 msg = "%s available as external when satisfying %s" % (spec.name, spec)
                 condition_id = self.condition(spec, msg=msg)
-                self.gen.fact(fn.imposed_constraint(
-                    condition_id, "external_conditions_hold", pkg_name, local_idx
-                ))
+                self.gen.fact(
+                    fn.imposed_constraint(
+                        condition_id, "external_conditions_hold", pkg_name, local_idx
+                    )
+                )
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -2310,16 +2347,20 @@ class SpackSolverSetup(object):
 
             self.gen.fact(fn.condition_requirement(condition_id, "literal_solved", condition_id))
 
-            self.gen.fact(fn.imposed_constraint(
-                condition_id, "virtual_root" if spec.virtual else "root", spec.name
-            ))
+            self.gen.fact(
+                fn.imposed_constraint(
+                    condition_id, "virtual_root" if spec.virtual else "root", spec.name
+                )
+            )
 
             for clause in self.spec_clauses(spec):
                 self.gen.fact(fn.imposed_constraint(condition_id, *clause.args))
                 if clause.args[0] == "variant_set":
-                    self.gen.fact(fn.imposed_constraint(
-                        condition_id, "variant_default_value_from_cli", *clause.args[1:]
-                    ))
+                    self.gen.fact(
+                        fn.imposed_constraint(
+                            condition_id, "variant_default_value_from_cli", *clause.args[1:]
+                        )
+                    )
 
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())

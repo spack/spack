@@ -86,6 +86,27 @@ version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package
 { attr("version", Package, Version) : version_declared(Package, Version) }
  :- attr("node", Package).
 
+% error we expect users to see
+error(0, "Version '{0}' of {1} does not satisfy '@{2}'", Version, Package, Constraint, startcauses, VersionCause, ConstraintCause)
+ :- attr("node", Package),
+    attr("version", Package, Version),
+    imposed_constraint(VersionCause, "node_version_satisfies", Package, Version),
+    condition_holds(VersionCause),
+    attr("node_version_satisfies", Package, Constraint),
+    imposed_constraint(ConstraintCause, "node_version_satisfies", Package, Constraint),
+    condition_holds(ConstraintCause),
+    not version_satisfies(Package, Constraint, Version).
+
+% Error to ensure structure of the program is not violated
+error(2, "No version from '{0}' satisfies '@{1}' and '@{2}'", Package, Version1, Version2)
+  :- attr("node", Package),
+     attr("version", Package, Version1),
+     attr("version", Package, Version2),
+     Version1 < Version2.  % see[1]
+
+error(2, "No versions available for package '{0}'", Package)
+  :- attr("node", Package), not attr("version", Package, _).
+
 % A virtual package may or may not have a version, but never has more than one
 error(100, "Cannot select a single version for virtual '{0}'", Virtual)
   :- attr("virtual_node", Virtual),

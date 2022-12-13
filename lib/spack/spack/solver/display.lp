@@ -23,6 +23,8 @@
 #show error/4.
 #show error/5.
 #show error/6.
+#show error/7.
+#show error/8.
 
 % show cause -> effect data for errors
 #show condition_cause/2.
