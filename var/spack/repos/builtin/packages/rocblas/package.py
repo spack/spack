@@ -13,7 +13,7 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
@@ -22,15 +22,32 @@ class Rocblas(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
     version("5.2.3", sha256="36f74ce53b82331a756c42f95f3138498d6f4a66f2fd370cff9ab18281bb12d5")
     version("5.2.1", sha256="6be804ba8d9e491a85063c220cd0ddbf3d13e3b481eee31041c35a938723f4c6")
     version("5.2.0", sha256="b178b7db5f0af55b21b5f744b8825f5e002daec69b4688e50df2bca2fac155bd")
     version("5.1.3", sha256="915374431db8f0cecdc2bf318a0ad33c3a8eceedc461d7a06b92ccb02b07313c")
     version("5.1.0", sha256="efa0c424b5ada697314aa8a78c19c93ade15f1612c4bfc8c53d71d1c9719aaa3")
-    version("5.0.2", sha256="358a0902fc279bfc80205659a90e96269cb7d83a80386b121e4e3dfe221fec23")
-    version("5.0.0", sha256="4b01fba937ada774f09c7ccb5e9fdc66e1a5d46c130be833e3706e6b5841b1da")
-    version("4.5.2", sha256="15d725e38f91d1ff7772c4204b97c1515af58fa7b8ec2a2014b99b6d337909c4")
-    version("4.5.0", sha256="22d15a1389a10f1324f5e0ceac1a6ec0758a2801a18419a55e37e2bc63793eaf")
+    version(
+        "5.0.2",
+        sha256="358a0902fc279bfc80205659a90e96269cb7d83a80386b121e4e3dfe221fec23",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="4b01fba937ada774f09c7ccb5e9fdc66e1a5d46c130be833e3706e6b5841b1da",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="15d725e38f91d1ff7772c4204b97c1515af58fa7b8ec2a2014b99b6d337909c4",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="22d15a1389a10f1324f5e0ceac1a6ec0758a2801a18419a55e37e2bc63793eaf",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b",
@@ -106,6 +123,10 @@ class Rocblas(CMakePackage):
     conflicts("amdgpu_target=gfx1011", when="@:4.2.1")
     conflicts("amdgpu_target=gfx1012", when="@:4.2.1")
     conflicts("amdgpu_target=gfx1030", when="@:4.2.1")
+    # https://reviews.llvm.org/D124866
+    # https://github.com/ROCm-Developer-Tools/HIP/issues/2678
+    # https://github.com/ROCm-Developer-Tools/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
+    conflicts("%gcc@12", when="@5.2.1:5.2.3")
 
     depends_on("cmake@3.16.8:", type="build", when="@4.2.0:")
     depends_on("cmake@3.8:", type="build", when="@3.9.0:")
@@ -147,6 +168,7 @@ class Rocblas(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -185,6 +207,7 @@ class Rocblas(CMakePackage):
         ("@5.2.0", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.2.1", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.2.3", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
+        ("@5.3.0", "b33ca97af456cda14f7b1ec9bcc8aeab3ed6dd08"),
     ]:
         resource(
             name="Tensile",
@@ -264,5 +287,7 @@ class Rocblas(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args

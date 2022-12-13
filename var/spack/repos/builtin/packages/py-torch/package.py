@@ -293,35 +293,42 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     # Use patches from IBM's Open CE to enable building on Power systems
-    # 03xx - patch temporary to fix a problem that when fixed upstream can be removed
+    # 01xx patches are specific to open-ce, we only include 03xx patches used in meta.yaml
+    # https://github.com/open-ce/pytorch-feedstock
     patch(
-        "https://github.com/open-ce/pytorch-feedstock/raw/0a145060ca8523314ec3893af935c3b140e2d0b0/pytorch-1.10/recipe/0302-cpp-extension.patch",
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.7.4/pytorch-1.10/recipe/0302-cpp-extension.patch",
         sha256="ecb3973fa7d0f4c8f8ae40433f3ca5622d730a7b16f6cb63325d1e95baff8aa2",
         when="@1.10:1.11 arch=ppc64le:",
     )
-
     patch(
-        "https://github.com/open-ce/pytorch-feedstock/raw/0a145060ca8523314ec3893af935c3b140e2d0b0/pytorch-1.10/recipe/0311-PR66085-Remove-unused-dump-method-from-VSX-vec256-methods.patch",
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.7.4/pytorch-1.10/recipe/0311-PR66085-Remove-unused-dump-method-from-VSX-vec256-methods.patch",
         sha256="f05db59f3def4c4215db7142d81029c73fe330c660492159b66d65ca5001f4d1",
-        when="@1.10:1.11 arch=ppc64le:",
+        when="@1.10 arch=ppc64le:",
     )
-
     patch(
-        "https://github.com/open-ce/pytorch-feedstock/raw/0a145060ca8523314ec3893af935c3b140e2d0b0/pytorch-1.10/recipe/0312-PR67331-Dummpy-VSX-bfloat16-implementation.patch",
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.7.4/pytorch-1.10/recipe/0312-PR67331-Dummpy-VSX-bfloat16-implementation.patch",
         sha256="860b64afa85f5e6647ebc3c91d5a0bb258784770900c9302c3599c98d5cff1ee",
-        when="@1.10:1.11 arch=ppc64le:",
+        when="@1.10 arch=ppc64le:",
     )
-
     patch(
-        "https://github.com/open-ce/pytorch-feedstock/raw/0a145060ca8523314ec3893af935c3b140e2d0b0/pytorch-1.10/recipe/0313-add-missing-vsx-dispatch.patch",
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.7.4/pytorch-1.10/recipe/0313-add-missing-vsx-dispatch.patch",
         sha256="7393c2bc0b6d41ecc813c829a1e517bee864686652e91f174cb7bcdfb10ba451",
-        when="@1.10:1.11 arch=ppc64le:",
+        when="@1.10 arch=ppc64le:",
     )
-
     patch(
-        "https://github.com/open-ce/pytorch-feedstock/raw/0a145060ca8523314ec3893af935c3b140e2d0b0/pytorch-1.12/recipe/0302-cpp-extension.patch",
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.7.4/pytorch-1.10/recipe/0314-fix-nullpointer-error.patch",
+        sha256="b9cff8966f316f58514c66a403b7a6786be3cdb252f1380a6b91c722686a4097",
+        when="@1.10 arch=ppc64le:",
+    )
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.7.4/pytorch-1.12/recipe/0302-cpp-extension.patch",
         sha256="2fac519cca8997f074c263505657ff867e7ba2d6637fc8bda99c70a99be0442a",
-        when="@1.12: arch=ppc64le:",
+        when="@1.12 arch=ppc64le:",
+    )
+    patch(
+        "https://github.com/open-ce/pytorch-feedstock/raw/main/pytorch-1.13/recipe/0302-cpp-extension.patch",
+        sha256="a54db63640b90e5833cc1099c0935572f5297d2d8625f62f01ac1fda79ed4569",
+        when="@1.13 arch=ppc64le:",
     )
 
     # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
@@ -329,6 +336,15 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch?full_index=1",
         sha256="8ff7d285e52e4718bad1ca01ceb3bb6471d7828329036bb94222717fcaa237da",
         when="@:1.9.1 ^cuda@11.4.100:",
+    )
+
+    # PyTorch does not build with GCC 12 (fixed on master)
+    # See: https://github.com/pytorch/pytorch/issues/77614
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/4a5e339b764261d20fc409071dc7a8b8989aa195.patch?full_index=1",
+        sha256="dc8b3a9bea4693f32d6850ea2ce6ce75e1778538bfba464b50efca92bac425e3",
+        when="@:1.13 %gcc@12:",
+        working_dir="third_party/gloo",
     )
 
     @when("@1.5.0:")

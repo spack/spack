@@ -37,13 +37,12 @@ import io
 import multiprocessing
 import os
 import re
-import shutil
 import sys
 import traceback
 import types
+from typing import List, Tuple
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
@@ -51,6 +50,7 @@ from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
+import spack.build_systems.python
 import spack.builder
 import spack.config
 import spack.install_test
@@ -287,7 +287,7 @@ def clean_environment():
 def _add_werror_handling(keep_werror, env):
     keep_flags = set()
     # set of pairs
-    replace_flags = []  # type: List[Tuple[str,str]]
+    replace_flags: List[Tuple[str, str]] = []
     if keep_werror == "all":
         keep_flags.add("-Werror*")
     else:
@@ -585,9 +585,6 @@ def set_module_variables_for_package(pkg):
     m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
 
-    # easy shortcut to os.environ
-    m.env = os.environ
-
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
@@ -606,21 +603,6 @@ def set_module_variables_for_package(pkg):
     m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
     m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
     m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
-
-    # Emulate some shell commands for convenience
-    m.pwd = os.getcwd
-    m.cd = os.chdir
-    m.mkdir = os.mkdir
-    m.makedirs = os.makedirs
-    m.remove = os.remove
-    m.removedirs = os.removedirs
-    m.symlink = symlink
-
-    m.mkdirp = mkdirp
-    m.install = install
-    m.install_tree = install_tree
-    m.rmtree = shutil.rmtree
-    m.move = shutil.move
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.

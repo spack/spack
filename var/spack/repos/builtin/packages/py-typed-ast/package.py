@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.python
 from spack.package import *
 
 
@@ -23,7 +23,22 @@ class PyTypedAst(PythonPackage):
         url="https://files.pythonhosted.org/packages/source/t/typed-ast/typed-ast-1.3.5.tar.gz",
     )
 
+    variant(
+        "wheel",
+        default=False,
+        sticky=True,
+        description="Install from wheel (required for bootstrapping Spack)",
+    )
+
     depends_on("python@3.3:", type=("build", "link", "run"))
     depends_on("python@3.6:", when="@1.5.4:", type=("build", "link", "run"))
     depends_on("python@:3.8", when="@:1.4.0")  # build errors with 3.9 until 1.4.1
     depends_on("py-setuptools", type="build")
+
+
+class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
+    @when("+wheel")
+    def install(self, pkg, spec, prefix):
+        args = list(filter(lambda x: x != "--no-index", self.std_args(self.pkg)))
+        args += [f"--prefix={prefix}", self.spec.format("typed-ast=={version}")]
+        pip(*args)
