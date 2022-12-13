@@ -53,6 +53,7 @@ default:
   variables:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 8G
+    SPACK_BACKTRACE: 1
   interruptible: true
   retry:
     max: 2
