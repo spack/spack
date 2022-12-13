@@ -1353,13 +1353,16 @@ def _build_tarball(
         key = select_signing_key(key)
         sign_specfile(key, force, specfile_path)
 
-    # push tarball and signed spec json to remote mirror
+    # push tarball and (signed) spec json to remote mirror
     web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
-    web_util.push_to_url(
-        signed_specfile_path if not unsigned else specfile_path,
-        remote_signed_specfile_path if not unsigned else remote_specfile_path,
-        keep_original=False,
-    )
+
+    # In Spack 0.20: upload spec.json.sig both as spec.json.sig and spec.json.
+    # In Spack 0.21: only ever use spec.json for clearsigned / unsigned spec files.
+    if unsigned:
+        web_util.push_to_url(specfile_path, remote_specfile_path, keep_original=False)
+    else:
+        web_util.push_to_url(signed_specfile_path, remote_signed_specfile_path, keep_original=True)
+        web_util.push_to_url(signed_specfile_path, remote_specfile_path, keep_original=False)
 
     tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
 
