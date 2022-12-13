@@ -15,17 +15,11 @@ class PyPulsarGalaxyLib(PythonPackage):
 
     version("0.14.16", sha256="f3330350d2e85c7228cebf83f74fc4c0cc5e8e7557bb6e5ae55f5556d7e6fbff")
 
-    depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-webob", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pastedeploy", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    # depends_on("py-", type=("build", "run"))
-    # depends_on("py-", type=("build", "run"))
-    # depends_on("py-", type=("build", "run"))
-    # depends_on("py-", type=("build", "run"))
     depends_on("py-paramiko", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"))
-    depends_on("py-pydantic-tes@0.1.5:", type=("build", "run"))
