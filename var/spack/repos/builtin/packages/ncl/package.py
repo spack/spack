@@ -17,8 +17,10 @@ class Ncl(Package):
     Numerous analysis functions are built-in."""
 
     homepage = "https://www.ncl.ucar.edu"
-
+    git = "https://github.com/NCAR/ncl.git"
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
+
+    maintainers = ["vanderwb"]
 
     version("6.6.2", sha256="cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e")
     version("6.5.0", sha256="133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591")
@@ -293,16 +295,14 @@ class Ncl(Package):
         with open(config_answers_filename, "r") as f:
             config_script(input=f)
 
-        # Modify Site.local to add RPC library if HDF4 is used w/external XDR
-        if "+hdf4" in self.spec:
+        if self.spec.satisfies("^hdf+external-xdr") and not self.spec["hdf"].satisfies("^libc"):
             hdf4 = self.spec["hdf"]
 
-            if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
-                filter_file(
-                    "(#define HDFlib.*)",
-                    r"\1 {}".format(hdf4["rpc"].libs.link_flags),
-                    "config/Site.local",
-                )
+            filter_file(
+                "(#define HDFlib.*)",
+                r"\1 {}".format(hdf4["rpc"].libs.link_flags),
+                "config/Site.local",
+            )
 
     def prepare_src_tree(self):
         if "+triangle" in self.spec:
