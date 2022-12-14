@@ -31,6 +31,7 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("9.0.a1", commit="b3c4b4f")
     version("8.2.2a", commit="eb19ae0")
     version("8.2.1", tag="8.2.1")
     version("8.2.0", tag="8.2.0")
@@ -65,6 +66,7 @@ class Neuron(CMakePackage):
 
     # extra variants from coreneuron recipe
     variant('gpu', default=False, description="Enable GPU build")
+    variant('knl', default=False, description="Enable KNL specific flags")
     variant('unified', default=False, description="Enable Unified Memory with GPU build")
     variant('openmp', default=False, description="Enable OpenMP support")
     variant('report', default=True, description="Enable SONATA and binary reports")
@@ -183,6 +185,10 @@ class Neuron(CMakePackage):
             compilation_flags += ['-g', '-O0']
             # Remove default flags (RelWithDebInfo etc.)
             args.append("-DCMAKE_BUILD_TYPE=Custom")
+
+        if "%intel" in self.spec and "+knl" in self.spec:
+            compilation_flags.append('-xMIC-AVX512')
+
         if "+mod-compatibility" in self.spec:
             args.append("-DNRN_ENABLE_MOD_COMPATIBILITY:BOOL=ON")
         if "+binary" in self.spec and '@:8.0.999' in self.spec:
@@ -261,6 +267,9 @@ class Neuron(CMakePackage):
                 options.append('-DCORENRN_ENABLE_GPU=ON')
 
             args.extend(options)
+
+        if self.spec.satisfies("@:8.99+coreneuron"):
+            args.append(self.define("CORENEURON_DIR", self.spec["coreneuron"].prefix))
 
         return args
 

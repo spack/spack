@@ -16,6 +16,7 @@ class Nmodl(CMakePackage):
     # 0.3.1 > 0.3.0.20220110 > 0.3.0 > 0.3b > 0.3 to Spack
     version("develop", branch="master", submodules=True)
     version("llvm", branch="llvm", submodules=True)
+    version("0.5.a", commit="94cba1c")
     version("0.4.0", tag="0.4")
     # This is the merge commit of #875, which allows catch2 etc. to be dependencies
     version("0.3.0.20220531", commit="d63a061ee01b1fd6b14971644bb7fa3efeee20b0")
