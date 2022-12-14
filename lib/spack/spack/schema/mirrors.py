@@ -22,7 +22,7 @@ mirror_conection = {
     "type": "object",
     "additionalProperties": False,
     "required": ["url"],
-    "properties": {**connection},
+    "properties": {**connection},  # type: ignore
 }
 
 #: Mirror connection when no pull/push keys are set
@@ -30,7 +30,11 @@ top_level_mirror_connection = {
     "type": "object",
     "additionalProperties": False,
     "required": ["url"],
-    "properties": {"source": {"type": "boolean"}, "binary": {"type": "boolean"}, **connection},
+    "properties": {
+        "source": {"type": "boolean"},
+        "binary": {"type": "boolean"},
+        **connection,  # type: ignore
+    },
 }
 
 #: Properties for inclusion in other schemas
