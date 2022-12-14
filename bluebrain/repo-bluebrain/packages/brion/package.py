@@ -30,8 +30,8 @@ class Brion(CMakePackage):
     depends_on('python@3.4:', type=('build', 'run'), when='+python')
     depends_on('py-numpy', type=('build', 'run', 'test'), when='+python')
 
-    depends_on('boost +shared +date_time', when='~python')
-    depends_on('boost +shared +date_time +python', when='+python')
+    depends_on('boost +date_time+filesystem+iostreams+program_options+regex+shared+system+test', when='~python')
+    depends_on('boost +date_time+filesystem+iostreams+program_options+regex+shared+system+test+python', when='+python')
 
     depends_on('libsonata')
     depends_on('morphio')
@@ -87,5 +87,4 @@ class Brion(CMakePackage):
                     python('-c', 'import brion; print(brion)')
 
     def _get_site_dir(self):
-        return (self.spec['python']
-                    .package.site_packages_dir.split(os.sep)[1:])
+        return self.spec['python'].package.platlib
