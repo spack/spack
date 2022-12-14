@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -59,6 +60,9 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
         args = []
         if "@6.7.0:" in self.spec:
             args.append("--with-libintl-prefix=" + self.spec["gettext"].prefix)
+            args.append(
+                "PERL_EXT_CPPFLAGS=" + self.spec["gettext"].prefix + os.path.sep + "include"
+            )
         return args
 
     @property
