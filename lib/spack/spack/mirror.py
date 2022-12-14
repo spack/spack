@@ -17,15 +17,18 @@ import os
 import os.path
 import sys
 import traceback
+import urllib.parse
 
 import ruamel.yaml.error as yaml_error
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
+import spack.caches
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
+import spack.mirror
 import spack.spec
 import spack.url as url
 import spack.util.spack_json as sjson
@@ -507,19 +510,13 @@ def mirror_cache_and_stats(path, skip_unstable_versions=False):
             they do not have a stable archive checksum (as determined by
             ``fetch_strategy.stable_target``)
     """
-    parsed = url_util.parse(path)
-    mirror_root = url_util.local_file_path(parsed)
-    if not mirror_root:
-        raise spack.error.SpackError("MirrorCaches only work with file:// URLs")
     # Get the absolute path of the root before we start jumping around.
-    if not os.path.isdir(mirror_root):
+    if not os.path.isdir(path):
         try:
-            mkdirp(mirror_root)
+            mkdirp(path)
         except OSError as e:
-            raise MirrorError("Cannot create directory '%s':" % mirror_root, str(e))
-    mirror_cache = spack.caches.MirrorCache(
-        mirror_root, skip_unstable_versions=skip_unstable_versions
-    )
+            raise MirrorError("Cannot create directory '%s':" % path, str(e))
+    mirror_cache = spack.caches.MirrorCache(path, skip_unstable_versions=skip_unstable_versions)
     mirror_stats = MirrorStats()
     return mirror_cache, mirror_stats
 
@@ -670,10 +667,10 @@ def push_url_from_directory(output_directory):
     """Given a directory in the local filesystem, return the URL on
     which to push binary packages.
     """
-    scheme = url_util.parse(output_directory, scheme="<missing>").scheme
+    scheme = urllib.parse.urlparse(output_directory, scheme="<missing>").scheme
     if scheme != "<missing>":
         raise ValueError("expected a local path, but got a URL instead")
-    mirror_url = "file://" + output_directory
+    mirror_url = url_util.path_to_file_url(output_directory)
     mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
     return url_util.format(mirror.push_url)
 
@@ -688,7 +685,7 @@ def push_url_from_mirror_name(mirror_name):
 
 def push_url_from_mirror_url(mirror_url):
     """Given a mirror URL, return the URL on which to push binary packages."""
-    scheme = url_util.parse(mirror_url, scheme="<missing>").scheme
+    scheme = urllib.parse.urlparse(mirror_url, scheme="<missing>").scheme
     if scheme == "<missing>":
         raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
     mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
