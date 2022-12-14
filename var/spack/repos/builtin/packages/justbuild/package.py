@@ -22,6 +22,7 @@ class Justbuild(Package):
     maintainers = ["asartori86"]
 
     version("master", branch="master")
+    version("1.0.0", tag="v1.0.0")
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("wget", type=("build", "run"))
