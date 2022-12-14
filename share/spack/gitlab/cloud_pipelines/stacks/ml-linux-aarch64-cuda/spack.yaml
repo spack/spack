@@ -23,7 +23,8 @@ spack:
       require: ~cuda
     py-torch:
       # https://github.com/spack/spack/issues/34455
-      require: ~valgrind
+      # https://github.com/google/XNNPACK/issues/1551
+      require: ~valgrind~xnnpack
 
   definitions:
     - packages:

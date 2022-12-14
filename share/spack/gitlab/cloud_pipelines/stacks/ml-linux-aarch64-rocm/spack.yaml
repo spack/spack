@@ -23,7 +23,8 @@ spack:
     py-torch:
       # Does not yet support Spack-installed ROCm
       # https://github.com/spack/spack/issues/34455
-      require: ~rocm~valgrind
+      # https://github.com/google/XNNPACK/issues/1551
+      require: ~rocm~valgrind~xnnpack
 
   definitions:
     - packages:
