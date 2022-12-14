@@ -12,7 +12,7 @@
 connection = {
     "url": {"type": "string"},
     "access_pair": {"type": "array", "items": {"type": "string", "minItems": 2, "maxItems": 2}},
-    "access_token": {"type", "string"},
+    "access_token": {"type": "string"},
     "profile": {"type": "string"},
     "endpoint_url": {"type": "string"},
 }
