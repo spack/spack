@@ -43,6 +43,9 @@ class Fms(CMakePackage):
     version(
         "2020.04.01", sha256="2c409242de7dea0cf29f8dbf7495698b6bcac1eeb5c4599a728bdea172ffe37c"
     )
+    version(
+        "2019.01.03", sha256="60a5181e883e141f2fdd4a30c535a788d609bcbbbca4af7e1ec73f66f4e58dc0"
+    )
 
     variant(
         "64bit",
