@@ -8,6 +8,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
 """
 
+#: Common properties for connection specification
 connection = {
     "url": {"type": "string"},
     "access_pair": {"type": "array", "items": {"type": "string", "minItems": 2, "maxItems": 2}},
@@ -16,6 +17,7 @@ connection = {
     "endpoint_url": {"type": "string"},
 }
 
+#: Mirror connection inside pull/push keys
 mirror_conection = {
     "type": "object",
     "additionalProperties": False,
@@ -23,6 +25,7 @@ mirror_conection = {
     "properties": {**connection},
 }
 
+#: Mirror connection when no pull/push keys are set
 top_level_mirror_connection = {
     "type": "object",
     "additionalProperties": False,
