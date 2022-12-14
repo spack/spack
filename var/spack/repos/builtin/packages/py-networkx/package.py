@@ -17,6 +17,7 @@ class PyNetworkx(PythonPackage):
     version("2.7.1", sha256="d1194ba753e5eed07cdecd1d23c5cd7a3c772099bd8dbd2fea366788cf4de7ba")
     version("2.6.3", sha256="c0946ed31d71f1b732b5aaa6da5a0388a345019af232ce2f49c766e2d6795c51")
     version("2.5.1", sha256="109cd585cac41297f71103c3c42ac6ef7379f29788eb54cb751be5a663bb235a")
+    version("2.5", sha256="7978955423fbc9639c10498878be59caf99b44dc304c2286162fd24b458c1602")
     version("2.4", sha256="f8f4ff0b6f96e4f9b16af6b84622597b5334bf9cae8cf9b2e42e7985d5c95c64")
     version("2.3", sha256="8311ddef63cf5c5c5e7c1d0212dd141d9a1fe3f474915281b73597ed5f1d4e3d")
     version("2.2", sha256="45e56f7ab6fe81652fb4bc9f44faddb0e9025f469f602df14e3b2551c2ea5c8b")
