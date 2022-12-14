@@ -7,18 +7,19 @@
 
 from spack.package import *
 
+
 class Mel(MakefilePackage):
     """MPI implementation of Half-approximate Graph Matching"""
 
     homepage = "https://github.com/ECP-ExaGraph/mel"
-    git = "https://github.com/ECP-ExaGraph/mel.git" 
+    git = "https://github.com/ECP-ExaGraph/mel.git"
 
     maintainers = ["Cgbrl28"]
 
-    version("develop",branch="master")
+    version("develop", branch="master")
 
-    variant("openmp", default=True, description = "Openmp support")
-    variant("opt",default=True, description = "Opt flags")
+    variant("openmp", default=True, description="Openmp support")
+    variant("opt", default=True, description="Opt flags")
 
     depends_on("mpi")
 
@@ -26,7 +27,7 @@ class Mel(MakefilePackage):
     def build_targets(self):
         targets = []
         cxxflags = ["-std=c++17 -g"]
-        ldflags = [] 
+        ldflags = []
 
         if "+openmp" in self.spec:
             cxxflags.append(self.compiler.openmp_flag)
