@@ -15,7 +15,7 @@ class PyNeurotools(PythonPackage):
 
     version("0.3.1", sha256="a459420fc0e9ff6b59af28716ddb0c75d11a63b8db80a5f4844e0d7a90c2c653")
 
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
