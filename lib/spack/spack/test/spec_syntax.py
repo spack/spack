@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
+import sys
 
 import pytest
 
@@ -10,6 +11,8 @@ import spack.platforms.test
 import spack.spec
 import spack.variant
 from spack.parser import SpecParser, SpecTokenizationError, Token, TokenType
+
+is_windows = sys.platform == "win32"
 
 
 def simple_package_name(name):
@@ -834,6 +837,7 @@ def test_error_conditions(text, exc_cls):
         SpecParser(text).next_spec()
 
 
+@pytest.mark.skipif(is_windows, reason="Spec parsing does not currently support Windows paths")
 def test_parse_specfile_simple(specfile_for, tmpdir):
     specfile = tmpdir.join("libdwarf.json")
     s = specfile_for("libdwarf", specfile)
@@ -879,6 +883,7 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
     )
 
 
+@pytest.mark.skipif(is_windows, reason="Spec parsing does not currently support Windows paths")
 def test_parse_specfile_dependency(default_mock_concretization, tmpdir):
     """Ensure we can use a specfile as a dependency"""
     s = default_mock_concretization("libdwarf")

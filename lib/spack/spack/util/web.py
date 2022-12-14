@@ -15,6 +15,7 @@ import shutil
 import ssl
 import sys
 import traceback
+import urllib.parse
 from html.parser import HTMLParser
 from urllib.error import URLError
 from urllib.request import Request, urlopen
@@ -68,7 +69,7 @@ def uses_ssl(parsed_url):
         if not endpoint_url:
             return True
 
-        if url_util.parse(endpoint_url, scheme="https").scheme == "https":
+        if urllib.parse.urlparse(endpoint_url).scheme == "https":
             return True
 
     elif parsed_url.scheme == "gs":
@@ -79,7 +80,8 @@ def uses_ssl(parsed_url):
 
 
 def read_from_url(url, accept_content_type=None):
-    url = url_util.parse(url)
+    if isinstance(url, str):
+        url = urllib.parse.urlparse(url)
     context = None
 
     # Timeout in seconds for web requests
@@ -143,13 +145,9 @@ def read_from_url(url, accept_content_type=None):
 
 
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
-    if sys.platform == "win32":
-        if remote_path[1] == ":":
-            remote_path = "file://" + remote_path
-    remote_url = url_util.parse(remote_path)
-
-    remote_file_path = url_util.local_file_path(remote_url)
-    if remote_file_path is not None:
+    remote_url = urllib.parse.urlparse(remote_path)
+    if remote_url.scheme == "file":
+        remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
         if keep_original:
             shutil.copy(local_file_path, remote_file_path)
@@ -175,9 +173,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         while remote_path.startswith("/"):
             remote_path = remote_path[1:]
 
-        s3 = s3_util.create_s3_session(
-            remote_url, connection=s3_util.get_mirror_connection(remote_url)
-        )
+        s3 = s3_util.get_s3_session(remote_url, method="push")
         s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
@@ -367,7 +363,7 @@ def url_exists(url, curl=None):
     Returns (bool): True if it exists; False otherwise.
     """
     tty.debug("Checking existence of {0}".format(url))
-    url_result = url_util.parse(url)
+    url_result = urllib.parse.urlparse(url)
 
     # Check if a local file
     local_path = url_util.local_file_path(url_result)
@@ -377,9 +373,7 @@ def url_exists(url, curl=None):
     # Check if Amazon Simple Storage Service (S3) .. urllib-based fetch
     if url_result.scheme == "s3":
         # Check for URL-specific connection information
-        s3 = s3_util.create_s3_session(
-            url_result, connection=s3_util.get_mirror_connection(url_result)
-        )  # noqa: E501
+        s3 = s3_util.get_s3_session(url_result, method="fetch")
 
         try:
             s3.get_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
@@ -429,7 +423,7 @@ def _debug_print_delete_results(result):
 
 
 def remove_url(url, recursive=False):
-    url = url_util.parse(url)
+    url = urllib.parse.urlparse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
@@ -441,7 +435,7 @@ def remove_url(url, recursive=False):
 
     if url.scheme == "s3":
         # Try to find a mirror for potential connection information
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="push")
         bucket = url.netloc
         if recursive:
             # Because list_objects_v2 can only return up to 1000 items
@@ -538,9 +532,9 @@ def _iter_local_prefix(path):
 
 
 def list_url(url, recursive=False):
-    url = url_util.parse(url)
-
+    url = urllib.parse.urlparse(url)
     local_path = url_util.local_file_path(url)
+
     if local_path:
         if recursive:
             return list(_iter_local_prefix(local_path))
@@ -551,7 +545,7 @@ def list_url(url, recursive=False):
         ]
 
     if url.scheme == "s3":
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="fetch")
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
@@ -669,7 +663,7 @@ def spider(root_urls, depth=0, concurrency=32):
 
     collect = current_depth < depth
     for root in root_urls:
-        root = url_util.parse(root)
+        root = urllib.parse.urlparse(root)
         spider_args.append((root, collect))
 
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
@@ -708,11 +702,11 @@ def _urlopen(req, *args, **kwargs):
     del kwargs["context"]
 
     opener = urlopen
-    if url_util.parse(url).scheme == "s3":
+    if urllib.parse.urlparse(url).scheme == "s3":
         import spack.s3_handler
 
         opener = spack.s3_handler.open
-    elif url_util.parse(url).scheme == "gs":
+    elif urllib.parse.urlparse(url).scheme == "gs":
         import spack.gcs_handler
 
         opener = spack.gcs_handler.gcs_open

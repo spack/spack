@@ -20,6 +20,12 @@ class NfTowerCli(Package):
     if platform.machine() == "x86_64":
         if platform.system() == "Darwin":
             version(
+                "0.7.2",
+                sha256="b72093af9c8d61e0150eb9d56cedb67afc982d2432221ae0819aaa0c8826ff2b",
+                url="https://github.com/seqeralabs/tower-cli/releases/download/v0.7.2/tw-0.7.2-osx-x86_64",
+                expand=False,
+            )
+            version(
                 "0.7.1",
                 sha256="a4731d0d7f2c2d4219758126a8ee0b22a0a68464329d4be0a025ad7eb191e5c0",
                 url="https://github.com/seqeralabs/tower-cli/releases/download/v0.7.1/tw-0.7.1-osx-x86_64",
@@ -44,6 +50,12 @@ class NfTowerCli(Package):
                 expand=False,
             )
         elif platform.system() == "Linux":
+            version(
+                "0.7.2",
+                sha256="a66d1655d2f3d83db160a890e6b3f20f4573978aa9e8ea5d6e505958a2980e72",
+                url="https://github.com/seqeralabs/tower-cli/releases/download/v0.7.2/tw-0.7.2-linux-x86_64",
+                expand=False,
+            )
             version(
                 "0.7.1",
                 sha256="f3f8cf6b241f8935d4d90bd271809ca4cd7157ac476822483f458edbe54a1fa8",

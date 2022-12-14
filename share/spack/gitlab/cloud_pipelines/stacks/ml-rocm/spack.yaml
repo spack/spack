@@ -119,6 +119,7 @@ spack:
     mappings:
       - match:
           - llvm
+          - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "x86_64_v4" ]
           variables:
