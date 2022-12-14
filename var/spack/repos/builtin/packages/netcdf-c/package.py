@@ -275,6 +275,10 @@ class NetcdfC(AutotoolsPackage):
         # with a backed up version, which references Spack compiler wrapper.
         if os.path.exists(self._nc_config_backup_dir):
             env.prepend_path("PATH", self._nc_config_backup_dir)
+        # This alone doesn't work on Cray when they cray-mpich wrappers are off, because the
+        # compiler is simply called "cc"
+        if self.spec.satisfies("+mpi") and self.spec.satisfies("platform=cray"):
+            env.set("CC=%s" % self.spec["mpi"].mpicc)
 
     @run_after("install")
     def backup_nc_config(self):
