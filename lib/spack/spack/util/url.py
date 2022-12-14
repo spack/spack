@@ -18,6 +18,14 @@ import urllib.request
 from spack.util.path import convert_to_posix_path
 
 
+def validate_scheme(scheme):
+    """Returns true if the URL scheme is generally known to Spack. This function
+    helps mostly in validation of paths vs urls, as Windows paths such as
+    C:/x/y/z (with backward not forward slash) may parse as a URL with scheme
+    C and path /x/y/z."""
+    return scheme in ("file", "http", "https", "ftp", "s3", "gs", "ssh", "git")
+
+
 def _split_all(path):
     """Split path into its atomic components.
 
