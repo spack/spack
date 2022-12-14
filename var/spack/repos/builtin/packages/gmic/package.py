@@ -16,7 +16,7 @@ class Gmic(MakefilePackage):
     color images."""
 
     homepage = "https://gmic.eu/"
-    git="https://github.com/GreycLab/gmic.git"
+    git = "https://github.com/GreycLab/gmic.git"
 
     version("develop", branch="master")
     version("3.1.6", tag="v.3.1.6")
