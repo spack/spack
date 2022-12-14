@@ -34,6 +34,7 @@ class Libcint(CMakePackage):
     variant(
         "coulomb_erf", default=True, description="Enable attenuated coulomb operator integrals."
     )
+    variant("pypzpx", default=False, description="Enforce PYPZPX ordering of p-orbitals instead of PXPYPZ.")
     variant("test", default=False, description="Build test programs")
     variant("shared", default=True, description="Build the shared library")
 
@@ -54,7 +55,8 @@ class Libcint(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            "-DWITH_COULOMB_ERF=" + str("+coulomb_erf" in spec),
+            "-DWITH_RANGE_COULOMB=" + str("+coulomb_erf" in spec),
+            "-DPYPZPX=" + str("+pypzpx" in spec),
             "-DWITH_F12=" + str("+f12" in spec),
             "-DBUILD_SHARED_LIBS=" + str("+shared" in spec),
             "-DENABLE_TEST=" + str("+test" in spec),
