@@ -52,3 +52,8 @@ class PyDill(PythonPackage):
 
         url = url.format(version)
         return url
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        python("-c", "import dill, collections; dill.dumps(collections)")
