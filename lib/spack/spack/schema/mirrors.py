@@ -8,6 +8,28 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
 """
 
+connection = {
+    "url": {"type": "string"},
+    "access_pair": {"type": "array", "items": {"type": "string", "minItems": 2, "maxItems": 2}},
+    "access_token": {"type", "string"},
+    "profile": {"type": "string"},
+    "endpoint_url": {"type": "string"},
+}
+
+mirror_conection = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["url"],
+    "properties": {**connection},
+}
+
+top_level_mirror_connection = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["url"],
+    "properties": {"source": {"type": "boolean"}, "binary": {"type": "boolean"}, **connection},
+}
+
 #: Properties for inclusion in other schemas
 properties = {
     "mirrors": {
@@ -18,12 +40,14 @@ properties = {
             r"\w[\w-]*": {
                 "anyOf": [
                     {"type": "string"},
+                    top_level_mirror_connection,
                     {
                         "type": "object",
                         "required": ["fetch", "push"],
+                        "additionalProperties": False,
                         "properties": {
-                            "fetch": {"type": ["string", "object"]},
-                            "push": {"type": ["string", "object"]},
+                            "fetch": {"anyOf": [{"type": "string"}, mirror_conection]},
+                            "push": {"anyOf": [{"type": "string"}, mirror_conection]},
                         },
                     },
                 ]
