@@ -33,6 +33,8 @@ class Morphio(CMakePackage):
             '-DBUILD_BINDINGS:BOOL=OFF',
             '-DEXTERNAL_HIGHFIVE:BOOL=ON',
         ]
+        if not self.spec.satisfies('@develop'):
+            args.append(self.define("MorphIO_CXX_WARNINGS", "OFF"))
         if self.spec.satisfies('+mpi'):
             args += [
                 '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
