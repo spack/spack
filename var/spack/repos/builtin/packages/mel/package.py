@@ -22,7 +22,7 @@ class Mel(MakefilePackage):
 
     depends_on("mpi")
 
-   @property
+    @property
     def build_targets(self):
         targets = []
         cxxflags = ["-std=c++17 -g"]
