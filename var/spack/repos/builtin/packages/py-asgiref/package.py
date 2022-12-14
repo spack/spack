@@ -12,7 +12,7 @@ class PyAsgiref(PythonPackage):
     homepage = "https://asgi.readthedocs.io/en/latest/"
     url = "https://github.com/django/asgiref/archive/3.2.7.tar.gz"
 
-    version("3.5.2", sha256="4a29362a6acebe09bf1d6640db38c1dc3d9217c68e6f9f6204d72667fc19a424")
+    version("3.5.2", sha256="62f04f81110898e471a7d5b37f88c923c2864d43fa6abb66a95980becb1a2ba4")
     version("3.5.0", sha256="2f8abc20f7248433085eda803936d98992f1343ddb022065779f37c5da0181d0")
     version("3.2.7", sha256="8a0b556b9e936418475f6670d59e14592c41d15d00b5ea4ad26f2b46f9f4fb9a")
     version("3.2.6", sha256="29788163bdad8d494475a0137eba39b111fd86fbe825534a9376f9f2ab44251a")
