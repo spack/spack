@@ -1,0 +1,22 @@
+diff -ruN CMakeLists.txt spack-src/CMakeLists.txt
+--- CMakeLists.txt	2022-12-14 01:36:59.000000000 +0000
++++ spack-src/CMakeLists.txt	2022-12-14 01:37:41.000000000 +0000
+@@ -238,14 +238,14 @@
+ 
+ if (UNIX)
+    add_library(scalapack ${blacs} ${tools} ${tools-C} ${extra_lapack} ${pblas} ${pblas-F} ${ptzblas} ${ptools} ${pbblas} ${redist} ${src} ${src-C})
+-   target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
++   target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MPI_Fortran_LIBRARIES})
+    scalapack_install_library(scalapack)
+ else (UNIX) # Need to separate Fortran and C Code
+    OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON )
+-   add_library(scalapack ${blacs} ${tools-C} ${pblas} ${ptools} ${redist} ${src-C})
+-   target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
++   add_library(scalapack ${blacs} ${tools-C} ${pblas} ${ptools} ${redist} ${src-C} )
++   target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MPI_Fortran_LIBRARIES})
+    add_library(scalapack-F ${pblas-F} ${pbblas} ${ptzblas} ${tools} ${src} ${extra_lapack} )
+-   target_link_libraries( scalapack-F ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
++   target_link_libraries( scalapack-F ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MPI_Fortran_LIBRARIES})
+    scalapack_install_library(scalapack)
+    scalapack_install_library(scalapack-F)
+ endif (UNIX)
