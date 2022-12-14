@@ -566,7 +566,13 @@ def add(name, url, scope, args):
         tty.die("Mirror with name %s already exists." % name)
 
     items = [(n, u) for n, u in mirrors.items()]
-    if args.s3_access_key_id or args.s3_access_key_secret or args.s3_access_token or args.s3_profile or args.s3_endpoint_url:
+    if (
+        args.s3_access_key_id
+        or args.s3_access_key_secret
+        or args.s3_access_token
+        or args.s3_profile
+        or args.s3_endpoint_url
+    ):
         url_dict = {"url": url}
         if args.s3_access_key_id and args.s3_access_key_secret:
             url_dict["access_pair"] = (args.s3_access_key_id, args.s3_access_key_secret)
