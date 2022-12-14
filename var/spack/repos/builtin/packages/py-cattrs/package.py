@@ -16,9 +16,8 @@ class PyCattrs(PythonPackage):
     version("22.2.0", sha256="f0eed5642399423cf656e7b66ce92cdc5b963ecafd041d1b24d136fdde7acf6d")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     depends_on("py-poetry-core@1.1.0:", type="build")
 
     depends_on("py-attrs@20:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="^python@:3.7.99", type=("build", "run"))
-    depends_on("py-exceptiongroup", when="^python@:3.10.99", type=("build", "run"))
+    depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-exceptiongroup", when="^python@:3.10", type=("build", "run"))

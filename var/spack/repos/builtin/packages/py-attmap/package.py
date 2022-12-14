@@ -15,7 +15,6 @@ class PyAttmap(PythonPackage):
 
     version("0.13.2", sha256="fdffa45f8671c13428eb8c3a1702bfdd1123badb99f7af14d72ad53cc7e770de")
 
-    depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-ubiquerg@0.2.1:", type=("build", "run"))

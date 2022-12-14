@@ -15,8 +15,7 @@ class PyUrlNormalize(PythonPackage):
 
     version("1.4.3", sha256="d23d3a070ac52a67b83a1c59a0e68f8608d1cd538783b401bc9de2c0fac999b2")
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-poetry@1.0.0:", type="build")
+    depends_on("python@3.6:3", type=("build", "run"))
+    depends_on("py-poetry@0.12:", type="build")
 
     depends_on("py-six", type=("build", "run"))

@@ -15,5 +15,4 @@ class PyUbiquerg(PythonPackage):
 
     version("0.6.2", sha256="a9b1388799d4c366f956e0c912819099ad8f6cd0e5d890923cdde197f80d14cf")
 
-    depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

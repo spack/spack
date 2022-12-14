@@ -19,8 +19,7 @@ class PyFlitScm(PythonPackage):
     version("1.7.0", sha256="961bd6fb24f31bba75333c234145fff88e6de0a90fc0f7e5e7c79deca69f6bb2")
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
 
-    depends_on("py-flit-core@3.5:3.5.99", type=("build", "run"))
+    depends_on("py-flit-core@3.5:3", type=("build", "run"))
     depends_on("py-setuptools-scm@6.4:", type=("build", "run"))
-    depends_on("py-tomli", type=("build", "run"))
+    depends_on("py-tomli", when="^python@:3.10", type=("build", "run"))
