@@ -266,10 +266,7 @@ class BinaryCacheIndex(object):
                 None, just assumes all configured mirrors.
         """
         if find_hash not in self._mirrors_for_spec:
-            # Not found in the cached index, pull the latest from the server.
-            self.update(with_cooldown=True)
-        if find_hash not in self._mirrors_for_spec:
-            return None
+            return []
         results = self._mirrors_for_spec[find_hash]
         if not mirrors_to_check:
             return results
@@ -1186,7 +1183,7 @@ def generate_key_index(key_prefix, tmpdir=None):
 
 def _build_tarball(
     spec,
-    outdir,
+    out_url,
     force=False,
     relative=False,
     unsigned=False,
@@ -1209,8 +1206,7 @@ def _build_tarball(
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(cache_prefix, tarball_path_name(spec, ".spack"))
-
-    remote_spackfile_path = url_util.join(outdir, os.path.relpath(spackfile_path, tmpdir))
+    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
     if web_util.url_exists(remote_spackfile_path):
@@ -1229,7 +1225,7 @@ def _build_tarball(
     signed_specfile_path = "{0}.sig".format(specfile_path)
 
     remote_specfile_path = url_util.join(
-        outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir))
+        out_url, os.path.relpath(specfile_path, os.path.realpath(tmpdir))
     )
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 
@@ -1334,12 +1330,12 @@ def _build_tarball(
         # push the key to the build cache's _pgp directory so it can be
         # imported
         if not unsigned:
-            push_keys(outdir, keys=[key], regenerate_index=regenerate_index, tmpdir=tmpdir)
+            push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=tmpdir)
 
         # create an index.json for the build_cache directory so specs can be
         # found
         if regenerate_index:
-            generate_package_index(url_util.join(outdir, os.path.relpath(cache_prefix, tmpdir)))
+            generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, tmpdir)))
     finally:
         shutil.rmtree(tmpdir)
 
@@ -2084,8 +2080,8 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
         spec (spack.spec.Spec): The spec to look for in binary mirrors
         mirrors_to_check (dict): Optionally override the configured mirrors
             with the mirrors in this dictionary.
-        index_only (bool): Do not attempt direct fetching of ``spec.json``
-            files from remote mirrors, only consider the indices.
+        index_only (bool): When ``index_only`` is set to ``True``, only the local
+            cache is checked, no requests are made.
 
     Return:
         A list of objects, each containing a ``mirror_url`` and ``spec`` key
