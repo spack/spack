@@ -32,7 +32,7 @@ class PyDill(PythonPackage):
     # [this issue]: https://github.com/uqfoundation/dill/issues/566
     # [fixing PR]: https://github.com/uqfoundation/dill/pull/567
     # [this commit]: https://github.com/uqfoundation/dill/commit/23c47455da62d4cb8582d8f98f1de9fc6e0971ad
-    patch('fix-is-builtin-module.patch', when="@0.3.5:")
+    patch("fix-is-builtin-module.patch", when="@0.3.5:")
 
     depends_on("python@2.5:2.8,3.1:", type=("build", "run"))
     depends_on("python@2.6:2.8,3.1:", when="@0.3.0:", type=("build", "run"))
