@@ -37,6 +37,12 @@ class Brayns(CMakePackage):
     depends_on('zlib')
     depends_on('bzip2')
 
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/1133.patch",
+        sha256="a698a881dc2353dcf60a165f283017612d728c87a1b0abf8c24ec76a60bb8e6b",
+        when="@3.0.0%gcc@12:",
+    )
+
     def cmake_args(self):
         return [
             '-DBRAYNS_CIRCUITEXPLORER_ENABLED=ON',
