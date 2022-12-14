@@ -24,7 +24,6 @@ spack:
           - py-rtree
           - py-scikit-learn
           - py-scipy
-          - py-tensorflow
           - python-dev
           - py-virtualenv
         projections:
@@ -64,7 +63,6 @@ spack:
     - py-rtree
     - py-scikit-learn
     - py-scipy
-    - py-tensorflow
     - py-virtualenv
     - python-dev
     - sundials+int64
