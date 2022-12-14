@@ -113,7 +113,6 @@ class Reframe(Package):
         "reframe",
         "tutorials",
         "unittests",
-        "cscs-checks",
     ]
 
     # check if we can run reframe
