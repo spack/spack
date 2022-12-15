@@ -132,11 +132,11 @@ class Rocrand(CMakePackage):
         resource(
             name="hipRAND",
             git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
-            commit= d_commit,
+            commit=d_commit,
             destination="",
             placement="hiprand",
             when="@{0}".format(d_version),
-    )
+        )
     resource(
         name="hipRAND",
         git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
