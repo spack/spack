@@ -57,6 +57,7 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
+    variant("icb", default=False, when="@3.6:", description="Activates iso_c_binding support")
 
     # The function pdlamch10 does not set the return variable.
     # This is fixed upstream
@@ -126,6 +127,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("BLAS_INCLUDE_DIRS", spec["blas"].prefix.include),
             self.define("BLAS_LIBRARIES", blas_libs),
             self.define_from_variant("MPI", "mpi"),
+            self.define_from_variant("ICB", "icb"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
         ]
