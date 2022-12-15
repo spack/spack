@@ -339,7 +339,7 @@ class Glib(Package):
         # the gettext library directory. The patch below explitly adds the
         # appropriate -L path.
         spec = self.spec
-        if spec.satisfies("@2.0:2"):
+        if spec.satisfies("@2.0:2") and spec["gettext"].libs.directories:
             pattern = "Libs:"
             repl = "Libs: -L{0} -Wl,-rpath={0} ".format(spec["gettext"].libs.directories[0])
             myfile = join_path(self.spec["glib"].libs.directories[0], "pkgconfig", "glib-2.0.pc")
