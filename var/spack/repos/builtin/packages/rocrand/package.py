@@ -21,7 +21,8 @@ class Rocrand(CMakePackage):
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
     libraries = ["librocrand"]
-    version("master", branch="develop")
+    version("develop", branch="develop")
+    version("master", branch="master")
     version("5.3.0", sha256="be4c9f9433415bdfea50d9f47b8afb43ac315f205ed39674f863955a6c256dca")
     version("5.2.3", sha256="01eda8022fab7bafb2c457fe26a9e9c99950ed1b772ae7bf8710b23a90b56e32")
     version("5.2.1", sha256="4b2a7780f0112c12b5f307e1130e6b2c02ab984a0c1b94e9190dae38f0067600")
@@ -140,10 +141,18 @@ class Rocrand(CMakePackage):
     resource(
         name="hipRAND",
         git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
-        branch="develop",
+        branch="master",
         destination="",
         placement="hiprand",
         when="@master",
+    )
+    resource(
+        name="hipRAND",
+        git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+        branch="develop",
+        destination="",
+        placement="hiprand",
+        when="@develop",
     )
 
     for ver in [
