@@ -50,13 +50,13 @@ class PyMlflow(PythonPackage):
     depends_on("py-sqlalchemy@1.4.0:1", type=("build", "run"), when="~skinny")
     for platform in ["linux", "darwin", "cray"]:
         depends_on("py-gunicorn@:20", type=("build", "run"), when=f"~skinny platform={platform}")
-    depends_on("py-waitress@:2", type=("build", "run"), when="os=windows ~skinny")
+    depends_on("py-waitress@:2", type=("build", "run"), when="platform=windows ~skinny")
     depends_on("py-scikit-learn@:1", type=("build", "run"), when="~skinny")
     depends_on("py-pyarrow@4.0.0:10", type=("build", "run"), when="~skinny")
     depends_on("py-shap@0.40:0", type=("build", "run"), when="~skinny")
     depends_on("py-markdown@3.3:3", type=("build", "run"), when="~skinny")
     for platform in ["linux", "darwin", "cray"]:
         depends_on("py-jinja2@2.11:3", type=("build", "run"), when=f"~skinny platform={platform}")
-    depends_on("py-jinja2@3.0:3", type=("build", "run"), when="os=windows ~skinny")
+    depends_on("py-jinja2@3.0:3", type=("build", "run"), when="platform=windows ~skinny")
     depends_on("py-matplotlib@:3", type=("build", "run"), when="~skinny")
     depends_on("py-prometheus-flask-exporter", type=("build", "run"), when="~skinny")
