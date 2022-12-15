@@ -35,14 +35,13 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on("python@3.6:", type=("build", "run"), when="@3.0.0:")
     depends_on("python@3.7:", type=("build", "run"), when="@7.0.0:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@38.6.0:", type="build", when="@7.0.0:")
+    depends_on("py-setuptools@65.5.0:", type="build", when="@7.0.0:")
     depends_on("py-setuptools-scm", type="build", when="@0.15.0:")
     depends_on("py-cython", type="build")
     depends_on("py-cython@0.29:", type="build", when="@0.15.0:")
     depends_on("py-cython@0.29.22:", type="build", when="@8.0.0:")
     depends_on("py-numpy@1.14:", type=("build", "run"), when="@0.15.0:")
     depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@3.0.0:")
-    depends_on("py-six@1.0.0:", type=("build", "run"), when="@0.15.0")
 
     arrow_versions = (
         "@0.9.0",
@@ -54,6 +53,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
         "@4.0.1",
         "@7.0.0",
         "@8.0.0",
+        "@10.0.1",
     )
     for v in arrow_versions:
         depends_on("arrow+python" + v, when=v)
