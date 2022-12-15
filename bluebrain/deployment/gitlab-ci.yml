@@ -232,7 +232,7 @@ github_information:
     #
     # As we're using the underlying config, create a temporary file and
     # move afterwards
-    -     spack export --scope=user --module tcl --explicit --unbuildable intel-mkl likwid llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc' ${shas} > "spack_config/packages.yaml.tmp"
+    -     spack export --scope=user --module tcl --explicit --unbuildable intel-oneapi-mkl likwid llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc' ${shas} > "spack_config/packages.yaml.tmp"
     -     sed -e "/:':/{s/'//g}" "spack_config/packages.yaml.tmp" > "spack_config/packages.yaml"
     - fi
     # Fail if software fails to build!
