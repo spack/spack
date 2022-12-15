@@ -285,6 +285,7 @@ spack:
 
       - match:
           - cuda
+          - dealii
           - dray
           - dyninst
           - ginkgo
@@ -294,12 +295,22 @@ spack:
           - magma
           - mfem
           - mpich
+          - nvhpc
+          - oce
           - openturns
+          - plumed
           - precice
+          - py-tensorflow
+          - qt
           - raja
+          - rocfft
+          - rocsolver
+          - rocsparse
           - rust
           - slate
           - trilinos
+          - visit
+          - vtk
           - vtk-m
           - warpx
         runner-attributes:

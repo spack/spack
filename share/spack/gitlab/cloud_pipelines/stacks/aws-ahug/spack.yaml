@@ -288,6 +288,7 @@ spack:
         - magma
         - mfem
         - mpich
+        - nvhpc
         - openturns
         - precice
         - raja

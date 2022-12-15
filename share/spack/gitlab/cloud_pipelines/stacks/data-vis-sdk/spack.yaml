@@ -111,6 +111,7 @@ spack:
         - ecp-data-vis-sdk
         - mesa
         - openblas
+        - vtk
         - vtk-m
         runner-attributes:
           tags: [ "spack", "large", "x86_64" ]
