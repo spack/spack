@@ -50,7 +50,8 @@ def update(data):
     # Look for filesystem paths that should be replaced by URLs
     changed = False
 
-    for mirror, info in data.items():
+    for mirror in data:
+        info = data[mirror]
         if isinstance(info, str):
             if not url_util.is_path_instead_of_url(info):
                 continue
