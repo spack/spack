@@ -144,7 +144,7 @@ def setup_parser(subparser):
 
 
 def promote_deprecated_path_to_url(path_or_url):
-    # Spack tutorial still mention spac mirror add <name> <path>
+    # Spack tutorial still mentions spack mirror add <name> <path>
     # but the commands really expect URLs.
     if not url_util.is_path_instead_of_url(path_or_url):
         return path_or_url
