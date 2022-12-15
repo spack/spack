@@ -743,7 +743,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                     ("cvode/cuda/cvAdvDiff_kry_cuda", [], "Test CVODE with CUDA", True)
                 )
 
-        if "+hip" in self.spec:
+        if "+rocm" in self.spec:
             smoke_tests.append(
                 ("nvector/hip/test_nvector_hip", ["10", "0", "0"], "Test HIP N_Vector", True)
             )
