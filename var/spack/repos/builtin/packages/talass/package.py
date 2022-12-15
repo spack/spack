@@ -14,9 +14,12 @@ class Talass(CMakePackage):
     < StreamingTopology and any of the subsets can be build stand-
     alone."""
 
-    homepage = "http://www.cedmav.org/research/project/16-talass.html"
-    git = "ssh://git@bitbucket.org/cedmav/talass.git"
+    homepage = "http://www.cedmav.org/research/topology/72-talass.html"
+    git = "https://bitbucket.org/cedmav/talass.git"
 
+    maintainers = ["lpottier"]
+
+    version("process-statistics", branch="process-statistics")
     version("2018-10-29", commit="5d459c0dd89e733fa301391908a5b79fe2850ad7")
 
     # The default precision and index space sizes
