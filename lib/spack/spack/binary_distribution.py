@@ -40,6 +40,7 @@ import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
@@ -1833,10 +1834,13 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
-def extract_tarball(spec, download_result, allow_root=False, unsigned=False, force=False):
+def extract_tarball(
+    spec, download_result, allow_root=False, unsigned=False, force=False, timer=timer.NULL_TIMER
+):
     """
     extract binary tarball for given package into install area
     """
+    timer.start("extract")
     if os.path.exists(spec.prefix):
         if force:
             shutil.rmtree(spec.prefix)
@@ -1925,7 +1929,9 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         raise e
     os.remove(tarfile_path)
     os.remove(specfile_path)
+    timer.stop("extract")
 
+    timer.start("relocate")
     try:
         relocate_package(spec, allow_root)
     except Exception as e:
@@ -1944,6 +1950,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         if os.path.exists(filename):
             os.remove(filename)
         _delete_staged_downloads(download_result)
+    timer.stop("relocate")
 
 
 def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None):

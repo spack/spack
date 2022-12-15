@@ -397,15 +397,18 @@ def _process_binary_cache_tarball(
     tty.msg("Extracting {0} from binary cache".format(pkg_id))
 
     # don't print long padded paths while extracting/relocating binaries
-    timer.start("install")
     with spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            binary_spec, download_result, allow_root=False, unsigned=unsigned, force=False
+            binary_spec,
+            download_result,
+            allow_root=False,
+            unsigned=unsigned,
+            force=False,
+            timer=timer,
         )
 
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
-    timer.stop("install")
     return True
 
 
