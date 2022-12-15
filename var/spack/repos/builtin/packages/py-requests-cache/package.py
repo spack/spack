@@ -26,4 +26,4 @@ class PyRequestsCache(PythonPackage):
     depends_on("py-cattrs@22.2:", type=("build", "run"))
     # depends_on("py-platformdirs@2.5:", type=("build", "run"))  # will be in future versions
     depends_on("py-url-normalize@1.4:", type=("build", "run"))
-    depends_on("py-appdirs@1.4.4", type=("build", "run"))
+    depends_on("py-appdirs@1.4.4:", type=("build", "run"))
