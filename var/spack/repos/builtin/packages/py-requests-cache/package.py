@@ -18,7 +18,7 @@ class PyRequestsCache(PythonPackage):
     version("0.9.7", sha256="b7c26ea98143bac7058fad6e773d56c3442eabc0da9ea7480af5edfc134ff515")
 
     depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-poetry@1.0.0:", type="build")
+    depends_on("py-poetry-core@1.0.0:", type="build")
 
     depends_on("py-requests@2.22:", type=("build", "run"))
     depends_on("py-urllib3@1.25.5:", type=("build", "run"))
