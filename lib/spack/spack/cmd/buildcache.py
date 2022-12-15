@@ -712,9 +712,23 @@ def update_index(mirror_url, update_keys=False):
         bindist.generate_key_index(keys_url)
 
 
+def _mirror_url_from_args_deprecated_format(args):
+    # In Spack 0.19 the -d flag was equivalent to --mirror-url.
+    # Spack 0.20 deprecates this, so in 0.21 -d means --directory.
+    if args.directory and url_util.validate_scheme(urllib.parse.urlparse(args.directory).scheme):
+        tty.warn(
+            "Passing a URL to `update-index -d <url>` is deprecated "
+            "and will be removed in Spack 0.21. "
+            "Use `update-index --mirror-url <url>` instead."
+        )
+        return spack.mirror.push_url_from_mirror_url(args.directory)
+    else:
+        return _mirror_url_from_args(args)
+
+
 def update_index_fn(args):
     """Update a buildcache index."""
-    push_url = _mirror_url_from_args(args)
+    push_url = _mirror_url_from_args_deprecated_format(args)
     update_index(push_url, update_keys=args.keys)
 
 
