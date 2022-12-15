@@ -143,9 +143,22 @@ def setup_parser(subparser):
     )
 
 
+def promote_deprecated_path_to_url(path_or_url):
+    # Spack tutorial still mention spac mirror add <name> <path>
+    # but the commands really expect URLs.
+    if not url_util.is_path_instead_of_url(path_or_url):
+        return path_or_url
+
+    url = url_util.path_to_file_url(path_or_url)
+
+    tty.warn("Converted path to URL: {}.".format(url))
+
+    return path_or_url
+
+
 def mirror_add(args):
     """Add a mirror to Spack."""
-    url = url_util.format(args.url)
+    url = url_util.format(promote_deprecated_path_to_url(args.url))
     spack.mirror.add(args.name, url, args.scope, args)
 
 
@@ -156,7 +169,7 @@ def mirror_remove(args):
 
 def mirror_set_url(args):
     """Change the URL of a mirror."""
-    url = url_util.format(args.url)
+    url = url_util.format(promote_deprecated_path_to_url(args.url))
     mirrors = spack.config.get("mirrors", scope=args.scope)
     if not mirrors:
         mirrors = syaml_dict()

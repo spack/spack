@@ -20,6 +20,7 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
+import spack.schema.mirrors
 
 pytestmark = [
     pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows"),
@@ -312,3 +313,21 @@ def test_get_all_versions(specs, expected_specs):
     output_list = [str(x) for x in output_list]
     # Compare sets since order is not important
     assert set(output_list) == set(expected_specs)
+
+
+def test_mirror_update_path_to_url():
+    path = os.getcwd()
+    url = url_util.path_to_file_url(path)
+    old_config = {
+        "mirror_1": path,
+        "mirror_2": {
+            "push": {"url": path},
+            "fetch": {"url": path},
+        },
+    }
+    updated = spack.schema.mirrors.update(old_config)
+
+    assert updated
+    assert old_config["mirror_1"] == url
+    assert old_config["mirror_2"]["push"]["url"] == url
+    assert old_config["mirror_2"]["fetch"]["url"] == url
