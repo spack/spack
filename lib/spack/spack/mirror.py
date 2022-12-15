@@ -667,8 +667,7 @@ def push_url_from_directory(output_directory):
     """Given a directory in the local filesystem, return the URL on
     which to push binary packages.
     """
-    scheme = urllib.parse.urlparse(output_directory, scheme="<missing>").scheme
-    if scheme != "<missing>":
+    if url_util.validate_scheme(urllib.parse.urlparse(output_directory).scheme):
         raise ValueError("expected a local path, but got a URL instead")
     mirror_url = url_util.path_to_file_url(output_directory)
     mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
@@ -685,8 +684,7 @@ def push_url_from_mirror_name(mirror_name):
 
 def push_url_from_mirror_url(mirror_url):
     """Given a mirror URL, return the URL on which to push binary packages."""
-    scheme = urllib.parse.urlparse(mirror_url, scheme="<missing>").scheme
-    if scheme == "<missing>":
+    if not url_util.validate_scheme(urllib.parse.urlparse(mirror_url).scheme):
         raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
     mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
     return url_util.format(mirror.push_url)
