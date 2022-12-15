@@ -8,7 +8,7 @@ import re
 from spack.package import *
 
 
-class RoctracerDev(CMakePackage):
+class RoctracerDev(CMakePackage, ROCmPackage):
     """ROC-tracer library: Runtimes Generic Callback/Activity APIs.
     The goal of the implementation is to provide a generic independent from
     specific runtime profiler to trace API and asyncronous activity."""
@@ -81,7 +81,7 @@ class RoctracerDev(CMakePackage):
 
     @classmethod
     def determine_version(cls, lib):
-        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
+        match = re.search(r"rocm-(\d+)\.(\d+)\.(\d)/lib/lib\S*\.so\.\d+\.\d+\.\d+", lib)
         if match:
             ver = "{0}.{1}.{2}".format(
                 int(match.group(1)), int(match.group(2)), int(match.group(3))
@@ -89,10 +89,6 @@ class RoctracerDev(CMakePackage):
         else:
             ver = None
         return ver
-
-    def setup_build_environment(self, build_env):
-        spec = self.spec
-        build_env.set("HIP_PATH", spec["hip"].prefix),
 
     def patch(self):
         filter_file(
