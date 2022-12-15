@@ -298,7 +298,9 @@ class PythonPackage(PythonExtension):
         )
 
         python_externals_detected = [
-            d.spec for d in python_externals_detection.get("python", []) if d.prefix == self.spec.external_path
+            d.spec
+            for d in python_externals_detection.get("python", [])
+            if d.prefix == self.spec.external_path
         ]
         if python_externals_detected:
             return python_externals_detected[0]
