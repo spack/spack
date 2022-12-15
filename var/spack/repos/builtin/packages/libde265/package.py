@@ -19,10 +19,3 @@ class Libde265(CMakePackage):
     version("1.0.9", sha256="153554f407718a75f1e0ae197d35b43147ce282118a54f894554dbe27c32163d")
 
     depends_on("cmake@3.13:", type="build")
-
-    def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
-        return args
