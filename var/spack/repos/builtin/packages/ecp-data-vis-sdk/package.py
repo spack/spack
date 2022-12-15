@@ -92,7 +92,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     variant("vtkm", default=False, description="Enable VTK-m")
     variant("zfp", default=False, description="Enable ZFP")
 
-    variant("rebuildme", default=True, description="Change hash please")
+    variant("rebuildme", default=False, description="Change hash please")
 
     # Language Options
     variant("fortran", default=True, sticky=True, description="Enable fortran language features.")

@@ -407,8 +407,10 @@ def _process_binary_cache_tarball(
             timer=timer,
         )
 
+    timer.start("database")
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+    timer.stop("database")
     return True
 
 
