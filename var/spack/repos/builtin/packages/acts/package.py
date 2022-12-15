@@ -275,6 +275,8 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
+    depends_on("python@3.8:", when="+python @19.11:19")
+    depends_on("python@3.8:", when="+python @21:")
     depends_on("py-onnx-runtime", when="+onnx")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
