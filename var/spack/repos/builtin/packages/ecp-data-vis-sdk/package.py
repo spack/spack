@@ -156,7 +156,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("py-cinemasci", when="+cinema")
 
     dav_sdk_depends_on(
-        "paraview@5.10:+mpi+python+kits+shared+catalyst+libcatalyst",
+        "paraview@5.10:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst",
         when="+paraview",
         propagate=["hdf5", "adios2"],
     )
