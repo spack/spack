@@ -14,6 +14,7 @@ class Odc(CMakePackage):
 
     maintainers = ["skosukhin"]
 
+    version("1.4.5", sha256="8532d0453531d62e1f15791d1c5c96540b842913bd211a8ef090211eaf4cccae")
     version("1.3.0", sha256="97a4f10765b341cc8ccbbf203f5559cb1b838cbd945f48d4cecb1bc4305e6cd6")
 
     variant("fortran", default=False, description="Enable the Fortran interface")
