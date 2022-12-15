@@ -21,7 +21,7 @@ class Rocrand(CMakePackage):
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
     libraries = ["librocrand"]
-
+    version("master", branch="develop")
     version("5.3.0", sha256="be4c9f9433415bdfea50d9f47b8afb43ac315f205ed39674f863955a6c256dca")
     version("5.2.3", sha256="01eda8022fab7bafb2c457fe26a9e9c99950ed1b772ae7bf8710b23a90b56e32")
     version("5.2.1", sha256="4b2a7780f0112c12b5f307e1130e6b2c02ab984a0c1b94e9190dae38f0067600")
@@ -120,13 +120,30 @@ class Rocrand(CMakePackage):
     # same directory.
     patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:")
 
+    # Add hiprand sources thru the below
+    for d_version, d_commit in [
+        ("5.3.0", "125d691d3bcc6de5f5d63cf5f5a993c636251208"),
+        ("5.2.3", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
+        ("5.2.1", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
+        ("5.2.0", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
+        ("5.1.3", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
+        ("5.1.0", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
+    ]:
+        resource(
+            name="hipRAND",
+            git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
+            commit= d_commit,
+            destination="",
+            placement="hiprand",
+            when="@{0}".format(d_version),
+    )
     resource(
         name="hipRAND",
         git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
         branch="develop",
         destination="",
         placement="hiprand",
-        when="@5.1.0:",
+        when="@master",
     )
 
     for ver in [
