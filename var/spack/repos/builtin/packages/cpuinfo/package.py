@@ -10,11 +10,12 @@ class Cpuinfo(CMakePackage):
     """cpuinfo is a library to detect essential
     for performance optimization information about host CPU."""
 
-    homepage = "https://github.com/Maratyszcza/cpuinfo/"
-    git = "https://github.com/Maratyszcza/cpuinfo.git"
+    homepage = "https://github.com/pytorch/cpuinfo"
+    git = "https://github.com/pytorch/cpuinfo.git"
 
-    version("master", branch="master")
-    version("2020-12-17", commit="5916273f79a21551890fd3d56fc5375a78d1598d")  # py-torch@1.8:1.9
+    version("main", branch="main")
+    version("2022-08-19", commit="8ec7bd91ad0470e61cf38f618cc1f270dede599c")  # py-torch@1.13
+    version("2020-12-17", commit="5916273f79a21551890fd3d56fc5375a78d1598d")  # py-torch@1.8:1.12
     version("2020-06-11", commit="63b254577ed77a8004a9be6ac707f3dccc4e1fd9")  # py-torch@1.6:1.7
     version("2020-01-21", commit="0e6bde92b343c5fbcfe34ecd41abf9515d54b4a7")  # py-torch@1.5
     version("2019-01-17", commit="89fe1695edf9ee14c22f815f24bac45577a4f135")  # py-torch@1.0.1:1.4
@@ -25,33 +26,12 @@ class Cpuinfo(CMakePackage):
     depends_on("cmake@3.5:", type="build")
     depends_on("ninja", type="build")
 
-    resource(
-        name="googletest",
-        url="https://github.com/google/googletest/archive/release-1.10.0.zip",
-        sha256="94c634d499558a76fa649edb13721dce6e98fb1e7018dfaeba3cd7a083945e91",
-        destination="deps",
-        placement="googletest",
-    )
-    resource(
-        name="googlebenchmark",
-        url="https://github.com/google/benchmark/archive/v1.2.0.zip",
-        sha256="cc463b28cb3701a35c0855fbcefb75b29068443f1952b64dd5f4f669272e95ea",
-        destination="deps",
-        placement="googlebenchmark",
-    )
-
     generator = "Ninja"
 
     def cmake_args(self):
         return [
-            self.define(
-                "GOOGLETEST_SOURCE_DIR", join_path(self.stage.source_path, "deps", "googletest")
-            ),
-            self.define(
-                "GOOGLEBENCHMARK_SOURCE_DIR",
-                join_path(self.stage.source_path, "deps", "googlebenchmark"),
-            ),
-            self.define("CPUINFO_BUILD_UNIT_TESTS", self.run_tests),
-            self.define("CPUINFO_BUILD_MOCK_TESTS", self.run_tests),
-            self.define("CPUINFO_BUILD_BENCHMARKS", self.run_tests),
+            self.define("BUILD_SHARED_LIBS", True),
+            self.define("CPUINFO_BUILD_UNIT_TESTS", False),
+            self.define("CPUINFO_BUILD_MOCK_TESTS", False),
+            self.define("CPUINFO_BUILD_BENCHMARKS", False),
         ]
