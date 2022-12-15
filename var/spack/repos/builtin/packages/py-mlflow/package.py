@@ -37,7 +37,7 @@ class PyMlflow(PythonPackage):
     depends_on("py-pytz", type=("build", "run"))
     depends_on("py-requests@2.17.3:", type=("build", "run"))
     depends_on("py-packaging@:21", type=("build", "run"))
-    depends_on("py-importlib-metadata@3.7.0:4.6.4,4.7.1:5", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.7:4.6,4.7.1:5", type=("build", "run"))
     depends_on("py-sqlparse@0.4.0:0", type=("build", "run"))
 
     depends_on("py-alembic@:1", type=("build", "run"), when="~skinny")
