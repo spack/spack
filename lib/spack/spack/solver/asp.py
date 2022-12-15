@@ -2245,6 +2245,11 @@ class SpecBuilder(object):
         )
         self._specs[pkg].extra_attributes = spec_info.get("extra_attributes", {})
 
+        # If this is an extension, update the dependencies to include the extendee
+        package = self._specs[pkg].package_class(self._specs[pkg])
+        extendee_name = package.extendee_spec.name
+        package.update_external_dependencies(self._specs.get(extendee_name, None))
+
     def depends_on(self, pkg, dep, type):
         dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
 
@@ -2313,15 +2318,17 @@ class SpecBuilder(object):
     def sort_fn(function_tuple):
         name = function_tuple[0]
         if name == "hash":
-            return (-4, 0)
+            return (-5, 0)
         elif name == "node":
-            return (-3, 0)
+            return (-4, 0)
         elif name == "node_compiler":
-            return (-2, 0)
+            return (-3, 0)
         elif name == "node_flag":
-            return (-1, 0)
+            return (-2, 0)
+        elif name == "external_spec_selected":
+            return (0, 0)  # note out of order so this goes last
         else:
-            return (0, 0)
+            return (-1, 0)
 
     def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
@@ -2404,12 +2411,6 @@ class SpecBuilder(object):
             for spec in root.traverse():
                 if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_git_lookup(spec.fullname)
-
-        # Add synthetic edges for externals that are extensions
-        for root in self._specs.values():
-            for dep in root.traverse():
-                if dep.external:
-                    dep.package.update_external_dependencies()
 
         return self._specs
 

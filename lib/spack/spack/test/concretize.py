@@ -2001,3 +2001,17 @@ class TestConcretize(object):
         assert "python" in spec["py-extension1"]
         assert spec["python"].prefix == prefix
         assert spec["python"] == python_spec
+
+    def test_external_python_extension_find_unified_python(self, monkeypatch):
+        """Test that python extensions use the same python as other specs in unified env"""
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": "/fake"}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        abstract_specs = [spack.spec.Spec(s) for s in ["py-extension1", "python"]]
+        specs = spack.concretize.concretize_specs_together(*abstract_specs)
+        assert specs[0]["python"] == specs[1]["python"]

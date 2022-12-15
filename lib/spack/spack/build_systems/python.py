@@ -224,7 +224,7 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
-    def update_external_dependencies(self):
+    def update_external_dependencies(self, extendee_spec=None):
         """
         Ensure all external python packages have a python dependency
 
@@ -235,7 +235,9 @@ class PythonPackage(PythonExtension):
         """
         # TODO: Include this in the solve, rather than instantiating post-concretization
         if "python" not in self.spec:
-            if "python" in self.spec.root:
+            if extendee_spec:
+                python = extendee_spec
+            elif "python" in self.spec.root:
                 python = self.spec.root["python"]
             else:
                 python = self.get_external_python_for_prefix()
@@ -249,7 +251,7 @@ class PythonPackage(PythonExtension):
                         host_os = host_platform.operating_system("default_os")
                         host_target = host_platform.target("default_target")
                         python.architecture = spack.spec.ArchSpec(
-                            str(host_platform), str(host_os), str(host_target)
+                            (str(host_platform), str(host_os), str(host_target))
                         )
                     else:
                         if not python.architecture.platform:
@@ -263,7 +265,7 @@ class PythonPackage(PythonExtension):
                     if not python.compiler:
                         python.compiler = self.spec.compiler
 
-                    python.external_path = self.prefix
+                    python.external_path = self.spec.external_path
                     python._mark_concrete()
             self.spec.add_dependency_edge(python, ("build", "link", "run"))
 
@@ -277,7 +279,7 @@ class PythonPackage(PythonExtension):
         Third search: search this prefix for a python package
         """
         python_externals_installed = [
-            s for s in spack.store.db.query("python") if s.prefix == self.prefix
+            s for s in spack.store.db.query("python") if s.prefix == self.spec.external_path
         ]
         if python_externals_installed:
             return python_externals_installed[0]
@@ -286,17 +288,17 @@ class PythonPackage(PythonExtension):
         python_externals_configured = [
             spack.spec.Spec(item["spec"])
             for item in python_external_config
-            if item["prefix"] == self.prefix
+            if item["prefix"] == self.spec.external_path
         ]
         if python_externals_configured:
             return python_externals_configured[0]
 
         python_externals_detection = spack.detection.by_executable(
-            [spack.repo.path.get_pkg_class("python")], path_hints=[self.prefix]
+            [spack.repo.path.get_pkg_class("python")], path_hints=[self.spec.external_path]
         )
 
         python_externals_detected = [
-            d.spec for d in python_externals_detection.get("python", []) if d.prefix == self.prefix
+            d.spec for d in python_externals_detection.get("python", []) if d.prefix == self.spec.external_path
         ]
         if python_externals_detected:
             return python_externals_detected[0]
