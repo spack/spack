@@ -26,36 +26,12 @@ class Cpuinfo(CMakePackage):
     depends_on("cmake@3.5:", type="build")
     depends_on("ninja", type="build")
 
-    # No option to use pre-installed deps
-    # https://github.com/pytorch/cpuinfo/issues/5
-    resource(
-        name="googlebenchmark",
-        url="https://github.com/google/benchmark/archive/v1.6.1.zip",
-        sha256="367e963b8620080aff8c831e24751852cffd1f74ea40f25d9cc1b667a9dd5e45",
-        destination="deps",
-        placement="googlebenchmark",
-    )
-    resource(
-        name="googletest",
-        url="https://github.com/google/googletest/archive/release-1.11.0.zip",
-        sha256="353571c2440176ded91c2de6d6cd88ddd41401d14692ec1f99e35d013feda55a",
-        destination="deps",
-        placement="googletest",
-    )
-
     generator = "Ninja"
 
     def cmake_args(self):
         return [
             self.define("BUILD_SHARED_LIBS", True),
-            self.define(
-                "GOOGLEBENCHMARK_SOURCE_DIR",
-                join_path(self.stage.source_path, "deps", "googlebenchmark"),
-            ),
-            self.define(
-                "GOOGLETEST_SOURCE_DIR", join_path(self.stage.source_path, "deps", "googletest")
-            ),
-            self.define("CPUINFO_BUILD_UNIT_TESTS", self.run_tests),
-            self.define("CPUINFO_BUILD_MOCK_TESTS", self.run_tests),
-            self.define("CPUINFO_BUILD_BENCHMARKS", self.run_tests),
+            self.define("CPUINFO_BUILD_UNIT_TESTS", False),
+            self.define("CPUINFO_BUILD_MOCK_TESTS", False),
+            self.define("CPUINFO_BUILD_BENCHMARKS", False),
         ]
