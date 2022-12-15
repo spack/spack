@@ -496,10 +496,10 @@ class Result(object):
         best = min(self.answers)
         opt, _, answer = best
         for input_spec in self.abstract_specs:
-            key = input_spec.name
+            key = (input_spec.name, "0")
             if input_spec.virtual:
-                providers = [spec.name for spec in answer.values() if spec.package.provides(key)]
-                key = providers[0]
+                providers = [spec.name for spec in answer.values() if spec.package.provides(input_spec.name)]
+                key = (providers[0], "0")
             candidate = answer.get(key)
 
             if candidate and candidate.satisfies(input_spec):
@@ -1562,7 +1562,7 @@ class SpackSolverSetup(object):
                     for dtype in dspec.deptypes:
                         # skip build dependencies of already-installed specs
                         if concrete_build_deps or dtype != "build":
-                            clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
+                            clauses.append(fn.attr("depends_on_unknown", spec.name, dep.name, dtype))
 
                             # Ensure Spack will not coconcretize this with another provider
                             # for the same virtual
@@ -2171,89 +2171,102 @@ class SpecBuilder(object):
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
 
-    def hash(self, pkg, h):
-        if pkg not in self._specs:
-            self._specs[pkg] = self._hash_lookup[h]
+    def hash(self, pkg, psid, h):
+        key = (pkg, psid)
+        if key not in self._specs:
+            self._specs[key] = self._hash_lookup[h]
 
-    def node(self, pkg):
-        if pkg not in self._specs:
-            self._specs[pkg] = spack.spec.Spec(pkg)
+    def node(self, pkg, psid):
+        key = (pkg, psid)
+        if key not in self._specs:
+            self._specs[key] = spack.spec.Spec(pkg)
 
-    def _arch(self, pkg):
-        arch = self._specs[pkg].architecture
+    def _arch(self, pkg, psid):
+        key = (pkg, psid)
+        arch = self._specs[key].architecture
         if not arch:
             arch = spack.spec.ArchSpec()
-            self._specs[pkg].architecture = arch
+            self._specs[key].architecture = arch
         return arch
 
-    def node_platform(self, pkg, platform):
-        self._arch(pkg).platform = platform
+    def node_platform(self, pkg, psid, platform):
+        self._arch(pkg, psid).platform = platform
 
-    def node_os(self, pkg, os):
-        self._arch(pkg).os = os
+    def node_os(self, pkg, psid, os):
+        self._arch(pkg, psid).os = os
 
-    def node_target(self, pkg, target):
-        self._arch(pkg).target = target
+    def node_target(self, pkg, psid, target):
+        self._arch(pkg, psid).target = target
 
-    def variant_value(self, pkg, name, value):
+    def variant_value(self, pkg, psid, name, value):
         # FIXME: is there a way not to special case 'dev_path' everywhere?
+        key = (pkg, psid)
         if name == "dev_path":
-            self._specs[pkg].variants.setdefault(
+            self._specs[key].variants.setdefault(
                 name, spack.variant.SingleValuedVariant(name, value)
             )
             return
 
         if name == "patches":
-            self._specs[pkg].variants.setdefault(
+            self._specs[key].variants.setdefault(
                 name, spack.variant.MultiValuedVariant(name, value)
             )
             return
 
-        self._specs[pkg].update_variant_validate(name, value)
+        self._specs[key].update_variant_validate(name, value)
 
-    def version(self, pkg, version):
-        self._specs[pkg].versions = spack.version.ver([version])
+    def version(self, pkg, psid, version):
+        key = (pkg, psid)
+        self._specs[key].versions = spack.version.ver([version])
 
-    def node_compiler(self, pkg, compiler):
-        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
+    def node_compiler(self, pkg, psid, compiler):
+        key = (pkg, psid)
+        self._specs[key].compiler = spack.spec.CompilerSpec(compiler)
 
-    def node_compiler_version(self, pkg, compiler, version):
-        self._specs[pkg].compiler.versions = spack.version.VersionList([version])
+    def node_compiler_version(self, pkg, psid, compiler, version):
+        key = (pkg, psid)
+        self._specs[key].compiler.versions = spack.version.VersionList([version])
 
-    def node_flag_compiler_default(self, pkg):
-        self._flag_compiler_defaults.add(pkg)
+    def node_flag_compiler_default(self, pkg, psid):
+        key = (pkg, psid)
+        self._flag_compiler_defaults.add(key)
 
-    def node_flag(self, pkg, flag_type, flag):
-        self._specs[pkg].compiler_flags.add_flag(flag_type, flag, False)
+    def node_flag(self, pkg, psid, flag_type, flag):
+        key = (pkg, psid)
+        self._specs[key].compiler_flags.add_flag(flag_type, flag, False)
 
-    def node_flag_source(self, pkg, flag_type, source):
-        self._flag_sources[(pkg, flag_type)].add(source)
+    def node_flag_source(self, pkg, psid, flag_type, source):
+        self._flag_sources[(pkg, psid, flag_type)].add(source)
 
-    def no_flags(self, pkg, flag_type):
-        self._specs[pkg].compiler_flags[flag_type] = []
+    def no_flags(self, pkg, psid, flag_type):
+        key = (pkg, psid)
+        self._specs[key].compiler_flags[flag_type] = []
 
-    def external_spec_selected(self, pkg, idx):
+    def external_spec_selected(self, pkg, psid, idx):
         """This means that the external spec and index idx
         has been selected for this package.
         """
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
         spec_info = packages_yaml[pkg]["externals"][int(idx)]
-        self._specs[pkg].external_path = spec_info.get("prefix", None)
-        self._specs[pkg].external_modules = spack.spec.Spec._format_module_list(
+        key = (pkg, psid)
+        self._specs[key].external_path = spec_info.get("prefix", None)
+        self._specs[key].external_modules = spack.spec.Spec._format_module_list(
             spec_info.get("modules", None)
         )
-        self._specs[pkg].extra_attributes = spec_info.get("extra_attributes", {})
+        self._specs[key].extra_attributes = spec_info.get("extra_attributes", {})
 
-    def depends_on(self, pkg, dep, type):
-        dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
+    def depends_on(self, pkg, psid1, dep, psid2, type):
+        pkg_key = (pkg, psid1)
+        dep_key = (dep, psid2)
+        dependencies = self._specs[pkg_key].edges_to_dependencies(name=dep)
 
         # TODO: assertion to be removed when cross-compilation is handled correctly
         msg = "Current solver does not handle multiple dependency edges of the same name"
         assert len(dependencies) < 2, msg
 
         if not dependencies:
-            self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
+            self._specs[pkg_key].add_dependency_edge(self._specs[dep_key], (type,))
         else:
             # TODO: This assumes that each solve unifies dependencies
             dependencies[0].add_type(type)
@@ -2272,7 +2285,8 @@ class SpecBuilder(object):
         compilers = dict((c.spec, c) for c in all_compilers_in_config())
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
-        for spec in self._specs.values():
+        for key, spec in self._specs.items():
+            name, psid = key
             # if bootstrapping, compiler is not in config and has no flags
             flagmap_from_compiler = {}
             if spec.compiler in compilers:
@@ -2284,7 +2298,7 @@ class SpecBuilder(object):
 
                 # order is determined by the  DAG. A spec's flags come after any of its ancestors
                 # on the compile line
-                source_key = (spec.name, flag_type)
+                source_key = (spec.name, psid, flag_type)
                 if source_key in self._flag_sources:
                     order = [s.name for s in spec.traverse(order="post", direction="parents")]
                     sorted_sources = sorted(
@@ -2305,7 +2319,7 @@ class SpecBuilder(object):
 
                 spec.compiler_flags.update({flag_type: ordered_compiler_flags})
 
-    def deprecated(self, pkg, version):
+    def deprecated(self, pkg, psid, version):
         msg = 'using "{0}@{1}" which is a deprecated version'
         tty.warn(msg.format(pkg, version))
 
@@ -2353,12 +2367,14 @@ class SpecBuilder(object):
             # predicates on virtual packages.
             if name != "error":
                 pkg = args[0]
+                psid = args[1]
                 if spack.repo.path.is_virtual(pkg):
                     continue
 
                 # if we've already gotten a concrete spec for this pkg,
                 # do not bother calling actions on it.
-                spec = self._specs.get(pkg)
+                key = (pkg, psid)
+                spec = self._specs.get(key)
                 if spec and spec.concrete:
                     continue
 

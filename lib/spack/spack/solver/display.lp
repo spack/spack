@@ -10,9 +10,10 @@
 %==============================================================================
 
 % Spec attributes
-#show attr/2.
 #show attr/3.
 #show attr/4.
+#show attr/5.
+#show attr/6.
 
 % names of optimization criteria
 #show opt_criterion/2.

@@ -2933,9 +2933,10 @@ class Spec(object):
             providers = [spec.name for spec in answer.values() if spec.package.provides(name)]
             name = providers[0]
 
-        assert name in answer
+        key = (name, "0")
+        assert key in answer
 
-        concretized = answer[name]
+        concretized = answer[key]
         self._dup(concretized)
 
     def concretize(self, tests=False):
