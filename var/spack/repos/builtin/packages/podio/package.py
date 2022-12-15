@@ -122,7 +122,7 @@ class Podio(CMakePackage):
             # dynamicaly load the python bindings library
             env.prepend_path("LD_LIBRARY_PATH", self.spec["sio"].libs.directories[0])
 
-        if self.satisfies("@0.16.1:"):
+        if self.spec.satisfies("@0.16.1:"):
             # Frame header needs to be available for python bindings
             env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
 
