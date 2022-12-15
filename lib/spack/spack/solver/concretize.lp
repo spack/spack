@@ -250,6 +250,16 @@ dependency_holds(Package, PSID, Dependency, PSID, Type) :-
   condition_holds(ID, PSID),
   Type != "build".
 
+% If it holds as a build dep and as another dep, we keep it in one PSID
+dependency_holds(Package, PSID, Dependency, PSID, "build") :-
+  dependency_condition(ID, Package, Dependency),
+  dependency_type(ID, "build"),
+  dependency_type(ID, Type),
+  Type != "build",
+  build(Package, PSID),
+  not external(Package, PSID),
+  condition_holds(ID, PSID).
+
 1 { dependency_holds(Package, PSID, Dependency, PSID2, "build") : psid(PSID2) } 1
  :- dependency_condition(ID, Package, Dependency),
     dependency_type(ID, "build"),
