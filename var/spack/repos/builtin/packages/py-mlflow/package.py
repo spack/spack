@@ -21,7 +21,7 @@ class PyMlflow(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-click@7.0:8", type=("build", "run"))
-    depends_on("py-cloudpickle:2", type=("build", "run"))
+    depends_on("py-cloudpickle@:2", type=("build", "run"))
     depends_on("py-databricks-cli@0.8.7:0", type=("build", "run"))
     depends_on("py-entrypoints@:0", type=("build", "run"))
     depends_on("py-gitpython@2.1.0:3", type=("build", "run"))
