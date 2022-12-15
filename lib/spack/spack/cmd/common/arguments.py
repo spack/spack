@@ -5,6 +5,7 @@
 
 
 import argparse
+import os.path
 
 from llnl.util.lang import stable_partition
 
@@ -12,6 +13,7 @@ import spack.cmd
 import spack.config
 import spack.dependency as dep
 import spack.environment as ev
+import spack.mirror
 import spack.modules
 import spack.reporters
 import spack.spec
@@ -552,3 +554,42 @@ def use_buildcache(cli_arg_value):
             dependencies = val
 
     return package, dependencies
+
+
+def mirror_name_or_url(m):
+    # Look up mirror by name or use anonymous mirror with path/url.
+    # We want to guard against typos in mirror names, to avoid pushing
+    # accidentally to a dir in the current working directory.
+
+    # If there's a \ or / in the name, it's interpreted as a path or url.
+    if "/" in m or "\\" in m:
+        return spack.mirror.Mirror(m)
+
+    # Otherwise, the named mirror is required to exist.
+    try:
+        return spack.mirror.require_mirror_name(m)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(
+            str(e) + ". Did you mean {}?".format(os.path.join(".", m))
+        )
+
+
+def mirror_url(url):
+    try:
+        return spack.mirror.Mirror.from_url(url)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_directory(path):
+    try:
+        return spack.mirror.Mirror.from_local_path(path)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_name(name):
+    try:
+        return spack.mirror.require_mirror_name(name)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))

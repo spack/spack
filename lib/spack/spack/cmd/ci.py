@@ -241,8 +241,9 @@ def ci_reindex(args):
     ci_mirrors = yaml_root["mirrors"]
     mirror_urls = [url for url in ci_mirrors.values()]
     remote_mirror_url = mirror_urls[0]
+    mirror = spack.mirror.Mirror(remote_mirror_url)
 
-    buildcache.update_index(remote_mirror_url, update_keys=True)
+    buildcache.update_index(mirror, update_keys=True)
 
 
 def ci_rebuild(args):
