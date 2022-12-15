@@ -57,7 +57,7 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
-    variant("icb", default=False, description="Activates iso_c_binding support")
+    variant("icb", default=False, when="@3.6:", description="Activates iso_c_binding support")
 
     # The function pdlamch10 does not set the return variable.
     # This is fixed upstream
@@ -85,8 +85,6 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
         depends_on("autoconf", type="build")
         depends_on("libtool@2.4.2:", type="build")
         depends_on("pkgconfig", type="build")
-
-    conflicts("+icb", when="@:3.5.0")
 
     def flag_handler(self, name, flags):
         spec = self.spec
