@@ -9,7 +9,8 @@ from spack.package import *
 class Gexiv2(MesonPackage):
     """gexiv2 is a GObject wrapper around the Exiv2 photo metadata library.
 
-    It allows for GNOME applications to easily inspect and update EXIF, IPTC, and XMP metadata in photo and video files of various formats."""
+    It allows for GNOME applications to easily inspect and update EXIF, IPTC,
+    and XMP metadata in photo and video files of various formats."""
 
     homepage = "https://gitlab.gnome.org/GNOME/gexiv2"
     url = "https://download.gnome.org/sources/gexiv2/0.12/gexiv2-0.12.3.tar.xz"
@@ -21,8 +22,8 @@ class Gexiv2(MesonPackage):
     version("0.12.1", sha256="8aeafd59653ea88f6b78cb03780ee9fd61a2f993070c5f0d0976bed93ac2bd77")
     version("0.12.0", sha256="58f539b0386f36300b76f3afea3a508de4914b27e78f58ee4d142486a42f926a")
 
-    depends_on("pkgconfig",    type="build")
-    depends_on("cmake@3.4:",   type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("cmake@3.4:", type="build")
     depends_on("ninja@1.8.2:", type="build")
     depends_on("exiv2")
     depends_on("vala")
@@ -32,5 +33,5 @@ class Gexiv2(MesonPackage):
 
     def meson_args(self):
         # disable python2
-        args = ['-Dpython2_girdir=no']
+        args = ["-Dpython2_girdir=no"]
         return args

@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class Libwmf(AutotoolsPackage):
-    """libwmf is a library for reading vector images in Microsft's native Windows Metafile Format (WMF)"""
+    """libwmf is a library for reading vector images in Microsft's
+    native Windows Metafile Format (WMF)"""
 
     homepage = "https://github.com/caolanm/libwmf"
     url = "https://github.com/caolanm/libwmf/archive/refs/tags/v0.2.12.tar.gz"
@@ -30,5 +31,5 @@ class Libwmf(AutotoolsPackage):
     depends_on("zlib")
 
     def configure_args(self):
-        args = ['--disable-static']
+        args = ["--disable-static"]
         return args

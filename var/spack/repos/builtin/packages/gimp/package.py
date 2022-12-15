@@ -20,8 +20,8 @@ class Gimp(AutotoolsPackage):
 
     maintainers = ["benkirk"]
 
-    conflicts('platform=darwin',  msg='spack/GIMP currently requires Linux')
-    conflicts('platform=windows', msg='spack/GIMP currently requires Linux')
+    conflicts("platform=darwin", msg="spack/GIMP currently requires Linux")
+    conflicts("platform=windows", msg="spack/GIMP currently requires Linux")
 
     version("2.10.32", sha256="3f15c70554af5dcc1b46e6dc68f3d8f0a6cc9fe56b6d78ac08c0fd859ab89a25")
     version("2.10.30", sha256="88815daa76ed7d4277eeb353358bafa116cd2fcd2c861d95b95135c1d52b67dc")
@@ -29,15 +29,25 @@ class Gimp(AutotoolsPackage):
     version("2.10.26", sha256="5ddbccf1db462a41df9a26197fcb0d24c7152753a36b3c8b8a9506b4136395f7")
     version("2.10.24", sha256="bd1bb762368c0dd3175cf05006812dd676949c3707e21f4e6857435cb435989e")
 
-    variant("doc",         default=True,  description="Build documentation with gtk-doc")
-    variant("ghostscript", default=True,  description="Build with ghostscript support")
-    variant("jpegxl",      default=True,  description="Build with JPEG XL image format support")
-    #variant("libheif",     default=False, description="Build with the libheif HEIF and AVIF file format decoder and encoder.")
-    variant("libmng",      default=True,  description="Build with Multiple-Image Network Graphics support")
-    variant("libwmf",      default=True,  description="Build with libwmf Windows Windows Metafile Format (WMF) support")
-    variant("libxpm",      default=True,  description="Build with libxpm support")
-    variant("webp",        default=True,  description="Build with WebP support")
-    #variant("python",      default=False, description="Build with Python bindings")
+    variant("doc", default=True, description="Build documentation with gtk-doc")
+    variant("ghostscript", default=True, description="Build with ghostscript support")
+    variant("jpegxl", default=True, description="Build with JPEG XL image format support")
+    # variant(
+    #     "libheif",
+    #     default=False,
+    #     description="Build with the libheif HEIF and AVIF file format decoder and encoder."
+    # )
+    variant(
+        "libmng", default=True, description="Build with Multiple-Image Network Graphics support"
+    )
+    variant(
+        "libwmf",
+        default=True,
+        description="Build with libwmf Windows Windows Metafile Format (WMF) support",
+    )
+    variant("libxpm", default=True, description="Build with libxpm support")
+    variant("webp", default=True, description="Build with WebP support")
+    # variant("python",      default=False, description="Build with Python bindings")
 
     # ref. https://www.gimp.org/source/
     depends_on("pkgconfig", type="build")
@@ -53,7 +63,7 @@ class Gimp(AutotoolsPackage):
     depends_on("intltool")
     depends_on("jpeg")
     depends_on("libexif")
-    #depends_on("libheif+libde265", when="+libheif")
+    # depends_on("libheif+libde265", when="+libheif")
     depends_on("libjxl", when="+jpegxl")
     depends_on("libmng", when="+libmng")
     depends_on("libmypaint@1.4")
@@ -67,7 +77,7 @@ class Gimp(AutotoolsPackage):
     depends_on("mypaint-brushes@1.3")
     depends_on("openexr")
     depends_on("openjpeg")
-    #depends_on("python@3.6:", when="+python") # coming in 2.99
+    # depends_on("python@3.6:", when="+python") # coming in 2.99
     depends_on("pango@1.29.4:")
     depends_on("poppler+glib")
     depends_on("poppler-data@0.4.7:")
@@ -75,14 +85,14 @@ class Gimp(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            '--prefix={0}'.format(self.prefix),
-            '--disable-python',
-            '--without-webkit',
-            'GIO_USE_TLS=gnutls',
-            'GIO_EXTRA_MODULES={0}/lib/gio/modules'.format(self.spec['glib-networking'].prefix),
+            "--prefix={0}".format(self.prefix),
+            "--disable-python",
+            "--without-webkit",
+            "GIO_USE_TLS=gnutls",
+            "GIO_EXTRA_MODULES={0}/lib/gio/modules".format(self.spec["glib-networking"].prefix),
         ]
-        if '+libxpm' in self.spec:
-            args.append( '--with-libxpm={0}'.format(self.spec['libxpm'].prefix) )
+        if "+libxpm" in self.spec:
+            args.append("--with-libxpm={0}".format(self.spec["libxpm"].prefix))
         return args
 
     def check(self):

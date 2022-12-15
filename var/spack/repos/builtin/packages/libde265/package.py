@@ -9,7 +9,8 @@ from spack.package import *
 class Libde265(CMakePackage):
     """libde265 is an open source implementation of the h.265 video codec.
 
-    It is written from scratch and has a plain C API to enable a simple integration into other software."""
+    It is written from scratch and has a plain C API to enable
+    a simple integration into other software."""
 
     homepage = "https://www.libde265.org"
     url = "https://github.com/strukturag/libde265/archive/refs/tags/v1.0.9.tar.gz"

@@ -22,32 +22,33 @@ class Libmypaint(AutotoolsPackage):
     version("1.4.0", sha256="59d13b14c6aca0497095f29ee7228ca2499a923ba8e1dd718a2f2ecb45a9cbff")
     version("1.3.0", sha256="6a07d9d57fea60f68d218a953ce91b168975a003db24de6ac01ad69dcc94a671")
 
-    variant("gegl",          default=False, description="Enable GEGL based code in build")
-    variant("introspection", default=True,  description="Enable introspection for this build")
+    variant("gegl", default=False, description="Enable GEGL based code in build")
+    variant("introspection", default=True, description="Enable introspection for this build")
 
     depends_on("json-c")
     depends_on("perl@5.8.1:")
     depends_on("perl-xml-parser")
-    depends_on("babl",                  when="+gegl")
-    depends_on("gegl",                  when="+gegl")
+    depends_on("babl", when="+gegl")
+    depends_on("gegl", when="+gegl")
     depends_on("gobject-introspection", when="+introspection")
-    depends_on("glib",                  when="+introspection")
+    depends_on("glib", when="+introspection")
 
     def url_for_version(self, version):
         url = "https://github.com/mypaint/libmypaint/releases/download/v{0}/libmypaint-{0}.tar.xz"
         return url.format(version)
 
-
     def configure_args(self):
         args = []
 
-        if '+gegl' in self.spec:
-            args.extend('--enable-gegl=yes')
+        if "+gegl" in self.spec:
+            args.extend("--enable-gegl=yes")
 
-        if '+introspection' in self.spec:
-            args.extend([
-                '--enable-introspection=yes',
-                '--with-glib={0}'.format(self.spec['glib'].prefix),
-            ])
+        if "+introspection" in self.spec:
+            args.extend(
+                [
+                    "--enable-introspection=yes",
+                    "--with-glib={0}".format(self.spec["glib"].prefix),
+                ]
+            )
 
         return args
