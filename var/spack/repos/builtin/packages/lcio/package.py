@@ -19,6 +19,7 @@ class Lcio(CMakePackage):
     maintainers = ["gaede", "vvolkl"]
 
     version("master", branch="master")
+    version("2.19", sha256="2d6b37094d8d556ab0ba0efa632f10d8b851f533ca5c767e436397df18cb57c7")
     version("2.18", sha256="e722df7f4a6adcc2459ea1c6488a2a6e40bb04f7ee99536fdc60b51e6c80f565")
     version("2.17.1", sha256="e7e4e4399a53680dfb8cc497e7f59633a96361f8f9435d1b044a90fd3ad97ab7")
     version("2.17", sha256="a81e07790443f0e2d9abb18bc3b5f2929edbc8d8e4f307f931679eaa39bb044a")
