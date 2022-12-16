@@ -611,7 +611,7 @@ class ViewDescriptor(object):
         if (
             old_root
             and Path(old_root).exists()
-            and os.path.samefile(os.path.dirname(new_root), os.path.dirname(old_root))
+            and Path(os.path.dirname(new_root)).samefile(os.path.dirname(old_root))
         ):
             try:
                 shutil.rmtree(old_root)

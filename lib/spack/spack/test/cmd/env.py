@@ -6,6 +6,7 @@ import filecmp
 import glob
 import io
 import os
+from pathlib import Path
 import shutil
 import sys
 from argparse import Namespace
@@ -2846,7 +2847,7 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     # view is the original view from before the failed regenerate attempt.
     views_after = list(Path(all_views).iterdir())
     assert views_before == views_after
-    assert os.path.samefile(resolved_view, view)
+    assert Path(resolved_view).samefile(view)
 
 
 def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, install_mockery):
