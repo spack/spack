@@ -372,7 +372,7 @@ class DirectoryLayout(object):
         while path != self.root:
             if os.path.isdir(path):
                 try:
-                    os.rmdir(path)
+                    Path(path).rmdir()
                 except OSError as e:
                     if e.errno == errno.ENOENT:
                         # already deleted, continue with parent

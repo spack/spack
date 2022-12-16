@@ -442,7 +442,7 @@ def exploding_archive_handler(tarball_container, stage):
                     src = os.path.join(tarball_container, f)
                     dest = os.path.join(stage.path, f)
                     shutil.move(src, dest)
-            os.rmdir(tarball_container)
+            Path(tarball_container).rmdir()
         else:
             # This is a non-directory entry (e.g., a patch file) so simply
             # rename the tarball container to be the source path.
@@ -1391,7 +1391,7 @@ def remove_empty_directories(root):
         for sd in subdirs:
             sdp = os.path.join(dirpath, sd)
             try:
-                os.rmdir(sdp)
+                Path(sdp).rmdir()
             except OSError:
                 pass
 
