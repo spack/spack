@@ -581,7 +581,6 @@ def ci_rebuild(args):
             "GNUMAKEFLAGS=--output-sync=recurse",
         ],
         [
-            "time",
             MAKE_COMMAND,
             "SPACK={}".format(args_to_string(spack_cmd)),
             "SPACK_COLOR=always",
