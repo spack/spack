@@ -18,5 +18,5 @@ class PyBagitProfile(PythonPackage):
     depends_on("python@3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-bagit@0.9.8:", type=("build", "run"))
-    depends_on("py-requests@0.14.2:", type=("build", "run"))
+    depends_on("py-bagit", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"))
