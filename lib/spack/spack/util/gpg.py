@@ -383,13 +383,13 @@ def _socket_dir(gpgconf):
         var_run_user = os.path.join(var_run, "user")
         try:
             if not os.path.exists(var_run_user):
-                os.mkdir(var_run_user)
+                Path(var_run_user).mkdir()
                 Path(var_run_user).chmod(0o777)
 
             user_dir = os.path.join(var_run_user, str(os.getuid()))
 
             if not os.path.exists(user_dir):
-                os.mkdir(user_dir)
+                Path(user_dir).mkdir()
                 Path(user_dir).chmod(0o700)
 
         # If the above operation fails due to lack of permissions, then

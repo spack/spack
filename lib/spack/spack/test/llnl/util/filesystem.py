@@ -729,7 +729,7 @@ def test_lexists_islink_isdir(tmpdir):
     symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
     symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
 
-    os.mkdir(dir)
+    Path(dir).mkdir()
     with open(file, "wb") as f:
         f.write(b"file")
 

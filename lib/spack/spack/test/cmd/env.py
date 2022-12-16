@@ -2867,7 +2867,7 @@ def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, 
     shutil.rmtree(real_view)
 
     # Replace it with something new.
-    os.mkdir(real_view)
+    Path(real_view).mkdir()
     fs.touch(os.path.join(real_view, "file"))
 
     # Remove the symlink so Spack can't know about the "previous root"

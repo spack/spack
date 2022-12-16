@@ -677,7 +677,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
         with working_dir(self.stage.path):
             try:
-                os.mkdir("go")
+                Path("go").mkdir()
             except OSError:
                 pass
             env = dict(os.environ)

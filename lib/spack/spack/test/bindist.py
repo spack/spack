@@ -624,7 +624,7 @@ def test_build_manifest_visitor(tmpdir):
 
     with tmpdir.as_cwd():
         # Create a file inside a directory
-        os.mkdir(dir)
+        Path(dir).mkdir()
         with open(file, "wb") as f:
             f.write(b"example file")
 

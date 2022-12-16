@@ -684,7 +684,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Make the directory structure
         for dst in visitor.directories:
-            os.mkdir(os.path.join(self._root, dst))
+            Path(os.path.join(self._root, dst)).mkdir()
 
         # Then group the files to be linked by spec...
         # For compatibility, we have to create a merge_map dict mapping
@@ -727,7 +727,7 @@ class SimpleFilesystemView(FilesystemView):
             raise MergeConflictSummary(metadata_visitor.file_conflicts)
 
         for dst in metadata_visitor.directories:
-            os.mkdir(os.path.join(self._root, dst))
+            Path(os.path.join(self._root, dst)).mkdir()
 
         for dst_relpath, (src_root, src_relpath) in metadata_visitor.files.items():
             self.link(os.path.join(src_root, src_relpath), os.path.join(self._root, dst_relpath))

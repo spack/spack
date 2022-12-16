@@ -190,10 +190,10 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
     """
     j = os.path.join
     with tmpdir.as_cwd():
-        os.mkdir(j("a"))
-        os.mkdir(j("a", "b"))
-        os.mkdir(j("a", "b", "c"))
-        os.mkdir(j("a", "b", "c", "d"))
+        Path(j("a")).mkdir()
+        Path(j("a", "b")).mkdir()
+        Path(j("a", "b", "c")).mkdir()
+        Path(j("a", "b", "c", "d")).mkdir()
         os.symlink(j("b"), j("a", "symlink_b"))
         os.symlink(j("c"), j("a", "b", "symlink_c"))
         os.symlink(j("d"), j("a", "b", "c", "symlink_d"))
@@ -237,10 +237,10 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
     """
     j = os.path.join
     with tmpdir.as_cwd():
-        os.mkdir(j("a"))
+        Path(j("a")).mkdir()
         os.symlink(j("..", "b"), j("a", "symlink_b"))
         os.symlink(j("symlink_b"), j("a", "symlink_b_b"))
-        os.mkdir(j("b"))
+        Path(j("b")).mkdir()
         os.symlink(j("..", "a"), j("b", "symlink_a"))
 
     visitor = SourceMergeVisitor()
@@ -261,14 +261,14 @@ def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmpdir):
 
     # Here example_a and example_b are symlinks.
     with tmpdir.mkdir("dst").as_cwd():
-        os.mkdir("a")
+        Path("a").mkdir()
         os.symlink("a", "example_a")
         os.symlink("a", "example_b")
 
     # Here example_a is a directory, and example_b is a (non-expanded) symlinked
     # directory.
     with tmpdir.mkdir("src").as_cwd():
-        os.mkdir("example_a")
+        Path("example_a").mkdir()
         with open(j("example_a", "file"), "wb"):
             pass
         os.symlink("..", "example_b")
@@ -287,7 +287,7 @@ def test_destination_merge_visitor_file_dir_clashes(tmpdir):
     """Tests whether non-symlink file-dir and dir-file clashes as registered as fatal
     errors"""
     with tmpdir.mkdir("a").as_cwd():
-        os.mkdir("example")
+        Path("example").mkdir()
 
     with tmpdir.mkdir("b").as_cwd():
         with open("example", "wb"):

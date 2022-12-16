@@ -57,7 +57,7 @@ def test_shared_libraries_visitor(tmpdir):
         gcc("hello.c", "-o", "soname.so", "--shared", "-Wl,-soname,example.so")
         gcc("hello.c", "-pie", "-o", "executable.so")
         gcc("hello.c", "-o", "libskipme.so", "-Wl,-soname,libskipme.so")
-        os.mkdir("my_dir")
+        Path("my_dir").mkdir()
         os.symlink("..", os.path.join("my_dir", "parent_dir"))
         os.symlink(os.path.join("..", "libskipme.so"), os.path.join("my_dir", "skip_symlink"))
 

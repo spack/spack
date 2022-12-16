@@ -2614,7 +2614,7 @@ def flatten_dependencies(spec, flat_dir):
         dep_path = spack.store.layout.path_for_spec(dep)
         dep_files = LinkTree(dep_path)
 
-        os.mkdir(flat_dir + "/" + name)
+        Path(flat_dir + "/" + name).mkdir()
 
         conflict = dep_files.find_conflict(flat_dir + "/" + name)
         if conflict:

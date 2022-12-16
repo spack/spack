@@ -1770,14 +1770,14 @@ def noncyclical_dir_structure(tmpdir):
     d, j = tmpdir.mkdir("nontrivial-dir"), os.path.join
 
     with d.as_cwd():
-        os.mkdir(j("a"))
-        os.mkdir(j("a", "d"))
+        Path(j("a")).mkdir()
+        Path(j("a", "d")).mkdir()
         with open(j("a", "file_1"), "wb"):
             pass
         os.symlink(j("file_1"), j("a", "to_file_1"))
         os.symlink(j("..", "c"), j("a", "to_c"))
         os.symlink(j("a"), j("b"))
-        os.mkdir(j("c"))
+        Path(j("c")).mkdir()
         os.symlink(j("nowhere"), j("c", "dangling_link"))
         with open(j("c", "file_2"), "wb"):
             pass

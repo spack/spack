@@ -266,7 +266,7 @@ def test_compiler_find_path_order(no_compilers_yaml, working_env, clangdir):
     """Ensure that we find compilers that come first in the PATH first"""
 
     with clangdir.as_cwd():
-        os.mkdir("first_in_path")
+        Path("first_in_path").mkdir()
         shutil.copy("gcc-8", "first_in_path/gcc-8")
         shutil.copy("g++-8", "first_in_path/g++-8")
         shutil.copy("gfortran-8", "first_in_path/gfortran-8")

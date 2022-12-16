@@ -25,8 +25,8 @@ def test_environment_pickle(tmpdir):
 def test_error_on_nonempty_view_dir(tmpdir):
     """Error when the target is not an empty dir"""
     with tmpdir.as_cwd():
-        os.mkdir("empty_dir")
-        os.mkdir("nonempty_dir")
+        Path("empty_dir").mkdir()
+        Path("nonempty_dir").mkdir()
         with open(os.path.join("nonempty_dir", "file"), "wb"):
             pass
         os.symlink("empty_dir", "symlinked_empty_dir")
