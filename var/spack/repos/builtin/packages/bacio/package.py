@@ -39,3 +39,6 @@ class Bacio(CMakePackage):
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         return args
+
+    def patch(self):
+        filter_file(".*", "2.4.1", "VERSION", when="bacio@2.4.1")
