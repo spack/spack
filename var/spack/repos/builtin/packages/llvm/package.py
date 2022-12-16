@@ -205,6 +205,10 @@ class Llvm(CMakePackage, CudaPackage):
         "z3", default=False, when="+clang @8:", description="Use Z3 for the clang static analyzer"
     )
 
+    compiles("cxx", when="+clang")
+    can_inject("libstdcxx", when="+clang")
+    can_inject("libcxx", when="+libcxx +clang")
+
     provides("libllvm@14", when="@14.0.0:14")
     provides("libllvm@13", when="@13.0.0:13")
     provides("libllvm@12", when="@12.0.0:12")

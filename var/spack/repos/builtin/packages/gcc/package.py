@@ -144,6 +144,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="+bootstrap %gcc",
     )
 
+    compiles("c", when="languages=c")
+    compiles("cxx", when="languages=c++")
+    compiles("fortran", when="languages=fortran")
+    can_inject("libstdcxx")
+    can_inject("libgfortran")
+
     depends_on("flex", type="build", when="@master")
 
     # https://gcc.gnu.org/install/prerequisites.html

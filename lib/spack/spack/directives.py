@@ -59,6 +59,9 @@ __all__ = [
     "variant",
     "resource",
     "build_system",
+    "compiles",
+    "can_inject",
+    "language"
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -355,6 +358,66 @@ def version(ver, checksum=None, **kwargs):
     return _execute_version
 
 
+def _compiles(pkg, spec, when=None):
+    # pkg.compiles[name][when] = spec
+
+    # validate
+    when_spec = make_when_spec(when)
+    if not when_spec:
+        return
+    spec = spack.spec.Spec(spec)
+
+    if not spec.name:
+        raise ValueError("Invalid compiles directive in package '%s':" % pkg.name, spec)
+
+    # register
+    conditions = pkg.compiles.setdefault(spec.name, {})
+    if when_spec in conditions:
+        conditions[when_spec].constrain(spec, deps=False)
+    else:
+        conditions[when_spec] = spec
+
+
+def _language(pkg, spec, when=None):
+    # pkg.language[name][when] = spec
+
+    # validate
+    when_spec = make_when_spec(when)
+    if not when_spec:
+        return
+    spec = spack.spec.Spec(spec)
+
+    if not spec.name:
+        raise ValueError("Invalid language directive in package '%s':" % pkg.name, spec)
+
+    # register
+    conditions = pkg.language.setdefault(spec.name, {})
+    if when_spec in conditions:
+        conditions[when_spec].constrain(spec, deps=False)
+    else:
+        conditions[when_spec] = spec
+
+
+def _can_inject(pkg, spec, when=None):
+    # pkg.can_inject[name][when] = spec
+
+    # validate
+    when_spec = make_when_spec(when)
+    if not when_spec:
+        return
+    spec = spack.spec.Spec(spec)
+
+    if not spec.name:
+        raise ValueError("Invalid can_inject directive in package '%s':" % pkg.name, spec)
+
+    # register
+    conditions = pkg.can_inject.setdefault(spec.name, {})
+    if when_spec in conditions:
+        conditions[when_spec].constrain(spec, deps=False)
+    else:
+        conditions[when_spec] = spec
+
+
 def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
     when_spec = make_when_spec(when)
     if not when_spec:
@@ -462,6 +525,21 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
         _depends_on(pkg, spec, when=when, type=type, patches=patches)
 
     return _execute_depends_on
+
+
+@directive("compiles")
+def compiles(spec, when=None):
+    return lambda pkg: _compiles(pkg, spec, when=when)
+
+
+@directive("can_inject")
+def can_inject(spec, when=None):
+    return lambda pkg: _can_inject(pkg, spec, when=when)
+
+
+@directive("language")
+def language(spec, when=None):
+    return lambda pkg: _language(pkg, spec, when=when)
 
 
 @directive(("extendees", "dependencies"))
