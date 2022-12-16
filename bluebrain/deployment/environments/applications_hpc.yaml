@@ -49,7 +49,7 @@ spack:
     - neurodamus-thalamus+coreneuron+caliper
     - neurodamus-thalamus+coreneuron+caliper^coreneuron+knl
     - neuron+coreneuron+tests
-    - neuron+coreneuron+tests ^coreneuron+gpu~shared
+   #- neuron+coreneuron+tests ^coreneuron+gpu~shared
     - neuron+debug
     - nmodl
     - parquet-converters
