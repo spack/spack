@@ -260,14 +260,14 @@ def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
-    if not os.path.exists(env_path):
+    if not Path(env_path).exists():
         return []
 
     candidates = sorted(os.listdir(env_path))
     names = []
     for candidate in candidates:
         yaml_path = os.path.join(_root(candidate), manifest_name)
-        if valid_env_name(candidate) and os.path.exists(yaml_path):
+        if valid_env_name(candidate) and Path(yaml_path).exists():
             names.append(candidate)
     return names
 
@@ -590,7 +590,7 @@ class ViewDescriptor(object):
             view.add_specs(*specs, with_dependencies=False)
 
             # create symlink from tmp_symlink_name to new_root
-            if os.path.exists(tmp_symlink_name):
+            if Path(tmp_symlink_name).exists():
                 Path(tmp_symlink_name).unlink()
             symlink(new_root, tmp_symlink_name)
 
@@ -610,7 +610,7 @@ class ViewDescriptor(object):
         # was not created by the environment, but by the user.
         if (
             old_root
-            and os.path.exists(old_root)
+            and Path(old_root).exists()
             and os.path.samefile(os.path.dirname(new_root), os.path.dirname(old_root))
         ):
             try:
@@ -712,14 +712,14 @@ class Environment(object):
         """Reinitialize the environment object if it has been written (this
         may not be true if the environment was just created in this running
         instance of Spack)."""
-        if not os.path.exists(self.manifest_path):
+        if not Path(self.manifest_path).exists():
             return
 
         self.clear(re_read=True)
         self._read()
 
     def _read(self):
-        default_manifest = not os.path.exists(self.manifest_path)
+        default_manifest = not Path(self.manifest_path).exists()
         if default_manifest:
             # No manifest, use default yaml
             self._read_manifest(default_manifest_yaml())
@@ -727,7 +727,7 @@ class Environment(object):
             with open(self.manifest_path) as f:
                 self._read_manifest(f)
 
-        if os.path.exists(self.lock_path):
+        if Path(self.lock_path).exists():
             with open(self.lock_path) as f:
                 read_lock_version = self._read_lockfile(f)
             if default_manifest:
@@ -941,7 +941,7 @@ class Environment(object):
                 # Stage any remote configuration file(s)
                 staged_configs = (
                     os.listdir(self.config_stage_dir)
-                    if os.path.exists(self.config_stage_dir)
+                    if Path(self.config_stage_dir).exists()
                     else []
                 )
                 remote_path = urllib.request.url2pathname(include_url.path)
@@ -989,7 +989,7 @@ class Environment(object):
                 config_name = "env:%s:%s" % (self.name, os.path.basename(config_path))
                 tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
-            elif os.path.exists(config_path):
+            elif Path(config_path).exists():
                 # files are assumed to be SingleFileScopes
                 config_name = "env:%s:%s" % (self.name, config_path)
                 tty.debug(
@@ -2167,7 +2167,7 @@ class Environment(object):
         # which would not show up in even a string comparison between the two
         # keys).
         changed = not yaml_equivalent(self.yaml, self.raw_yaml)
-        written = os.path.exists(self.manifest_path)
+        written = Path(self.manifest_path).exists()
         if changed or not written:
             self.raw_yaml = copy.deepcopy(self.yaml)
             with fs.write_tmp_and_move(os.path.realpath(self.manifest_path)) as f:
@@ -2360,7 +2360,7 @@ def update_yaml(manifest, backup_file):
         'backup file "{0}" already exists on disk. Check its content '
         "and remove it before trying to update again."
     )
-    assert not os.path.exists(backup_file), msg.format(backup_file)
+    assert not Path(backup_file).exists(), msg.format(backup_file)
 
     shutil.copy(manifest, backup_file)
     with open(manifest, "w") as f:

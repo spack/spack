@@ -377,7 +377,7 @@ def _report_suite_results(test_suite, args, constraints):
     if not test_specs:
         return
 
-    if os.path.exists(test_suite.results_file):
+    if Path(test_suite.results_file).exists():
         results_desc = "Failing results" if args.failed else "Results"
         matching = ", spec matching '{0}'".format(" ".join(constraints)) if constraints else ""
         tty.msg("{0} for test suite '{1}'{2}:".format(results_desc, test_suite.name, matching))

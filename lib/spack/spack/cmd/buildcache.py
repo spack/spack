@@ -577,7 +577,7 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
         finally:
             temp_stage.destroy()
     finally:
-        if tmpdir and os.path.exists(tmpdir):
+        if tmpdir and Path(tmpdir).exists():
             shutil.rmtree(tmpdir)
 
 

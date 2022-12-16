@@ -83,7 +83,7 @@ def repo_add(args):
     canon_path = spack.util.path.canonicalize_path(path)
 
     # check if the path exists
-    if not os.path.exists(canon_path):
+    if not Path(canon_path).exists():
         tty.die("No such file or directory: %s" % path)
 
     # Make sure the path is a directory.

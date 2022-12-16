@@ -32,7 +32,7 @@ def test_create_db_tarball(tmpdir, database):
         )
 
         # debug command made an archive
-        assert os.path.exists(tarball_name)
+        assert Path(tarball_name).exists()
 
         # print contents of archive
         tar = which("tar")

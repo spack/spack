@@ -144,7 +144,7 @@ class FilePatch(Patch):
             # classes, not instances.
             pkg_dir = Path.resolve(os.path.dirname(cls.module.__file__))
             path = os.path.join(pkg_dir, self.relative_path)
-            if os.path.exists(path):
+            if Path(path).exists():
                 abs_path = path
                 break
 

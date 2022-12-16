@@ -139,7 +139,7 @@ def _fix_ext_suffix(candidate_spec):
     standard_extensions = fs.find(candidate_spec.prefix, expected["glob"])
     link_names = [re.sub(expected["re"], ext_suffix, s) for s in standard_extensions]
     for file_name, link_name in zip(standard_extensions, link_names):
-        if os.path.exists(link_name):
+        if Path(link_name).exists():
             continue
         os.symlink(file_name, link_name)
 
@@ -155,7 +155,7 @@ def _fix_ext_suffix(candidate_spec):
                 module=module, major=sys.version_info[0], minor=sys.version_info[1]
             ),
         )
-        if os.path.exists(link_name):
+        if Path(link_name).exists():
             continue
         os.symlink(abs_path, link_name)
 
@@ -184,7 +184,7 @@ def _executables_in_store(executables, query_spec, query_info=None):
             # IF we have a "bin" directory and it contains
             # the executables we are looking for
             if (
-                os.path.exists(bin_dir)
+                Path(bin_dir).exists()
                 and os.path.isdir(bin_dir)
                 and spack.util.executable.which_string(*executables, path=bin_dir)
             ):

@@ -61,7 +61,7 @@ def create_stage_root(path: str) -> None:
     group_paths, user_node, user_paths = partition_path(path, getpass.getuser())
 
     for p in group_paths:
-        if not os.path.exists(p):
+        if not Path(p).exists():
             # Ensure access controls of subdirs created above `$user` inherit
             # from the parent and share the group.
             par_stat = os.stat(os.path.dirname(p))
@@ -116,7 +116,7 @@ def _first_accessible_path(paths):
     for path in paths:
         try:
             # Ensure the user has access, creating the directory if necessary.
-            if os.path.exists(path):
+            if Path(path).exists():
                 if can_access(path):
                     return path
             else:
@@ -405,7 +405,7 @@ class Stage(object):
     def archive_file(self):
         """Path to the source archive within this stage directory."""
         for path in self.expected_archive_files:
-            if os.path.exists(path):
+            if Path(path).exists():
                 return path
         else:
             return None
@@ -413,7 +413,7 @@ class Stage(object):
     @property
     def expanded(self):
         """Returns True if source path expanded; else False."""
-        return os.path.exists(self.source_path)
+        return Path(self.source_path).exists()
 
     @property
     def source_path(self):
@@ -559,7 +559,7 @@ class Stage(object):
                 shutil.copy2(entry, dest)
 
         # copy archive file if we downloaded from url -- replaces for vcs
-        if self.archive_file and os.path.exists(self.archive_file):
+        if self.archive_file and Path(self.archive_file).exists():
             shutil.copy2(self.archive_file, dest)
 
         # remove leftover stage
@@ -607,7 +607,7 @@ class Stage(object):
 
         absolute_storage_path = os.path.join(mirror.root, self.mirror_paths.storage_path)
 
-        if os.path.exists(absolute_storage_path):
+        if Path(absolute_storage_path).exists():
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()
@@ -638,7 +638,7 @@ class Stage(object):
         Ensures the top-level (config:build_stage) directory exists.
         """
         # User has full permissions and group has only read permissions
-        if not os.path.exists(self.path):
+        if not Path(self.path).exists():
             mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
         elif not os.path.isdir(self.path):
             Path(self.path).unlink()
@@ -709,7 +709,7 @@ class ResourceStage(Stage):
             destination_path = os.path.join(target_path, value)
             source_path = os.path.join(self.source_path, key)
 
-            if not os.path.exists(destination_path):
+            if not Path(destination_path).exists():
                 tty.info(
                     "Moving resource stage\n\tsource: "
                     "{stage}\n\tdestination: {destination}".format(

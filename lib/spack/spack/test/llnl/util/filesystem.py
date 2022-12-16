@@ -58,7 +58,7 @@ class TestCopy:
         with fs.working_dir(str(stage)):
             fs.copy("source/1", "dest/1")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
 
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
@@ -66,7 +66,7 @@ class TestCopy:
         with fs.working_dir(str(stage)):
             fs.copy("source/1", "dest")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -74,8 +74,8 @@ class TestCopy:
         with fs.working_dir(str(stage)):
             fs.copy("source/a/*/*", "dest")
 
-            assert os.path.exists("dest/2")
-            assert os.path.exists("dest/3")
+            assert Path("dest/2").exists()
+            assert Path("dest/3").exists()
 
     def test_non_existing_src(self, stage):
         """Test using a non-existing source."""
@@ -111,7 +111,7 @@ class TestInstall:
         with fs.working_dir(str(stage)):
             fs.install("source/1", "dest/1")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
             check_added_exe_permissions("source/1", "dest/1")
 
     def test_dir_dest(self, stage):
@@ -120,7 +120,7 @@ class TestInstall:
         with fs.working_dir(str(stage)):
             fs.install("source/1", "dest")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
             check_added_exe_permissions("source/1", "dest/1")
 
     def test_glob_src(self, stage):
@@ -129,8 +129,8 @@ class TestInstall:
         with fs.working_dir(str(stage)):
             fs.install("source/a/*/*", "dest")
 
-            assert os.path.exists("dest/2")
-            assert os.path.exists("dest/3")
+            assert Path("dest/2").exists()
+            assert Path("dest/3").exists()
             check_added_exe_permissions("source/a/b/2", "dest/2")
             check_added_exe_permissions("source/a/b/3", "dest/3")
 
@@ -161,7 +161,7 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest")
 
-            assert os.path.exists("dest/a/b/2")
+            assert Path("dest/a/b/2").exists()
 
     def test_non_existing_dir(self, stage):
         """Test copying to a non-existing directory."""
@@ -169,7 +169,7 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest/sub/directory")
 
-            assert os.path.exists("dest/sub/directory/a/b/2")
+            assert Path("dest/sub/directory/a/b/2").exists()
 
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
@@ -177,10 +177,10 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest", symlinks=True)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             assert islink("dest/2")
 
-            assert os.path.exists("dest/a/b2")
+            assert Path("dest/a/b2").exists()
             with fs.working_dir("dest/a"):
                 assert os.path.exists(os.readlink("b2"))
 
@@ -192,9 +192,9 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             ignore = lambda p: p in ["c/d/e", "a"]
             fs.copy_tree("source", "dest", symlinks=True, ignore=ignore)
-            assert not os.path.exists("dest/a")
-            assert os.path.exists("dest/c/d")
-            assert not os.path.exists("dest/c/d/e")
+            assert not Path("dest/a").exists()
+            assert Path("dest/c/d").exists()
+            assert not Path("dest/c/d/e").exists()
 
     def test_symlinks_false(self, stage):
         """Test copying without symlink preservation."""
@@ -202,7 +202,7 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest", symlinks=False)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             if sys.platform != "win32":
                 assert not os.path.islink("dest/2")
 
@@ -212,9 +212,9 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source/g/*", "dest")
 
-            assert os.path.exists("dest/i/8")
-            assert os.path.exists("dest/i/9")
-            assert os.path.exists("dest/j/10")
+            assert Path("dest/i/8").exists()
+            assert Path("dest/i/9").exists()
+            assert Path("dest/j/10").exists()
 
     def test_non_existing_src(self, stage):
         """Test using a non-existing source."""
@@ -242,7 +242,7 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest")
 
-            assert os.path.exists("dest/a/b/2")
+            assert Path("dest/a/b/2").exists()
             check_added_exe_permissions("source/a/b/2", "dest/a/b/2")
 
     def test_non_existing_dir(self, stage):
@@ -251,7 +251,7 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest/sub/directory")
 
-            assert os.path.exists("dest/sub/directory/a/b/2")
+            assert Path("dest/sub/directory/a/b/2").exists()
             check_added_exe_permissions("source/a/b/2", "dest/sub/directory/a/b/2")
 
     def test_symlinks_true(self, stage):
@@ -260,7 +260,7 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest", symlinks=True)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             if sys.platform != "win32":
                 assert os.path.islink("dest/2")
             check_added_exe_permissions("source/2", "dest/2")
@@ -271,7 +271,7 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest", symlinks=False)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             if sys.platform != "win32":
                 assert not os.path.islink("dest/2")
             check_added_exe_permissions("source/2", "dest/2")
@@ -282,9 +282,9 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source/g/*", "dest")
 
-            assert os.path.exists("dest/i/8")
-            assert os.path.exists("dest/i/9")
-            assert os.path.exists("dest/j/10")
+            assert Path("dest/i/8").exists()
+            assert Path("dest/i/9").exists()
+            assert Path("dest/j/10").exists()
             check_added_exe_permissions("source/g/h/i/8", "dest/i/8")
             check_added_exe_permissions("source/g/h/i/9", "dest/i/9")
             check_added_exe_permissions("source/g/i/j/10", "dest/j/10")
@@ -638,12 +638,12 @@ def test_safe_remove(files_or_dirs, tmpdir):
     with pytest.raises(RuntimeError):
         with fs.safe_remove(*to_be_removed):
             for entry in to_be_removed:
-                assert not os.path.exists(entry)
+                assert not Path(entry).exists()
             raise RuntimeError("Mock a failure")
 
     # Assert that files are restored
     for entry in to_be_checked:
-        assert os.path.exists(entry)
+        assert Path(entry).exists()
 
 
 @pytest.mark.regression("18441")

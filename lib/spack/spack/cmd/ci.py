@@ -205,7 +205,7 @@ def ci_generate(args):
     else:
         output_file_path = Path(output_file).resolve()
         gen_ci_dir = os.path.dirname(output_file_path)
-        if not os.path.exists(gen_ci_dir):
+        if not Path(gen_ci_dir).exists():
             os.makedirs(gen_ci_dir)
 
     # Generate the jobs
@@ -223,7 +223,7 @@ def ci_generate(args):
 
     if copy_yaml_to:
         copy_to_dir = os.path.dirname(copy_yaml_to)
-        if not os.path.exists(copy_to_dir):
+        if not Path(copy_to_dir).exists():
             os.makedirs(copy_to_dir)
         shutil.copyfile(output_file, copy_yaml_to)
 
@@ -376,16 +376,16 @@ def ci_rebuild(args):
     # need to clean out the artifacts we may have got from upstream jobs.
 
     cdash_report_dir = os.path.join(pipeline_artifacts_dir, "cdash_report")
-    if os.path.exists(cdash_report_dir):
+    if Path(cdash_report_dir).exists():
         shutil.rmtree(cdash_report_dir)
 
-    if os.path.exists(job_log_dir):
+    if Path(job_log_dir).exists():
         shutil.rmtree(job_log_dir)
 
-    if os.path.exists(job_test_dir):
+    if Path(job_test_dir).exists():
         shutil.rmtree(job_test_dir)
 
-    if os.path.exists(repro_dir):
+    if Path(repro_dir).exists():
         shutil.rmtree(repro_dir)
 
     # Now that we removed them if they existed, create the directories we

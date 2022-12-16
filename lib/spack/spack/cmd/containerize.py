@@ -41,7 +41,7 @@ def containerize(parser, args):
 
     config_dir = args.env_dir or Path.cwd()
     config_file = Path.resolve(os.path.join(config_dir, "spack.yaml"))
-    if not os.path.exists(config_file):
+    if not Path(config_file).exists():
         msg = "file not found: {0}"
         raise ValueError(msg.format(config_file))
 

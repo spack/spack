@@ -96,7 +96,7 @@ class PythonExtension(spack.package_base.PackageBase):
         Specifically, this does not report errors for duplicate
         __init__.py files for packages in the same namespace.
         """
-        conflicts = list(dst for src, dst in merge_map.items() if os.path.exists(dst))
+        conflicts = list(dst for src, dst in merge_map.items() if Path(dst).exists())
 
         if conflicts and self.py_namespace:
             ext_map = view.extensions_layout.extension_map(self.extendee_spec)
@@ -114,7 +114,7 @@ class PythonExtension(spack.package_base.PackageBase):
         python_is_external = self.extendee_spec.external
         global_view = fs.same_path(python_prefix, view.get_projection_for_spec(self.spec))
         for src, dst in merge_map.items():
-            if os.path.exists(dst):
+            if Path(dst).exists():
                 continue
             elif global_view or not fs.path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)

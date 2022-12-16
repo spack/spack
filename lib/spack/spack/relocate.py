@@ -411,7 +411,7 @@ def _set_elf_rpaths(target, rpaths):
         msg = "patchelf --force-rpath --set-rpath {0} failed with error {1}"
         tty.warn(msg.format(target, e))
     finally:
-        if bak_path and os.path.exists(bak_path):
+        if bak_path and Path(bak_path).exists():
             Path(bak_path).unlink()
     return output
 
@@ -953,7 +953,7 @@ def ensure_binary_is_relocatable(filename, paths_to_relocate=None):
     """
     paths_to_relocate = paths_to_relocate or [spack.store.layout.root, spack.paths.prefix]
 
-    if not os.path.exists(filename):
+    if not Path(filename).exists():
         raise ValueError("{0} does not exist".format(filename))
 
     if not os.path.isabs(filename):
@@ -1106,7 +1106,7 @@ def fixup_macos_rpaths(spec):
     libs = frozenset(["lib", "lib64", "libexec", "plugins", "Library", "Frameworks"])
     prefix = spec.prefix
 
-    if not os.path.exists(prefix):
+    if not Path(prefix).exists():
         raise RuntimeError(
             "Could not fix up install prefix spec {0} because it does "
             "not exist: {1!s}".format(prefix, spec.name)

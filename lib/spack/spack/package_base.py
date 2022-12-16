@@ -1085,7 +1085,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
         old_filename = os.path.join(self.stage.path, "spack-build.env")
-        if os.path.exists(old_filename):
+        if Path(old_filename).exists():
             return old_filename
         else:
             return os.path.join(self.stage.path, _spack_build_envfile)
@@ -1111,7 +1111,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
         old_filename = os.path.join(self.metadata_dir, "build.env")
-        if os.path.exists(old_filename):
+        if Path(old_filename).exists():
             return old_filename
         else:
             return os.path.join(self.metadata_dir, _spack_build_envfile)
@@ -1122,7 +1122,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Backward compatibility: Return the name of an existing log path.
         for filename in ["spack-build.out", "spack-build.txt"]:
             old_log = os.path.join(self.stage.path, filename)
-            if os.path.exists(old_log):
+            if Path(old_log).exists():
                 return old_log
 
         # Otherwise, return the current log path name.
@@ -1142,7 +1142,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Backward compatibility: Return the name of an existing install log.
         for filename in ["build.out", "build.txt"]:
             old_log = os.path.join(self.metadata_dir, filename)
-            if os.path.exists(old_log):
+            if Path(old_log).exists():
                 return old_log
 
         # Otherwise, return the current install log path name.
@@ -1680,7 +1680,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # Check if we have a Makefile
         for makefile in ["GNUmakefile", "Makefile", "makefile"]:
-            if os.path.exists(makefile):
+            if Path(makefile).exists():
                 break
         else:
             tty.debug("No Makefile found in the build directory")
@@ -1741,7 +1741,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         ninja = inspect.getmodule(self).ninja
 
         # Check if we have a Ninja build script
-        if not os.path.exists("build.ninja"):
+        if not Path("build.ninja").exists():
             tty.debug("No Ninja build script found in the build directory")
             return False
 
@@ -2532,13 +2532,13 @@ def test_process(pkg, kwargs):
                     if spec.concrete:
                         cache_source = spec_pkg.install_test_root
                         cache_dir = pkg.test_suite.current_test_cache_dir
-                        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
+                        if os.path.isdir(cache_source) and not Path(cache_dir).exists():
                             fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test
                     data_dir = pkg.test_suite.current_test_data_dir
-                    if os.path.isdir(data_source) and not os.path.exists(data_dir):
+                    if os.path.isdir(data_source) and not Path(data_dir).exists():
                         # We assume data dir is used read-only
                         # maybe enforce this later
                         shutil.copytree(data_source, data_dir)

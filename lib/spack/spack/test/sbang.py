@@ -312,7 +312,7 @@ def check_sbang_installation(group=False):
     sbang_bin_dir = os.path.dirname(sbang_path)
     assert sbang_path.startswith(spack.store.store.unpadded_root)
 
-    assert os.path.exists(sbang_path)
+    assert Path(sbang_path).exists()
     assert fs.is_exe(sbang_path)
 
     status = os.stat(sbang_bin_dir)
@@ -335,7 +335,7 @@ def run_test_install_sbang(group):
     sbang_bin_dir = os.path.dirname(sbang_path)
 
     assert sbang_path.startswith(spack.store.store.unpadded_root)
-    assert not os.path.exists(sbang_bin_dir)
+    assert not Path(sbang_bin_dir).exists()
 
     sbang.install_sbang()
     check_sbang_installation(group)

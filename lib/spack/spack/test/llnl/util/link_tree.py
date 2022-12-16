@@ -74,7 +74,7 @@ def test_merge_to_new_directory(stage, link_tree):
 
         link_tree.unmerge("dest")
 
-        assert not os.path.exists("dest")
+        assert not Path("dest").exists()
 
 
 def test_merge_to_new_directory_relative(stage, link_tree):
@@ -99,7 +99,7 @@ def test_merge_to_new_directory_relative(stage, link_tree):
 
         link_tree.unmerge("dest")
 
-        assert not os.path.exists("dest")
+        assert not Path("dest").exists()
 
 
 def test_merge_to_existing_directory(stage, link_tree):
@@ -143,13 +143,13 @@ def test_merge_with_empty_directories(stage, link_tree):
         link_tree.merge("dest")
         link_tree.unmerge("dest")
 
-        assert not os.path.exists("dest/1")
-        assert not os.path.exists("dest/a/b/2")
-        assert not os.path.exists("dest/a/b/3")
-        assert not os.path.exists("dest/c/4")
-        assert not os.path.exists("dest/c/d/5")
-        assert not os.path.exists("dest/c/d/6")
-        assert not os.path.exists("dest/c/d/e/7")
+        assert not Path("dest/1").exists()
+        assert not Path("dest/a/b/2").exists()
+        assert not Path("dest/a/b/3").exists()
+        assert not Path("dest/c/4").exists()
+        assert not Path("dest/c/d/5").exists()
+        assert not Path("dest/c/d/6").exists()
+        assert not Path("dest/c/d/e/7").exists()
 
         assert os.path.isdir("dest/a/b/h")
         assert os.path.isdir("dest/f/g")
@@ -163,9 +163,9 @@ def test_ignore(stage, link_tree):
         link_tree.merge("dest", ignore=lambda x: x == ".spec")
         link_tree.unmerge("dest", ignore=lambda x: x == ".spec")
 
-        assert not os.path.exists("dest/1")
-        assert not os.path.exists("dest/a")
-        assert not os.path.exists("dest/c")
+        assert not Path("dest/1").exists()
+        assert not Path("dest/a").exists()
+        assert not Path("dest/c").exists()
 
         assert os.path.isfile("source/.spec")
         assert os.path.isfile("dest/.spec")

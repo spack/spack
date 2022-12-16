@@ -147,7 +147,7 @@ class TestAutotoolsPackage(object):
 
         # Assert the libtool archive is not there and we have
         # a log of removed files
-        assert not os.path.exists(s.package.builder.libtool_archive_file)
+        assert not Path(s.package.builder.libtool_archive_file).exists()
         search_directory = os.path.join(s.prefix, ".spack")
         libtool_deletion_log = fs.find(search_directory, "removed_la_files.txt", recursive=True)
         assert libtool_deletion_log
@@ -162,7 +162,7 @@ class TestAutotoolsPackage(object):
         s.package.do_install(explicit=True)
 
         # Assert libtool archives are installed
-        assert os.path.exists(s.package.builder.libtool_archive_file)
+        assert Path(s.package.builder.libtool_archive_file).exists()
 
     def test_autotools_gnuconfig_replacement(self, default_mock_concretization, mutable_database):
         """

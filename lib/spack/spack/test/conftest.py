@@ -786,7 +786,7 @@ def no_compilers_yaml(mutable_config):
         if not local_config.path:  # skip internal scopes
             continue
         compilers_yaml = os.path.join(local_config.path, "compilers.yaml")
-        if os.path.exists(compilers_yaml):
+        if Path(compilers_yaml).exists():
             Path(compilers_yaml).unlink()
 
 

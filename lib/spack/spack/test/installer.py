@@ -1271,7 +1271,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     # Make sure the package is not marked uninstalled and the original dir
     # is back.
     assert not fake_db.called
-    assert os.path.exists(installed_file)
+    assert Path(installed_file).exists()
 
 
 def test_overwrite_install_backup_failure(temporary_store, config, mock_packages, tmpdir):

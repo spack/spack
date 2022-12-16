@@ -902,7 +902,7 @@ echo "/Library/Developer"
     real_listdir = os.listdir
 
     def _listdir(path):
-        if not os.path.exists(path):
+        if not Path(path).exists():
             return []
         return real_listdir(path)
 

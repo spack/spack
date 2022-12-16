@@ -364,10 +364,10 @@ class Database(object):
         self.prefix_fail_path = os.path.join(self._db_dir, "prefix_failures")
 
         # Create needed directories and files
-        if not is_upstream and not os.path.exists(self._db_dir):
+        if not is_upstream and not Path(self._db_dir).exists():
             fs.mkdirp(self._db_dir)
 
-        if not is_upstream and not os.path.exists(self._failure_dir):
+        if not is_upstream and not Path(self._failure_dir).exists():
             fs.mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
@@ -1044,7 +1044,7 @@ class Database(object):
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
-            if os.path.exists(temp_file):
+            if Path(temp_file).exists():
                 Path(temp_file).unlink()
             raise
 

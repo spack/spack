@@ -265,7 +265,7 @@ def root_path(name, module_set_name):
 
 def generate_module_index(root, modules, overwrite=False):
     index_path = os.path.join(root, "module-index.yaml")
-    if overwrite or not os.path.exists(index_path):
+    if overwrite or not Path(index_path).exists():
         entries = syaml.syaml_dict()
     else:
         with open(index_path) as index_file:
@@ -295,7 +295,7 @@ ModuleIndexEntry = collections.namedtuple("ModuleIndexEntry", ["path", "use_name
 
 def read_module_index(root):
     index_path = os.path.join(root, "module-index.yaml")
-    if not os.path.exists(index_path):
+    if not Path(index_path).exists():
         return {}
     with open(index_path, "r") as index_file:
         return _read_module_index(index_file)
@@ -694,7 +694,7 @@ class BaseContext(tengine.Context):
             msg = "unknown, software installed outside of Spack"
             return msg
 
-        if os.path.exists(pkg.install_configure_args_path):
+        if Path(pkg.install_configure_args_path).exists():
             with open(pkg.install_configure_args_path, "r") as args_file:
                 return args_file.read()
 
@@ -851,7 +851,7 @@ class BaseModuleFileWriter(object):
 
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.layout.filename):
+        if not overwrite and Path(self.layout.filename).exists():
             message = "Module file {0.filename} exists and will not be overwritten"
             tty.warn(message.format(self.layout))
             return
@@ -863,7 +863,7 @@ class BaseModuleFileWriter(object):
         # If the directory where the module should reside does not exist
         # create it
         module_dir = os.path.dirname(self.layout.filename)
-        if not os.path.exists(module_dir):
+        if not Path(module_dir).exists():
             llnl.util.filesystem.mkdirp(module_dir)
 
         # Get the template for the module
@@ -905,7 +905,7 @@ class BaseModuleFileWriter(object):
             f.write(text)
 
         # Set the file permissions of the module to match that of the package
-        if os.path.exists(self.layout.filename):
+        if Path(self.layout.filename).exists():
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
         # Symlink defaults if needed
@@ -924,7 +924,7 @@ class BaseModuleFileWriter(object):
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
-        if os.path.exists(mod_file):
+        if Path(mod_file).exists():
             try:
                 Path(mod_file).unlink()  # Remove the module file
                 os.removedirs(

@@ -311,7 +311,7 @@ def list(parser, args):
 
     if args.update:
         # change output stream if user asked for update
-        if os.path.exists(args.update):
+        if Path(args.update).exists():
             if os.path.getmtime(args.update) > spack.repo.path.last_mtime():
                 tty.msg("File is up to date: %s" % args.update)
                 return

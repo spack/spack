@@ -992,7 +992,7 @@ def read_config_file(filename, schema=None):
     # schema when it's not necessary) while allowing us to validate against a
     # known schema when the top-level key could be incorrect.
 
-    if not os.path.exists(filename):
+    if not Path(filename).exists():
         # Ignore nonexistent files.
         tty.debug("Skipping nonexistent config path {0}".format(filename), level=3)
         return None

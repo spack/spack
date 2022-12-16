@@ -22,7 +22,7 @@ def current_host_platform():
     """Return the platform of the current host as detected by the
     'platform' stdlib package.
     """
-    if os.path.exists("/opt/cray/pe"):
+    if Path("/opt/cray/pe").exists():
         current_platform = spack.platforms.Cray()
     elif "Linux" in platform.system():
         current_platform = spack.platforms.Linux()

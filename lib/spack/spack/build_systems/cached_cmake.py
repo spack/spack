@@ -164,10 +164,10 @@ class CachedCMakeBuilder(CMakeBuilder):
                 mpiexec = os.path.join(spec["slurm"].prefix.bin, "srun")
         else:
             mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpirun")
-            if not os.path.exists(mpiexec):
+            if not Path(mpiexec).exists():
                 mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpiexec")
 
-        if not os.path.exists(mpiexec):
+        if not Path(mpiexec).exists():
             msg = "Unable to determine MPIEXEC, %s tests may fail" % self.pkg.name
             entries.append("# {0}\n".format(msg))
             tty.warn(msg)

@@ -1326,11 +1326,11 @@ class CommitLookup(object):
 
         # prepare a cache for the repository
         dest_parent = os.path.dirname(dest)
-        if not os.path.exists(dest_parent):
+        if not Path(dest_parent).exists():
             mkdirp(dest_parent)
 
         # Only clone if we don't have it!
-        if not os.path.exists(dest):
+        if not Path(dest).exists():
             self.fetcher.clone(dest, bare=True)
 
         # Lookup commit info

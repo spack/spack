@@ -472,7 +472,7 @@ def get_change_revisions():
     """If this is a git repo get the revisions to use when checking
     for changed packages and spack core modules."""
     git_dir = os.path.join(spack.paths.prefix, ".git")
-    if os.path.exists(git_dir) and os.path.isdir(git_dir):
+    if Path(git_dir).exists() and os.path.isdir(git_dir):
         # TODO: This will only find changed packages from the last
         # TODO: commit.  While this may work for single merge commits
         # TODO: when merging the topic branch into the base, it will
@@ -747,7 +747,7 @@ def generate_gitlab_ci_yaml(
     # Now that we've added the mirrors we know about, they should be properly
     # reflected in the environment manifest file, so copy that into the
     # concrete environment directory, along with the spack.lock file.
-    if not os.path.exists(concrete_env_dir):
+    if not Path(concrete_env_dir).exists():
         os.makedirs(concrete_env_dir)
     shutil.copyfile(env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
     shutil.copyfile(env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
@@ -1317,7 +1317,7 @@ def generate_gitlab_ci_yaml(
             # Write out the file describing specs that should be copied
             copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
 
-            if not os.path.exists(copy_specs_dir):
+            if not Path(copy_specs_dir).exists():
                 os.makedirs(copy_specs_dir)
 
             copy_specs_file = os.path.join(
@@ -1596,7 +1596,7 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
         job_test_dir (str): the destination artifacts test directory
     """
     tty.debug("test stage: {0}".format(test_stage))
-    if not os.path.exists(test_stage):
+    if not Path(test_stage).exists():
         msg = "Cannot copy test logs: job test stage ({0}) does not exist"
         tty.error(msg.format(test_stage))
         return
@@ -1637,7 +1637,7 @@ def download_and_extract_artifacts(url, work_dir):
 
     artifacts_zip_path = os.path.join(work_dir, "artifacts.zip")
 
-    if not os.path.exists(work_dir):
+    if not Path(work_dir).exists():
         os.makedirs(work_dir)
 
     with open(artifacts_zip_path, "wb") as out_file:
@@ -1654,7 +1654,7 @@ def get_spack_info():
     """If spack is running from a git repo, return the most recent git log
     entry, otherwise, return a string containing the spack version."""
     git_path = os.path.join(spack.paths.prefix, ".git")
-    if os.path.exists(git_path):
+    if Path(git_path).exists():
         git = spack.util.git.git()
         if git:
             with fs.working_dir(spack.paths.prefix):
@@ -1689,7 +1689,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     print("merge_commit: {0}".format(merge_commit))
 
     dot_git_path = os.path.join(spack.paths.prefix, ".git")
-    if not os.path.exists(dot_git_path):
+    if not Path(dot_git_path).exists():
         tty.error("Unable to find the path to your local spack clone")
         return False
 

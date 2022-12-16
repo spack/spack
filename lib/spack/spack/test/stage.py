@@ -142,12 +142,12 @@ def check_destroy(stage, stage_name):
     stage_path = get_stage_path(stage, stage_name)
 
     # check that the stage dir/link was removed.
-    assert not os.path.exists(stage_path)
+    assert not Path(stage_path).exists()
 
     # tmp stage needs to remove tmp dir too.
     if not stage.managed_by_spack:
         target = os.path.realpath(stage_path)
-        assert not os.path.exists(target)
+        assert not Path(target).exists()
 
 
 def check_setup(stage, stage_name, archive):
@@ -416,7 +416,7 @@ class TestStage(object):
         with Stage(test_noexpand_fetcher) as stage:
             stage.fetch()
             stage.expand_archive()
-            assert os.path.exists(stage.archive_file)
+            assert Path(stage.archive_file).exists()
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_noexpand_resource(
@@ -460,7 +460,7 @@ class TestStage(object):
 
         for fname in mock_resource.files:
             file_path = os.path.join(root_stage.source_path, "resource-dir", fname)
-            assert os.path.exists(file_path)
+            assert Path(file_path).exists()
 
         # Perform a little cleanup
         shutil.rmtree(root_stage.path)
@@ -490,7 +490,7 @@ class TestStage(object):
 
         for fname in mock_resource.files:
             file_path = os.path.join(root_stage.source_path, "resource-expand", fname)
-            assert os.path.exists(file_path)
+            assert Path(file_path).exists()
 
         # Perform a little cleanup
         shutil.rmtree(root_stage.path)
@@ -658,7 +658,7 @@ class TestStage(object):
         source_path = stage.source_path
         assert source_path
         assert source_path.endswith(spack.stage._source_path_subdir)
-        assert not os.path.exists(source_path)
+        assert not Path(source_path).exists()
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
     @pytest.mark.skipif(getuid() == 0, reason="user is root")
@@ -702,7 +702,7 @@ class TestStage(object):
             if getpass.getuser() in str(test_path).split(os.sep):
                 # Simply ensure directory created if tmpdir includes user
                 spack.stage.create_stage_root(test_path)
-                assert os.path.exists(test_path)
+                assert Path(test_path).exists()
 
                 p_stat = os.stat(test_path)
                 assert p_stat.st_mode & stat.S_IRWXU == stat.S_IRWXU
@@ -830,9 +830,9 @@ class TestStage(object):
             spack.stage.purge()
 
             if purged:
-                assert not os.path.exists(test_path)
+                assert not Path(test_path).exists()
             else:
-                assert os.path.exists(test_path)
+                assert Path(test_path).exists()
                 shutil.rmtree(test_path)
 
     def test_stage_constructor_no_fetcher(self):
@@ -882,7 +882,7 @@ class TestStage(object):
 
         stage.destroy()  # A no-op
         assert stage.path == path  # Ensure can still access attributes
-        assert os.path.exists(stage.source_path)  # Ensure path still exists
+        assert Path(stage.source_path).exists()  # Ensure path still exists
 
     def test_diystage_preserve_file(self, tmpdir):
         """Ensure DIYStage preserves an existing file."""

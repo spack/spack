@@ -179,7 +179,7 @@ def _reset(args):
         # If we are outside of an env scope delete the bootstrap.yaml file
         bootstrap_yaml = os.path.join(scope.path, "bootstrap.yaml")
         backup_file = bootstrap_yaml + ".bkp"
-        if os.path.exists(bootstrap_yaml):
+        if Path(bootstrap_yaml).exists():
             shutil.move(bootstrap_yaml, backup_file)
 
         spack.config.config.clear_caches()
@@ -335,11 +335,11 @@ def _add(args):
 
     # Check that the metadata file exists
     metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir)
-    if not os.path.exists(metadata_dir) or not os.path.isdir(metadata_dir):
+    if not Path(metadata_dir).exists() or not os.path.isdir(metadata_dir):
         raise RuntimeError('the directory "{0}" does not exist'.format(args.metadata_dir))
 
     file = os.path.join(metadata_dir, "metadata.yaml")
-    if not os.path.exists(file):
+    if not Path(file).exists():
         raise RuntimeError('the file "{0}" does not exist'.format(file))
 
     # Insert the new source as the highest priority one

@@ -513,7 +513,7 @@ def dump_packages(spec, path):
 
         # Create a destination repository
         dest_repo_root = os.path.join(path, node.namespace)
-        if not os.path.exists(dest_repo_root):
+        if not Path(dest_repo_root).exists():
             spack.repo.create_repo(dest_repo_root)
         repo = spack.repo.Repo(dest_repo_root)
 
@@ -583,10 +583,10 @@ def log(pkg):
     fs.install(pkg.env_mods_path, pkg.install_env_path)
 
     # Archive the install-phase test log, if present
-    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
+    if pkg.test_install_log_path and Path(pkg.test_install_log_path).exists():
         fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
 
-    if os.path.exists(pkg.configure_args_path):
+    if Path(pkg.configure_args_path).exists():
         # Archive the args used for the build
         fs.install(pkg.configure_args_path, pkg.install_configure_args_path)
 
@@ -1433,7 +1433,7 @@ class PackageInstaller(object):
         Args:
             pkg (spack.package_base.PackageBase): the package to be built and installed
         """
-        if not os.path.exists(pkg.spec.prefix):
+        if not Path(pkg.spec.prefix).exists():
             path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
             tty.debug("Creating the installation directory {0}".format(path))
             spack.store.layout.create_install_directory(pkg.spec)
@@ -1579,7 +1579,7 @@ class PackageInstaller(object):
 
         # If the install prefix is missing, warn about it, and proceed with
         # normal install.
-        if not os.path.exists(task.pkg.prefix):
+        if not Path(task.pkg.prefix).exists():
             tty.debug("Missing installation to overwrite")
             return InstallAction.INSTALL
 

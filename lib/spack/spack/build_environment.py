@@ -1320,7 +1320,7 @@ class ChildError(InstallError):
         out = io.StringIO()
         out.write(self._long_message if self._long_message else "")
 
-        have_log = self.log_name and os.path.exists(self.log_name)
+        have_log = self.log_name and Path(self.log_name).exists()
 
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show

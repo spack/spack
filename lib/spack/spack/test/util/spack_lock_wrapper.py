@@ -24,16 +24,16 @@ def test_disable_locking(tmpdir):
         lock = lk.Lock(lock_path)
 
         lock.acquire_read()
-        assert not os.path.exists(lock_path)
+        assert not Path(lock_path).exists()
 
         lock.acquire_write()
-        assert not os.path.exists(lock_path)
+        assert not Path(lock_path).exists()
 
         lock.release_write()
-        assert not os.path.exists(lock_path)
+        assert not Path(lock_path).exists()
 
         lock.release_read()
-        assert not os.path.exists(lock_path)
+        assert not Path(lock_path).exists()
 
     assert old_value == spack.config.get("config:locks")
 

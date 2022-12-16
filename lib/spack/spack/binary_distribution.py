@@ -835,7 +835,7 @@ def select_signing_key(key=None):
 
 def sign_specfile(key, force, specfile_path):
     signed_specfile_path = "%s.sig" % specfile_path
-    if os.path.exists(signed_specfile_path):
+    if Path(signed_specfile_path).exists():
         if force:
             Path(signed_specfile_path).unlink()
         else:
@@ -1753,17 +1753,17 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     with closing(tarfile.open(spackfile_path, "r")) as tar:
         tar.extractall(extract_to)
     # some buildcache tarfiles use bzip2 compression
-    if not os.path.exists(tarfile_path):
+    if not Path(tarfile_path).exists():
         tarfile_name = tarball_name(spec, ".tar.bz2")
         tarfile_path = os.path.join(extract_to, tarfile_name)
 
-    if os.path.exists(json_path):
+    if Path(json_path).exists():
         specfile_path = json_path
     else:
         raise ValueError("Cannot find spec file for {0}.".format(extract_to))
 
     if not unsigned:
-        if os.path.exists("%s.asc" % specfile_path):
+        if Path("%s.asc" % specfile_path).exists():
             suppress = config.get("config:suppress_gpg_warnings", False)
             try:
                 spack.util.gpg.verify("%s.asc" % specfile_path, specfile_path, suppress)
@@ -1793,7 +1793,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     """
     extract binary tarball for given package into install area
     """
-    if os.path.exists(spec.prefix):
+    if Path(spec.prefix).exists():
         if force:
             shutil.rmtree(spec.prefix)
         else:
@@ -1891,13 +1891,13 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         manifest_file = os.path.join(
             spec.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
         )
-        if not os.path.exists(manifest_file):
+        if not Path(manifest_file).exists():
             spec_id = spec.format("{name}/{hash:7}")
             tty.warn("No manifest file in tarball for spec %s" % spec_id)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
-        if os.path.exists(filename):
+        if Path(filename).exists():
             Path(filename).unlink()
         _delete_staged_downloads(download_result)
 
@@ -2119,9 +2119,9 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
             link = os.path.join(keys_url, fingerprint + ".pub")
 
             with Stage(link, name="build_cache", keep=True) as stage:
-                if os.path.exists(stage.save_filename) and force:
+                if Path(stage.save_filename).exists() and force:
                     Path(stage.save_filename).unlink()
-                if not os.path.exists(stage.save_filename):
+                if not Path(stage.save_filename).exists():
                     try:
                         stage.fetch()
                     except web_util.FetchError:

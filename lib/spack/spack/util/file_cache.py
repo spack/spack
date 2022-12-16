@@ -37,7 +37,7 @@ class FileCache(object):
                 before assuming that there is a deadlock.
         """
         self.root = root.rstrip(os.path.sep)
-        if not os.path.exists(self.root):
+        if not Path(self.root).exists():
             mkdirp(self.root)
 
         self._locks = {}
@@ -76,7 +76,7 @@ class FileCache(object):
         """
         cache_path = self.cache_path(key)
 
-        exists = os.path.exists(cache_path)
+        exists = Path(cache_path).exists()
         if exists:
             if not os.path.isfile(cache_path):
                 raise CacheError("Cache file is not a file: %s" % cache_path)
@@ -117,7 +117,7 @@ class FileCache(object):
 
         """
         filename = self.cache_path(key)
-        if os.path.exists(filename) and not os.access(filename, os.W_OK):
+        if Path(filename).exists() and not os.access(filename, os.W_OK):
             raise CacheError(
                 "Insufficient permissions to write to file cache at {0}".format(filename)
             )
@@ -130,7 +130,7 @@ class FileCache(object):
             def __enter__(cm):
                 cm.orig_filename = self.cache_path(key)
                 cm.orig_file = None
-                if os.path.exists(cm.orig_filename):
+                if Path(cm.orig_filename).exists():
                     cm.orig_file = open(cm.orig_filename, "r")
 
                 cm.tmp_filename = self.cache_path(key) + ".tmp"

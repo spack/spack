@@ -16,6 +16,7 @@ import io
 import operator
 import os
 import os.path
+from pathlib import Path
 import pstats
 import re
 import signal
@@ -135,7 +136,7 @@ def get_version():
     """
     version = spack.spack_version
     git_path = os.path.join(spack.paths.prefix, ".git")
-    if os.path.exists(git_path):
+    if Path(git_path).exists():
         git = spack.util.git.git()
         if not git:
             return version

@@ -874,7 +874,7 @@ def test_env_with_included_config_var_path(packages_file):
     config_real_path = substitute_path_variables(config_var_path)
     fs.mkdirp(os.path.dirname(config_real_path))
     shutil.move(packages_file.strpath, config_real_path)
-    assert os.path.exists(config_real_path)
+    assert Path(config_real_path).exists()
 
     with e:
         e.concretize()
@@ -989,7 +989,7 @@ def test_env_loads(install_mockery, mock_fetch):
     e = ev.read("test")
 
     loads_file = os.path.join(e.path, "loads")
-    assert os.path.exists(loads_file)
+    assert Path(loads_file).exists()
 
     with open(loads_file) as f:
         contents = f.read()
@@ -2976,7 +2976,7 @@ def test_read_v1_lock_creates_backup(config, tmpdir):
     shutil.copy(v1_lockfile_path, test_lockfile_path)
 
     e = ev.Environment(str(tmpdir))
-    assert os.path.exists(e._lock_backup_v1_path)
+    assert Path(e._lock_backup_v1_path).exists()
     assert filecmp.cmp(e._lock_backup_v1_path, v1_lockfile_path)
 
 

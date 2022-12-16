@@ -1364,7 +1364,7 @@ def test_config_fetch_remote_configs(
     else:
         with spack.config.override("config:url_fetch_method", "curl"):
             path = spack.config.fetch_remote_configs(url, dest_dir)
-            assert os.path.exists(path)
+            assert Path(path).exists()
             if isfile:
                 # Ensure correct file is "fetched"
                 assert os.path.basename(path) == os.path.basename(url)

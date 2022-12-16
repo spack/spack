@@ -129,7 +129,7 @@ class AppleClang(spack.compilers.clang.Clang):
         )
         xcode_link = os.path.join(developer_root, "Xcode.app")
 
-        if not os.path.exists(developer_root):
+        if not Path(developer_root).exists():
             tty.warn(
                 "Copying Xcode from %s to %s in order to add spack "
                 "wrappers to it. Please do not interrupt." % (real_root, developer_root)

@@ -71,7 +71,7 @@ def init(gnupghome=None, force=False):
         SOCKET_DIR = _socket_dir(GPGCONF)
 
     # Make sure that the GNUPGHOME exists
-    if not os.path.exists(GNUPGHOME):
+    if not Path(GNUPGHOME).exists():
         os.makedirs(GNUPGHOME)
         Path(GNUPGHOME).chmod(0o700)
 
@@ -377,18 +377,18 @@ def _socket_dir(gpgconf):
 
     result = None
     for var_run in ("/run", "/var/run"):
-        if not os.path.exists(var_run):
+        if not Path(var_run).exists():
             continue
 
         var_run_user = os.path.join(var_run, "user")
         try:
-            if not os.path.exists(var_run_user):
+            if not Path(var_run_user).exists():
                 Path(var_run_user).mkdir()
                 Path(var_run_user).chmod(0o777)
 
             user_dir = os.path.join(var_run_user, str(os.getuid()))
 
-            if not os.path.exists(user_dir):
+            if not Path(user_dir).exists():
                 Path(user_dir).mkdir()
                 Path(user_dir).chmod(0o700)
 

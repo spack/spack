@@ -37,7 +37,7 @@ def edit_package(name, repo_path, namespace):
     path = repo.filename_for_package_name(name)
 
     spec = Spec(name)
-    if os.path.exists(path):
+    if Path(path).exists():
         if not os.path.isfile(path):
             tty.die("Something is wrong. '{0}' is not a file!".format(path))
         if not os.access(path, os.R_OK):
@@ -119,7 +119,7 @@ def edit(parser, args):
                 name = spack.cmd.python_name(name)
 
             path = os.path.join(path, name)
-            if not os.path.exists(path):
+            if not Path(path).exists():
                 files = glob.glob(path + "*")
                 exclude_list = [".pyc", "~"]  # exclude binaries and backups
                 files = list(filter(lambda x: all(s not in x for s in exclude_list), files))

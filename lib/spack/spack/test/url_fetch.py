@@ -161,7 +161,7 @@ def test_fetch(
             with spack.config.override("config:url_fetch_method", _fetch_method):
                 s.package.do_stage()
         with working_dir(s.package.stage.source_path):
-            assert os.path.exists("configure")
+            assert Path("configure").exists()
             assert is_exe("configure")
 
             with open("configure") as f:

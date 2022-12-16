@@ -36,7 +36,7 @@ def set_up_license(pkg):
     # If the license can be stored in a file, create one
     if pkg.license_files:
         license_path = pkg.global_license_file
-        if not os.path.exists(license_path):
+        if not Path(license_path).exists():
             # Create a new license file
             write_license_file(pkg, license_path)
             # Open up file in user's favorite $EDITOR for editing
@@ -186,13 +186,13 @@ def symlink_license(pkg):
         link_name = os.path.join(pkg.prefix, filename)
         link_name = Path(link_name).resolve()
         license_dir = os.path.dirname(link_name)
-        if not os.path.exists(license_dir):
+        if not Path(license_dir).exists():
             mkdirp(license_dir)
 
         # If example file already exists, overwrite it with a symlink
         if os.path.lexists(link_name):
             Path(link_name).unlink()
 
-        if os.path.exists(target):
+        if Path(target).exists():
             symlink(target, link_name)
             tty.msg("Added local symlink %s to global license file" % link_name)

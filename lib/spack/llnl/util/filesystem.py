@@ -102,7 +102,7 @@ def rename(src, dst):
     if is_windows:
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
-        if os.path.exists(dst) or os.path.islink(dst):
+        if Path(dst).exists() or os.path.islink(dst):
             Path(dst).unlink()
     Path(src).rename(Path(dst))
 
@@ -276,14 +276,14 @@ def filter_file(regex, repl, *filenames, **kwargs):
         backup_filename = filename + "~"
         tmp_filename = filename + ".spack~"
 
-        if ignore_absent and not os.path.exists(filename):
+        if ignore_absent and not Path(filename).exists():
             msg = 'FILTER FILE: file "{0}" not found. Skipping to next file.'
             tty.debug(msg.format(filename))
             continue
 
         # Create backup file. Don't overwrite an existing backup
         # file in case this file is being filtered multiple times.
-        if not os.path.exists(backup_filename):
+        if not Path(backup_filename).exists():
             shutil.copy(filename, backup_filename)
 
         # Create a temporary file to read from. We cannot use backup_filename
@@ -334,7 +334,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
         finally:
             Path(tmp_filename).unlink()
-            if not backup and os.path.exists(backup_filename):
+            if not backup and Path(backup_filename).exists():
                 Path(backup_filename).unlink()
 
 
@@ -453,7 +453,7 @@ def exploding_archive_handler(tarball_container, stage):
 
 @system_path_filter(arg_slice=slice(1))
 def get_owner_uid(path, err_msg=None):
-    if not os.path.exists(path):
+    if not Path(path).exists():
         mkdirp(path, mode=stat.S_IRWXU)
 
         p_stat = os.stat(path)
@@ -837,7 +837,7 @@ def mkdirp(*paths, **kwargs):
     default_perms = kwargs.get("default_perms", "args")
     paths = path_to_os_path(*paths)
     for path in paths:
-        if not os.path.exists(path):
+        if not Path(path).exists():
             try:
                 # detect missing intermediate folders
                 intermediate_folders = []
@@ -846,7 +846,7 @@ def mkdirp(*paths, **kwargs):
                 intermediate_path = os.path.dirname(path)
 
                 while intermediate_path:
-                    if os.path.exists(intermediate_path):
+                    if Path(intermediate_path).exists():
                         last_parent = intermediate_path
                         break
 
@@ -960,7 +960,7 @@ def replace_directory_transaction(directory_name):
         # composite exception.
         try:
             # Delete what was there, before copying back the original content
-            if os.path.exists(directory_name):
+            if Path(directory_name).exists():
                 shutil.rmtree(directory_name)
             Path(backup_dir).rename(Path(directory_name))
         except Exception as outer_exception:
@@ -1186,7 +1186,7 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
 
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
-            if follow_nonexisting or os.path.exists(dest_child):
+            if follow_nonexisting or Path(dest_child).exists():
                 tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
                 for t in tuples:
                     yield t
@@ -1416,7 +1416,7 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path) and not os.path.exists(path):
+    if os.path.islink(path) and not Path(path).exists():
         Path(path).unlink()
 
 
@@ -1474,7 +1474,7 @@ def remove_linked_tree(path):
         kwargs["ignore_errors"] = False
         kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
 
-    if os.path.exists(path):
+    if Path(path).exists():
         if os.path.islink(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
             Path(path).unlink()
@@ -1512,7 +1512,7 @@ def safe_remove(*files_or_dirs):
             # happen that a previous iteration of the loop already removed it.
             # This is the case, for instance, if we remove the directory
             # "/foo/bar" before the file "/foo/bar/baz.yaml".
-            if not os.path.exists(file_or_dir):
+            if not Path(file_or_dir).exists():
                 continue
             # The monotonic ID is a simple way to make the filename
             # or directory name unique in the temporary folder
@@ -2294,7 +2294,7 @@ class WindowsSimulatedRPath(object):
         mode is not enabled"""
         file_name = os.path.basename(path)
         dest_file = os.path.join(dest_dir, file_name)
-        if os.path.exists(dest_dir) and not dest_file == path:
+        if Path(dest_dir).exists() and not dest_file == path:
             try:
                 symlink(path, dest_file)
             # For py2 compatibility, we have to catch the specific Windows error code
@@ -2543,7 +2543,7 @@ def md5sum(file):
 @system_path_filter
 def remove_directory_contents(dir):
     """Remove all contents of a directory."""
-    if os.path.exists(dir):
+    if Path(dir).exists():
         for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
             if os.path.isfile(entry) or os.path.islink(entry):
                 Path(entry).unlink()
@@ -2565,11 +2565,11 @@ def keep_modification_time(*filenames):
     """
     mtimes = {}
     for f in filenames:
-        if os.path.exists(f):
+        if Path(f).exists():
             mtimes[f] = os.path.getmtime(f)
     yield
     for f, mtime in mtimes.items():
-        if os.path.exists(f):
+        if Path(f).exists():
             os.utime(f, (os.path.getatime(f), mtime))
 
 

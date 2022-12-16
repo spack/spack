@@ -54,7 +54,7 @@ def test_dev_build_before(tmpdir, mock_packages, install_mockery):
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.original_string
 
-    assert not os.path.exists(spec.prefix)
+    assert not Path(spec.prefix).exists()
 
 
 def test_dev_build_until(tmpdir, mock_packages, install_mockery):
@@ -71,7 +71,7 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.replacement_string
 
-    assert not os.path.exists(spec.prefix)
+    assert not Path(spec.prefix).exists()
     assert not spack.store.db.query(spec, installed=True)
 
 
@@ -90,7 +90,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.replacement_string
 
-    assert os.path.exists(spec.prefix)
+    assert Path(spec.prefix).exists()
     assert spack.store.db.query(spec, installed=True)
     assert os.path.exists(str(tmpdir))
 
@@ -362,7 +362,7 @@ env:
 
     # Ensure that both specs installed properly
     assert dep_spec.package.filename in os.listdir(dep_spec.prefix)
-    assert os.path.exists(spec.prefix)
+    assert Path(spec.prefix).exists()
 
     # Ensure variants set properly; ensure build_dir is absolute and normalized
     for dep in (dep_spec, spec["dev-build-test-install"]):

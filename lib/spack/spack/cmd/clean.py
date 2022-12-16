@@ -116,7 +116,7 @@ def clean(parser, args):
         spack.stage.purge()
         # Temp directory where buildcaches are extracted
         extract_tmp = os.path.join(spack.store.layout.root, ".tmp")
-        if os.path.exists(extract_tmp):
+        if Path(extract_tmp).exists():
             tty.debug("Removing {0}".format(extract_tmp))
             shutil.rmtree(extract_tmp)
     if args.downloads:

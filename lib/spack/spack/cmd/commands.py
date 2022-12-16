@@ -283,7 +283,7 @@ def _commands(parser, args):
     formatter = formatters[args.format]
 
     # check header first so we don't open out files unnecessarily
-    if args.header and not os.path.exists(args.header):
+    if args.header and not Path(args.header).exists():
         tty.die("No such file: '%s'" % args.header)
 
     if args.update:

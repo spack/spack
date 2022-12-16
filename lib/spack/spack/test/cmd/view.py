@@ -36,7 +36,7 @@ def test_view_link_type(
     viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
     view(cmd, viewpath, "libdwarf")
     package_prefix = os.path.join(viewpath, "libdwarf")
-    assert os.path.exists(package_prefix)
+    assert Path(package_prefix).exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_link_cmd = cmd in ("symlink", "add")
@@ -51,10 +51,10 @@ def test_view_link_type_remove(
     viewpath = str(tmpdir.mkdir("view_{0}".format(add_cmd)))
     view(add_cmd, viewpath, "needs-relocation")
     bindir = os.path.join(viewpath, "bin")
-    assert os.path.exists(bindir)
+    assert Path(bindir).exists()
 
     view("remove", viewpath, "needs-relocation")
-    assert not os.path.exists(bindir)
+    assert not Path(bindir).exists()
 
 
 @pytest.mark.parametrize("cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
@@ -69,7 +69,7 @@ def test_view_projections(
     view(cmd, viewpath, "--projection-file={0}".format(projection_file), "libdwarf")
 
     package_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
-    assert os.path.exists(package_prefix)
+    assert Path(package_prefix).exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_symlink_cmd = cmd in ("symlink", "add")
@@ -92,8 +92,8 @@ def test_view_multiple_projections(
 
     libdwarf_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
     extendee_prefix = os.path.join(viewpath, "extendee-gcc/bin")
-    assert os.path.exists(libdwarf_prefix)
-    assert os.path.exists(extendee_prefix)
+    assert Path(libdwarf_prefix).exists()
+    assert Path(extendee_prefix).exists()
 
 
 def test_view_multiple_projections_all_first(
@@ -112,8 +112,8 @@ def test_view_multiple_projections_all_first(
 
     libdwarf_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
     extendee_prefix = os.path.join(viewpath, "extendee-gcc/bin")
-    assert os.path.exists(libdwarf_prefix)
-    assert os.path.exists(extendee_prefix)
+    assert Path(libdwarf_prefix).exists()
+    assert Path(extendee_prefix).exists()
 
 
 def test_view_external(tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery):

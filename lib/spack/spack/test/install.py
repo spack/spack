@@ -193,7 +193,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
         s.package.do_install(**kwargs)
 
     assert s.package.spec.installed
-    assert os.path.exists(s.prefix)
+    assert Path(s.prefix).exists()
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch, monkeypatch):
@@ -317,8 +317,8 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
 
         dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
+        assert not Path(new_dependency.prefix).exists()
+        assert Path(dependent.prefix).exists()
 
 
 def test_installed_upstream(install_upstream, mock_fetch):
@@ -336,8 +336,8 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
         dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
+        assert not Path(new_dependency.prefix).exists()
+        assert Path(dependent.prefix).exists()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -348,7 +348,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     monkeypatch.setattr(spack.package_base.PackageBase, "remove_prefix", mock_remove_prefix)
     with pytest.raises(spack.build_environment.ChildError):
         s.package.do_install(keep_prefix=True)
-    assert os.path.exists(s.package.prefix)
+    assert Path(s.package.prefix).exists()
 
     # must clear failure markings for the package before re-installing it
     spack.store.db.clear_failure(s, True)
@@ -591,9 +591,9 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 
     spack.installer.log(spec.package)
 
-    assert os.path.exists(spec.package.install_log_path)
-    assert os.path.exists(spec.package.install_env_path)
-    assert os.path.exists(spec.package.install_configure_args_path)
+    assert Path(spec.package.install_log_path).exists()
+    assert Path(spec.package.install_env_path).exists()
+    assert Path(spec.package.install_configure_args_path).exists()
 
     archive_dir = os.path.join(install_path, "archived-files")
     source_dir = os.path.dirname(source)

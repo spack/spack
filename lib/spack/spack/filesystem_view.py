@@ -262,7 +262,7 @@ class YamlFilesystemView(FilesystemView):
         if not self.projections:
             # Read projections file from view
             self.projections = self.read_projections()
-        elif not os.path.exists(self.projections_path):
+        elif not Path(self.projections_path).exists():
             # Write projections file to new view
             self.write_projections()
         else:
@@ -282,7 +282,7 @@ class YamlFilesystemView(FilesystemView):
                 f.write(s_yaml.dump_config({"projections": self.projections}))
 
     def read_projections(self):
-        if os.path.exists(self.projections_path):
+        if Path(self.projections_path).exists():
             with open(self.projections_path, "r") as f:
                 projections_data = s_yaml.load(f)
                 spack.config.validate(projections_data, spack.schema.projections.schema)
@@ -510,7 +510,7 @@ class YamlFilesystemView(FilesystemView):
 
         specs = []
         for md_dir in md_dirs:
-            if os.path.exists(md_dir):
+            if Path(md_dir).exists():
                 for name_dir in os.listdir(md_dir):
                     filename = os.path.join(md_dir, name_dir, spack.store.layout.spec_file_name)
                     spec = get_spec_from_file(filename)
@@ -626,7 +626,7 @@ class YamlFilesystemView(FilesystemView):
 
     def unlink_meta_folder(self, spec):
         path = self.get_path_meta_folder(spec)
-        assert os.path.exists(path)
+        assert Path(path).exists()
         shutil.rmtree(path)
 
 

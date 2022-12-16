@@ -189,7 +189,7 @@ class TestSuite(object):
 
                 # setup per-test directory in the stage dir
                 test_dir = self.test_dir_for_spec(spec)
-                if os.path.exists(test_dir):
+                if Path(test_dir).exists():
                     shutil.rmtree(test_dir)
                 fs.mkdirp(test_dir)
 
@@ -242,7 +242,7 @@ class TestSuite(object):
 
     def ensure_stage(self):
         """Ensure the test suite stage directory exists."""
-        if not os.path.exists(self.stage):
+        if not Path(self.stage).exists():
             fs.mkdirp(self.stage)
 
     @property
@@ -376,7 +376,7 @@ class TestSuite(object):
             spack.repo.path.dump_provenance(spec, repo_cache_path)
             for vspec in spec.package.virtuals_provided:
                 repo_cache_path = self.stage.repo.join(vspec.name)
-                if not os.path.exists(repo_cache_path):
+                if not Path(repo_cache_path).exists():
                     try:
                         spack.repo.path.dump_provenance(vspec, repo_cache_path)
                     except spack.repo.UnknownPackageError:

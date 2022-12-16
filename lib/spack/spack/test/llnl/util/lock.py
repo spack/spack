@@ -167,7 +167,7 @@ def lock_test_directory(request):
 @pytest.fixture(scope="session")
 def lock_dir(lock_test_directory):
     parent = next(
-        (p for p in glob.glob(lock_test_directory) if os.path.exists(p) and os.access(p, os.W_OK)),
+        (p for p in glob.glob(lock_test_directory) if Path(p).exists() and os.access(p, os.W_OK)),
         None,
     )
     if not parent:
@@ -209,7 +209,7 @@ def private_lock_path(lock_dir):
 
     yield lock_file
 
-    if os.path.exists(lock_file):
+    if Path(lock_file).exists():
         make_writable(lock_dir, lock_file)
         Path(lock_file).unlink()
 
@@ -221,7 +221,7 @@ def lock_path(lock_dir):
 
     yield lock_file
 
-    if os.path.exists(lock_file):
+    if Path(lock_file).exists():
         make_writable(lock_dir, lock_file)
         Path(lock_file).unlink()
 

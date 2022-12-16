@@ -140,7 +140,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         # Ensure directories are properly removed
         layout.remove_install_directory(spec)
         assert not os.path.isdir(install_dir)
-        assert not os.path.exists(install_dir)
+        assert not Path(install_dir).exists()
 
 
 def test_handle_unknown_package(temporary_store, config, mock_packages):

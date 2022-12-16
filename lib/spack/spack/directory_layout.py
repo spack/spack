@@ -157,14 +157,14 @@ class DirectoryLayout(object):
         # Otherwise just returns the YAML.
         yaml_path = os.path.join(self.metadata_path(spec), self._spec_file_name_yaml)
         json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
+        if Path(yaml_path).exists() and fs.can_write_to_dir(yaml_path):
             self.write_spec(spec, json_path)
             try:
                 Path(yaml_path).unlink()
             except OSError as err:
                 tty.debug("Could not remove deprecated {0}".format(yaml_path))
                 tty.debug(err)
-        elif os.path.exists(yaml_path):
+        elif Path(yaml_path).exists():
             return yaml_path
         return json_path
 
@@ -200,14 +200,14 @@ class DirectoryLayout(object):
             deprecated_spec.dag_hash() + "_" + self.spec_file_name,
         )
 
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
+        if Path(yaml_path).exists() and fs.can_write_to_dir(yaml_path):
             self.write_spec(deprecated_spec, json_path)
             try:
                 Path(yaml_path).unlink()
             except (IOError, OSError) as err:
                 tty.debug("Could not remove deprecated {0}".format(yaml_path))
                 tty.debug(err)
-        elif os.path.exists(yaml_path):
+        elif Path(yaml_path).exists():
             return yaml_path
 
         return json_path
@@ -355,14 +355,14 @@ class DirectoryLayout(object):
             kwargs = {}  # the default value for ignore_errors is false
 
         if deprecated:
-            if os.path.exists(path):
+            if Path(path).exists():
                 try:
                     metapath = self.deprecated_file_path(spec)
                     Path(path).unlink()
                     Path(metapath).unlink()
                 except OSError as e:
                     raise RemoveFailedError(spec, path, e) from e
-        elif os.path.exists(path):
+        elif Path(path).exists():
             try:
                 shutil.rmtree(path, **kwargs)
             except OSError as e:

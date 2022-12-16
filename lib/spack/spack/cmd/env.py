@@ -561,10 +561,10 @@ def env_revert(args):
 
     # Check that both the spack.yaml and the backup exist, the inform user
     # on what is going to happen and ask for confirmation
-    if not os.path.exists(manifest_file):
+    if not Path(manifest_file).exists():
         msg = "cannot fine the manifest file of the environment [file={0}]"
         tty.die(msg.format(manifest_file))
-    if not os.path.exists(backup_file):
+    if not Path(backup_file).exists():
         msg = "cannot find the old manifest file to be restored [file={0}]"
         tty.die(msg.format(backup_file))
 

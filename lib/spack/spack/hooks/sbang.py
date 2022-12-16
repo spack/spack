@@ -189,7 +189,7 @@ def install_sbang():
     """
     # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
-    if os.path.exists(sbang_path) and filecmp.cmp(spack.paths.sbang_script, sbang_path):
+    if Path(sbang_path).exists() and filecmp.cmp(spack.paths.sbang_script, sbang_path):
         return
 
     # make $install_tree/bin

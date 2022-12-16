@@ -411,7 +411,7 @@ def style(parser, args):
     # validate spack root if the user provided one
     args.root = os.path.realpath(args.root) if args.root else spack.paths.prefix
     spack_script = os.path.join(args.root, "bin", "spack")
-    if not os.path.exists(spack_script):
+    if not Path(spack_script).exists():
         tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
 
     file_list = args.files

@@ -541,7 +541,7 @@ To resolve this problem, please try the following:
         """Not needed usually, configure should be already there"""
 
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if Path(self.configure_abs_path).exists():
             return
 
         # Else try to regenerate it, which reuquires a few build dependencies
@@ -582,7 +582,7 @@ To resolve this problem, please try the following:
              RuntimeError: if the "configure" script is not found
         """
         # Check if the "configure" script is there. If not raise a RuntimeError.
-        if not os.path.exists(self.configure_abs_path):
+        if not Path(self.configure_abs_path).exists():
             msg = "configure script not found in {0}"
             raise RuntimeError(msg.format(self.configure_directory))
 

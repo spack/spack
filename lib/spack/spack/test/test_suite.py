@@ -19,7 +19,7 @@ def _true(*args, **kwargs):
 
 
 def ensure_results(filename, expected):
-    assert os.path.exists(filename)
+    assert Path(filename).exists()
     with open(filename, "r") as fd:
         lines = fd.readlines()
         have = False

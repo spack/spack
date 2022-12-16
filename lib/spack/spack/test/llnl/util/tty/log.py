@@ -356,7 +356,7 @@ def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     assert exitcode == 0
 
     # assert log was created
-    assert os.path.exists(log_path)
+    assert Path(log_path).exists()
 
 
 def synchronized_logger(**kwargs):
@@ -483,7 +483,7 @@ def test_foreground_background_output(test_fn, capfd, termios_on_or_off, tmpdir)
     output = out.strip().split("\n")
 
     # also get lines of log file
-    assert os.path.exists(log_path)
+    assert Path(log_path).exists()
     with open(log_path) as logfile:
         log_data = logfile.read().strip().split("\n")
 

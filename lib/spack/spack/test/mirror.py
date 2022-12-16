@@ -69,7 +69,7 @@ def check_mirror():
                 per_package_ref = os.path.join(spec.name, "-".join([spec.name, str(spec.version)]))
                 mirror_paths = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
                 expected_path = os.path.join(mirror_root, mirror_paths.storage_path)
-                assert os.path.exists(expected_path)
+                assert Path(expected_path).exists()
 
             # Now try to fetch each package.
             for name, mock_repo in repos.items():
@@ -285,7 +285,7 @@ def test_mirror_cache_symlinks(tmpdir):
     link_target = resolve_link_target_relative_to_the_link(
         os.path.join(cache.root, reference.cosmetic_path)
     )
-    assert os.path.exists(link_target)
+    assert Path(link_target).exists()
     assert os.path.normpath(link_target) == os.path.join(cache.root, reference.storage_path)
 
 

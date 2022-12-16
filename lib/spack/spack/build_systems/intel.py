@@ -1274,7 +1274,7 @@ class IntelPackage(Package):
         # Sometimes the installer exits with an error but doesn't pass a
         # non-zero exit code to spack. Check for the existence of a 'bin'
         # directory to catch this error condition.
-        if not os.path.exists(self.prefix.bin):
+        if not Path(self.prefix.bin).exists():
             raise InstallError("The installer has failed to install anything.")
 
     @spack.builder.run_after("install")

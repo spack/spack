@@ -71,7 +71,7 @@ def load_command_extension(command, path):
     cmd_path = os.path.join(path, extension, "cmd", python_name + ".py")
 
     # Short circuit if the command source file does not exist
-    if not os.path.exists(cmd_path):
+    if not Path(cmd_path).exists():
         return None
 
     def ensure_package_creation(name):
@@ -81,7 +81,7 @@ def load_command_extension(command, path):
 
         parts = [path] + name.split(".") + ["__init__.py"]
         init_file = os.path.join(*parts)
-        if os.path.exists(init_file):
+        if Path(init_file).exists():
             m = llnl.util.lang.load_module_from_file(package_name, init_file)
         else:
             m = types.ModuleType(package_name)

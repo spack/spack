@@ -151,7 +151,7 @@ def config_get(args):
 
     elif scope and scope.startswith("env:"):
         config_file = spack.config.config.get_config_filename(scope, section)
-        if os.path.exists(config_file):
+        if Path(config_file).exists():
             with open(config_file) as f:
                 print(f.read())
         else:
@@ -331,7 +331,7 @@ def config_update(args):
 
 def _can_revert_update(scope_dir, cfg_file, bkp_file):
     dir_ok = fs.can_write_to_dir(scope_dir)
-    cfg_ok = not os.path.exists(cfg_file) or fs.can_access(cfg_file)
+    cfg_ok = not Path(cfg_file).exists() or fs.can_access(cfg_file)
     bkp_ok = fs.can_access(bkp_file)
     return dir_ok and cfg_ok and bkp_ok
 
@@ -347,7 +347,7 @@ def config_revert(args):
         bkp_file = cfg_file + ".bkp"
 
         # If the backup files doesn't exist move to the next scope
-        if not os.path.exists(bkp_file):
+        if not Path(bkp_file).exists():
             continue
 
         # If it exists and we don't have write access in this scope

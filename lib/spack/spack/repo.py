@@ -1068,7 +1068,7 @@ class Repo(object):
         for patch in itertools.chain.from_iterable(spec.package.patches.values()):
 
             if patch.path:
-                if os.path.exists(patch.path):
+                if Path(patch.path).exists():
                     fs.install(patch.path, path)
                 else:
                     tty.warn("Patch file did not exist: %s" % patch.path)
@@ -1187,7 +1187,7 @@ class Repo(object):
 
         # if not, check for the package.py file
         path = self.filename_for_package_name(pkg_name)
-        return os.path.exists(path)
+        return Path(path).exists()
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -1303,7 +1303,7 @@ def create_repo(root, namespace=None):
         raise InvalidNamespaceError("'%s' is not a valid namespace." % namespace)
 
     existed = False
-    if os.path.exists(root):
+    if Path(root).exists():
         if os.path.isfile(root):
             raise BadRepoError("File %s already exists and is not a directory" % root)
         elif os.path.isdir(root):
@@ -1344,7 +1344,7 @@ def create_repo(root, namespace=None):
 
 def create_or_construct(path, namespace=None):
     """Create a repository, or just return a Repo if it already exists."""
-    if not os.path.exists(path):
+    if not Path(path).exists():
         fs.mkdirp(path)
         create_repo(path, namespace)
     return Repo(path)

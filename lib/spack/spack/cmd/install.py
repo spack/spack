@@ -274,7 +274,7 @@ def install_specs(specs, install_kwargs, cli_args):
         if cli_args.show_log_on_error:
             e.print_context()
             assert e.pkg, "Expected InstallError to include the associated package"
-            if not os.path.exists(e.pkg.build_log_path):
+            if not Path(e.pkg.build_log_path).exists():
                 tty.error("'spack install' created no log.")
             else:
                 sys.stderr.write("Full build log:\n")

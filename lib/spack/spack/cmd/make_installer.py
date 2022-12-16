@@ -77,7 +77,7 @@ def make_installer(parser, args):
             git_verbosity = "/" + args.git_verbosity
 
         if spack_source:
-            if not os.path.exists(spack_source):
+            if not Path(spack_source).exists():
                 print("%s does not exist" % spack_source)
                 return
             else:

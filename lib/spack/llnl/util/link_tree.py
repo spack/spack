@@ -300,7 +300,7 @@ class LinkTree(object):
     """
 
     def __init__(self, source_root):
-        if not os.path.exists(source_root):
+        if not Path(source_root).exists():
             raise IOError("No such file or directory: '%s'", source_root)
 
         self._root = source_root
@@ -314,7 +314,7 @@ class LinkTree(object):
             conflicts.extend(
                 dst
                 for src, dst in self.get_file_map(dest_root, ignore).items()
-                if os.path.exists(dst)
+                if Path(dst).exists()
             )
 
         if conflicts:
@@ -325,9 +325,9 @@ class LinkTree(object):
         kwargs = {"follow_nonexisting": False, "ignore": ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
-                if os.path.exists(dest) and not os.path.isdir(dest):
+                if Path(dest).exists() and not os.path.isdir(dest):
                     conflicts.append("File blocks directory: %s" % dest)
-            elif os.path.exists(dest) and os.path.isdir(dest):
+            elif Path(dest).exists() and os.path.isdir(dest):
                 conflicts.append("Directory blocks directory: %s" % dest)
         return conflicts
 
@@ -342,7 +342,7 @@ class LinkTree(object):
     def merge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(self._root, dest_root, ignore=ignore):
             if os.path.isdir(src):
-                if not os.path.exists(dest):
+                if not Path(dest).exists():
                     mkdirp(dest)
                     continue
 
@@ -357,7 +357,7 @@ class LinkTree(object):
     def unmerge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(self._root, dest_root, ignore=ignore, order="post"):
             if os.path.isdir(src):
-                if not os.path.exists(dest):
+                if not Path(dest).exists():
                     continue
                 elif not os.path.isdir(dest):
                     raise ValueError("File blocks directory: %s" % dest)
@@ -368,7 +368,7 @@ class LinkTree(object):
 
                 # remove empty dir marker if present.
                 marker = os.path.join(dest, empty_file_name)
-                if os.path.exists(marker):
+                if Path(marker).exists():
                     Path(marker).unlink()
 
     def merge(self, dest_root, ignore_conflicts=False, ignore=None, link=symlink, relative=False):
@@ -401,7 +401,7 @@ class LinkTree(object):
         self.merge_directories(dest_root, ignore)
         existing = []
         for src, dst in self.get_file_map(dest_root, ignore).items():
-            if os.path.exists(dst):
+            if Path(dst).exists():
                 existing.append(dst)
             elif relative:
                 abs_src = Path(src).resolve()

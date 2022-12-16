@@ -571,7 +571,7 @@ def extension_from_file(file, decompress=False):
          file name. If file is not on system or is of an type not recognized by Spack as
          an archive or compression type, None is returned.
     """
-    if os.path.exists(file):
+    if Path(file).exists():
         with open(file, "rb") as f:
             ext = extension_from_stream(f, decompress)
             # based on magic number, file is compressed

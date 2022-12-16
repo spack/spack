@@ -24,7 +24,7 @@ def compute_hash(path):
 def create_manifest_entry(path):
     data = {}
 
-    if os.path.exists(path):
+    if Path(path).exists():
         stat = os.stat(path)
 
         data["mode"] = stat.st_mode
@@ -52,7 +52,7 @@ def write_manifest(spec):
         spec.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
     )
 
-    if not os.path.exists(manifest_file):
+    if not Path(manifest_file).exists():
         tty.debug("Writing manifest file: No manifest from binary")
 
         manifest = {}
@@ -126,7 +126,7 @@ def check_file_manifest(filename):
         dirname, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
     )
 
-    if not os.path.exists(manifest_file):
+    if not Path(manifest_file).exists():
         results.add_error(filename, "manifest missing")
         return results
 
@@ -152,7 +152,7 @@ def check_spec_manifest(spec):
         prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
     )
 
-    if not os.path.exists(manifest_file):
+    if not Path(manifest_file).exists():
         results.add_error(prefix, "manifest missing")
         return results
 

@@ -131,7 +131,7 @@ def host_dynamic_linker_search_paths():
             possible_prefix = os.path.dirname(os.path.dirname(dynamic_linker))
             possible_conf = os.path.join(possible_prefix, "etc", conf_name)
 
-            if os.path.exists(possible_conf):
+            if Path(possible_conf).exists():
                 conf_file = possible_conf
     except (IOError, OSError, elf_utils.ElfParsingError):
         pass

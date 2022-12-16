@@ -274,7 +274,7 @@ def test_mirror_destroy(
     # Destroy mirror by name
     mirror("destroy", "-m", "atest")
 
-    assert not os.path.exists(mirror_dir.strpath)
+    assert not Path(mirror_dir.strpath).exists()
 
     buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, spec_name)
 
@@ -284,7 +284,7 @@ def test_mirror_destroy(
     # Destroy mirror by url
     mirror("destroy", "--mirror-url", mirror_url)
 
-    assert not os.path.exists(mirror_dir.strpath)
+    assert not Path(mirror_dir.strpath).exists()
 
     uninstall("-y", spec_name)
     mirror("remove", "atest")

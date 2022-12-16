@@ -78,7 +78,7 @@ class MirrorCache(object):
         storage_path = os.path.join(self.root, mirror_ref.storage_path)
         relative_dst = os.path.relpath(storage_path, start=os.path.dirname(cosmetic_path))
 
-        if not os.path.exists(cosmetic_path):
+        if not Path(cosmetic_path).exists():
             if os.path.lexists(cosmetic_path):
                 # In this case the link itself exists but it is broken: remove
                 # it and recreate it (in order to fix any symlinks broken prior
