@@ -383,11 +383,9 @@ def _process_binary_cache_tarball(
         bool: ``True`` if the package was extracted from binary cache,
             else ``False``
     """
-    timer.start("fetch")
     download_result = binary_distribution.download_tarball(
-        binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec
+        binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec, timer=timer
     )
-    timer.stop("fetch")
     # see #10063 : install from source if tarball doesn't exist
     if download_result is None:
         tty.msg("{0} exists in binary cache but with different hash".format(pkg.name))
