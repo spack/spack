@@ -115,7 +115,8 @@ spack:
     # - intel-mpi
     - intel-oneapi-mkl@2021.4.0
     - ispc
-    - julia@1.6  # As requested by Polina S.
+   # causes trouble with llvm@11.0.1
+   #- julia@1.6  # As requested by Polina S.
     - libxslt
     - libzmq+libsodium
     - likwid
