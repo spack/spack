@@ -5,6 +5,7 @@
 
 import errno
 import os
+from pathlib import PurePath
 import shutil
 
 from llnl.util.filesystem import mkdirp, rename
@@ -59,7 +60,7 @@ class FileCache(object):
     def _lock_path(self, key):
         """Path to the file in the cache for a particular key."""
         keyfile = PurePath(key).name
-        keydir = os.path.dirname(key)
+        keydir = PurePath(key).parent
 
         return os.path.join(self.root, keydir, "." + keyfile + ".lock")
 
@@ -85,7 +86,7 @@ class FileCache(object):
                 raise CacheError("Cannot access cache file: %s" % cache_path)
         else:
             # if the file is hierarchical, make parent directories
-            parent = os.path.dirname(cache_path)
+            parent = PurePath(cache_path).parent
             if parent.rstrip(os.path.sep) != self.root:
                 mkdirp(parent)
 
