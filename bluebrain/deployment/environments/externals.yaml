@@ -59,7 +59,7 @@ spack:
     graphviz:
       variants: +pangocairo+expat
     llvm:
-      # The general cuda should be set via the generic packages.yaml!
+      # The general cuda should be set via the generic packages.yaml
       variants: +cuda cuda_arch=70 +omp_tsan +python +link_dylib
     mvapich2:
       variants: fabrics=mrail process_managers=slurm file_systems=gpfs
