@@ -25,7 +25,7 @@ class Cmake(Package):
 
     tags = ["build-tools"]
 
-    executables = ['^cmake[0-9]*$']
+    executables = ["^cmake[0-9]*$"]
 
     version("master", branch="master")
     version("3.25.1", sha256="1c511d09516af493694ed9baf13c55947a36389674d657a2d5e0ccedc6b291d8")
