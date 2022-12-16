@@ -30,9 +30,10 @@ class PySchemaSalad(PythonPackage):
     depends_on("py-mistune@2.0.3:2.0", type=("build", "run"))
     depends_on("py-cachecontrol@0.11.7:0.12+filecache", type=("build", "run"))
 
-    depends_on("py-black@19.10b0:22.12", type=("build", "run"))
-
-    depends_on("py-mypy@0.991", type=("build", "run"))
-    depends_on("py-types-pkg-resources", type=("build", "run"))
-    depends_on("py-types-requests", type=("build", "run"))
-    depends_on("py-types-dataclasses", type=("build", "run"))
+    depends_on("py-setuptools-scm@6.2:+toml", type="build")
+    depends_on("py-mypy@0.991", type="build")
+    depends_on("py-black@19.10b0:", type="build")
+    depends_on("py-types-pkg-resources", type="build")
+    depends_on("py-types-requests", type="build")
+    depends_on("py-types-dataclasses", type="build")
+    depends_on("py-types-setuptools", type="build")
