@@ -20,6 +20,11 @@ class Ncview(AutotoolsPackage):
     depends_on("libpng")
     depends_on("libxaw")
 
+    # Avoid checking if compiler is the same as for netcdf-c,
+    # this doesn't work with package relocation, doesn't work
+    # on cray where compiler wrappers (cc etc.) are used.
+    patch("bypass_compiler_check.patch")
+
     def configure_args(self):
         spec = self.spec
 
