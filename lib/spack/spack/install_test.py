@@ -64,11 +64,11 @@ def get_all_test_suites():
 
     def valid_stage(d):
         dirpath = os.path.join(stage_root, d)
-        return os.path.isdir(dirpath) and test_suite_filename in os.listdir(dirpath)
+        return os.path.isdir(dirpath) and test_suite_filename in list(Path(dirpath).iterdir())
 
     candidates = [
         os.path.join(stage_root, d, test_suite_filename)
-        for d in os.listdir(stage_root)
+        for d in Path(stage_root).iterdir()
         if valid_stage(d)
     ]
 

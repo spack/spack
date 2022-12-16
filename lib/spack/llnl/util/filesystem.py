@@ -201,7 +201,7 @@ def paths_containing_libs(paths, library_names):
     rpaths_to_include = []
     paths = path_to_os_path(*paths)
     for path in paths:
-        fnames = set(os.listdir(path))
+        fnames = set(Path(path).iterdir())
         if fnames & required_lib_fnames:
             rpaths_to_include.append(path)
 
@@ -429,7 +429,7 @@ def exploding_archive_handler(tarball_container, stage):
         stage: Stage object referencing filesystem location
             where archive is being expanded
     """
-    files = os.listdir(tarball_container)
+    files = list(Path(tarball_container).iterdir())
     non_hidden = [f for f in files if not f.startswith(".")]
     if len(non_hidden) == 1:
         src = os.path.join(tarball_container, non_hidden[0])
@@ -1079,7 +1079,7 @@ def ancestor(dir, n=1):
 
 @system_path_filter
 def get_single_file(directory):
-    fnames = os.listdir(directory)
+    fnames = list(Path(directory).iterdir())
     if len(fnames) != 1:
         raise ValueError("Expected exactly 1 file, got {0}".format(str(len(fnames))))
     return fnames[0]
@@ -1173,7 +1173,7 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
     if order == "pre":
         yield (source_path, dest_path)
 
-    for f in os.listdir(source_path):
+    for f in Path(source_path).iterdir():
         source_child = os.path.join(source_path, f)
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
@@ -2374,7 +2374,7 @@ def files_in(*search_paths):
     for d in filter(can_access_dir, search_paths):
         files.extend(
             filter(
-                lambda x: os.path.isfile(x[1]), [(f, os.path.join(d, f)) for f in os.listdir(d)]
+                lambda x: os.path.isfile(x[1]), [(f, os.path.join(d, f)) for f in list(Path(d).iterdir())]
             )
         )
     return files
@@ -2544,7 +2544,7 @@ def md5sum(file):
 def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if Path(dir).exists():
-        for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
+        for entry in [os.path.join(dir, entry) for entry in Path(dir).iterdir()]:
             if os.path.isfile(entry) or os.path.islink(entry):
                 Path(entry).unlink()
             else:

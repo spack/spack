@@ -486,7 +486,7 @@ def list_url(url, recursive=False):
             return list(_iter_local_prefix(local_path))
         return [
             subpath
-            for subpath in os.listdir(local_path)
+            for subpath in Path(local_path).iterdir()
             if os.path.isfile(os.path.join(local_path, subpath))
         ]
 

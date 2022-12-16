@@ -215,7 +215,7 @@ class UrlPatch(Patch):
             self.stage.expand_archive()
             root = self.stage.source_path
 
-        files = os.listdir(root)
+        files = list(Path(root).iterdir())
         if not files:
             if self.archive_sha256:
                 raise NoSuchPatchError("Archive was empty: %s" % self.url)

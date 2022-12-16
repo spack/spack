@@ -135,7 +135,7 @@ class Cray(Platform):
             return (craype_type, version)
 
         # If no default version, sort available versions and return latest
-        versions_available = [spack.version.Version(v) for v in os.listdir(craype_dir)]
+        versions_available = [spack.version.Version(v) for v in Path(craype_dir).iterdir()]
         versions_available.sort(reverse=True)
         return (craype_type, versions_available[0])
 
@@ -223,7 +223,7 @@ class Cray(Platform):
         def modules_from_listdir():
             craype_default_path = "/opt/cray/pe/craype/default/modulefiles"
             if os.path.isdir(craype_default_path):
-                return os.listdir(craype_default_path)
+                return list(Path(craype_default_path).iterdir())
             return []
 
         if getattr(self, "_craype_targets", None) is None:

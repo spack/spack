@@ -1371,7 +1371,7 @@ def test_config_fetch_remote_configs(
                 # Ensure contents of the file has expected config element
                 assert _has_content(path)
             else:
-                for filename in os.listdir(path):
+                for filename in Path(path).iterdir():
                     assert _has_content(join_path(path, filename))
 
 

@@ -33,7 +33,7 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
 
         dev_build("dev-build-test-install@0.0.0")
 
-    assert spec.package.filename in os.listdir(spec.prefix)
+    assert spec.package.filename in list(Path(spec.prefix).iterdir())
     with open(os.path.join(spec.prefix, spec.package.filename), "r") as f:
         assert f.read() == spec.package.replacement_string
 
@@ -209,7 +209,7 @@ env:
         with ev.read("test"):
             install()
 
-    assert spec.package.filename in os.listdir(spec.prefix)
+    assert spec.package.filename in list(Path(spec.prefix).iterdir())
     with open(os.path.join(spec.prefix, spec.package.filename), "r") as f:
         assert f.read() == spec.package.replacement_string
 
@@ -312,7 +312,7 @@ env:
             install()
 
     for spec in (leaf_spec, root_spec):
-        assert spec.package.filename in os.listdir(spec.prefix)
+        assert spec.package.filename in list(Path(spec.prefix).iterdir())
         with open(os.path.join(spec.prefix, spec.package.filename), "r") as f:
             assert f.read() == spec.package.replacement_string
 
@@ -361,7 +361,7 @@ env:
             install()
 
     # Ensure that both specs installed properly
-    assert dep_spec.package.filename in os.listdir(dep_spec.prefix)
+    assert dep_spec.package.filename in list(Path(dep_spec.prefix).iterdir())
     assert Path(spec.prefix).exists()
 
     # Ensure variants set properly; ensure build_dir is absolute and normalized

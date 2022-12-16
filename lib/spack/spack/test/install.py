@@ -268,7 +268,7 @@ def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):
     # Demonstrate that the directory does not appear under the spec
     # prior to the flatten operation.
     dependency_name = "dependency-install"
-    assert dependency_name not in os.listdir(pkg.prefix)
+    assert dependency_name not in list(Path(pkg.prefix).iterdir())
 
     # Flatten the dependencies and ensure the dependency directory is there.
     spack.package_base.flatten_dependencies(spec, pkg.prefix)

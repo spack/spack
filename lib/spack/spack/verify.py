@@ -116,7 +116,7 @@ def check_file_manifest(filename):
     dirname = os.path.dirname(filename)
 
     results = VerificationResults()
-    while spack.store.layout.metadata_dir not in os.listdir(dirname):
+    while spack.store.layout.metadata_dir not in list(Path(dirname).iterdir()):
         if dirname == os.path.sep:
             results.add_error(filename, "not owned by any package")
             return results

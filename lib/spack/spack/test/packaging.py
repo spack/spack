@@ -122,7 +122,7 @@ echo $PATH"""
     # Test install
     buildcache.buildcache(parser, args)
 
-    files = os.listdir(spec.prefix)
+    files = list(Path(spec.prefix).iterdir())
 
     assert "link_to_dummy.txt" in files
     assert "dummy.txt" in files
@@ -149,7 +149,7 @@ echo $PATH"""
     args = parser.parse_args(install_args)
     buildcache.buildcache(parser, args)
 
-    files = os.listdir(spec.prefix)
+    files = list(Path(spec.prefix).iterdir())
     assert "link_to_dummy.txt" in files
     assert "dummy.txt" in files
     #    assert os.path.realpath(

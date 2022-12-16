@@ -202,7 +202,7 @@ def _collect_and_consume_cray_manifest_files(
         )
 
     for directory in manifest_dirs:
-        for fname in os.listdir(directory):
+        for fname in Path(directory).iterdir():
             if fname.endswith(".json"):
                 fpath = os.path.join(directory, fname)
                 tty.debug("Adding manifest file: {0}".format(fpath))

@@ -445,7 +445,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
 
     files_in_stage = set()
     try:
-        stage_files = os.listdir(stage_path)
+        stage_files = list(Path(stage_path).iterdir())
         files_in_stage = set(stage_files) - ignore_stage_files
     except OSError as err:
         if err.errno == errno.ENOENT or err.errno == errno.EINVAL:
@@ -1789,7 +1789,7 @@ def noncyclical_dir_structure(tmpdir):
 @pytest.fixture(scope="function")
 def mock_config_data():
     config_data_dir = os.path.join(spack.paths.test_path, "data", "config")
-    return config_data_dir, os.listdir(config_data_dir)
+    return config_data_dir, list(Path(config_data_dir).iterdir())
 
 
 @pytest.fixture(scope="function")

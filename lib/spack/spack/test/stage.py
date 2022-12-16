@@ -84,14 +84,14 @@ def check_expand_archive(stage, stage_name, expected_file_list):
     stage_path = get_stage_path(stage, stage_name)
     archive_dir = spack.stage._source_path_subdir
 
-    stage_contents = os.listdir(stage_path)
+    stage_contents = list(Path(stage_path).iterdir())
     assert _archive_fn in stage_contents
     assert archive_dir in stage_contents
 
     source_path = os.path.join(stage_path, archive_dir)
     assert source_path == stage.source_path
 
-    source_contents = os.listdir(source_path)
+    source_contents = list(Path(source_path).iterdir())
 
     for _include in expected_file_list:
         if _include == _include_hidden:
@@ -133,7 +133,7 @@ def check_fetch(stage, stage_name):
     the module-level comments.
     """
     stage_path = get_stage_path(stage, stage_name)
-    assert _archive_fn in os.listdir(stage_path)
+    assert _archive_fn in list(Path(stage_path).iterdir())
     assert os.path.join(stage_path, _archive_fn) == stage.fetcher.archive_file
 
 
@@ -596,12 +596,12 @@ class TestStage(object):
                 with open("foobar", "w") as file:
                     file.write("this file is to be destroyed.")
 
-            assert "foobar" in os.listdir(stage.source_path)
+            assert "foobar" in list(Path(stage.source_path).iterdir())
 
             # Make sure the file is not there after restage.
             stage.restage()
             check_fetch(stage, self.stage_name)
-            assert "foobar" not in os.listdir(stage.source_path)
+            assert "foobar" not in list(Path(stage.source_path).iterdir())
         check_destroy(stage, self.stage_name)
 
     def test_no_keep_without_exceptions(self, mock_stage_archive):

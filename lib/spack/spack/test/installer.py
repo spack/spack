@@ -573,7 +573,7 @@ def test_clear_failures_success(install_mockery):
 
     # Ensure there are no cached failure locks or failure marks
     assert len(spack.store.db._prefix_failures) == 0
-    assert len(os.listdir(spack.store.db._failure_dir)) == 0
+    assert len(list(Path(spack.store.db._failure_dir).iterdir())) == 0
 
     # Ensure the core directory and failure lock file still exist
     assert os.path.isdir(spack.store.db._failure_dir)

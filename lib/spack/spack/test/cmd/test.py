@@ -78,12 +78,12 @@ def test_test_output(
     install("printing-package")
     spack_test("run", "--alias", "printpkg", "printing-package")
 
-    stage_files = os.listdir(mock_test_stage)
+    stage_files = list(Path(mock_test_stage).iterdir())
     assert len(stage_files) == 1
 
     # Grab test stage directory contents
     testdir = os.path.join(mock_test_stage, stage_files[0])
-    testdir_files = os.listdir(testdir)
+    testdir_files = list(Path(testdir).iterdir())
 
     # Grab the output from the test log
     testlog = list(filter(lambda x: x.endswith("out.txt") and x != "results.txt", testdir_files))

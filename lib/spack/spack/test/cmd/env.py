@@ -2834,7 +2834,7 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     # Save the current view directory.
     resolved_view = os.path.realpath(view)
     all_views = os.path.dirname(resolved_view)
-    views_before = os.listdir(all_views)
+    views_before = list(Path(all_views).iterdir())
 
     # Add a spec that results in MergeConflictError's when creating a view
     with ev.read("env"):
@@ -2844,7 +2844,7 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
 
     # Make sure there is no broken view in the views directory, and the current
     # view is the original view from before the failed regenerate attempt.
-    views_after = os.listdir(all_views)
+    views_after = list(Path(all_views).iterdir())
     assert views_before == views_after
     assert os.path.samefile(resolved_view, view)
 
@@ -2863,7 +2863,7 @@ def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, 
 
     # Empty the underlying view
     real_view = os.path.realpath(view)
-    assert os.listdir(real_view)  # make sure it had *some* contents
+    assert list(Path(real_view).iterdir())  # make sure it had *some* contents
     shutil.rmtree(real_view)
 
     # Replace it with something new.
@@ -2881,7 +2881,7 @@ def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, 
 
     # Make sure the dir was left untouched.
     assert not os.path.lexists(view)
-    assert os.listdir(real_view) == ["file"]
+    assert list(Path(real_view).iterdir()) == ["file"]
 
 
 def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):

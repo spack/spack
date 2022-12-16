@@ -490,7 +490,7 @@ spack:
             expect = "Problem populating buildgroup"
             assert expect in output
 
-            dir_contents = os.listdir(tmpdir.strpath)
+            dir_contents = list(Path(tmpdir.strpath).iterdir())
 
             assert "backup-ci.yml" in dir_contents
 
@@ -992,7 +992,7 @@ def test_ci_rebuild(
             "spack.yaml",
             "spack.lock",
         ]
-        repro_files = os.listdir(rebuild_env.repro_dir)
+        repro_files = list(Path(rebuild_env.repro_dir).iterdir())
         assert all([f in repro_files for f in expected_repro_files])
 
         install_script_path = os.path.join(rebuild_env.repro_dir, "install.sh")
@@ -1021,7 +1021,7 @@ def test_ci_rebuild(
             assert rebuild_env.ci_pipeline_url in broken_spec_content
 
         # Ensure also produce CDash output for skipped (or notrun) tests
-        test_files = os.listdir(rebuild_env.test_dir)
+        test_files = list(Path(rebuild_env.test_dir).iterdir())
         with open(os.path.join(rebuild_env.test_dir, test_files[0]), "r") as f:
             have = False
             for line in f:
@@ -1319,7 +1319,7 @@ spack:
             buildcache_list_output = buildcache_cmd("list", output=str)
             assert "patchelf" in buildcache_list_output
             # Also test buildcache_spec schema
-            bc_files_list = os.listdir(buildcache_path)
+            bc_files_list = list(Path(buildcache_path).iterdir())
             for file_name in bc_files_list:
                 if file_name.endswith(".spec.json.sig"):
                     spec_json_path = os.path.join(buildcache_path, file_name)
@@ -1333,7 +1333,7 @@ spack:
 
             ci.copy_stage_logs_to_artifacts(concrete_spec, logs_dir.strpath)
 
-            logs_dir_list = os.listdir(logs_dir.strpath)
+            logs_dir_list = list(Path(logs_dir.strpath).iterdir())
 
             assert "spack-build-out.txt" in logs_dir_list
 
@@ -1346,7 +1346,7 @@ spack:
             if not Path(dl_dir.strpath).exists():
                 os.makedirs(dl_dir.strpath)
             buildcache_cmd("download", "--spec-file", json_path, "--path", dl_dir.strpath)
-            dl_dir_list = os.listdir(dl_dir.strpath)
+            dl_dir_list = list(Path(dl_dir.strpath).iterdir())
 
             assert len(dl_dir_list) == 2
 

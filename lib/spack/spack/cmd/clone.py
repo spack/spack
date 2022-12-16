@@ -66,7 +66,7 @@ def clone(parser, args):
     if os.path.exists(os.path.join(prefix, ".git")):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
-    files_in_the_way = os.listdir(prefix)
+    files_in_the_way = list(Path(prefix).iterdir())
     if files_in_the_way:
         tty.die(
             "There are already files there! " "Delete these files before boostrapping spack.",

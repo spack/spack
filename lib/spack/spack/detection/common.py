@@ -113,7 +113,7 @@ def path_to_dict(search_paths):
     # Reverse order of search directories so that a lib in the first
     # entry overrides later entries
     for search_path in reversed(search_paths):
-        for lib in os.listdir(search_path):
+        for lib in Path(search_path).iterdir():
             lib_path = os.path.join(search_path, lib)
             if llnl.util.filesystem.is_readable_file(lib_path):
                 path_to_lib[lib_path] = lib

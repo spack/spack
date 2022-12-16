@@ -89,7 +89,7 @@ def all_commands():
         command_paths = [spack.paths.command_path]  # Built-in commands
         command_paths += spack.extensions.get_command_paths()  # Extensions
         for path in command_paths:
-            for file in os.listdir(path):
+            for file in Path(path).iterdir():
                 if file.endswith(".py") and not re.search(ignore_files, file):
                     cmd = re.sub(r".py$", "", file)
                     _all_commands.append(cmd_name(cmd))

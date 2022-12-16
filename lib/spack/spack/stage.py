@@ -847,7 +847,7 @@ def purge():
     """Remove all build directories in the top-level stage path."""
     root = get_stage_root()
     if os.path.isdir(root):
-        for stage_dir in os.listdir(root):
+        for stage_dir in Path(root).iterdir():
             if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
                 stage_path = os.path.join(root, stage_dir)
                 if os.path.isdir(stage_path):

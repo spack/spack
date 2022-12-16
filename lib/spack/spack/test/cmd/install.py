@@ -278,7 +278,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     spec.package.do_install()
 
     # Ensure first commit file contents were written
-    installed = os.listdir(spec.prefix.bin)
+    installed = list(Path(spec.prefix.bin).iterdir())
     assert filename in installed
     with open(spec.prefix.bin.join(filename), "r") as f:
         content = f.read().strip()

@@ -350,7 +350,7 @@ class LinkTree(object):
                     raise ValueError("File blocks directory: %s" % dest)
 
                 # mark empty directories so they aren't removed on unmerge.
-                if not os.listdir(dest):
+                if not list(Path(dest).iterdir()):
                     marker = os.path.join(dest, empty_file_name)
                     touch(marker)
 
@@ -363,7 +363,7 @@ class LinkTree(object):
                     raise ValueError("File blocks directory: %s" % dest)
 
                 # remove directory if it is empty.
-                if not os.listdir(dest):
+                if not list(Path(dest).iterdir()):
                     shutil.rmtree(dest, ignore_errors=True)
 
                 # remove empty dir marker if present.

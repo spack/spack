@@ -159,7 +159,7 @@ def filter_shebang(path):
 
 def filter_shebangs_in_directory(directory, filenames=None):
     if filenames is None:
-        filenames = os.listdir(directory)
+        filenames = Path(directory).iterdir()
 
     is_exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 

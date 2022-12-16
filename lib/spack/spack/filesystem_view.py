@@ -511,7 +511,7 @@ class YamlFilesystemView(FilesystemView):
         specs = []
         for md_dir in md_dirs:
             if Path(md_dir).exists():
-                for name_dir in os.listdir(md_dir):
+                for name_dir in Path(md_dir).iterdir():
                     filename = os.path.join(md_dir, name_dir, spack.store.layout.spec_file_name)
                     spec = get_spec_from_file(filename)
                     if spec:

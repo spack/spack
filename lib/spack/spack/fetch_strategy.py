@@ -91,7 +91,7 @@ def _needs_stage(fun):
 
 def _ensure_one_stage_entry(stage_path):
     """Ensure there is only one stage entry in the stage path."""
-    stage_entries = os.listdir(stage_path)
+    stage_entries = list(Path(stage_path).iterdir())
     assert len(stage_entries) == 1
     return os.path.join(stage_path, stage_entries[0])
 
@@ -518,7 +518,7 @@ class URLFetchStrategy(FetchStrategy):
             )
 
         # Remove everything but the archive from the stage
-        for filename in os.listdir(self.stage.path):
+        for filename in Path(self.stage.path).iterdir():
             abspath = os.path.join(self.stage.path, filename)
             if abspath != self.archive_file:
                 shutil.rmtree(abspath, ignore_errors=True)

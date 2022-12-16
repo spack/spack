@@ -210,7 +210,7 @@ def list_modules(directory, **kwargs):
     order."""
     list_directories = kwargs.setdefault("directories", True)
 
-    for name in os.listdir(directory):
+    for name in Path(directory).iterdir():
         if name == "__init__.py":
             continue
 

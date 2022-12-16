@@ -263,7 +263,7 @@ def all_environment_names():
     if not Path(env_path).exists():
         return []
 
-    candidates = sorted(os.listdir(env_path))
+    candidates = sorted(list(Path(env_path).iterdir()))
     names = []
     for candidate in candidates:
         yaml_path = os.path.join(_root(candidate), manifest_name)
@@ -362,7 +362,7 @@ def _error_on_nonempty_view_dir(new_root):
         return
 
     # Empty directories are fine
-    if stat.S_ISDIR(st.st_mode) and len(os.listdir(new_root)) == 0:
+    if stat.S_ISDIR(st.st_mode) and len(list(Path(new_root).iterdir())) == 0:
         return
 
     # Anything else is an error
@@ -940,7 +940,7 @@ class Environment(object):
             elif include_url.scheme in ("http", "https", "ftp"):
                 # Stage any remote configuration file(s)
                 staged_configs = (
-                    os.listdir(self.config_stage_dir)
+                    list(Path(self.config_stage_dir).iterdir())
                     if Path(self.config_stage_dir).exists()
                     else []
                 )
@@ -2286,7 +2286,7 @@ def make_repo_path(root):
     path = spack.repo.RepoPath()
 
     if os.path.isdir(root):
-        for repo_root in os.listdir(root):
+        for repo_root in Path(root).iterdir():
             repo_root = os.path.join(root, repo_root)
 
             if not os.path.isdir(repo_root):

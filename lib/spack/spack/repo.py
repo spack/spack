@@ -384,7 +384,7 @@ class FastPackageChecker(collections.abc.Mapping):
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
         cache: Dict[str, os.stat_result] = {}
-        for pkg_name in os.listdir(self.packages_path):
+        for pkg_name in Path(self.packages_path).iterdir():
             # Skip non-directories in the package root.
             pkg_dir = os.path.join(self.packages_path, pkg_name)
 
@@ -1309,7 +1309,7 @@ def create_repo(root, namespace=None):
         elif os.path.isdir(root):
             if not os.access(root, os.R_OK | os.W_OK):
                 raise BadRepoError("Cannot create new repo in %s: cannot access directory." % root)
-            if os.listdir(root):
+            if list(Path(root).iterdir()):
                 raise BadRepoError("Cannot create new repo in %s: directory is not empty." % root)
         existed = True
 

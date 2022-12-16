@@ -451,7 +451,7 @@ class Database(object):
 
         # Remove all failure markings (aka files)
         tty.debug("Removing prefix failure tracking files")
-        for fail_mark in os.listdir(self._failure_dir):
+        for fail_mark in Path(self._failure_dir).iterdir():
             try:
                 Path(os.path.join(self._failure_dir, fail_mark)).unlink()
             except OSError as exc:

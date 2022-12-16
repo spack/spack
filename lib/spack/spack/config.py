@@ -1371,7 +1371,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
     # Return the local path to the cached configuration file OR to the
     # directory containing the cached configuration files.
     config_links = collect_urls(url)
-    existing_files = os.listdir(dest_dir) if os.path.isdir(dest_dir) else []
+    existing_files = list(Path(dest_dir).iterdir()) if os.path.isdir(dest_dir) else []
 
     paths = []
     for config_url in config_links:

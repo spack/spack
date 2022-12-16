@@ -1471,7 +1471,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
 
-            if not os.listdir(self.stage.path):
+            if not list(Path(self.stage.path).iterdir()):
                 raise FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
