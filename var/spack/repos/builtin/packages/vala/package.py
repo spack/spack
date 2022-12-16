@@ -42,6 +42,6 @@ class Vala(AutotoolsPackage):
         args = []
 
         if "+doc" not in self.spec:
-            args.extend(["--disable-valadoc"])
+            args.append("--disable-valadoc")
 
         return args

@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Libmypaint(AutotoolsPackage):
-    """libmypaint - MyPaint brush engine library
+    """libmypaint - MyPaint brush engine library.
 
     This is the brush library used by MyPaint. A number of other painting programs use it too."""
 
@@ -32,10 +32,6 @@ class Libmypaint(AutotoolsPackage):
     depends_on("gegl", when="+gegl")
     depends_on("gobject-introspection", when="+introspection")
     depends_on("glib", when="+introspection")
-
-    def url_for_version(self, version):
-        url = "https://github.com/mypaint/libmypaint/releases/download/v{0}/libmypaint-{0}.tar.xz"
-        return url.format(version)
 
     def configure_args(self):
         args = []
