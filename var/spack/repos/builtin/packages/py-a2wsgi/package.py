@@ -16,6 +16,5 @@ class PyA2wsgi(PythonPackage):
     version("1.6.0", sha256="67a9902db6da72c268a24d4e5d01348f736980a577279b7df801c8902aba8554")
 
     depends_on("python@3.6.2:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
 
     depends_on("py-pdm-pep517@1.0.0:", type=("build", "run"))
