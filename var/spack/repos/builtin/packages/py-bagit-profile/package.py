@@ -10,7 +10,7 @@ from spack.package import *
 class PyBagitProfile(PythonPackage):
     """A simple Python module for validating BagIt profiles."""
 
-    homepage = ""
+    homepage = "https://github.com/bagit-profiles/bagit-profiles-validator"
     pypi = "bagit-profile/bagit_profile-1.3.1.tar.gz"
 
     version("1.3.1", sha256="57798cdcf98b32a413edb29382d85f4f8c44d3204940d7e12d84998521a98c3f")
