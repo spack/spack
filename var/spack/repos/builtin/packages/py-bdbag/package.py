@@ -19,7 +19,7 @@ class PyBdbag(PythonPackage):
 
     depends_on("python@2.7:2,3.5:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@:5.999999", type="build")
+    depends_on("py-setuptools-scm@:5", type=("build", "run"))
 
     depends_on("py-pytz", type=("build", "run"))
     depends_on("py-tzlocal@2.1", type=("build", "run"))
