@@ -278,7 +278,7 @@ class NetcdfC(AutotoolsPackage):
         # This alone doesn't work on Cray when they cray-mpich wrappers are off, because the
         # compiler is simply called "cc"
         if self.spec.satisfies("+mpi") and self.spec.satisfies("platform=cray"):
-            env.set("CC=%s" % self.spec["mpi"].mpicc)
+            env.set("CC", self.spec["mpi"].mpicc, force=True)
 
     @run_after("install")
     def backup_nc_config(self):
