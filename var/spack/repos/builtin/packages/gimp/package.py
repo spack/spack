@@ -85,8 +85,8 @@ class Gimp(AutotoolsPackage):
 
     def url_for_version(self, version):
         # ref: https://download.gimp.org/gimp/v2.10/gimp-2.10.32.tar.bz2"
-        url = "https://download.gimp.org/gimp/v{0}/gimp-{1}.tar.bz2".format(version.up_to(2), version)
-        return url
+        url = "https://download.gimp.org/gimp/v{0}/gimp-{1}.tar.bz2"
+        return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = [
