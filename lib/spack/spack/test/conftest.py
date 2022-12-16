@@ -1775,7 +1775,7 @@ def noncyclical_dir_structure(tmpdir):
         with open(j("a", "file_1"), "wb"):
             pass
         Path(j("a", "to_file_1")).link_to(j("file_1"))
-        Path("c"), j("a", "to_c")).link_to(j("..")
+        Path(j("a", "to_c")).link_to(j("..", "c"))
         Path(j("b")).link_to(j("a"))
         Path(j("c")).mkdir()
         Path(j("c", "dangling_link")).link_to(j("nowhere"))

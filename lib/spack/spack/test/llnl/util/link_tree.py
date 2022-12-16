@@ -238,10 +238,10 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
     j = os.path.join
     with tmpdir.as_cwd():
         Path(j("a")).mkdir()
-        Path("b"), j("a", "symlink_b")).link_to(j("..")
+        Path(j("a", "symlink_b")).link_to(j("..", "b"))
         Path(j("a", "symlink_b_b")).link_to(j("symlink_b"))
         Path(j("b")).mkdir()
-        Path("a"), j("b", "symlink_a")).link_to(j("..")
+        Path(j("b", "symlink_a")).link_to(j("..", "a"))
 
     visitor = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir), visitor)
