@@ -14,6 +14,7 @@ class Wi4mpi(CMakePackage):
     url = "https://github.com/cea-hpc/wi4mpi/archive/v3.4.1.tar.gz"
     maintainers = ["adrien-cotte", "marcjoos-cea"]
 
+    version("3.6.4", sha256="be1732a1aed1e2946873951a344b572f11f2a55cd06c634580a9398b5877e22a")
     version("3.6.3", sha256="c327babc892cc3c2bdddfacf3011e6fcb7e00a04e814de31f5e707cba3199c5c")
     version("3.6.2", sha256="4b784d27decfff9cbd29f072ba75bb0f6c471d6edc7f1037df1ab7ccbcceffba")
     version("3.6.1", sha256="14fbaf8c7ac0b7f350242a90e1be75e9f4bd0196a0d0e326b40be04ca58a2613")
