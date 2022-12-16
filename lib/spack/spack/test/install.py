@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 import shutil
 import sys
 
@@ -484,7 +485,7 @@ def test_pkg_build_paths(install_mockery):
     assert env_path.endswith(_spack_build_envfile)
 
     # Backward compatibility checks
-    log_dir = os.path.dirname(log_path)
+    log_dir = PurePath(log_path).parent
     fs.mkdirp(log_dir)
     with fs.working_dir(log_dir):
         # Start with the older of the previous log filenames
@@ -520,7 +521,7 @@ def test_pkg_install_paths(install_mockery):
     assert spec.package.install_configure_args_path == args_path
 
     # Backward compatibility checks
-    log_dir = os.path.dirname(log_path)
+    log_dir = PurePath(log_path).parent
     fs.mkdirp(log_dir)
     with fs.working_dir(log_dir):
         # Start with the older of the previous install log filenames
@@ -571,7 +572,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 
     # Set up mock build files and try again to include archive failure
     log_path = spec.package.log_path
-    log_dir = os.path.dirname(log_path)
+    log_dir = PurePath(log_path).parent
     fs.mkdirp(log_dir)
     with fs.working_dir(log_dir):
         fs.touch(log_path)
@@ -579,7 +580,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
         fs.touch(spec.package.env_mods_path)
         fs.touch(spec.package.configure_args_path)
 
-    install_path = os.path.dirname(spec.package.install_log_path)
+    install_path = PurePath(spec.package.install_log_path).parent
     fs.mkdirp(install_path)
 
     source = spec.package.stage.source_path
@@ -596,7 +597,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
     assert Path(spec.package.install_configure_args_path).exists()
 
     archive_dir = os.path.join(install_path, "archived-files")
-    source_dir = os.path.dirname(source)
+    source_dir = PurePath(source).parent
     rel_config = os.path.relpath(config, source_dir)
 
     assert os.path.exists(os.path.join(archive_dir, rel_config))

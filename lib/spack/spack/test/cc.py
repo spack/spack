@@ -8,6 +8,7 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+from pathlib import PurePath
 import sys
 
 import pytest
@@ -376,7 +377,7 @@ def test_system_path_cleanup(wrapper_environment):
     Thus, ensure that PATH cleanup works even with trailing /.
     """
     system_path = "/bin:/usr/bin:/usr/local/bin"
-    cc_dir = os.path.dirname(cc.path)
+    cc_dir = PurePath(cc.path).parent
     with set_env(SPACK_ENV_PATH=cc_dir, SPACK_CC="true"):
         with set_env(PATH=cc_dir + ":" + system_path):
             check_env_var(cc, "PATH", system_path)

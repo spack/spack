@@ -7,7 +7,7 @@ import os
 import os.path
 import stat
 import subprocess
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -821,7 +821,7 @@ To resolve this problem, please try the following:
         # Remove the files and create a log of what was removed
         libtool_files = fs.find(str(self.pkg.prefix), "*.la", recursive=True)
         with fs.safe_remove(*libtool_files):
-            fs.mkdirp(os.path.dirname(self._removed_la_files_log))
+            fs.mkdirp(PurePath(self._removed_la_files_log).parent)
             with open(self._removed_la_files_log, mode="w") as f:
                 f.write("\n".join(libtool_files))
 

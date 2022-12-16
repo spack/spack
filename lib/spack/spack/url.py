@@ -27,6 +27,7 @@ it's never been told about that version before.
 """
 import io
 import os
+from pathlib import PurePath
 import re
 from urllib.parse import urlsplit, urlunsplit
 
@@ -119,7 +120,7 @@ def find_list_urls(url):
         ),
     ]
 
-    list_urls = set([os.path.dirname(url)])
+    list_urls = set([PurePath(url).parent])
 
     for pattern, fun in url_types:
         match = re.search(pattern, url)

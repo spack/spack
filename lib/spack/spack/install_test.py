@@ -428,7 +428,7 @@ class TestSuite(object):
             with open(filename, "r") as f:
                 data = sjson.load(f)
                 test_suite = TestSuite.from_dict(data)
-                content_hash = os.path.basename(os.path.dirname(filename))
+                content_hash = os.path.basename(PurePath(filename).parent)
                 test_suite._hash = content_hash
                 return test_suite
         except Exception as e:

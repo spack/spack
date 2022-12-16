@@ -1668,7 +1668,7 @@ class FsCache(object):
             return
 
         dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
+        mkdirp(PurePath(dst).parent)
         fetcher.archive(dst)
 
     def fetcher(self, target_path, digest, **kwargs):

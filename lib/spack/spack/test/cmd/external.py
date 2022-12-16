@@ -5,7 +5,7 @@
 import os
 import os.path
 import sys
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -81,10 +81,10 @@ def test_find_external_two_instances_same_package(
     pkg, entries = next(iter(pkg_to_entries.items()))
     spec_to_path = dict((e.spec, e.prefix) for e in entries)
     assert spec_to_path[Spec("cmake@1.foo")] == (
-        spack.detection.executable_prefix(os.path.dirname(cmake_path1))
+        spack.detection.executable_prefix(PurePath(cmake_path1).parent)
     )
     assert spec_to_path[Spec("cmake@3.17.2")] == (
-        spack.detection.executable_prefix(os.path.dirname(cmake_path2))
+        spack.detection.executable_prefix(PurePath(cmake_path2).parent)
     )
 
 
@@ -108,7 +108,7 @@ def test_find_external_update_config(mutable_config):
 
 def test_get_executables(working_env, mock_executable):
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-    path_to_exe = spack.detection.executables_in_path([os.path.dirname(cmake_path1)])
+    path_to_exe = spack.detection.executables_in_path([PurePath(cmake_path1).parent])
     cmake_exe = define_plat_exe("cmake")
     assert path_to_exe[cmake_path1] == cmake_exe
 
@@ -121,9 +121,9 @@ def test_find_external_cmd(mutable_config, working_env, mock_executable, _platfo
     which restricts the set of packages that Spack looks for.
     """
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-    prefix = os.path.dirname(os.path.dirname(cmake_path1))
+    prefix = os.path.dirname(PurePath(cmake_path1).parent)
 
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
+    os.environ["PATH"] = os.pathsep.join([PurePath(cmake_path1).parent])
     external("find", "cmake")
 
     pkgs_cfg = spack.config.get("packages")
@@ -139,7 +139,7 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
     not buildable.
     """
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
+    os.environ["PATH"] = os.pathsep.join([PurePath(cmake_path1).parent])
     external("find", "--not-buildable", "cmake")
     pkgs_cfg = spack.config.get("packages")
     assert not pkgs_cfg["cmake"]["buildable"]
@@ -152,8 +152,8 @@ def test_find_external_cmd_full_repo(
     iterates through each package in the repository.
     """
     exe_path1 = mock_executable("find-externals1-exe", output="echo find-externals1 version 1.foo")
-    prefix = os.path.dirname(os.path.dirname(exe_path1))
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(exe_path1)])
+    prefix = os.path.dirname(PurePath(exe_path1).parent)
+    os.environ["PATH"] = os.pathsep.join([PurePath(exe_path1).parent])
     external("find", "--all")
 
     pkgs_cfg = spack.config.get("packages")
@@ -304,7 +304,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
 def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
+    prefix = PurePath(gcc_exe).parent
     monkeypatch.setenv("PATH", prefix)
 
     # Find the external spec
@@ -318,7 +318,7 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _pla
     assert len(externals) == 1
     external_gcc = externals[0]
     assert external_gcc["spec"] == "gcc@4.2.1 languages=c"
-    assert external_gcc["prefix"] == os.path.dirname(prefix)
+    assert external_gcc["prefix"] == PurePath(prefix).parent
     assert "extra_attributes" in external_gcc
     extra_attributes = external_gcc["extra_attributes"]
     assert "prefix" not in extra_attributes
@@ -329,7 +329,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     # Prepare an environment to detect a fake gcc that
     # override its external prefix
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
+    prefix = PurePath(gcc_exe).parent
     monkeypatch.setenv("PATH", prefix)
 
     @classmethod
@@ -356,7 +356,7 @@ def test_new_entries_are_reported_correctly(
 ):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
+    prefix = PurePath(gcc_exe).parent
     monkeypatch.setenv("PATH", prefix)
 
     # The first run will find and add the external gcc
@@ -379,11 +379,11 @@ def test_new_entries_are_reported_correctly(
 def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake cmake
     cmake_exe = mock_executable("cmake", output="echo cmake version 3.19.1")
-    prefix = os.path.dirname(cmake_exe)
+    prefix = PurePath(cmake_exe).parent
     monkeypatch.setenv("PATH", prefix)
 
     openssl_exe = mock_executable("openssl", output="OpenSSL 2.8.3")
-    prefix = os.path.dirname(openssl_exe)
+    prefix = PurePath(openssl_exe).parent
     monkeypatch.setenv("PATH", prefix)
 
     # Test that we detect specs

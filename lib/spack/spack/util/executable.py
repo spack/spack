@@ -8,7 +8,7 @@ import re
 import shlex
 import subprocess
 import sys
-from pathlib import Path as pth
+from pathlib import Path as pth, PurePath
 
 import llnl.util.tty as tty
 
@@ -294,7 +294,7 @@ def which_string(*args, **kwargs):
             new_path = path[:]
             for p in path:
                 if PurePath(p).name == "bin":
-                    new_path.append(os.path.dirname(p))
+                    new_path.append(PurePath(p).parent)
             path = new_path
 
         for candidate_name in candidate_names:

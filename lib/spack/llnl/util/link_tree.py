@@ -11,7 +11,7 @@ import filecmp
 import os
 import shutil
 from collections import OrderedDict
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, touch, traverse_tree
@@ -129,7 +129,7 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         else:
             # Only follow symlinked dirs when pointing deeper
             src = os.path.join(root, rel_path)
-            real_parent = os.path.realpath(os.path.dirname(src))
+            real_parent = os.path.realpath(PurePath(src).parent)
             real_child = os.path.realpath(src)
             handle_as_dir = real_child.startswith(real_parent)
 

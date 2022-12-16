@@ -16,7 +16,7 @@ import sys
 import tempfile
 import time
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePath
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -1777,7 +1777,7 @@ def reproduce_ci_job(url, work_dir):
     download_and_extract_artifacts(url, work_dir)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
-    repro_lock_dir = os.path.dirname(lock_file)
+    repro_lock_dir = PurePath(lock_file).parent
 
     tty.debug("Found lock file in: {0}".format(repro_lock_dir))
 
@@ -1830,7 +1830,7 @@ def reproduce_ci_job(url, work_dir):
     with open(repro_file) as fd:
         repro_details = json.load(fd)
 
-    repro_dir = os.path.dirname(repro_file)
+    repro_dir = PurePath(repro_file).parent
     rel_repro_dir = repro_dir.replace(work_dir, "").lstrip(os.path.sep)
 
     # Find the spack info text file that should contain the git log

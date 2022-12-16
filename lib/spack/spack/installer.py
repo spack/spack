@@ -36,7 +36,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
@@ -576,7 +576,7 @@ def log(pkg):
     # Archive all phase log paths
     for phase_log in pkg.phase_log_files:
         log_file = PurePath(phase_log).name
-        log_file = os.path.join(os.path.dirname(packages_dir), log_file)
+        log_file = os.path.join(PurePath(packages_dir).parent, log_file)
         fs.install(phase_log, log_file)
 
     # Archive the environment modifications for the build.
@@ -612,7 +612,7 @@ def log(pkg):
                     target = os.path.join(target_dir, f)
                     # We must ensure that the directory exists before
                     # copying a file in
-                    fs.mkdirp(os.path.dirname(target))
+                    fs.mkdirp(PurePath(target).parent)
                     fs.install(f, target)
                 except Exception as e:
                     tty.debug(e)
@@ -2019,7 +2019,7 @@ class BuildProcessInstaller(object):
             builder = spack.builder.create(pkg)
             for i, phase_fn in enumerate(builder):
                 # Keep a log file for each phase
-                log_dir = os.path.dirname(pkg.log_path)
+                log_dir = PurePath(pkg.log_path).parent
                 log_file = "spack-build-%02d-%s-out.txt" % (i + 1, phase_fn.name.lower())
                 log_file = os.path.join(log_dir, log_file)
 

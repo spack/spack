@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+from pathlib import Path, PurePath
 import re
 import sys
 
@@ -198,7 +199,7 @@ def test_setdefault_command(mutable_database, mutable_config):
     module("lmod", "refresh", "-y", "--delete-tree", preferred, other_spec)
 
     # Assert initial directory state: no link and all module files present
-    link_name = os.path.join(os.path.dirname(writers[preferred].layout.filename), "default")
+    link_name = os.path.join(PurePath(writers[preferred].layout.filename).parent, "default")
     for k in preferred, other_spec:
         assert Path(writers[k].layout.filename).exists()
     assert not Path(link_name).exists()

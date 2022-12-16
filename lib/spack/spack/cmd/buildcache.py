@@ -5,6 +5,7 @@
 import glob
 import json
 import os
+from pathlib import PurePath
 import shutil
 import sys
 import tempfile
@@ -565,7 +566,7 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
         local_path = os.path.join(tmpdir, PurePath(src_url).name)
 
     try:
-        temp_stage = Stage(src_url, path=os.path.dirname(local_path))
+        temp_stage = Stage(src_url, path=PurePath(local_path).parent)
         try:
             temp_stage.create()
             temp_stage.fetch()

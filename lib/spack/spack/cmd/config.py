@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import collections
 import os
+from pathlib import PurePath
 import shutil
 
 import llnl.util.filesystem as fs
@@ -353,7 +354,7 @@ def config_revert(args):
         # If it exists and we don't have write access in this scope
         # keep track of it and report a comprehensive error later
         entry = Entry(scope, cfg_file, bkp_file)
-        scope_dir = os.path.dirname(bkp_file)
+        scope_dir = PurePath(bkp_file).parent
         can_be_reverted = _can_revert_update(scope_dir, cfg_file, bkp_file)
         if not can_be_reverted:
             cannot_overwrite.append(entry)

@@ -6,6 +6,7 @@
 import errno
 import glob
 import os
+from pathlib import Path, PurePath
 import posixpath
 import re
 import shutil
@@ -306,7 +307,7 @@ class DirectoryLayout(object):
             pattern = os.path.join(self.root, *path_elems)
             spec_files = glob.glob(pattern)
             get_depr_spec_file = lambda x: os.path.join(
-                os.path.dirname(os.path.dirname(x)), self.spec_file_name
+                os.path.dirname(PurePath(x).parent), self.spec_file_name
             )
             deprecated_specs |= set(
                 (self.read_spec(s), self.read_spec(get_depr_spec_file(s))) for s in spec_files
@@ -368,7 +369,7 @@ class DirectoryLayout(object):
             except OSError as e:
                 raise RemoveFailedError(spec, path, e) from e
 
-        path = os.path.dirname(path)
+        path = PurePath(path).parent
         while path != self.root:
             if Path(path).is_dir():
                 try:
@@ -382,7 +383,7 @@ class DirectoryLayout(object):
                         return
                     else:
                         raise e
-            path = os.path.dirname(path)
+            path = PurePath(path).parent
 
 
 class DirectoryLayoutError(SpackError):

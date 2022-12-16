@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+from pathlib import Path, PurePath
 import stat
 import sys
 
@@ -80,7 +81,7 @@ def test_modules_default_symlink(
     generator = generator_cls(spec, "default")
     generator.write()
 
-    link_path = os.path.join(os.path.dirname(mock_module_filename), "default")
+    link_path = os.path.join(PurePath(mock_module_filename).parent, "default")
     assert Path(link_path).is_symlink()
     assert os.readlink(link_path) == mock_module_filename
 

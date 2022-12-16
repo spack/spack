@@ -223,7 +223,7 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
 @pytest.mark.parametrize(
     "start_path,relative_paths,expected",
     [
-        # $ORIGIN will be replaced with os.path.dirname('usr/bin/test')
+        # $ORIGIN will be replaced with PurePath('usr/bin/test').parent
         # and then normalized
         (
             "/usr/bin/test",

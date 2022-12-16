@@ -6,7 +6,7 @@
 import json
 import os
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -204,7 +204,7 @@ def ci_generate(args):
         output_file = Path(".gitlab-ci.yml").resolve()
     else:
         output_file_path = Path(output_file).resolve()
-        gen_ci_dir = os.path.dirname(output_file_path)
+        gen_ci_dir = PurePath(output_file_path).parent
         if not Path(gen_ci_dir).exists():
             os.makedirs(gen_ci_dir)
 
@@ -222,7 +222,7 @@ def ci_generate(args):
     )
 
     if copy_yaml_to:
-        copy_to_dir = os.path.dirname(copy_yaml_to)
+        copy_to_dir = PurePath(copy_yaml_to).parent
         if not Path(copy_to_dir).exists():
             os.makedirs(copy_to_dir)
         shutil.copyfile(output_file, copy_yaml_to)

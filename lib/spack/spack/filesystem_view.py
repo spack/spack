@@ -277,7 +277,7 @@ class YamlFilesystemView(FilesystemView):
 
     def write_projections(self):
         if self.projections:
-            mkdirp(os.path.dirname(self.projections_path))
+            mkdirp(PurePath(self.projections_path).parent)
             with open(self.projections_path, "w") as f:
                 f.write(s_yaml.dump_config({"projections": self.projections}))
 

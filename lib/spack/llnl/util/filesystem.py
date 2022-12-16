@@ -16,7 +16,7 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
-from pathlib import Path
+from pathlib import Path, PurePath
 from sys import platform as _platform
 
 from llnl.util import tty
@@ -843,7 +843,7 @@ def mkdirp(*paths, **kwargs):
                 intermediate_folders = []
                 last_parent = ""
 
-                intermediate_path = os.path.dirname(path)
+                intermediate_path = PurePath(path).parent
 
                 while intermediate_path:
                     if Path(intermediate_path).exists():
@@ -851,7 +851,7 @@ def mkdirp(*paths, **kwargs):
                         break
 
                     intermediate_folders.append(intermediate_path)
-                    intermediate_path = os.path.dirname(intermediate_path)
+                    intermediate_path = PurePath(intermediate_path).parent
 
                 # create folders
                 os.makedirs(path)
@@ -945,7 +945,7 @@ def replace_directory_transaction(directory_name):
 
     # Note: directory_name is normalized here, meaning the trailing slash is dropped,
     # so dirname is the directory's parent not the directory itself.
-    tmpdir = tempfile.mkdtemp(dir=os.path.dirname(directory_name), prefix=".backup")
+    tmpdir = tempfile.mkdtemp(dir=PurePath(directory_name).parent, prefix=".backup")
 
     # We have to jump through hoops to support Windows, since
     # Path(directory_name).rename(Path(tmpdir)) errors there.
@@ -1006,7 +1006,7 @@ def hash_directory(directory, ignore=[]):
 @system_path_filter
 def write_tmp_and_move(filename):
     """Write to a temporary file, then move into place."""
-    dirname = os.path.dirname(filename)
+    dirname = PurePath(filename).parent
     basename = PurePath(filename).name
     tmp = os.path.join(dirname, ".%s.tmp" % basename)
     with open(tmp, "w") as f:
@@ -1047,7 +1047,7 @@ def touch(path):
 @system_path_filter
 def touchp(path):
     """Like ``touch``, but creates any parent directories needed for the file."""
-    mkdirp(os.path.dirname(path))
+    mkdirp(PurePath(path).parent)
     touch(path)
 
 
@@ -1073,7 +1073,7 @@ def ancestor(dir, n=1):
     """Get the nth ancestor of a directory."""
     parent = Path(dir).resolve()
     for i in range(n):
-        parent = os.path.dirname(parent)
+        parent = PurePath(parent).parent
     return parent
 
 
@@ -1689,7 +1689,7 @@ class FileList(collections.abc.Sequence):
         Returns:
             list: A list of directories
         """
-        return list(dedupe(os.path.dirname(x) for x in self.files if os.path.dirname(x)))
+        return list(dedupe(PurePath(x).parent for x in self.files if PurePath(x).parent))
 
     @property
     def basenames(self):

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 import sys
 
 import pytest
@@ -71,7 +72,7 @@ def test_which_with_slash_ignores_path(tmpdir, working_env):
 
     path = str(tmpdir.join("exe"))
     wrong_path = str(tmpdir.join("bin", "exe"))
-    os.environ["PATH"] = os.path.dirname(wrong_path)
+    os.environ["PATH"] = PurePath(wrong_path).parent
 
     with tmpdir.as_cwd():
         if sys.platform == "win32":

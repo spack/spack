@@ -9,7 +9,7 @@ import re
 import sys
 import tempfile
 import xml.etree.ElementTree as ElementTree
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -970,7 +970,7 @@ class IntelPackage(Package):
         # Ensure that the directory containing the compiler wrappers is in the
         # PATH. Spack packages add `prefix.bin` to their dependents' paths,
         # but because of the intel directory hierarchy that is insufficient.
-        env.prepend_path("PATH", os.path.dirname(wrapper_vars["MPICC"]))
+        env.prepend_path("PATH", PurePath(wrapper_vars["MPICC"]).parent)
 
         for key, value in wrapper_vars.items():
             env.set(key, value)

@@ -5,7 +5,7 @@
 
 """Caches used by Spack to store data"""
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
@@ -67,7 +67,7 @@ class MirrorCache(object):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
         dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
+        mkdirp(PurePath(dst).parent)
         fetcher.archive(dst)
 
     def symlink(self, mirror_ref):
@@ -76,7 +76,7 @@ class MirrorCache(object):
 
         cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
         storage_path = os.path.join(self.root, mirror_ref.storage_path)
-        relative_dst = os.path.relpath(storage_path, start=os.path.dirname(cosmetic_path))
+        relative_dst = os.path.relpath(storage_path, start=PurePath(cosmetic_path).parent)
 
         if not Path(cosmetic_path).exists():
             if os.path.lexists(cosmetic_path):
@@ -84,7 +84,7 @@ class MirrorCache(object):
                 # it and recreate it (in order to fix any symlinks broken prior
                 # to https://github.com/spack/spack/pull/13908)
                 Path(cosmetic_path).unlink()
-            mkdirp(os.path.dirname(cosmetic_path))
+            mkdirp(PurePath(cosmetic_path).parent)
             symlink(relative_dst, cosmetic_path)
 
 

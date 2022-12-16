@@ -15,6 +15,7 @@ import inspect
 import itertools
 import os
 import os.path
+from pathlib import Path, PurePath
 import random
 import re
 import shutil
@@ -1314,7 +1315,7 @@ def create_repo(root, namespace=None):
         existed = True
 
     full_path = os.path.realpath(root)
-    parent = os.path.dirname(full_path)
+    parent = PurePath(full_path).parent
     if not os.access(parent, os.R_OK | os.W_OK):
         raise BadRepoError("Cannot create repository in %s: can't access parent!" % root)
 
@@ -1431,13 +1432,13 @@ class MockRepositoryBuilder(object):
         template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
         text = template.render(context)
         package_py = self.recipe_filename(name)
-        fs.mkdirp(os.path.dirname(package_py))
+        fs.mkdirp(PurePath(package_py).parent)
         with open(package_py, "w") as f:
             f.write(text)
 
     def remove(self, name):
         package_py = self.recipe_filename(name)
-        shutil.rmtree(os.path.dirname(package_py))
+        shutil.rmtree(PurePath(package_py).parent)
 
     def recipe_filename(self, name):
         return os.path.join(self.root, "packages", name, "package.py")

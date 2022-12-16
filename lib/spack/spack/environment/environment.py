@@ -13,7 +13,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import ruamel.yaml as yaml
 
@@ -450,12 +450,12 @@ class ViewDescriptor(object):
         if PurePath(root).is_absolute():
             return root
 
-        root_dir = os.path.dirname(self.root)
+        root_dir = PurePath(self.root).parent
         return os.path.join(root_dir, root)
 
     def _next_root(self, specs):
         content_hash = self.content_hash(specs)
-        root_dir = os.path.dirname(self.root)
+        root_dir = PurePath(self.root).parent
         root_name = PurePath(self.root).name
         return os.path.join(root_dir, "._%s" % root_name, content_hash)
 
@@ -581,7 +581,7 @@ class ViewDescriptor(object):
 
         view = self.view(new=new_root)
 
-        root_dirname = os.path.dirname(self.root)
+        root_dirname = PurePath(self.root).parent
         tmp_symlink_name = os.path.join(root_dirname, "._view_link")
 
         # Create a new view
@@ -611,7 +611,7 @@ class ViewDescriptor(object):
         if (
             old_root
             and Path(old_root).exists()
-            and Path(os.path.dirname(new_root)).samefile(os.path.dirname(old_root))
+            and Path(PurePath(new_root).parent).samefile(PurePath(old_root).parent)
         ):
             try:
                 shutil.rmtree(old_root)
@@ -671,7 +671,7 @@ class Environment(object):
                 # Rewrite relative develop paths when initializing a new
                 # environment in a different location from the spack.yaml file.
                 if not keep_relative and hasattr(f, "name") and f.name.endswith(".yaml"):
-                    init_file_dir = Path.resolve(os.path.dirname(f.name))
+                    init_file_dir = Path.resolve(PurePath(f.name).parent)
                     self._rewrite_relative_paths_on_relocation(init_file_dir)
         else:
             with lk.ReadTransaction(self.txlock):

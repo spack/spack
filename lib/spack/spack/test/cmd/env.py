@@ -9,7 +9,7 @@ import os
 import shutil
 import sys
 from argparse import Namespace
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -873,7 +873,7 @@ def test_env_with_included_config_var_path(packages_file):
     e = ev.read("test")
 
     config_real_path = substitute_path_variables(config_var_path)
-    fs.mkdirp(os.path.dirname(config_real_path))
+    fs.mkdirp(PurePath(config_real_path).parent)
     shutil.move(packages_file.strpath, config_real_path)
     assert Path(config_real_path).exists()
 
@@ -2834,7 +2834,7 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
 
     # Save the current view directory.
     resolved_view = os.path.realpath(view)
-    all_views = os.path.dirname(resolved_view)
+    all_views = PurePath(resolved_view).parent
     views_before = list(Path(all_views).iterdir())
 
     # Add a spec that results in MergeConflictError's when creating a view

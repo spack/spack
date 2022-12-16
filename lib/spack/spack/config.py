@@ -37,7 +37,7 @@ import re
 import sys
 from contextlib import contextmanager
 from typing import Dict, List, Optional
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -283,7 +283,7 @@ class SingleFileScope(ConfigScope):
 
         validate(data_to_write, self.schema)
         try:
-            parent = os.path.dirname(self.path)
+            parent = PurePath(self.path).parent
             mkdirp(parent)
 
             tmp = os.path.join(parent, ".%s.tmp" % PurePath(self.path).name)

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
 import os
+from pathlib import PurePath
 import shutil
 import sys
 from copy import copy
@@ -893,7 +894,7 @@ fi
 echo "/Library/Developer"
 """,
     )
-    bin_dir = os.path.dirname(xcrun)
+    bin_dir = PurePath(xcrun).parent
     monkeypatch.setenv("PATH", bin_dir, prepend=os.pathsep)
 
     def noop(*args, **kwargs):
@@ -945,7 +946,7 @@ def test_xcode_not_available(xcode_select_output, mock_executable, monkeypatch):
             xcode_select_output
         ),
     )
-    bin_dir = os.path.dirname(xcrun)
+    bin_dir = PurePath(xcrun).parent
     monkeypatch.setenv("PATH", bin_dir, prepend=os.pathsep)
     # Prepare compiler
     apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")

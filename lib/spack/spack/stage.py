@@ -10,6 +10,7 @@ import getpass
 import glob
 import hashlib
 import os
+from pathlib import Path, PurePath
 import shutil
 import stat
 import sys
@@ -64,7 +65,7 @@ def create_stage_root(path: str) -> None:
         if not Path(p).exists():
             # Ensure access controls of subdirs created above `$user` inherit
             # from the parent and share the group.
-            par_stat = os.stat(os.path.dirname(p))
+            par_stat = os.stat(PurePath(p).parent)
             mkdirp(p, group=par_stat.st_gid, mode=par_stat.st_mode)
 
             p_stat = os.stat(p)
@@ -657,7 +658,7 @@ class Stage(object):
             Path.cwd()
         except OSError as e:
             tty.debug(e)
-            os.chdir(os.path.dirname(self.path))
+            os.chdir(PurePath(self.path).parent)
 
         # mark as destroyed
         self.created = False

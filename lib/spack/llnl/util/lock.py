@@ -5,6 +5,7 @@
 
 import errno
 import os
+from pathlib import PurePath
 import socket
 import sys
 import time
@@ -110,7 +111,7 @@ class OpenFileTracker(object):
                 raise
 
             # path does not exist -- fail if we won't be able to create it
-            parent = os.path.dirname(path) or "."
+            parent = PurePath(path).parent or "."
             if not os.access(parent, os.W_OK):
                 raise CantCreateLockError(path)
 
@@ -378,7 +379,7 @@ class Lock(object):
         return False
 
     def _ensure_parent_directory(self):
-        parent = os.path.dirname(self.path)
+        parent = PurePath(self.path).parent
 
         # relative paths to lockfiles in the current directory have no parent
         if not parent:

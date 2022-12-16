@@ -36,6 +36,7 @@ import inspect
 import io
 import multiprocessing
 import os
+from pathlib import PurePath
 import re
 import sys
 import traceback
@@ -439,7 +440,7 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths["cc"])
+        spack.paths.build_env_path, PurePath(pkg.compiler.link_paths["cc"]).parent
     )
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)

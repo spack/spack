@@ -10,6 +10,7 @@ import json
 import multiprocessing.pool
 import os
 import re
+from pathlib import PurePath
 import shutil
 import sys
 import tarfile
@@ -1743,7 +1744,7 @@ def relocate_package(spec, allow_root):
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
-    stagepath = os.path.dirname(filename)
+    stagepath = PurePath(filename).parent
     spackfile_name = tarball_name(spec, ".spack")
     spackfile_path = os.path.join(stagepath, spackfile_name)
     tarfile_name = tarball_name(spec, ".tar.gz")

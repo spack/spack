@@ -27,7 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import llnl.util.filesystem as fsys
@@ -789,7 +789,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""
-        return Path.resolve(os.path.dirname(cls.module.__file__))
+        return Path.resolve(PurePath(cls.module.__file__).parent)
 
     @classproperty
     def module(cls):
@@ -1873,7 +1873,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if Path(src_path).is_dir():
                 fsys.install_tree(src_path, dest_path)
             else:
-                fsys.mkdirp(os.path.dirname(dest_path))
+                fsys.mkdirp(PurePath(dest_path).parent)
                 fsys.copy(src_path, dest_path)
 
     @contextlib.contextmanager
@@ -2311,7 +2311,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # copy spec metadata to "deprecated" dir of deprecator
         depr_yaml = spack.store.layout.deprecated_file_path(spec, deprecator)
-        fsys.mkdirp(os.path.dirname(depr_yaml))
+        fsys.mkdirp(PurePath(depr_yaml).parent)
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in

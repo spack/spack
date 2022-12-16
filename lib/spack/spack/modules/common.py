@@ -33,6 +33,7 @@ import copy
 import datetime
 import inspect
 import os.path
+from pathlib import Path, PurePath
 import re
 from typing import Optional
 
@@ -862,7 +863,7 @@ class BaseModuleFileWriter(object):
 
         # If the directory where the module should reside does not exist
         # create it
-        module_dir = os.path.dirname(self.layout.filename)
+        module_dir = PurePath(self.layout.filename).parent
         if not Path(module_dir).exists():
             llnl.util.filesystem.mkdirp(module_dir)
 
@@ -916,8 +917,8 @@ class BaseModuleFileWriter(object):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing
             # symlinks do not cause an error.
-            default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
-            default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
+            default_path = os.path.join(PurePath(self.layout.filename).parent, "default")
+            default_tmp = os.path.join(PurePath(self.layout.filename).parent, ".tmp_spack_default")
             Path(default_tmp).link_to(self.layout.filename)
             Path(default_tmp).rename(Path(default_path))
 
@@ -928,7 +929,7 @@ class BaseModuleFileWriter(object):
             try:
                 Path(mod_file).unlink()  # Remove the module file
                 os.removedirs(
-                    os.path.dirname(mod_file)
+                    PurePath(mod_file).parent
                 )  # Remove all the empty directories from the leaf up
             except OSError:
                 # removedirs throws OSError on first non-empty directory found

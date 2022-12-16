@@ -5,6 +5,7 @@
 
 import glob
 import os
+from pathlib import PurePath
 import re
 import sys
 
@@ -75,7 +76,7 @@ def _process_ld_so_conf_queue(queue):
             if not include_path:
                 continue
 
-            cwd = os.path.dirname(p)
+            cwd = PurePath(p).parent
             os.chdir(cwd)
             queue.extend(os.path.join(cwd, p) for p in glob.glob(include_path))
 
@@ -128,7 +129,7 @@ def host_dynamic_linker_search_paths():
             # like <long glibc prefix>/lib/ld.so. And on Debian /lib64 is actually
             # a symlink to /usr/lib64. So, best effort attempt is to just strip
             # two path components and join with etc/ld.so.conf.
-            possible_prefix = os.path.dirname(os.path.dirname(dynamic_linker))
+            possible_prefix = os.path.dirname(PurePath(dynamic_linker).parent)
             possible_conf = os.path.join(possible_prefix, "etc", conf_name)
 
             if Path(possible_conf).exists():

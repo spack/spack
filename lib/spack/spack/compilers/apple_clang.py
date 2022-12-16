@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+from pathlib import Path, PurePath
 import re
 import shutil
 
@@ -123,7 +124,7 @@ class AppleClang(spack.compilers.clang.Clang):
 
             raise OSError(msg)
 
-        real_root = os.path.dirname(os.path.dirname(real_root))
+        real_root = os.path.dirname(PurePath(real_root).parent)
         developer_root = os.path.join(
             spack.stage.get_stage_root(), "xcode-select", self.name, str(self.version)
         )

@@ -10,6 +10,7 @@ TODO: this is really part of spack.config. Consolidate it.
 import contextlib
 import getpass
 import os
+from pathlib import PurePath
 import re
 import subprocess
 import sys
@@ -373,7 +374,7 @@ def canonicalize_path(path, default_wd=None):
     # relative to that path.
     filename = None
     if isinstance(path, syaml.syaml_str):
-        filename = os.path.dirname(path._start_mark.name)
+        filename = PurePath(path._start_mark.name).parent
         assert path._start_mark.name == path._end_mark.name
 
     path = substitute_path_variables(path)

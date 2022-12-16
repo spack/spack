@@ -10,6 +10,7 @@ import errno
 import multiprocessing.pool
 import os
 import os.path
+from pathlib import PurePath
 import re
 import shutil
 import ssl
@@ -119,7 +120,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
     remote_url = urllib.parse.urlparse(remote_path)
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
-        mkdirp(os.path.dirname(remote_file_path))
+        mkdirp(PurePath(remote_file_path).parent)
         if keep_original:
             shutil.copy(local_file_path, remote_file_path)
         else:

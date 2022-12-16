@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import os.path
+from pathlib import Path, PurePath
 import shutil
 import tempfile
 
@@ -417,10 +418,10 @@ def _mirror(args):
     def write_metadata(subdir, metadata):
         metadata_rel_dir = os.path.join("metadata", subdir)
         metadata_yaml = os.path.join(args.root_dir, metadata_rel_dir, "metadata.yaml")
-        llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
+        llnl.util.filesystem.mkdirp(PurePath(metadata_yaml).parent)
         with open(metadata_yaml, mode="w") as f:
             spack.util.spack_yaml.dump(metadata, stream=f)
-        return os.path.dirname(metadata_yaml), metadata_rel_dir
+        return PurePath(metadata_yaml).parent, metadata_rel_dir
 
     instructions = (
         "\nTo register the mirror on the platform where it's supposed "

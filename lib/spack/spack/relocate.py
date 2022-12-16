@@ -5,6 +5,7 @@
 import collections
 import multiprocessing.pool
 import os
+from pathlib import PurePath
 import re
 import shutil
 from collections import OrderedDict
@@ -133,7 +134,7 @@ def _make_relative(reference_file, path_root, paths):
     Returns:
         List of relative paths
     """
-    start_directory = os.path.dirname(reference_file)
+    start_directory = PurePath(reference_file).parent
     pattern = re.compile(path_root)
     relative_paths = []
 
@@ -169,7 +170,7 @@ def _normalize_relative_paths(start_path, relative_paths):
     """
     normalized_paths = []
     pattern = re.compile(re.escape("$ORIGIN"))
-    start_directory = os.path.dirname(start_path)
+    start_directory = PurePath(start_path).parent
 
     for path in relative_paths:
         if path.startswith("$ORIGIN"):
@@ -201,13 +202,13 @@ def macho_make_paths_relative(path_name, old_layout_root, rpaths, deps, idpath):
         paths_to_paths[idpath] = os.path.join("@rpath", "%s" % PurePath(idpath).name)
     for rpath in rpaths:
         if re.match(old_layout_root, rpath):
-            rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
+            rel = os.path.relpath(rpath, start=PurePath(path_name).parent)
             paths_to_paths[rpath] = os.path.join("@loader_path", "%s" % rel)
         else:
             paths_to_paths[rpath] = rpath
     for dep in deps:
         if re.match(old_layout_root, dep):
-            rel = os.path.relpath(dep, start=os.path.dirname(path_name))
+            rel = os.path.relpath(dep, start=PurePath(path_name).parent)
             paths_to_paths[dep] = os.path.join("@loader_path", "%s" % rel)
         else:
             paths_to_paths[dep] = dep
@@ -228,7 +229,7 @@ def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
     for rpath in rpaths:
         if re.match("@loader_path", rpath):
             norm = os.path.normpath(
-                re.sub(re.escape("@loader_path"), os.path.dirname(orig_path_name), rpath)
+                re.sub(re.escape("@loader_path"), PurePath(orig_path_name).parent, rpath)
             )
             rel_to_orig[rpath] = norm
         else:
@@ -236,7 +237,7 @@ def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
     for dep in deps:
         if re.match("@loader_path", dep):
             norm = os.path.normpath(
-                re.sub(re.escape("@loader_path"), os.path.dirname(orig_path_name), dep)
+                re.sub(re.escape("@loader_path"), PurePath(orig_path_name).parent, dep)
             )
             rel_to_orig[dep] = norm
         else:
@@ -719,7 +720,7 @@ def make_link_relative(new_links, orig_links):
     """
     for new_link, orig_link in zip(new_links, orig_links):
         target = os.readlink(orig_link)
-        relative_target = os.path.relpath(target, os.path.dirname(orig_link))
+        relative_target = os.path.relpath(target, PurePath(orig_link).parent)
         Path(new_link).unlink()
         symlink(relative_target, new_link)
 

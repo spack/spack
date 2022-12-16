@@ -5,6 +5,7 @@
 import base64
 import hashlib
 import os
+from pathlib import PurePath
 
 import llnl.util.tty as tty
 
@@ -113,14 +114,14 @@ def check_entry(path, data):
 
 
 def check_file_manifest(filename):
-    dirname = os.path.dirname(filename)
+    dirname = PurePath(filename).parent
 
     results = VerificationResults()
     while spack.store.layout.metadata_dir not in list(Path(dirname).iterdir()):
         if dirname == os.path.sep:
             results.add_error(filename, "not owned by any package")
             return results
-        dirname = os.path.dirname(dirname)
+        dirname = PurePath(dirname).parent
 
     manifest_file = os.path.join(
         dirname, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name

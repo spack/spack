@@ -6,7 +6,7 @@
 import json
 import os.path
 import sys
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -25,7 +25,7 @@ def data():
     """
     global _data
     if not _data:
-        json_dir = Path.resolve(os.path.dirname(__file__))
+        json_dir = Path.resolve(PurePath(__file__).parent)
         json_file = os.path.join(json_dir, "images.json")
         with open(json_file) as f:
             _data = json.load(f)

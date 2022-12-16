@@ -91,7 +91,7 @@ def load_command_extension(command, path):
         #
         # https://docs.python.org/3/reference/import.html#package-path-rules
         #
-        m.__path__ = [os.path.dirname(init_file)]
+        m.__path__ = [PurePath(init_file).parent]
         sys.modules[package_name] = m
 
     # Create a searchable package for both the root folder of the extension

@@ -10,7 +10,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -193,7 +193,7 @@ def install_sbang():
         return
 
     # make $install_tree/bin
-    sbang_bin_dir = os.path.dirname(sbang_path)
+    sbang_bin_dir = PurePath(sbang_path).parent
     fs.mkdirp(sbang_bin_dir)
 
     # get permissions for bin dir from configuration files
@@ -213,7 +213,7 @@ def install_sbang():
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path),
+        PurePath(sbang_path).parent,
         ".%s.tmp" % PurePath(sbang_path).name,
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)

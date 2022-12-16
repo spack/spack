@@ -11,6 +11,7 @@ static DSL metadata for packages.
 """
 
 import os
+from pathlib import Path, PurePath
 import shutil
 
 import pytest
@@ -196,4 +197,4 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
             assert not Path(pd).exists(), msg.format(pd, " not")
 
     # Perform a little cleanup
-    shutil.rmtree(os.path.dirname(source_path))
+    shutil.rmtree(PurePath(source_path).parent)

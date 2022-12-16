@@ -12,7 +12,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -309,7 +309,7 @@ all:
 
 def check_sbang_installation(group=False):
     sbang_path = sbang.sbang_install_path()
-    sbang_bin_dir = os.path.dirname(sbang_path)
+    sbang_bin_dir = PurePath(sbang_path).parent
     assert sbang_path.startswith(spack.store.store.unpadded_root)
 
     assert Path(sbang_path).exists()
@@ -332,7 +332,7 @@ def check_sbang_installation(group=False):
 
 def run_test_install_sbang(group):
     sbang_path = sbang.sbang_install_path()
-    sbang_bin_dir = os.path.dirname(sbang_path)
+    sbang_bin_dir = PurePath(sbang_path).parent
 
     assert sbang_path.startswith(spack.store.store.unpadded_root)
     assert not Path(sbang_bin_dir).exists()

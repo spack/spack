@@ -8,6 +8,7 @@ and running executables.
 import collections
 import os
 import os.path
+from pathlib import PurePath
 import re
 import sys
 import warnings
@@ -111,7 +112,7 @@ def libraries_in_windows_paths(path_hints):
 def _group_by_prefix(paths):
     groups = collections.defaultdict(set)
     for p in paths:
-        groups[os.path.dirname(p)].add(p)
+        groups[PurePath(p).parent].add(p)
     return groups.items()
 
 

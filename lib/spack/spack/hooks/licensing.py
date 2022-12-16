@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -160,8 +160,8 @@ def write_license_file(pkg, license_path):
  - Otherwise, enter your license or server address AT THE BEGINNING.
 """
     # Global license directory may not already exist
-    if not os.path.exists(os.path.dirname(license_path)):
-        os.makedirs(os.path.dirname(license_path))
+    if not os.path.exists(PurePath(license_path).parent):
+        os.makedirs(PurePath(license_path).parent)
 
     # Output
     with open(license_path, "w") as f:
@@ -185,7 +185,7 @@ def symlink_license(pkg):
     for filename in pkg.license_files:
         link_name = os.path.join(pkg.prefix, filename)
         link_name = Path(link_name).resolve()
-        license_dir = os.path.dirname(link_name)
+        license_dir = PurePath(link_name).parent
         if not Path(license_dir).exists():
             mkdirp(license_dir)
 

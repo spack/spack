@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import os
+from pathlib import Path, PurePath
 import re
 import urllib.parse
 
@@ -965,7 +966,7 @@ def create(parser, args):
             "  Try running `spack create --force` to overwrite it.",
         )
     else:
-        mkdirp(os.path.dirname(pkg_path))
+        mkdirp(PurePath(pkg_path).parent)
 
     # Write the new package file
     package.write(pkg_path)

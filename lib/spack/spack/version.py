@@ -29,7 +29,7 @@ import os
 import re
 from bisect import bisect_left
 from functools import wraps
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
@@ -1325,7 +1325,7 @@ class CommitLookup(object):
             dest = dest[:-4]
 
         # prepare a cache for the repository
-        dest_parent = os.path.dirname(dest)
+        dest_parent = PurePath(dest).parent
         if not Path(dest_parent).exists():
             mkdirp(dest_parent)
 
