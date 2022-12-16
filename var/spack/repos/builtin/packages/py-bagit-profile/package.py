@@ -15,7 +15,7 @@ class PyBagitProfile(PythonPackage):
 
     version("1.3.1", sha256="57798cdcf98b32a413edb29382d85f4f8c44d3204940d7e12d84998521a98c3f")
 
-    depends_on("python@3.4:", type=("build", "run"))
+    depends_on("python@2.7,3.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-bagit", type=("build", "run"))
