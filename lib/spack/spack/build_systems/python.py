@@ -6,6 +6,7 @@ import inspect
 import os
 import re
 import shutil
+from pathlib import Path
 from typing import Optional
 
 import llnl.util.filesystem as fs
@@ -123,12 +124,12 @@ class PythonExtension(spack.package_base.PackageBase):
                 if is_script and not python_is_external:
                     fs.filter_file(
                         python_prefix,
-                        os.path.abspath(view.get_projection_for_spec(self.spec)),
+                        Path.resolve(view.get_projection_for_spec(self.spec)),
                         dst,
                     )
             else:
                 orig_link_target = os.path.realpath(src)
-                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                new_link_target = Path(merge_map[orig_link_target]).resolve()
                 view.link(new_link_target, dst)
 
     def remove_files_from_view(self, view, merge_map):

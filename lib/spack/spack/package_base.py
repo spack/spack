@@ -27,6 +27,7 @@ import time
 import traceback
 import types
 import warnings
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import llnl.util.filesystem as fsys
@@ -788,7 +789,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(cls.module.__file__))
+        return Path.resolve(os.path.dirname(cls.module.__file__))
 
     @classproperty
     def module(cls):

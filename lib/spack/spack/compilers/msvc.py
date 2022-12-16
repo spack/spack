@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 from distutils.version import StrictVersion
+from pathlib import Path
 from typing import Dict, List, Set
 
 import spack.compiler
@@ -89,7 +90,7 @@ class Msvc(Compiler):
             # Spack first finds the compilers via VSWHERE
             # and stores their path, but their respective VCVARS
             # file must be invoked before useage.
-            self.setvarsfile = os.path.abspath(os.path.join(self.cc, "../../../../../../.."))
+            self.setvarsfile = Path.resolve(os.path.join(self.cc, "../../../../../../.."))
             self.setvarsfile = os.path.join(self.setvarsfile, "Auxiliary", "Build", "vcvars64.bat")
 
     @property

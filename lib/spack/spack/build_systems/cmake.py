@@ -8,6 +8,7 @@ import os
 import platform
 import re
 import sys
+from pathlib import Path
 from typing import List, Tuple
 
 import llnl.util.filesystem as fs
@@ -392,7 +393,7 @@ class CMakeBuilder(BaseBuilder):
         """Runs ``cmake`` in the build directory"""
         options = self.std_cmake_args
         options += self.cmake_args()
-        options.append(os.path.abspath(self.root_cmakelists_dir))
+        options.append(Path(self.root_cmakelists_dir).resolve())
         with fs.working_dir(self.build_directory, create=True):
             inspect.getmodule(self.pkg).cmake(*options)
 

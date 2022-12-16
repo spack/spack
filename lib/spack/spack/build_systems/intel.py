@@ -9,6 +9,7 @@ import re
 import sys
 import tempfile
 import xml.etree.ElementTree as ElementTree
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -1290,7 +1291,7 @@ class IntelPackage(Package):
             if not os.path.isfile(f):
                 raise InstallError("Cannot find compiler command to configure rpath:\n\t" + f)
 
-            compiler_cfg = os.path.abspath(f + ".cfg")
+            compiler_cfg = Path(f + ".cfg").resolve()
             with open(compiler_cfg, "w") as fh:
                 fh.write("-Xlinker -rpath={0}\n".format(compilers_lib_dir))
 
@@ -1314,7 +1315,7 @@ class IntelPackage(Package):
                     if "auto_dispatch={0}".format(x) in self.spec:
                         ad.append(x)
 
-                compiler_cfg = os.path.abspath(f + ".cfg")
+                compiler_cfg = Path(f + ".cfg").resolve()
                 with open(compiler_cfg, "a") as fh:
                     fh.write("-ax{0}\n".format(",".join(ad)))
 

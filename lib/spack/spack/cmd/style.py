@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from itertools import zip_longest
+from pathlib import Path
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -417,7 +418,7 @@ def style(parser, args):
     if file_list:
 
         def prefix_relative(path):
-            return os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root)
+            return os.path.relpath(Path.resolve(os.path.realpath(path)), args.root)
 
         file_list = [prefix_relative(p) for p in file_list]
 

@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import tempfile
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -162,7 +163,7 @@ def env_activate(args):
     # Temporary environment
     if args.temp:
         env = create_temp_env_directory()
-        env_path = os.path.abspath(env)
+        env_path = Path(env).resolve()
         short_name = os.path.basename(env_path)
         ev.Environment(env).write(regenerate=False)
 
@@ -173,7 +174,7 @@ def env_activate(args):
 
     # Environment directory
     elif ev.is_env_dir(env_name_or_dir):
-        env_path = os.path.abspath(env_name_or_dir)
+        env_path = Path(env_name_or_dir).resolve()
         short_name = os.path.basename(env_path)
 
     else:

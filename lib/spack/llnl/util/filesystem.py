@@ -16,6 +16,7 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
+from pathlib import Path
 from sys import platform as _platform
 
 from llnl.util import tty
@@ -108,8 +109,8 @@ def rename(src, dst):
 
 @system_path_filter
 def path_contains_subdirectory(path, root):
-    norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
-    norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
+    norm_root = Path(root).resolve().rstrip(os.path.sep) + os.path.sep
+    norm_path = Path(path).resolve().rstrip(os.path.sep) + os.path.sep
     return norm_path.startswith(norm_root)
 
 
@@ -209,8 +210,8 @@ def paths_containing_libs(paths, library_names):
 
 @system_path_filter
 def same_path(path1, path2):
-    norm1 = os.path.abspath(path1).rstrip(os.path.sep)
-    norm2 = os.path.abspath(path2).rstrip(os.path.sep)
+    norm1 = Path(path1).resolve().rstrip(os.path.sep)
+    norm2 = Path(path2).resolve().rstrip(os.path.sep)
     return norm1 == norm2
 
 
@@ -647,7 +648,7 @@ def resolve_link_target_relative_to_the_link(link):
     target = os.readlink(link)
     if os.path.isabs(target):
         return target
-    link_dir = os.path.dirname(os.path.abspath(link))
+    link_dir = os.path.dirname(Path(link).resolve())
     return os.path.join(link_dir, target)
 
 
@@ -684,7 +685,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     else:
         tty.debug("Copying {0} to {1}".format(src, dest))
 
-    abs_dest = os.path.abspath(dest)
+    abs_dest = Path(dest).resolve()
     if not abs_dest.endswith(os.path.sep):
         abs_dest += os.path.sep
 
@@ -693,7 +694,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         raise IOError("No such file or directory: '{0}'".format(src))
 
     for src in files:
-        abs_src = os.path.abspath(src)
+        abs_src = Path(src).resolve()
         if not abs_src.endswith(os.path.sep):
             abs_src += os.path.sep
 
@@ -939,7 +940,7 @@ def replace_directory_transaction(directory_name):
     """
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
-    directory_name = os.path.abspath(directory_name)
+    directory_name = Path(directory_name).resolve()
     assert os.path.isdir(directory_name), "Not a directory: " + directory_name
 
     # Note: directory_name is normalized here, meaning the trailing slash is dropped,
@@ -1070,7 +1071,7 @@ def join_path(prefix, *args):
 @system_path_filter
 def ancestor(dir, n=1):
     """Get the nth ancestor of a directory."""
-    parent = os.path.abspath(dir)
+    parent = Path(dir).resolve()
     for i in range(n):
         parent = os.path.dirname(parent)
     return parent
@@ -1368,7 +1369,7 @@ def set_executable(path):
 
 @system_path_filter
 def last_modification_time_recursive(path):
-    path = os.path.abspath(path)
+    path = Path(path).resolve()
     times = [os.stat(path).st_mtime]
     times.extend(
         os.lstat(os.path.join(root, name)).st_mtime
@@ -1500,7 +1501,7 @@ def safe_remove(*files_or_dirs):
     # Sort them so that shorter paths like "/foo/bar" come before
     # nested paths like "/foo/bar/baz.yaml". This simplifies the
     # handling of temporary copies below
-    sorted_matches = sorted([os.path.abspath(x) for x in itertools.chain(*glob_matches)], key=len)
+    sorted_matches = sorted([Path(x).resolve() for x in itertools.chain(*glob_matches)], key=len)
 
     # Copy files and directories in a temporary location
     removed, dst_root = {}, tempfile.mkdtemp()
@@ -1624,7 +1625,7 @@ def _find_recursive(root, search_files):
     found_files = collections.defaultdict(list)
 
     # Make the path absolute to have os.walk also return an absolute path
-    root = os.path.abspath(root)
+    root = Path(root).resolve()
     for path, _, list_files in os.walk(root):
         for search_file in search_files:
             matches = glob.glob(os.path.join(path, search_file))
@@ -1645,7 +1646,7 @@ def _find_non_recursive(root, search_files):
     found_files = collections.defaultdict(list)
 
     # Make the path absolute to have absolute path returned
-    root = os.path.abspath(root)
+    root = Path(root).resolve()
 
     for search_file in search_files:
         matches = glob.glob(os.path.join(root, search_file))
@@ -2402,7 +2403,7 @@ def search_paths_for_executables(*path_hints):
         if not os.path.isdir(path):
             continue
 
-        path = os.path.abspath(path)
+        path = Path(path).resolve()
         executable_paths.append(path)
 
         bin_dir = os.path.join(path, "bin")
@@ -2430,7 +2431,7 @@ def search_paths_for_libraries(*path_hints):
         if not os.path.isdir(path):
             continue
 
-        path = os.path.abspath(path)
+        path = Path(path).resolve()
         library_paths.append(path)
 
         lib_dir = os.path.join(path, "lib")

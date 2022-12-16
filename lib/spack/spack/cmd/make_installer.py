@@ -5,6 +5,7 @@
 import os
 import posixpath
 import sys
+from pathlib import Path
 
 import spack.paths
 import spack.util.executable
@@ -86,7 +87,7 @@ def make_installer(parser, args):
 
         spack_version = args.spack_version
 
-        here = os.path.dirname(os.path.abspath(__file__))
+        here = os.path.dirname(Path(__file__).resolve())
         source_dir = os.path.join(here, "installer")
         posix_root = convert_to_posix_path(spack.paths.spack_root)
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")

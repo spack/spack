@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
+from pathlib import Path
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -182,7 +183,7 @@ class MesonBuilder(BaseBuilder):
 
     def meson(self, pkg, spec, prefix):
         """Run ``meson`` in the build directory"""
-        options = [os.path.abspath(self.root_mesonlists_dir)]
+        options = [Path(self.root_mesonlists_dir).resolve()]
         options += self.std_meson_args
         options += self.meson_args()
         with fs.working_dir(self.build_directory, create=True):

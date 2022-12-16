@@ -29,6 +29,7 @@ import os
 import re
 from bisect import bisect_left
 from functools import wraps
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
@@ -1284,7 +1285,7 @@ class CommitLookup(object):
             return os.path.join(*components)
         except ValueError:
             # If it's not a git url, it's a local path
-            return os.path.abspath(self.pkg.git)
+            return Path(self.pkg.git).resolve()
 
     def save(self):
         """

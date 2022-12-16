@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -183,7 +184,7 @@ def symlink_license(pkg):
     target = pkg.global_license_file
     for filename in pkg.license_files:
         link_name = os.path.join(pkg.prefix, filename)
-        link_name = os.path.abspath(link_name)
+        link_name = Path(link_name).resolve()
         license_dir = os.path.dirname(link_name)
         if not os.path.exists(license_dir):
             mkdirp(license_dir)

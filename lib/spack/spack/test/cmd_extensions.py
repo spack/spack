@@ -6,6 +6,7 @@
 import contextlib
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -262,7 +263,7 @@ def test_get_command_paths(config):
         ext_path = os.path.join("my", "path", "to", "spack-" + ext)
         ext_paths.append(ext_path)
         path = os.path.join(ext_path, spack.cmd.python_name(ext), "cmd")
-        path = os.path.abspath(path)
+        path = Path(path).resolve()
         expected_cmd_paths.append(path)
 
     with spack.config.override("config:extensions", ext_paths):

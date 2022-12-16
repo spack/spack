@@ -8,6 +8,7 @@ import re
 import shlex
 import subprocess
 import sys
+from pathlib import Path as pth
 
 import llnl.util.tty as tty
 
@@ -298,7 +299,7 @@ def which_string(*args, **kwargs):
 
         for candidate_name in candidate_names:
             if os.path.sep in candidate_name:
-                exe = os.path.abspath(candidate_name)
+                exe = pth.resolve(candidate_name)
                 if os.path.isfile(exe) and os.access(exe, os.X_OK):
                     return exe
             else:

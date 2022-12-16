@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 from os.path import exists, join
+from pathlib import Path
 from sys import platform as _platform
 
 from llnl.util import lang
@@ -46,7 +47,7 @@ def islink(path):
 def _win32_junction(path, link):
     # junctions require absolute paths
     if not os.path.isabs(link):
-        link = os.path.abspath(link)
+        link = Path(link).resolve()
 
     # os.symlink will fail if link exists, emulate the behavior here
     if exists(link):
@@ -55,7 +56,7 @@ def _win32_junction(path, link):
     if not os.path.isabs(path):
         parent = os.path.join(link, os.pardir)
         path = os.path.join(parent, path)
-        path = os.path.abspath(path)
+        path = Path(path).resolve()
 
     CreateHardLink(link, path)
 

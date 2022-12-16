@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -200,9 +201,9 @@ def ci_generate(args):
     buildcache_destination = args.buildcache_destination
 
     if not output_file:
-        output_file = os.path.abspath(".gitlab-ci.yml")
+        output_file = Path(".gitlab-ci.yml").resolve()
     else:
-        output_file_path = os.path.abspath(output_file)
+        output_file_path = Path(output_file).resolve()
         gen_ci_dir = os.path.dirname(output_file_path)
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)

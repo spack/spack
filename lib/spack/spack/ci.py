@@ -16,6 +16,7 @@ import sys
 import tempfile
 import time
 import zipfile
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -740,7 +741,7 @@ def generate_gitlab_ci_yaml(
         proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
         pipeline_artifacts_dir = os.path.join(proj_dir, "jobs_scratch_dir")
 
-    pipeline_artifacts_dir = os.path.abspath(pipeline_artifacts_dir)
+    pipeline_artifacts_dir = Path(pipeline_artifacts_dir).resolve()
     concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
 
     # Now that we've added the mirrors we know about, they should be properly

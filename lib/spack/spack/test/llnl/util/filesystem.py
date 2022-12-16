@@ -9,6 +9,7 @@ import os
 import shutil
 import stat
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -38,7 +39,7 @@ def stage(tmpdir_factory):
         fs.touchp("source/g/i/j/10")
 
         # Create symlinks
-        symlink(os.path.abspath("source/1"), "source/2")
+        symlink(Path("source/1").resolve(), "source/2")
         symlink("b/2", "source/a/b2")
         symlink("a/b", "source/f")
 
@@ -183,8 +184,8 @@ class TestCopyTree:
             with fs.working_dir("dest/a"):
                 assert os.path.exists(os.readlink("b2"))
 
-            assert os.path.realpath("dest/f/2") == os.path.abspath("dest/a/b/2")
-            assert os.path.realpath("dest/2") == os.path.abspath("dest/1")
+            assert os.path.realpath("dest/f/2") == Path("dest/a/b/2").resolve()
+            assert os.path.realpath("dest/2") == Path("dest/1").resolve()
 
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""

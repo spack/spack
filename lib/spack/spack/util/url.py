@@ -14,6 +14,7 @@ import re
 import sys
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 from spack.util.path import convert_to_posix_path
 
@@ -63,7 +64,7 @@ def local_file_path(url):
 
 def path_to_file_url(path):
     if not os.path.isabs(path):
-        path = os.path.abspath(path)
+        path = Path(path).resolve()
     return urllib.parse.urljoin("file:", urllib.request.pathname2url(path))
 
 

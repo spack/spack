@@ -11,6 +11,7 @@ import re
 import shutil
 import sys
 import tempfile
+from pathlib import Path
 from typing import List, Optional, Sequence
 
 import llnl.util.lang
@@ -146,7 +147,7 @@ def _parse_link_paths(string):
     implicit_link_dirs = list()
     visited = set()
     for link_dir in raw_link_dirs:
-        normalized_path = os.path.abspath(link_dir)
+        normalized_path = Path(link_dir).resolve()
         if normalized_path not in visited:
             implicit_link_dirs.append(normalized_path)
             visited.add(normalized_path)

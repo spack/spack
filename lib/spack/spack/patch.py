@@ -8,6 +8,7 @@ import inspect
 import os
 import os.path
 import sys
+from pathlib import Path
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -141,7 +142,7 @@ class FilePatch(Patch):
 
             # Cannot use pkg.package_dir because it's a property and we have
             # classes, not instances.
-            pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
+            pkg_dir = Path.resolve(os.path.dirname(cls.module.__file__))
             path = os.path.join(pkg_dir, self.relative_path)
             if os.path.exists(path):
                 abs_path = path

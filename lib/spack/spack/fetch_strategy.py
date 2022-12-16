@@ -30,6 +30,7 @@ import re
 import shutil
 import sys
 import urllib.parse
+from pathlib import Path
 from typing import List, Optional
 
 import llnl.util
@@ -1655,7 +1656,7 @@ def from_list_url(pkg):
 
 class FsCache(object):
     def __init__(self, root):
-        self.root = os.path.abspath(root)
+        self.root = Path(root).resolve()
 
     def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable

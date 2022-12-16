@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -44,7 +45,7 @@ def link_tree(stage):
 def check_file_link(filename, expected_target):
     assert os.path.isfile(filename)
     assert islink(filename)
-    assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
+    assert Path.resolve(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
 def check_dir(filename):

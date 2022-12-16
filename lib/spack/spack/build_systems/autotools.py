@@ -7,6 +7,7 @@ import os
 import os.path
 import stat
 import subprocess
+from pathlib import Path
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -523,7 +524,7 @@ To resolve this problem, please try the following:
     @property
     def configure_abs_path(self):
         # Absolute path to configure
-        configure_abs_path = os.path.join(os.path.abspath(self.configure_directory), "configure")
+        configure_abs_path = os.path.join(Path(self.configure_directory).resolve(), "configure")
         return configure_abs_path
 
     @property

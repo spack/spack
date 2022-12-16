@@ -5,6 +5,7 @@
 
 """Caches used by Spack to store data"""
 import os
+from pathlib import Path
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
@@ -57,7 +58,7 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root, skip_unstable_versions):
-        self.root = os.path.abspath(root)
+        self.root = Path(root).resolve()
         self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):

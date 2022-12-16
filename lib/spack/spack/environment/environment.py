@@ -13,6 +13,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 import ruamel.yaml as yaml
 
@@ -643,7 +644,7 @@ class Environment(object):
                 when the environment path is different from init_file's
                 directory.
         """
-        self.path = os.path.abspath(path)
+        self.path = Path(path).resolve()
         self.init_file = init_file
         self.with_view = with_view
         self.keep_relative = keep_relative
@@ -670,7 +671,7 @@ class Environment(object):
                 # Rewrite relative develop paths when initializing a new
                 # environment in a different location from the spack.yaml file.
                 if not keep_relative and hasattr(f, "name") and f.name.endswith(".yaml"):
-                    init_file_dir = os.path.abspath(os.path.dirname(f.name))
+                    init_file_dir = Path.resolve(os.path.dirname(f.name))
                     self._rewrite_relative_paths_on_relocation(init_file_dir)
         else:
             with lk.ReadTransaction(self.txlock):
@@ -2322,9 +2323,9 @@ def manifest_file(env_name_or_dir):
     """
     env_dir = None
     if is_env_dir(env_name_or_dir):
-        env_dir = os.path.abspath(env_name_or_dir)
+        env_dir = Path(env_name_or_dir).resolve()
     elif exists(env_name_or_dir):
-        env_dir = os.path.abspath(root(env_name_or_dir))
+        env_dir = Path.resolve(root(env_name_or_dir))
 
     assert env_dir, "environment not found [env={0}]".format(env_name_or_dir)
     return os.path.join(env_dir, manifest_name)

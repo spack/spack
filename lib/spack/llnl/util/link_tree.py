@@ -11,6 +11,7 @@ import filecmp
 import os
 import shutil
 from collections import OrderedDict
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, touch, traverse_tree
@@ -403,8 +404,8 @@ class LinkTree(object):
             if os.path.exists(dst):
                 existing.append(dst)
             elif relative:
-                abs_src = os.path.abspath(src)
-                dst_dir = os.path.dirname(os.path.abspath(dst))
+                abs_src = Path(src).resolve()
+                dst_dir = os.path.dirname(Path(dst).resolve())
                 rel = os.path.relpath(abs_src, dst_dir)
                 link(rel, dst)
             else:
