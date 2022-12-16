@@ -214,7 +214,7 @@ def install_sbang():
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
         os.path.dirname(sbang_path),
-        ".%s.tmp" % os.path.basename(sbang_path),
+        ".%s.tmp" % PurePath(sbang_path).name,
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 

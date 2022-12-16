@@ -457,7 +457,7 @@ class URLFetchStrategy(FetchStrategy):
             )
             if not self.stage.expanded:
                 mkdirp(self.stage.source_path)
-            dest = os.path.join(self.stage.source_path, os.path.basename(self.archive_file))
+            dest = os.path.join(self.stage.source_path, PurePath(self.archive_file).name)
             shutil.move(self.archive_file, dest)
             return
 
@@ -625,7 +625,7 @@ class VCSFetchStrategy(FetchStrategy):
                 with temp_rename(self.stage.source_path, self.stage.srcdir):
                     tar("-czf", destination, self.stage.srcdir)
             else:
-                tar("-czf", destination, os.path.basename(self.stage.source_path))
+                tar("-czf", destination, PurePath(self.stage.source_path).name)
 
     def __str__(self):
         return "VCS: %s" % self.url
@@ -1327,7 +1327,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
         tty.debug("Fetching {0}".format(self.url))
 
-        basename = os.path.basename(parsed_url.path)
+        basename = PurePath(parsed_url.path).name
 
         with working_dir(self.stage.path):
             _, headers, stream = web_util.read_from_url(self.url)
@@ -1374,7 +1374,7 @@ class GCSFetchStrategy(URLFetchStrategy):
 
         tty.debug("Fetching {0}".format(self.url))
 
-        basename = os.path.basename(parsed_url.path)
+        basename = PurePath(parsed_url.path).name
 
         with working_dir(self.stage.path):
             _, headers, stream = web_util.read_from_url(self.url)

@@ -848,7 +848,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if not self.license_files:
             return
         return os.path.join(
-            self.global_license_dir, self.name, os.path.basename(self.license_files[0])
+            self.global_license_dir, self.name, PurePath(self.license_files[0]).name
         )
 
     @property

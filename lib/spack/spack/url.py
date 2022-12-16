@@ -429,7 +429,7 @@ def parse_version_offset(path):
     path, ext, suffix = split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
-    original_stem = os.path.basename(path)
+    original_stem = PurePath(path).name
 
     # Try to strip off anything after the version number
     stem = strip_version_suffixes(original_stem)
@@ -623,7 +623,7 @@ def parse_name_offset(path, v=None):
     path, ext, suffix = split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
-    original_stem = os.path.basename(path)
+    original_stem = PurePath(path).name
 
     # Try to strip off anything after the package name
     stem = strip_name_suffixes(original_stem, v)

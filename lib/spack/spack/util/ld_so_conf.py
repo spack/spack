@@ -121,7 +121,7 @@ def host_dynamic_linker_search_paths():
         # to its prefix.
         if elf.has_pt_interp:
             dynamic_linker = elf.pt_interp_str.decode("utf-8")
-            dynamic_linker_name = os.path.basename(dynamic_linker)
+            dynamic_linker_name = PurePath(dynamic_linker).name
             conf_name = get_conf_file_from_dynamic_linker(dynamic_linker_name)
 
             # Typically it is /lib/ld.so, but on Gentoo Prefix it is something

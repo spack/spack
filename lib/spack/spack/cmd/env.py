@@ -164,7 +164,7 @@ def env_activate(args):
     if args.temp:
         env = create_temp_env_directory()
         env_path = Path(env).resolve()
-        short_name = os.path.basename(env_path)
+        short_name = PurePath(env_path).name
         ev.Environment(env).write(regenerate=False)
 
     # Named environment
@@ -175,7 +175,7 @@ def env_activate(args):
     # Environment directory
     elif ev.is_env_dir(env_name_or_dir):
         env_path = Path(env_name_or_dir).resolve()
-        short_name = os.path.basename(env_path)
+        short_name = PurePath(env_path).name
 
     else:
         tty.die("No such environment: '%s'" % env_name_or_dir)

@@ -58,7 +58,7 @@ class FileCache(object):
 
     def _lock_path(self, key):
         """Path to the file in the cache for a particular key."""
-        keyfile = os.path.basename(key)
+        keyfile = PurePath(key).name
         keydir = os.path.dirname(key)
 
         return os.path.join(self.root, keydir, "." + keyfile + ".lock")

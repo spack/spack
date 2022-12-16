@@ -456,7 +456,7 @@ class ViewDescriptor(object):
     def _next_root(self, specs):
         content_hash = self.content_hash(specs)
         root_dir = os.path.dirname(self.root)
-        root_name = os.path.basename(self.root)
+        root_name = PurePath(self.root).name
         return os.path.join(root_dir, "._%s" % root_name, content_hash)
 
     def content_hash(self, specs):
@@ -850,7 +850,7 @@ class Environment(object):
         for named environments.
         """
         if self.internal:
-            return os.path.basename(self.path)
+            return PurePath(self.path).name
         else:
             return self.path
 
@@ -945,7 +945,7 @@ class Environment(object):
                     else []
                 )
                 remote_path = urllib.request.url2pathname(include_url.path)
-                basename = os.path.basename(remote_path)
+                basename = PurePath(remote_path).name
                 if basename in staged_configs:
                     # Do NOT re-stage configuration files over existing
                     # ones with the same name since there is a risk of
@@ -986,7 +986,7 @@ class Environment(object):
 
             if Path(config_path).is_dir():
                 # directories are treated as regular ConfigScopes
-                config_name = "env:%s:%s" % (self.name, os.path.basename(config_path))
+                config_name = "env:%s:%s" % (self.name, PurePath(config_path).name)
                 tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
             elif Path(config_path).exists():

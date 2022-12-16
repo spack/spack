@@ -96,7 +96,7 @@ def _bunzip2(archive_file):
     Args:
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
-    compressed_file_name = os.path.basename(archive_file)
+    compressed_file_name = PurePath(archive_file).name
     decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
     working_dir = Path.cwd()
     archive_out = os.path.join(working_dir, decompressed_file)
@@ -140,7 +140,7 @@ def _system_gunzip(archive_file):
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
     working_dir = Path.cwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
+    compressed_file = PurePath(archive_file).name
     copy_path = os.path.join(working_dir, compressed_file)
     shutil.copy(archive_file, copy_path)
     gzip = which("gzip")
@@ -232,7 +232,7 @@ def _xz(archive_file):
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     working_dir = Path.cwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
+    compressed_file = PurePath(archive_file).name
     copy_path = os.path.join(working_dir, compressed_file)
     shutil.copy(archive_file, copy_path)
     xz = which("xz", required=True)

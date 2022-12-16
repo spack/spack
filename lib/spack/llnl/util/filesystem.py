@@ -609,7 +609,7 @@ def copy(src, dest, _permissions=False):
         # Expand dest to its eventual full path if it is a directory.
         dst = dest
         if Path(dest).is_dir():
-            dst = join_path(dest, os.path.basename(src))
+            dst = join_path(dest, PurePath(src).name)
 
         shutil.copy(src, dst)
 
@@ -1007,7 +1007,7 @@ def hash_directory(directory, ignore=[]):
 def write_tmp_and_move(filename):
     """Write to a temporary file, then move into place."""
     dirname = os.path.dirname(filename)
-    basename = os.path.basename(filename)
+    basename = PurePath(filename).name
     tmp = os.path.join(dirname, ".%s.tmp" % basename)
     with open(tmp, "w") as f:
         yield f
@@ -1516,7 +1516,7 @@ def safe_remove(*files_or_dirs):
                 continue
             # The monotonic ID is a simple way to make the filename
             # or directory name unique in the temporary folder
-            basename = os.path.basename(file_or_dir) + "-{0}".format(id)
+            basename = PurePath(file_or_dir).name + "-{0}".format(id)
             temporary_path = os.path.join(dst_root, basename)
             shutil.move(file_or_dir, temporary_path)
             removed[file_or_dir] = temporary_path
@@ -1554,11 +1554,11 @@ def fix_darwin_install_name(path):
         for dep in deps:
             for loc in libs:
                 # We really want to check for either
-                #     dep == os.path.basename(loc)   or
-                #     dep == join_path(builddir, os.path.basename(loc)),
+                #     dep == PurePath(loc).name   or
+                #     dep == join_path(builddir, PurePath(loc).name),
                 # but we don't know builddir (nor how symbolic links look
                 # in builddir). We thus only compare the basenames.
-                if os.path.basename(dep) == os.path.basename(loc):
+                if PurePath(dep).name == PurePath(loc).name:
                     install_name_tool("-change", dep, loc, lib)
                     break
 
@@ -1705,7 +1705,7 @@ class FileList(collections.abc.Sequence):
         Returns:
             list: A list of base-names
         """
-        return list(dedupe(os.path.basename(x) for x in self.files))
+        return list(dedupe(PurePath(x).name for x in self.files))
 
     def __getitem__(self, item):
         cls = type(self)
@@ -2292,7 +2292,7 @@ class WindowsSimulatedRPath(object):
         This is because it is both meaningless from an rpath
         perspective, and will cause an error when Developer
         mode is not enabled"""
-        file_name = os.path.basename(path)
+        file_name = PurePath(path).name
         dest_file = os.path.join(dest_dir, file_name)
         if Path(dest_dir).exists() and not dest_file == path:
             try:

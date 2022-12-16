@@ -198,7 +198,7 @@ def macho_make_paths_relative(path_name, old_layout_root, rpaths, deps, idpath):
     """
     paths_to_paths = dict()
     if idpath:
-        paths_to_paths[idpath] = os.path.join("@rpath", "%s" % os.path.basename(idpath))
+        paths_to_paths[idpath] = os.path.join("@rpath", "%s" % PurePath(idpath).name)
     for rpath in rpaths:
         if re.match(old_layout_root, rpath):
             rel = os.path.relpath(rpath, start=os.path.dirname(path_name))

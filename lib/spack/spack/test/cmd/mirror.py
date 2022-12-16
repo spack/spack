@@ -78,7 +78,7 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config, mutable_mock
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmpdir):
     s = spack.spec.Spec("trivial-pkg-with-valid-hash").concretized()
-    local_url_basename = os.path.basename(s.package.url)
+    local_url_basename = PurePath(s.package.url).name
     local_path = os.path.join(str(tmpdir), local_url_basename)
     with open(local_path, "w") as f:
         f.write(s.package.hashed_content)

@@ -65,7 +65,7 @@ class ABI(object):
         libpath = os.path.realpath(output.strip())
         if not libpath:
             return None
-        return os.path.basename(libpath)
+        return PurePath(libpath).name
 
     @memoized
     def _gcc_compiler_compare(self, pversion, cversion):

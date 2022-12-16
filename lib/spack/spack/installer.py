@@ -575,7 +575,7 @@ def log(pkg):
 
     # Archive all phase log paths
     for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
+        log_file = PurePath(phase_log).name
         log_file = os.path.join(os.path.dirname(packages_dir), log_file)
         fs.install(phase_log, log_file)
 

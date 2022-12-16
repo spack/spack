@@ -221,7 +221,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     files_cached_in_mirror = set()
 
     def record_store(_class, fetcher, relative_dst, cosmetic_path=None):
-        files_cached_in_mirror.add(os.path.basename(relative_dst))
+        files_cached_in_mirror.add(PurePath(relative_dst).name)
 
     def successful_fetch(_class):
         with open(_class.stage.save_filename, "w"):

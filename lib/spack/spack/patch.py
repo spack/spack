@@ -251,7 +251,7 @@ class UrlPatch(Patch):
 
         # The same package can have multiple patches with the same name but
         # with different contents, therefore apply a subset of the hash.
-        name = "{0}-{1}".format(os.path.basename(self.url), fetch_digest[:7])
+        name = "{0}-{1}".format(PurePath(self.url).name, fetch_digest[:7])
 
         per_package_ref = os.path.join(self.owner.split(".")[-1], name)
         # Reference starting with "spack." is required to avoid cyclic imports

@@ -649,7 +649,7 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
         self.symlinks.append(rel_path)
 
     def before_visit_dir(self, root, rel_path, depth):
-        return os.path.basename(rel_path) not in (".spack", "man")
+        return PurePath(rel_path).name not in (".spack", "man")
 
     def before_visit_symlinked_dir(self, root, rel_path, depth):
         # Treat symlinked directories simply as symlinks.
@@ -1197,7 +1197,7 @@ def _build_tarball(
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     # make a copy of the install directory to work with
-    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    workdir = os.path.join(tmpdir, PurePath(spec.prefix).name)
     # install_tree copies hardlinks
     # create a temporary tarfile from prefix and exract it to workdir
     # tarfile preserves hardlinks
@@ -1237,7 +1237,7 @@ def _build_tarball(
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
     # So we follow gzip.
     with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
-        tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
+        tar.add(name="%s" % workdir, arcname="%s" % PurePath(spec.prefix).name)
     # remove copy of install directory
     shutil.rmtree(workdir)
 

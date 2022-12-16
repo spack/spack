@@ -1347,7 +1347,7 @@ def test_config_fetch_remote_configs(
         # The first element of all configuration files for this test happen to
         # be the basename of the file so this check leverages that feature. If
         # that changes, then this check will need to change accordingly.
-        element = "{0}:".format(os.path.splitext(os.path.basename(filename))[0])
+        element = "{0}:".format(os.path.splitext(PurePath(filename).name)[0])
         with open(filename, "r") as fd:
             for line in fd:
                 if element in line:
@@ -1367,7 +1367,7 @@ def test_config_fetch_remote_configs(
             assert Path(path).exists()
             if isfile:
                 # Ensure correct file is "fetched"
-                assert os.path.basename(path) == os.path.basename(url)
+                assert PurePath(path).name == PurePath(url).name
                 # Ensure contents of the file has expected config element
                 assert _has_content(path)
             else:

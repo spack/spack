@@ -658,7 +658,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
     if "linux" in arch or "cray" in arch:
-        soname = os.path.basename(shared_lib)
+        soname = PurePath(shared_lib).name
 
         if compat_version:
             soname += ".{0}".format(compat_version)
@@ -702,7 +702,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     compiler_args.extend(["-o", shared_lib])
 
     # Create symlinks for version and compat_version
-    shared_lib_link = os.path.basename(shared_lib)
+    shared_lib_link = PurePath(shared_lib).name
 
     if version or compat_version:
         symlink(shared_lib_link, shared_lib_base)

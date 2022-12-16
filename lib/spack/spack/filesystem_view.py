@@ -654,7 +654,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Ignore spack meta data folder.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.layout.metadata_dir
+            return PurePath(file).name == spack.store.layout.metadata_dir
 
         visitor = SourceMergeVisitor(ignore=skip_list)
 

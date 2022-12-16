@@ -50,7 +50,7 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
 
     def visit_file(self, root, rel_path, depth):
         # Check if excluded
-        basename = os.path.basename(rel_path)
+        basename = PurePath(rel_path).name
         if basename in self.exclude_list:
             return
 
@@ -72,7 +72,7 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         # should be excluded based on the filename of the symlink. E.g. when excluding
         # libf.so, which is a symlink to libf.so.1.2.3, we keep track of the stat data
         # of the latter.
-        basename = os.path.basename(rel_path)
+        basename = PurePath(rel_path).name
         if basename not in self.exclude_list:
             return
 
@@ -87,7 +87,7 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
     def before_visit_dir(self, root, rel_path, depth):
         # Allow skipping over directories. E.g. `<prefix>/lib/stubs` can be skipped by
         # adding `"stubs"` to the exclude list.
-        return os.path.basename(rel_path) not in self.exclude_list
+        return PurePath(rel_path).name not in self.exclude_list
 
     def before_visit_symlinked_dir(self, root, rel_path, depth):
         # Never enter symlinked dirs, since we don't want to leave the prefix, and

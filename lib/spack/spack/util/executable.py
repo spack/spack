@@ -71,7 +71,7 @@ class Executable(object):
         Returns:
             str: The basename of the executable
         """
-        return os.path.basename(self.path)
+        return PurePath(self.path).name
 
     @property
     def path(self):
@@ -293,7 +293,7 @@ def which_string(*args, **kwargs):
         if sys.platform == "win32":
             new_path = path[:]
             for p in path:
-                if os.path.basename(p) == "bin":
+                if PurePath(p).name == "bin":
                     new_path.append(os.path.dirname(p))
             path = new_path
 

@@ -194,7 +194,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         s = Spec(spec).concretized()
         fetch_strategy = fs.from_list_url(s.package)
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
-        assert os.path.basename(fetch_strategy.url) == url
+        assert PurePath(fetch_strategy.url).name == url
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
         s.package.fetch_options = {"timeout": 60}
@@ -231,7 +231,7 @@ def test_new_version_from_list_url(
         fetch_strategy = fs.from_list_url(s.package)
 
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
-        assert os.path.basename(fetch_strategy.url) == tarball
+        assert PurePath(fetch_strategy.url).name == tarball
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
         s.package.fetch_options = {"timeout": 60}

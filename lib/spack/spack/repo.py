@@ -319,7 +319,7 @@ def is_package_file(filename):
     ]
     return (
         filename_noext != packagebase_filename_noext
-        and os.path.basename(filename_noext) == "package"
+        and PurePath(filename_noext).name == "package"
     )
 
 
@@ -1297,7 +1297,7 @@ def create_repo(root, namespace=None):
     """
     root = spack.util.path.canonicalize_path(root)
     if not namespace:
-        namespace = os.path.basename(root)
+        namespace = PurePath(root).name
 
     if not re.match(r"\w[\.\w-]*", namespace):
         raise InvalidNamespaceError("'%s' is not a valid namespace." % namespace)

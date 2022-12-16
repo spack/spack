@@ -851,7 +851,7 @@ def test_env_with_included_config_scope(tmpdir, packages_file):
     # directory so it is picked up during concretization. (Using
     # copy instead of rename in case the fixture scope changes.)
     fs.mkdirp(config_scope_path)
-    include_filename = os.path.basename(packages_file.strpath)
+    include_filename = PurePath(packages_file.strpath).name
     included_path = os.path.join(config_scope_path, include_filename)
     fs.copy(packages_file.strpath, included_path)
 

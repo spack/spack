@@ -562,7 +562,7 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
 
     if not local_path:
         tmpdir = tempfile.mkdtemp()
-        local_path = os.path.join(tmpdir, os.path.basename(src_url))
+        local_path = os.path.join(tmpdir, PurePath(src_url).name)
 
     try:
         temp_stage = Stage(src_url, path=os.path.dirname(local_path))

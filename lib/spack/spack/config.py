@@ -286,7 +286,7 @@ class SingleFileScope(ConfigScope):
             parent = os.path.dirname(self.path)
             mkdirp(parent)
 
-            tmp = os.path.join(parent, ".%s.tmp" % os.path.basename(self.path))
+            tmp = os.path.join(parent, ".%s.tmp" % PurePath(self.path).name)
             with open(tmp, "w") as f:
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
             rename(tmp, self.path)
@@ -1297,7 +1297,7 @@ def _config_from(scopes_or_paths):
         # Otherwise we need to construct it
         path = os.path.normpath(scope_or_path)
         assert Path(path).is_dir(), '"{0}" must be a directory'.format(path)
-        name = os.path.basename(path)
+        name = PurePath(path).name
         scopes.append(ConfigScope(name, path))
 
     configuration = Configuration(*scopes)
@@ -1376,7 +1376,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
 
     paths = []
     for config_url in config_links:
-        basename = os.path.basename(config_url)
+        basename = PurePath(config_url).name
         if skip_existing and basename in existing_files:
             tty.warn(
                 "Will not fetch configuration from {0} since a version already"

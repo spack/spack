@@ -1809,14 +1809,14 @@ def mock_curl_configs(mock_config_data, monkeypatch):
 
         def __call__(self, *args, **kwargs):
             url = [a for a in args if a.startswith("http")][0]
-            basename = os.path.basename(url)
+            basename = PurePath(url).name
             if os.path.splitext(url)[1]:
                 if basename in config_files:
                     filename = os.path.join(config_data_dir, basename)
 
                     with open(filename, "r") as f:
                         lines = f.readlines()
-                        write_file(os.path.basename(filename), "".join(lines))
+                        write_file(PurePath(filename).name, "".join(lines))
 
                     self.returncode = 0
                 else:

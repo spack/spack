@@ -382,7 +382,7 @@ class Stage(object):
             fnames.append(clean_url)
 
         if self.mirror_paths:
-            fnames.extend(os.path.basename(x) for x in self.mirror_paths)
+            fnames.extend(PurePath(x).name for x in self.mirror_paths)
 
         paths.extend(os.path.join(self.path, f) for f in fnames)
         if not expanded:
@@ -553,7 +553,7 @@ class Stage(object):
         # Include hidden files for VCS repo history
         for entry in hidden_entries + entries:
             if Path(entry).is_dir():
-                d = os.path.join(dest, os.path.basename(entry))
+                d = os.path.join(dest, PurePath(entry).name)
                 shutil.copytree(entry, d, symlinks=True)
             else:
                 shutil.copy2(entry, dest)

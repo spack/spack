@@ -127,7 +127,7 @@ def edit(parser, args):
                     m = "Multiple files exist with the name {0}.".format(name)
                     m += " Please specify a suffix. Files are:\n\n"
                     for f in files:
-                        m += "        " + os.path.basename(f) + "\n"
+                        m += "        " + PurePath(f).name + "\n"
                     tty.die(m)
                 if not files:
                     tty.die("No file for '{0}' was found in {1}".format(name, path))

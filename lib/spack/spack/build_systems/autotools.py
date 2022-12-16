@@ -221,7 +221,7 @@ class AutotoolsBuilder(BaseBuilder):
         def runs_ok(script_abs_path):
             # Construct the list of arguments for the call
             additional_args = {"config.sub": [config_arch]}
-            script_name = os.path.basename(script_abs_path)
+            script_name = PurePath(script_abs_path).name
             args = [script_abs_path] + additional_args.get(script_name, [])
 
             try:
@@ -246,7 +246,7 @@ class AutotoolsBuilder(BaseBuilder):
         )
 
         # Get the config files we need to patch (config.sub / config.guess).
-        to_be_found = list(set(os.path.basename(f) for f in to_be_patched))
+        to_be_found = list(set(PurePath(f).name for f in to_be_patched))
         gnuconfig = self.pkg.spec["gnuconfig"]
         gnuconfig_dir = gnuconfig.prefix
 
@@ -278,7 +278,7 @@ class AutotoolsBuilder(BaseBuilder):
         candidates = [f for f in candidates if runs_ok(f)]
         substitutes = {}
         for candidate in candidates:
-            config_file = os.path.basename(candidate)
+            config_file = PurePath(candidate).name
             substitutes[config_file] = candidate
             to_be_found.remove(config_file)
 
@@ -303,7 +303,7 @@ To resolve this problem, please try the following:
 
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:
-            name = os.path.basename(abs_path)
+            name = PurePath(abs_path).name
             mode = os.stat(abs_path).st_mode
             Path(abs_path).chmod(stat.S_IWUSR)
             fs.copy(substitutes[name], abs_path)

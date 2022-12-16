@@ -271,7 +271,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
 
     tty.debug("Fetching text at {0}".format(url))
 
-    filename = os.path.basename(url)
+    filename = PurePath(url).name
     path = os.path.join(dest_dir, filename)
 
     fetch_method = spack.config.get("config:url_fetch_method")
@@ -694,7 +694,7 @@ def find_versions_of_archive(
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
-        url_regex = os.path.basename(url_regex)
+        url_regex = PurePath(url_regex).name
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:
