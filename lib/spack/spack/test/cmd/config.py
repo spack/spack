@@ -246,15 +246,17 @@ def test_config_with_c_argument(mutable_empty_config):
 
 
 def test_config_add_ordered_dict(mutable_empty_config):
-    config("add", "mirrors:first:/path/to/first")
-    config("add", "mirrors:second:/path/to/second")
-    output = config("get", "mirrors")
+    config("add", "upstreams:first:install_tree:/path/to/first")
+    config("add", "upstreams:second:install_tree:/path/to/second")
+    output = config("get", "upstreams")
 
     assert (
         output
-        == """mirrors:
-  first: /path/to/first
-  second: /path/to/second
+        == """upstreams:
+  first:
+    install_tree: /path/to/first
+  second:
+    install_tree: /path/to/second
 """
     )
 
