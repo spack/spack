@@ -27,7 +27,7 @@ class PySchemaSalad(PythonPackage):
     depends_on("py-rdflib@4.2.2:5.999999", when="^python@:3.6", type=("build", "run"))
     depends_on("py-rdflib-jsonld@0.4.0:0.6.0", when="^python@:3.6", type=("build", "run"))
     depends_on("py-mistune@2.0.3:2.0", type=("build", "run"))
-    depends_on("py-cachecontrol@0.12.11+filecache", type=("build", "run"))
+    depends_on("py-cachecontrol@0.11.7:0.12+filecache", type=("build", "run"))
 
     depends_on("py-black@19.10b0:22.12", type=("build", "run"))
 
