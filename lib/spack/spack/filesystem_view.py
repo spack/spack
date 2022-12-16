@@ -53,7 +53,7 @@ def view_symlink(src, dst, **kwargs):
 def view_hardlink(src, dst, **kwargs):
     # keyword arguments are irrelevant
     # here to fit required call signature
-    os.link(src, dst)
+    Path(src).link_to(dst)
 
 
 def view_copy(src, dst, view, spec=None):

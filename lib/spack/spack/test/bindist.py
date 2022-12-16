@@ -635,14 +635,14 @@ def test_build_manifest_visitor(tmpdir):
         os.symlink(file, "symlink_to_file")
 
         # Hardlink the file
-        os.link(file, "hardlink_of_file")
+        Path(file).link_to("hardlink_of_file")
 
         # Hardlinked symlinks: seems like this is only a thing on Linux,
         # on Darwin the symlink *target* is hardlinked, on Linux the
         # symlink *itself* is hardlinked.
         if sys.platform.startswith("linux"):
-            os.link("symlink_to_file", "hardlink_of_symlink_to_file")
-            os.link("symlink_to_directory", "hardlink_of_symlink_to_directory")
+            Path("symlink_to_file").link_to("hardlink_of_symlink_to_file")
+            Path("symlink_to_directory").link_to("hardlink_of_symlink_to_directory")
 
     visitor = bindist.BuildManifestVisitor()
     visit_directory_tree(str(tmpdir), visitor)
