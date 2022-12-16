@@ -52,7 +52,7 @@ def test_test_ensure_stage(mock_test_stage, mock_packages):
     test_suite = spack.install_test.TestSuite([spec], test_name)
     test_suite.ensure_stage()
 
-    assert os.path.isdir(test_suite.stage)
+    assert Path(test_suite.stage).is_dir()
     assert mock_test_stage in test_suite.stage
 
 

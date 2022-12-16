@@ -444,7 +444,7 @@ def set_wrapper_variables(pkg, env):
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, "case-insensitive")
-        if os.path.isdir(ci):
+        if Path(ci).is_dir():
             env_paths.append(ci)
 
     tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
@@ -491,7 +491,7 @@ def set_wrapper_variables(pkg, env):
 
             for default_lib_dir in ["lib", "lib64"]:
                 default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-                if os.path.isdir(default_lib_prefix):
+                if Path(default_lib_prefix).is_dir():
                     dep_link_dirs.append(default_lib_prefix)
 
             _prepend_all(link_dirs, dep_link_dirs)
@@ -725,8 +725,8 @@ def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
     deps = get_rpath_deps(pkg)
-    rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+    rpaths.extend(d.prefix.lib for d in deps if Path(d.prefix.lib).is_dir())
+    rpaths.extend(d.prefix.lib64 for d in deps if Path(d.prefix.lib64).is_dir())
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
@@ -837,7 +837,7 @@ def _make_runnable(pkg, env):
 
     for dirname in ["bin", "bin64"]:
         bin_dir = os.path.join(prefix, dirname)
-        if os.path.isdir(bin_dir):
+        if Path(bin_dir).is_dir():
             env.prepend_path("PATH", bin_dir)
 
 
@@ -931,7 +931,7 @@ def modifications_from_dependencies(
 
             for directory in ("lib", "lib64", "share"):
                 pcdir = os.path.join(prefix, directory, "pkgconfig")
-                if os.path.isdir(pcdir):
+                if Path(pcdir).is_dir():
                     env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
         if dep in exe_deps and not is_system_path(dep.prefix):

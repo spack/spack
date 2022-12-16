@@ -318,7 +318,7 @@ def test_find(args):  # TODO: merge with status (noargs)
         test_suites = [
             t
             for t in test_suites
-            if any(match(t.alias, f) for f in filters) and os.path.isdir(t.stage)
+            if any(match(t.alias, f) for f in filters) and Path(t.stage).is_dir()
         ]
 
     names = [t.name for t in test_suites]

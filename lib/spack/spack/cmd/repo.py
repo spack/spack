@@ -87,7 +87,7 @@ def repo_add(args):
         tty.die("No such file or directory: %s" % path)
 
     # Make sure the path is a directory.
-    if not os.path.isdir(canon_path):
+    if not Path(canon_path).is_dir():
         tty.die("Not a Spack repository: %s" % path)
 
     # Make sure it's actually a spack repository by constructing it.

@@ -340,7 +340,7 @@ def refresh(module_type, specs, args):
 
     # Proceed regenerating module files
     tty.msg("Regenerating {name} module files".format(name=module_type))
-    if os.path.isdir(module_type_root) and args.delete_tree:
+    if Path(module_type_root).is_dir() and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
 

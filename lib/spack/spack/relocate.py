@@ -1008,7 +1008,7 @@ def is_binary(filename):
 # Memoize this due to repeated calls to libraries in the same directory.
 @llnl.util.lang.memoized
 def _exists_dir(dirname):
-    return os.path.isdir(dirname)
+    return Path(dirname).is_dir()
 
 
 def fixup_macos_rpath(root, filename):

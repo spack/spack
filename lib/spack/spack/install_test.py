@@ -59,12 +59,12 @@ def get_all_test_suites():
         list: a list of TestSuite objects, which may be empty if there are none
     """
     stage_root = get_test_stage_dir()
-    if not os.path.isdir(stage_root):
+    if not Path(stage_root).is_dir():
         return []
 
     def valid_stage(d):
         dirpath = os.path.join(stage_root, d)
-        return os.path.isdir(dirpath) and test_suite_filename in list(Path(dirpath).iterdir())
+        return Path(dirpath).is_dir() and test_suite_filename in list(Path(dirpath).iterdir())
 
     candidates = [
         os.path.join(stage_root, d, test_suite_filename)

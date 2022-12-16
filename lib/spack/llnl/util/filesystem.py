@@ -433,7 +433,7 @@ def exploding_archive_handler(tarball_container, stage):
     non_hidden = [f for f in files if not f.startswith(".")]
     if len(non_hidden) == 1:
         src = os.path.join(tarball_container, non_hidden[0])
-        if os.path.isdir(src):
+        if Path(src).is_dir():
             stage.srcdir = non_hidden[0]
             shutil.move(src, stage.source_path)
             if len(files) > 1:
@@ -486,7 +486,7 @@ def set_install_permissions(path):
     # Spack-maintained prefix, the permissions should not be modified.
     if os.path.islink(path):
         return
-    if os.path.isdir(path):
+    if Path(path).is_dir():
         Path(path).chmod(0o755)
     else:
         Path(path).chmod(0o644)
@@ -600,7 +600,7 @@ def copy(src, dest, _permissions=False):
     files = glob.glob(src)
     if not files:
         raise IOError("No such file or directory: '{0}'".format(src))
-    if len(files) > 1 and not os.path.isdir(dest):
+    if len(files) > 1 and not Path(dest).is_dir():
         raise ValueError(
             "'{0}' matches multiple files but '{1}' is not a directory".format(src, dest)
         )
@@ -608,7 +608,7 @@ def copy(src, dest, _permissions=False):
     for src in files:
         # Expand dest to its eventual full path if it is a directory.
         dst = dest
-        if os.path.isdir(dest):
+        if Path(dest).is_dir():
             dst = join_path(dest, os.path.basename(src))
 
         shutil.copy(src, dst)
@@ -730,12 +730,12 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
                             target = new_target
 
                     symlink(target, d)
-                elif os.path.isdir(link_target):
+                elif Path(link_target).is_dir():
                     mkdirp(d)
                 else:
                     shutil.copyfile(s, d)
             else:
-                if os.path.isdir(s):
+                if Path(s).is_dir():
                     mkdirp(d)
                 else:
                     shutil.copy2(s, d)
@@ -888,9 +888,9 @@ def mkdirp(*paths, **kwargs):
                         Path(intermediate_path).chmod(intermediate_mode)  # reset sticky bit after
 
             except OSError as e:
-                if e.errno != errno.EEXIST or not os.path.isdir(path):
+                if e.errno != errno.EEXIST or not Path(path).is_dir():
                     raise e
-        elif not os.path.isdir(path):
+        elif not Path(path).is_dir():
             raise OSError(errno.EEXIST, "File already exists", path)
 
 
@@ -941,7 +941,7 @@ def replace_directory_transaction(directory_name):
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     directory_name = Path(directory_name).resolve()
-    assert os.path.isdir(directory_name), "Not a directory: " + directory_name
+    assert Path(directory_name).is_dir(), "Not a directory: " + directory_name
 
     # Note: directory_name is normalized here, meaning the trailing slash is dropped,
     # so dirname is the directory's parent not the directory itself.
@@ -984,7 +984,7 @@ def hash_directory(directory, ignore=[]):
     Returns:
         hash of the directory content
     """
-    assert os.path.isdir(directory), '"directory" must be a directory!'
+    assert Path(directory).is_dir(), '"directory" must be a directory!'
 
     md5_hash = hashlib.md5()
 
@@ -1182,7 +1182,7 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
-        if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
+        if Path(source_child).is_dir() and (follow_links or not os.path.islink(source_child)):
 
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
@@ -1336,7 +1336,7 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
                 # will ensure that if so, that it is relative
                 # to the CWD and therefore
                 # makes sense
-                isdir = os.path.isdir(link_target)
+                isdir = Path(link_target).is_dir()
             else:
                 raise e
 
@@ -2170,7 +2170,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
 
     for subdir in common_lib_dirs:
         dirname = join_path(root, subdir)
-        if not os.path.isdir(dirname):
+        if not Path(dirname).is_dir():
             continue
         found_libs = find(dirname, libraries, False)
         if found_libs:
@@ -2340,7 +2340,7 @@ def can_access_dir(path):
     Returns:
         True if ``path`` is an accessible directory, else False
     """
-    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+    return Path(path).is_dir() and os.access(path, os.R_OK | os.X_OK)
 
 
 @system_path_filter
@@ -2354,7 +2354,7 @@ def can_write_to_dir(path):
     Returns:
         True if ``path`` is an writeable directory, else False
     """
-    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK | os.W_OK)
+    return Path(path).is_dir() and os.access(path, os.R_OK | os.X_OK | os.W_OK)
 
 
 @system_path_filter
@@ -2400,14 +2400,14 @@ def search_paths_for_executables(*path_hints):
     """
     executable_paths = []
     for path in path_hints:
-        if not os.path.isdir(path):
+        if not Path(path).is_dir():
             continue
 
         path = Path(path).resolve()
         executable_paths.append(path)
 
         bin_dir = os.path.join(path, "bin")
-        if os.path.isdir(bin_dir):
+        if Path(bin_dir).is_dir():
             executable_paths.append(bin_dir)
 
     return executable_paths
@@ -2428,18 +2428,18 @@ def search_paths_for_libraries(*path_hints):
     """
     library_paths = []
     for path in path_hints:
-        if not os.path.isdir(path):
+        if not Path(path).is_dir():
             continue
 
         path = Path(path).resolve()
         library_paths.append(path)
 
         lib_dir = os.path.join(path, "lib")
-        if os.path.isdir(lib_dir):
+        if Path(lib_dir).is_dir():
             library_paths.append(lib_dir)
 
         lib64_dir = os.path.join(path, "lib64")
-        if os.path.isdir(lib64_dir):
+        if Path(lib64_dir).is_dir():
             library_paths.append(lib64_dir)
 
     return library_paths

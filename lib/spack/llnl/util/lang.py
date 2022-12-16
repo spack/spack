@@ -215,7 +215,7 @@ def list_modules(directory, **kwargs):
             continue
 
         path = os.path.join(directory, name)
-        if list_directories and os.path.isdir(path):
+        if list_directories and Path(path).is_dir():
             init_py = os.path.join(path, "__init__.py")
             if os.path.isfile(init_py):
                 yield name

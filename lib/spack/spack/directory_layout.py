@@ -256,7 +256,7 @@ class DirectoryLayout(object):
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
 
-        if not os.path.isdir(path):
+        if not Path(path).is_dir():
             raise InconsistentInstallDirectoryError(
                 "Install prefix {0} does not exist.".format(path)
             )
@@ -273,7 +273,7 @@ class DirectoryLayout(object):
             )
 
     def all_specs(self):
-        if not os.path.isdir(self.root):
+        if not Path(self.root).is_dir():
             return []
 
         specs = []
@@ -291,7 +291,7 @@ class DirectoryLayout(object):
         return specs
 
     def all_deprecated_specs(self):
-        if not os.path.isdir(self.root):
+        if not Path(self.root).is_dir():
             return []
 
         deprecated_specs = set()
@@ -370,7 +370,7 @@ class DirectoryLayout(object):
 
         path = os.path.dirname(path)
         while path != self.root:
-            if os.path.isdir(path):
+            if Path(path).is_dir():
                 try:
                     Path(path).rmdir()
                 except OSError as e:

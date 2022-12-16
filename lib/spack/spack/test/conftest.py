@@ -344,7 +344,7 @@ def no_chdir():
     """
     original_wd = Path.cwd()
     yield
-    if os.path.isdir(original_wd):
+    if Path(original_wd).is_dir():
         assert Path.cwd() == original_wd
 
 
@@ -389,7 +389,7 @@ def mock_stage(tmpdir_factory, monkeypatch, request):
         yield new_stage_path
 
         # Clean up the test stage directory
-        if os.path.isdir(new_stage_path):
+        if Path(new_stage_path).is_dir():
             shutil.rmtree(new_stage_path, onerror=onerror)
     else:
         # Must yield a path to avoid a TypeError on test teardown

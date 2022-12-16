@@ -499,7 +499,7 @@ def dump_packages(spec, path):
             # (currently) use Spack metadata to associate repos with externals
             # built by other Spack instances.
             # Spack can always get something current from the builtin repo.
-            if node.external or not os.path.isdir(source_repo_root):
+            if node.external or not Path(source_repo_root).is_dir():
                 continue
 
             # Create a source repo and get the pkg directory out of it.
@@ -954,7 +954,7 @@ class PackageInstaller(object):
 
             # Make sure the installation directory is in the desired state
             # for uninstalled specs.
-            if os.path.isdir(task.pkg.spec.prefix):
+            if Path(task.pkg.spec.prefix).is_dir():
                 if not keep_prefix:
                     task.pkg.remove_prefix()
                 else:
@@ -1975,7 +1975,7 @@ class BuildProcessInstaller(object):
     def _install_source(self):
         """Install source code from stage into share/pkg/src if necessary."""
         pkg = self.pkg
-        if not os.path.isdir(pkg.stage.source_path):
+        if not Path(pkg.stage.source_path).is_dir():
             return
 
         src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")

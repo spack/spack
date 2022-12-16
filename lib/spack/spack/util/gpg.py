@@ -75,7 +75,7 @@ def init(gnupghome=None, force=False):
         os.makedirs(GNUPGHOME)
         Path(GNUPGHOME).chmod(0o700)
 
-    if not os.path.isdir(GNUPGHOME):
+    if not Path(GNUPGHOME).is_dir():
         msg = 'GNUPGHOME "{0}" exists and is not a directory'.format(GNUPGHOME)
         raise SpackGPGError(msg)
 

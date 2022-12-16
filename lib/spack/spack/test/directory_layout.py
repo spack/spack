@@ -102,7 +102,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         spec_path = layout.spec_file_path(spec)
 
         # Ensure directory has been created in right place.
-        assert os.path.isdir(install_dir)
+        assert Path(install_dir).is_dir()
         assert install_dir.startswith(temporary_store.root)
 
         # Ensure spec file exists when directory is created
@@ -139,7 +139,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
 
         # Ensure directories are properly removed
         layout.remove_install_directory(spec)
-        assert not os.path.isdir(install_dir)
+        assert not Path(install_dir).is_dir()
         assert not Path(install_dir).exists()
 
 

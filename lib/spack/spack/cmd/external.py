@@ -187,7 +187,7 @@ def _collect_and_consume_cray_manifest_files(
     if manifest_directory:
         manifest_dirs.append(manifest_directory)
 
-    if os.path.isdir(cray_manifest.default_path):
+    if Path(cray_manifest.default_path).is_dir():
         tty.debug(
             "Cray manifest path {0} exists: collecting all files to read.".format(
                 cray_manifest.default_path

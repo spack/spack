@@ -938,7 +938,7 @@ class Repo(object):
 
         self.packages_path = os.path.join(self.root, packages_dir_name)
         check(
-            os.path.isdir(self.packages_path),
+            Path(self.packages_path).is_dir(),
             "No directory '%s' found in '%s'" % (packages_dir_name, root),
         )
 
@@ -1306,7 +1306,7 @@ def create_repo(root, namespace=None):
     if Path(root).exists():
         if os.path.isfile(root):
             raise BadRepoError("File %s already exists and is not a directory" % root)
-        elif os.path.isdir(root):
+        elif Path(root).is_dir():
             if not os.access(root, os.R_OK | os.W_OK):
                 raise BadRepoError("Cannot create new repo in %s: cannot access directory." % root)
             if list(Path(root).iterdir()):

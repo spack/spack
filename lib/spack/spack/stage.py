@@ -107,7 +107,7 @@ def create_stage_root(path: str) -> None:
     # created automatically by spack. It's not clear why this is the case for `spack
     # stage -p`, but since `mkdirp()` is idempotent, this should not change the behavior
     # for any other code paths.
-    if not os.path.isdir(spack_src_subdir):
+    if not Path(spack_src_subdir).is_dir():
         mkdirp(spack_src_subdir, mode=stat.S_IRWXU)
 
 
@@ -542,7 +542,7 @@ class Stage(object):
         if not self.expanded:
             self.expand_archive()
 
-        if not os.path.isdir(dest):
+        if not Path(dest).is_dir():
             mkdirp(dest)
 
         # glob all files and directories in the source path
@@ -552,7 +552,7 @@ class Stage(object):
         # Move all files from stage to destination directory
         # Include hidden files for VCS repo history
         for entry in hidden_entries + entries:
-            if os.path.isdir(entry):
+            if Path(entry).is_dir():
                 d = os.path.join(dest, os.path.basename(entry))
                 shutil.copytree(entry, d, symlinks=True)
             else:
@@ -640,7 +640,7 @@ class Stage(object):
         # User has full permissions and group has only read permissions
         if not Path(self.path).exists():
             mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
-        elif not os.path.isdir(self.path):
+        elif not Path(self.path).is_dir():
             Path(self.path).unlink()
             mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
 
@@ -700,7 +700,7 @@ class ResourceStage(Stage):
             os.makedirs(target_path)
         except OSError as err:
             tty.debug(err)
-            if err.errno == errno.EEXIST and os.path.isdir(target_path):
+            if err.errno == errno.EEXIST and Path(target_path).is_dir():
                 pass
             else:
                 raise
@@ -719,7 +719,7 @@ class ResourceStage(Stage):
 
                 src = os.path.realpath(source_path)
 
-                if os.path.isdir(src):
+                if Path(src).is_dir():
                     install_tree(src, destination_path)
                 else:
                     install(src, destination_path)
@@ -794,7 +794,7 @@ class DIYStage(object):
     def __init__(self, path):
         if path is None:
             raise ValueError("Cannot construct DIYStage without a path.")
-        elif not os.path.isdir(path):
+        elif not Path(path).is_dir():
             raise StagePathError("The stage path directory does not exist:", path)
 
         self.archive_file = None
@@ -846,11 +846,11 @@ def ensure_access(file):
 def purge():
     """Remove all build directories in the top-level stage path."""
     root = get_stage_root()
-    if os.path.isdir(root):
+    if Path(root).is_dir():
         for stage_dir in Path(root).iterdir():
             if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
                 stage_path = os.path.join(root, stage_dir)
-                if os.path.isdir(stage_path):
+                if Path(stage_path).is_dir():
                     remove_linked_tree(stage_path)
                 else:
                     Path(stage_path).unlink()

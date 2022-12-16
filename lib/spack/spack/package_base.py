@@ -1870,7 +1870,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         for path in paths:
             src_path = os.path.join(self.stage.source_path, path)
             dest_path = os.path.join(self.install_test_root, path)
-            if os.path.isdir(src_path):
+            if Path(src_path).is_dir():
                 fsys.install_tree(src_path, dest_path)
             else:
                 fsys.mkdirp(os.path.dirname(dest_path))
@@ -2199,7 +2199,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @staticmethod
     def uninstall_by_spec(spec, force=False, deprecator=None):
-        if not os.path.isdir(spec.prefix):
+        if not Path(spec.prefix).is_dir():
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
             specs = spack.store.db.query(spec, installed=True)
@@ -2413,11 +2413,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # stored in the bin directory
         if is_windows:
             rpaths = [self.prefix.bin]
-            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+            rpaths.extend(d.prefix.bin for d in deps if Path(d.prefix.bin).is_dir())
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
-            rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-            rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+            rpaths.extend(d.prefix.lib for d in deps if Path(d.prefix.lib).is_dir())
+            rpaths.extend(d.prefix.lib64 for d in deps if Path(d.prefix.lib64).is_dir())
         return rpaths
 
     @property
@@ -2532,13 +2532,13 @@ def test_process(pkg, kwargs):
                     if spec.concrete:
                         cache_source = spec_pkg.install_test_root
                         cache_dir = pkg.test_suite.current_test_cache_dir
-                        if os.path.isdir(cache_source) and not Path(cache_dir).exists():
+                        if Path(cache_source).is_dir() and not Path(cache_dir).exists():
                             fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test
                     data_dir = pkg.test_suite.current_test_data_dir
-                    if os.path.isdir(data_source) and not Path(data_dir).exists():
+                    if Path(data_source).is_dir() and not Path(data_dir).exists():
                         # We assume data dir is used read-only
                         # maybe enforce this later
                         shutil.copytree(data_source, data_dir)

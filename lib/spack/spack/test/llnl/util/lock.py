@@ -129,7 +129,7 @@ def make_readable(*paths):
     # bits are ignored."
     for path in paths:
         if not is_windows:
-            mode = 0o555 if os.path.isdir(path) else 0o444
+            mode = 0o555 if Path(path).is_dir() else 0o444
         else:
             mode = stat.S_IREAD
         Path(path).chmod(mode)
@@ -138,7 +138,7 @@ def make_readable(*paths):
 def make_writable(*paths):
     for path in paths:
         if not is_windows:
-            mode = 0o755 if os.path.isdir(path) else 0o744
+            mode = 0o755 if Path(path).is_dir() else 0o744
         else:
             mode = stat.S_IWRITE
         Path(path).chmod(mode)

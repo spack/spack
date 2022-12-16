@@ -152,7 +152,7 @@ def executable_prefix(executable_dir):
     # Given a prefix where an executable is found, assuming that prefix
     # contains /bin/, strip off the 'bin' directory to get a Spack-compatible
     # prefix
-    assert os.path.isdir(executable_dir)
+    assert Path(executable_dir).is_dir()
 
     components = executable_dir.split(os.sep)
     # convert to lower to match Bin, BIN, bin
@@ -173,7 +173,7 @@ def library_prefix(library_dir):
     # Given a prefix where an library is found, assuming that prefix
     # contains /lib/ or /lib64/, strip off the 'lib' or 'lib64' directory
     # to get a Spack-compatible prefix
-    assert os.path.isdir(library_dir)
+    assert Path(library_dir).is_dir()
 
     components = library_dir.split(os.sep)
     # covert to lowercase to match lib, LIB, Lib, etc.

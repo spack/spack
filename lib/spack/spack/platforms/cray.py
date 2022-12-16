@@ -102,7 +102,7 @@ class Cray(Platform):
         env.set("CRAYPE_LINK_TYPE", "dynamic")
         cray_wrapper_names = os.path.join(build_env_path, "cray")
 
-        if os.path.isdir(cray_wrapper_names):
+        if Path(cray_wrapper_names).is_dir():
             env.prepend_path("PATH", cray_wrapper_names)
             env.prepend_path("SPACK_ENV_PATH", cray_wrapper_names)
 
@@ -119,10 +119,10 @@ class Cray(Platform):
 
     @classmethod
     def craype_type_and_version(cls):
-        if os.path.isdir(_ex_craype_dir):
+        if Path(_ex_craype_dir).is_dir():
             craype_dir = _ex_craype_dir
             craype_type = "EX"
-        elif os.path.isdir(_xc_craype_dir):
+        elif Path(_xc_craype_dir).is_dir():
             craype_dir = _xc_craype_dir
             craype_type = "XC"
         else:
@@ -222,7 +222,7 @@ class Cray(Platform):
 
         def modules_from_listdir():
             craype_default_path = "/opt/cray/pe/craype/default/modulefiles"
-            if os.path.isdir(craype_default_path):
+            if Path(craype_default_path).is_dir():
                 return list(Path(craype_default_path).iterdir())
             return []
 

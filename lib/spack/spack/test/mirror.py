@@ -62,7 +62,7 @@ def check_mirror():
                 spack.mirror.create(mirror_root, specs)
 
             # Stage directory exists
-            assert os.path.isdir(mirror_root)
+            assert Path(mirror_root).is_dir()
 
             for spec in specs:
                 fetcher = spec.package.fetcher[0]

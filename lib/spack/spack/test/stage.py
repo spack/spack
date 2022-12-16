@@ -155,11 +155,11 @@ def check_setup(stage, stage_name, archive):
     stage_path = get_stage_path(stage, stage_name)
 
     # Ensure stage was created in the spack stage directory
-    assert os.path.isdir(stage_path)
+    assert Path(stage_path).is_dir()
 
     # Make sure it points to a valid directory
     target = os.path.realpath(stage_path)
-    assert os.path.isdir(target)
+    assert Path(target).is_dir()
     assert not os.path.islink(target)
 
     # Make sure the directory is in the place we asked it to
@@ -618,7 +618,7 @@ class TestStage(object):
         with stage:
             pass
         path = get_stage_path(stage, self.stage_name)
-        assert os.path.isdir(path)
+        assert Path(path).is_dir()
 
     @pytest.mark.disable_clean_stage_check
     def test_no_keep_with_exceptions(self, mock_stage_archive):
@@ -633,7 +633,7 @@ class TestStage(object):
 
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
-            assert os.path.isdir(path)
+            assert Path(path).is_dir()
 
     @pytest.mark.disable_clean_stage_check
     def test_keep_exceptions(self, mock_stage_archive):
@@ -648,7 +648,7 @@ class TestStage(object):
 
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
-            assert os.path.isdir(path)
+            assert Path(path).is_dir()
 
     def test_source_path_available(self, mock_stage_archive):
         """Ensure source path available but does not exist on instantiation."""
@@ -671,7 +671,7 @@ class TestStage(object):
         # Ensure the tmpdir path is returned since the user should have access
         path = spack.stage._first_accessible_path(files)
         assert path == name
-        assert os.path.isdir(path)
+        assert Path(path).is_dir()
         check_stage_dir_perms(str(tmpdir), path)
 
         # Ensure an existing path is returned
@@ -893,7 +893,7 @@ class TestStage(object):
         # Instantiate the DIYStage and ensure the above file is unchanged.
         path = str(tmpdir)
         stage = DIYStage(path)
-        assert os.path.isdir(path)
+        assert Path(path).is_dir()
         assert os.path.isfile(str(fn))
 
         stage.create()  # Only sets the flag value
@@ -918,7 +918,7 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     stage.create()
 
     # Ensure the stage path is "converted" to a directory
-    assert os.path.isdir(stage.path)
+    assert Path(stage.path).is_dir()
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")

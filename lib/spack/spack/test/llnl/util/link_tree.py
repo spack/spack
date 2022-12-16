@@ -49,7 +49,7 @@ def check_file_link(filename, expected_target):
 
 
 def check_dir(filename):
-    assert os.path.isdir(filename)
+    assert Path(filename).is_dir()
 
 
 def test_merge_to_new_directory(stage, link_tree):
@@ -151,8 +151,8 @@ def test_merge_with_empty_directories(stage, link_tree):
         assert not Path("dest/c/d/6").exists()
         assert not Path("dest/c/d/e/7").exists()
 
-        assert os.path.isdir("dest/a/b/h")
-        assert os.path.isdir("dest/f/g")
+        assert Path("dest/a/b/h").is_dir()
+        assert Path("dest/f/g").is_dir()
 
 
 def test_ignore(stage, link_tree):

@@ -153,7 +153,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
         s.package.remove_prefix = mock_remove_prefix
         with pytest.raises(MockInstallError):
             s.package.do_install()
-        assert os.path.isdir(s.package.prefix)
+        assert Path(s.package.prefix).is_dir()
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
         s.package.remove_prefix = rm_prefix_checker.remove_prefix
 
@@ -234,7 +234,7 @@ def test_install_dependency_symlinks_pkg(install_mockery, mock_fetch, mutable_mo
 
     # Ensure dependency directory exists after the installation.
     dependency_dir = os.path.join(pkg.prefix, "dependency-install")
-    assert os.path.isdir(dependency_dir)
+    assert Path(dependency_dir).is_dir()
 
 
 def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
@@ -274,7 +274,7 @@ def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):
     spack.package_base.flatten_dependencies(spec, pkg.prefix)
 
     dependency_dir = os.path.join(pkg.prefix, dependency_name)
-    assert os.path.isdir(dependency_dir)
+    assert Path(dependency_dir).is_dir()
 
 
 @pytest.fixture()

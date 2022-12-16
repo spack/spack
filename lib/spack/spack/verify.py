@@ -35,7 +35,7 @@ def create_manifest_entry(path):
             data["type"] = "link"
             data["dest"] = os.readlink(path)
 
-        elif os.path.isdir(path):
+        elif Path(path).is_dir():
             data["type"] = "dir"
 
         else:
@@ -93,7 +93,7 @@ def check_entry(path, data):
             res.add_error(path, "link")
 
     # Check directories are listed as directory
-    elif os.path.isdir(path):
+    elif Path(path).is_dir():
         if data["type"] != "dir":
             res.add_error(path, "type")
 

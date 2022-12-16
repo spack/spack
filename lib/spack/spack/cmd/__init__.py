@@ -533,7 +533,7 @@ def spack_is_git_repo():
 
 def is_git_repo(path):
     dotgit_path = join_path(path, ".git")
-    if os.path.isdir(dotgit_path):
+    if Path(dotgit_path).is_dir():
         # we are in a regular git repo
         return True
     if os.path.isfile(dotgit_path):

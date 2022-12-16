@@ -761,7 +761,7 @@ def _add_command_line_scopes(cfg, command_line_scopes):
     for i, path in enumerate(command_line_scopes):
         # We ensure that these scopes exist and are readable, as they are
         # provided on the command line by the user.
-        if not os.path.isdir(path):
+        if not Path(path).is_dir():
             raise ConfigError("config scope is not a directory: '%s'" % path)
         elif not os.access(path, os.R_OK):
             raise ConfigError("config scope is not readable: '%s'" % path)
@@ -1295,7 +1295,7 @@ def _config_from(scopes_or_paths):
 
         # Otherwise we need to construct it
         path = os.path.normpath(scope_or_path)
-        assert os.path.isdir(path), '"{0}" must be a directory'.format(path)
+        assert Path(path).is_dir(), '"{0}" must be a directory'.format(path)
         name = os.path.basename(path)
         scopes.append(ConfigScope(name, path))
 
@@ -1371,7 +1371,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
     # Return the local path to the cached configuration file OR to the
     # directory containing the cached configuration files.
     config_links = collect_urls(url)
-    existing_files = list(Path(dest_dir).iterdir()) if os.path.isdir(dest_dir) else []
+    existing_files = list(Path(dest_dir).iterdir()) if Path(dest_dir).is_dir() else []
 
     paths = []
     for config_url in config_links:

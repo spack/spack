@@ -1172,7 +1172,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
                 path = line[8:].strip()
                 if os.path.isfile(path):
                     Path(path).unlink()
-                elif os.path.isdir(path):
+                elif Path(path).is_dir():
                     shutil.rmtree(path, ignore_errors=True)
 
     def archive(self, destination):

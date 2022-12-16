@@ -241,7 +241,7 @@ def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
 
 
 def trigger_bad_patch(pkg):
-    if not os.path.isdir(pkg.stage.source_path):
+    if not Path(pkg.stage.source_path).is_dir():
         os.makedirs(pkg.stage.source_path)
     bad_file = os.path.join(pkg.stage.source_path, ".spack_patch_failed")
     touch(bad_file)

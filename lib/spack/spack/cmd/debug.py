@@ -42,7 +42,7 @@ def _debug_tarball_suffix():
         return "nobranch-nogit-%s" % suffix
 
     with working_dir(spack.paths.prefix):
-        if not os.path.isdir(".git"):
+        if not Path(".git").is_dir():
             return "nobranch.nogit.%s" % suffix
 
         # Get symbolic branch name and strip any special chars (mainly '/')

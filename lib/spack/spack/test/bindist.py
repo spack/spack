@@ -658,7 +658,7 @@ def test_build_manifest_visitor(tmpdir):
         assert len(visitor.symlinks) == 2
 
     with tmpdir.as_cwd():
-        assert not any(os.path.islink(f) or os.path.isdir(f) for f in visitor.files)
+        assert not any(os.path.islink(f) or Path(f).is_dir() for f in visitor.files)
         assert all(os.path.islink(f) for f in visitor.symlinks)
 
 

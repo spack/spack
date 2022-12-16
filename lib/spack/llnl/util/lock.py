@@ -392,7 +392,7 @@ class Lock(object):
             # are fine if we ensure that the directory exists.
             # Python 3 allows an exist_ok parameter and ignores any OSError as long as
             # the directory exists.
-            if not (e.errno == errno.EISDIR or os.path.isdir(parent)):
+            if not (e.errno == errno.EISDIR or Path(parent).is_dir()):
                 raise
         return parent
 

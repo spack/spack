@@ -433,7 +433,7 @@ def test_fake_install(install_mockery):
 
     pkg = spec.package
     inst._do_fake_install(pkg)
-    assert os.path.isdir(pkg.prefix.lib)
+    assert Path(pkg.prefix.lib).is_dir()
 
 
 def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
@@ -576,7 +576,7 @@ def test_clear_failures_success(install_mockery):
     assert len(list(Path(spack.store.db._failure_dir).iterdir())) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.db._failure_dir)
+    assert Path(spack.store.db._failure_dir).is_dir()
     assert os.path.isfile(spack.store.db.prefix_fail_path)
 
 

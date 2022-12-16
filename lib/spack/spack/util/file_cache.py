@@ -47,7 +47,7 @@ class FileCache(object):
         """Remove all files under the cache root."""
         for f in Path(self.root).iterdir():
             path = os.path.join(self.root, f)
-            if os.path.isdir(path):
+            if Path(path).is_dir():
                 shutil.rmtree(path, True)
             else:
                 Path(path).unlink()

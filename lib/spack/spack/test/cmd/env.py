@@ -2821,7 +2821,7 @@ def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock
     with ev.create("env", with_view=view):
         add("libelf")
         install("--fake")
-    assert os.path.isdir(non_view_dir)
+    assert Path(non_view_dir).is_dir()
 
 
 def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):

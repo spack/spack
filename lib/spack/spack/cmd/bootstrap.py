@@ -335,7 +335,7 @@ def _add(args):
 
     # Check that the metadata file exists
     metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir)
-    if not Path(metadata_dir).exists() or not os.path.isdir(metadata_dir):
+    if not Path(metadata_dir).exists() or not Path(metadata_dir).is_dir():
         raise RuntimeError('the directory "{0}" does not exist'.format(args.metadata_dir))
 
     file = os.path.join(metadata_dir, "metadata.yaml")

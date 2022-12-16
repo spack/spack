@@ -231,7 +231,7 @@ def active(name):
 
 def is_env_dir(path):
     """Whether a directory contains a spack environment."""
-    return os.path.isdir(path) and os.path.exists(os.path.join(path, manifest_name))
+    return Path(path).is_dir() and os.path.exists(os.path.join(path, manifest_name))
 
 
 def read(name):
@@ -984,7 +984,7 @@ class Environment(object):
                 config_path = os.path.join(self.path, config_path)
                 config_path = os.path.normpath(os.path.realpath(config_path))
 
-            if os.path.isdir(config_path):
+            if Path(config_path).is_dir():
                 # directories are treated as regular ConfigScopes
                 config_name = "env:%s:%s" % (self.name, os.path.basename(config_path))
                 tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
@@ -2285,11 +2285,11 @@ def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
     path = spack.repo.RepoPath()
 
-    if os.path.isdir(root):
+    if Path(root).is_dir():
         for repo_root in Path(root).iterdir():
             repo_root = os.path.join(root, repo_root)
 
-            if not os.path.isdir(repo_root):
+            if not Path(repo_root).is_dir():
                 continue
 
             repo = spack.repo.Repo(repo_root)

@@ -176,7 +176,7 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
         if os.path.splitext(src)[1]:
             assert os.path.isfile(src), emsg_file.format(src)
         else:
-            assert os.path.isdir(src), emsg_dir.format(src)
+            assert Path(src).is_dir(), emsg_dir.format(src)
 
     s.package.cache_extra_test_sources(extras)
 
@@ -191,7 +191,7 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
             if os.path.splitext(pd)[1]:
                 assert os.path.isfile(pd), emsg_file.format(pd)
             else:
-                assert os.path.isdir(pd), emsg_dir.format(pd)
+                assert Path(pd).is_dir(), emsg_dir.format(pd)
         else:
             assert not Path(pd).exists(), msg.format(pd, " not")
 

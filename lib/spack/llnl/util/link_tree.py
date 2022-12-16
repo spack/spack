@@ -324,10 +324,10 @@ class LinkTree(object):
         conflicts = []
         kwargs = {"follow_nonexisting": False, "ignore": ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
-            if os.path.isdir(src):
-                if Path(dest).exists() and not os.path.isdir(dest):
+            if Path(src).is_dir():
+                if Path(dest).exists() and not Path(dest).is_dir():
                     conflicts.append("File blocks directory: %s" % dest)
-            elif Path(dest).exists() and os.path.isdir(dest):
+            elif Path(dest).exists() and Path(dest).is_dir():
                 conflicts.append("Directory blocks directory: %s" % dest)
         return conflicts
 
@@ -335,18 +335,18 @@ class LinkTree(object):
         merge_map = {}
         kwargs = {"follow_nonexisting": True, "ignore": ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
-            if not os.path.isdir(src):
+            if not Path(src).is_dir():
                 merge_map[src] = dest
         return merge_map
 
     def merge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(self._root, dest_root, ignore=ignore):
-            if os.path.isdir(src):
+            if Path(src).is_dir():
                 if not Path(dest).exists():
                     mkdirp(dest)
                     continue
 
-                if not os.path.isdir(dest):
+                if not Path(dest).is_dir():
                     raise ValueError("File blocks directory: %s" % dest)
 
                 # mark empty directories so they aren't removed on unmerge.
@@ -356,10 +356,10 @@ class LinkTree(object):
 
     def unmerge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(self._root, dest_root, ignore=ignore, order="post"):
-            if os.path.isdir(src):
+            if Path(src).is_dir():
                 if not Path(dest).exists():
                     continue
-                elif not os.path.isdir(dest):
+                elif not Path(dest).is_dir():
                     raise ValueError("File blocks directory: %s" % dest)
 
                 # remove directory if it is empty.

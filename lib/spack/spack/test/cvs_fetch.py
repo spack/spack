@@ -55,7 +55,7 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
                 assert get_date() <= test.date
 
             file_path = os.path.join(spec.package.stage.source_path, test.file)
-            assert os.path.isdir(spec.package.stage.source_path)
+            assert Path(spec.package.stage.source_path).is_dir()
             assert os.path.isfile(file_path)
 
             Path(file_path).unlink()
@@ -67,7 +67,7 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
             spec.package.do_restage()
             assert not os.path.isfile(untracked_file)
 
-            assert os.path.isdir(spec.package.stage.source_path)
+            assert Path(spec.package.stage.source_path).is_dir()
             assert os.path.isfile(file_path)
 
 

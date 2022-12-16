@@ -118,7 +118,7 @@ def test_fetch(
             assert h("HEAD") == h(t.revision)
 
             file_path = os.path.join(s.package.stage.source_path, t.file)
-            assert os.path.isdir(s.package.stage.source_path)
+            assert Path(s.package.stage.source_path).is_dir()
             assert os.path.isfile(file_path)
 
             Path(file_path).unlink()
@@ -130,7 +130,7 @@ def test_fetch(
             s.package.do_restage()
             assert not os.path.isfile(untracked_file)
 
-            assert os.path.isdir(s.package.stage.source_path)
+            assert Path(s.package.stage.source_path).is_dir()
             assert os.path.isfile(file_path)
 
             assert h("HEAD") == h(t.revision)
@@ -210,7 +210,7 @@ def test_debug_fetch(
     with s.package.stage:
         with spack.config.override("config:debug", True):
             s.package.do_fetch()
-            assert os.path.isdir(s.package.stage.source_path)
+            assert Path(s.package.stage.source_path).is_dir()
 
 
 def test_git_extra_fetch(git, tmpdir):
@@ -361,6 +361,6 @@ def test_gitsubmodules_delete(
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule0")
-        assert not os.path.isdir(file_path)
+        assert not Path(file_path).is_dir()
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule1")
-        assert not os.path.isdir(file_path)
+        assert not Path(file_path).is_dir()

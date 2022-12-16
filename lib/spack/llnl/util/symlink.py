@@ -28,7 +28,7 @@ def symlink(real_path, link_path):
         os.symlink(real_path, link_path)
     elif _win32_can_symlink():
         # Windows requires target_is_directory=True when the target is a dir.
-        os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
+        os.symlink(real_path, link_path, target_is_directory=Path(real_path).is_dir())
     else:
         try:
             # Try to use junctions

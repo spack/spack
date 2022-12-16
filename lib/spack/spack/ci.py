@@ -472,7 +472,7 @@ def get_change_revisions():
     """If this is a git repo get the revisions to use when checking
     for changed packages and spack core modules."""
     git_dir = os.path.join(spack.paths.prefix, ".git")
-    if Path(git_dir).exists() and os.path.isdir(git_dir):
+    if Path(git_dir).exists() and Path(git_dir).is_dir():
         # TODO: This will only find changed packages from the last
         # TODO: commit.  While this may work for single merge commits
         # TODO: when merging the topic branch into the base, it will

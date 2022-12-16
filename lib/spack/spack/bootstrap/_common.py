@@ -185,7 +185,7 @@ def _executables_in_store(executables, query_spec, query_info=None):
             # the executables we are looking for
             if (
                 Path(bin_dir).exists()
-                and os.path.isdir(bin_dir)
+                and Path(bin_dir).is_dir()
                 and spack.util.executable.which_string(*executables, path=bin_dir)
             ):
                 spack.util.environment.path_put_first("PATH", [bin_dir])

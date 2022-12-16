@@ -914,7 +914,7 @@ def inspect_path(root, inspections, exclude=None):
     for relative_path, variables in inspections.items():
         expected = os.path.join(root, relative_path)
 
-        if os.path.isdir(expected) and not exclude(expected):
+        if Path(expected).is_dir() and not exclude(expected):
             for variable in variables:
                 env.prepend_path(variable, expected)
 

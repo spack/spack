@@ -321,7 +321,7 @@ def test_move_transaction_commit(tmpdir):
     fake_library.write("Just some fake content.")
 
     with fs.replace_directory_transaction(str(tmpdir.join("lib"))) as backup:
-        assert os.path.isdir(backup)
+        assert Path(backup).is_dir()
         fake_library = tmpdir.mkdir("lib").join("libfoo.so")
         fake_library.write("Other content.")
 
@@ -337,7 +337,7 @@ def test_move_transaction_rollback(tmpdir):
 
     try:
         with fs.replace_directory_transaction(str(tmpdir.join("lib"))) as backup:
-            assert os.path.isdir(backup)
+            assert Path(backup).is_dir()
             fake_library = tmpdir.mkdir("lib").join("libfoo.so")
             fake_library.write("New content.")
             raise RuntimeError("")
