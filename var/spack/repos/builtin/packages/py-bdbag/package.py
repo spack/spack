@@ -24,7 +24,6 @@ class PyBdbag(PythonPackage):
     depends_on("py-pytz", type=("build", "run"))
     depends_on("py-tzlocal@2.1", type=("build", "run"))
     depends_on("py-certifi", type=("build", "run"))
-    depends_on("py-requests@2.7:2.25.1", when="^python@3.5", type=("build", "run"))
     depends_on("py-requests@2.7:", type=("build", "run"))
     depends_on("py-bagit@1.8.1", type=("build", "run"))
     depends_on("py-bagit-profile@1.3.1", type=("build", "run"))
