@@ -112,8 +112,7 @@ class Reframe(Package):
         "docs",
         "reframe",
         "tutorials",
-        "unittests",
-        "cscs-checks",
+        "unittests"
     ]
 
     # check if we can run reframe
@@ -124,8 +123,15 @@ class Reframe(Package):
             reframe = Executable(self.prefix + "/bin/reframe")
             reframe("-l")
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_hpctestlib(self):
+        if self.spec.satisfies("@3.9.0:"):
+            if not can_access("hpctestlib"):
+                tty.warn("the test library was not installed")
+
     def install(self, spec, prefix):
-        if spec.version >= Version("3.0"):
+        if spec.satisfies("@3.0:"):
             if "+docs" in spec:
                 with working_dir("docs"):
                     make("man")
@@ -139,6 +145,6 @@ class Reframe(Package):
 
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix)
-        if self.spec.version >= Version("3.0"):
+        if self.spec.satisfies("@3.0:"):
             if "+docs" in self.spec:
                 env.prepend_path("MANPATH", self.prefix.docs.man)
