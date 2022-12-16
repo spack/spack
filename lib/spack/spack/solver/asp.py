@@ -2247,8 +2247,9 @@ class SpecBuilder(object):
 
         # If this is an extension, update the dependencies to include the extendee
         package = self._specs[pkg].package_class(self._specs[pkg])
-        extendee_name = package.extendee_spec.name
-        package.update_external_dependencies(self._specs.get(extendee_name, None))
+        extendee_spec = package.extendee_spec
+        if extendee_spec:
+            package.update_external_dependencies(self._specs.get(extendee_spec.name, None))
 
     def depends_on(self, pkg, dep, type):
         dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
