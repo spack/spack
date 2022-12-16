@@ -141,7 +141,7 @@ def _fix_ext_suffix(candidate_spec):
     for file_name, link_name in zip(standard_extensions, link_names):
         if Path(link_name).exists():
             continue
-        os.symlink(file_name, link_name)
+        Path(link_name).link_to(file_name)
 
     # Check if this interpreter installed something and we have to create
     # links for a standard CPython interpreter
@@ -157,7 +157,7 @@ def _fix_ext_suffix(candidate_spec):
         )
         if Path(link_name).exists():
             continue
-        os.symlink(abs_path, link_name)
+        Path(link_name).link_to(abs_path)
 
 
 def _executables_in_store(executables, query_spec, query_info=None):

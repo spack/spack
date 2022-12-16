@@ -194,9 +194,9 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
         Path(j("a", "b")).mkdir()
         Path(j("a", "b", "c")).mkdir()
         Path(j("a", "b", "c", "d")).mkdir()
-        os.symlink(j("b"), j("a", "symlink_b"))
-        os.symlink(j("c"), j("a", "b", "symlink_c"))
-        os.symlink(j("d"), j("a", "b", "c", "symlink_d"))
+        Path(j("a", "symlink_b")).link_to(j("b"))
+        Path(j("a", "b", "symlink_c")).link_to(j("c"))
+        Path(j("a", "b", "c", "symlink_d")).link_to(j("d"))
         with open(j("a", "b", "c", "d", "file"), "wb"):
             pass
 
@@ -238,10 +238,10 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
     j = os.path.join
     with tmpdir.as_cwd():
         Path(j("a")).mkdir()
-        os.symlink(j("..", "b"), j("a", "symlink_b"))
-        os.symlink(j("symlink_b"), j("a", "symlink_b_b"))
+        Path("b"), j("a", "symlink_b")).link_to(j("..")
+        Path(j("a", "symlink_b_b")).link_to(j("symlink_b"))
         Path(j("b")).mkdir()
-        os.symlink(j("..", "a"), j("b", "symlink_a"))
+        Path("a"), j("b", "symlink_a")).link_to(j("..")
 
     visitor = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir), visitor)
@@ -262,8 +262,8 @@ def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmpdir):
     # Here example_a and example_b are symlinks.
     with tmpdir.mkdir("dst").as_cwd():
         Path("a").mkdir()
-        os.symlink("a", "example_a")
-        os.symlink("a", "example_b")
+        Path("example_a").link_to("a")
+        Path("example_b").link_to("a")
 
     # Here example_a is a directory, and example_b is a (non-expanded) symlinked
     # directory.
@@ -271,7 +271,7 @@ def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmpdir):
         Path("example_a").mkdir()
         with open(j("example_a", "file"), "wb"):
             pass
-        os.symlink("..", "example_b")
+        Path("example_b").link_to("..")
 
     visitor = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir.join("src")), visitor)

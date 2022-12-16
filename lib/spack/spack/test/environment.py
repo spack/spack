@@ -29,9 +29,9 @@ def test_error_on_nonempty_view_dir(tmpdir):
         Path("nonempty_dir").mkdir()
         with open(os.path.join("nonempty_dir", "file"), "wb"):
             pass
-        os.symlink("empty_dir", "symlinked_empty_dir")
-        os.symlink("does_not_exist", "broken_link")
-        os.symlink("broken_link", "file")
+        Path("symlinked_empty_dir").link_to("empty_dir")
+        Path("broken_link").link_to("does_not_exist")
+        Path("file").link_to("broken_link")
 
         # This is OK.
         _error_on_nonempty_view_dir("empty_dir")

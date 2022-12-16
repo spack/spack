@@ -707,7 +707,7 @@ def test_is_nonsymlink_exe_with_shebang(tmpdir):
             f.write(b"#!/interpreter")
         Path("not_executable_with_shebang").chmod(0o100664)
 
-        os.symlink("executable_script", "symlink_to_executable_script")
+        Path("symlink_to_executable_script").link_to("executable_script")
 
         assert fs.is_nonsymlink_exe_with_shebang("executable_script")
         assert not fs.is_nonsymlink_exe_with_shebang("executable_but_not_script")
@@ -733,12 +733,12 @@ def test_lexists_islink_isdir(tmpdir):
     with open(file, "wb") as f:
         f.write(b"file")
 
-    os.symlink("dir", symlink_to_dir)
-    os.symlink("file", symlink_to_file)
-    os.symlink("does_not_exist", dangling_symlink)
-    os.symlink("dangling_symlink", symlink_to_dangling_symlink)
-    os.symlink("symlink_to_dir", symlink_to_symlink_to_dir)
-    os.symlink("symlink_to_file", symlink_to_symlink_to_file)
+    Path(symlink_to_dir).link_to("dir")
+    Path(symlink_to_file).link_to("file")
+    Path(dangling_symlink).link_to("does_not_exist")
+    Path(symlink_to_dangling_symlink).link_to("dangling_symlink")
+    Path(symlink_to_symlink_to_dir).link_to("symlink_to_dir")
+    Path(symlink_to_symlink_to_file).link_to("symlink_to_file")
 
     assert fs.lexists_islink_isdir(dir) == (True, False, True)
     assert fs.lexists_islink_isdir(file) == (True, False, False)

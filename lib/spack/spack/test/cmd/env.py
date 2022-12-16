@@ -308,8 +308,8 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     e.add("mpileaks")
 
     Path(e.manifest_path).rename(Path(filepath))
-    os.symlink(filepath, filepath_mid)
-    os.symlink(filepath_mid, e.manifest_path)
+    Path(filepath_mid).link_to(filepath)
+    Path(e.manifest_path).link_to(filepath_mid)
 
     e.concretize()
     e.write()
@@ -2818,7 +2818,7 @@ def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock
     view = str(tmpdir.join("view"))
     # Put a symlink to an actual directory in view
     non_view_dir = str(tmpdir.mkdir("dont-delete-me"))
-    os.symlink(non_view_dir, view)
+    Path(view).link_to(non_view_dir)
     with ev.create("env", with_view=view):
         add("libelf")
         install("--fake")

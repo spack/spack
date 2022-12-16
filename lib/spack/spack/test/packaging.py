@@ -234,12 +234,12 @@ def test_relocate_links(tmpdir):
 
     with tmpdir.join("new_prefix_a").as_cwd():
         # To be relocated
-        os.symlink(own_prefix_path, "to_self")
-        os.symlink(dep_prefix_path, "to_dependency")
+        Path("to_self").link_to(own_prefix_path)
+        Path("to_dependency").link_to(dep_prefix_path)
 
         # To be ignored
-        os.symlink(system_path, "to_system")
-        os.symlink("relative", "to_self_but_relative")
+        Path("to_system").link_to(system_path)
+        Path("to_self_but_relative").link_to("relative")
 
         relocate_links(["to_self", "to_dependency", "to_system"], prefix_to_prefix)
 

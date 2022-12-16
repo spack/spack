@@ -237,7 +237,7 @@ def test_cray_platform_detection(versions, default, expected, tmpdir, monkeypatc
         for version in versions:
             fs.touch(version)
         if default:
-            os.symlink(default, "default")
+            Path("default").link_to(default)
 
     monkeypatch.setattr(spack.platforms.cray, "_ex_craype_dir", ex_path)
     os.environ["MODULEPATH"] = "/opt/cray/pe"

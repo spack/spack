@@ -1774,11 +1774,11 @@ def noncyclical_dir_structure(tmpdir):
         Path(j("a", "d")).mkdir()
         with open(j("a", "file_1"), "wb"):
             pass
-        os.symlink(j("file_1"), j("a", "to_file_1"))
-        os.symlink(j("..", "c"), j("a", "to_c"))
-        os.symlink(j("a"), j("b"))
+        Path(j("a", "to_file_1")).link_to(j("file_1"))
+        Path("c"), j("a", "to_c")).link_to(j("..")
+        Path(j("b")).link_to(j("a"))
         Path(j("c")).mkdir()
-        os.symlink(j("nowhere"), j("c", "dangling_link"))
+        Path(j("c", "dangling_link")).link_to(j("nowhere"))
         with open(j("c", "file_2"), "wb"):
             pass
         with open(j("file_3"), "wb"):

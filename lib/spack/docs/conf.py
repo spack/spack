@@ -35,7 +35,7 @@ from sphinx.parsers import RSTParser
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 link_name = Path("_spack_root").resolve()
 if not Path(link_name).exists():
-    os.symlink(Path("../../..").resolve(), link_name, target_is_directory=True)
+    Path(link_name).link_to(Path("../../..").resolve(), target_is_directory=True)
 sys.path.insert(0, Path("_spack_root/lib/spack/external").resolve())
 sys.path.insert(0, Path("_spack_root/lib/spack/external/_vendoring").resolve())
 sys.path.append(Path("_spack_root/lib/spack/").resolve())

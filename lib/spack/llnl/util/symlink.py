@@ -25,10 +25,10 @@ def symlink(real_path, link_path):
     On Windows, use junctions if os.symlink fails.
     """
     if not is_windows:
-        os.symlink(real_path, link_path)
+        Path(link_path).link_to(real_path)
     elif _win32_can_symlink():
         # Windows requires target_is_directory=True when the target is a dir.
-        os.symlink(real_path, link_path, target_is_directory=Path(real_path).is_dir())
+        Path(link_path).link_to(real_path, target_is_directory=Path(real_path).is_dir())
     else:
         try:
             # Try to use junctions
@@ -76,13 +76,13 @@ def _win32_can_symlink():
     fs.touchp(fpath)
 
     try:
-        os.symlink(dpath, dlink)
+        Path(dlink).link_to(dpath)
         can_symlink_directories = Path(dlink).is_symlink()
     except OSError:
         can_symlink_directories = False
 
     try:
-        os.symlink(fpath, flink)
+        Path(flink).link_to(fpath)
         can_symlink_files = Path(flink).is_symlink()
     except OSError:
         can_symlink_files = False

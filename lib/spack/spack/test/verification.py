@@ -28,7 +28,7 @@ def test_link_manifest_entry(tmpdir):
     file = str(tmpdir.join("file"))
     open(file, "a").close()
     link = str(tmpdir.join("link"))
-    os.symlink(file, link)
+    Path(link).link_to(file)
 
     data = spack.verify.create_manifest_entry(link)
     assert data["type"] == "link"
@@ -50,7 +50,7 @@ def test_link_manifest_entry(tmpdir):
     file2 = str(tmpdir.join("file2"))
     open(file2, "a").close()
     Path(link).unlink()
-    os.symlink(file2, link)
+    Path(link).link_to(file2)
 
     results = spack.verify.check_entry(link, data)
     assert results.has_errors()

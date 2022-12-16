@@ -629,10 +629,10 @@ def test_build_manifest_visitor(tmpdir):
             f.write(b"example file")
 
         # Symlink the dir
-        os.symlink(dir, "symlink_to_directory")
+        Path("symlink_to_directory").link_to(dir)
 
         # Symlink the file
-        os.symlink(file, "symlink_to_file")
+        Path("symlink_to_file").link_to(file)
 
         # Hardlink the file
         Path(file).link_to("hardlink_of_file")
