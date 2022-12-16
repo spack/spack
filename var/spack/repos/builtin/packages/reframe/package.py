@@ -25,6 +25,15 @@ class Reframe(Package):
 
     version("master", branch="master")
     version(
+        "4.0.0-dev.4", sha256="35d37ee2747807b539b2c5b75073619870371d1e0fed9778f2a33a8abd37b8a1"
+    )
+    version(
+        "4.0.0-dev.3", sha256="830f00bcf27f693e7c0288e53a7b7fcf5aa5721ba8d451e693da018cf4af9bf4"
+    )
+    version(
+        "4.0.0-dev.2", sha256="a02ed4077965e38a2897984b79d938a229b7e52095cd9d803e6121448efbde11"
+    )
+    version(
         "4.0.0-dev.1", sha256="6db55c20b79764fc1f0e0a13de062850007425fa2c7f54a113b96adee50741ed"
     )
     version(
