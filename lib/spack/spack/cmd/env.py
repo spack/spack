@@ -457,7 +457,7 @@ def env_status_setup_parser(subparser):
 def env_status(args):
     env = ev.active_environment()
     if env:
-        if env.path == os.getcwd():
+        if env.path == Path.cwd():
             tty.msg("Using %s in current directory: %s" % (ev.manifest_name, env.path))
         else:
             tty.msg("In environment %s" % env.name)

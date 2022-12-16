@@ -69,7 +69,7 @@ class RacketBuilder(spack.builder.Builder):
 
     @property
     def build_directory(self):
-        ret = os.getcwd()
+        ret = Path.cwd()
         if self.subdirectory:
             ret = os.path.join(ret, self.subdirectory)
         return ret
@@ -94,7 +94,7 @@ class RacketBuilder(spack.builder.Builder):
                 "-j",
                 str(determine_number_of_jobs(parallel)),
                 "--",
-                os.getcwd(),
+                Path.cwd(),
             ]
             try:
                 raco(*args)

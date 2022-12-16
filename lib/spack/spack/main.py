@@ -114,7 +114,7 @@ def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
     global spack_working_dir
     try:
-        spack_working_dir = os.getcwd()
+        spack_working_dir = Path.cwd()
     except OSError:
         os.chdir(spack.paths.prefix)
         spack_working_dir = spack.paths.prefix

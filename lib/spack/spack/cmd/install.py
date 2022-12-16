@@ -378,7 +378,7 @@ def install_all_specs_from_active_environment(
     env = ev.active_environment()
     if not env:
         msg = "install requires a package argument or active environment"
-        if "spack.yaml" in os.listdir(os.getcwd()):
+        if "spack.yaml" in os.listdir(Path.cwd()):
             # There's a spack.yaml file in the working dir, the user may
             # have intended to use that
             msg += "\n\n"

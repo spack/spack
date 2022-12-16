@@ -408,7 +408,7 @@ def exploding_archive_catch(stage):
     # exploding tarballs.
     tarball_container = os.path.join(stage.path, "spack-expanded-archive")
     mkdirp(tarball_container)
-    orig_dir = os.getcwd()
+    orig_dir = Path.cwd()
     os.chdir(tarball_container)
     try:
         yield
@@ -911,7 +911,7 @@ def working_dir(dirname, **kwargs):
     if kwargs.get("create", False):
         mkdirp(dirname)
 
-    orig_dir = os.getcwd()
+    orig_dir = Path.cwd()
     os.chdir(dirname)
     try:
         yield

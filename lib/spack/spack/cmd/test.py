@@ -8,6 +8,7 @@ from __future__ import print_function
 import argparse
 import fnmatch
 import os
+from pathlib import Path
 import re
 import shutil
 import sys
@@ -247,7 +248,7 @@ def create_reporter(args, specs_to_test, test_suite):
             if os.path.isabs(args.log_file):
                 log_file = args.log_file
             else:
-                log_dir = os.getcwd()
+                log_dir = Path.cwd()
                 log_file = os.path.join(log_dir, args.log_file)
         else:
             log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)

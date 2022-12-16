@@ -98,7 +98,7 @@ def _bunzip2(archive_file):
     """
     compressed_file_name = os.path.basename(archive_file)
     decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
-    working_dir = os.getcwd()
+    working_dir = Path.cwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
     if is_bz2_supported():
@@ -124,7 +124,7 @@ def _gunzip(archive_file):
         archive_file (str): absolute path of the file to be decompressed
     """
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
-    working_dir = os.getcwd()
+    working_dir = Path.cwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     if is_gzip_supported():
         f_in = gzip.open(archive_file, "rb")
@@ -138,7 +138,7 @@ def _gunzip(archive_file):
 
 def _system_gunzip(archive_file):
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
-    working_dir = os.getcwd()
+    working_dir = Path.cwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
     copy_path = os.path.join(working_dir, compressed_file)
@@ -184,7 +184,7 @@ def _lzma_decomp(archive_file):
     on Unix and 7z on Windows"""
     if is_lzma_supported():
         decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
-        archive_out = os.path.join(os.getcwd(), decompressed_file)
+        archive_out = os.path.join(Path.cwd(), decompressed_file)
         with open(archive_out, "wb") as ar:
             with lzma.open(archive_file) as lar:
                 shutil.copyfileobj(lar, ar)
@@ -230,7 +230,7 @@ def _xz(archive_file):
     if is_windows:
         raise RuntimeError("XZ tool unavailable on Windows")
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
-    working_dir = os.getcwd()
+    working_dir = Path.cwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
     copy_path = os.path.join(working_dir, compressed_file)

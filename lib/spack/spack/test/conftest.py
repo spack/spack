@@ -342,10 +342,10 @@ def no_chdir():
     original wd somehow ceased to exist.
 
     """
-    original_wd = os.getcwd()
+    original_wd = Path.cwd()
     yield
     if os.path.isdir(original_wd):
-        assert os.getcwd() == original_wd
+        assert Path.cwd() == original_wd
 
 
 @pytest.fixture(scope="function", autouse=True)

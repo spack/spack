@@ -29,7 +29,7 @@ def parse_ld_so_conf(conf_file="/etc/ld.so.conf"):
         conf_file = conf_file.encode("utf-8")
 
     # For globbing in Python2 we need to chdir.
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     try:
         paths = _process_ld_so_conf_queue([conf_file])
     finally:

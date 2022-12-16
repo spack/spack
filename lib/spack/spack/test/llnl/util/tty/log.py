@@ -377,7 +377,7 @@ def synchronized_logger(**kwargs):
     write_lock = kwargs["write_lock"]
     v_lock = kwargs["v_lock"]
 
-    sys.stderr.write(os.getcwd() + "\n")
+    sys.stderr.write(Path.cwd() + "\n")
     with log.log_output(log_path) as logger:
         with logger.force_echo():
             print("forced output")

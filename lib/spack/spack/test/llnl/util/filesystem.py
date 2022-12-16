@@ -685,10 +685,10 @@ def test_keep_modification_time(tmpdir):
 
 
 def test_temporary_dir_context_manager():
-    previous_dir = os.path.realpath(os.getcwd())
+    previous_dir = os.path.realpath(Path.cwd())
     with fs.temporary_dir() as tmp_dir:
-        assert previous_dir != os.path.realpath(os.getcwd())
-        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+        assert previous_dir != os.path.realpath(Path.cwd())
+        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(Path.cwd())
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="No shebang on Windows")

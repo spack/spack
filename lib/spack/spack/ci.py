@@ -738,7 +738,7 @@ def generate_gitlab_ci_yaml(
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
-        proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
+        proj_dir = os.environ.get("CI_PROJECT_DIR", Path.cwd())
         pipeline_artifacts_dir = os.path.join(proj_dir, "jobs_scratch_dir")
 
     pipeline_artifacts_dir = Path(pipeline_artifacts_dir).resolve()

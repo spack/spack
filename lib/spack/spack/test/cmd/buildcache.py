@@ -274,7 +274,7 @@ def test_deprecation_mirror_url_dir_flag(capfd):
     # Test that passing `update-index -d <url>` gives a deprecation warning.
     parser = argparse.ArgumentParser()
     spack.cmd.buildcache.setup_parser(parser)
-    url = spack.util.url.path_to_file_url(os.getcwd())
+    url = spack.util.url.path_to_file_url(Path.cwd())
     args = parser.parse_args(["update-index", "-d", url])
     spack.cmd.buildcache._mirror_url_from_args_deprecated_format(args)
     assert "Passing a URL to `update-index -d <url>` is deprecated" in capfd.readouterr()[1]

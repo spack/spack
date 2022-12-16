@@ -176,7 +176,7 @@ through the SPACK_CONCRETE_ENVIRONMENT_PATH variable.""",
     reproduce.add_argument(
         "--working-dir",
         help="Where to unpack artifacts",
-        default=os.path.join(os.getcwd(), "ci_reproduction"),
+        default=os.path.join(Path.cwd(), "ci_reproduction"),
     )
 
     reproduce.set_defaults(func=ci_reproduce)
@@ -628,7 +628,7 @@ def ci_rebuild(args):
         "broken-tests-packages" in gitlab_ci
         and job_spec.name in gitlab_ci["broken-tests-packages"]
     )
-    reports_dir = fs.join_path(os.getcwd(), "cdash_report")
+    reports_dir = fs.join_path(Path.cwd(), "cdash_report")
     if args.tests and broken_tests:
         tty.warn(
             "Unable to run stand-alone tests since listed in "

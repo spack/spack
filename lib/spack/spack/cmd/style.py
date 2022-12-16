@@ -401,7 +401,7 @@ def _bootstrap_dev_dependencies():
 
 def style(parser, args):
     # save initial working directory for relativizing paths later
-    args.initial_working_dir = os.getcwd()
+    args.initial_working_dir = Path.cwd()
 
     # ensure that the config files we need actually exist in the spack prefix.
     # assertions b/c users should not ever see these errors -- they're checked in CI.

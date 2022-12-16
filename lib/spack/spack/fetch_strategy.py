@@ -681,7 +681,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             except OSError:
                 pass
             env = dict(os.environ)
-            env["GOPATH"] = os.path.join(os.getcwd(), "go")
+            env["GOPATH"] = os.path.join(Path.cwd(), "go")
             self.go("get", "-v", "-d", self.url, env=env)
 
     def archive(self, destination):

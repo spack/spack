@@ -1347,7 +1347,7 @@ class IntelPackage(Package):
         # TODO? also try
         #   ~/intel/ism/uninstall --silent
 
-        debug_print(os.getcwd())
+        debug_print(Path.cwd())
         return
 
     @property

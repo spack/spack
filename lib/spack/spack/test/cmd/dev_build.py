@@ -50,7 +50,7 @@ def test_dev_build_before(tmpdir, mock_packages, install_mockery):
 
         dev_build("-b", "edit", "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())
+        assert spec.package.filename in os.listdir(Path.cwd())
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.original_string
 
@@ -67,7 +67,7 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
 
         dev_build("-u", "edit", "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())
+        assert spec.package.filename in os.listdir(Path.cwd())
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.replacement_string
 
@@ -86,7 +86,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
 
         dev_build("-u", "install", "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())
+        assert spec.package.filename in os.listdir(Path.cwd())
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.replacement_string
 

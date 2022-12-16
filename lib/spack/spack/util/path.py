@@ -361,7 +361,7 @@ def canonicalize_path(path, default_wd=None):
 
     If the string is a yaml object with file annotations, make absolute paths
     relative to that file's directory.
-    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
+    Otherwise, use ``default_wd`` if specified, otherwise ``Path.cwd()``
 
     Arguments:
         path (str): path being converted as needed
@@ -381,7 +381,7 @@ def canonicalize_path(path, default_wd=None):
         if filename:
             path = os.path.join(filename, path)
         else:
-            base = default_wd or os.getcwd()
+            base = default_wd or Path.cwd()
             path = os.path.join(base, path)
             tty.debug("Using working directory %s as base for abspath" % base)
 

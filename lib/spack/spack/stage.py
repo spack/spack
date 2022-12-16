@@ -654,7 +654,7 @@ class Stage(object):
 
         # Make sure we don't end up in a removed directory
         try:
-            os.getcwd()
+            Path.cwd()
         except OSError as e:
             tty.debug(e)
             os.chdir(os.path.dirname(self.path))

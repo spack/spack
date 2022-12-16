@@ -429,7 +429,7 @@ def test_environment_status(capsys, tmpdir):
 
         with ev.Environment("local_dir"):
             with capsys.disabled():
-                assert os.path.join(os.getcwd(), "local_dir") in env("status")
+                assert os.path.join(Path.cwd(), "local_dir") in env("status")
 
             e = ev.Environment("myproject")
             e.write()
