@@ -165,7 +165,7 @@ class AppleClang(spack.compilers.clang.Clang):
                 dev_dir = os.path.join(developer_root, "Contents", "Developer", real_dir)
                 for fname in os.listdir(dev_dir):
                     if fname in bins:
-                        os.unlink(os.path.join(dev_dir, fname))
+                        Path(os.path.join(dev_dir, fname)).unlink()
                         symlink(
                             os.path.join(spack.paths.build_env_path, "cc"),
                             os.path.join(dev_dir, fname),

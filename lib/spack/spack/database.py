@@ -453,7 +453,7 @@ class Database(object):
         tty.debug("Removing prefix failure tracking files")
         for fail_mark in os.listdir(self._failure_dir):
             try:
-                os.remove(os.path.join(self._failure_dir, fail_mark))
+                Path(os.path.join(self._failure_dir, fail_mark)).unlink()
             except OSError as exc:
                 tty.warn(
                     "Unable to remove failure marking file {0}: {1}".format(fail_mark, str(exc))
@@ -489,7 +489,7 @@ class Database(object):
             try:
                 path = self._failed_spec_path(spec)
                 tty.debug("Removing failure marking for {0}".format(spec.name))
-                os.remove(path)
+                Path(path).unlink()
             except OSError as err:
                 tty.warn(
                     "Unable to remove failure marking for {0} ({1}): {2}".format(
@@ -1045,7 +1045,7 @@ class Database(object):
             tty.debug(e)
             # Clean up temp file if something goes wrong.
             if os.path.exists(temp_file):
-                os.remove(temp_file)
+                Path(temp_file).unlink()
             raise
 
     def _read(self):

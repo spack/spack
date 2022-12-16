@@ -625,7 +625,7 @@ class Lock(object):
 
     def cleanup(self):
         if self._reads == 0 and self._writes == 0:
-            os.unlink(self.path)
+            Path(self.path).unlink()
         else:
             raise LockError("Attempting to cleanup active lock.")
 

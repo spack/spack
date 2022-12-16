@@ -49,7 +49,7 @@ def test_link_manifest_entry(tmpdir):
 
     file2 = str(tmpdir.join("file2"))
     open(file2, "a").close()
-    os.remove(link)
+    Path(link).unlink()
     os.symlink(file2, link)
 
     results = spack.verify.check_entry(link, data)
@@ -170,7 +170,7 @@ def test_check_prefix_manifest(tmpdir):
     results = spack.verify.check_spec_manifest(spec)
     assert not results.has_errors()
 
-    os.remove(link)
+    Path(link).unlink()
     malware = os.path.join(metadata_dir, "hiddenmalware")
     with open(malware, "w") as f:
         f.write("Foul evil deeds")

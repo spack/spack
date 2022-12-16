@@ -156,7 +156,7 @@ class PythonExtension(spack.package_base.PackageBase):
             if global_view or not fs.path_contains_subdirectory(src, bin_dir):
                 to_remove.append(dst)
             else:
-                os.remove(dst)
+                Path(dst).unlink()
 
         view.remove_files(to_remove)
 

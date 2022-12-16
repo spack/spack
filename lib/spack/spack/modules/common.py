@@ -926,7 +926,7 @@ class BaseModuleFileWriter(object):
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
             try:
-                os.remove(mod_file)  # Remove the module file
+                Path(mod_file).unlink()  # Remove the module file
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up

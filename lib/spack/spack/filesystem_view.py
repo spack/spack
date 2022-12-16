@@ -404,7 +404,7 @@ class YamlFilesystemView(FilesystemView):
             # metadata directory.
             if len([s for s in specs if needs_file(s, file)]) <= 1:
                 tty.debug("Removing file " + file)
-                os.remove(file)
+                Path(file).unlink()
 
     def check_added(self, spec):
         assert spec.concrete

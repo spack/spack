@@ -591,7 +591,7 @@ class ViewDescriptor(object):
 
             # create symlink from tmp_symlink_name to new_root
             if os.path.exists(tmp_symlink_name):
-                os.unlink(tmp_symlink_name)
+                Path(tmp_symlink_name).unlink()
             symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
@@ -600,7 +600,7 @@ class ViewDescriptor(object):
             # Clean up new view and temporary symlink on any failure.
             try:
                 shutil.rmtree(new_root, ignore_errors=True)
-                os.unlink(tmp_symlink_name)
+                Path(tmp_symlink_name).unlink()
             except (IOError, OSError):
                 pass
             raise e
@@ -1669,7 +1669,7 @@ class Environment(object):
                     log_path, "%s-%s.log" % (spec.name, spec.dag_hash(7))
                 )
                 if os.path.lexists(build_log_link):
-                    os.remove(build_log_link)
+                    Path(build_log_link).unlink()
                 symlink(spec.package.build_log_path, build_log_link)
 
     def _partition_roots_by_install_status(self):

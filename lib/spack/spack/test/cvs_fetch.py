@@ -58,7 +58,7 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
             assert os.path.isdir(spec.package.stage.source_path)
             assert os.path.isfile(file_path)
 
-            os.unlink(file_path)
+            Path(file_path).unlink()
             assert not os.path.isfile(file_path)
 
             untracked_file = "foobarbaz"

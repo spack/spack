@@ -83,7 +83,7 @@ class MirrorCache(object):
                 # In this case the link itself exists but it is broken: remove
                 # it and recreate it (in order to fix any symlinks broken prior
                 # to https://github.com/spack/spack/pull/13908)
-                os.unlink(cosmetic_path)
+                Path(cosmetic_path).unlink()
             mkdirp(os.path.dirname(cosmetic_path))
             symlink(relative_dst, cosmetic_path)
 

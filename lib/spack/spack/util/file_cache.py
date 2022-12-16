@@ -50,7 +50,7 @@ class FileCache(object):
             if os.path.isdir(path):
                 shutil.rmtree(path, True)
             else:
-                os.remove(path)
+                Path(path).unlink()
 
     def cache_path(self, key):
         """Path to the file in the cache for a particular key."""
@@ -170,7 +170,7 @@ class FileCache(object):
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-            os.unlink(file)
+            Path(file).unlink()
         except OSError as e:
             # File not found is OK, so remove is idempotent.
             if e.errno != errno.ENOENT:

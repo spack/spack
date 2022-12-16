@@ -29,7 +29,7 @@ def remove_link(src, dest):
     # be false if two packages are merged into a prefix and have a
     # conflicting file
     if filecmp.cmp(src, dest, shallow=True):
-        os.remove(dest)
+        Path(dest).unlink()
 
 
 class MergeConflict:
@@ -369,7 +369,7 @@ class LinkTree(object):
                 # remove empty dir marker if present.
                 marker = os.path.join(dest, empty_file_name)
                 if os.path.exists(marker):
-                    os.remove(marker)
+                    Path(marker).unlink()
 
     def merge(self, dest_root, ignore_conflicts=False, ignore=None, link=symlink, relative=False):
         """Link all files in src into dest, creating directories

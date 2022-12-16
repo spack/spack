@@ -121,7 +121,7 @@ def test_fetch(
             assert os.path.isdir(s.package.stage.source_path)
             assert os.path.isfile(file_path)
 
-            os.unlink(file_path)
+            Path(file_path).unlink()
             assert not os.path.isfile(file_path)
 
             untracked_file = "foobarbaz"

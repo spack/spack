@@ -386,7 +386,7 @@ def config_revert(args):
 
     for _, cfg_file, bkp_file in to_be_restored:
         shutil.copy(bkp_file, cfg_file)
-        os.unlink(bkp_file)
+        Path(bkp_file).unlink()
         msg = 'File "{0}" reverted to old state'
         tty.msg(msg.format(cfg_file))
 

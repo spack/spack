@@ -103,7 +103,7 @@ def rename(src, dst):
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
         if os.path.exists(dst) or os.path.islink(dst):
-            os.remove(dst)
+            Path(dst).unlink()
     Path(src).rename(Path(dst))
 
 
@@ -333,9 +333,9 @@ def filter_file(regex, repl, *filenames, **kwargs):
             raise
 
         finally:
-            os.remove(tmp_filename)
+            Path(tmp_filename).unlink()
             if not backup and os.path.exists(backup_filename):
-                os.remove(backup_filename)
+                Path(backup_filename).unlink()
 
 
 class FileFilter(object):
@@ -900,7 +900,7 @@ def force_remove(*paths):
     remove directories."""
     for path in paths:
         try:
-            os.remove(path)
+            Path(path).unlink()
         except OSError:
             pass
 
@@ -1056,7 +1056,7 @@ def force_symlink(src, dest):
     try:
         symlink(src, dest)
     except OSError:
-        os.remove(dest)
+        Path(dest).unlink()
         symlink(src, dest)
 
 
@@ -1417,7 +1417,7 @@ def remove_if_dead_link(path):
         path (str): The potential dead link
     """
     if os.path.islink(path) and not os.path.exists(path):
-        os.unlink(path)
+        Path(path).unlink()
 
 
 def readonly_file_handler(ignore_errors=False):
@@ -1477,7 +1477,7 @@ def remove_linked_tree(path):
     if os.path.exists(path):
         if os.path.islink(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
-            os.unlink(path)
+            Path(path).unlink()
         else:
             shutil.rmtree(path, **kwargs)
 
@@ -2546,7 +2546,7 @@ def remove_directory_contents(dir):
     if os.path.exists(dir):
         for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
             if os.path.isfile(entry) or os.path.islink(entry):
-                os.unlink(entry)
+                Path(entry).unlink()
             else:
                 shutil.rmtree(entry)
 

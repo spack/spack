@@ -412,7 +412,7 @@ def _set_elf_rpaths(target, rpaths):
         tty.warn(msg.format(target, e))
     finally:
         if bak_path and os.path.exists(bak_path):
-            os.remove(bak_path)
+            Path(bak_path).unlink()
     return output
 
 
@@ -720,7 +720,7 @@ def make_link_relative(new_links, orig_links):
     for new_link, orig_link in zip(new_links, orig_links):
         target = os.readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
-        os.unlink(new_link)
+        Path(new_link).unlink()
         symlink(relative_target, new_link)
 
 
@@ -788,7 +788,7 @@ def relocate_links(links, prefix_to_prefix):
             continue
 
         new_target = prefix_to_prefix[match.group()] + old_target[match.end() :]
-        os.unlink(link)
+        Path(link).unlink()
         symlink(new_target, link)
 
 

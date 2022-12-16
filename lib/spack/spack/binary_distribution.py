@@ -837,7 +837,7 @@ def sign_specfile(key, force, specfile_path):
     signed_specfile_path = "%s.sig" % specfile_path
     if os.path.exists(signed_specfile_path):
         if force:
-            os.remove(signed_specfile_path)
+            Path(signed_specfile_path).unlink()
         else:
             raise NoOverwriteException(signed_specfile_path)
 
@@ -1207,7 +1207,7 @@ def _build_tarball(
         tar.add(name="%s" % spec.prefix, arcname=".")
     with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
         tar.extractall(workdir)
-    os.remove(temp_tarfile_path)
+    Path(temp_tarfile_path).unlink()
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
@@ -1879,8 +1879,8 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         _delete_staged_downloads(download_result)
         shutil.rmtree(extracted_dir)
         raise e
-    os.remove(tarfile_path)
-    os.remove(specfile_path)
+    Path(tarfile_path).unlink()
+    Path(specfile_path).unlink()
 
     try:
         relocate_package(spec, allow_root)
@@ -1898,7 +1898,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         if tmpdir:
             shutil.rmtree(tmpdir)
         if os.path.exists(filename):
-            os.remove(filename)
+            Path(filename).unlink()
         _delete_staged_downloads(download_result)
 
 
@@ -2120,7 +2120,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
 
             with Stage(link, name="build_cache", keep=True) as stage:
                 if os.path.exists(stage.save_filename) and force:
-                    os.remove(stage.save_filename)
+                    Path(stage.save_filename).unlink()
                 if not os.path.exists(stage.save_filename):
                     try:
                         stage.fetch()

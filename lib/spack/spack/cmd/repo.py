@@ -116,7 +116,7 @@ def repo_remove(args):
     for repo_path in repos:
         repo_canon_path = spack.util.path.canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
-            repos.remove(repo_path)
+            repPath(repo_path).unlink()
             spack.config.set("repos", repos, args.scope)
             tty.msg("Removed repository %s" % repo_path)
             return
@@ -126,7 +126,7 @@ def repo_remove(args):
         try:
             repo = spack.repo.Repo(path)
             if repo.namespace == namespace_or_path:
-                repos.remove(path)
+                repPath(path).unlink()
                 spack.config.set("repos", repos, args.scope)
                 tty.msg("Removed repository %s with namespace '%s'." % (repo.root, repo.namespace))
                 return

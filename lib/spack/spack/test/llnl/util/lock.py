@@ -211,7 +211,7 @@ def private_lock_path(lock_dir):
 
     if os.path.exists(lock_file):
         make_writable(lock_dir, lock_file)
-        os.unlink(lock_file)
+        Path(lock_file).unlink()
 
 
 @pytest.fixture
@@ -223,7 +223,7 @@ def lock_path(lock_dir):
 
     if os.path.exists(lock_file):
         make_writable(lock_dir, lock_file)
-        os.unlink(lock_file)
+        Path(lock_file).unlink()
 
 
 def test_poll_interval_generator():

@@ -1647,7 +1647,7 @@ def download_and_extract_artifacts(url, work_dir):
     zip_file.extractall(work_dir)
     zip_file.close()
 
-    os.remove(artifacts_zip_path)
+    Path(artifacts_zip_path).unlink()
 
 
 def get_spack_info():

@@ -58,7 +58,7 @@ def test_fetch(type_of_test, secure, mock_svn_repository, config, mutable_mock_r
             assert os.path.isdir(s.package.stage.source_path)
             assert os.path.isfile(file_path)
 
-            os.unlink(file_path)
+            Path(file_path).unlink()
             assert not os.path.isfile(file_path)
 
             untracked_file = "foobarbaz"

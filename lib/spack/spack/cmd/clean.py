@@ -80,7 +80,7 @@ def remove_python_cache():
                 if f.endswith(".pyc") or f.endswith(".pyo"):
                     fname = os.path.join(root, f)
                     tty.debug("Removing {0}".format(fname))
-                    os.remove(fname)
+                    Path(fname).unlink()
             for d in dirs:
                 if d == "__pycache__":
                     dname = os.path.join(root, d)

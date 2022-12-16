@@ -641,7 +641,7 @@ class Stage(object):
         if not os.path.exists(self.path):
             mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
         elif not os.path.isdir(self.path):
-            os.remove(self.path)
+            Path(self.path).unlink()
             mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
 
         # Make sure we can actually do something with the stage we made.
@@ -853,7 +853,7 @@ def purge():
                 if os.path.isdir(stage_path):
                     remove_linked_tree(stage_path)
                 else:
-                    os.remove(stage_path)
+                    Path(stage_path).unlink()
 
 
 def get_checksums_for_versions(url_dict, name, **kwargs):

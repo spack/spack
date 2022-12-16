@@ -368,14 +368,14 @@ class URLFetchStrategy(FetchStrategy):
         except web_util.SpackWebError as e:
             # clean up archive on failure.
             if self.archive_file:
-                os.remove(self.archive_file)
+                Path(self.archive_file).unlink()
             if os.path.lexists(save_file):
-                os.remove(save_file)
+                Path(save_file).unlink()
             msg = "urllib failed to fetch with error {0}".format(e)
             raise FailedDownloadError(url, msg)
 
         if os.path.lexists(save_file):
-            os.remove(save_file)
+            Path(save_file).unlink()
 
         with open(save_file, "wb") as _open_file:
             shutil.copyfileobj(response, _open_file)
@@ -422,10 +422,10 @@ class URLFetchStrategy(FetchStrategy):
         if curl.returncode != 0:
             # clean up archive on failure.
             if self.archive_file:
-                os.remove(self.archive_file)
+                Path(self.archive_file).unlink()
 
             if partial_file and os.path.lexists(partial_file):
-                os.remove(partial_file)
+                Path(partial_file).unlink()
 
             try:
                 web_util.check_curl_code(curl.returncode)
@@ -552,7 +552,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         # remove old symlink if one is there.
         filename = self.stage.save_filename
         if os.path.lexists(filename):
-            os.remove(filename)
+            Path(filename).unlink()
 
         # Symlink to local cached archive.
         symlink(path, filename)
@@ -563,7 +563,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             try:
                 self.check()
             except ChecksumError:
-                os.remove(self.archive_file)
+                Path(self.archive_file).unlink()
                 raise
 
         # Notify the user how we fetched.
@@ -1078,7 +1078,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
                 if re.match(r"^[?]", line):
                     path = line[2:].strip()
                     if os.path.isfile(path):
-                        os.unlink(path)
+                        Path(path).unlink()
 
     def archive(self, destination):
         super(CvsFetchStrategy, self).archive(destination, exclude="CVS")
@@ -1171,7 +1171,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
                     continue
                 path = line[8:].strip()
                 if os.path.isfile(path):
-                    os.unlink(path)
+                    Path(path).unlink()
                 elif os.path.isdir(path):
                     shutil.rmtree(path, ignore_errors=True)
 

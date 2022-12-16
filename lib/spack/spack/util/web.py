@@ -132,7 +132,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
                     # metadata), and then delete the original.  This operation
                     # needs to be done in separate steps.
                     shutil.copy2(local_file_path, remote_file_path)
-                    os.remove(local_file_path)
+                    Path(local_file_path).unlink()
                 else:
                     raise
 
@@ -148,13 +148,13 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
-            os.remove(local_file_path)
+            Path(local_file_path).unlink()
 
     elif remote_url.scheme == "gs":
         gcs = gcs_util.GCSBlob(remote_url)
         gcs.upload_to_blob(local_file_path)
         if not keep_original:
-            os.remove(local_file_path)
+            Path(local_file_path).unlink()
 
     else:
         raise NotImplementedError(
@@ -376,7 +376,7 @@ def remove_url(url, recursive=False):
         if recursive:
             shutil.rmtree(local_path)
         else:
-            os.remove(local_path)
+            Path(local_path).unlink()
         return
 
     if url.scheme == "s3":

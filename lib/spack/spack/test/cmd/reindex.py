@@ -34,7 +34,7 @@ def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch, install_moc
 
     all_installed = spack.store.db.query()
 
-    os.remove(spack.store.db._index_path)
+    Path(spack.store.db._index_path).unlink()
     reindex()
 
     assert spack.store.db.query() == all_installed
@@ -51,7 +51,7 @@ def test_reindex_with_deprecated_packages(
     all_installed = spack.store.db.query(installed=any)
     non_deprecated = spack.store.db.query(installed=True)
 
-    os.remove(spack.store.db._index_path)
+    Path(spack.store.db._index_path).unlink()
     reindex()
 
     assert spack.store.db.query(installed=any) == all_installed

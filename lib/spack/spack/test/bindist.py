@@ -445,7 +445,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
 
     # Remove dependency from cache
     libelf_files = glob.glob(os.path.join(mirror_dir.join("build_cache").strpath, "*libelf*"))
-    os.remove(*libelf_files)
+    Path(*libelf_files).unlink()
 
     # Update index
     buildcache_cmd("update-index", "-d", mirror_dir.strpath)

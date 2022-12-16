@@ -1570,7 +1570,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # or are not needed.  This is mostly defensive -- it's needed
         # if the restage() method doesn't clean *everything* (e.g., for a repo)
         if os.path.isfile(bad_file):
-            os.remove(bad_file)
+            Path(bad_file).unlink()
 
         # touch good or no patches file so that we skip next time.
         if patched:

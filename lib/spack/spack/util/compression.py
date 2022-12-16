@@ -218,7 +218,7 @@ def _win_compressed_tarball_handler(archive_file):
         outfile = _untar(decomped_tarball)
         # clean intermediate archive to mimic end result
         # produced by one shot decomp/extraction
-        os.remove(decomped_tarball)
+        Path(decomped_tarball).unlink()
         return outfile
     return decomped_tarball
 

@@ -409,7 +409,7 @@ def ignore_stage_files():
 def remove_whatever_it_is(path):
     """Type-agnostic remove."""
     if os.path.isfile(path):
-        os.remove(path)
+        Path(path).unlink()
     elif os.path.islink(path):
         remove_linked_tree(path)
     else:
@@ -787,7 +787,7 @@ def no_compilers_yaml(mutable_config):
             continue
         compilers_yaml = os.path.join(local_config.path, "compilers.yaml")
         if os.path.exists(compilers_yaml):
-            os.remove(compilers_yaml)
+            Path(compilers_yaml).unlink()
 
 
 @pytest.fixture()

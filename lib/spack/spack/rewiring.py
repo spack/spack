@@ -29,7 +29,7 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
         link_target = os.readlink(os.path.join(orig_prefix, link))
         link_target = re.sub("^" + orig_prefix, new_prefix, link_target)
         new_link_path = os.path.join(new_prefix, link)
-        os.unlink(new_link_path)
+        Path(new_link_path).unlink()
         symlink(link_target, new_link_path)
 
 

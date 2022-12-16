@@ -191,7 +191,7 @@ def symlink_license(pkg):
 
         # If example file already exists, overwrite it with a symlink
         if os.path.lexists(link_name):
-            os.remove(link_name)
+            Path(link_name).unlink()
 
         if os.path.exists(target):
             symlink(target, link_name)

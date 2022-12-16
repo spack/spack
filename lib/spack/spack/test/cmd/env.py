@@ -2871,7 +2871,7 @@ def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, 
     fs.touch(os.path.join(real_view, "file"))
 
     # Remove the symlink so Spack can't know about the "previous root"
-    os.unlink(view)
+    Path(view).unlink()
 
     # Regenerate the view, which should realize it can't write into the same dir.
     msg = "Failed to generate environment view"

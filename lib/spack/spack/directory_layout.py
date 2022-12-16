@@ -160,7 +160,7 @@ class DirectoryLayout(object):
         if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
             self.write_spec(spec, json_path)
             try:
-                os.remove(yaml_path)
+                Path(yaml_path).unlink()
             except OSError as err:
                 tty.debug("Could not remove deprecated {0}".format(yaml_path))
                 tty.debug(err)
@@ -203,7 +203,7 @@ class DirectoryLayout(object):
         if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
             self.write_spec(deprecated_spec, json_path)
             try:
-                os.remove(yaml_path)
+                Path(yaml_path).unlink()
             except (IOError, OSError) as err:
                 tty.debug("Could not remove deprecated {0}".format(yaml_path))
                 tty.debug(err)
@@ -358,8 +358,8 @@ class DirectoryLayout(object):
             if os.path.exists(path):
                 try:
                     metapath = self.deprecated_file_path(spec)
-                    os.unlink(path)
-                    os.remove(metapath)
+                    Path(path).unlink()
+                    Path(metapath).unlink()
                 except OSError as e:
                     raise RemoveFailedError(spec, path, e) from e
         elif os.path.exists(path):
