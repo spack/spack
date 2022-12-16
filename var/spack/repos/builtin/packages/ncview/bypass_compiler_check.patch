@@ -1,0 +1,107 @@
+--- a/configure	2017-03-08 10:35:42.000000000 -0700
++++ b/configure	2022-12-16 13:18:08.000000000 -0700
+@@ -5802,55 +5802,55 @@
+ 
+ 
+ 
+-#----------------------------------------------------------------------------
+-# We want to test if the same compiler was used for the netcdf library as for
+-# ncview.  This might be complicated by the fact that often "gcc" and "cc"
+-# end up invoking the same compiler.  Use an ugly hack that I have no idea
+-# if it generally works or not.  Probably not.
+-#----------------------------------------------------------------------------
+-CC_TEST_SAME=$CC
+-#-----------------------------------------------------------------------
+-# Point of following obscure manipulations is that $CC can have multiple
+-# words, for example, it could be "gcc -fPIC -lm". We want to keep only
+-# the first word, so use 'set' and then take the first arg ($1).
+-#-----------------------------------------------------------------------
+-set $CC_TEST_SAME
+-CC_TEST_SAME=$1
+-if test x$CC_TEST_SAME = xcc; then
+-	CC_TEST_SAME=gcc
+-fi
+-NETCDF_CC_TEST_SAME=$NETCDF_CC
+-set $NETCDF_CC_TEST_SAME
+-NETCDF_CC_TEST_SAME=$1
+-if test x$NETCDF_CC_TEST_SAME = xcc; then
+-	NETCDF_CC_TEST_SAME=gcc
+-fi
+-if test x$CC_TEST_SAME != x$NETCDF_CC_TEST_SAME; then
+-	echo "======================================================================"
+-	echo "Configuration error: You specified that the \"$CC\" C compiler should be"
+-	echo "used to build ncview, but the netcdf library was compiled with the \"$NETCDF_CC\""
+-	echo "compiler.  Here is the path where I found the netcdf library:"
+-	echo "     $NETCDF_LDFLAGS"
+-	echo "You must use the same compiler for ncview as was used to build the netcdf library!"
+-	echo " "
+-	echo "There are two possible ways to fix this."
+-	echo " "
+-	echo "1) Download the netcdf library and compile it with the $CC compiler,"
+-	echo "install it, and try again to build ncview.  NOTE that if you do this,"
+-	echo "you might have more than one version of the netcdf library on your system,"
+-	echo "built with differnt compilers, which can get confusing.  If you do this,"
+-	echo "you will have to specify the path to the (new) version of nc-config"
+-	echo "that was compiled using the $CC compiler by configuring ncview in a "
+-	echo "way similar to this:"
+-	echo " "
+-	echo "   ./configure --with-nc-config=/path/to/newly/compiled/nc-config"
+-	echo " "
+-	echo "2) Configure ncview to use the $NETCDF_CC compiler."
+-	echo "To do this, set environmental variable CC to $NETCDF_CC"
+-	echo "and run ./configure again"
+-	echo "==================================================================="
+-	exit -1
+-fi
++##----------------------------------------------------------------------------
++## We want to test if the same compiler was used for the netcdf library as for
++## ncview.  This might be complicated by the fact that often "gcc" and "cc"
++## end up invoking the same compiler.  Use an ugly hack that I have no idea
++## if it generally works or not.  Probably not.
++##----------------------------------------------------------------------------
++#CC_TEST_SAME=$CC
++##-----------------------------------------------------------------------
++## Point of following obscure manipulations is that $CC can have multiple
++## words, for example, it could be "gcc -fPIC -lm". We want to keep only
++## the first word, so use 'set' and then take the first arg ($1).
++##-----------------------------------------------------------------------
++#set $CC_TEST_SAME
++#CC_TEST_SAME=$1
++#if test x$CC_TEST_SAME = xcc; then
++#	CC_TEST_SAME=gcc
++#fi
++#NETCDF_CC_TEST_SAME=$NETCDF_CC
++#set $NETCDF_CC_TEST_SAME
++#NETCDF_CC_TEST_SAME=$1
++#if test x$NETCDF_CC_TEST_SAME = xcc; then
++#	NETCDF_CC_TEST_SAME=gcc
++#fi
++#if test x$CC_TEST_SAME != x$NETCDF_CC_TEST_SAME; then
++#	echo "======================================================================"
++#	echo "Configuration error: You specified that the \"$CC\" C compiler should be"
++#	echo "used to build ncview, but the netcdf library was compiled with the \"$NETCDF_CC\""
++#	echo "compiler.  Here is the path where I found the netcdf library:"
++#	echo "     $NETCDF_LDFLAGS"
++#	echo "You must use the same compiler for ncview as was used to build the netcdf library!"
++#	echo " "
++#	echo "There are two possible ways to fix this."
++#	echo " "
++#	echo "1) Download the netcdf library and compile it with the $CC compiler,"
++#	echo "install it, and try again to build ncview.  NOTE that if you do this,"
++#	echo "you might have more than one version of the netcdf library on your system,"
++#	echo "built with differnt compilers, which can get confusing.  If you do this,"
++#	echo "you will have to specify the path to the (new) version of nc-config"
++#	echo "that was compiled using the $CC compiler by configuring ncview in a "
++#	echo "way similar to this:"
++#	echo " "
++#	echo "   ./configure --with-nc-config=/path/to/newly/compiled/nc-config"
++#	echo " "
++#	echo "2) Configure ncview to use the $NETCDF_CC compiler."
++#	echo "To do this, set environmental variable CC to $NETCDF_CC"
++#	echo "and run ./configure again"
++#	echo "==================================================================="
++#	exit -1
++#fi
+ 
+ #----------------------------------------------------------------------------------
+ # Construct our RPATH flags.  Idea here is that we have LDFLAGS that might look,
