@@ -2374,7 +2374,8 @@ def files_in(*search_paths):
     for d in filter(can_access_dir, search_paths):
         files.extend(
             filter(
-                lambda x: Path(x[1]).is_file(), [(f, os.path.join(d, f)) for f in list(Path(d).iterdir())]
+                lambda x: Path(x[1]).is_file(),
+                [(f, os.path.join(d, f)) for f in list(Path(d).iterdir())],
             )
         )
     return files

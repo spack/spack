@@ -37,6 +37,7 @@ import re
 import sys
 from contextlib import contextmanager
 from typing import Dict, List, Optional
+from pathlib import Path
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError

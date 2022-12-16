@@ -24,6 +24,7 @@ import subprocess as sp
 import sys
 import traceback
 import warnings
+from pathlib import Path
 
 import archspec.cpu
 

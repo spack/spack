@@ -6,6 +6,7 @@ import os
 import os.path
 import platform
 import re
+from pathlib import Path
 
 import archspec.cpu
 

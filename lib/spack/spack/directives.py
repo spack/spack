@@ -31,8 +31,8 @@ The available directives are:
 import collections.abc
 import functools
 import os.path
-from pathlib import PurePath
 import re
+from pathlib import PurePath
 from typing import List, Set
 
 import llnl.util.lang

@@ -333,8 +333,8 @@ def test_huge_float():
 
 
 def test_min_int30():
-    check_ast_roundtrip(str(-(2**31)))
-    check_ast_roundtrip(str(-(2**63)))
+    check_ast_roundtrip(str(-(2 ** 31)))
+    check_ast_roundtrip(str(-(2 ** 63)))
 
 
 def test_imaginary_literals():
