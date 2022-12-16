@@ -1388,7 +1388,7 @@ class GCSFetchStrategy(URLFetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
 
         if self.stage.save_filename:
-            os.rename(os.path.join(self.stage.path, basename), self.stage.save_filename)
+            Path(os.path.join(self.stage.path, basename)).rename(Path(self.stage.save_filename))
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)

@@ -104,7 +104,7 @@ def rename(src, dst):
         # so check for that case
         if os.path.exists(dst) or os.path.islink(dst):
             os.remove(dst)
-    os.rename(src, dst)
+    Path(src).rename(Path(dst))
 
 
 @system_path_filter
@@ -948,9 +948,9 @@ def replace_directory_transaction(directory_name):
     tmpdir = tempfile.mkdtemp(dir=os.path.dirname(directory_name), prefix=".backup")
 
     # We have to jump through hoops to support Windows, since
-    # os.rename(directory_name, tmpdir) errors there.
+    # Path(directory_name).rename(Path(tmpdir)) errors there.
     backup_dir = os.path.join(tmpdir, "backup")
-    os.rename(directory_name, backup_dir)
+    Path(directory_name).rename(Path(backup_dir))
     tty.debug("Directory moved [src={0}, dest={1}]".format(directory_name, backup_dir))
 
     try:
@@ -962,7 +962,7 @@ def replace_directory_transaction(directory_name):
             # Delete what was there, before copying back the original content
             if os.path.exists(directory_name):
                 shutil.rmtree(directory_name)
-            os.rename(backup_dir, directory_name)
+            Path(backup_dir).rename(Path(directory_name))
         except Exception as outer_exception:
             raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
