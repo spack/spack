@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import subprocess
 
 from spack.package import *
 
@@ -312,6 +313,10 @@ class Esmf(MakefilePackage):
             # NetCDF format.
             os.environ["ESMF_NETCDF"] = "nc-config"
             os.environ["ESMF_NFCONFIG"] = "nf-config"
+            if spec["netcdf-c"].satisfies("~shared"):
+                nc_pc_cmd = ["nc-config", "--static", "--libs"]
+                nc_flags = subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+                os.environ["ESMF_NETCDF_LIBS"] = nc_flags
 
         ###################
         # Parallel-NetCDF #
