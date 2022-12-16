@@ -9,7 +9,7 @@ from os.path import dirname as dn
 
 def main(argv=None):
     # Find spack's location and its prefix.
-    this_file = os.path.realpath(os.path.expanduser(__file__))
+    this_file = os.path.realpath(Path(__file__).expanduser())
     spack_prefix = dn(dn(dn(dn(this_file))))
 
     # Allow spack libs to be imported in our scripts

@@ -316,7 +316,7 @@ def substitute_path_variables(path):
     """Substitute config vars, expand environment vars, expand user home."""
     path = substitute_config_variables(path)
     path = os.path.expandvars(path)
-    path = os.path.expanduser(path)
+    path = Path(path).expanduser()
     return path
 
 
