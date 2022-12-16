@@ -63,7 +63,7 @@ def local_file_path(url):
 
 
 def path_to_file_url(path):
-    if not os.path.isabs(path):
+    if not PurePath(path).is_absolute():
         path = Path(path).resolve()
     return urllib.parse.urljoin("file:", urllib.request.pathname2url(path))
 

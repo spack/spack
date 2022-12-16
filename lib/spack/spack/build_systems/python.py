@@ -118,7 +118,7 @@ class PythonExtension(spack.package_base.PackageBase):
                 continue
             elif global_view or not fs.path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
-            elif not os.path.islink(src):
+            elif not Path(src).is_symlink():
                 shutil.copy2(src, dst)
                 is_script = fs.is_nonsymlink_exe_with_shebang(src)
                 if is_script and not python_is_external:

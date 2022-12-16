@@ -410,7 +410,7 @@ def remove_whatever_it_is(path):
     """Type-agnostic remove."""
     if Path(path).is_file():
         Path(path).unlink()
-    elif os.path.islink(path):
+    elif Path(path).is_symlink():
         remove_linked_tree(path)
     else:
         shutil.rmtree(path, onerror=onerror)
@@ -1901,7 +1901,7 @@ def binary_with_rpaths(prefix_tmpdir):
         gcc = spack.util.executable.which("gcc")
         executable = source.dirpath("main.x")
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
-        rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
+        rpaths = [x if PurePath(x).is_absolute() else os.path.join("$ORIGIN", x) for x in rpaths]
         rpath_str = ":".join(rpaths)
         opts = [
             "-Wl,--disable-new-dtags",

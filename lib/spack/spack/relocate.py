@@ -770,7 +770,7 @@ def ensure_binaries_are_relocatable(binaries):
 
 
 def warn_if_link_cant_be_relocated(link, target):
-    if not os.path.isabs(target):
+    if not PurePath(target).is_absolute():
         return
     tty.warn('Symbolic link at "{}" to "{}" cannot be relocated'.format(link, target))
 
@@ -956,7 +956,7 @@ def ensure_binary_is_relocatable(filename, paths_to_relocate=None):
     if not Path(filename).exists():
         raise ValueError("{0} does not exist".format(filename))
 
-    if not os.path.isabs(filename):
+    if not PurePath(filename).is_absolute():
         raise ValueError("{0} is not an absolute path".format(filename))
 
     strings = executable.Executable("strings")

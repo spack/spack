@@ -54,7 +54,7 @@ def get_compiler_version_output(compiler_path, *args, **kwargs):
     # This ensures that we memoize compiler output by *absolute path*,
     # not just executable name. If we don't do this, and the path changes
     # (e.g., during testing), we can get incorrect results.
-    if not os.path.isabs(compiler_path):
+    if not PurePath(compiler_path).is_absolute():
         compiler_path = spack.util.executable.which_string(compiler_path, required=True)
 
     return _get_compiler_version_output(compiler_path, *args, **kwargs)
@@ -339,7 +339,7 @@ class Compiler(object):
 
         def accessible_exe(exe):
             # compilers may contain executable names (on Cray or user edited)
-            if not os.path.isabs(exe):
+            if not PurePath(exe).is_absolute():
                 exe = spack.util.executable.which_string(exe)
                 if not exe:
                     return False

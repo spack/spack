@@ -377,7 +377,7 @@ def canonicalize_path(path, default_wd=None):
         assert path._start_mark.name == path._end_mark.name
 
     path = substitute_path_variables(path)
-    if not os.path.isabs(path):
+    if not PurePath(path).is_absolute():
         if filename:
             path = os.path.join(filename, path)
         else:

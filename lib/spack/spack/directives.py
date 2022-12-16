@@ -727,7 +727,7 @@ def resource(**kwargs):
         placement = kwargs.get("placement", None)
 
         # Check if the path is relative
-        if os.path.isabs(destination):
+        if PurePath(destination).is_absolute():
             message = (
                 "The destination keyword of a resource directive " "can't be an absolute path.\n"
             )

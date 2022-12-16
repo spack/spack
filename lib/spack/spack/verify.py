@@ -31,7 +31,7 @@ def create_manifest_entry(path):
         data["owner"] = stat.st_uid
         data["group"] = stat.st_gid
 
-        if os.path.islink(path):
+        if Path(path).is_symlink():
             data["type"] = "link"
             data["dest"] = os.readlink(path)
 
@@ -86,7 +86,7 @@ def check_entry(path, data):
         res.add_error(path, "group")
 
     # Check for symlink targets  and listed as symlink
-    if os.path.islink(path):
+    if Path(path).is_symlink():
         if data["type"] != "link":
             res.add_error(path, "type")
         if os.readlink(path) != data.get("dest", ""):

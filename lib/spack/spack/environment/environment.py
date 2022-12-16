@@ -443,11 +443,11 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
-        if not os.path.islink(self.root):
+        if not Path(self.root).is_symlink():
             return None
 
         root = os.readlink(self.root)
-        if os.path.isabs(root):
+        if PurePath(root).is_absolute():
             return root
 
         root_dir = os.path.dirname(self.root)
@@ -980,7 +980,7 @@ class Environment(object):
                 )
 
             # treat relative paths as relative to the environment
-            if not os.path.isabs(config_path):
+            if not PurePath(config_path).is_absolute():
                 config_path = os.path.join(self.path, config_path)
                 config_path = os.path.normpath(os.path.realpath(config_path))
 

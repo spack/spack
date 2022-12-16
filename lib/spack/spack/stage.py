@@ -51,7 +51,7 @@ stage_prefix = "spack-stage-"
 
 def create_stage_root(path: str) -> None:
     """Create the stage root directory and ensure appropriate access perms."""
-    assert os.path.isabs(path) and len(path.strip()) > 1
+    assert PurePath(path).is_absolute() and len(path.strip()) > 1
 
     err_msg = "Cannot create stage root {0}: Access to {1} is denied"
 

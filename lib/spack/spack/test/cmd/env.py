@@ -313,8 +313,8 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     e.concretize()
     e.write()
 
-    assert os.path.islink(e.manifest_path)
-    assert os.path.islink(filepath_mid)
+    assert Path(e.manifest_path).is_symlink()
+    assert Path(filepath_mid).is_symlink()
 
 
 def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir, capsys):
@@ -2161,7 +2161,7 @@ env:
             file_path = test.default_view.view()._root
             file_to_test = os.path.join(file_path, spec.name)
             assert Path(file_to_test).is_file()
-            assert os.path.islink(file_to_test) == (link_type == "symlink")
+            assert Path(file_to_test).is_symlink() == (link_type == "symlink")
 
 
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):

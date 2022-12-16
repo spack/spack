@@ -658,8 +658,8 @@ def test_build_manifest_visitor(tmpdir):
         assert len(visitor.symlinks) == 2
 
     with tmpdir.as_cwd():
-        assert not any(os.path.islink(f) or Path(f).is_dir() for f in visitor.files)
-        assert all(os.path.islink(f) for f in visitor.symlinks)
+        assert not any(Path(f).is_symlink() or Path(f).is_dir() for f in visitor.files)
+        assert all(Path(f).is_symlink() for f in visitor.symlinks)
 
 
 def test_text_relocate_if_needed(install_mockery, mock_fetch, monkeypatch, capfd):

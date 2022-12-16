@@ -604,7 +604,7 @@ def log(pkg):
                 continue
             # Now that we are sure that the path is within the correct
             # folder, make it relative and check for matches
-            if os.path.isabs(glob_expr):
+            if PurePath(glob_expr).is_absolute():
                 glob_expr = os.path.relpath(glob_expr, pkg.stage.path)
             files = glob.glob(glob_expr)
             for f in files:

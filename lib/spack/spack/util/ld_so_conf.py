@@ -66,7 +66,7 @@ def _process_ld_so_conf_queue(queue):
             # If not an include, it's a literal path (no globbing here).
             if not is_include:
                 # We only allow absolute search paths.
-                if os.path.isabs(line):
+                if PurePath(line).is_absolute():
                     paths.append(line)
                 continue
 

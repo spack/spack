@@ -706,7 +706,7 @@ def env_depfile(args):
         # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
         # sense to have a prefix like `env/all`, `env/clean` when they are
         # supposed to be included
-        if name in ("all", "clean") and os.path.isabs(target_prefix):
+        if name in ("all", "clean") and PurePath(target_prefix).is_absolute():
             return name
         else:
             return os.path.join(target_prefix, name)

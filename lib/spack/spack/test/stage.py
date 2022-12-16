@@ -160,7 +160,7 @@ def check_setup(stage, stage_name, archive):
     # Make sure it points to a valid directory
     target = os.path.realpath(stage_path)
     assert Path(target).is_dir()
-    assert not os.path.islink(target)
+    assert not Path(target).is_symlink()
 
     # Make sure the directory is in the place we asked it to
     # be (see setUp, tearDown, and use_tmp)

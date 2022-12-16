@@ -101,7 +101,7 @@ class Bootstrapper:
     def mirror_url(self):
         """Mirror url associated with this bootstrapper"""
         # Absolute paths
-        if os.path.isabs(self.url):
+        if PurePath(self.url).is_absolute():
             return spack.util.url.format(self.url)
 
         # Check for :// and assume it's an url if we find it

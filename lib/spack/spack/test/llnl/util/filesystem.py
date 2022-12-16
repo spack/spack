@@ -204,7 +204,7 @@ class TestCopyTree:
 
             assert Path("dest/2").exists()
             if sys.platform != "win32":
-                assert not os.path.islink("dest/2")
+                assert not Path("dest/2").is_symlink()
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -262,7 +262,7 @@ class TestInstallTree:
 
             assert Path("dest/2").exists()
             if sys.platform != "win32":
-                assert os.path.islink("dest/2")
+                assert Path("dest/2").is_symlink()
             check_added_exe_permissions("source/2", "dest/2")
 
     def test_symlinks_false(self, stage):
@@ -273,7 +273,7 @@ class TestInstallTree:
 
             assert Path("dest/2").exists()
             if sys.platform != "win32":
-                assert not os.path.islink("dest/2")
+                assert not Path("dest/2").is_symlink()
             check_added_exe_permissions("source/2", "dest/2")
 
     def test_glob_src(self, stage):

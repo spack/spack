@@ -130,7 +130,7 @@ class Cray(Platform):
 
         # Take the default version from known symlink path
         default_path = os.path.join(craype_dir, "default")
-        if os.path.islink(default_path):
+        if Path(default_path).is_symlink():
             version = spack.version.Version(os.readlink(default_path))
             return (craype_type, version)
 

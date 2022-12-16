@@ -7,6 +7,7 @@
 package.
 """
 import os
+from pathlib import Path
 
 import llnl.util.filesystem
 
@@ -66,7 +67,7 @@ def filter_compiler_wrappers(*files, **kwargs):
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
         abs_files = llnl.util.filesystem.find(root, files, **find_kwargs)
-        abs_files = [x for x in abs_files if not os.path.islink(x)]
+        abs_files = [x for x in abs_files if not Path(x).is_symlink()]
 
         x = llnl.util.filesystem.FileFilter(*abs_files)
 

@@ -81,7 +81,7 @@ def make_installer(parser, args):
                 print("%s does not exist" % spack_source)
                 return
             else:
-                if not os.path.isabs(spack_source):
+                if not PurePath(spack_source).is_absolute():
                     spack_source = posixpath.abspath(spack_source)
                 spack_source = convert_to_posix_path(spack_source)
 

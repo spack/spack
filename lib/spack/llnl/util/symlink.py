@@ -39,21 +39,21 @@ def symlink(real_path, link_path):
 
 
 def islink(path):
-    return os.path.islink(path) or _win32_is_junction(path)
+    return Path(path).is_symlink() or _win32_is_junction(path)
 
 
 # '_win32' functions based on
 # https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
 def _win32_junction(path, link):
     # junctions require absolute paths
-    if not os.path.isabs(link):
+    if not PurePath(link).is_absolute():
         link = Path(link).resolve()
 
     # os.symlink will fail if link exists, emulate the behavior here
     if exists(link):
         raise OSError(errno.EEXIST, "File  exists: %s -> %s" % (link, path))
 
-    if not os.path.isabs(path):
+    if not PurePath(path).is_absolute():
         parent = os.path.join(link, os.pardir)
         path = os.path.join(parent, path)
         path = Path(path).resolve()
@@ -77,13 +77,13 @@ def _win32_can_symlink():
 
     try:
         os.symlink(dpath, dlink)
-        can_symlink_directories = os.path.islink(dlink)
+        can_symlink_directories = Path(dlink).is_symlink()
     except OSError:
         can_symlink_directories = False
 
     try:
         os.symlink(fpath, flink)
-        can_symlink_files = os.path.islink(flink)
+        can_symlink_files = Path(flink).is_symlink()
     except OSError:
         can_symlink_files = False
 
@@ -97,7 +97,7 @@ def _win32_is_junction(path):
     """
     Determines if a path is a win32 junction
     """
-    if os.path.islink(path):
+    if Path(path).is_symlink():
         return False
 
     if is_windows:

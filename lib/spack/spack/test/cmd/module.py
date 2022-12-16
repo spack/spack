@@ -209,7 +209,7 @@ def test_setdefault_command(mutable_database, mutable_config):
     # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
         assert Path(writers[k].layout.filename).exists()
-    assert Path(link_name).exists() and os.path.islink(link_name)
+    assert Path(link_name).exists() and Path(link_name).is_symlink()
     assert os.path.realpath(link_name) == os.path.realpath(writers[other_spec].layout.filename)
 
     # Reset the default to be the preferred spec
@@ -218,5 +218,5 @@ def test_setdefault_command(mutable_database, mutable_config):
     # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
         assert Path(writers[k].layout.filename).exists()
-    assert Path(link_name).exists() and os.path.islink(link_name)
+    assert Path(link_name).exists() and Path(link_name).is_symlink()
     assert os.path.realpath(link_name) == os.path.realpath(writers[preferred].layout.filename)

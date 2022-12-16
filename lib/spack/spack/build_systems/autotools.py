@@ -183,7 +183,7 @@ class AutotoolsBuilder(BaseBuilder):
     def _removed_la_files_log(self):
         """File containing the list of removed libtool archives"""
         build_dir = self.build_directory
-        if not os.path.isabs(self.build_directory):
+        if not PurePath(self.build_directory).is_absolute():
             build_dir = os.path.join(self.pkg.stage.path, build_dir)
         return os.path.join(build_dir, "removed_la_files.txt")
 

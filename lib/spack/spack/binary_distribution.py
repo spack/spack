@@ -706,7 +706,7 @@ def get_buildfile_manifest(spec):
     for rel_path in visitor.symlinks:
         abs_path = os.path.join(root, rel_path)
         link = os.readlink(abs_path)
-        if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+        if PurePath(link).is_absolute() and link.startswith(spack.store.layout.root):
             data["link_to_relocate"].append(rel_path)
 
     # Non-symlinks.

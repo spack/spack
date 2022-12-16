@@ -102,7 +102,7 @@ def rename(src, dst):
     if is_windows:
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
-        if Path(dst).exists() or os.path.islink(dst):
+        if Path(dst).exists() or Path(dst).is_symlink():
             Path(dst).unlink()
     Path(src).rename(Path(dst))
 
@@ -484,7 +484,7 @@ def set_install_permissions(path):
     # If this points to a file maintained in a Spack prefix, it is assumed that
     # this function will be invoked on the target. If the file is outside a
     # Spack-maintained prefix, the permissions should not be modified.
-    if os.path.islink(path):
+    if Path(path).is_symlink():
         return
     if Path(path).is_dir():
         Path(path).chmod(0o755)
@@ -551,7 +551,7 @@ def chmod_x(entry, perms):
 @system_path_filter
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link."""
-    if os.path.islink(dest):
+    if Path(dest).is_symlink():
         return
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
@@ -646,7 +646,7 @@ def resolve_link_target_relative_to_the_link(link):
     our cwd (which may not be the same as the link's directory)
     """
     target = os.readlink(link)
-    if os.path.isabs(target):
+    if PurePath(target).is_absolute():
         return target
     link_dir = os.path.dirname(Path(link).resolve())
     return os.path.join(link_dir, target)
@@ -715,11 +715,11 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             ignore=ignore,
             follow_nonexisting=True,
         ):
-            if os.path.islink(s):
+            if Path(s).is_symlink():
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
                     target = os.readlink(s)
-                    if os.path.isabs(target):
+                    if PurePath(target).is_absolute():
 
                         def escaped_path(path):
                             return path.replace("\\", r"\\")
@@ -1182,7 +1182,7 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
-        if Path(source_child).is_dir() and (follow_links or not os.path.islink(source_child)):
+        if Path(source_child).is_dir() and (follow_links or not Path(source_child).is_symlink()):
 
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
@@ -1416,7 +1416,7 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path) and not Path(path).exists():
+    if Path(path).is_symlink() and not Path(path).exists():
         Path(path).unlink()
 
 
@@ -1475,7 +1475,7 @@ def remove_linked_tree(path):
         kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
 
     if Path(path).exists():
-        if os.path.islink(path):
+        if Path(path).is_symlink():
             shutil.rmtree(os.path.realpath(path), **kwargs)
             Path(path).unlink()
         else:
@@ -2545,7 +2545,7 @@ def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if Path(dir).exists():
         for entry in [os.path.join(dir, entry) for entry in Path(dir).iterdir()]:
-            if Path(entry).is_file() or os.path.islink(entry):
+            if Path(entry).is_file() or Path(entry).is_symlink():
                 Path(entry).unlink()
             else:
                 shutil.rmtree(entry)
