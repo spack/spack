@@ -39,13 +39,13 @@ class Octopus(AutotoolsPackage, CudaPackage):
     version("develop", branch="main")
 
     variant("mpi", default=True, description="Build with MPI support")
-    variant("scalapack", default=False, description="Compile with Scalapack")
+    variant("scalapack", default=False, when="+mpi", description="Compile with Scalapack")
     variant("metis", default=False, description="Compile with METIS")
-    variant("parmetis", default=False, description="Compile with ParMETIS")
+    variant("parmetis", default=False, when="+mpi", description="Compile with ParMETIS")
     variant("netcdf", default=False, description="Compile with Netcdf")
     variant("arpack", default=False, description="Compile with ARPACK")
     variant("cgal", default=False, description="Compile with CGAL library support")
-    variant("pfft", default=False, description="Compile with PFFT")
+    variant("pfft", default=False, when="+mpi", description="Compile with PFFT")
     # poke here refers to https://gitlab.e-cam2020.eu/esl/poke
     # variant('poke', default=False,
     #         description='Compile with poke (not available in spack yet)')
@@ -77,24 +77,27 @@ class Octopus(AutotoolsPackage, CudaPackage):
         depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
         depends_on("fftw-api@3:+mpi+openmp", when="@10:")
         depends_on("libvdwxc+mpi", when="+libvdwxc")
+        depends_on("arpack-ng+mpi", when="+arpack")
+        depends_on("elpa+mpi", when="+elpa")
+        depends_on("netcdf-fortran ^netcdf-c+mpi", when="+netcdf")
 
     with when("~mpi"):  # list all the serial dependencies
         depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
         depends_on("fftw-api@3:+openmp~mpi", when="@10:")
         depends_on("libvdwxc~mpi", when="+libvdwxc")
+        depends_on("arpack-ng~mpi", when="+arpack")
+        depends_on("elpa~mpi", when="+elpa")
+        depends_on("netcdf-fortran ^netcdf-c~~mpi", when="+netcdf")
 
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
     depends_on("metis@5:+int64", when="+metis")
     depends_on("parmetis+int64", when="+parmetis")
     depends_on("scalapack", when="+scalapack")
-    depends_on("netcdf-fortran", when="+netcdf")
-    depends_on("arpack-ng", when="+arpack")
     depends_on("cgal", when="+cgal")
     depends_on("pfft", when="+pfft")
     depends_on("likwid", when="+likwid")
     depends_on("libyaml", when="+libyaml")
-    depends_on("elpa", when="+elpa")
     depends_on("nlopt", when="+nlopt")
 
     # optional dependencies:
