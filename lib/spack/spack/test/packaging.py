@@ -13,6 +13,7 @@ import shutil
 import stat
 import sys
 from collections import OrderedDict
+from pathlib import Path
 
 import pytest
 
@@ -64,7 +65,7 @@ echo $PATH"""
     f.write(body)
     f.close()
     st = os.stat(patchelfscr)
-    os.chmod(patchelfscr, st.st_mode | stat.S_IEXEC)
+    Path(patchelfscr).chmod(st.st_mode | stat.S_IEXEC)
 
     # Install the test package
     spec = Spec("trivial-install-test-package")

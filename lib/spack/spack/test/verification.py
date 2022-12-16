@@ -7,6 +7,7 @@
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -129,7 +130,7 @@ def test_check_chmod_manifest_entry(tmpdir):
 
     data = spack.verify.create_manifest_entry(file)
 
-    os.chmod(file, data["mode"] - 1)
+    Path(file).chmod(data["mode"] - 1)
 
     results = spack.verify.check_entry(file, data)
     assert results.has_errors()

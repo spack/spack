@@ -36,6 +36,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
@@ -1448,7 +1449,7 @@ class PackageInstaller(object):
             mode = os.stat(pkg.spec.prefix).st_mode
             perms = prefs.get_package_dir_permissions(pkg.spec)
             if mode != perms:
-                os.chmod(pkg.spec.prefix, perms)
+                Path(pkg.spec.prefix).chmod(perms)
 
             # Ensure the metadata path exists as well
             fs.mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)

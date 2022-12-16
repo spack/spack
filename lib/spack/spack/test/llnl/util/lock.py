@@ -55,6 +55,7 @@ import tempfile
 import traceback
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
+from pathlib import Path
 
 import pytest
 
@@ -131,7 +132,7 @@ def make_readable(*paths):
             mode = 0o555 if os.path.isdir(path) else 0o444
         else:
             mode = stat.S_IREAD
-        os.chmod(path, mode)
+        Path(path).chmod(mode)
 
 
 def make_writable(*paths):
@@ -140,7 +141,7 @@ def make_writable(*paths):
             mode = 0o755 if os.path.isdir(path) else 0o744
         else:
             mode = stat.S_IWRITE
-        os.chmod(path, mode)
+        Path(path).chmod(mode)
 
 
 @contextmanager
@@ -151,7 +152,7 @@ def read_only(*paths):
     yield
 
     for path, mode in zip(paths, modes):
-        os.chmod(path, mode)
+        Path(path).chmod(mode)
 
 
 @pytest.fixture(scope="session", params=locations)

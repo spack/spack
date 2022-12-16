@@ -5,6 +5,7 @@
 import os
 import os.path
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -221,12 +222,12 @@ def test_find_external_manifest_with_bad_permissions(
     monkeypatch.setenv("PATH", "")
     monkeypatch.setattr(spack.cray_manifest, "default_path", test_manifest_dir)
     try:
-        os.chmod(test_manifest_file_path, 0)
+        Path(test_manifest_file_path).chmod(0)
         output = external("find")
         assert "insufficient permissions" in output
         assert "Skipping manifest and continuing" in output
     finally:
-        os.chmod(test_manifest_file_path, 0o700)
+        Path(test_manifest_file_path).chmod(0o700)
 
 
 def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdir, monkeypatch):

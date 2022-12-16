@@ -487,9 +487,9 @@ def set_install_permissions(path):
     if os.path.islink(path):
         return
     if os.path.isdir(path):
-        os.chmod(path, 0o755)
+        Path(path).chmod(0o755)
     else:
-        os.chmod(path, 0o644)
+        Path(path).chmod(0o644)
 
 
 def group_ids(uid=None):
@@ -545,7 +545,7 @@ def chmod_x(entry, perms):
             perms &= ~stat.S_IXUSR
             perms &= ~stat.S_IXGRP
             perms &= ~stat.S_IXOTH
-    os.chmod(entry, perms)
+    Path(entry).chmod(perms)
 
 
 @system_path_filter
@@ -561,7 +561,7 @@ def copy_mode(src, dest):
         dest_mode |= stat.S_IXGRP
     if src_mode & stat.S_IXOTH:
         dest_mode |= stat.S_IXOTH
-    os.chmod(dest, dest_mode)
+    Path(dest).chmod(dest_mode)
 
 
 @system_path_filter
@@ -570,7 +570,7 @@ def unset_executable_mode(path):
     mode &= ~stat.S_IXUSR
     mode &= ~stat.S_IXGRP
     mode &= ~stat.S_IXOTH
-    os.chmod(path, mode)
+    Path(path).chmod(mode)
 
 
 @system_path_filter
@@ -858,11 +858,11 @@ def mkdirp(*paths, **kwargs):
 
                 # leaf folder permissions
                 if mode is not None:
-                    os.chmod(path, mode)
+                    Path(path).chmod(mode)
                 if group:
                     chgrp_if_not_world_writable(path, group)
                     if mode is not None:
-                        os.chmod(path, mode)  # reset sticky grp bit post chgrp
+                        Path(path).chmod(mode)  # reset sticky grp bit post chgrp
 
                 # for intermediate folders, change mode just for newly created
                 # ones and if mode_intermediate has been specified, otherwise
@@ -882,10 +882,10 @@ def mkdirp(*paths, **kwargs):
 
                 for intermediate_path in reversed(intermediate_folders):
                     if intermediate_mode is not None:
-                        os.chmod(intermediate_path, intermediate_mode)
+                        Path(intermediate_path).chmod(intermediate_mode)
                     if intermediate_group is not None:
                         chgrp_if_not_world_writable(intermediate_path, intermediate_group)
-                        os.chmod(intermediate_path, intermediate_mode)  # reset sticky bit after
+                        Path(intermediate_path).chmod(intermediate_mode)  # reset sticky bit after
 
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
@@ -1364,7 +1364,7 @@ def set_executable(path):
         mode |= stat.S_IXGRP
     if mode & stat.S_IROTH:
         mode |= stat.S_IXOTH
-    os.chmod(path, mode)
+    Path(path).chmod(mode)
 
 
 @system_path_filter
@@ -1445,7 +1445,7 @@ def readonly_file_handler(ignore_errors=False):
             and excvalue.errno == errno.EACCES
         ):
             # change the file to be readable,writable,executable: 0777
-            os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+            Path(path).chmod(stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
             # retry
             func(path)
         elif not ignore_errors:

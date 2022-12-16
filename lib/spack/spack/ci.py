@@ -1819,7 +1819,7 @@ def reproduce_ci_job(url, work_dir):
     # Find the install script in the unzipped artifacts and make it executable
     install_script = fs.find(work_dir, "install.sh")[0]
     st = os.stat(install_script)
-    os.chmod(install_script, st.st_mode | stat.S_IEXEC)
+    Path(install_script).chmod(st.st_mode | stat.S_IEXEC)
 
     # Find the repro details file.  This just includes some values we wrote
     # during `spack ci rebuild` to make reproduction easier.  E.g. the job
@@ -2000,7 +2000,7 @@ def process_command(name, commands, repro_dir):
         fd.write("\n")
 
     st = os.stat(script)
-    os.chmod(script, st.st_mode | stat.S_IEXEC)
+    Path(script).chmod(st.st_mode | stat.S_IEXEC)
 
     copy_path = os.path.join(repro_dir, script)
     shutil.copyfile(script, copy_path)

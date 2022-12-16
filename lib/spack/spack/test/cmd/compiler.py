@@ -5,6 +5,7 @@
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -69,7 +70,7 @@ def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
 echo "0.0.0"
 """
             )
-        os.chmod("gcc", 0o700)
+        Path("gcc").chmod(0o700)
 
     os.environ["PATH"] = str(tmpdir)
     output = compiler("find", "--scope=site")
@@ -98,7 +99,7 @@ else
 fi
 """
             )
-        os.chmod("gcc", 0o700)
+        Path("gcc").chmod(0o700)
 
     os.environ["PATH"] = str(tmpdir)
     output = compiler("find", "--scope=site")
@@ -184,11 +185,11 @@ fi
             f.write(gcc_script.format("g++", "g++-8"))
         with open("gfortran-8", "w") as f:
             f.write(gcc_script.format("GNU Fortran", "gfortran-8"))
-        os.chmod("clang", 0o700)
-        os.chmod("clang++", 0o700)
-        os.chmod("gcc-8", 0o700)
-        os.chmod("g++-8", 0o700)
-        os.chmod("gfortran-8", 0o700)
+        Path("clang").chmod(0o700)
+        Path("clang++").chmod(0o700)
+        Path("gcc-8").chmod(0o700)
+        Path("g++-8").chmod(0o700)
+        Path("gfortran-8").chmod(0o700)
 
     yield tmpdir
 
@@ -240,8 +241,8 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, clangdir
     with clangdir.as_cwd():
         shutil.copy("clang", "clang-gpu")
         shutil.copy("clang++", "clang++-gpu")
-        os.chmod("clang-gpu", 0o700)
-        os.chmod("clang++-gpu", 0o700)
+        Path("clang-gpu").chmod(0o700)
+        Path("clang++-gpu").chmod(0o700)
 
     os.environ["PATH"] = str(clangdir)
     output = compiler("find", "--scope=site")

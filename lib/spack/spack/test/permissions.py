@@ -6,6 +6,7 @@
 import os
 import stat
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -31,7 +32,7 @@ def ensure_known_group(path):
 def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
     path = str(tmpdir.join("file").ensure())
     mode = stat.S_ISUID | stat.S_ISGID | stat.S_ISVTX
-    os.chmod(path, mode)
+    Path(path).chmod(mode)
     mode = os.stat(path).st_mode  # adds a high bit we aren't concerned with
 
     perms = stat.S_IRWXU

@@ -12,6 +12,7 @@ import shutil
 import stat
 import sys
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -172,7 +173,7 @@ class ScriptDirectory(object):
         # make a file executable
         st = os.stat(path)
         executable_mode = st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-        os.chmod(path, executable_mode)
+        Path(path).chmod(executable_mode)
 
         st = os.stat(path)
         assert oct(executable_mode) == oct(st.st_mode & executable_mode)
@@ -258,7 +259,7 @@ def test_shebang_handles_non_writable_files(script_dir, sbang_line):
     # make a file non-writable
     st = os.stat(script_dir.long_shebang)
     not_writable_mode = st.st_mode & ~stat.S_IWRITE
-    os.chmod(script_dir.long_shebang, not_writable_mode)
+    Path(script_dir.long_shebang).chmod(not_writable_mode)
 
     test_shebang_handling(script_dir, sbang_line)
 
@@ -445,7 +446,7 @@ def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmpdir):
     path = str(tmpdir.join("file.sh"))
     with open(path, "w") as f:
         f.write(long_line)
-    os.chmod(path, 0o555)
+    Path(path).chmod(0o555)
     sbang.filter_shebang(path)
     with open(path, "r") as f:
         assert "sbang" in f.readline()

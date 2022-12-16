@@ -866,10 +866,10 @@ def test_bad_command_line_scopes(tmpdir, config):
         mkdirp("unreadable_dir")
         with pytest.raises(spack.config.ConfigError):
             try:
-                os.chmod("unreadable_dir", 0)
+                Path("unreadable_dir").chmod(0)
                 spack.config._add_command_line_scopes(cfg, ["unreadable_dir"])
             finally:
-                os.chmod("unreadable_dir", 0o700)  # so tmpdir can be removed
+                Path("unreadable_dir").chmod(0o700)  # so tmpdir can be removed
 
 
 def test_add_command_line_scopes(tmpdir, mutable_config):
@@ -1444,7 +1444,7 @@ def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
     ConfigFileError is raised."""
     filename = join_path(tmpdir.strpath, "test.yaml")
     touch(filename)
-    os.chmod(filename, 0o200)
+    Path(filename).chmod(0o200)
 
     with pytest.raises(spack.config.ConfigFileError, match="not readable"):
         spack.config.read_config_file(filename)

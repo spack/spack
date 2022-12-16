@@ -697,15 +697,15 @@ def test_is_nonsymlink_exe_with_shebang(tmpdir):
         # Create an executable with shebang.
         with open("executable_script", "wb") as f:
             f.write(b"#!/interpreter")
-        os.chmod("executable_script", 0o100775)
+        Path("executable_script").chmod(0o100775)
 
         with open("executable_but_not_script", "wb") as f:
             f.write(b"#/not-a-shebang")
-        os.chmod("executable_but_not_script", 0o100775)
+        Path("executable_but_not_script").chmod(0o100775)
 
         with open("not_executable_with_shebang", "wb") as f:
             f.write(b"#!/interpreter")
-        os.chmod("not_executable_with_shebang", 0o100664)
+        Path("not_executable_with_shebang").chmod(0o100664)
 
         os.symlink("executable_script", "symlink_to_executable_script")
 

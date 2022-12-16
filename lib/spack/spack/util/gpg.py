@@ -7,6 +7,7 @@ import errno
 import functools
 import os
 import re
+from pathlib import Path
 
 import spack.error
 import spack.paths
@@ -72,7 +73,7 @@ def init(gnupghome=None, force=False):
     # Make sure that the GNUPGHOME exists
     if not os.path.exists(GNUPGHOME):
         os.makedirs(GNUPGHOME)
-        os.chmod(GNUPGHOME, 0o700)
+        Path(GNUPGHOME).chmod(0o700)
 
     if not os.path.isdir(GNUPGHOME):
         msg = 'GNUPGHOME "{0}" exists and is not a directory'.format(GNUPGHOME)
@@ -383,13 +384,13 @@ def _socket_dir(gpgconf):
         try:
             if not os.path.exists(var_run_user):
                 os.mkdir(var_run_user)
-                os.chmod(var_run_user, 0o777)
+                Path(var_run_user).chmod(0o777)
 
             user_dir = os.path.join(var_run_user, str(os.getuid()))
 
             if not os.path.exists(user_dir):
                 os.mkdir(user_dir)
-                os.chmod(user_dir, 0o700)
+                Path(user_dir).chmod(0o700)
 
         # If the above operation fails due to lack of permissions, then
         # just carry on without running gpgconf and hope for the best.

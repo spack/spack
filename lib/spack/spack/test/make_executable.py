@@ -13,6 +13,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 import pytest
 
@@ -34,7 +35,7 @@ class MakeExecutableTest(unittest.TestCase):
         with open(make_exe, "w") as f:
             f.write("#!/bin/sh\n")
             f.write('echo "$@"')
-        os.chmod(make_exe, 0o700)
+        Path(make_exe).chmod(0o700)
 
         path_put_first("PATH", [self.tmpdir])
 
