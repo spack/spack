@@ -657,7 +657,7 @@ class EnvironmentModifications(object):
         """
         tty.debug("EnvironmentModifications.from_sourcing_file: {0}".format(filename))
         # Check if the file actually exists
-        if not os.path.isfile(filename):
+        if not Path(filename).is_file():
             msg = "Trying to source non-existing file: {0}".format(filename)
             raise RuntimeError(msg)
 

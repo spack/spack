@@ -1168,7 +1168,7 @@ class IntelPackage(Package):
         # populated beyond its templated explanatory comments, proffer it to
         # the installer instead:
         f = self.global_license_file
-        if os.path.isfile(f):
+        if Path(f).is_file():
             # The file will have been created upon self.license_required AND
             # self.license_files having been populated, so the "if" is usually
             # true by the time the present function runs; ../hooks/licensing.py
@@ -1288,7 +1288,7 @@ class IntelPackage(Package):
 
         for compiler_name in "icc icpc ifort".split():
             f = os.path.join(compilers_bin_dir, compiler_name)
-            if not os.path.isfile(f):
+            if not Path(f).is_file():
                 raise InstallError("Cannot find compiler command to configure rpath:\n\t" + f)
 
             compiler_cfg = Path(f + ".cfg").resolve()
@@ -1305,7 +1305,7 @@ class IntelPackage(Package):
 
             for compiler_name in "icc icpc ifort".split():
                 f = os.path.join(compilers_bin_dir, compiler_name)
-                if not os.path.isfile(f):
+                if not Path(f).is_file():
                     raise InstallError(
                         "Cannot find compiler command to configure " "auto_dispatch:\n\t" + f
                     )
@@ -1339,7 +1339,7 @@ class IntelPackage(Package):
         #  completely: <installdir>/intel/ism/uninstall.sh"
 
         f = os.path.join(self.normalize_path("ism"), "uninstall.sh")
-        if os.path.isfile(f):
+        if Path(f).is_file():
             tty.warn('Uninstalling "Intel Software Improvement Program"' "component")
             uninstall = Executable(f)
             uninstall("--silent")

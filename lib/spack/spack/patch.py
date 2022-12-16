@@ -90,7 +90,7 @@ class Patch(object):
         """
         assert self.path, "Path for patch not set in apply: %s" % self.path_or_url
 
-        if not os.path.isfile(self.path):
+        if not Path(self.path).is_file():
             raise NoSuchPatchError("No such patch: %s" % self.path)
 
         apply_patch(stage, self.path, self.level, self.working_dir)
@@ -224,7 +224,7 @@ class UrlPatch(Patch):
 
         self.path = os.path.join(root, files.pop())
 
-        if not os.path.isfile(self.path):
+        if not Path(self.path).is_file():
             raise NoSuchPatchError("Archive %s contains no patch file!" % self.url)
 
         # for a compressed archive, Need to check the patch sha256 again

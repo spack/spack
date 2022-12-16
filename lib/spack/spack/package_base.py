@@ -1505,7 +1505,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
-        if os.path.isfile(bad_file):
+        if Path(bad_file).is_file():
             if self.stage.managed_by_spack:
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
@@ -1520,10 +1520,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 return
 
         # If this file exists, then we already applied all the patches.
-        if os.path.isfile(good_file):
+        if Path(good_file).is_file():
             tty.msg("Already patched {0}".format(self.name))
             return
-        elif os.path.isfile(no_patches_file):
+        elif Path(no_patches_file).is_file():
             tty.msg("No patches needed for {0}".format(self.name))
             return
 
@@ -1569,7 +1569,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Get rid of any old failed file -- patches have either succeeded
         # or are not needed.  This is mostly defensive -- it's needed
         # if the restage() method doesn't clean *everything* (e.g., for a repo)
-        if os.path.isfile(bad_file):
+        if Path(bad_file).is_file():
             Path(bad_file).unlink()
 
         # touch good or no patches file so that we skip next time.

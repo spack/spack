@@ -343,7 +343,7 @@ class Compiler(object):
                 exe = spack.util.executable.which_string(exe)
                 if not exe:
                     return False
-            return os.path.isfile(exe) and os.access(exe, os.X_OK)
+            return Path(exe).is_file() and os.access(exe, os.X_OK)
 
         # setup environment before verifying in case we have executable names
         # instead of absolute paths

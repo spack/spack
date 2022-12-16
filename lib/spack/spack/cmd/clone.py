@@ -58,7 +58,7 @@ def clone(parser, args):
 
     tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
 
-    if os.path.isfile(prefix):
+    if Path(prefix).is_file():
         tty.die("There is already a file at %s" % prefix)
 
     mkdirp(prefix)

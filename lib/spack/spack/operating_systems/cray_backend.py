@@ -96,14 +96,14 @@ class CrayBackend(LinuxDistro):
 
     @classmethod
     def _detect_crayos_version(cls):
-        if os.path.isfile(_cle_release_file):
+        if Path(_cle_release_file).is_file():
             release_attrs = read_cle_release_file()
             if "RELEASE" not in release_attrs:
                 # This Cray system uses a base OS not CLE/CNL
                 return None
             v = spack.version.Version(release_attrs["RELEASE"])
             return v[0]
-        elif os.path.isfile(_clerelease_file):
+        elif Path(_clerelease_file).is_file():
             v = read_clerelease_file()
             return spack.version.Version(v)[0]
         else:

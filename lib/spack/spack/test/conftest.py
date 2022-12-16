@@ -408,7 +408,7 @@ def ignore_stage_files():
 
 def remove_whatever_it_is(path):
     """Type-agnostic remove."""
-    if os.path.isfile(path):
+    if Path(path).is_file():
         Path(path).unlink()
     elif os.path.islink(path):
         remove_linked_tree(path)

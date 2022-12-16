@@ -106,7 +106,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         assert install_dir.startswith(temporary_store.root)
 
         # Ensure spec file exists when directory is created
-        assert os.path.isfile(spec_path)
+        assert Path(spec_path).is_file()
         assert spec_path.startswith(install_dir)
 
         # Make sure spec file can be read back in to get the original spec

@@ -77,10 +77,10 @@ class PerlBuilder(BaseBuilder):
         Raises:
             RuntimeError: if neither Makefile.PL nor Build.PL exist
         """
-        if os.path.isfile("Makefile.PL"):
+        if Path("Makefile.PL").is_file():
             self.build_method = "Makefile.PL"
             self.build_executable = inspect.getmodule(self.pkg).make
-        elif os.path.isfile("Build.PL"):
+        elif Path("Build.PL").is_file():
             self.build_method = "Build.PL"
             self.build_executable = Executable(os.path.join(self.pkg.stage.source_path, "Build"))
         else:

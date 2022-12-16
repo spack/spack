@@ -244,7 +244,7 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
     # Ensure dependency directory exists after the installation.
     install_times = os.path.join(spec.package.prefix, ".spack", "install_times.json")
-    assert os.path.isfile(install_times)
+    assert Path(install_times).is_file()
 
     # Ensure the phases are included
     with open(install_times, "r") as timefile:
@@ -466,11 +466,11 @@ def test_nosource_pkg_install_post_install(install_mockery, mock_fetch, mock_pac
 
     # Ensure the file created in the package's `install` method exists.
     install_txt = os.path.join(spec.prefix, "install.txt")
-    assert os.path.isfile(install_txt)
+    assert Path(install_txt).is_file()
 
     # Ensure the file created in the package's `post-install` method exists.
     post_install_txt = os.path.join(spec.prefix, "post-install.txt")
-    assert os.path.isfile(post_install_txt)
+    assert Path(post_install_txt).is_file()
 
 
 def test_pkg_build_paths(install_mockery):

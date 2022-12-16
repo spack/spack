@@ -122,7 +122,7 @@ def check_expand_archive(stage, stage_name, expected_file_list):
         else:
             assert False
 
-        assert os.path.isfile(fn)
+        assert Path(fn).is_file()
         with open(fn) as _file:
             _file.read() == contents
 
@@ -899,7 +899,7 @@ class TestStage(object):
         stage.create()  # Only sets the flag value
 
         readmefn = str(fn)
-        assert os.path.isfile(readmefn)
+        assert Path(readmefn).is_file()
         with open(readmefn) as _file:
             _file.read() == _readme_contents
 

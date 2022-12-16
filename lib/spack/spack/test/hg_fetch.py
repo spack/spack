@@ -56,19 +56,19 @@ def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_re
 
             file_path = os.path.join(s.package.stage.source_path, t.file)
             assert Path(s.package.stage.source_path).is_dir()
-            assert os.path.isfile(file_path)
+            assert Path(file_path).is_file()
 
             Path(file_path).unlink()
-            assert not os.path.isfile(file_path)
+            assert not Path(file_path).is_file()
 
             untracked_file = "foobarbaz"
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert Path(untracked_file).is_file()
             s.package.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not Path(untracked_file).is_file()
 
             assert Path(s.package.stage.source_path).is_dir()
-            assert os.path.isfile(file_path)
+            assert Path(file_path).is_file()
 
             assert h() == t.revision
 

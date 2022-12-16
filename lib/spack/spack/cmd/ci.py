@@ -406,7 +406,7 @@ def ci_rebuild(args):
     for dir_to_list in target_dirs:
         for file_name in Path(dir_to_list).iterdir():
             src_file = os.path.join(dir_to_list, file_name)
-            if os.path.isfile(src_file):
+            if Path(src_file).is_file():
                 dst_file = os.path.join(repro_dir, file_name)
                 shutil.copyfile(src_file, dst_file)
 

@@ -877,7 +877,7 @@ class Database(object):
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if os.path.isfile(self._index_path):
+                if Path(self._index_path).is_file():
                     self._read_from_file(self._index_path)
             except CorruptDatabaseError as e:
                 self._error = e
@@ -1050,7 +1050,7 @@ class Database(object):
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if os.path.isfile(self._index_path):
+        if Path(self._index_path).is_file():
             current_verifier = ""
             if _use_uuid:
                 try:

@@ -401,7 +401,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             return module.use_name
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
-        if not os.path.isfile(writer.layout.filename):
+        if not Path(writer.layout.filename).is_file():
             if not writer.conf.excluded:
                 err_msg = "No module available for package {0} at {1}".format(
                     spec, writer.layout.filename

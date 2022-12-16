@@ -2160,7 +2160,7 @@ env:
         for spec in test.roots():
             file_path = test.default_view.view()._root
             file_to_test = os.path.join(file_path, spec.name)
-            assert os.path.isfile(file_to_test)
+            assert Path(file_to_test).is_file()
             assert os.path.islink(file_to_test) == (link_type == "symlink")
 
 
@@ -3171,7 +3171,7 @@ def test_env_include_packages_url(
     spack_yaml = tmpdir.join("spack.yaml")
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(default_packages))
-    assert os.path.isfile(spack_yaml.strpath)
+    assert Path(spack_yaml.strpath).is_file()
 
     with spack.config.override("config:url_fetch_method", "curl"):
         env = ev.Environment(tmpdir.strpath)

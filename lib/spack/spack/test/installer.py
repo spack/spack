@@ -507,7 +507,7 @@ def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
 
     repo = mock_packages.repos[0]
     dest_pkg = repo.filename_for_package_name(spec_name)
-    assert os.path.isfile(dest_pkg)
+    assert Path(dest_pkg).is_file()
 
 
 def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
@@ -577,7 +577,7 @@ def test_clear_failures_success(install_mockery):
 
     # Ensure the core directory and failure lock file still exist
     assert Path(spack.store.db._failure_dir).is_dir()
-    assert os.path.isfile(spack.store.db.prefix_fail_path)
+    assert Path(spack.store.db.prefix_fail_path).is_file()
 
 
 def test_clear_failures_errs(install_mockery, monkeypatch, capsys):

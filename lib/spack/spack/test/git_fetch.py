@@ -119,19 +119,19 @@ def test_fetch(
 
             file_path = os.path.join(s.package.stage.source_path, t.file)
             assert Path(s.package.stage.source_path).is_dir()
-            assert os.path.isfile(file_path)
+            assert Path(file_path).is_file()
 
             Path(file_path).unlink()
-            assert not os.path.isfile(file_path)
+            assert not Path(file_path).is_file()
 
             untracked_file = "foobarbaz"
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert Path(untracked_file).is_file()
             s.package.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not Path(untracked_file).is_file()
 
             assert Path(s.package.stage.source_path).is_dir()
-            assert os.path.isfile(file_path)
+            assert Path(file_path).is_file()
 
             assert h("HEAD") == h(t.revision)
 
@@ -309,9 +309,9 @@ def test_gitsubmodule(
                 "third_party/submodule{0}/r0_file_{0}".format(submodule_count),
             )
             if submodules:
-                assert os.path.isfile(file_path)
+                assert Path(file_path).is_file()
             else:
-                assert not os.path.isfile(file_path)
+                assert not Path(file_path).is_file()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -337,9 +337,9 @@ def test_gitsubmodules_callable(
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule0/r0_file_0")
-        assert os.path.isfile(file_path)
+        assert Path(file_path).is_file()
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule1/r0_file_1")
-        assert not os.path.isfile(file_path)
+        assert not Path(file_path).is_file()
 
 
 @pytest.mark.disable_clean_stage_check

@@ -286,7 +286,7 @@ def add_package_to_git_stage(packages):
 
     for pkg_name in packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
-        if not os.path.isfile(filename):
+        if not Path(filename).is_file():
             tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 
         git("add", filename)
@@ -934,7 +934,7 @@ class Repo(object):
 
         # Validate repository layout.
         self.config_file = os.path.join(self.root, repo_config_name)
-        check(os.path.isfile(self.config_file), "No %s found in '%s'" % (repo_config_name, root))
+        check(Path(self.config_file).is_file(), "No %s found in '%s'" % (repo_config_name, root))
 
         self.packages_path = os.path.join(self.root, packages_dir_name)
         check(
@@ -1304,7 +1304,7 @@ def create_repo(root, namespace=None):
 
     existed = False
     if Path(root).exists():
-        if os.path.isfile(root):
+        if Path(root).is_file():
             raise BadRepoError("File %s already exists and is not a directory" % root)
         elif Path(root).is_dir():
             if not os.access(root, os.R_OK | os.W_OK):

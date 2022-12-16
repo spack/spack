@@ -261,7 +261,7 @@ class DirectoryLayout(object):
                 "Install prefix {0} does not exist.".format(path)
             )
 
-        if not os.path.isfile(spec_file_path):
+        if not Path(spec_file_path).is_file():
             raise InconsistentInstallDirectoryError(
                 "Install prefix exists but contains no spec.json:", "  " + path
             )

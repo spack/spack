@@ -141,7 +141,7 @@ class BinaryCacheIndex(object):
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
-            if os.path.isfile(cache_path):
+            if Path(cache_path).is_file():
                 with self._index_file_cache.read_transaction(cache_key) as cache_file:
                     self._local_index_cache = json.load(cache_file)
 

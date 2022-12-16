@@ -56,19 +56,19 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
 
             file_path = os.path.join(spec.package.stage.source_path, test.file)
             assert Path(spec.package.stage.source_path).is_dir()
-            assert os.path.isfile(file_path)
+            assert Path(file_path).is_file()
 
             Path(file_path).unlink()
-            assert not os.path.isfile(file_path)
+            assert not Path(file_path).is_file()
 
             untracked_file = "foobarbaz"
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert Path(untracked_file).is_file()
             spec.package.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not Path(untracked_file).is_file()
 
             assert Path(spec.package.stage.source_path).is_dir()
-            assert os.path.isfile(file_path)
+            assert Path(file_path).is_file()
 
 
 def test_cvs_extra_fetch(tmpdir):

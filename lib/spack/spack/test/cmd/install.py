@@ -190,7 +190,7 @@ def test_install_env_variables(mock_packages, mock_archive, mock_fetch, config, 
     spec = Spec("libdwarf")
     spec.concretize()
     install("libdwarf")
-    assert os.path.isfile(spec.package.install_env_path)
+    assert Path(spec.package.install_env_path).is_file()
 
 
 @pytest.mark.disable_clean_stage_check

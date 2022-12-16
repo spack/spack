@@ -43,7 +43,7 @@ def link_tree(stage):
 
 
 def check_file_link(filename, expected_target):
-    assert os.path.isfile(filename)
+    assert Path(filename).is_file()
     assert islink(filename)
     assert Path.resolve(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
@@ -118,21 +118,21 @@ def test_merge_to_existing_directory(stage, link_tree):
         check_file_link("dest/c/d/6", "source/c/d/6")
         check_file_link("dest/c/d/e/7", "source/c/d/e/7")
 
-        assert os.path.isfile("dest/x")
-        assert os.path.isfile("dest/a/b/y")
+        assert Path("dest/x").is_file()
+        assert Path("dest/a/b/y").is_file()
 
         link_tree.unmerge("dest")
 
-        assert os.path.isfile("dest/x")
-        assert os.path.isfile("dest/a/b/y")
+        assert Path("dest/x").is_file()
+        assert Path("dest/a/b/y").is_file()
 
-        assert not os.path.isfile("dest/1")
-        assert not os.path.isfile("dest/a/b/2")
-        assert not os.path.isfile("dest/a/b/3")
-        assert not os.path.isfile("dest/c/4")
-        assert not os.path.isfile("dest/c/d/5")
-        assert not os.path.isfile("dest/c/d/6")
-        assert not os.path.isfile("dest/c/d/e/7")
+        assert not Path("dest/1").is_file()
+        assert not Path("dest/a/b/2").is_file()
+        assert not Path("dest/a/b/3").is_file()
+        assert not Path("dest/c/4").is_file()
+        assert not Path("dest/c/d/5").is_file()
+        assert not Path("dest/c/d/6").is_file()
+        assert not Path("dest/c/d/e/7").is_file()
 
 
 def test_merge_with_empty_directories(stage, link_tree):
@@ -167,8 +167,8 @@ def test_ignore(stage, link_tree):
         assert not Path("dest/a").exists()
         assert not Path("dest/c").exists()
 
-        assert os.path.isfile("source/.spec")
-        assert os.path.isfile("dest/.spec")
+        assert Path("source/.spec").is_file()
+        assert Path("dest/.spec").is_file()
 
 
 def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):

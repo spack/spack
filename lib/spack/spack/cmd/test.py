@@ -408,7 +408,7 @@ def _report_suite_results(test_suite, args, constraints):
                 if args.logs:
                     spec = test_specs[pkg_id]
                     log_file = test_suite.log_file_for_spec(spec)
-                    if os.path.isfile(log_file):
+                    if Path(log_file).is_file():
                         with open(log_file, "r") as f:
                             msg += "\n{0}".format("".join(f.readlines()))
                 tty.msg(msg)

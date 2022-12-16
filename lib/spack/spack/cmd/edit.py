@@ -38,7 +38,7 @@ def edit_package(name, repo_path, namespace):
 
     spec = Spec(name)
     if Path(path).exists():
-        if not os.path.isfile(path):
+        if not Path(path).is_file():
             tty.die("Something is wrong. '{0}' is not a file!".format(path))
         if not os.access(path, os.R_OK):
             tty.die("Insufficient permissions on '%s'!" % path)

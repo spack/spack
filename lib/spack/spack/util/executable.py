@@ -300,13 +300,13 @@ def which_string(*args, **kwargs):
         for candidate_name in candidate_names:
             if os.path.sep in candidate_name:
                 exe = pth.resolve(candidate_name)
-                if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                if Path(exe).is_file() and os.access(exe, os.X_OK):
                     return exe
             else:
                 for directory in path:
                     directory = path_to_os_path(directory).pop()
                     exe = os.path.join(directory, candidate_name)
-                    if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                    if Path(exe).is_file() and os.access(exe, os.X_OK):
                         return exe
 
     if required:

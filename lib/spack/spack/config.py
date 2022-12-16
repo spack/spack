@@ -997,7 +997,7 @@ def read_config_file(filename, schema=None):
         tty.debug("Skipping nonexistent config path {0}".format(filename), level=3)
         return None
 
-    elif not os.path.isfile(filename):
+    elif not Path(filename).is_file():
         raise ConfigFileError("Invalid configuration. %s exists but is not a file." % filename)
 
     elif not os.access(filename, os.R_OK):

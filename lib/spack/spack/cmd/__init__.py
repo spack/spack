@@ -536,7 +536,7 @@ def is_git_repo(path):
     if Path(dotgit_path).is_dir():
         # we are in a regular git repo
         return True
-    if os.path.isfile(dotgit_path):
+    if Path(dotgit_path).is_file():
         # we might be in a git worktree
         try:
             with open(dotgit_path, "rb") as f:
@@ -572,7 +572,7 @@ def extant_file(f):
     """
     Argparse type for files that exist.
     """
-    if not os.path.isfile(f):
+    if not Path(f).is_file():
         raise argparse.ArgumentTypeError("%s does not exist" % f)
     return f
 

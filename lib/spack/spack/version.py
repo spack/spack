@@ -1298,7 +1298,7 @@ class CommitLookup(object):
         """
         Load data if the path already exists.
         """
-        if os.path.isfile(self.cache_path):
+        if Path(self.cache_path).is_file():
             with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
                 self.data = sjson.load(cache_file)
 

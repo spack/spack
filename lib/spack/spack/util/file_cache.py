@@ -78,7 +78,7 @@ class FileCache(object):
 
         exists = Path(cache_path).exists()
         if exists:
-            if not os.path.isfile(cache_path):
+            if not Path(cache_path).is_file():
                 raise CacheError("Cache file is not a file: %s" % cache_path)
 
             if not os.access(cache_path, os.R_OK):

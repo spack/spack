@@ -263,7 +263,7 @@ def test_patch_failure_develop_spec_exits_gracefully(
     pkg = libelf.package
     with pkg.stage:
         bad_patch_indicator = trigger_bad_patch(pkg)
-        assert os.path.isfile(bad_patch_indicator)
+        assert Path(bad_patch_indicator).is_file()
         pkg.do_patch()
     # success if no exceptions raised
 
@@ -278,9 +278,9 @@ def test_patch_failure_restages(mock_packages, config, install_mockery, mock_fet
     pkg = spec["libelf"].package
     with pkg.stage:
         bad_patch_indicator = trigger_bad_patch(pkg)
-        assert os.path.isfile(bad_patch_indicator)
+        assert Path(bad_patch_indicator).is_file()
         pkg.do_patch()
-        assert not os.path.isfile(bad_patch_indicator)
+        assert not Path(bad_patch_indicator).is_file()
 
 
 def test_multiple_patched_dependencies(mock_packages, config):

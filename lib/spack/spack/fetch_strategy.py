@@ -546,7 +546,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         path = url_util.file_url_string_to_path(self.url)
 
         # check whether the cache file exists.
-        if not os.path.isfile(path):
+        if not Path(path).is_file():
             raise NoCacheError("No cache of %s" % path)
 
         # remove old symlink if one is there.
@@ -1077,7 +1077,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
             for line in status.split("\n"):
                 if re.match(r"^[?]", line):
                     path = line[2:].strip()
-                    if os.path.isfile(path):
+                    if Path(path).is_file():
                         Path(path).unlink()
 
     def archive(self, destination):
@@ -1170,7 +1170,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
                 if not re.match("^[I?]", line):
                     continue
                 path = line[8:].strip()
-                if os.path.isfile(path):
+                if Path(path).is_file():
                     Path(path).unlink()
                 elif Path(path).is_dir():
                     shutil.rmtree(path, ignore_errors=True)

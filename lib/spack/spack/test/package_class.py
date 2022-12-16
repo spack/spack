@@ -174,7 +174,7 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     for src in srcs:
         assert Path(src).exists(), "Expected {0} to exist".format(src)
         if os.path.splitext(src)[1]:
-            assert os.path.isfile(src), emsg_file.format(src)
+            assert Path(src).is_file(), emsg_file.format(src)
         else:
             assert Path(src).is_dir(), emsg_dir.format(src)
 
@@ -189,7 +189,7 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
         if pd in exp_dests:
             assert Path(pd).exists(), msg.format(pd, "")
             if os.path.splitext(pd)[1]:
-                assert os.path.isfile(pd), emsg_file.format(pd)
+                assert Path(pd).is_file(), emsg_file.format(pd)
             else:
                 assert Path(pd).is_dir(), emsg_dir.format(pd)
         else:

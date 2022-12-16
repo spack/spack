@@ -540,7 +540,7 @@ def chmod_x(entry, perms):
     utility's `+X` option.
     """
     mode = os.stat(entry).st_mode
-    if os.path.isfile(entry):
+    if Path(entry).is_file():
         if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
             perms &= ~stat.S_IXUSR
             perms &= ~stat.S_IXGRP
@@ -768,7 +768,7 @@ def install_tree(src, dest, symlinks=True, ignore=None):
 @system_path_filter
 def is_exe(path):
     """True if path is an executable file."""
-    return os.path.isfile(path) and os.access(path, os.X_OK)
+    return Path(path).is_file() and os.access(path, os.X_OK)
 
 
 @system_path_filter
@@ -2252,7 +2252,7 @@ class WindowsSimulatedRPath(object):
         directories.
         """
         for pth in dest:
-            if os.path.isfile(pth):
+            if Path(pth).is_file():
                 self._additional_library_dependents.add(os.path.dirname)
             else:
                 self._additional_library_dependents.add(pth)
@@ -2374,7 +2374,7 @@ def files_in(*search_paths):
     for d in filter(can_access_dir, search_paths):
         files.extend(
             filter(
-                lambda x: os.path.isfile(x[1]), [(f, os.path.join(d, f)) for f in list(Path(d).iterdir())]
+                lambda x: Path(x[1]).is_file(), [(f, os.path.join(d, f)) for f in list(Path(d).iterdir())]
             )
         )
     return files
@@ -2382,7 +2382,7 @@ def files_in(*search_paths):
 
 def is_readable_file(file_path):
     """Return True if the path passed as argument is readable"""
-    return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
+    return Path(file_path).is_file() and os.access(file_path, os.R_OK)
 
 
 @system_path_filter
@@ -2545,7 +2545,7 @@ def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if Path(dir).exists():
         for entry in [os.path.join(dir, entry) for entry in Path(dir).iterdir()]:
-            if os.path.isfile(entry) or os.path.islink(entry):
+            if Path(entry).is_file() or os.path.islink(entry):
                 Path(entry).unlink()
             else:
                 shutil.rmtree(entry)
