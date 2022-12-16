@@ -93,22 +93,15 @@ class Bootstrapper:
     def __init__(self, conf):
         self.conf = conf
         self.name = conf["name"]
-        self.url = conf["info"]["url"]
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
 
-    @property
-    def mirror_url(self):
-        """Mirror url associated with this bootstrapper"""
-        # Absolute paths
-        if os.path.isabs(self.url):
-            return spack.util.url.format(self.url)
-
-        # Check for :// and assume it's an url if we find it
-        if "://" in self.url:
-            return self.url
-
-        # Otherwise, it's a relative path
-        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
+        # Promote (relative) paths to file urls
+        url = conf["info"]["url"]
+        if spack.util.url.is_path_instead_of_url(url):
+            if not os.path.isabs(url):
+                url = os.path.join(self.metadata_dir, url)
+            url = spack.util.url.path_to_file_url(url)
+        self.url = url
 
     @property
     def mirror_scope(self):
@@ -116,7 +109,7 @@ class Bootstrapper:
         this bootstrapper.
         """
         return spack.config.InternalConfigScope(
-            self.config_scope_name, {"mirrors:": {self.name: self.mirror_url}}
+            self.config_scope_name, {"mirrors:": {self.name: self.url}}
         )
 
     def try_import(self, module: str, abstract_spec_str: str):  # pylint: disable=unused-argument
