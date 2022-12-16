@@ -12,24 +12,20 @@ import spack.modules.lmod
 
 
 def add_command(parser, command_dict):
-    lmod_parser = parser.add_parser(
-        'lmod', help='manipulate hierarchical module files'
-    )
+    lmod_parser = parser.add_parser("lmod", help="manipulate hierarchical module files")
     sp = spack.cmd.modules.setup_parser(lmod_parser)
 
     # Set default module file for a package
     setdefault_parser = sp.add_parser(
-        'setdefault', help='set the default module file for a package'
+        "setdefault", help="set the default module file for a package"
     )
-    spack.cmd.common.arguments.add_common_arguments(
-        setdefault_parser, ['constraint']
-    )
+    spack.cmd.common.arguments.add_common_arguments(setdefault_parser, ["constraint"])
 
     callbacks = dict(spack.cmd.modules.callbacks.items())
-    callbacks['setdefault'] = setdefault
+    callbacks["setdefault"] = setdefault
 
-    command_dict['lmod'] = functools.partial(
-        spack.cmd.modules.modules_cmd, module_type='lmod', callbacks=callbacks
+    command_dict["lmod"] = functools.partial(
+        spack.cmd.modules.modules_cmd, module_type="lmod", callbacks=callbacks
     )
 
 
@@ -41,18 +37,10 @@ def setdefault(module_type, specs, args):
     #
     spack.cmd.modules.one_spec_or_raise(specs)
     spec = specs[0]
-    data = {
-        'modules': {
-            args.module_set_name: {
-                'lmod': {
-                    'defaults': [str(spec)]
-                }
-            }
-        }
-    }
+    data = {"modules": {args.module_set_name: {"lmod": {"defaults": [str(spec)]}}}}
     # Need to clear the cache if a SpackCommand is called during scripting
     spack.modules.lmod.configuration_registry = {}
-    scope = spack.config.InternalConfigScope('lmod-setdefault', data)
+    scope = spack.config.InternalConfigScope("lmod-setdefault", data)
     with spack.config.override(scope):
-        writer = spack.modules.module_types['lmod'](spec, args.module_set_name)
+        writer = spack.modules.module_types["lmod"](spec, args.module_set_name)
         writer.update_module_defaults()

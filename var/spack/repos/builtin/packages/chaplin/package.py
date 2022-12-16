@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Chaplin(AutotoolsPackage):
@@ -13,10 +13,10 @@ class Chaplin(AutotoolsPackage):
     complex argument."""
 
     homepage = "https://chaplin.hepforge.org"
-    url      = "https://chaplin.hepforge.org/code/chaplin-1.2.tar"
+    url = "https://chaplin.hepforge.org/code/chaplin-1.2.tar"
 
-    tags = ['hep']
+    tags = ["hep"]
 
-    maintainers = ['vvolkl']
+    maintainers = ["vvolkl"]
 
-    version('1.2', sha256='f17c2d985fd4e4ce36cede945450416d3fa940af68945c91fa5d3ca1d76d4b49')
+    version("1.2", sha256="f17c2d985fd4e4ce36cede945450416d3fa940af68945c91fa5d3ca1d76d4b49")

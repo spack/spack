@@ -19,20 +19,14 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(
-        subparser, ['no_checksum', 'deprecated', 'specs'])
+    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated", "specs"])
     subparser.add_argument(
-        '-p', '--path', dest='path',
-        help="path to stage package, does not add to spack tree")
+        "-p", "--path", dest="path", help="path to stage package, does not add to spack tree"
+    )
+    arguments.add_concretizer_args(subparser)
 
 
 def stage(parser, args):
-    # We temporarily modify the working directory when setting up a stage, so we need to
-    # convert this to an absolute path here in order for it to remain valid later.
-    custom_path = os.path.abspath(args.path) if args.path else None
-    if custom_path:
-        spack.stage.create_stage_root(custom_path)
-
     if not args.specs:
         env = ev.active_environment()
         if env:
@@ -40,19 +34,22 @@ def stage(parser, args):
             for spec in env.specs_by_hash.values():
                 for dep in spec.traverse():
                     dep.package.do_stage()
-                    tty.msg("Staged {0} in {1}".format(dep.package.name,
-                                                       dep.package.stage.path))
+                    tty.msg("Staged {0} in {1}".format(dep.package.name, dep.package.stage.path))
             return
         else:
             tty.die("`spack stage` requires a spec or an active environment")
 
     if args.no_checksum:
-        spack.config.set('config:checksum', False, scope='command_line')
+        spack.config.set("config:checksum", False, scope="command_line")
 
     if args.deprecated:
-        spack.config.set('config:deprecated', True, scope='command_line')
+        spack.config.set("config:deprecated", True, scope="command_line")
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
+
+    # We temporarily modify the working directory when setting up a stage, so we need to
+    # convert this to an absolute path here in order for it to remain valid later.
+    custom_path = os.path.abspath(args.path) if args.path else None
 
     # prevent multiple specs from extracting in the same folder
     if len(specs) > 1 and custom_path:
@@ -60,8 +57,7 @@ def stage(parser, args):
 
     for spec in specs:
         spec = spack.cmd.matching_spec_from_env(spec)
-        package = spack.repo.get(spec)
         if custom_path:
-            package.path = custom_path
-        package.do_stage()
-        tty.msg("Staged {0} in {1}".format(package.name, package.stage.path))
+            spec.package.path = custom_path
+        spec.package.do_stage()
+        tty.msg("Staged {0} in {1}".format(spec.package.name, spec.package.stage.path))

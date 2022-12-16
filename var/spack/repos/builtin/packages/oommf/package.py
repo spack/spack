@@ -5,8 +5,7 @@
 
 import os.path
 
-from spack import *
-from spack.util.executable import Executable
+from spack.package import *
 
 
 class Oommf(Package):
@@ -41,6 +40,16 @@ class Oommf(Package):
     url = "https://github.com/fangohr/oommf/archive/refs/tags/20a1_20180930_ext.tar.gz"
 
     maintainers = ["fangohr"]
+
+    version(
+        "20b0_20220930", sha256="764f1983d858fbad4bae34c720b217940ce56f745647ba94ec74de4b185f1328"
+    )
+
+    version(
+        "20b0_20220930-vanilla",
+        url="https://math.nist.gov/oommf/dist/oommf20b0_20220930.tar.gz",
+        sha256="141826208d638ded65704d0964d9c56e94a35d198e310454f6173e02601378fd",
+    )
 
     version(
         "20a3_20210930",
@@ -109,7 +118,7 @@ class Oommf(Package):
 
     # sanity checks: (https://spack.readthedocs.io/en/latest/packaging_guide.html#checking-an-installation)
     sanity_check_is_file = [join_path("bin", "oommf.tcl")]
-    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/eamples"]
+    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/examples"]
 
     def get_oommf_source_root(self):
         """If we download the source from NIST, then 'oommf.tcl' is in the root directory.
@@ -118,9 +127,7 @@ class Oommf(Package):
         Here, we try to find the relative path to that file, and return it.
         """
         if "oommf.tcl" in os.listdir():
-            print(
-                "Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)"
-            )
+            print("Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)")
             return "."
         elif "oommf.tcl" in os.listdir("oommf"):
             print(
@@ -208,11 +215,7 @@ class Oommf(Package):
             test_env["PATH"] = os.environ["PATH"]
 
         output = self.tclsh(
-            self.oommf_tcl_path,
-            *oommf_args,
-            output=str.split,
-            error=str.split,
-            env=test_env
+            self.oommf_tcl_path, *oommf_args, output=str.split, error=str.split, env=test_env
         )
 
         print("output received from oommf is %s" % output)

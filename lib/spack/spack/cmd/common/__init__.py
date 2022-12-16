@@ -38,8 +38,9 @@ def shell_init_instructions(cmd, equivalent):
         color.colorize("@*c{For Windows batch:}"),
         "  source %s/spack_cmd.bat" % spack.paths.share_path,
         "",
-        "Or, if you do not want to use shell support, run " + (
-            "one of these" if shell_specific else "this") + " instead:",
+        "Or, if you do not want to use shell support, run "
+        + ("one of these" if shell_specific else "this")
+        + " instead:",
         "",
     ]
 
@@ -48,7 +49,7 @@ def shell_init_instructions(cmd, equivalent):
             equivalent.format(sh_arg="--sh  ") + "  # bash/zsh/sh",
             equivalent.format(sh_arg="--csh ") + "  # csh/tcsh",
             equivalent.format(sh_arg="--fish") + "  # fish",
-            equivalent.format(sh_arg="--bat ") + "  # batch"
+            equivalent.format(sh_arg="--bat ") + "  # batch",
         ]
     else:
         msg += ["  " + equivalent]
@@ -60,5 +61,5 @@ def shell_init_instructions(cmd, equivalent):
         "without any path components (such as `bin/spack`).",
     ]
 
-    msg += ['']
+    msg += [""]
     tty.error(*msg)

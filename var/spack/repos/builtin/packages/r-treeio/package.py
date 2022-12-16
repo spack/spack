@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTreeio(RPackage):
@@ -18,13 +18,17 @@ class RTreeio(RPackage):
 
     bioc = "treeio"
 
-    version('1.18.1', commit='a06b6b3d2a64f1b22c6c8c5f97c08f5863349c83')
+    version("1.22.0", commit="eb24a854806a671e7b37ef36dafc60b4eb9ddaa1")
+    version("1.20.2", commit="ed457d6fd85a50e0993c8c9acbd9b701be01a348")
+    version("1.20.0", commit="5f7c3704fc8202c52451d092148fdcfe683f026a")
+    version("1.18.1", commit="a06b6b3d2a64f1b22c6c8c5f97c08f5863349c83")
 
-    depends_on('r@3.6.0:', type=('build', 'run'))
-    depends_on('r-ape', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-tidytree@0.3.0:', type=('build', 'run'))
+    depends_on("r@3.6.0:", type=("build", "run"))
+    depends_on("r-ape", type=("build", "run"))
+    depends_on("r-dplyr", type=("build", "run"))
+    depends_on("r-jsonlite", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"))
+    depends_on("r-tibble", type=("build", "run"))
+    depends_on("r-tidytree@0.3.0:", type=("build", "run"))
+    depends_on("r-tidytree@0.3.9:", type=("build", "run"), when="@1.20.0:")

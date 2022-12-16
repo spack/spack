@@ -9,8 +9,9 @@ import os
 import platform
 import re
 import shutil
+import sys
 import tempfile
-from typing import List, Sequence  # novm
+from typing import List, Optional, Sequence
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -25,7 +26,9 @@ import spack.version
 from spack.util.environment import filter_system_paths
 from spack.util.path import system_path_filter
 
-__all__ = ['Compiler']
+__all__ = ["Compiler"]
+
+is_windows = sys.platform == "win32"
 
 
 @llnl.util.lang.memoized
@@ -39,11 +42,9 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """
     compiler = spack.util.executable.Executable(compiler_path)
     if version_arg:
-        output = compiler(
-            version_arg, output=str, error=str, ignore_errors=ignore_errors)
+        output = compiler(version_arg, output=str, error=str, ignore_errors=ignore_errors)
     else:
-        output = compiler(
-            output=str, error=str, ignore_errors=ignore_errors)
+        output = compiler(output=str, error=str, ignore_errors=ignore_errors)
     return output
 
 
@@ -53,47 +54,43 @@ def get_compiler_version_output(compiler_path, *args, **kwargs):
     # not just executable name. If we don't do this, and the path changes
     # (e.g., during testing), we can get incorrect results.
     if not os.path.isabs(compiler_path):
-        compiler_path = spack.util.executable.which_string(
-            compiler_path, required=True)
+        compiler_path = spack.util.executable.which_string(compiler_path, required=True)
 
     return _get_compiler_version_output(compiler_path, *args, **kwargs)
 
 
-def tokenize_flags(flags_str):
+def tokenize_flags(flags_values, propagate=False):
     """Given a compiler flag specification as a string, this returns a list
-       where the entries are the flags. For compiler options which set values
-       using the syntax "-flag value", this function groups flags and their
-       values together. Any token not preceded by a "-" is considered the
-       value of a prior flag."""
-    tokens = flags_str.split()
+    where the entries are the flags. For compiler options which set values
+    using the syntax "-flag value", this function groups flags and their
+    values together. Any token not preceded by a "-" is considered the
+    value of a prior flag."""
+    tokens = flags_values.split()
     if not tokens:
         return []
     flag = tokens[0]
-    flags = []
+    flags_with_propagation = []
     for token in tokens[1:]:
-        if not token.startswith('-'):
-            flag += ' ' + token
+        if not token.startswith("-"):
+            flag += " " + token
         else:
-            flags.append(flag)
+            flags_with_propagation.append((flag, propagate))
             flag = token
-    flags.append(flag)
-    return flags
+    flags_with_propagation.append((flag, propagate))
+    return flags_with_propagation
 
 
 #: regex for parsing linker lines
-_LINKER_LINE = re.compile(
-    r'^( *|.*[/\\])'
-    r'(link|ld|([^/\\]+-)?ld|collect2)'
-    r'[^/\\]*( |$)')
+_LINKER_LINE = re.compile(r"^( *|.*[/\\])" r"(link|ld|([^/\\]+-)?ld|collect2)" r"[^/\\]*( |$)")
 
 #: components of linker lines to ignore
-_LINKER_LINE_IGNORE = re.compile(r'(collect2 version|^[A-Za-z0-9_]+=|/ldfe )')
+_LINKER_LINE_IGNORE = re.compile(r"(collect2 version|^[A-Za-z0-9_]+=|/ldfe )")
 
 #: regex to match linker search paths
-_LINK_DIR_ARG = re.compile(r'^-L(.:)?(?P<dir>[/\\].*)')
+_LINK_DIR_ARG = re.compile(r"^-L(.:)?(?P<dir>[/\\].*)")
 
 #: regex to match linker library path arguments
-_LIBPATH_ARG = re.compile(r'^[-/](LIBPATH|libpath):(?P<dir>.*)')
+_LIBPATH_ARG = re.compile(r"^[-/](LIBPATH|libpath):(?P<dir>.*)")
 
 
 def _parse_link_paths(string):
@@ -105,26 +102,26 @@ def _parse_link_paths(string):
     """
     lib_search_paths = False
     raw_link_dirs = []
-    tty.debug('parsing implicit link info')
+    tty.debug("parsing implicit link info")
     for line in string.splitlines():
         if lib_search_paths:
-            if line.startswith('\t'):
+            if line.startswith("\t"):
                 raw_link_dirs.append(line[1:])
                 continue
             else:
                 lib_search_paths = False
-        elif line.startswith('Library search paths:'):
+        elif line.startswith("Library search paths:"):
             lib_search_paths = True
 
         if not _LINKER_LINE.match(line):
             continue
         if _LINKER_LINE_IGNORE.match(line):
             continue
-        tty.debug('linker line: %s' % line)
+        tty.debug("linker line: %s" % line)
 
         next_arg = False
         for arg in line.split():
-            if arg in ('-L', '-Y'):
+            if arg in ("-L", "-Y"):
                 next_arg = True
                 continue
 
@@ -135,16 +132,16 @@ def _parse_link_paths(string):
 
             link_dir_arg = _LINK_DIR_ARG.match(arg)
             if link_dir_arg:
-                link_dir = link_dir_arg.group('dir')
-                tty.debug('linkdir: %s' % link_dir)
+                link_dir = link_dir_arg.group("dir")
+                tty.debug("linkdir: %s" % link_dir)
                 raw_link_dirs.append(link_dir)
 
             link_dir_arg = _LIBPATH_ARG.match(arg)
             if link_dir_arg:
-                link_dir = link_dir_arg.group('dir')
-                tty.debug('libpath: %s', link_dir)
+                link_dir = link_dir_arg.group("dir")
+                tty.debug("libpath: %s", link_dir)
                 raw_link_dirs.append(link_dir)
-    tty.debug('found raw link dirs: %s' % ', '.join(raw_link_dirs))
+    tty.debug("found raw link dirs: %s" % ", ".join(raw_link_dirs))
 
     implicit_link_dirs = list()
     visited = set()
@@ -154,7 +151,7 @@ def _parse_link_paths(string):
             implicit_link_dirs.append(normalized_path)
             visited.add(normalized_path)
 
-    tty.debug('found link dirs: %s' % ', '.join(implicit_link_dirs))
+    tty.debug("found link dirs: %s" % ", ".join(implicit_link_dirs))
     return implicit_link_dirs
 
 
@@ -183,102 +180,117 @@ def _parse_non_system_link_dirs(string):
 
 
 def in_system_subdirectory(path):
-    system_dirs = ['/lib/', '/lib64/', '/usr/lib/', '/usr/lib64/',
-                   '/usr/local/lib/', '/usr/local/lib64/']
+    system_dirs = [
+        "/lib/",
+        "/lib64/",
+        "/usr/lib/",
+        "/usr/lib64/",
+        "/usr/local/lib/",
+        "/usr/local/lib64/",
+    ]
     return any(path_contains_subdirectory(path, x) for x in system_dirs)
 
 
 class Compiler(object):
     """This class encapsulates a Spack "compiler", which includes C,
-       C++, and Fortran compilers.  Subclasses should implement
-       support for specific compilers, their possible names, arguments,
-       and how to identify the particular type of compiler."""
+    C++, and Fortran compilers.  Subclasses should implement
+    support for specific compilers, their possible names, arguments,
+    and how to identify the particular type of compiler."""
 
     # Subclasses use possible names of C compiler
-    cc_names = []  # type: List[str]
+    cc_names: List[str] = []
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = []  # type: List[str]
+    cxx_names: List[str] = []
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []  # type: List[str]
+    f77_names: List[str] = []
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []  # type: List[str]
+    fc_names: List[str] = []
 
     # Optional prefix regexes for searching for this type of compiler.
     # Prefixes are sometimes used for toolchains
-    prefixes = []  # type: List[str]
+    prefixes: List[str] = []
 
     # Optional suffix regexes for searching for this type of compiler.
     # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
     # version suffix for gcc.
-    suffixes = [r'-.*']
+    suffixes = [r"-.*"]
 
     #: Compiler argument that produces version information
-    version_argument = '-dumpversion'
+    version_argument = "-dumpversion"
 
     #: Return values to ignore when invoking the compiler to get its version
-    ignore_version_errors = ()  # type: Sequence[int]
+    ignore_version_errors: Sequence[int] = ()
 
     #: Regex used to extract version from compiler's output
-    version_regex = '(.*)'
+    version_regex = "(.*)"
 
     # These libraries are anticipated to be required by all executables built
     # by any compiler
-    _all_compiler_rpath_libraries = ['libc', 'libc++', 'libstdc++']
+    _all_compiler_rpath_libraries = ["libc", "libc++", "libstdc++"]
 
     # Default flags used by a compiler to set an rpath
     @property
     def cc_rpath_arg(self):
-        return '-Wl,-rpath,'
+        return "-Wl,-rpath,"
 
     @property
     def cxx_rpath_arg(self):
-        return '-Wl,-rpath,'
+        return "-Wl,-rpath,"
 
     @property
     def f77_rpath_arg(self):
-        return '-Wl,-rpath,'
+        return "-Wl,-rpath,"
 
     @property
     def fc_rpath_arg(self):
-        return '-Wl,-rpath,'
+        return "-Wl,-rpath,"
 
     @property
     def linker_arg(self):
         """Flag that need to be used to pass an argument to the linker."""
-        return '-Wl,'
+        return "-Wl,"
 
     @property
     def disable_new_dtags(self):
-        if platform.system() == 'Darwin':
-            return ''
-        return '--disable-new-dtags'
+        if platform.system() == "Darwin":
+            return ""
+        return "--disable-new-dtags"
 
     @property
     def enable_new_dtags(self):
-        if platform.system() == 'Darwin':
-            return ''
-        return '--enable-new-dtags'
+        if platform.system() == "Darwin":
+            return ""
+        return "--enable-new-dtags"
 
     @property
     def debug_flags(self):
-        return ['-g']
+        return ["-g"]
 
     @property
     def opt_flags(self):
-        return ['-O', '-O0', '-O1', '-O2', '-O3']
+        return ["-O", "-O0", "-O1", "-O2", "-O3"]
 
     # Cray PrgEnv name that can be used to load this compiler
-    PrgEnv = None  # type: str
+    PrgEnv: Optional[str] = None
     # Name of module used to switch versions of this compiler
-    PrgEnv_compiler = None  # type: str
+    PrgEnv_compiler: Optional[str] = None
 
-    def __init__(self, cspec, operating_system, target,
-                 paths, modules=None, alias=None, environment=None,
-                 extra_rpaths=None, enable_implicit_rpaths=None,
-                 **kwargs):
+    def __init__(
+        self,
+        cspec,
+        operating_system,
+        target,
+        paths,
+        modules=None,
+        alias=None,
+        environment=None,
+        extra_rpaths=None,
+        enable_implicit_rpaths=None,
+        **kwargs,
+    ):
         self.spec = cspec
         self.operating_system = str(operating_system)
         self.target = target
@@ -288,7 +300,7 @@ class Compiler(object):
         self.extra_rpaths = extra_rpaths or []
         self.enable_implicit_rpaths = enable_implicit_rpaths
 
-        self.cc  = paths[0]
+        self.cc = paths[0]
         self.cxx = paths[1]
         self.f77 = None
         self.fc = None
@@ -297,16 +309,18 @@ class Compiler(object):
             if len(paths) == 3:
                 self.fc = self.f77
             else:
-                self.fc  = paths[3]
+                self.fc = paths[3]
 
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
         # in compilers/__init__.py
-        self.flags = {}
-        for flag in spack.spec.FlagMap.valid_compiler_flags():
+        self.flags = spack.spec.FlagMap(self.spec)
+        for flag in self.flags.valid_compiler_flags():
             value = kwargs.get(flag, None)
             if value is not None:
-                self.flags[flag] = tokenize_flags(value)
+                values_with_propagation = tokenize_flags(value, False)
+                for value, propagation in values_with_propagation:
+                    self.flags.add_flag(flag, value, propagation)
 
         # caching value for compiler reported version
         # used for version checks for API, e.g. C++11 flag
@@ -321,6 +335,7 @@ class Compiler(object):
         Raises a CompilerAccessError if any of the non-null paths for the
         compiler are not accessible.
         """
+
         def accessible_exe(exe):
             # compilers may contain executable names (on Cray or user edited)
             if not os.path.isabs(exe):
@@ -332,8 +347,11 @@ class Compiler(object):
         # setup environment before verifying in case we have executable names
         # instead of absolute paths
         with self.compiler_environment():
-            missing = [cmp for cmp in (self.cc, self.cxx, self.f77, self.fc)
-                       if cmp and not accessible_exe(cmp)]
+            missing = [
+                cmp
+                for cmp in (self.cc, self.cxx, self.f77, self.fc)
+                if cmp and not accessible_exe(cmp)
+            ]
             if missing:
                 raise CompilerAccessError(self, missing)
 
@@ -349,9 +367,8 @@ class Compiler(object):
         """
         if not self._real_version:
             try:
-                real_version = spack.version.Version(
-                    self.get_real_version())
-                if real_version == spack.version.Version('unknown'):
+                real_version = spack.version.Version(self.get_real_version())
+                if real_version == spack.version.Version("unknown"):
                     return self.version
                 self._real_version = real_version
             except spack.util.executable.ProcessError:
@@ -364,12 +381,10 @@ class Compiler(object):
 
         # Put CXX first since it has the most linking issues
         # And because it has flags that affect linking
-        exe_paths = [
-            x for x in [self.cxx, self.cc, self.fc, self.f77] if x]
+        exe_paths = [x for x in [self.cxx, self.cc, self.fc, self.f77] if x]
         link_dirs = self._get_compiler_link_paths(exe_paths)
 
-        all_required_libs = (
-            list(self.required_libs) + Compiler._all_compiler_rpath_libraries)
+        all_required_libs = list(self.required_libs) + Compiler._all_compiler_rpath_libraries
         return list(paths_containing_libs(link_dirs, all_required_libs))
 
     @property
@@ -390,37 +405,36 @@ class Compiler(object):
             return []
 
         # What flag types apply to first_compiler, in what order
-        flags = ['cppflags', 'ldflags']
+        flags = ["cppflags", "ldflags"]
         if first_compiler == self.cc:
-            flags = ['cflags'] + flags
+            flags = ["cflags"] + flags
         elif first_compiler == self.cxx:
-            flags = ['cxxflags'] + flags
+            flags = ["cxxflags"] + flags
         else:
-            flags.append('fflags')
+            flags.append("fflags")
 
         try:
-            tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
-            fout = os.path.join(tmpdir, 'output')
-            fin = os.path.join(tmpdir, 'main.c')
+            tmpdir = tempfile.mkdtemp(prefix="spack-implicit-link-info")
+            fout = os.path.join(tmpdir, "output")
+            fin = os.path.join(tmpdir, "main.c")
 
-            with open(fin, 'w+') as csource:
+            with open(fin, "w+") as csource:
                 csource.write(
-                    'int main(int argc, char* argv[]) { '
-                    '(void)argc; (void)argv; return 0; }\n')
+                    "int main(int argc, char* argv[]) { " "(void)argc; (void)argv; return 0; }\n"
+                )
             compiler_exe = spack.util.executable.Executable(first_compiler)
             for flag_type in flags:
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
 
-            output = ''
+            output = ""
             with self.compiler_environment():
-                output = str(compiler_exe(
-                    self.verbose_flag, fin, '-o', fout,
-                    output=str, error=str))  # str for py2
+                output = str(
+                    compiler_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
+                )  # str for py2
             return _parse_non_system_link_dirs(output)
         except spack.util.executable.ProcessError as pe:
-            tty.debug('ProcessError: Command exited with non-zero status: ' +
-                      pe.long_message)
+            tty.debug("ProcessError: Command exited with non-zero status: " + pe.long_message)
             return []
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
@@ -452,69 +466,59 @@ class Compiler(object):
     @property
     def cxx11_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        raise UnsupportedCompilerFlag(self,
-                                      "the C++11 standard",
-                                      "cxx11_flag")
+        raise UnsupportedCompilerFlag(self, "the C++11 standard", "cxx11_flag")
 
     # This property should be overridden in the compiler subclass if
     # C++14 is supported by that compiler
     @property
     def cxx14_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        raise UnsupportedCompilerFlag(self,
-                                      "the C++14 standard",
-                                      "cxx14_flag")
+        raise UnsupportedCompilerFlag(self, "the C++14 standard", "cxx14_flag")
 
     # This property should be overridden in the compiler subclass if
     # C++17 is supported by that compiler
     @property
     def cxx17_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        raise UnsupportedCompilerFlag(self,
-                                      "the C++17 standard",
-                                      "cxx17_flag")
+        raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag")
 
     # This property should be overridden in the compiler subclass if
     # C99 is supported by that compiler
     @property
     def c99_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        raise UnsupportedCompilerFlag(self,
-                                      "the C99 standard",
-                                      "c99_flag")
+        raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag")
 
     # This property should be overridden in the compiler subclass if
     # C11 is supported by that compiler
     @property
     def c11_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        raise UnsupportedCompilerFlag(self,
-                                      "the C11 standard",
-                                      "c11_flag")
+        raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag")
 
     @property
     def cc_pic_flag(self):
         """Returns the flag used by the C compiler to produce
         Position Independent Code (PIC)."""
-        return '-fPIC'
+        return "-fPIC"
 
     @property
     def cxx_pic_flag(self):
         """Returns the flag used by the C++ compiler to produce
         Position Independent Code (PIC)."""
-        return '-fPIC'
+        return "-fPIC"
 
     @property
     def f77_pic_flag(self):
         """Returns the flag used by the F77 compiler to produce
         Position Independent Code (PIC)."""
-        return '-fPIC'
+        return "-fPIC"
 
     @property
     def fc_pic_flag(self):
         """Returns the flag used by the FC compiler to produce
         Position Independent Code (PIC)."""
-        return '-fPIC'
+        return "-fPIC"
 
     # Note: This is not a class method. The class methods are used to detect
     # compilers on PATH based systems, and do not set up the run environment of
@@ -530,10 +534,21 @@ class Compiler(object):
         """
         cc = spack.util.executable.Executable(self.cc)
         with self.compiler_environment():
-            output = cc(self.version_argument,
-                        output=str, error=str,
-                        ignore_errors=tuple(self.ignore_version_errors))
+            output = cc(
+                self.version_argument,
+                output=str,
+                error=str,
+                ignore_errors=tuple(self.ignore_version_errors),
+            )
             return self.extract_version_from_output(output)
+
+    @property
+    def prefix(self):
+        """Query the compiler for its install prefix. This is the install
+        path as reported by the compiler. Note that paths for cc, cxx, etc
+        are not enough to find the install prefix of the compiler, since
+        the can be symlinks, wrappers, or filenames instead of absolute paths."""
+        raise NotImplementedError("prefix is not implemented for this compiler")
 
     #
     # Compiler classes have methods for querying the version of
@@ -546,7 +561,8 @@ class Compiler(object):
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
         output = get_compiler_version_output(
-            cc, cls.version_argument, tuple(cls.ignore_version_errors))
+            cc, cls.version_argument, tuple(cls.ignore_version_errors)
+        )
         return cls.extract_version_from_output(output)
 
     @classmethod
@@ -554,7 +570,7 @@ class Compiler(object):
     def extract_version_from_output(cls, output):
         """Extracts the version from compiler's output."""
         match = re.search(cls.version_regex, output)
-        return match.group(1) if match else 'unknown'
+        return match.group(1) if match else "unknown"
 
     @classmethod
     def cc_version(cls, cc):
@@ -577,14 +593,22 @@ class Compiler(object):
         # Compile all the regular expressions used for files beforehand.
         # This searches for any combination of <prefix><name><suffix>
         # defined for the compiler
-        compiler_names = getattr(cls, '{0}_names'.format(language))
-        prefixes = [''] + cls.prefixes
-        suffixes = [''] + cls.suffixes
-        regexp_fmt = r'^({0}){1}({2})$'
+        compiler_names = getattr(cls, "{0}_names".format(language))
+        prefixes = [""] + cls.prefixes
+        suffixes = [""]
+        # Windows compilers generally have an extension of some sort
+        # as do most files on Windows, handle that case here
+        if is_windows:
+            ext = r"\.(?:exe|bat)"
+            cls_suf = [suf + ext for suf in cls.suffixes]
+            ext_suf = [ext]
+            suffixes = suffixes + cls.suffixes + cls_suf + ext_suf
+        else:
+            suffixes = suffixes + cls.suffixes
+        regexp_fmt = r"^({0}){1}({2})$"
         return [
             re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))
-            for prefix, name, suffix in
-            itertools.product(prefixes, compiler_names, suffixes)
+            for prefix, name, suffix in itertools.product(prefixes, compiler_names, suffixes)
         ]
 
     def setup_custom_environment(self, pkg, env):
@@ -598,9 +622,21 @@ class Compiler(object):
     def __str__(self):
         """Return a string representation of the compiler toolchain."""
         return "%s(%s)" % (
-            self.name, '\n     '.join((str(s) for s in (
-                self.cc, self.cxx, self.f77, self.fc, self.modules,
-                str(self.operating_system)))))
+            self.name,
+            "\n     ".join(
+                (
+                    str(s)
+                    for s in (
+                        self.cc,
+                        self.cxx,
+                        self.f77,
+                        self.fc,
+                        self.modules,
+                        str(self.operating_system),
+                    )
+                )
+            ),
+        )
 
     @contextlib.contextmanager
     def compiler_environment(self):
@@ -617,8 +653,8 @@ class Compiler(object):
             for module in self.modules:
                 # On cray, mic-knl module cannot be loaded without cce module
                 # See: https://github.com/spack/spack/issues/3153
-                if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
-                    spack.util.module_cmd.load_module('cce')
+                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                    spack.util.module_cmd.load_module("cce")
                 spack.util.module_cmd.load_module(module)
 
             # apply other compiler environment changes
@@ -643,23 +679,18 @@ class CompilerAccessError(spack.error.SpackError):
 
 
 class InvalidCompilerError(spack.error.SpackError):
-
     def __init__(self):
-        super(InvalidCompilerError, self).__init__(
-            "Compiler has no executables.")
+        super(InvalidCompilerError, self).__init__("Compiler has no executables.")
 
 
 class UnsupportedCompilerFlag(spack.error.SpackError):
-
     def __init__(self, compiler, feature, flag_name, ver_string=None):
         super(UnsupportedCompilerFlag, self).__init__(
-            "{0} ({1}) does not support {2} (as compiler.{3})."
-            .format(compiler.name,
-                    ver_string if ver_string else compiler.version,
-                    feature,
-                    flag_name),
-            "If you think it should, please edit the compiler.{0} subclass to"
-            .format(compiler.name) +
-            " implement the {0} property and submit a pull request or issue."
-            .format(flag_name)
+            "{0} ({1}) does not support {2} (as compiler.{3}).".format(
+                compiler.name, ver_string if ver_string else compiler.version, feature, flag_name
+            ),
+            "If you think it should, please edit the compiler.{0} subclass to".format(
+                compiler.name
+            )
+            + " implement the {0} property and submit a pull request or issue.".format(flag_name),
         )

@@ -5,68 +5,164 @@
 
 import re
 
-from spack import *
+from spack.package import *
 
 
 class Hipblas(CMakePackage):
     """hipBLAS is a BLAS marshalling library, with multiple
-       supported backends"""
+    supported backends"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
-    git      = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.0.2.tar.gz"
+    git = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
+    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.3.0.tar.gz"
+    tags = ["rocm"]
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    libraries = ['libhipblas.so']
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    libraries = ["libhipblas"]
 
-    version('5.0.2', sha256='201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646')
-    version('5.0.0', sha256='63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41')
-    version('4.5.2', sha256='82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978')
-    version('4.5.0', sha256='187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e')
-    version('4.3.1', sha256='7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2')
-    version('4.3.0', sha256='0631e21c588794ea1c8413ef8ff293606bcf7a52c0c3ff88da824f103395a76a')
-    version('4.2.0', sha256='c7ce7f69c7596b5a54e666fb1373ef41d1f896dd29260a691e2eadfa863e2b1a')
-    version('4.1.0', sha256='876efe80a4109ad53d290d2921b3fb425b4cb857b32920819f10dcd4deee4ef8', deprecated=True)
-    version('4.0.0', sha256='6cc03af891b36cce8266d32ba8dfcf7fdfcc18afa7a6cc058fbe28bcf8528d94', deprecated=True)
-    version('3.10.0', sha256='45cb5e3b37f0845bd9e0d09912df4fa0ce88dd508ec9448241ae6600d3c4b1e8', deprecated=True)
-    version('3.9.0', sha256='82ddd57fd905a5d4060665349ec017ff757a7c121cb9310574be3c3630b3545f', deprecated=True)
-    version('3.8.0', sha256='33cb82e8b2658ae2096f39e41492ba8b6852ac37c26a730612b8642d9d29abe3', deprecated=True)
-    version('3.7.0', sha256='9840a493ab4838c86696ceb33ce07c34b5f59f62db4f88cb3af62b69d84f8729', deprecated=True)
-    version('3.5.0', sha256='d451da80beb048767da71a090afceed2e111d01b3e95a7044deada5054d6e7b1', deprecated=True)
+    version("develop", branch="develop")
+    version("master", branch="master")
 
-    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+    version("5.3.0", sha256="873d55749479873994679840906c4257316dfb09a6200411204ad4a8c2480565")
+    version("5.2.3", sha256="4d66db9b000b6207b5270d90556b724bfdb08ebbfcc675f014287e0be7ee6344")
+    version("5.2.1", sha256="ccae36b118b7a1eb4b2f7d65fb163f54ab9c5cf774dbe2ec60971d4f78ae8308")
+    version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
+    version("5.1.3", sha256="f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1")
+    version("5.1.0", sha256="22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92")
+    version(
+        "5.0.2",
+        sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e",
+        deprecated=True,
+    )
+    version(
+        "4.3.1",
+        sha256="7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2",
+        deprecated=True,
+    )
+    version(
+        "4.3.0",
+        sha256="0631e21c588794ea1c8413ef8ff293606bcf7a52c0c3ff88da824f103395a76a",
+        deprecated=True,
+    )
+    version(
+        "4.2.0",
+        sha256="c7ce7f69c7596b5a54e666fb1373ef41d1f896dd29260a691e2eadfa863e2b1a",
+        deprecated=True,
+    )
+    version(
+        "4.1.0",
+        sha256="876efe80a4109ad53d290d2921b3fb425b4cb857b32920819f10dcd4deee4ef8",
+        deprecated=True,
+    )
+    version(
+        "4.0.0",
+        sha256="6cc03af891b36cce8266d32ba8dfcf7fdfcc18afa7a6cc058fbe28bcf8528d94",
+        deprecated=True,
+    )
+    version(
+        "3.10.0",
+        sha256="45cb5e3b37f0845bd9e0d09912df4fa0ce88dd508ec9448241ae6600d3c4b1e8",
+        deprecated=True,
+    )
+    version(
+        "3.9.0",
+        sha256="82ddd57fd905a5d4060665349ec017ff757a7c121cb9310574be3c3630b3545f",
+        deprecated=True,
+    )
+    version(
+        "3.8.0",
+        sha256="33cb82e8b2658ae2096f39e41492ba8b6852ac37c26a730612b8642d9d29abe3",
+        deprecated=True,
+    )
+    version(
+        "3.7.0",
+        sha256="9840a493ab4838c86696ceb33ce07c34b5f59f62db4f88cb3af62b69d84f8729",
+        deprecated=True,
+    )
+    version(
+        "3.5.0",
+        sha256="d451da80beb048767da71a090afceed2e111d01b3e95a7044deada5054d6e7b1",
+        deprecated=True,
+    )
 
-    depends_on('cmake@3.5:', type='build')
+    variant(
+        "build_type",
+        default="Release",
+        values=("Release", "Debug", "RelWithDebInfo"),
+        description="CMake build type",
+    )
 
-    depends_on('googletest@1.10.0:', type='test')
-    depends_on('netlib-lapack@3.7.1:', type='test')
-    depends_on('boost@1.64.0:1.76.0 cxxstd=14', type='test')
+    depends_on("cmake@3.5:", type="build")
 
-    patch('link-clients-blas.patch', when='@4.3.0:4.3.2')
-    patch('link-clients-blas-4.5.0.patch', when='@4.5.0:4.5.2')
-    patch('hipblas-link-clients-blas-5.0.0.patch', when='@5.0.0:')
+    depends_on("googletest@1.10.0:", type="test")
+    depends_on("netlib-lapack@3.7.1:", type="test")
+    depends_on("boost@1.64.0:1.76.0 +program_options cxxstd=14", type="test")
+
+    patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
+    patch("link-clients-blas-4.5.0.patch", when="@4.5.0:4.5.2")
+    patch("hipblas-link-clients-blas-5.0.0.patch", when="@5.0.0:5.0.2")
 
     def check(self):
-        exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
-        self.run_test(exe)
+        exe = join_path(self.build_directory, "clients", "staging", "hipblas-test")
+        self.run_test(exe, options=["--gtest_filter=-*known_bug*"])
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('rocsolver@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
+    depends_on("hip@4.1.0:", when="@4.1.0:")
+    depends_on("rocm-cmake@master", type="build", when="@master:")
+    depends_on("rocm-cmake@4.5.0:", type="build", when="@4.5.0:")
+    depends_on("rocm-cmake@3.5.0:", type="build")
+
+    for ver in ["master", "develop"]:
+        depends_on("rocblas@" + ver, when="@" + ver)
+        depends_on("rocsolver@" + ver, when="@" + ver)
+
+    for ver in [
+        "3.5.0",
+        "3.7.0",
+        "3.8.0",
+        "3.9.0",
+        "3.10.0",
+        "4.0.0",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "4.3.1",
+        "4.5.0",
+        "4.5.2",
+        "5.0.0",
+        "5.0.2",
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+    ]:
+        depends_on("hip@" + ver, when="@" + ver)
+        depends_on("rocsolver@" + ver, when="@" + ver)
+        depends_on("rocblas@" + ver, when="@" + ver)
 
     @classmethod
     def determine_version(cls, lib):
-        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
-                          lib)
+        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
         if match:
-            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
-                                       int(match.group(2)),
-                                       int(match.group(3)))
+            ver = "{0}.{1}.{2}".format(
+                int(match.group(1)), int(match.group(2)), int(match.group(3))
+            )
         else:
             ver = None
         return ver
@@ -74,22 +170,27 @@ class Hipblas(CMakePackage):
     def cmake_args(self):
         args = [
             # Make sure find_package(HIP) finds the module.
-            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
-            self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
-            self.define('BUILD_CLIENTS_TESTS', self.run_tests)
+            self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
+            self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
 
         # hipblas actually prefers CUDA over AMD GPUs when you have it
         # installed...
-        if self.spec.satisfies('@:3.9.0'):
-            args.append(self.define('TRY_CUDA', 'OFF'))
+        if self.spec.satisfies("@:3.9.0"):
+            args.append(self.define("TRY_CUDA", "OFF"))
         else:
-            args.append(self.define('USE_CUDA', 'OFF'))
+            args.append(self.define("USE_CUDA", "OFF"))
 
-        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
-            args.append(self.define('__skip_rocmclang', 'ON'))
+        if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
+            args.append(self.define("__skip_rocmclang", "ON"))
+        if self.spec.satisfies("@:5.1"):
+            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+        elif self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
 
     def setup_build_environment(self, env):
-        env.set('CXX', self.spec['hip'].hipcc)
+        env.set("CXX", self.spec["hip"].hipcc)

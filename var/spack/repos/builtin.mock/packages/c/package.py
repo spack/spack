@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class C(Package):
     """Simple package with no dependencies"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/c-1.0.tar.gz"
+    url = "http://www.example.com/c-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")

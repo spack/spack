@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyTomli(PythonPackage):
@@ -12,10 +12,18 @@ class PyTomli(PythonPackage):
     Tomli is fully compatible with TOML v1.0.0."""
 
     homepage = "https://github.com/hukkin/tomli"
-    url = "https://files.pythonhosted.org/packages/py3/t/tomli/tomli-1.2.2-py3-none-any.whl"
-    list_url = "https://pypi.org/simple/tomli/"
+    pypi = "tomli/tomli-2.0.1.tar.gz"
+    git = "https://github.com/hukkin/tomli.git"
 
-    version('1.2.2', sha256='f04066f68f5554911363063a30b108d2b5a5b1a010aa8b6132af78489fe3aade', expand=False)
-    version('1.2.1', sha256='8dd0e9524d6f386271a36b41dbf6c57d8e32fd96fd22b6584679dc569d20899f', expand=False)
+    maintainers = ["charmoniumq"]
 
-    depends_on('python@3.6:', type=('build', 'run'))
+    version("2.0.1", sha256="de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f")
+    version("1.2.2", sha256="c6ce0015eb38820eaf32b5db832dbc26deb3dd427bd5f6556cf0acac2c214fee")
+    version("1.2.1", sha256="a5b75cb6f3968abb47af1b40c1819dc519ea82bcc065776a866e8d74c5ca9442")
+
+    # https://github.com/hukkin/tomli/blob/2.0.1/pyproject.toml#L2
+    depends_on("py-flit-core@3.2:3", type="build")
+
+    # https://github.com/hukkin/tomli/blob/2.0.1/pyproject.toml#L13
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@2.0.1:")

@@ -3,24 +3,16 @@ name: Bootstrapping
 on:
   # This Workflow can be triggered manually
   workflow_dispatch:
-  pull_request:
-    branches:
-      - develop
-      - releases/**
-    paths-ignore:
-      # Don't run if we only modified packages in the
-      # built-in repository or documentation
-      - 'var/spack/repos/builtin/**'
-      - '!var/spack/repos/builtin/packages/clingo-bootstrap/**'
-      - '!var/spack/repos/builtin/packages/python/**'
-      - '!var/spack/repos/builtin/packages/re2c/**'
-      - 'lib/spack/docs/**'
+  workflow_call:
   schedule:
     # nightly at 2:16 AM
     - cron: '16 2 * * *'
 
-jobs:
+concurrency:
+  group: bootstrap-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
 
+jobs:
   fedora-clingo-sources:
     runs-on: ubuntu-latest
     container: "fedora:latest"
@@ -31,25 +23,27 @@ jobs:
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison bison-devel libstdc++-static
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        with:
+          fetch-depth: 0
+      - name: Setup non-root user
         run: |
-          # See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd spack-test
-          chown -R spack-test .
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions-v0.2
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -67,27 +61,27 @@ jobs:
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree \
               cmake bison
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        with:
+          fetch-depth: 0
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions-v0.2
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -104,29 +98,27 @@ jobs:
           apt-get install -y \
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        with:
+          fetch-depth: 0
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap clingo
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
-
 
   opensuse-clingo-sources:
     runs-on: ubuntu-latest
@@ -140,18 +132,21 @@ jobs:
               bzip2 curl file gcc-c++ gcc gcc-fortran tar git gpg2 gzip \
               make patch unzip which xz python3 python3-devel tree \
               cmake bison
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - name: Setup repo and non-root user
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        with:
+          fetch-depth: 0
+      - name: Setup repo
         run: |
-          git --version
-          # See http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-          git fetch --unshallow
+          git --version
           . .github/workflows/setup_git.sh
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions-v0.2
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -162,57 +157,82 @@ jobs:
       - name: Install dependencies
         run: |
           brew install cmake bison@2.7 tree
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
           export PATH=/usr/local/opt/bison@2.7/bin:$PATH
-          spack bootstrap untrust github-actions-v0.2
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
   macos-clingo-binaries:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.macos-version }}
     strategy:
       matrix:
-        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+        macos-version: ['macos-11', 'macos-12']
     steps:
       - name: Install dependencies
         run: |
           brew install tree
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap clingo
         run: |
-          source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
-          spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          set -ex
+          for ver in '3.6' '3.7' '3.8' '3.9' '3.10' ; do
+            not_found=1
+            ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
+            echo "Testing $ver_dir"
+            if [[ -d "$ver_dir" ]] ; then
+              if $ver_dir/python --version ; then
+                export PYTHON="$ver_dir/python"
+                not_found=0
+                old_path="$PATH"
+                export PATH="$ver_dir:$PATH"
+                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                export PATH="$old_path"
+              fi
+            fi
+            # NOTE: test all pythons that exist, not all do on 12
+          done
 
   ubuntu-clingo-binaries:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      - uses: actions/setup-python@98f2ad02fd48d057ee3b4d4f66525b231c3e52b6 # @v2
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Setup repo and non-root user
+          fetch-depth: 0
+      - name: Setup repo
         run: |
           git --version
-          git fetch --unshallow
           . .github/workflows/setup_git.sh
       - name: Bootstrap clingo
         run: |
-          source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
-          spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          set -ex
+          for ver in '3.6' '3.7' '3.8' '3.9' '3.10' ; do
+            not_found=1
+            ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
+            echo "Testing $ver_dir"
+            if [[ -d "$ver_dir" ]] ; then
+              if $ver_dir/python --version ; then
+                export PYTHON="$ver_dir/python"
+                not_found=0
+                old_path="$PATH"
+                export PATH="$ver_dir:$PATH"
+                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
+                export PATH="$old_path"
+              fi
+            fi
+            if (($not_found)) ; then
+              echo Required python version $ver not found in runner!
+              exit 1
+            fi
+          done
 
   ubuntu-gnupg-binaries:
     runs-on: ubuntu-latest
@@ -226,27 +246,26 @@ jobs:
           apt-get install -y \
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        with:
+          fetch-depth: 0
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap disable spack-install
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -263,28 +282,28 @@ jobs:
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree \
               gawk
-      - name: Work around CVE-2022-24765
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        with:
+          fetch-depth: 0
+      - name: Setup non-root user
         run: |
-          # Apparently Ubuntu patched git v2.25.1 with a security patch that introduces 
-          # a breaking behavior. See:
-          # - https://github.blog/2022-04-12-git-security-vulnerability-announced/
-          # - https://github.com/actions/checkout/issues/760
-          # - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog
+          # See [1] below
           git config --global --add safe.directory /__w/spack/spack
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - name: Setup repo and non-root user
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
         run: |
           git --version
-          git fetch --unshallow
           . .github/workflows/setup_git.sh
-          useradd -m spack-test
-          chown -R spack-test .
       - name: Bootstrap GnuPG
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
-          spack bootstrap untrust github-actions-v0.2
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -296,11 +315,12 @@ jobs:
           brew install tree
           # Remove GnuPG since we want to bootstrap it
           sudo rm -rf /usr/local/bin/gpg
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap disable spack-install
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -312,11 +332,21 @@ jobs:
           brew install gawk tree
           # Remove GnuPG since we want to bootstrap it
           sudo rm -rf /usr/local/bin/gpg
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Checkout
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
-          spack bootstrap untrust github-actions-v0.2
+          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.3
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
+
+
+# [1] Distros that have patched git to resolve CVE-2022-24765 (e.g. Ubuntu patching v2.25.1)
+#     introduce breaking behaviorso we have to set `safe.directory` in gitconfig ourselves.
+#     See:
+#     - https://github.blog/2022-04-12-git-security-vulnerability-announced/
+#     - https://github.com/actions/checkout/issues/760
+#     - http://changelogs.ubuntu.com/changelogs/pool/main/g/git/git_2.25.1-1ubuntu3.3/changelog

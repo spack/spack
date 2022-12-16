@@ -39,6 +39,7 @@ on these ideas for each distinct build system that Spack supports:
 
    build_systems/autotoolspackage
    build_systems/cmakepackage
+   build_systems/cachedcmakepackage
    build_systems/mesonpackage
    build_systems/qmakepackage
    build_systems/sippackage
@@ -47,6 +48,7 @@ on these ideas for each distinct build system that Spack supports:
    :maxdepth: 1
    :caption: Language-specific
 
+   build_systems/luapackage
    build_systems/octavepackage
    build_systems/perlpackage
    build_systems/pythonpackage
@@ -60,11 +62,11 @@ on these ideas for each distinct build system that Spack supports:
 
    build_systems/bundlepackage
    build_systems/cudapackage
+   build_systems/custompackage
    build_systems/inteloneapipackage
    build_systems/intelpackage
    build_systems/rocmpackage
-   build_systems/custompackage
-   build_systems/multiplepackage
+   build_systems/sourceforgepackage
 
 For reference, the :py:mod:`Build System API docs <spack.build_systems>`
 provide a list of build systems and methods/attributes that can be

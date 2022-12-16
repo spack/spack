@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dtlink4(Package):
@@ -12,4 +12,4 @@ class Dtlink4(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/dtlink4-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")

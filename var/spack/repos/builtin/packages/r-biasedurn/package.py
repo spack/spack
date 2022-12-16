@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiasedurn(RPackage):
@@ -18,4 +18,5 @@ class RBiasedurn(RPackage):
 
     cran = "BiasedUrn"
 
-    version('1.07', sha256='2377c2e59d68e758a566452d7e07e88663ae61a182b9ee455d8b4269dda3228e')
+    version("2.0.8", sha256="205e7f8da8fba76fbf4bd9d12a027599b685dedecc818aad39de5c51dc47b856")
+    version("1.07", sha256="2377c2e59d68e758a566452d7e07e88663ae61a182b9ee455d8b4269dda3228e")

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PopplerData(CMakePackage):
@@ -15,8 +15,8 @@ class PopplerData(CMakePackage):
     distributed separately."""
 
     homepage = "https://poppler.freedesktop.org/"
-    url      = "https://poppler.freedesktop.org/poppler-data-0.4.9.tar.gz"
+    url = "https://poppler.freedesktop.org/poppler-data-0.4.9.tar.gz"
 
-    version('0.4.9', sha256='1f9c7e7de9ecd0db6ab287349e31bf815ca108a5a175cf906a90163bdbe32012')
+    version("0.4.9", sha256="1f9c7e7de9ecd0db6ab287349e31bf815ca108a5a175cf906a90163bdbe32012")
 
-    depends_on('cmake@2.6:', type='build')
+    depends_on("cmake@2.6:", type="build")

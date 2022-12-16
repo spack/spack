@@ -24,19 +24,17 @@ from spack.util.path import path_to_os_path
 max_packages = 10
 
 
-def test_yaml_directory_layout_parameters(tmpdir, config):
+def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     """This tests the various parameters that can be used to configure
-    the install location """
-    spec = Spec('python')
-    spec.concretize()
+    the install location"""
+    spec = default_mock_concretization("python")
 
     # Ensure default layout matches expected spec format
     layout_default = DirectoryLayout(str(tmpdir))
     path_default = layout_default.relative_path_for_spec(spec)
-    assert(path_default == spec.format(
-        "{architecture}/"
-        "{compiler.name}-{compiler.version}/"
-        "{name}-{version}-{hash}"))
+    assert path_default == spec.format(
+        "{architecture}/" "{compiler.name}-{compiler.version}/" "{name}-{version}-{hash}"
+    )
 
     # Test hash_length parameter works correctly
     layout_10 = DirectoryLayout(str(tmpdir), hash_length=10)
@@ -44,39 +42,36 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
     layout_7 = DirectoryLayout(str(tmpdir), hash_length=7)
     path_7 = layout_7.relative_path_for_spec(spec)
 
-    assert(len(path_default) - len(path_10) == 22)
-    assert(len(path_default) - len(path_7) == 25)
+    assert len(path_default) - len(path_10) == 22
+    assert len(path_default) - len(path_7) == 25
 
     # Test path_scheme
-    arch, compiler, package7 = path_7.split('/')
-    projections_package7 = {'all': "{name}-{version}-{hash:7}"}
-    layout_package7 = DirectoryLayout(str(tmpdir),
-                                      projections=projections_package7)
+    arch, compiler, package7 = path_7.split("/")
+    projections_package7 = {"all": "{name}-{version}-{hash:7}"}
+    layout_package7 = DirectoryLayout(str(tmpdir), projections=projections_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
 
-    assert(package7 == path_package7)
+    assert package7 == path_package7
 
     # Test separation of architecture or namespace
-    spec2 = Spec('libelf').concretized()
+    spec2 = Spec("libelf").concretized()
 
-    arch_scheme = "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"   # NOQA: ignore=E501
-    ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
-    arch_ns_scheme_projections = {'all': arch_scheme,
-                                  'python': ns_scheme}
-    layout_arch_ns = DirectoryLayout(
-        str(tmpdir), projections=arch_ns_scheme_projections)
+    arch_scheme = (
+        "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"
+    )
+    ns_scheme = "{architecture}/{namespace}/{name}-{version}-{hash:7}"
+    arch_ns_scheme_projections = {"all": arch_scheme, "python": ns_scheme}
+    layout_arch_ns = DirectoryLayout(str(tmpdir), projections=arch_ns_scheme_projections)
 
     arch_path_spec2 = layout_arch_ns.relative_path_for_spec(spec2)
-    assert(arch_path_spec2 == spec2.format(arch_scheme))
+    assert arch_path_spec2 == spec2.format(arch_scheme)
 
     ns_path_spec = layout_arch_ns.relative_path_for_spec(spec)
-    assert(ns_path_spec == spec.format(ns_scheme))
+    assert ns_path_spec == spec.format(ns_scheme)
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):
-        DirectoryLayout(str(tmpdir),
-                        hash_length=20,
-                        projections=projections_package7)
+        DirectoryLayout(str(tmpdir), hash_length=20, projections=projections_package7)
 
 
 def test_read_and_write_spec(temporary_store, config, mock_packages):
@@ -87,18 +82,17 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
     layout.
     """
     layout = temporary_store.layout
-    packages = list(spack.repo.path.all_packages())[:max_packages]
+    pkg_names = list(spack.repo.path.all_package_names())[:max_packages]
 
-    for pkg in packages:
-        if pkg.name.startswith('external'):
+    for name in pkg_names:
+        if name.startswith("external"):
             # External package tests cannot be installed
             continue
-        spec = pkg.spec
 
         # If a spec fails to concretize, just skip it.  If it is a
         # real error, it will be caught by concretization tests.
         try:
-            spec.concretize()
+            spec = spack.spec.Spec(name).concretized()
         except Exception:
             continue
 
@@ -118,13 +112,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         # Make sure spec file can be read back in to get the original spec
         spec_from_file = layout.read_spec(spec_path)
 
-        # currently we don't store build dependency information when
-        # we write out specs to the filesystem.
-
-        # TODO: fix this when we can concretize more loosely based on
-        # TODO: what is installed. We currently omit these to
-        # TODO: increase reuse of build dependencies.
-        stored_deptypes = spack.hash_types.full_hash
+        stored_deptypes = spack.hash_types.dag_hash
         expected = spec.copy(deps=stored_deptypes)
         expected._mark_concrete()
 
@@ -170,14 +158,14 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
     mock_db = spack.repo.RepoPath(spack.paths.mock_packages_path)
 
     not_in_mock = set.difference(
-        set(spack.repo.all_package_names()),
-        set(mock_db.all_package_names()))
+        set(spack.repo.all_package_names()), set(mock_db.all_package_names())
+    )
     packages = list(not_in_mock)[:max_packages]
 
     # Create all the packages that are not in mock.
     installed_specs = {}
     for pkg_name in packages:
-        spec = spack.repo.get(pkg_name).spec
+        spec = spack.spec.Spec(pkg_name)
 
         # If a spec fails to concretize, just skip it.  If it is a
         # real error, it will be caught by concretization tests.
@@ -189,12 +177,11 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
         layout.create_install_directory(spec)
         installed_specs[spec] = layout.path_for_spec(spec)
 
-    with spack.repo.use_repositories(mock_db):
+    with spack.repo.use_repositories(spack.paths.mock_packages_path):
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():
-            spec_from_file = layout.read_spec(
-                os.path.join(path, '.spack', 'spec.json'))
+            spec_from_file = layout.read_spec(os.path.join(path, ".spack", "spec.json"))
 
             # To satisfy these conditions, directory layouts need to
             # read in concrete specs from their install dirs somehow.
@@ -207,15 +194,15 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
 def test_find(temporary_store, config, mock_packages):
     """Test that finding specs within an install layout works."""
     layout = temporary_store.layout
-    packages = list(spack.repo.path.all_packages())[:max_packages]
+    package_names = list(spack.repo.path.all_package_names())[:max_packages]
 
     # Create install prefixes for all packages in the list
     installed_specs = {}
-    for pkg in packages:
-        if pkg.name.startswith('external'):
+    for name in package_names:
+        if name.startswith("external"):
             # External package tests cannot be installed
             continue
-        spec = pkg.spec.concretized()
+        spec = spack.spec.Spec(name).concretized()
         installed_specs[spec.name] = spec
         layout.create_install_directory(spec)
 
@@ -227,12 +214,9 @@ def test_find(temporary_store, config, mock_packages):
         assert found_specs[name].eq_dag(spec)
 
 
-def test_yaml_directory_layout_build_path(tmpdir, config):
+def test_yaml_directory_layout_build_path(tmpdir, default_mock_concretization):
     """This tests build path method."""
-    spec = Spec('python')
-    spec.concretize()
-
+    spec = default_mock_concretization("python")
     layout = DirectoryLayout(str(tmpdir))
     rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
-    assert layout.build_packages_path(spec) == os.path.join(spec.prefix,
-                                                            rel_path)
+    assert layout.build_packages_path(spec) == os.path.join(spec.prefix, rel_path)

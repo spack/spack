@@ -1,0 +1,40 @@
+From 5dc160c7ae489b8181874dccf7ce3b8089c128f5 Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <chuck.atkins@kitware.com>
+Date: Tue, 24 May 2022 10:57:29 -0400
+Subject: [PATCH] hdf5: Support the API changes in >= 1.13
+
+---
+ src/hdf5_drv/H5FDsilo.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/hdf5_drv/H5FDsilo.c b/src/hdf5_drv/H5FDsilo.c
+index f454045..74594c1 100644
+--- a/src/hdf5_drv/H5FDsilo.c
++++ b/src/hdf5_drv/H5FDsilo.c
+@@ -550,6 +550,12 @@ typedef struct H5FD_class_t {
+ #endif
+ 
+ static const H5FD_class_t H5FD_silo_g = {
++#if HDF5_VERSION_GE(1,13,2) && defined(H5FD_CLASS_VERSION)
++    H5FD_CLASS_VERSION,                         /*version               */
++#endif
++#if HDF5_VERSION_GE(1,13,0)
++    512,                                        /*value                 */
++#endif
+     "silo",				        /*name			*/
+     MAXADDR,				        /*maxaddr		*/
+     H5F_CLOSE_WEAK,				/* fc_degree		*/
+@@ -583,6 +589,10 @@ static const H5FD_class_t H5FD_silo_g = {
+     H5FD_silo_truncate,				/*truncate		*/
+     NULL,                                       /*lock                  */
+     NULL,                                       /*unlock                */
++#if HDF5_VERSION_GE(1,13,0)
++    NULL,                                       /*del                   */
++    NULL,                                       /*ctl                   */
++#endif
+     H5FD_FLMAP_SINGLE				/*fl_map		*/
+ };
+ 
+-- 
+2.36.1
+

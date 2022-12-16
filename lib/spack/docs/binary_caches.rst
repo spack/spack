@@ -50,6 +50,13 @@ build cache files for the "ninja" spec:
 Note that the targeted spec must already be installed. Once you have a build cache,
 you can add it as a mirror, discussed next.
 
+.. warning::
+
+   Spack improved the format used for binary caches in v0.18. The entire v0.18 series
+   will be able to verify and install binary caches both in the new and in the old format.
+   Support for using the old format is expected to end in v0.19, so we advise users to
+   recreate relevant buildcaches using Spack v0.18 or higher.
+
 ---------------------------------------
 Finding or installing build cache files
 ---------------------------------------

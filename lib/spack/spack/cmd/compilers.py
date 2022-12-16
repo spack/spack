@@ -16,8 +16,11 @@ def setup_parser(subparser):
     scopes_metavar = spack.config.scopes_metavar
 
     subparser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
-        help="configuration scope to read/modify")
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        help="configuration scope to read/modify",
+    )
 
 
 def compilers(parser, args):

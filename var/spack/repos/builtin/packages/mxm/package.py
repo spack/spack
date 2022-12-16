@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Mxm(Package):
@@ -11,10 +11,10 @@ class Mxm(Package):
     communication libraries by fully utilizing the underlying networking
     infrastructure provided by Mellanox HCA/switch hardware."""
 
-    homepage = 'https://www.mellanox.com/products/mxm'
+    homepage = "https://www.mellanox.com/products/mxm"
     has_code = False
 
-    version('3.6.3104')
+    version("3.6.3104")
 
     # MXM needs to be added as an external package to SPACK. For this, the
     # config file packages.yaml needs to be adjusted:
@@ -28,5 +28,8 @@ class Mxm(Package):
 
     def install(self, spec, prefix):
         raise InstallError(
-            self.spec.format('{name} is not installable, you need to specify '
-                             'it as an external package in packages.yaml'))
+            self.spec.format(
+                "{name} is not installable, you need to specify "
+                "it as an external package in packages.yaml"
+            )
+        )

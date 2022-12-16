@@ -3,71 +3,81 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Fdb(CMakePackage):
     """FDB (Fields DataBase) is a domain-specific object store developed at
     ECMWF for storing, indexing and retrieving GRIB data."""
 
-    homepage = 'https://github.com/ecmwf/fdb'
-    url = 'https://github.com/ecmwf/fdb/archive/refs/tags/5.7.8.tar.gz'
+    homepage = "https://github.com/ecmwf/fdb"
+    url = "https://github.com/ecmwf/fdb/archive/refs/tags/5.7.8.tar.gz"
+    git = "https://github.com/ecmwf/fdb.git"
 
-    maintainers = ['skosukhin']
+    maintainers = ["skosukhin"]
 
-    version('5.7.8', sha256='6adac23c0d1de54aafb3c663d077b85d0f804724596623b381ff15ea4a835f60')
+    # master version of fdb is subject to frequent changes and is to be used experimentally.
+    version("master", branch="master")
+    version("5.10.8", sha256="6a0db8f98e13c035098dd6ea2d7559f883664cbf9cba8143749539122ac46099")
+    version("5.7.8", sha256="6adac23c0d1de54aafb3c663d077b85d0f804724596623b381ff15ea4a835f60")
 
-    variant('tools', default=True, description='Build the command line tools')
+    variant("tools", default=True, description="Build the command line tools")
     variant(
-        'backends',
+        "backends",
         values=any_combination_of(
             # FDB backend in indexed filesystem with table-of-contents with
             # additional support for Lustre filesystem stripping control:
-            'lustre',
+            "lustre",
             # Backends that will be added later:
             # FDB backend in persistent memory (NVRAM):
             # 'pmem',  # (requires https://github.com/ecmwf/pmem)
             # FDB backend in CEPH object store (using Rados):
             # 'rados'  # (requires eckit with RADOS support)
-        ), description='List of supported backends')
+        ),
+        description="List of supported backends",
+    )
 
-    depends_on('cmake@3.12:', type='build')
-    depends_on('ecbuild@3.4:', type='build')
+    depends_on("cmake@3.12:", type="build")
+    depends_on("ecbuild@3.4:", type="build")
 
-    depends_on('eckit@1.16:')
-    depends_on('eckit+admin', when='+tools')
+    depends_on("eckit@1.16:")
+    depends_on("eckit+admin", when="+tools")
 
-    depends_on('eccodes@2.10:')
-    depends_on('metkit@1.5:+grib')
+    depends_on("eccodes@2.10:")
+    depends_on("eccodes+tools", when="+tools")
 
-    depends_on('lustre', when='backends=lustre')
+    depends_on("metkit@1.5:+grib")
+
+    depends_on("lustre", when="backends=lustre")
 
     # Starting version 1.7.0, metkit installs GribHandle.h to another directory.
     # That is accounted for only starting version 5.8.0:
-    patch('metkit_1.7.0.patch', when='@:5.7.10+tools^metkit@1.7.0:')
+    patch("metkit_1.7.0.patch", when="@:5.7.10+tools^metkit@1.7.0:")
 
     # Download test data before running a test:
-    patch('https://github.com/ecmwf/fdb/commit/86e06b60f9a2d76a389a5f49bedd566d4c2ad2b2.patch?full_index=1',
-          sha256='8b4bf3a473ec86fd4d7672faa7d74292dde443719299f2ba59a2c8501d6f0906',
-          when='@5.7.1:5.7.10+tools')
+    patch(
+        "https://github.com/ecmwf/fdb/commit/86e06b60f9a2d76a389a5f49bedd566d4c2ad2b2.patch?full_index=1",
+        sha256="8b4bf3a473ec86fd4d7672faa7d74292dde443719299f2ba59a2c8501d6f0906",
+        when="@5.7.1:5.7.10+tools",
+    )
 
     def cmake_args(self):
-        enable_build_tools = '+tools' in self.spec
+        enable_build_tools = "+tools" in self.spec
 
         args = [
-            self.define('ENABLE_FDB_BUILD_TOOLS', enable_build_tools),
-            self.define('ENABLE_BUILD_TOOLS', enable_build_tools),
+            self.define("ENABLE_FDB_BUILD_TOOLS", enable_build_tools),
+            self.define("ENABLE_BUILD_TOOLS", enable_build_tools),
             # We cannot disable the FDB backend in indexed filesystem with
             # table-of-contents because some default test programs and tools
             # cannot be built without it:
-            self.define('ENABLE_TOCFDB', True),
-            self.define('ENABLE_LUSTRE', 'backends=lustre' in self.spec),
-            self.define('ENABLE_PMEMFDB', False),
-            self.define('ENABLE_RADOSFDB', False),
+            self.define("ENABLE_TOCFDB", True),
+            self.define("ENABLE_LUSTRE", "backends=lustre" in self.spec),
+            self.define("ENABLE_PMEMFDB", False),
+            self.define("ENABLE_RADOSFDB", False),
             # The tests download additional data (~10MB):
-            self.define('ENABLE_TESTS', self.run_tests),
+            self.define("ENABLE_TESTS", self.run_tests),
             # We do not need any experimental features:
-            self.define('ENABLE_EXPERIMENTAL', False),
-            self.define('ENABLE_SANDBOX', False)
+            self.define("ENABLE_EXPERIMENTAL", False),
+            self.define("ENABLE_SANDBOX", False),
         ]
         return args

@@ -3,55 +3,75 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Geos(CMakePackage):
-    """GEOS (Geometry Engine - Open Source) is a C++ port of the Java
-       Topology Suite (JTS). As such, it aims to contain the complete
-       functionality of JTS in C++. This includes all the OpenGIS
-       Simple Features for SQL spatial predicate functions and spatial
-       operators, as well as specific JTS enhanced topology functions."""
+    """GEOS (Geometry Engine, Open Source).
 
-    homepage = "https://trac.osgeo.org/geos/"
-    url      = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
+    GEOS is a C/C++ library for computational geometry with a focus on algorithms used in
+    geographic information systems (GIS) software. It implements the OGC Simple Features
+    geometry model and provides all the spatial functions in that standard as well as many
+    others. GEOS is a core dependency of PostGIS, QGIS, GDAL, and Shapely.
+    """
 
-    maintainers = ['adamjstewart']
+    homepage = "https://libgeos.org/"
+    url = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
+    git = "https://github.com/libgeos/geos.git"
 
-    version('3.9.1', sha256='7e630507dcac9dc07565d249a26f06a15c9f5b0c52dd29129a0e3d381d7e382a')
-    version('3.8.1', sha256='4258af4308deb9dbb5047379026b4cd9838513627cb943a44e16c40e42ae17f7')
-    version('3.7.2', sha256='2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707')
-    version('3.6.2', sha256='045a13df84d605a866602f6020fc6cbf8bf4c42fb50de237a08926e1d7d7652a')
-    version('3.6.1', sha256='4a2e4e3a7a09a7cfda3211d0f4a235d9fd3176ddf64bd8db14b4ead266189fc5')
-    version('3.6.0', sha256='1fe7644f3240c8422b0143830ff142e44e8b01333c12f67681ccaab92142f2ea')
-    version('3.5.1', sha256='e6bb0a7ba0e142b1e952fae9d946b2b532fa05a5c384e458f7cb8990e1fcac32')
-    version('3.5.0', sha256='49982b23bcfa64a53333dab136b82e25354edeb806e5a2e2f5b8aa98b1d0ae02')
-    version('3.4.3', sha256='cfbf68079117c1c2b76411636444ff41d73c31093c4cab9dcc9a8c1bbe7e3897')
-    version('3.4.2', sha256='15e8bfdf7e29087a957b56ac543ea9a80321481cef4d4f63a7b268953ad26c53')
-    version('3.4.1', sha256='d07ac375f3edd12425d6ce5a96db9739d5ff358cbdf60c6804f7a9e565af8ff2')
-    version('3.4.0', sha256='3b2106d9baeede39d70e22672598d40cb63ee901f54436c774b250726d7bbdd5')
-    version('3.3.9', sha256='3e2156165d593f3e85df9ac223170b2c11de3cb4697e4c7a761c3ffbf04fe0ee')
-    version('3.3.8', sha256='ebecd4d1a71bcc28e5e883296cd8c52a80d5596335e74728f320989734fa503b')
-    version('3.3.7', sha256='fd01c21b54a3c48cac3e7885f26d4ca10ea9944238776b8ce03489e5e45c592b')
-    version('3.3.6', sha256='7ee6c1da9a1b87a3e29209e7cddbf19d36f9689d8e44fec2c9bcf6a1b1be3898')
-    version('3.3.5', sha256='3b513fbe2d155364d61e76d9c250d6d8e75b5166783a233596c744373cb5874f')
-    version('3.3.4', sha256='cd5400aa5f3fe32246dfed5d238c5017e1808162c865c016480b3e6c07271904')
-    version('3.3.3', sha256='dfcf4bd70ab212a5b7bad21d01b84748f101a545092b56dafdc3882ef3bddec9')
+    maintainers = ["adamjstewart"]
 
-    depends_on('cmake@3.8:', type='build')
-    depends_on('ninja', type='build')
+    version("3.11.1", sha256="6d0eb3cfa9f92d947731cc75f1750356b3bdfc07ea020553daf6af1c768e0be2")
+    version("3.11.0", sha256="79ab8cabf4aa8604d161557b52e3e4d84575acdc0d08cb09ab3f7aaefa4d858a")
+    version("3.10.4", sha256="d6fc11bcfd265cbf2714199174e4c3392d657551e5fd84c74c07c863b29357e3")
+    version("3.10.3", sha256="3c141b07d61958a758345d5f54e3c735834b2f4303edb9f67fb26914f0d44770")
+    version("3.10.2", sha256="50bbc599ac386b4c2b3962dcc411f0040a61f204aaef4eba7225ecdd0cf45715")
+    version("3.10.1", sha256="a8148eec9636814c8ab0f8f5266ce6f9b914ed65b0d083fc43bb0bbb01f83648")
+    version("3.10.0", sha256="097d70e3c8f688e59633ceb8d38ad5c9b0d7ead5729adeb925dbc489437abe13")
+    version("3.9.4", sha256="70dff2530d8cd2dfaeeb91a5014bd17afb1baee8f0e3eb18e44d5b4dbea47b14")
+    version("3.9.3", sha256="f8b2314e311456f7a449144efb5e3188c2a28774752bc50fc882a3cd5c89ee35")
+    version("3.9.2", sha256="44a5a9be21d7d473436bf621c2ddcc3cf5a8bbe3c786e13229618a3b9d861297")
+    version("3.9.1", sha256="7e630507dcac9dc07565d249a26f06a15c9f5b0c52dd29129a0e3d381d7e382a")
+    version("3.8.1", sha256="4258af4308deb9dbb5047379026b4cd9838513627cb943a44e16c40e42ae17f7")
+    version("3.7.2", sha256="2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707")
+    version("3.6.2", sha256="045a13df84d605a866602f6020fc6cbf8bf4c42fb50de237a08926e1d7d7652a")
+    version("3.6.1", sha256="4a2e4e3a7a09a7cfda3211d0f4a235d9fd3176ddf64bd8db14b4ead266189fc5")
+    version("3.6.0", sha256="1fe7644f3240c8422b0143830ff142e44e8b01333c12f67681ccaab92142f2ea")
+    version("3.5.1", sha256="e6bb0a7ba0e142b1e952fae9d946b2b532fa05a5c384e458f7cb8990e1fcac32")
+    version("3.5.0", sha256="49982b23bcfa64a53333dab136b82e25354edeb806e5a2e2f5b8aa98b1d0ae02")
+    version("3.4.3", sha256="cfbf68079117c1c2b76411636444ff41d73c31093c4cab9dcc9a8c1bbe7e3897")
+    version("3.4.2", sha256="15e8bfdf7e29087a957b56ac543ea9a80321481cef4d4f63a7b268953ad26c53")
+    version("3.4.1", sha256="d07ac375f3edd12425d6ce5a96db9739d5ff358cbdf60c6804f7a9e565af8ff2")
+    version("3.4.0", sha256="3b2106d9baeede39d70e22672598d40cb63ee901f54436c774b250726d7bbdd5")
+    version("3.3.9", sha256="3e2156165d593f3e85df9ac223170b2c11de3cb4697e4c7a761c3ffbf04fe0ee")
+    version("3.3.8", sha256="ebecd4d1a71bcc28e5e883296cd8c52a80d5596335e74728f320989734fa503b")
+    version("3.3.7", sha256="fd01c21b54a3c48cac3e7885f26d4ca10ea9944238776b8ce03489e5e45c592b")
+    version("3.3.6", sha256="7ee6c1da9a1b87a3e29209e7cddbf19d36f9689d8e44fec2c9bcf6a1b1be3898")
+    version("3.3.5", sha256="3b513fbe2d155364d61e76d9c250d6d8e75b5166783a233596c744373cb5874f")
+    version("3.3.4", sha256="cd5400aa5f3fe32246dfed5d238c5017e1808162c865c016480b3e6c07271904")
+    version("3.3.3", sha256="dfcf4bd70ab212a5b7bad21d01b84748f101a545092b56dafdc3882ef3bddec9")
 
-    generator = 'Ninja'
+    depends_on("cmake@3.13:", when="@3.10:", type="build")
+    depends_on("cmake@3.8:", type="build")
+    depends_on("ninja", type="build")
 
-    patch('https://github.com/libgeos/geos/pull/461.patch?full_index=1',
-          sha256='ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35',
-          when='@3.8:')
+    generator = "Ninja"
+
+    patch(
+        "https://github.com/libgeos/geos/pull/461.patch?full_index=1",
+        sha256="ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35",
+        when="@3.8:3.9",
+    )
+
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.join("geos-config"))
 
     def cmake_args(self):
         args = []
 
         # https://github.com/libgeos/geos/issues/460
-        if '%intel' in self.spec:
-            args.append(self.define('BUILD_ASTYLE', False))
+        if "%intel" in self.spec:
+            args.append(self.define("BUILD_ASTYLE", False))
 
         return args

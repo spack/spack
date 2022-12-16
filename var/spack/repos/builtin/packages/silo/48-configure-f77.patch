@@ -1,0 +1,12 @@
+diff --git a/configure.ac b/configure.ac
+index 94e2a8a..fd7fbad 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -578,6 +578,7 @@ AC_PROG_CC
+ AC_PROG_CPP
+ if test -n "$FORTRAN"; then
+     AC_PROG_FC
++    AC_PROG_F77
+     AC_FC_LIBRARY_LDFLAGS
+     AC_FC_WRAPPERS
+ fi

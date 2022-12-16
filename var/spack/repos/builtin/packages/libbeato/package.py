@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libbeato(AutotoolsPackage):
@@ -12,6 +12,6 @@ class Libbeato(AutotoolsPackage):
     from UCSC's Genome Browser Group."""
 
     homepage = "https://github.com/CRG-Barcelona/libbeato"
-    git      = "https://github.com/CRG-Barcelona/libbeato.git"
+    git = "https://github.com/CRG-Barcelona/libbeato.git"
 
-    version('master', branch='master')
+    version("master", branch="master")

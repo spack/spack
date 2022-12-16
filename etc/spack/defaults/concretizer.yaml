@@ -14,7 +14,7 @@ concretizer:
   # concretizing specs. If `true`, we'll try to use as many installs/binaries
   # as possible, rather than building. If `false`, we'll always give you a fresh
   # concretization.
-  reuse: false
+  reuse: true
   # Options that tune which targets are considered for concretization. The
   # concretization process is very sensitive to the number targets, and the time
   # needed to reach a solution increases noticeably with the number of targets
@@ -27,4 +27,10 @@ concretizer:
     # If "false" allow targets that are incompatible with the current host (for
     # instance concretize with target "icelake" while running on "haswell").
     # If "true" only allow targets that are compatible with the host.
-    host_compatible: false
+    host_compatible: true
+  # When "true" concretize root specs of environments together, so that each unique
+  # package in an environment corresponds to one concrete spec. This ensures
+  # environments can always be activated. When "false" perform concretization separately
+  # on each root spec, allowing different versions and variants of the same package in
+  # an environment.
+  unify: true

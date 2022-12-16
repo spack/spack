@@ -14,16 +14,18 @@ import spack.paths
 from spack.main import get_version, main
 
 pytestmark = pytest.mark.skipif(
-    sys.platform == 'win32',
-    reason="Test functionality supported but tests are failing on Win")
+    sys.platform == "win32", reason="Test functionality supported but tests are failing on Win"
+)
 
 
 def test_version_git_nonsense_output(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:
-        f.write("""#!/bin/sh
+        f.write(
+            """#!/bin/sh
 echo --|not a hash|----
-""")
+"""
+        )
     fs.set_executable(git)
 
     os.environ["PATH"] = str(tmpdir)
@@ -33,10 +35,12 @@ echo --|not a hash|----
 def test_version_git_fails(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:
-        f.write("""#!/bin/sh
+        f.write(
+            """#!/bin/sh
 echo 26552533be04e83e66be2c28e0eb5011cb54e8fa
 exit 1
-""")
+"""
+        )
     fs.set_executable(git)
 
     os.environ["PATH"] = str(tmpdir)
@@ -45,11 +49,15 @@ exit 1
 
 def test_git_sha_output(tmpdir, working_env):
     git = str(tmpdir.join("git"))
-    sha = '26552533be04e83e66be2c28e0eb5011cb54e8fa'
+    sha = "26552533be04e83e66be2c28e0eb5011cb54e8fa"
     with open(git, "w") as f:
-        f.write("""#!/bin/sh
+        f.write(
+            """#!/bin/sh
 echo {0}
-""".format(sha))
+""".format(
+                sha
+            )
+        )
     fs.set_executable(git)
 
     os.environ["PATH"] = str(tmpdir)
@@ -76,9 +84,11 @@ def test_main_calls_get_version(tmpdir, capsys, working_env):
 def test_get_version_bad_git(tmpdir, working_env):
     bad_git = str(tmpdir.join("git"))
     with open(bad_git, "w") as f:
-        f.write("""#!/bin/sh
+        f.write(
+            """#!/bin/sh
 exit 1
-""")
+"""
+        )
     fs.set_executable(bad_git)
 
     os.environ["PATH"] = str(tmpdir)

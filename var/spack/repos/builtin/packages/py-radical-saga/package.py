@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyRadicalSaga(PythonPackage):
@@ -12,21 +12,29 @@ class PyRadicalSaga(PythonPackage):
     as a light-weight access layer for distributed computing infrastructures,
     providing adaptors for different middleware systems and services."""
 
-    homepage = 'https://radical-cybertools.github.io'
-    git      = 'https://github.com/radical-cybertools/radical.saga.git'
-    pypi     = 'radical.saga/radical.saga-1.11.1.tar.gz'
+    homepage = "https://radical-cybertools.github.io"
+    git = "https://github.com/radical-cybertools/radical.saga.git"
+    pypi = "radical.saga/radical.saga-1.16.0.tar.gz"
 
-    maintainers = ['andre-merzky']
+    maintainers = ["andre-merzky"]
 
-    version('develop', branch='devel')
-    version('1.11.1',  sha256='edb1def63fadd192a4be4f508e9e65669745843e158ce27a965bf2f43d18b84d')
-    version('1.8.0',   sha256='6edf94897102a08dcb994f7f107a0e25e7f546a0a9488af3f8b92ceeeaaf58a6')
-    version('1.6.10',  sha256='8fe7e281e9f81234f34f5c7c7986871761e9e37230d2a874c65d18daeccd976a')
-    version('1.6.8',   sha256='d5e9f95a027087fb637cef065ff3af848e5902e403360189e36c9aa7c3f6f29b')
+    version("develop", branch="devel")
+    version("1.16.0", sha256="d269e2e7043f05e8f1d45ca3d50be973857150d7928d53bedd6844f39b224786")
+    version("1.14.0", sha256="337d8778bf392fd54845b1876de903c4c12f6fa938ef16220e1847561b66731a")
+    version("1.13.0", sha256="90d8e875f48402deab87314ea5c08d591264fb576c461bd9663ac611fc2e547e")
+    version("1.12.0", sha256="769c83bab95c0e3ef970da0fa6cb30878d7a31216ff8b542e894686357f7cb5b")
+    version("1.11.1", sha256="edb1def63fadd192a4be4f508e9e65669745843e158ce27a965bf2f43d18b84d")
+    version("1.8.0", sha256="6edf94897102a08dcb994f7f107a0e25e7f546a0a9488af3f8b92ceeeaaf58a6")
+    version("1.6.10", sha256="8fe7e281e9f81234f34f5c7c7986871761e9e37230d2a874c65d18daeccd976a")
+    version("1.6.8", sha256="d5e9f95a027087fb637cef065ff3af848e5902e403360189e36c9aa7c3f6f29b")
 
-    depends_on('py-radical-utils',   type=('build', 'run'))
+    depends_on("py-radical-utils", type=("build", "run"))
 
-    depends_on('python@3.6:',        type=('build', 'run'))
-    depends_on('py-apache-libcloud', type=('build', 'run'))
-    depends_on('py-parse',           type=('build', 'run'))
-    depends_on('py-setuptools',      type='build')
+    depends_on("py-radical-utils@1.12:", type=("build", "run"), when="@1.12:")
+
+    depends_on("py-radical-utils@:1.11", type=("build", "run"), when="@:1.11")
+
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-apache-libcloud", type=("build", "run"))
+    depends_on("py-parse", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

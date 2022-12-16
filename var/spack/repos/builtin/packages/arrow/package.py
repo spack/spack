@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
-from spack.pkg.builtin.boost import Boost
+
+from spack.package import *
 
 
 class Arrow(CMakePackage, CudaPackage):
@@ -13,85 +13,147 @@ class Arrow(CMakePackage, CudaPackage):
     """
 
     homepage = "https://arrow.apache.org"
-    url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
+    url = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
-    version('7.0.0',  sha256='57e13c62f27b710e1de54fd30faed612aefa22aa41fa2c0c3bacd204dd18a8f3')
-    version('4.0.1',  sha256='79d3e807df4a179cfab1e7a1ab5f79d95f7b72ac2c33aba030febd125d77eb3b')
-    version('3.0.0',  sha256='fc461c4f0a60e7470a7c58b28e9344aa8fb0be5cc982e9658970217e084c3a82')
-    version('0.17.1', sha256='ecb6da20f9288c0ca31f9b457ffdd460198765a8af27c1cac4b1382a8d130f86')
-    version('0.15.1', sha256='ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593')
-    version('0.15.0', sha256='d1072d8c4bf9166949f4b722a89350a88b7c8912f51642a5d52283448acdfd58')
-    version('0.14.1', sha256='69d9de9ec60a3080543b28a5334dbaf892ca34235b8bd8f8c1c01a33253926c1')
-    version('0.12.1', sha256='aae68622edc3dcadaa16b2d25ae3f00290d5233100321993427b03bcf5b1dd3b')
-    version('0.11.0', sha256='0ac629a7775d86108e403eb66d9f1a3d3bdd6b3a497a86228aa4e8143364b7cc')
-    version('0.9.0', sha256='65f89a3910b6df02ac71e4d4283db9b02c5b3f1e627346c7b6a5982ae994af91')
-    version('0.8.0', sha256='c61a60c298c30546fc0b418a35be66ef330fb81b06c49928acca7f1a34671d54')
+    version("9.0.0", sha256="bb187b4b0af8dcc027fffed3700a7b891c9f76c9b63ad8925b4afb8257a2bb1b")
+    version("8.0.0", sha256="19ece12de48e51ce4287d2dee00dc358fbc5ff02f41629d16076f77b8579e272")
+    version("7.0.0", sha256="57e13c62f27b710e1de54fd30faed612aefa22aa41fa2c0c3bacd204dd18a8f3")
+    version("4.0.1", sha256="79d3e807df4a179cfab1e7a1ab5f79d95f7b72ac2c33aba030febd125d77eb3b")
+    version("3.0.0", sha256="fc461c4f0a60e7470a7c58b28e9344aa8fb0be5cc982e9658970217e084c3a82")
+    version("0.17.1", sha256="ecb6da20f9288c0ca31f9b457ffdd460198765a8af27c1cac4b1382a8d130f86")
+    version("0.15.1", sha256="ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593")
+    version("0.15.0", sha256="d1072d8c4bf9166949f4b722a89350a88b7c8912f51642a5d52283448acdfd58")
+    version("0.14.1", sha256="69d9de9ec60a3080543b28a5334dbaf892ca34235b8bd8f8c1c01a33253926c1")
+    version("0.12.1", sha256="aae68622edc3dcadaa16b2d25ae3f00290d5233100321993427b03bcf5b1dd3b")
+    version("0.11.0", sha256="0ac629a7775d86108e403eb66d9f1a3d3bdd6b3a497a86228aa4e8143364b7cc")
+    version("0.9.0", sha256="65f89a3910b6df02ac71e4d4283db9b02c5b3f1e627346c7b6a5982ae994af91")
+    version("0.8.0", sha256="c61a60c298c30546fc0b418a35be66ef330fb81b06c49928acca7f1a34671d54")
 
-    depends_on('boost@1.60:')
+    depends_on("boost@1.60: +filesystem +system")
+    depends_on("cmake@3.2.0:", type="build")
+    depends_on("flatbuffers")
+    depends_on("llvm@:11 +clang", when="+gandiva @:3", type="build")
+    depends_on("llvm@:12 +clang", when="+gandiva @:4", type="build")
+    depends_on("llvm@:13 +clang", when="+gandiva @:7", type="build")
+    depends_on("llvm@:14 +clang", when="+gandiva @8:", type="build")
+    depends_on("lz4", when="+lz4")
+    depends_on("ninja", type="build")
+    depends_on("openssl", when="+gandiva @6.0.0:")
+    depends_on("openssl", when="@4.0.0:")
+    depends_on("orc", when="+orc")
+    depends_on("protobuf", when="+gandiva")
+    depends_on("py-numpy", when="+python")
+    depends_on("python", when="+python")
+    depends_on("rapidjson")
+    depends_on("re2+shared", when="+compute")
+    depends_on("re2+shared", when="+gandiva")
+    depends_on("re2+shared", when="+python")
+    depends_on("snappy~shared", when="+snappy @9:")
+    depends_on("snappy~shared", when="@8:")
+    depends_on("thrift+pic", when="+parquet")
+    depends_on("utf8proc@2.7.0: +shared", when="+compute")
+    depends_on("utf8proc@2.7.0: +shared", when="+gandiva")
+    depends_on("utf8proc@2.7.0: +shared", when="+python")
+    depends_on("xsimd@8.1.0:", when="@9.0.0:")
+    depends_on("zlib+pic", when="+zlib @9:")
+    depends_on("zlib+pic", when="@:8")
+    depends_on("zstd", when="+zstd @9:")
+    depends_on("zstd", when="@:8")
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
-    depends_on('cmake@3.2.0:', type='build')
-    depends_on('flatbuffers build_type=Release')  # only Release contains flatc
-    depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python')
-    depends_on('rapidjson')
-    depends_on('snappy~shared')
-    depends_on('zlib+pic')
-    depends_on('zstd')
-    depends_on('thrift+pic', when='+parquet')
-    depends_on('orc', when='+orc')
+    variant("brotli", default=False, description="Build support for Brotli compression")
+    variant(
+        "build_type",
+        default="Release",
+        description="CMake build type",
+        values=("Debug", "FastDebug", "Release"),
+    )
+    variant(
+        "compute", default=False, description="Computational kernel functions and other support"
+    )
+    variant("gandiva", default=False, description="Build Gandiva support")
+    variant(
+        "glog",
+        default=False,
+        description="Build libraries with glog support for pluggable logging",
+    )
+    variant(
+        "hdfs",
+        default=False,
+        description="Integration with libhdfs for accessing the Hadoop Filesystem",
+    )
+    variant("ipc", default=True, description="Build the Arrow IPC extensions")
+    variant("jemalloc", default=False, description="Build the Arrow jemalloc-based allocator")
+    variant("lz4", default=False, description="Build support for lz4 compression")
+    variant("orc", default=False, description="Build integration with Apache ORC")
+    variant("parquet", default=False, description="Build Parquet interface")
+    variant("python", default=False, description="Build Python interface")
+    variant("shared", default=True, description="Build shared libs")
+    variant("snappy", default=False, description="Build support for Snappy compression")
+    variant("tensorflow", default=False, description="Build Arrow with TensorFlow support enabled")
+    variant("zlib", default=False, description="Build support for zlib (gzip) compression")
+    variant("zstd", default=False, description="Build support for ZSTD compression")
 
-    variant('build_type', default='Release',
-            description='CMake build type',
-            values=('Debug', 'FastDebug', 'Release'))
-    variant('python', default=False, description='Build Python interface')
-    variant('parquet', default=False, description='Build Parquet interface')
-    variant('orc', default=False, description='Build ORC support')
-
-    root_cmakelists_dir = 'cpp'
+    root_cmakelists_dir = "cpp"
 
     def patch(self):
-        """Prevent `-isystem /usr/include` from appearing, since this confuses gcc.
-        """
-        filter_file(r'(include_directories\()SYSTEM ',
-                    r'\1',
-                    'cpp/cmake_modules/ThirdpartyToolchain.cmake')
+        """Prevent `-isystem /usr/include` from appearing, since this confuses gcc."""
+        filter_file(
+            r"(include_directories\()SYSTEM ", r"\1", "cpp/cmake_modules/ThirdpartyToolchain.cmake"
+        )
+
+        filter_file(
+            r'set\(ARROW_LLVM_VERSIONS "10" "9" "8" "7"\)',
+            'set(ARROW_LLVM_VERSIONS "11" "10" "9" "8" "7")',
+            "cpp/CMakeLists.txt",
+            when="@:2.0.0",
+        )
+
+        filter_file(
+            r"#include <llvm/Support/DynamicLibrary\.h>",
+            r"#include <llvm/Support/DynamicLibrary.h>" + "\n" + r"#include <llvm/Support/Host.h>",
+            "cpp/src/gandiva/engine.cc",
+            when="@2.0.0",
+        )
 
     def cmake_args(self):
-        args = [
-            "-DARROW_USE_SSE=ON",
-            "-DARROW_BUILD_SHARED=ON",
-            "-DARROW_BUILD_STATIC=OFF",
-            "-DARROW_BUILD_TESTS=OFF",
-            "-DARROW_WITH_BROTLI=OFF",
-            "-DARROW_WITH_LZ4=OFF",
-        ]
+        args = ["-DARROW_DEPENDENCY_SOURCE=SYSTEM", "-DARROW_NO_DEPRECATED_API=ON"]
 
-        if self.spec.satisfies('+cuda'):
-            args.append('-DARROW_CUDA:BOOL=ON')
+        if self.spec.satisfies("+shared"):
+            args.append(self.define("BUILD_SHARED", "ON"))
         else:
-            args.append('-DARROW_CUDA:BOOL=OFF')
+            args.append(self.define("BUILD_SHARED", "OFF"))
+            args.append(self.define("BUILD_STATIC", "ON"))
 
-        if self.spec.satisfies('+python'):
-            args.append("-DARROW_PYTHON:BOOL=ON")
-        else:
-            args.append('-DARROW_PYTHON:BOOL=OFF')
+        if self.spec.satisfies("@:0.11.99"):
+            # ARROW_USE_SSE was removed in 0.12
+            # see https://issues.apache.org/jira/browse/ARROW-3844
+            args.append(self.define("ARROW_USE_SSE", "ON"))
 
-        if self.spec.satisfies('+parquet'):
-            args.append("-DARROW_PARQUET:BOOL=ON")
-        else:
-            args.append("-DARROW_PARQUET:BOOL=OFF")
+        args.append(self.define_from_variant("ARROW_COMPUTE", "compute"))
+        args.append(self.define_from_variant("ARROW_CUDA", "cuda"))
+        args.append(self.define_from_variant("ARROW_GANDIVA", "gandiva"))
+        args.append(self.define_from_variant("ARROW_GLOG", "glog"))
+        args.append(self.define_from_variant("ARROW_HDFS", "hdfs"))
+        args.append(self.define_from_variant("ARROW_IPC", "ipc"))
+        args.append(self.define_from_variant("ARROW_JEMALLOC", "jemalloc"))
+        args.append(self.define_from_variant("ARROW_ORC", "orc"))
+        args.append(self.define_from_variant("ARROW_PARQUET", "parquet"))
+        args.append(self.define_from_variant("ARROW_PYTHON", "python"))
+        args.append(self.define_from_variant("ARROW_TENSORFLOW", "tensorflow"))
+        args.append(self.define_from_variant("ARROW_WITH_BROTLI", "brotli"))
+        args.append(self.define_from_variant("ARROW_WITH_LZ4", "lz4"))
+        args.append(self.define_from_variant("ARROW_WITH_SNAPPY", "snappy"))
+        args.append(self.define_from_variant("ARROW_WITH_ZLIB", "zlib"))
+        args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
-        if self.spec.satisfies('+orc'):
-            args.append('-DARROW_ORC:BOOL=ON')
-        else:
-            args.append('-DARROW_ORC:BOOL=OFF')
+        with when("@:8"):
+            dep_list = ("flatbuffers", "rapidjson", "zlib", "zstd")
 
-        for dep in ('flatbuffers', 'rapidjson', 'snappy', 'zlib', 'zstd'):
-            args.append("-D{0}_HOME={1}".format(dep.upper(),
-                                                self.spec[dep].prefix))
-        args.append("-DZLIB_LIBRARIES={0}".format(self.spec['zlib'].libs))
+            if self.spec.satisfies("+snappy"):
+                dep_list.append("snappy")
+
+            for dep in dep_list:
+                args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
+            args.append("-DZLIB_LIBRARIES={0}".format(self.spec["zlib"].libs))
+
         return args

@@ -2,42 +2,57 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 
 from llnl.util.filesystem import working_dir
 
-from spack.directives import depends_on
-from spack.package import PackageBase, run_after
+import spack.builder
+import spack.package_base
+from spack.directives import build_system, depends_on
+
+from ._checks import BaseBuilder, execute_build_time_tests
 
 
-class QMakePackage(PackageBase):
+class QMakePackage(spack.package_base.PackageBase):
     """Specialized class for packages built using qmake.
 
     For more information on the qmake build system, see:
     http://doc.qt.io/qt-5/qmake-manual.html
-
-    This class provides three phases that can be overridden:
-
-    1. :py:meth:`~.QMakePackage.qmake`
-    2. :py:meth:`~.QMakePackage.build`
-    3. :py:meth:`~.QMakePackage.install`
-
-    They all have sensible defaults and for many packages the only thing
-    necessary will be to override :py:meth:`~.QMakePackage.qmake_args`.
     """
-    #: Phases of a qmake package
-    phases = ['qmake', 'build', 'install']
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
-    build_system_class = 'QMakePackage'
+    build_system_class = "QMakePackage"
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "qmake"
+
+    build_system("qmake")
+
+    depends_on("qt", type="build", when="build_system=qmake")
+
+
+@spack.builder.builder("qmake")
+class QMakeBuilder(BaseBuilder):
+    """The qmake builder provides three phases that can be overridden:
+
+    1. :py:meth:`~.QMakeBuilder.qmake`
+    2. :py:meth:`~.QMakeBuilder.build`
+    3. :py:meth:`~.QMakeBuilder.install`
+
+    They all have sensible defaults and for many packages the only thing
+    necessary will be to override :py:meth:`~.QMakeBuilder.qmake_args`.
+    """
+
+    phases = ("qmake", "build", "install")
+
+    #: Names associated with package methods in the old build-system format
+    legacy_methods = ("qmake_args", "check")
+
+    #: Names associated with package attributes in the old build-system format
+    legacy_attributes = ("build_directory", "build_time_test_callbacks")
 
     #: Callback names for build-time test
-    build_time_test_callbacks = ['check']
-
-    depends_on('qt', type='build')
+    build_time_test_callbacks = ["check"]
 
     @property
     def build_directory(self):
@@ -45,39 +60,27 @@ class QMakePackage(PackageBase):
         return self.stage.source_path
 
     def qmake_args(self):
-        """Produces a list containing all the arguments that must be passed to
-        qmake
-        """
+        """List of arguments passed to qmake."""
         return []
 
-    def qmake(self, spec, prefix):
+    def qmake(self, pkg, spec, prefix):
         """Run ``qmake`` to configure the project and generate a Makefile."""
-
         with working_dir(self.build_directory):
-            inspect.getmodule(self).qmake(*self.qmake_args())
+            inspect.getmodule(self.pkg).qmake(*self.qmake_args())
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         """Make the build targets"""
-
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make()
+            inspect.getmodule(self.pkg).make()
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         """Make the install targets"""
-
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make('install')
-
-    # Tests
+            inspect.getmodule(self.pkg).make("install")
 
     def check(self):
-        """Searches the Makefile for a ``check:`` target and runs it if found.
-        """
-
+        """Search the Makefile for a ``check:`` target and runs it if found."""
         with working_dir(self.build_directory):
-            self._if_make_target_execute('check')
+            self._if_make_target_execute("check")
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
-
-    # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    spack.builder.run_after("build")(execute_build_time_tests)

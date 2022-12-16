@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from typing import Callable, Dict  # novm
+from typing import Callable, Dict
 
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
@@ -13,11 +13,11 @@ section = "user environment"
 level = "short"
 
 
-_subcommands = {}  # type: Dict[str, Callable]
+_subcommands: Dict[str, Callable] = {}
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="module_command")
     spack.cmd.modules.lmod.add_command(sp, _subcommands)
     spack.cmd.modules.tcl.add_command(sp, _subcommands)
 

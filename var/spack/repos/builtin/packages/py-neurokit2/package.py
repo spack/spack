@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyNeurokit2(PythonPackage):
@@ -17,16 +17,18 @@ class PyNeurokit2(PythonPackage):
     """
 
     homepage = "https://github.com/neuropsychology/NeuroKit"
-    pypi     = "neurokit2/neurokit2-0.1.2.tar.gz"
+    pypi = "neurokit2/neurokit2-0.1.2.tar.gz"
 
-    version('0.1.5', sha256='4df48c0ce8971e32e32f36c2263986b00fd83da5eadaaa98e4bb5ab6bcd930e5')
-    version('0.1.4.1', sha256='226bb04bb369d8bb87d99831f0a93cd8d0ed96fdc500f63de0b3550082876f6e')
-    version('0.1.2', sha256='5ef40037c2d7078ecb713ab0b77b850267babf133856b59595de9613f29787bc')
+    version("0.2.2", sha256="0c33b060f9ac5ec8a6a0e23261fdbc36a98cb48e06142a1653fd12698806a952")
+    version("0.1.5", sha256="4df48c0ce8971e32e32f36c2263986b00fd83da5eadaaa98e4bb5ab6bcd930e5")
+    version("0.1.4.1", sha256="226bb04bb369d8bb87d99831f0a93cd8d0ed96fdc500f63de0b3550082876f6e")
+    version("0.1.2", sha256="5ef40037c2d7078ecb713ab0b77b850267babf133856b59595de9613f29787bc")
 
-    depends_on('py-setuptools@40.6.0:', type='build')
-    depends_on('py-pytest-runner', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-scikit-learn', type=('build', 'run'))
-    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on("py-setuptools@40.6.0:", type="build")
+    depends_on("py-pytest-runner", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-scikit-learn@1:", when="@0.2:", type=("build", "run"))
+    depends_on("py-scikit-learn", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))

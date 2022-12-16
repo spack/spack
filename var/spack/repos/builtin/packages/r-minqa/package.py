@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMinqa(RPackage):
@@ -14,7 +14,8 @@ class RMinqa(RPackage):
 
     cran = "minqa"
 
-    version('1.2.4', sha256='cfa193a4a9c55cb08f3faf4ab09c11b70412523767f19894e4eafc6e94cccd0c')
+    version("1.2.5", sha256="9b83562390990d04b2c61b63ac9a7c9ecab0d35c460d232596e3c73bdc89f4be")
+    version("1.2.4", sha256="cfa193a4a9c55cb08f3faf4ab09c11b70412523767f19894e4eafc6e94cccd0c")
 
-    depends_on('r-rcpp@0.9.10:', type=('build', 'run'))
-    depends_on('gmake', type='build')
+    depends_on("r-rcpp@0.9.10:", type=("build", "run"))
+    depends_on("gmake", type="build")

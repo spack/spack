@@ -1,3 +1,89 @@
+[project]
+name="spack"
+description="The spack package manager"
+dependencies=[
+  "clingo",
+  "setuptools",
+  "six",
+  "types-six",
+]
+dynamic = ["version"]
+
+[project.scripts]
+spack = "lib.spack.spack_installable.main:main"
+
+[tool.hatch.version]
+path = "lib/spack/spack/__init__.py"
+
+[project.optional-dependencies]
+dev = [
+  "pip>=21.3",
+  "pytest",
+  "pytest-xdist",
+  "setuptools",
+  "click==8.0.2",
+  'black==21.12b0',
+  "mypy",
+  "isort",
+  "flake8",
+  "vermin",
+]
+ci = [
+  "pytest-cov",
+  "codecov[toml]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "/bin",
+  "/etc",
+  "/lib",
+  "/share",
+  "/var",
+  "CITATION.cff",
+  "COPYRIGHT",
+  "LICENSE-APACHE",
+  "LICENSE-MIT",
+  "NOTICE",
+  "README.md",
+  "SECURITY.md",
+]
+
+[tool.hatch.envs.default]
+features = [
+  "dev",
+]
+
+[tool.hatch.envs.default.scripts]
+spack = "./bin/spack"
+style = "./bin/spack style"
+test = "./bin/spack unit-test"
+
+[tool.hatch.envs.ci]
+features = [
+  "dev",
+  "ci",
+]
+
+[tool.black]
+line-length = 99
+target-version = ['py36', 'py37', 'py38', 'py39', 'py310']
+include = '''
+    \.pyi?$
+'''
+extend-exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | ^lib/spack/external/
+  | ^opt/
+)/
+'''
+
 [tool.isort]
 profile = "black"
 sections = [
@@ -16,8 +102,9 @@ honor_noqa = true
 
 [tool.mypy]
 python_version = 3.7
-files = ['lib/spack/llnl/**/*.py', 'lib/spack/spack/**/*.py']
+files = ['lib/spack/llnl/**/*.py', 'lib/spack/spack/**/*.py', './var/spack/repos/builtin/packages/*/package.py']
 mypy_path = ['bin', 'lib/spack', 'lib/spack/external', 'var/spack/repos/builtin']
+allow_redefinition = true
 
 # This and a generated import file allows supporting packages
 namespace_packages = true
@@ -36,6 +123,8 @@ ignore_missing_imports = true
   module = 'packages.*'
   ignore_errors = false
   ignore_missing_imports = false
+  # we can't do this here, not a module scope option, in spack style instead
+  # disable_error_code = 'no-redef'
 
   [[tool.mypy.overrides]]
   module = 'llnl.*'
@@ -58,11 +147,21 @@ ignore_missing_imports = true
   module = 'jinja2'
   follow_imports = 'skip'
 
+[tool.pyright]
+useLibraryCodeForTypes = true
+reportMissingImports = true
+reportWildcardImportFromLibrary = false
+include = ['lib/spack']
+ignore = ['lib/spack/external']
+extraPaths = ['lib/spack', 'lib/spack/external']
+
+
 [tool.coverage.run]
 parallel = true
 concurrency = ["multiprocessing"]
 branch = true
 source = ["bin", "lib"]
+data_file = "./tests-coverage/.coverage"
 omit = [
     'lib/spack/spack/test/*',
     'lib/spack/docs/*',

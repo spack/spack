@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Genesis(AutotoolsPackage, CudaPackage):
@@ -17,7 +17,6 @@ class Genesis(AutotoolsPackage, CudaPackage):
     url = "https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2"
     git = "https://github.com/genesis-release-r-ccs/genesis-2.0.git"
 
-    version("master", branch="master")
     version(
         "1.6.0",
         sha256="d0185a5464ed4231f6ee81f6dcaa15935a99fa30b96658d2b7c25d7fbc5b38e9",
@@ -63,7 +62,6 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     depends_on("mpi", type=("build", "run"))
     depends_on("lapack")
-    depends_on("python@2.6.9:2.8.0", type=("build", "run"), when="@master")
 
     patch("fj_compiler.patch", when="@master %fj")
     patch("fj_compiler_1.5.1.patch", when="@1.5.1 %fj")
@@ -108,34 +106,10 @@ class Genesis(AutotoolsPackage, CudaPackage):
     @property
     def cached_tests_work_dir(self):
         """The working directory for cached test sources."""
-        return join_path(self.test_suite.current_test_cache_dir,
-                         "tests")
+        return join_path(self.test_suite.current_test_cache_dir, "tests")
 
     @run_after("install")
     def cache_test_sources(self):
         """Copy test files after the package is installed for test()."""
         if self.spec.satisfies("@master"):
             self.cache_extra_test_sources(["tests"])
-
-    def test(self):
-        """Perform stand-alone/smoke tests using installed package."""
-        if not self.spec.satisfies("@master"):
-            print('Skipping: Tests are only available for the master branch')
-            return
-
-        test_name = join_path(
-            self.cached_tests_work_dir, "regression_test", "test.py"
-        )
-        bin_name = join_path(self.prefix.bin, "spdyn")
-        opts = [
-            test_name,
-            self.spec["mpi"].prefix.bin.mpirun + " -np 8 " + bin_name,
-        ]
-        env["OMP_NUM_THREADS"] = "1"
-        self.run_test(
-            self.spec["python"].command.path,
-            options=opts,
-            expected="Passed  53 / 53",
-            purpose="test: running regression test",
-            work_dir=self.cached_tests_work_dir
-        )

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Xgc(AutotoolsPackage, XorgPackage):
@@ -13,12 +13,12 @@ class Xgc(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xgc"
     xorg_mirror_path = "app/xgc-1.0.5.tar.gz"
 
-    version('1.0.5', sha256='16645fb437699bad2360f36f54f42320e33fce5a0ab9a086f6e0965963205b02')
+    version("1.0.5", sha256="16645fb437699bad2360f36f54f42320e33fce5a0ab9a086f6e0965963205b02")
 
-    depends_on('libxaw')
-    depends_on('libxt')
+    depends_on("libxaw")
+    depends_on("libxt")
 
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("flex", type="build")
+    depends_on("bison", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

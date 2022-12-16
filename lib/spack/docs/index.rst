@@ -63,6 +63,7 @@ or refer to the full manual below.
 
    configuration
    config_yaml
+   bootstrapping
    build_settings
    environments
    containers

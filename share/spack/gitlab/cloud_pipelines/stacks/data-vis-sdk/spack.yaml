@@ -1,8 +1,12 @@
 spack:
   view: false
-  concretization: separately
+
+  concretizer:
+    reuse: false
+    unify: false
 
   config:
+    build_jobs: 32
     install_tree:
       root: /home/software/spack
       padded_length: 512
@@ -12,125 +16,165 @@ spack:
   packages:
     cmake:
       variants: ~ownlibs
-    curl:
-      variants: tls=mbedtls
     mesa:
-      variants: +glx ~osmesa +opengl ~opengles +llvm
-    paraview:
-      variants: +qt
+      require: "@21 +glx +osmesa +opengl ~opengles +llvm swr=auto"
+    libosmesa:
+      require: ^mesa +osmesa
+    libglx:
+      require: ^mesa +glx
     all:
       target: [x86_64]
 
-  # The spec will be gradually expanded to enable all the SDK components.
-  # Currently disabled: ascent, catalyst, visit
-  specs:
-  - matrix:
-    - - ecp-data-vis-sdk
-          +adios2
-          +ascent
-          +cinema
-          +darshan
-          +faodel
-          +hdf5
-          +paraview
-          +pnetcdf
-          +sz
-          +unifyfs
-          +veloc
-          +vtkm
-          +zfp
+  definitions:
+  - paraview_specs:
+    - matrix:
+      - - paraview
+      - - +qt~osmesa # GUI Support w/ GLX Rendering
+        - ~qt~osmesa # GLX Rendering
+        - ~qt+osmesa # OSMesa Rendering
+  - visit_specs:
+    - matrix:
+      - - visit
+      - - +gui~osmesa # GUI Support w/ GLX Rendering
+        - ~gui~osmesa # GLX Rendering
+        - ~gui+osmesa # OSMesa Rendering
+  - sdk_base_spec:
+    - matrix:
+      - - ecp-data-vis-sdk
+            +ascent
+            +adios2
+            +cinema
+            +darshan
+            +faodel
+            +hdf5
+            +pnetcdf
+            +sensei
+            +sz
+            +unifyfs
+            +veloc
+            +vtkm
+            +zfp
+      - - ~cuda ~rocm
+        # Current testing of GPU supported configurations
+        # is provided in the E4S stack
+        # - +cuda ~rocm
+        # - ~cuda +rocm
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/data-vis-sdk" }
+  specs:
+    # Test ParaView builds with different GL backends
+    - matrix:
+      - [$sdk_base_spec]
+      - [$^paraview_specs]
+    # Test ParaView builds with differnt GL backends
+    - matrix:
+      - [$sdk_base_spec]
+      - [$^visit_specs]
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
   gitlab-ci:
-    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
     script:
+      - uname -a || true
+      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - nproc
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
+      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - spack -d ci rebuild
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - spack --color=always --backtrace ci rebuild
+    after_script:
+     - cat /proc/loadavg || true
+
+    match_behavior: first
     mappings:
       - match:
-          - llvm
-          - qt
+        - llvm
+        - qt
+        - paraview
+        - visit
         runner-attributes:
-          tags: [ "spack", "public", "huge", "x86_64" ]
+          tags: [ "spack", "huge", "x86_64" ]
           variables:
             CI_JOB_SIZE: huge
             KUBERNETES_CPU_REQUEST: 11000m
             KUBERNETES_MEMORY_REQUEST: 42G
 
       - match:
-            - ecp-data-vis-sdk
-            - mesa
-            - openblas
-            - paraview
-            - vtk-m
+        - ecp-data-vis-sdk
+        - mesa
+        - openblas
+        - vtk
+        - vtk-m
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64" ]
+          tags: [ "spack", "large", "x86_64" ]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
             KUBERNETES_MEMORY_REQUEST: 12G
 
       - match:
-            - adios2
-            - ascent
-            - binutils
-            - blt
-            - boost
-            - conduit
-            - double-conversion
-            - dray
-            - eigen
-            - faodel
-            - hdf5
-            - mfem
-            - nasm
-            - openmpi
-            - pegtl
-            - py-cinemasci
-            - raja
-            - vtk-h
+        - adios2
+        - ascent
+        - binutils
+        - blt
+        - boost
+        - conduit
+        - double-conversion
+        - dray
+        - eigen
+        - faodel
+        - hdf5
+        - mfem
+        - nasm
+        - openmpi
+        - pegtl
+        - py-cinemasci
+        - raja
+        - vtk-h
         runner-attributes:
-          tags: [ "spack", "public", "medium", "x86_64" ]
+          tags: [ "spack", "medium", "x86_64" ]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
             KUBERNETES_MEMORY_REQUEST: "4G"
 
       - match:
-            - darshan-util
-            - docbook-xml
-            - gdbm
-            - gettext
-            - hwloc
-            - libevent
-            - libmd
-            - libpciaccess
-            - libsigsegv
-            - libunwind
-            - libxml2
-            - libzmq
-            - numactl
-            - openssh
-            - pcre
-            - perl-data-dumper
-            - py-cycler
-            - py-decorator
-            - py-mistune
-            - py-pycparser
-            - py-setuptools
-            - py-wheel
-            - readline
-            - sqlite
-            - tar
-            - util-linux-uuid
-
+        - darshan-util
+        - docbook-xml
+        - gdbm
+        - gettext
+        - hwloc
+        - libevent
+        - libmd
+        - libpciaccess
+        - libsigsegv
+        - libunwind
+        - libxml2
+        - libzmq
+        - numactl
+        - openssh
+        - pcre
+        - perl-data-dumper
+        - py-cycler
+        - py-decorator
+        - py-mistune
+        - py-pycparser
+        - py-setuptools
+        - py-wheel
+        - readline
+        - sqlite
+        - tar
+        - util-linux-uuid
         runner-attributes:
-          tags: [ "spack", "public", "small", "x86_64" ]
+          tags: [ "spack", "small", "x86_64" ]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -138,17 +182,26 @@ spack:
 
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
-      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
       tags: ["spack", "public", "medium", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
     build-group: Data and Vis SDK

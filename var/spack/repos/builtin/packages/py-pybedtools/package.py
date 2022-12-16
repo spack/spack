@@ -3,33 +3,32 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPybedtools(PythonPackage):
     """Python wrapper -- and more -- for Aaron Quinlan's BEDTools"""
 
     homepage = "https://daler.github.io/pybedtools"
-    url      = "https://github.com/daler/pybedtools/archive/v0.6.9.tar.gz"
+    pypi = "pybedtools/pybedtools-0.9.0.tar.gz"
 
-    version('0.8.0', sha256='f0d9f24135d13d6d02d5c0d1bded771848d3642b00a2d3c3d86b2a1fcd5ce532')
-    version('0.7.10', sha256='bc81c1655e998d8090d852f109925fc7fd3dad3ff90371cf80807dd4438a826a')
-    version('0.7.9',  sha256='49cdb62b81bb6bf28fecf6fc9519aa31e333d150347ca4ce2d2cd2aa5ec2ca57')
-    version('0.7.8',  sha256='0d49d92ba6d6cec85956cc4f947c9f431dc30aeea05125643a1b8786a59dc402')
-    version('0.7.7',  sha256='e4f87da5009928046ac233d2c8a7c2121820aa6d74de45922ec1405464c62862')
-    version('0.7.6',  sha256='639880a45ef60bd10d4ed31e6e7f7e901a6dbd909373df8f63f5aeccde446754')
-    version('0.7.5',  sha256='ef221c38281cb9be1e8014d6513f6fd9b2722306a70e4ac2484d0d7034bc5b03')
-    version('0.7.4',  sha256='39172a31c59ccf355fcff885f652cdc825341cabbab4ba78ac03862c42caa9da')
-    version('0.7.3',  sha256='ba6875297116b776cb1eb79ddb9fe24db9cbee8f6922940f84984d533ef9000b')
-    version('0.7.2',  sha256='0d0a80a42667742d53b1ef1947f4645dc16b060c7aacb4721c48f8028cc33c5e')
-    version('0.6.9',  sha256='2639e80917999e76572017fd93757e8d7ceb384f0b92647ccfdd23a0d60def7c')
+    version("0.9.0", sha256="9267c92cd764173449d9c31baedac0659b4eccc3d7c05e22ec378f86c0fc30a3")
+    version("0.8.0", sha256="4eebd2cd1764ee1c604fd881703c3e329195485350b987b7fb8db42d232984f6")
+    version("0.7.10", sha256="518a2311bd33f29cf2ee8fc1a028dda8c8e380c9fc83fcb0fbaa206933174b50")
+    version("0.7.9", sha256="e9134d7dc3de41b90126df633fe3aa854a0427d7ada834dc8681081e8b2fea14")
+    version("0.7.8", sha256="e80e8b73b233ec6950069e0e1cf14127aff8310a8eaf3ee663bdfbcb61309fdc")
+    version("0.7.7", sha256="dba8758bd86121e4dcfc8b25ebae7d3b2de6ff9e38e4cdd9dc03f128bf5d4c9d")
+    version("0.7.6", sha256="8b6382036c715b49f83e35cc787d7084c1633ebe94a2a3c4102e805613f7426b")
+    version("0.7.5", sha256="f2428b4845083eff36385bec241ddddf7488a7de3f18886a78c73226e9e3306c")
+    version("0.7.4", sha256="15cfae9e8a207ded403ad9fa2e77f09d14c2fe377d1bc5f8b063647e2d0554e0")
+    version("0.6.9", sha256="56915b3e2200c6fb56260a36f839e66ce27d7dd3ef55fba278c3931b786fbfd1")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
+    depends_on("py-setuptools@0.6c5:", type="build")
+    depends_on("py-cython", type="build")
 
-    depends_on('bedtools2', type='run')
+    depends_on("bedtools2", type="run")
 
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-pysam', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-pysam", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"))

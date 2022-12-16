@@ -88,6 +88,20 @@
             "name": "pentium4",
             "flags": "-march={name} -mtune=generic"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
+          }
         ]
       }
     },
@@ -128,6 +142,20 @@
             "versions": "3.9:11.1",
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": "2021.2.0:",
+            "name": "x86-64-v2",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": "2021.2.0:",
+            "name": "x86-64-v2",
+            "flags": "-march={name} -mtune=generic"
           }
         ]
       }
@@ -185,6 +213,20 @@
             "versions": "8.0:",
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": "2021.2.0:",
+            "name": "x86-64-v3",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": "2021.2.0:",
+            "name": "x86-64-v3",
+            "flags": "-march={name} -mtune=generic"
           }
         ]
       }
@@ -248,6 +290,20 @@
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave -mavx512f -mavx512bw -mavx512cd -mavx512dq -mavx512vl"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": "2021.2.0:",
+            "name": "x86-64-v4",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": "2021.2.0:",
+            "name": "x86-64-v4",
+            "flags": "-march={name} -mtune=generic"
+          }
         ]
       }
     },
@@ -288,8 +344,19 @@
         "intel": [
           {
             "versions": "16.0:",
-            "name": "pentium4",
-            "flags": "-march={name} -mtune=generic"
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
           }
         ]
       }
@@ -331,6 +398,18 @@
         "intel": [
           {
             "versions": "16.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -384,6 +463,20 @@
             "name": "corei7",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "name": "corei7",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "name": "corei7",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -429,6 +522,20 @@
         "intel": [
           {
             "versions": "16.0:",
+            "name": "corei7",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "name": "corei7",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "name": "corei7",
             "flags": "-march={name} -mtune={name}"
           }
@@ -490,6 +597,18 @@
             "versions": "18.0:",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -548,6 +667,18 @@
           },
           {
             "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -615,6 +746,18 @@
             "versions": "18.0:",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -670,6 +813,18 @@
         "intel": [
           {
             "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -730,6 +885,18 @@
         "intel": [
           {
             "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -795,6 +962,20 @@
         "intel": [
           {
             "versions": "18.0:",
+            "name": "knl",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "name": "knl",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "name": "knl",
             "flags": "-march={name} -mtune={name}"
           }
@@ -868,6 +1049,20 @@
             "name": "skylake-avx512",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "name": "skylake-avx512",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "name": "skylake-avx512",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -904,8 +1099,7 @@
         "avx512cd",
         "avx512vbmi",
         "avx512ifma",
-        "sha",
-        "umip"
+        "sha"
       ],
       "compilers": {
         "gcc": [
@@ -935,6 +1129,18 @@
         "intel": [
           {
             "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -1004,6 +1210,18 @@
             "versions": "19.0.1:",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -1044,7 +1262,6 @@
         "avx512vbmi",
         "avx512ifma",
         "sha_ni",
-        "umip",
         "clwb",
         "rdpid",
         "gfni",
@@ -1098,6 +1315,20 @@
             "name": "icelake-client",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "name": "icelake-client",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "name": "icelake-client",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -1139,6 +1370,20 @@
         "intel": [
           {
             "versions": "16.0:",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse2"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse2"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse2"
           }
@@ -1189,6 +1434,20 @@
         "intel": [
           {
             "versions": "16.0:",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse3"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse3"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse3"
           }
@@ -1246,6 +1505,20 @@
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse3"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse3"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse3"
+          }
         ]
       }
     },
@@ -1298,6 +1571,20 @@
         "intel": [
           {
             "versions": "16.0:",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse4.2"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "flags": "-msse4.2"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "flags": "-msse4.2"
           }
@@ -1360,6 +1647,22 @@
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -1418,6 +1721,22 @@
         "intel": [
           {
             "versions": "16.0:",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
@@ -1485,6 +1804,22 @@
             "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
         ]
       }
     },
@@ -1541,6 +1876,30 @@
           {
             "versions": "3.0:",
             "name": "znver3",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "intel": [
+          {
+            "versions": "16.0:",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "oneapi": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "dpcpp": [
+          {
+            "versions": ":",
+            "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
+            "name": "core-avx2",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -1734,8 +2093,163 @@
         ]
       }
     },
-    "thunderx2": {
+    "armv8.1a": {
       "from": ["aarch64"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "5:",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.2a": {
+      "from": ["armv8.1a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "6:",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.3a": {
+      "from": ["armv8.2a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "6:",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "6:",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.4a": {
+      "from": ["armv8.3a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "8:",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "8:",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.5a": {
+      "from": ["armv8.4a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "9:",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11:",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "thunderx2": {
+      "from": ["armv8.1a"],
       "vendor": "Cavium",
       "features": [
         "fp",
@@ -1782,13 +2296,12 @@
       }
     },
     "a64fx": {
-      "from": ["aarch64"],
+      "from": ["armv8.2a"],
       "vendor": "Fujitsu",
       "features": [
         "fp",
         "asimd",
         "evtstrm",
-        "aes",
         "pmull",
         "sha1",
         "sha2",
@@ -1821,18 +2334,26 @@
             "flags": "-march=armv8.2-a+crc+crypto+fp16"
           },
           {
-            "versions": "8:",
-            "flags": "-march=armv8.2-a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
+            "versions": "8:10.2",
+            "flags": "-march=armv8.2-a+crc+sha2+fp16+sve -msve-vector-bits=512"
+          },
+          {
+            "versions": "10.3:",
+            "flags": "-mcpu=a64fx -msve-vector-bits=512"
           }
         ],
         "clang": [
           {
             "versions": "3.9:4.9",
-            "flags": "-march=armv8.2-a+crc+crypto+fp16"
+            "flags": "-march=armv8.2-a+crc+sha2+fp16"
           },
           {
-            "versions": "5:",
-            "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
+            "versions": "5:10",
+            "flags": "-march=armv8.2-a+crc+sha2+fp16+sve"
+          },
+          {
+            "versions": "11:",
+            "flags": "-mcpu=a64fx"
           }
         ],
         "arm": [
@@ -1843,7 +2364,7 @@
         ]
       }
     },
-    "graviton": {
+    "cortex_a72": {
       "from": ["aarch64"],
       "vendor": "ARM",
       "features": [
@@ -1869,19 +2390,19 @@
               },
               {
                   "versions": "6:",
-                  "flags" : "-march=armv8-a+crc+crypto -mtune=cortex-a72"
+                  "flags" : "-mcpu=cortex-a72"
               }
           ],
           "clang" : [
               {
                   "versions": "3.9:",
-                  "flags" : "-march=armv8-a+crc+crypto"
+                  "flags" : "-mcpu=cortex-a72"
               }
           ]
       }
     },
-    "graviton2": {
-      "from": ["aarch64"],
+    "neoverse_n1": {
+      "from": ["cortex_a72", "armv8.2a"],
       "vendor": "ARM",
       "features": [
           "fp",
@@ -1930,7 +2451,7 @@
               },
               {
                   "versions": "9.0:",
-                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto -mtune=neoverse-n1"
+                  "flags" : "-mcpu=neoverse-n1"
               }
           ],
           "clang" : [
@@ -1941,6 +2462,10 @@
               {
                   "versions": "5:",
                   "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+              },
+              {
+                  "versions": "10:",
+                  "flags" : "-mcpu=neoverse-n1"
               }
           ],
           "arm" : [
@@ -1951,10 +2476,148 @@
           ]
       }
     },
+    "neoverse_v1": {
+      "from": ["neoverse_n1", "armv8.4a"],
+      "vendor": "ARM",
+      "features": [
+          "fp",
+          "asimd",
+          "evtstrm",
+          "aes",
+          "pmull",
+          "sha1",
+          "sha2",
+          "crc32",
+          "atomics",
+          "fphp",
+          "asimdhp",
+          "cpuid",
+          "asimdrdm",
+          "jscvt",
+          "fcma",
+          "lrcpc",
+          "dcpop",
+          "sha3",
+          "sm3",
+          "sm4",
+          "asimddp",
+          "sha512",
+          "sve",
+          "asimdfhm",
+          "dit",
+          "uscat",
+          "ilrcpc",
+          "flagm",
+          "ssbs",
+          "paca",
+          "pacg",
+          "dcpodp",
+          "svei8mm",
+          "svebf16",
+          "i8mm",
+          "bf16",
+          "dgh",
+          "rng"
+      ],
+      "compilers" : {
+          "gcc": [
+              {
+                  "versions": "4.8:4.8.9",
+                  "flags": "-march=armv8-a"
+              },
+              {
+                  "versions": "4.9:5.9",
+                  "flags": "-march=armv8-a+crc+crypto"
+              },
+              {
+                  "versions": "6:6.9",
+                  "flags" : "-march=armv8.1-a"
+              },
+              {
+                  "versions": "7:7.9",
+                  "flags" : "-march=armv8.2-a+crypto+fp16 -mtune=cortex-a72"
+              },
+              {
+                  "versions": "8.0:8.9",
+                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+              },
+              {
+                  "versions": "9.0:9.9",
+                  "flags" : "-mcpu=neoverse-v1"
+              },
+	            {
+                  "versions": "10.0:",
+                  "flags" : "-mcpu=neoverse-v1"
+              }
+
+          ],
+          "clang" : [
+              {
+                  "versions": "3.9:4.9",
+                  "flags" : "-march=armv8.2-a+fp16+crc+crypto"
+              },
+              {
+                  "versions": "5:10",
+                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+              },
+              {
+                  "versions": "11:",
+                  "flags" : "-march=armv8.4-a+sve+ssbs+fp16+bf16+crypto+i8mm+rng"
+              },
+              {
+                  "versions": "12:",
+                  "flags" : "-mcpu=neoverse-v1"
+              }
+          ],
+          "arm" : [
+              {
+                  "versions": "20:21.9",
+                  "flags" : "-march=armv8.2-a+sve+fp16+rcpc+dotprod+crypto"
+              },
+	            {
+                  "versions": "22:",
+                  "flags" : "-march=armv8.4-a+sve+ssbs+fp16+bf16+crypto+i8mm+rng"
+              }
+          ]
+      }
+    },
     "m1": {
-      "from": ["aarch64"],
+      "from": ["armv8.4a"],
       "vendor": "Apple",
-      "features": [],
+      "features": [
+          "fp",
+          "asimd",
+          "evtstrm",
+          "aes",
+          "pmull",
+          "sha1",
+          "sha2",
+          "crc32",
+          "atomics",
+          "fphp",
+          "asimdhp",
+          "cpuid",
+          "asimdrdm",
+          "jscvt",
+          "fcma",
+          "lrcpc",
+          "dcpop",
+          "sha3",
+          "asimddp",
+          "sha512",
+          "asimdfhm",
+          "dit",
+          "uscat",
+          "ilrcpc",
+          "flagm",
+          "ssbs",
+          "sb",
+          "paca",
+          "pacg",
+          "dcpodp",
+          "flagm2",
+          "frint"
+      ],
       "compilers": {
         "gcc": [
           {
@@ -1964,14 +2627,92 @@
         ],
         "clang" : [
           {
-            "versions": "9.0:",
+            "versions": "9.0:12.0",
             "flags" : "-march=armv8.4-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=apple-m1"
           }
         ],
         "apple-clang": [
           {
-            "versions": "11.0:",
+            "versions": "11.0:12.5",
             "flags" : "-march=armv8.4-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=apple-m1"
+          }
+        ]
+      }
+    },
+    "m2": {
+      "from": ["m1", "armv8.5a"],
+      "vendor": "Apple",
+      "features": [
+          "fp",
+          "asimd",
+          "evtstrm",
+          "aes",
+          "pmull",
+          "sha1",
+          "sha2",
+          "crc32",
+          "atomics",
+          "fphp",
+          "asimdhp",
+          "cpuid",
+          "asimdrdm",
+          "jscvt",
+          "fcma",
+          "lrcpc",
+          "dcpop",
+          "sha3",
+          "asimddp",
+          "sha512",
+          "asimdfhm",
+          "dit",
+          "uscat",
+          "ilrcpc",
+          "flagm",
+          "ssbs",
+          "sb",
+          "paca",
+          "pacg",
+          "dcpodp",
+          "flagm2",
+          "frint",
+          "ecv",
+          "bf16",
+          "i8mm",
+          "bti"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "8.0:",
+            "flags" : "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "clang" : [
+          {
+            "versions": "9.0:12.0",
+            "flags" : "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=apple-m1"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "11.0:12.5",
+            "flags" : "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=vortex"
           }
         ]
       }

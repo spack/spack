@@ -1,8 +1,12 @@
 spack:
   view: false
-  concretization: separately
+
+  concretizer:
+    reuse: false
+    unify: when_possible
 
   config:
+    build_jobs: 32
     install_tree:
       root: /home/software/spack
       padded_length: 512
@@ -11,9 +15,10 @@ spack:
 
   definitions:
     - default_specs:
+      - 'uncrustify build_system=autotools'
+      - 'uncrustify build_system=cmake'
       - lz4  # MakefilePackage
       - mpich~fortran  # AutotoolsPackage
-      - tut  # WafPackage
       - py-setuptools  # PythonPackage
       - openjpeg  # CMakePackage
       - r-rcpp  # RPackage
@@ -26,26 +31,38 @@ spack:
         - - $default_specs
         - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/build_systems" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/build_systems" }
 
   gitlab-ci:
     script:
+      - uname -a || true
+      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - nproc
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
+      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - spack -d ci rebuild
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - spack --color=always --backtrace ci rebuild
+    after_script:
+      - cat /proc/loadavg || true
 
     image:
       name: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
       entrypoint: [ "" ]
 
+    match_behavior: first
     mappings:
       - match:
           - cmake
         runner-attributes:
-          tags: [ "spack", "public", "large", "x86_64"]
+          tags: [ "spack", "large", "x86_64"]
           variables:
             CI_JOB_SIZE: large
             KUBERNETES_CPU_REQUEST: 8000m
@@ -58,7 +75,7 @@ spack:
           - openjpeg
           - sqlite
         runner-attributes:
-          tags: [ "spack", "public", "medium", "x86_64" ]
+          tags: [ "spack", "medium", "x86_64" ]
           variables:
             CI_JOB_SIZE: "medium"
             KUBERNETES_CPU_REQUEST: "2000m"
@@ -82,7 +99,7 @@ spack:
           - xz
           - zlib
         runner-attributes:
-          tags: [ "spack", "public", "medium", "x86_64" ]
+          tags: [ "spack", "medium", "x86_64" ]
           variables:
             CI_JOB_SIZE: "small"
             KUBERNETES_CPU_REQUEST: "500m"
@@ -91,18 +108,27 @@ spack:
       - match:
           - 'os=ubuntu18.04'
         runner-attributes:
-          tags: ["spack", "public", "x86_64"]
+          tags: ["spack", "x86_64"]
           variables:
             CI_JOB_SIZE: "default"
 
+    broken-specs-url: "s3://spack-binaries/broken-specs"
 
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+
   cdash:
     build-group: Build tests for different build systems
     url: https://cdash.spack.io

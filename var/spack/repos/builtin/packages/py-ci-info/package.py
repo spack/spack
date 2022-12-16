@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyCiInfo(PythonPackage):
@@ -14,9 +14,11 @@ class PyCiInfo(PythonPackage):
     """
 
     homepage = "https://github.com/mgxd/ci-info"
-    pypi     = "ci-info/ci-info-0.2.0.tar.gz"
+    pypi = "ci-info/ci-info-0.2.0.tar.gz"
 
-    version('0.2.0', sha256='dd70632c977feb8797b1e633507166b64ad5f57183cebb2b0ea56934abba4616')
+    version("0.3.0", sha256="1fd50cbd401f29adffeeb18b0489e232d16ac1a7458ac6bc316deab6ae535fb0")
+    version("0.2.0", sha256="dd70632c977feb8797b1e633507166b64ad5f57183cebb2b0ea56934abba4616")
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.7:", when="@0.3:", type=("build", "run"))
+    depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

@@ -1,0 +1,12 @@
+--- a/ext/htslib/configure.ac	2022-01-16 23:02:18.000000000 -0600
++++ b/ext/htslib/configure.ac	2022-07-16 18:45:33.283586367 -0500
+@@ -46,7 +46,9 @@
+    the PACKAGE_* defines are unused and are overridden by the more
+    accurate PACKAGE_VERSION as computed by the Makefile.  */])
+ 
++AC_CANONICAL_HOST
+ AC_PROG_CC
++AC_PROG_INSTALL
+ AC_PROG_RANLIB
+ 
+ dnl Avoid chicken-and-egg problem where pkg-config supplies the

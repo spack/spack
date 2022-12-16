@@ -1,6 +1,9 @@
 spack:
   view: false
-  concretization: separately
+
+  concretizer:
+    reuse: false
+    unify: false
 
   config:
     concretizer: clingo
@@ -12,16 +15,21 @@ spack:
 
   packages:
     all:
-      compiler: [apple-clang@13.0.0]
+      compiler: [apple-clang@13.1.6]
       target: [m1]
 
   definitions:
   - easy_specs:
-    - kokkos +openmp
-    - kokkos-kernels +openmp
+    - berkeley-db
+    - ncurses
+    - gcc
+    - py-jupyterlab
+    - py-scipy
+    - py-matplotlib
+    - py-pandas
 
   - arch:
-    - '%apple-clang@13.0.0 target=m1'
+    - '%apple-clang@13.1.6 target=m1'
 
   specs:
 
@@ -29,31 +37,38 @@ spack:
     - - $easy_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s-mac" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-mac" }
 
   gitlab-ci:
 
     script:
+      - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
-      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
+    match_behavior: first
     mappings:
       - match: ['os=monterey']
         runner-attributes:
           tags:
-          - omicron
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+          - lambda
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       before_script:
-        - . "./share/spack/setup-env.sh"
-        - spack --version
+      - export SPACK_USER_CACHE_PATH=$(pwd)/.spack-user-cache
+      - export SPACK_USER_CONFIG_PATH=$(pwd)/.spack-user-config
+      - . "./share/spack/setup-env.sh"
+      - spack --version
       tags:
-      - omicron
+      - lambda
 
   cdash:
     build-group: E4S Mac

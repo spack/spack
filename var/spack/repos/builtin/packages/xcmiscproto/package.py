@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Xcmiscproto(AutotoolsPackage, XorgPackage):
@@ -15,7 +15,7 @@ class Xcmiscproto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/xcmiscproto"
     xorg_mirror_path = "proto/xcmiscproto-1.2.2.tar.gz"
 
-    version('1.2.2', sha256='48013cfbe4bd5580925a854a43e2bccbb4c7a5a31128070644617b6dc7f8ef85')
+    version("1.2.2", sha256="48013cfbe4bd5580925a854a43e2bccbb4c7a5a31128070644617b6dc7f8ef85")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")
