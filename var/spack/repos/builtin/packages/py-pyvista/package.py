@@ -12,6 +12,8 @@ class PyPyvista(PythonPackage):
     homepage = "https://github.com/pyvista/pyvista"
     pypi = "pyvista/pyvista-0.32.1.tar.gz"
 
+    maintainers = ["banesullivan"]
+
     version("0.37.0", sha256="d36a2c6d5f53f473ab6a9241669693acee7a5179394dc97595da14cc1de23141")
     version("0.32.1", sha256="585ac79524e351924730aff9b7207d6c5ac4175dbb5d33f7a9a2de22ae53dbf9")
 
