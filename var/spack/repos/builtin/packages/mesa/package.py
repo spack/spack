@@ -2,9 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import sys
 
+import spack.build_systems.meson
 from spack.package import *
 
 
@@ -148,6 +148,11 @@ class Mesa(MesonPackage):
     # the existence of the function and call it only if it is available.
     patch("handle_missing_set_override_stack_alignment.patch", when="@21.2.3:")
 
+    # ROCm 5.3.0 is providing llvm15. Gallivm coroutine is disabled in mesa upstream version
+    # for llvm-15. Until mesa release is available with this changes below patch is required
+    # in order to move on with ROCm 5.3.0.
+    patch("disable-gallivm-coroutine-for-libllvm15.patch", when="@22.1.2: ^libllvm@15:")
+
     # Explicitly use the llvm-config tool
     def patch(self):
         filter_file(r"_llvm_method = 'auto'", "_llvm_method = 'config-tool'", "meson.build")
@@ -158,6 +163,28 @@ class Mesa(MesonPackage):
                 flags.append("-std=c99")
         return super(Mesa, self).flag_handler(name, flags)
 
+    @property
+    def libglx_headers(self):
+        return find_headers("GL/glx", root=self.spec.prefix.include, recursive=False)
+
+    @property
+    def libglx_libs(self):
+        return find_libraries("libGL", root=self.spec.prefix, recursive=True)
+
+    @property
+    def libosmesa_headers(self):
+        return find_headers("GL/osmesa", root=self.spec.prefix.include, recursive=False)
+
+    @property
+    def libosmesa_libs(self):
+        if "platform=windows" in self.spec:
+            lib_name = "osmesa"
+        else:
+            lib_name = "libOSMesa"
+        return find_libraries(lib_name, root=self.spec.prefix, recursive=True)
+
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
         spec = self.spec
         args = [
@@ -274,23 +301,3 @@ class Mesa(MesonPackage):
         args.append("-Ddri-drivers=" + ",".join(args_dri_drivers))
 
         return args
-
-    @property
-    def libglx_headers(self):
-        return find_headers("GL/glx", root=self.spec.prefix.include, recursive=False)
-
-    @property
-    def libglx_libs(self):
-        return find_libraries("libGL", root=self.spec.prefix, recursive=True)
-
-    @property
-    def libosmesa_headers(self):
-        return find_headers("GL/osmesa", root=self.spec.prefix.include, recursive=False)
-
-    @property
-    def libosmesa_libs(self):
-        if "platform=windows" in self.spec:
-            lib_name = "osmesa"
-        else:
-            lib_name = "libOSMesa"
-        return find_libraries(lib_name, root=self.spec.prefix, recursive=True)

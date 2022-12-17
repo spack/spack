@@ -14,6 +14,7 @@ class PyCartopy(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("0.21.1", sha256="89d5649712c8582231c6e11825a04c85f6f0cee94dbb89e4db23eabca1cc250a")
     version("0.21.0", sha256="ce1d3a28a132e94c89ac33769a50f81f65634ab2bd40556317e15bd6cad1ce42")
     version("0.20.3", sha256="0d60fa2e2fbd77c4d1f6b1f9d3b588966147f07c1b179d2d34570ac1e1b49006")
     version("0.20.2", sha256="4d08c198ecaa50a6a6b109d0f14c070e813defc046a83ac5d7ab494f85599e35")
@@ -62,15 +63,17 @@ class PyCartopy(PythonPackage):
     depends_on("py-numpy@1.13.3:", when="@0.19:", type=("build", "run"))
     depends_on("py-numpy@1.10:", when="@0.17:", type=("build", "run"))
     depends_on("py-numpy@1.6:", type=("build", "run"))
-    depends_on("py-matplotlib@3.1:", when="@0.20:", type=("build", "run"))
-    depends_on("py-shapely@1.6.4:1", when="@0.20:", type=("build", "run"))
-    depends_on("py-shapely@1.5.6:1", type=("build", "run"))
+    depends_on("py-matplotlib@3.1:", when="@0.21:", type=("build", "run"))
+    # https://github.com/SciTools/cartopy/issues/2086
+    depends_on("py-matplotlib@3.1:3.5", when="@0.20", type=("build", "run"))
+    depends_on("py-shapely@1.6.4:", when="@0.21.1:", type=("build", "run"))
+    depends_on("py-shapely@1.6.4:1", when="@0.20:0.21.0", type=("build", "run"))
+    depends_on("py-shapely@1.5.6:1", when="@:0.19", type=("build", "run"))
     depends_on("py-pyshp@2.1:", when="@0.20:", type=("build", "run"))
     depends_on("py-pyshp@2:", when="@0.19:", type=("build", "run"))
     depends_on("py-pyshp@1.1.4:", type=("build", "run"))
     depends_on("py-pyproj@3:", when="@0.20:", type=("build", "run"))
     depends_on("py-six@1.3:", when="@:0.18", type=("build", "run"))
-    depends_on("py-futures", when="@0.18 ^python@2.7", type=("build", "run"))
 
     # requirements/epsg.txt
     with when("+epsg"):
@@ -92,8 +95,8 @@ class PyCartopy(PythonPackage):
         depends_on("pil@1.7.8:", type="run")
         depends_on("py-scipy@1.3.1:", when="@0.20:", type="run")
         depends_on("py-scipy@0.10:", type="run")
-        depends_on("py-matplotlib@1.5.1:", when="@0.17:0.19", type="run")
-        depends_on("py-matplotlib@1.3:", when="@0.16", type="run")
+        depends_on("py-matplotlib@1.5.1:3.5", when="@0.17:0.19", type="run")
+        depends_on("py-matplotlib@1.3:3.5", when="@0.16", type="run")
 
     patch("proj6.patch", when="@0.17.0")
 

@@ -13,7 +13,7 @@ on:
     paths:
       - '.github/workflows/build-containers.yml'
       - 'share/spack/docker/*'
-      - 'share/templates/container/*'
+      - 'share/spack/templates/container/*'
       - 'lib/spack/spack/container/*'
   # Let's also build & tag Spack containers on releases.
   release:
@@ -50,7 +50,7 @@ jobs:
     if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
 
       - name: Set Container Tag Normal (Nightly)
         run: |
@@ -80,16 +80,16 @@ jobs:
           fi
 
       - name: Upload Dockerfile
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
         with:
           name: dockerfiles
           path: dockerfiles
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8 # @v1
+        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # @v1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@c74574e6c82eeedc46366be1b0d287eff9085eb6 # @v1
+        uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325 # @v1
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # @v1
@@ -106,7 +106,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
-        uses: docker/build-push-action@c84f38281176d4c9cdb1626ffafcd6b3911b5d94 # @v2
+        uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # @v2
         with:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}

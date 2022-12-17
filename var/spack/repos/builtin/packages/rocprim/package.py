@@ -11,20 +11,37 @@ class Rocprim(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
 
+    version("5.3.0", sha256="4885bd662b038c6e9f058a756fd838203dbd00227bfef6adaf31496010b100e4")
     version("5.2.3", sha256="502f49cf3190f4ac20d0a6b19eb2d0786bb3c5661329940378081f1678aa8e82")
     version("5.2.1", sha256="47f09536b0afbb7be4d6fb71cca9f0a4fa58dde29c83aee247d4b167f6f3acae")
     version("5.2.0", sha256="f99eb7d2f6b1445742fba631a0dc8bb0d464a767a9c4fb79ac865d9570fe747b")
     version("5.1.3", sha256="b5a08d2e76388bd1ffa6c946009928fe95de846ab6b65a6475998070c0cf6dc1")
     version("5.1.0", sha256="dfe106c01155e00ed816f0231d1576ff8c08750cc8278fa453926f388dc6fe48")
-    version("5.0.2", sha256="a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0")
-    version("5.0.0", sha256="0e7e7bda6a09b70a07ddd926986882df0c8d8ff3e0a34e12cb6d44f7d0a5840e")
-    version("4.5.2", sha256="0dc673847e67db672f2e239f299206fe16c324005ddd2e92c7cb7725bb6f4fa6")
-    version("4.5.0", sha256="6f0ca1da9a93064af662d6c61fbdb56bb313f8edca85615ead0dd284eb481089")
+    version(
+        "5.0.2",
+        sha256="a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="0e7e7bda6a09b70a07ddd926986882df0c8d8ff3e0a34e12cb6d44f7d0a5840e",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="0dc673847e67db672f2e239f299206fe16c324005ddd2e92c7cb7725bb6f4fa6",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="6f0ca1da9a93064af662d6c61fbdb56bb313f8edca85615ead0dd284eb481089",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="d29ffcb5dd1c6155c586b9952fa4c11b717d90073feb083db6b03ea74746194b",
@@ -110,6 +127,7 @@ class Rocprim(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)

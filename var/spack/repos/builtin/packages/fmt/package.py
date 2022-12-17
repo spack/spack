@@ -13,6 +13,7 @@ class Fmt(CMakePackage):
 
     homepage = "https://fmt.dev/"
     url = "https://github.com/fmtlib/fmt/releases/download/7.1.3/fmt-7.1.3.zip"
+    maintainers = ["msimberg"]
 
     version("9.1.0", sha256="cceb4cb9366e18a5742128cb3524ce5f50e88b476f1e54737a47ffdf4df4c996")
     version("9.0.0", sha256="fc96dd2d2fdf2bded630787adba892c23cb9e35c6fd3273c136b0c57d4651ad6")
@@ -37,7 +38,7 @@ class Fmt(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("98", "11", "14", "17"),
+        values=("98", "11", "14", "17", "20"),
         multi=False,
         description="Use the specified C++ standard when building",
     )
@@ -70,6 +71,13 @@ class Fmt(CMakePackage):
     # Only allow [[attributes]] on C++11 and higher
     patch("fmt-attributes-cpp11_4.1.0.patch", when="@4.1.0")
 
+    # Fix compilation with hipcc/dpcpp: https://github.com/fmtlib/fmt/issues/3005
+    patch(
+        "https://github.com/fmtlib/fmt/commit/0b0f7cfbfcebd021c910078003d413354bd843e2.patch?full_index=1",
+        sha256="08fb707bf8b4fc890d6eed29217ead666558cbae38f9249e22ddb82212f0eb4a",
+        when="@9.0.0:9.1.0",
+    )
+
     def cmake_args(self):
         spec = self.spec
         args = []
@@ -97,5 +105,8 @@ class Fmt(CMakePackage):
         # Can't build docs without doxygen+python+virtualenv
         # and call to build "doc" target
         args.append("-DFMT_DOC=OFF")
+
+        # Don't build tests
+        args.append(self.define("FMT_TEST", self.run_tests))
 
         return args

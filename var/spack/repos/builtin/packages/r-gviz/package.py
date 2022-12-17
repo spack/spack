@@ -18,6 +18,7 @@ class RGviz(RPackage):
 
     bioc = "Gviz"
 
+    version("1.42.0", commit="4eddb688bca3fdeb65fd536d653d7ba7f7976121")
     version("1.40.1", commit="d21843710cd05135353de5cd4ce4d35cdd333b7c")
     version("1.38.3", commit="c4b352a16455a5744533c511e59354977814cb9e")
     version("1.34.0", commit="445fadff2aedd8734580fa908aa47ff1216a8182")

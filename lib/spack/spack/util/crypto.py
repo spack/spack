@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import hashlib
-import sys
 from typing import Any, Callable, Dict  # novm
 
 import llnl.util.tty as tty
@@ -23,7 +22,7 @@ _deprecated_hash_algorithms = ["md5"]
 
 
 #: cache of hash functions generated
-_hash_functions = {}  # type: Dict[str, Callable[[], Any]]
+_hash_functions: Dict[str, Callable[[], Any]] = {}
 
 
 class DeprecatedHash(object):
@@ -82,7 +81,7 @@ def checksum(hashlib_algo, filename, **kwargs):
     """Returns a hex digest of the filename generated using an
     algorithm from hashlib.
     """
-    block_size = kwargs.get("block_size", 2 ** 20)
+    block_size = kwargs.get("block_size", 2**20)
     hasher = hashlib_algo()
     with open(filename, "rb") as file:
         while True:
@@ -116,7 +115,7 @@ class Checker(object):
     """
 
     def __init__(self, hexdigest, **kwargs):
-        self.block_size = kwargs.get("block_size", 2 ** 20)
+        self.block_size = kwargs.get("block_size", 2**20)
         self.hexdigest = hexdigest
         self.sum = None
         self.hash_fun = hash_fun_for_digest(hexdigest)
@@ -137,11 +136,7 @@ class Checker(object):
 
 def prefix_bits(byte_array, bits):
     """Return the first <bits> bits of a byte array as an integer."""
-    if sys.version_info < (3,):
-        b2i = ord  # In Python 2, indexing byte_array gives str
-    else:
-        b2i = lambda b: b  # In Python 3, indexing byte_array gives int
-
+    b2i = lambda b: b  # In Python 3, indexing byte_array gives int
     result = 0
     n = 0
     for i, b in enumerate(byte_array):

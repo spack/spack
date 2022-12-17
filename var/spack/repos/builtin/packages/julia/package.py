@@ -26,6 +26,7 @@ class Julia(MakefilePackage):
     maintainers = ["glennpj", "vchuravy", "haampie"]
 
     version("master", branch="master")
+    version("1.8.3", sha256="4d8d460fcae5c6f8306a3e3c14371635c1a26f47c3ce62b2950cf9234b6ec849")
     version("1.8.2", sha256="3e2cea35bf5df963ed7b75a83e8febfc000acf1e664ecd657a0772508eb1fb5d")
     version("1.8.1", sha256="066f4ca7a2ad39b003e2af77dbecfbfb9b0a1cb1664033f657ffdbe2f374d956")
     version("1.8.0", sha256="0fa980286d6d912f24ed9f90a02930560d985e0ada8233a4ae5610884feb2438")
@@ -204,12 +205,13 @@ class Julia(MakefilePackage):
             "mpfr",
             "nghttp2",
             "openblas",
-            "openlibm",
             "pcre2",
             "suite-sparse",
             "utf8proc",
             "zlib",
         ]
+        if "+openlibm" in self.spec:
+            pkgs.append("openlibm")
         if self.spec.satisfies("@1.7.0:"):
             pkgs.append("libblastrampoline")
         for pkg in pkgs:
@@ -271,6 +273,14 @@ class Julia(MakefilePackage):
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
         options.append("USECLANG:={}".format("1" if "%clang" in spec else "0"))
+
+        options.extend(
+            [
+                "override CC:={0}".format(spack_cc),
+                "override CXX:={0}".format(spack_cxx),
+                "override FC:={0}".format(spack_fc),
+            ]
+        )
 
         # libm or openlibm?
         if spec.variants["openlibm"].value:

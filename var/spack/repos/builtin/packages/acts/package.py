@@ -39,7 +39,16 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("21.1.0", commit="3b4b5c741c8541491d496a36b917b00b344d52d1", submodules=True)
+    version("21.0.0", commit="d8cb0fac3a44e1d44595a481f977df9bd70195fb", submodules=True)
+    version("20.3.0", commit="b1859b322744cb033328fd57d9e74fb5326aa56b", submodules=True)
+    version("20.2.0", commit="7750c1d24714314e8de716b92ebcd4a92cc4e303", submodules=True)
+    version("20.1.0", commit="be36226fb1be88d7be7c9b17a1c1f6e76ff0e006", submodules=True)
     version("20.0.0", commit="3740e6cdbfb1f75d8e481686acdfa5b16d3c41a3", submodules=True)
+    version("19.11.0", commit="d56ca2583e55b48e77c853b7c567070d07fc1cae", submodules=True)
+    version("19.10.0", commit="2d07f60eb2280a46af1085600ec8327679bbb630", submodules=True)
+    version("19.9.0", commit="b655e18929ae0ccb6926d8e217b1b3fc02978d35", submodules=True)
+    version("19.8.0", commit="7582072dbaa70802264f20b392de4313afd25667", submodules=True)
     version("19.7.0", commit="03cf7a3ae74b632b3f89416dc27cc993c9ae4628", submodules=True)
     version("19.6.0", commit="333082914e6a51b381abc1cf52856829e3eb7890", submodules=True)
     version("19.5.0", commit="bf9f0270eadd8e78d283557b7c9070b80dece4a7", submodules=True)
@@ -228,10 +237,23 @@ class Acts(CMakePackage, CudaPackage):
         description="Build python bindings for the examples",
         when="@14: +examples",
     )
+    variant(
+        "svg",
+        default=False,
+        description="Build ActSVG display plugin",
+        when="@20.1:",
+    )
+    variant(
+        "tbb",
+        default=True,
+        description="Build the examples with Threading Building Blocks library",
+        when="@19.8:19,20.1: +examples",
+    )
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
     # Build dependencies
     depends_on("acts-dd4hep", when="@19 +dd4hep")
+    depends_on("actsvg", when="@20.1: +svg")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
@@ -249,10 +271,12 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("gperftools", when="+profilemem")
     depends_on("hepmc3 @3.2.1:", when="+hepmc3")
     depends_on("heppdt", when="+hepmc3 @:4.0")
-    depends_on("intel-tbb @2020.1:", when="+examples")
+    depends_on("intel-tbb @2020.1:", when="+examples +tbb")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
+    depends_on("python@3.8:", when="+python @19.11:19")
+    depends_on("python@3.8:", when="+python @21:")
     depends_on("py-onnx-runtime", when="+onnx")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
@@ -275,9 +299,9 @@ class Acts(CMakePackage, CudaPackage):
             enabled = spec.satisfies(spack_variant)
             return "-DACTS_ENABLE_{0}={1}".format(cmake_label, enabled)
 
-        def example_cmake_variant(cmake_label, spack_variant):
+        def example_cmake_variant(cmake_label, spack_variant, type="BUILD"):
             enabled = spec.satisfies("+examples +" + spack_variant)
-            return "-DACTS_BUILD_EXAMPLES_{0}={1}".format(cmake_label, enabled)
+            return "-DACTS_{0}_EXAMPLES_{1}={2}".format(type, cmake_label, enabled)
 
         def plugin_label(plugin_name):
             if spec.satisfies("@0.33:"):
@@ -305,6 +329,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
             example_cmake_variant("DD4HEP", "dd4hep"),
+            plugin_cmake_variant("DIGITIZATION", "digitization"),
             example_cmake_variant("EDM4HEP", "edm4hep"),
             cmake_variant("EXAMPLES", "examples"),
             cmake_variant("FATRAS", "fatras"),
@@ -321,8 +346,10 @@ class Acts(CMakePackage, CudaPackage):
             enable_cmake_variant("MEMORY_PROFILING", "profilemem"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
+            plugin_cmake_variant("ACTSVG", "svg"),
             plugin_cmake_variant("SYCL", "sycl"),
             plugin_cmake_variant("TGEO", "tgeo"),
+            example_cmake_variant("TBB", "tbb", "USE"),
             cmake_variant(unit_tests_label, "unit_tests"),
         ]
 
@@ -331,27 +358,34 @@ class Acts(CMakePackage, CudaPackage):
         if spec.satisfies("@19.4.0:"):
             args.append("-DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON")
 
-        if spec.satisfies("+autodiff"):
-            args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
+        # Use dependencies provided by spack
+        if spec.satisfies("@20.3:"):
+            args.append("-DACTS_USE_SYSTEM_LIBS=ON")
+        else:
+            if spec.satisfies("+autodiff"):
+                args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
+
+            if spec.satisfies("@19:20.2 +dd4hep"):
+                args.append("-DACTS_USE_SYSTEM_ACTSDD4HEP=ON")
+
+            if spec.satisfies("@0.33: +json"):
+                args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
+            elif spec.satisfies("@0.14.0:0.32 +json"):
+                args.append("-DACTS_USE_BUNDLED_NLOHMANN_JSON=OFF")
+
+            if spec.satisfies("@18: +python"):
+                args.append("-DACTS_USE_SYSTEM_PYBIND11=ON")
+
+            if spec.satisfies("@20.1: +svg"):
+                args.append("-DACTS_USE_SYSTEM_ACTSVG=ON")
+
+            if spec.satisfies("@14: +vecmem"):
+                args.append("-DACTS_USE_SYSTEM_VECMEM=ON")
 
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
-
-        if spec.satisfies("@19 +dd4hep"):
-            args.append("-DACTS_USE_SYSTEM_ACTSDD4HEP=ON")
-
-        if spec.satisfies("@:16"):
-            args.append(plugin_cmake_variant("DIGITIZATION", "digitization"))
-
-        if spec.satisfies("@0.33: +json"):
-            args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
-        elif spec.satisfies("@0.14.0: +json"):
-            args.append("-DACTS_USE_BUNDLED_NLOHMANN_JSON=OFF")
-
-        if spec.satisfies("@18: +python"):
-            args.append("-DACTS_USE_SYSTEM_PYBIND11=ON")
 
         if "root" in spec:
             cxxstd = spec["root"].variants["cxxstd"].value

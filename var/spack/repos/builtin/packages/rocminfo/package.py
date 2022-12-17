@@ -12,22 +12,39 @@ class Rocminfo(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocminfo"
     git = "https://github.com/RadeonOpenCompute/rocminfo.git"
-    url = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
 
     version("master", branch="master")
 
+    version("5.3.0", sha256="c279da1d946771d120611b64974fde751534e787a394ceb6b8e0b743c143d782")
     version("5.2.3", sha256="38fe8db21077100ee2242bd087371f6b8e0078d3a269e145d3a4ab314d0b8902")
     version("5.2.1", sha256="e8a3b3228387d164e21de060e18ac018eecb5e9abe0ae45830c51ead4b7f1004")
     version("5.2.0", sha256="e721eb81efd384abd22ff01cdcbb6245b11084dc11a867c74c8ad6b028aa0404")
     version("5.1.3", sha256="7aecd7b189e129b77c8f2af70be2926a0f3a5ee89814879bc8477924a7e6f2ae")
     version("5.1.0", sha256="76f6cc9e69d9fc7e692e5c7db35e89079d3b1d2d47632e4742d612e743c396d3")
-    version("5.0.2", sha256="5fd970f08c5d6591efe7379ece564ce5580cba87fb6237531dabbd5adcb6a899")
-    version("5.0.0", sha256="43e025de31bffa335d9cb682649add886afdd02c92090ee63e9bf77b3aaaa75b")
-    version("4.5.2", sha256="5ea839cd1f317cbc72ea1e3634a75f33a458ba0cb5bf48377f08bb329c29222d")
-    version("4.5.0", sha256="421ed55192780eb478f0341fd1ce47a0dd3ffafbec9d7a02109a411878a58ee5")
+    version(
+        "5.0.2",
+        sha256="5fd970f08c5d6591efe7379ece564ce5580cba87fb6237531dabbd5adcb6a899",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="43e025de31bffa335d9cb682649add886afdd02c92090ee63e9bf77b3aaaa75b",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="5ea839cd1f317cbc72ea1e3634a75f33a458ba0cb5bf48377f08bb329c29222d",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="421ed55192780eb478f0341fd1ce47a0dd3ffafbec9d7a02109a411878a58ee5",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="d042947d3f29e943a2e3294a2a2d759ca436cebe31151ce048e49bc4f02d6993",
@@ -108,6 +125,7 @@ class Rocminfo(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)

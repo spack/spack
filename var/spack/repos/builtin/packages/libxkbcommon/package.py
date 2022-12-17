@@ -2,11 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
+import spack.build_systems.meson
 from spack.package import *
 
 
-class Libxkbcommon(MesonPackage):
+class Libxkbcommon(MesonPackage, AutotoolsPackage):
     """xkbcommon is a library to handle keyboard descriptions, including
     loading them from disk, parsing them and handling their state. It's mainly
     meant for client toolkits, window systems, and other system
@@ -14,6 +15,10 @@ class Libxkbcommon(MesonPackage):
 
     homepage = "https://xkbcommon.org/"
     url = "https://xkbcommon.org/download/libxkbcommon-0.8.2.tar.xz"
+
+    build_system(
+        conditional("meson", when="@0.9:"), conditional("autotools", when="@:0.8"), default="meson"
+    )
 
     version("1.4.0", sha256="106cec5263f9100a7e79b5f7220f889bc78e7d7ffc55d2b6fdb1efefb8024031")
     version(
@@ -44,6 +49,8 @@ class Libxkbcommon(MesonPackage):
     depends_on("wayland@1.2.0:", when="+wayland")
     depends_on("wayland-protocols@1.7:", when="+wayland")
 
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
         return [
             "-Dxkb-config-root={0}".format(self.spec["xkbdata"].prefix),
@@ -51,26 +58,11 @@ class Libxkbcommon(MesonPackage):
             "-Denable-wayland=" + str(self.spec.satisfies("+wayland")),
         ]
 
-    @when("@:0.8")
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         """Configure arguments are passed using meson_args functions"""
         return [
             "--with-xkb-config-root={0}".format(self.spec["xkbdata"].prefix),
             "--disable-docs",
-            "--" + ("en" if self.spec.satisfies("+wayland") else "dis") + "able-wayland",
-        ]
-
-    @when("@:0.8")
-    def meson(self, spec, prefix):
-        """Run the AutotoolsPackage configure phase in source_path"""
-        configure("--prefix=" + prefix, *self.configure_args())
-
-    @when("@:0.8")
-    def build(self, spec, prefix):
-        """Run the AutotoolsPackage build phase in source_path"""
-        make()
-
-    @when("@:0.8")
-    def install(self, spec, prefix):
-        """Run the AutotoolsPackage install phase in source_path"""
-        make("install")
+        ] + self.enable_or_disable("wayland")

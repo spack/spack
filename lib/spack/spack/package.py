@@ -8,15 +8,28 @@
 
 Everything in this module is automatically imported into Spack package files.
 """
+from os import chdir, environ, getcwd, makedirs, mkdir, remove, removedirs
+from shutil import move, rmtree
+
+# Emulate some shell commands for convenience
+env = environ
+cd = chdir
+pwd = getcwd
+
 # import most common types used in packages
 from typing import Dict, List, Optional
 
 import llnl.util.filesystem
 from llnl.util.filesystem import *
+from llnl.util.symlink import symlink
 
 import spack.util.executable
+
+# These props will be overridden when the build env is set up.
+from spack.build_environment import MakeExecutable
 from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.bundle import BundlePackage
 from spack.build_systems.cached_cmake import (
     CachedCMakePackage,
     cmake_cache_option,
@@ -25,12 +38,14 @@ from spack.build_systems.cached_cmake import (
 )
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.generic import Package
 from spack.build_systems.gnu import GNUMirrorPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.lua import LuaPackage
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.maven import MavenPackage
 from spack.build_systems.meson import MesonPackage
+from spack.build_systems.nmake import NMakePackage
 from spack.build_systems.octave import OctavePackage
 from spack.build_systems.oneapi import (
     IntelOneApiLibraryPackage,
@@ -38,7 +53,7 @@ from spack.build_systems.oneapi import (
     IntelOneApiStaticLibraryList,
 )
 from spack.build_systems.perl import PerlPackage
-from spack.build_systems.python import PythonPackage
+from spack.build_systems.python import PythonExtension, PythonPackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.racket import RacketPackage
@@ -50,6 +65,7 @@ from spack.build_systems.sourceforge import SourceforgePackage
 from spack.build_systems.sourceware import SourcewarePackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.xorg import XorgPackage
+from spack.builder import run_after, run_before
 from spack.dependency import all_deptypes
 from spack.directives import *
 from spack.install_test import get_escaped_text_output
@@ -62,17 +78,13 @@ from spack.installer import (
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import when
 from spack.package_base import (
-    BundlePackage,
     DependencyConflictError,
-    Package,
     build_system_flags,
     env_flags,
     flatten_dependencies,
     inject_flags,
     install_dependency_symlinks,
     on_package_attributes,
-    run_after,
-    run_before,
 )
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.executable import *
@@ -83,3 +95,10 @@ from spack.variant import (
     disjoint_sets,
 )
 from spack.version import Version, ver
+
+# These are just here for editor support; they will be replaced when the build env
+# is set up.
+make = MakeExecutable("make", jobs=1)
+gmake = MakeExecutable("gmake", jobs=1)
+ninja = MakeExecutable("ninja", jobs=1)
+configure = Executable(join_path(".", "configure"))

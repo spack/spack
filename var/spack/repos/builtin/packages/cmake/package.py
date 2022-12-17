@@ -28,9 +28,14 @@ class Cmake(Package):
     executables = ["^cmake$"]
 
     version("master", branch="master")
+    version("3.25.1", sha256="1c511d09516af493694ed9baf13c55947a36389674d657a2d5e0ccedc6b291d8")
+    version("3.25.0", sha256="306463f541555da0942e6f5a0736560f70c487178b9d94a5ae7f34d0538cdd48")
+    version("3.24.3", sha256="b53aa10fa82bff84ccdb59065927b72d3bee49f4d86261249fc0984b3b367291")
     version("3.24.2", sha256="0d9020f06f3ddf17fb537dc228e1a56c927ee506b486f55fe2dc19f69bf0c8db")
     version("3.24.1", sha256="4931e277a4db1a805f13baa7013a7757a0cbfe5b7932882925c7061d9d1fa82b")
     version("3.24.0", sha256="c2b61f7cdecb1576cad25f918a8f42b8685d88a832fd4b62b9e0fa32e915a658")
+    version("3.23.5", sha256="f2944cde7a140b992ba5ccea2009a987a92413762250de22ebbace2319a0f47d")
+    version("3.23.4", sha256="aa8b6c17a5adf04de06e42c06adc7e25b21e4fe8378f44f703a861e5f6ac59c7")
     version("3.23.3", sha256="06fefaf0ad94989724b56f733093c2623f6f84356e5beb955957f9ce3ee28809")
     version("3.23.2", sha256="f316b40053466f9a416adf981efda41b160ca859e97f6a484b447ea299ff26aa")
     version("3.23.1", sha256="33fd10a8ec687a4d0d5b42473f10459bb92b3ae7def2b745dc10b192760869f3")
@@ -307,11 +312,20 @@ class Cmake(Package):
         args = []
         self.generator = make
 
+        if self.spec.satisfies("platform=windows"):
+            args.append("-GNinja")
+            self.generator = ninja
+
         if not sys.platform == "win32":
             args.append("--prefix={0}".format(self.prefix))
 
-            if spack.build_environment.should_set_parallel_jobs(jobserver_support=True):
-                args.append("--parallel={0}".format(make_jobs))
+            jobs = spack.build_environment.get_effective_jobs(
+                make_jobs,
+                parallel=self.parallel,
+                supports_jobserver=self.generator.supports_jobserver,
+            )
+            if jobs is not None:
+                args.append("--parallel={0}".format(jobs))
 
             if "+ownlibs" in spec:
                 # Build and link to the CMake-provided third-party libraries
@@ -338,9 +352,7 @@ class Cmake(Package):
             args.append("--")
         else:
             args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
-        if self.spec.satisfies("platform=windows"):
-            args.append("-GNinja")
-            self.generator = ninja
+
         args.append("-DCMAKE_BUILD_TYPE={0}".format(self.spec.variants["build_type"].value))
 
         # Install CMake correctly, even if `spack install` runs

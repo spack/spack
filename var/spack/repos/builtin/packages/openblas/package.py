@@ -89,8 +89,12 @@ class Openblas(MakefilePackage):
     # https://github.com/xianyi/OpenBLAS/pull/3712
     patch("cce.patch", when="@0.3.20 %cce")
 
+    # https://github.com/xianyi/OpenBLAS/pull/3778
+    patch("fix-cray-fortran-detection-pr3778.patch", when="@0.3.21")
+
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
+    patch("f_check-intel.patch", when="@0.3.21 %intel")
 
     # OpenBLAS >=3.0 has an official way to disable internal parallel builds
     patch("make.patch", when="@0.2.16:0.2.20")
@@ -165,8 +169,23 @@ class Openblas(MakefilePackage):
     # See <https://github.com/xianyi/OpenBLAS/issues/3760>
     patch("linktest.patch", when="@0.3.20")
 
+    # Fix build on ARM Neoverse N1 when using gcc@:9. The 1st patch is context for the 2nd patch:
+    patch(
+        "https://github.com/xianyi/OpenBLAS/commit/68277282df4adaafaf9b4a01c2eeb629eed99528.patch?full_index=1",
+        sha256="a4c642fbaeafbf4178558368212594e99c74a7b6c2a119fd0627f7b54f1ebfb3",
+        when="@0.3.21 %gcc@:9",
+    )
+    # gcc@:9 doesn't support sve2 and bf16 architecture features, apply upstream fix:
+    patch(
+        "https://github.com/xianyi/OpenBLAS/commit/c957ad684ed6b8ca64f332221b376f2ad0fdc51a.patch?full_index=1",
+        sha256="c20f5188a9145395c37c22ae5c1f72bfc24edfbccbb636cc8f9227345615daa8",
+        when="@0.3.21 %gcc@:9",
+    )
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
-    conflicts("%gcc@7.0.0:7.3,8.0.0:8.2", when="@0.3.11:")
+    # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
+    # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
+    conflicts("%gcc@7:7.3.0,8:8.2", when="@0.3.11:")
 
     # See https://github.com/xianyi/OpenBLAS/issues/3074
     conflicts("%gcc@:10.1", when="@0.3.13 target=ppc64le:")
@@ -193,7 +212,7 @@ class Openblas(MakefilePackage):
         spec = self.spec
         iflags = []
         if name == "cflags":
-            if spec.satisfies("@0.3.20 %oneapi"):
+            if spec.satisfies("@0.3.20: %oneapi"):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 
@@ -220,7 +239,10 @@ class Openblas(MakefilePackage):
         # a f2c translated LAPACK version
         #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
         if self.compiler.fc is None and "~fortran" not in self.spec:
-            raise InstallError("OpenBLAS requires both C and Fortran compilers!")
+            raise InstallError(
+                self.compiler.cc
+                + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
+            )
 
     @staticmethod
     def _read_targets(target_file):
@@ -379,8 +401,9 @@ class Openblas(MakefilePackage):
         if "+consistent_fpcsr" in self.spec:
             make_defs += ["CONSISTENT_FPCSR=1"]
 
-        # Flang/f18 does not provide ETIME as an intrinsic
-        if self.spec.satisfies("%clang"):
+        # Flang/f18 does not provide ETIME as an intrinsic.
+        # Do not set TIMER variable if fortran is disabled.
+        if self.spec.satisfies("+fortran%clang"):
             make_defs.append("TIMER=INT_CPU_TIME")
 
         # Prevent errors in `as` assembler from newer instructions

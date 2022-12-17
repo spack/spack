@@ -474,6 +474,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("lustre", default=False, description="Lustre filesystem library support")
     variant("romio", default=True, description="Enable ROMIO support")
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
+    variant(
+        "orterunprefix",
+        default=False,
+        description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
+    )
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -928,6 +933,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies("~rsh"):
             config_args.append("--enable-mca-no-build=plm-rsh")
 
+        # Useful for ssh-based environments
+        if spec.satisfies("@1.3:"):
+            if spec.satisfies("+orterunprefix"):
+                config_args.append("--enable-orterun-prefix-by-default")
+
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
         # https://github.com/open-mpi/ompi/issues/6114#issuecomment-446279495
@@ -1053,8 +1063,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         return config_args
 
-    @when("+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="+wrapper-rpath")
     def filter_rpaths(self):
         def filter_lang_rpaths(lang_tokens, rpath_arg):
             if self.compiler.cc_rpath_arg == rpath_arg:
@@ -1086,8 +1095,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         filter_lang_rpaths(["c++", "CC", "cxx"], self.compiler.cxx_rpath_arg)
         filter_lang_rpaths(["fort", "f77", "f90"], self.compiler.fc_rpath_arg)
 
-    @when("@:3.0.4+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="@:3.0.4+wrapper-rpath")
     def filter_pc_files(self):
         files = find(self.spec.prefix.lib.pkgconfig, "*.pc")
         x = FileFilter(*[f for f in files if not os.path.islink(f)])

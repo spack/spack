@@ -12,12 +12,13 @@ class Pastix(CMakePackage, CudaPackage):
     based on direct methods"""
 
     homepage = "https://gitlab.inria.fr/solverstack/pastix/blob/master/README.md"
-    url = "https://gitlab.inria.fr/solverstack/pastix/uploads/baa57033d98378e0f3affbf45900fb6e/pastix-6.2.1.tar.gz"
+    url = "https://files.inria.fr/pastix/releases/v6/pastix-6.2.2.tar.gz"
     git = "https://gitlab.inria.fr/solverstack/pastix.git"
     maintainers = ["fpruvost", "mfaverge", "ramet"]
 
     version("master", branch="master", submodules=True)
-    version("6.2.1", "50742cc0e6e03728f7529fc607d5c65b9e14205f192947678d6103a872a6210c")
+    version("6.2.2", "cce9a1fe4678b5733c9f1a5a52f77b040eadc3e254418c6fb03d8ab37dede508")
+    version("6.2.1", "b680cbfc265df8cba18d3a7093fcc02e260198c4a2d6a86d1e684bb291e309dd")
 
     # cmake's specific
     variant("shared", default=True, description="Build Pastix as a shared library")

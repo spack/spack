@@ -91,6 +91,7 @@ class Gmsh(CMakePackage):
     depends_on("zlib", when="+compression")
     depends_on("metis", when="+metis+external")
     depends_on("cgns", when="+cgns")
+    depends_on("cgns~scoping", when="+cgns @:4.7.1")
     with when("+petsc"):
         depends_on("petsc~int64")
         depends_on("petsc+mpi", when="+mpi")

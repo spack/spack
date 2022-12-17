@@ -34,8 +34,11 @@ class Llvm(CMakePackage, CudaPackage):
 
     family = "compiler"  # Used by lmod
 
-    # fmt: off
     version("main", branch="main")
+    version("15.0.6", sha256="4d857d7a180918bdacd09a5910bf9743c9861a1e49cb065a85f7a990f812161d")
+    version("15.0.5", sha256="c47640269e0251e009ae18a25162df4e20e175885286e21d28c054b084b991a4")
+    version("15.0.4", sha256="e24b4d3bf7821dcb1c901d1e09096c1f88fb00095c5a6ef893baab4836975e52")
+    version("15.0.3", sha256="8ac8e4c0982bf236526d737d385db5e1e66543ab217a9355d54159659eae3774")
     version("15.0.2", sha256="dc11d35e60ab61792baa607dff080c993b39de23fb93b3d3369ba15b0601c307")
     version("15.0.1", sha256="20bccb964e39f604fdc16d1258f94d2053fbdcdab2b2f6d5e20e6095ec403c00")
     version("15.0.0", sha256="36d83cd84e1caf2bcfda1669c029e2b949adb9860cff01e7d3246ac2348b11ae")
@@ -66,17 +69,6 @@ class Llvm(CMakePackage, CudaPackage):
     version("5.0.2", sha256="fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795")
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
-    version("4.0.1", sha256="cd664fb3eec3208c08fb61189c00c9118c290b3be5adb3215a97b24255618be5")
-    version("4.0.0", sha256="28ca4b2fc434cb1f558e8865386c233c2a6134437249b8b3765ae745ffa56a34")
-    version("3.9.1", sha256="f5b6922a5c65f9232f83d89831191f2c3ccf4f41fdd8c63e6645bbf578c4ab92")
-    version("3.9.0", sha256="9c6563a72c8b5b79941c773937d997dd2b1b5b3f640136d02719ec19f35e0333")
-    version("3.8.1", sha256="69360f0648fde0dc3d3c4b339624613f3bc2a89c4858933bc3871a250ad02826")
-    version("3.8.0", sha256="b5cc5974cc2fd4e9e49e1bbd0700f872501a8678bd9694fa2b36c65c026df1d1")
-    version("3.7.1", sha256="d2cb0eb9b8eb21e07605bfe5e7a5c6c5f5f8c2efdac01ec1da6ffacaabe4195a")
-    version("3.7.0", sha256="dc00bc230be2006fb87b84f6fe4800ca28bc98e6692811a98195da53c9cb28c6")
-    version("3.6.2", sha256="f75d703a388ba01d607f9cf96180863a5e4a106827ade17b221d43e6db20778a")
-    version("3.5.1", sha256="5d739684170d5b2b304e4fb521532d5c8281492f71e1a8568187bfa38eb5909d")
-    # fmt: on
 
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
@@ -232,13 +224,11 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
     depends_on("ninja", type="build")
-    depends_on("python@2.7:2.8", when="@:4 ~python", type="build")
-    depends_on("python", when="@5: ~python", type="build")
+    depends_on("python", when="~python", type="build")
     depends_on("pkgconfig", type="build")
 
     # Universal dependency
-    depends_on("python@2.7:2.8", when="@:4+python")
-    depends_on("python", when="@5:+python")
+    depends_on("python", when="+python")
 
     # clang and clang-tools dependencies
     depends_on("z3@4.7.1:", when="+z3")
@@ -259,20 +249,14 @@ class Llvm(CMakePackage, CudaPackage):
         depends_on("swig@3:", when="@12:")
     depends_on("libedit", when="+lldb")
     depends_on("ncurses", when="+lldb")
-    depends_on("py-six", when="@5.0.0: +lldb +python")
+    depends_on("py-six", when="+lldb+python")
 
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins", when="+gold")
 
-    # polly plugin
-    depends_on("gmp", when="@:3.6 +polly")
-    depends_on("isl", when="@:3.6 +polly")
-
     # Older LLVM do not build with newer compilers, and vice versa
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0", when="@8:")
-    # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
-    conflicts("%clang@8:", when="@:4")
     # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
     conflicts("%gcc@8.4:8.4.9", when="@12: target=aarch64:")
 
@@ -288,14 +272,6 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%clang@:10", when="@13:+libcxx")
     conflicts("%apple-clang@:11", when="@13:+libcxx")
 
-    # libcxx-4 and compiler-rt-4 fail to build with "newer" clang and gcc versions:
-    conflicts("%gcc@7:", when="@:4+libcxx")
-    conflicts("%clang@6:", when="@:4+libcxx")
-    conflicts("%apple-clang@6:", when="@:4+libcxx")
-    conflicts("%gcc@7:", when="@:4+compiler-rt")
-    conflicts("%clang@6:", when="@:4+compiler-rt")
-    conflicts("%apple-clang@6:", when="@:4+compiler-rt")
-
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
 
@@ -304,14 +280,10 @@ class Llvm(CMakePackage, CudaPackage):
     # Fixed in upstream versions of both
     conflicts("^cmake@3.19.0", when="@6:11.0.0")
 
-    # Github issue #4986
-    patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
-
     # sys/ustat.h has been removed in favour of statfs from glibc-2.28. Use fixed sizes:
     patch("llvm5-sanitizer-ustat.patch", when="@4:6.0.0+compiler-rt")
 
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
-    patch("llvm4-lld-ELF-Symbols.patch", when="@4+lld%clang@6:")
     patch("llvm5-lld-ELF-Symbols.patch", when="@5+lld%clang@7:")
 
     # Fix missing std:size_t in 'llvm@4:5' when built with '%clang@7:'

@@ -18,6 +18,7 @@ class RRtracklayer(RPackage):
 
     bioc = "rtracklayer"
 
+    version("1.58.0", commit="54a74972c08775fdf1e83e6e22cd0b8fad677fc1")
     version("1.56.1", commit="4c6d2201fcb102d471bd88f4f51cc34317669955")
     version("1.56.0", commit="1d70f7dc464ad87a1fde61588cd9ae0cb86b6e86")
     version("1.54.0", commit="04cdd75521a8364e67a49d7352500dd4a3e83c55")
