@@ -129,7 +129,7 @@ class Vtk(CMakePackage):
     depends_on("lz4")
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-cxx")
+    depends_on("netcdf-cxx4")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("zlib")
@@ -148,6 +148,8 @@ class Vtk(CMakePackage):
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
     depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
+    depends_on("nlohmann-json", when="@9.2:")
+    # depends_on("verdict", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
     patch("find_fujitsu_mpi.patch", when="@:8.2.0%fj")
