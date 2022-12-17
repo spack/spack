@@ -79,6 +79,9 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
 
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
