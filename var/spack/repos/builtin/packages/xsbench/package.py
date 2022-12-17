@@ -26,12 +26,11 @@ class Xsbench(MakefilePackage, CudaPackage):
 
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=True, description="Build with OpenMP support")
-    variant("cuda", default=False, when='@19:', description="Build with CUDA support")
+    variant("cuda", default=False, when="@19:", description="Build with CUDA support")
 
     depends_on("mpi", when="+mpi")
 
     conflicts("cuda_arch=none", when="+cuda", msg="Must select a CUDA architecture")
-    
     conflicts("+cuda", when="+openmp", msg="OpenMP must be disabled to support CUDA")
 
     @property
@@ -52,7 +51,7 @@ class Xsbench(MakefilePackage, CudaPackage):
         cflags = ""
 
         if "+cuda" in self.spec:
-            return ['SM_VERSION={0}'.format(self.spec.variants['cuda_arch'].value[0])]
+            return ["SM_VERSION={0}".format(self.spec.variants["cuda_arch"].value[0])]
 
         if not self.spec.satisfies("%nvhpc@:20.11"):
             cflags = "-std=gnu99"
