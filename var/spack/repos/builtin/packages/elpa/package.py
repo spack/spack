@@ -7,12 +7,19 @@ import os
 
 from spack.package import *
 
+#
+# Please note that you can open issues on the github page of ELPA:
+# https://github.com/marekandreas/elpa/issues
+#
 
 class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Eigenvalue solvers for Petaflop-Applications (ELPA)"""
 
     homepage = "https://elpa.mpcdf.mpg.de/"
     url = "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz"
+    git = "https://gitlab.mpcdf.mpg.de/elpa/elpa.git"
+
+    version("master", branch="master")
 
     version(
         "2022.11.001.rc2", sha256="13d67e7d69894c631b48e4fcac905b51c4e41554c7eb4731e98c4e205f0fab9f"
