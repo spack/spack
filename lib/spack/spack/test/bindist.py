@@ -13,13 +13,16 @@ import pytest
 from llnl.util.filesystem import join_path, visit_directory_tree
 
 import spack.binary_distribution as bindist
+import spack.caches
 import spack.config
+import spack.fetch_strategy
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.binary_distribution import get_buildfile_manifest
 from spack.directory_layout import DirectoryLayout
@@ -58,7 +61,7 @@ def mirror_dir(tmpdir_factory):
 
 @pytest.fixture(scope="function")
 def test_mirror(mirror_dir):
-    mirror_url = "file://%s" % mirror_dir
+    mirror_url = url_util.path_to_file_url(mirror_dir)
     mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
     yield mirror_dir
     mirror_cmd("rm", "--scope=site", "test-mirror-func")
@@ -200,8 +203,7 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     buildcache_cmd("create", "-auf", "-d", mirror_dir, cspec.name)
 
     # Create mirror index
-    mirror_url = "file://{0}".format(mirror_dir)
-    buildcache_cmd("update-index", "-d", mirror_url)
+    buildcache_cmd("update-index", "-d", mirror_dir)
     # List the buildcaches in the mirror
     buildcache_cmd("list", "-alv")
 
@@ -266,8 +268,7 @@ def test_relative_rpaths_create_default_layout(mirror_dir):
     buildcache_cmd("create", "-aur", "-d", mirror_dir, cspec.name)
 
     # Create mirror index
-    mirror_url = "file://%s" % mirror_dir
-    buildcache_cmd("update-index", "-d", mirror_url)
+    buildcache_cmd("update-index", "-d", mirror_dir)
 
     # Uninstall the package and deps
     uninstall_cmd("-y", "--dependents", gspec.name)
@@ -323,9 +324,9 @@ def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
     mirror = os.path.join(testpath, "mirror")
-    mirrors = {"test-mirror": mirror}
+    mirrors = {"test-mirror": url_util.path_to_file_url(mirror)}
     mirrors = spack.mirror.MirrorCollection(mirrors)
-    mirror = spack.mirror.Mirror("file://" + mirror)
+    mirror = spack.mirror.Mirror(url_util.path_to_file_url(mirror))
 
     gpg_dir1 = os.path.join(testpath, "gpg1")
     gpg_dir2 = os.path.join(testpath, "gpg2")
@@ -389,7 +390,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
 
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
     s = Spec("libdwarf").concretized()
 
@@ -421,7 +422,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
 
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
     spack.config.set("mirrors", {"test": mirror_url})
 
     s = Spec("libdwarf").concretized()
@@ -514,7 +515,6 @@ def test_update_sbang(tmpdir, test_mirror):
 
     # Need a fake mirror with *function* scope.
     mirror_dir = test_mirror
-    mirror_url = "file://{0}".format(mirror_dir)
 
     # Assume all commands will concretize old_spec the same way.
     install_cmd("--no-cache", old_spec.name)
@@ -523,7 +523,7 @@ def test_update_sbang(tmpdir, test_mirror):
     buildcache_cmd("create", "-u", "-a", "-d", mirror_dir, old_spec_hash_str)
 
     # Need to force an update of the buildcache index
-    buildcache_cmd("update-index", "-d", mirror_url)
+    buildcache_cmd("update-index", "-d", mirror_dir)
 
     # Uninstall the original package.
     uninstall_cmd("-y", old_spec_hash_str)

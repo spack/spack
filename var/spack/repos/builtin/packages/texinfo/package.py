@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import re
 
 from spack.package import *
@@ -54,6 +53,13 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     patch("update_locale_handling.patch", when="@6.3:6.5")
 
     patch("nvhpc.patch", when="%nvhpc")
+
+    @property
+    def build_targets(self):
+        targets = []
+        if self.spec.satisfies("@7.0:"):
+            targets.append("CFLAGS={}".format(self.compiler.c11_flag))
+        return targets
 
     @classmethod
     def determine_version(cls, exe):

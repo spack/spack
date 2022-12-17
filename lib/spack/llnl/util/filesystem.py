@@ -99,7 +99,9 @@ def getuid():
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     if is_windows:
-        if os.path.exists(dst):
+        # Windows path existence checks will sometimes fail on junctions/links/symlinks
+        # so check for that case
+        if os.path.exists(dst) or os.path.islink(dst):
             os.remove(dst)
     os.rename(src, dst)
 
@@ -288,7 +290,10 @@ def filter_file(regex, repl, *filenames, **kwargs):
         shutil.copy(filename, tmp_filename)
 
         try:
-            extra_kwargs = {"errors": "surrogateescape"}
+            # To avoid translating line endings (\n to \r\n and vis versa)
+            # we force os.open to ignore translations and use the line endings
+            # the file comes with
+            extra_kwargs = {"errors": "surrogateescape", "newline": ""}
 
             # Open as a text file and filter until the end of the file is
             # reached or we found a marker in the line if it was specified
