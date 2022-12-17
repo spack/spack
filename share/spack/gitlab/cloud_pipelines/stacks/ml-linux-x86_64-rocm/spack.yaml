@@ -126,8 +126,9 @@ spack:
     match_behavior: first
     mappings:
       - match:
-          - llvm-amdgpu
           - llvm
+          - llvm-amdgpu
+          - py-tensorflow
           - py-torch
           - rocblas
         runner-attributes:

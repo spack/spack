@@ -124,6 +124,7 @@ spack:
     mappings:
       - match:
           - llvm
+          - py-tensorflow
           - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "x86_64_v4" ]
