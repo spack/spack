@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
     version("master", branch="master", submodules=True)
+    version("1.13.1", tag="v1.13.1", submodules=True)
     version("1.13.0", tag="v1.13.0", submodules=True)
     version("1.12.1", tag="v1.12.1", submodules=True)
     version("1.12.0", tag="v1.12.0", submodules=True)
