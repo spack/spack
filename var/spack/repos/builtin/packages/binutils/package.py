@@ -186,8 +186,11 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         install(join_path(self.build_directory, "bfd", "*.h"), extradir)
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%cce"):
+        spec = self.spec
+        if spec.satisfies("%cce"):
             env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
 
-        if "+nls" in self.spec:
-            env.append_flags("LDFLAGS", "-lintl")
+        if "+nls" in spec:
+            # Add -lintl if provided by gettext. Otherwise, libintl is provided by system's glibc:
+            if any("libintl." in filename.split("/")[-1] for filename in spec["gettext"].libs):
+                env.append_flags("LDFLAGS", "-lintl")
