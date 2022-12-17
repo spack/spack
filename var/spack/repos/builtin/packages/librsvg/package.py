@@ -53,4 +53,16 @@ class Librsvg(AutotoolsPackage):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     def configure_args(self):
-        return ["--enable-gtk-doc=" + ("yes" if self.spec.variants["doc"].value else "no")]
+        args=[]
+        if "+doc" in self.spec:
+            args.append("--enable-gtk-doc")
+        else:
+            args.extend(
+                [
+                    "--disable-gtk-doc",
+                    "GTKDOC_MKPDF=/bin/true",
+                    "GTKDOC_REBASE=/bin/true",
+                    "GTKDOC_CHECK_PATH=/bin/true",
+                ]
+            )
+        return args
