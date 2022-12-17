@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Xsbench(MakefilePackage):
+class Xsbench(MakefilePackage, CudaPackage):
     """XSBench is a mini-app representing a key computational
     kernel of the Monte Carlo neutronics application OpenMC.
     A full explanation of the theory and purpose of XSBench
@@ -26,21 +26,33 @@ class Xsbench(MakefilePackage):
 
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=True, description="Build with OpenMP support")
+    variant("cuda", default=False, when='@19:', description="Build with CUDA support")
 
     depends_on("mpi", when="+mpi")
+
+    conflicts("cuda_arch=none", when="+cuda", msg="Must select a CUDA architecture")
+    
+    conflicts("+cuda", when="+openmp", msg="OpenMP must be disabled to support CUDA")
 
     @property
     def build_directory(self):
         if self.spec.satisfies("@:18"):
             return "src"
-        else:
+
+        if "+openmp" in self.spec:
             return "openmp-threading"
+
+        if "+cuda" in self.spec:
+            return "cuda"
 
     @property
     def build_targets(self):
 
         targets = []
         cflags = ""
+
+        if "+cuda" in self.spec:
+            return ['SM_VERSION={0}'.format(self.spec.variants['cuda_arch'].value[0])]
 
         if not self.spec.satisfies("%nvhpc@:20.11"):
             cflags = "-std=gnu99"
