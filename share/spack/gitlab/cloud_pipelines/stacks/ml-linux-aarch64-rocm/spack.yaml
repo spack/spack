@@ -129,7 +129,10 @@ spack:
     mappings:
       - match:
           - llvm
+          - llvm-amdgpu
+          - py-tensorflow
           - py-torch
+          - rocblas
         runner-attributes:
           tags: [ "spack", "huge", "aarch64" ]
           variables:
