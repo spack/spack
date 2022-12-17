@@ -15,7 +15,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz"
 
     version(
-        "2022.05.001", sha256="207e6f26d6532fb70373afc3ef3d38255213af61def659c25dad3a30e4fca38b"
+        "2022.11.001.rc2", sha256="13d67e7d69894c631b48e4fcac905b51c4e41554c7eb4731e98c4e205f0fab9f"
     )
     version(
         "2021.11.001", sha256="fb361da6c59946661b73e51538d419028f763d7cb9dacf9d8cd5c9cd3fb7802f"
@@ -211,8 +211,6 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
                 "FC={0}".format(spec["mpi"].mpifc),
                 "SCALAPACK_LDFLAGS={0}".format(spec["scalapack"].libs.joined()),
             ]
-
-        options += ["CPP=cpp"]
 
         if "+autotune" in self.spec:
             options.append("--enable-autotune-redistribute-matrix")
