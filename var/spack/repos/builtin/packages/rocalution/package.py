@@ -103,7 +103,7 @@ class Rocalution(CMakePackage):
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
+    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant(
         "build_type",
         default="Release",
