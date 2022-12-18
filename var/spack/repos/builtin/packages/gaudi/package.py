@@ -51,6 +51,7 @@ class Gaudi(CMakePackage):
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
 
+    patch("tbb.patch")
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
     depends_on("boost@1.67.0: +python")
