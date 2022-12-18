@@ -14,7 +14,7 @@ class Relion(CMakePackage, CudaPackage):
 
     homepage = "http://www2.mrc-lmb.cam.ac.uk/relion"
     git = "https://github.com/3dem/relion.git"
-        url = "https://github.com/3dem/relion/archive/4.0.0.zip"
+    url = "https://github.com/3dem/relion/archive/4.0.0.zip"
 
     version("4.0.0", sha256="0987e684e9d2dfd630f1ad26a6847493fe9fcd829ec251d8bc471d11701d51dd")
 
