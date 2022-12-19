@@ -225,7 +225,13 @@ class TestUninstallFromEnv(object):
 
     @pytest.fixture
     def environment_setup(
-        self, mutable_mock_env_path, config, mock_packages, mutable_database, install_mockery
+        self,
+        mutable_mock_env_path,
+        config,
+        mock_packages,
+        mutable_database,
+        install_mockery,
+        tmpdir,
     ):
         # make environments local to each instantiation of the fixture so they don't clash
         # in parallel
