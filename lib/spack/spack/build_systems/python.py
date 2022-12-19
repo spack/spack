@@ -277,6 +277,9 @@ class PythonPackage(PythonExtension):
         First search: an "installed" external that shares a prefix with this package
         Second search: a configured external that shares a prefix with this package
         Third search: search this prefix for a python package
+
+        Returns:
+          spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
         """
         python_externals_installed = [
             s for s in spack.store.db.query("python") if s.prefix == self.spec.external_path
