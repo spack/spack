@@ -10,8 +10,7 @@ from spack.package import *
 
 
 class NodeJs(Package):
-    """Node.js is a JavaScript runtime built on Chrome's V8 JavaScript
-    engine."""
+    """Node.js is an open-source, cross-platform JavaScript runtime environment."""
 
     homepage = "https://nodejs.org/"
     url = "https://nodejs.org/dist/v13.5.0/node-v13.5.0.tar.gz"
@@ -20,20 +19,24 @@ class NodeJs(Package):
 
     maintainers = ["cosmicexplorer"]
 
-    # Current (latest features)
+    # Current (latest features) - odd major number
+    version("19.2.0", sha256="aac9d1a366fb57d68f4639f9204d1de5d6387656959a97ed929a5ba9e62c033a")
     version("15.3.0", sha256="cadfa384a5f14591b84ce07a1afe529f28deb0d43366fb0ae4e78afba96bfaf2")
-    version("14.16.1", sha256="5f5080427abddde7f22fd2ba77cd2b8a1f86253277a1eec54bc98a202728ce80")
-    version("14.13.0", sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61")
-    version("14.10.0", sha256="7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e")
     version("13.8.0", sha256="815b5e1b18114f35da89e4d98febeaba97555d51ef593bd5175db2b05f2e8be6")
     version("13.5.0", sha256="4b8078d896a7550d7ed399c1b4ac9043e9f883be404d9b337185c8d8479f2db8")
 
-    # LTS (recommended for most users)
+    # LTS (recommended for most users) - even major number
     version(
-        "14.15.1",
-        sha256="a1120472bf55aea745287693a6651e16973e1008c9d6107df350126adf9716fe",
+        "18.12.1",
+        sha256="ba8174dda00d5b90943f37c6a180a1d37c861d91e04a4cb38dc1c0c74981c186",
         preferred=True,
     )
+    version("16.18.1", sha256="3d24c9c3a953afee43edc44569045eda56cd45cd58b0539922d17da62736189c")
+    version("14.21.1", sha256="76ba961536dc11e4dfd9b198c61ff3399e655eca959ae4b66d926f29bfcce9d3")
+    version("14.16.1", sha256="5f5080427abddde7f22fd2ba77cd2b8a1f86253277a1eec54bc98a202728ce80")
+    version("14.15.1", sha256="a1120472bf55aea745287693a6651e16973e1008c9d6107df350126adf9716fe")
+    version("14.13.0", sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61")
+    version("14.10.0", sha256="7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e")
     version("12.18.4", sha256="a802d87e579e46fc52771ed6f2667048320caca867be3276f4c4f1bbb41389c3")
     version("12.18.3", sha256="6ea85f80e01b007cc9b566b8836513bc5102667d833bad4c1092be60fa60c2d4")
     version("12.16.0", sha256="ae2dfe74485d821d4fef7cf1802acd2322cd994c853a2327c4306952f4453441")
@@ -57,9 +60,15 @@ class NodeJs(Package):
 
     # https://github.com/nodejs/node/blob/master/BUILDING.md#unix-and-macos
     depends_on("gmake@3.81:", type="build")
+    depends_on("python@3.6:3.11", when="@19.1:", type="build")
+    depends_on("python@3.6:3.10", when="@16.11:19.0", type="build")
+    depends_on("python@3.6:3.9", when="@16.0:16.10", type="build")
+    depends_on("python@2.7,3.5:3.8", when="@15", type="build")
+    depends_on("python@2.7,3.6:3.10", when="@14.18.2:14", type="build")
+    depends_on("python@2.7,3.5:3.8", when="@13.1:14.18.1", type="build")
+    depends_on("python@2.7,3.5:3.7", when="@12:13.0", type="build")
     depends_on("libtool", type="build", when=sys.platform != "darwin")
     depends_on("pkgconfig", type="build")
-    depends_on("python@2.7:2.8,3.5:", type="build")
     # depends_on('bash-completion', when="+bash-completion")
     depends_on("icu4c", when="+icu4c")
     depends_on("openssl@1.1:", when="+openssl")
@@ -79,17 +88,30 @@ class NodeJs(Package):
         env.set("NODE_GYP_FORCE_PYTHON", self.spec["python"].command.path)
 
     def configure_args(self):
-        # On OSX, the system libtool must be used
+        # On macOS, the system libtool must be used
         # So, we ensure that this is the case by...
         if sys.platform == "darwin":
+            # Possible output formats:
+            #
+            # /usr/bin/libtool
             process_pipe = subprocess.Popen(["which", "libtool"], stdout=subprocess.PIPE)
             result_which = process_pipe.communicate()[0].strip()
+
+            # Possible output formats:
+            #
+            # /usr/bin/libtool
+            # libtool: /usr/bin/libtool
+            # libtool: /usr/bin/libtool /Applications/Xcode.app/.../share/man/man1/libtool.1
             process_pipe = subprocess.Popen(["whereis", "libtool"], stdout=subprocess.PIPE)
-            result_whereis = process_pipe.communicate()[0].strip().split()[-1]
+            result_whereis_list = process_pipe.communicate()[0].strip().split()
+            if len(result_whereis_list) == 1:
+                result_whereis = result_whereis_list[0]
+            else:
+                result_whereis = result_whereis_list[1]
+
             assert result_which == result_whereis, (
-                "On OSX the system libtool must be used. Please"
-                "(temporarily) remove \n %s or its link to libtool from"
-                "path"
+                "On macOS the system libtool must be used. Please (temporarily) remove "
+                "\n or its link to libtool from PATH"
             )
 
         args = [
