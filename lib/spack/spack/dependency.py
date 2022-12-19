@@ -6,7 +6,7 @@
 import spack.spec
 
 #: The types of dependency relationships that Spack understands.
-all_deptypes = ("build", "link", "run", "test", "compiler")
+all_deptypes = ("build", "link", "run", "test")
 
 #: Default dependency type if none is specified
 default_deptype = ("build", "link")
