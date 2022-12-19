@@ -2317,6 +2317,15 @@ class SpecBuilder(object):
 
     @staticmethod
     def sort_fn(function_tuple):
+        """Ensure attributes are evaluated in the correct order.
+
+        hash attributes are handled first, since they imply entire concrete specs
+        node attributes are handled next, since they instantiate nodes
+        node_compiler attributes are handled next to ensure they come before node_compiler_version
+        external_spec_selected attributes are handled last, so that external extensions can find
+        the concrete specs on which they depend because all nodes are fully constructed before we
+        consider which ones are external.
+        """
         name = function_tuple[0]
         if name == "hash":
             return (-5, 0)
