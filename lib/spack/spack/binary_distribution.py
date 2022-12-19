@@ -753,7 +753,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, concurrency
 
     # Now convert the index to JSON, compute its hash, and push the two files to
     # the mirror.
-    index = sjson.dump(db)
+    index = json.dumps(db, separators=(",", ":"))
     index_hash = compute_hash(index)
     with tempfile.TemporaryDirectory() as temp_dir:
         # Write out the index JSON
@@ -972,7 +972,7 @@ def generate_key_index(key_prefix, tmpdir=None):
 
     index = {"keys": dict((fingerprint, {}) for fingerprint in sorted(set(fingerprints)))}
     with open(target, "w") as f:
-        sjson.dump(index, f)
+        json.dump(index, f, separators=(",", ":"))
 
     if not keys_local:
         try:
@@ -1099,10 +1099,9 @@ def _build_tarball(
 
     # add sha256 checksum to spec.json
 
-    with open(spec_file, "r") as inputfile:
-        content = inputfile.read()
+    with open(spec_file, "r") as f:
         if spec_file.endswith(".json"):
-            spec_dict = sjson.load(content)
+            spec_dict = json.load(f)
         else:
             raise ValueError("{0} not a valid spec file type".format(spec_file))
     spec_dict["buildcache_layout_version"] = 1
@@ -1117,8 +1116,8 @@ def _build_tarball(
     buildinfo["relative_rpaths"] = relative
     spec_dict["buildinfo"] = buildinfo
 
-    with open(specfile_path, "w") as outfile:
-        outfile.write(sjson.dump(spec_dict))
+    with open(specfile_path, "w") as f:
+        json.dump(spec_dict, f, separators=(",", ":"))
 
     # sign the tarball and spec file with gpg
     if not unsigned:
@@ -1659,7 +1658,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         if specfile_path.endswith(".json.sig"):
             spec_dict = Spec.extract_json_from_clearsig(content)
         else:
-            spec_dict = sjson.load(content)
+            spec_dict = json.loads(content)
 
     bchecksum = spec_dict["binary_cache_checksum"]
     filename = download_result["tarball_stage"].save_filename
@@ -1943,7 +1942,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
 
         try:
             _, _, json_file = web_util.read_from_url(keys_index)
-            json_index = sjson.load(codecs.getreader("utf-8")(json_file))
+            json_index = json.load(codecs.getreader("utf-8")(json_file))
         except (URLError, web_util.SpackWebError) as url_err:
             if web_util.url_exists(keys_index):
                 err_msg = [

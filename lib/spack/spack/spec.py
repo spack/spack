@@ -2454,11 +2454,11 @@ class Spec(object):
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e)) from e
 
     @staticmethod
-    def extract_json_from_clearsig(data):
+    def extract_json_from_clearsig(data: str):
         m = CLEARSIGN_FILE_REGEX.search(data)
         if m:
-            return sjson.load(m.group(1))
-        return sjson.load(data)
+            return json.loads(m.group(1))
+        return json.loads(data)
 
     @staticmethod
     def from_signed_json(stream):
