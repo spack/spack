@@ -206,8 +206,8 @@ class Llvm(CMakePackage, CudaPackage):
     )
 
     compiles("cxx", when="+clang")
-    can_inject("libstdcxx", when="+clang")
-    can_inject("libcxx", when="+libcxx +clang")
+    can_inject("libstdcxx", language="cxx", when="+clang")
+    can_inject("libcxx", language="cxx", when="+libcxx +clang")
 
     provides("libllvm@14", when="@14.0.0:14")
     provides("libllvm@13", when="@13.0.0:13")

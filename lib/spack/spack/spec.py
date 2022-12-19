@@ -666,14 +666,16 @@ class DependencySpec(object):
     - spec: Spec depended on by parent.
     - parent: Spec that depends on `spec`.
     - deptypes: list of strings, representing dependency relationships.
+    - languages: used to mark the dependency as the chosen compiler for a language.
     """
 
-    __slots__ = "parent", "spec", "deptypes"
+    __slots__ = "parent", "spec", "deptypes", "languages"
 
-    def __init__(self, parent, spec, deptypes):
+    def __init__(self, parent, spec, deptypes, languages):
         self.parent = parent
         self.spec = spec
         self.deptypes = dp.canonical_deptype(deptypes)
+        self.languages = dp.canonical_language(languages)
 
     def update_deptypes(self, deptypes):
         deptypes = set(deptypes)
@@ -685,7 +687,7 @@ class DependencySpec(object):
         return changed
 
     def copy(self):
-        return DependencySpec(self.parent, self.spec, self.deptypes)
+        return DependencySpec(self.parent, self.spec, self.deptypes, self.languages)
 
     def add_type(self, type):
         self.deptypes = dp.canonical_deptype(self.deptypes + dp.canonical_deptype(type))
@@ -694,6 +696,7 @@ class DependencySpec(object):
         yield self.parent.name if self.parent else None
         yield self.spec.name if self.spec else None
         yield self.deptypes
+        yield self.languages
 
     def __str__(self):
         return "%s %s--> %s" % (
@@ -703,10 +706,12 @@ class DependencySpec(object):
         )
 
     def canonical(self):
-        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
+        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes, self.languages
 
     def flip(self):
-        return DependencySpec(parent=self.spec, spec=self.parent, deptypes=self.deptypes)
+        return DependencySpec(
+            parent=self.spec, spec=self.parent, deptypes=self.deptypes, languages=self.languages
+        )
 
 
 class CompilerFlag(str):
@@ -920,7 +925,7 @@ class _EdgeMap(collections.abc.Mapping):
 
         return clone
 
-    def select(self, parent=None, child=None, deptypes=dp.all_deptypes):
+    def select(self, parent=None, child=None, deptypes=dp.all_deptypes, languages=None):
         """Select a list of edges and return them.
 
         If an edge:
@@ -960,6 +965,9 @@ class _EdgeMap(collections.abc.Mapping):
                 for dep in selected
                 if not dep.deptypes or any(d in deptypes for d in dep.deptypes)
             )
+
+        if languages:
+            selected = (d for d in selected if languages in d.languages)
 
         return list(selected)
 
@@ -1397,7 +1405,7 @@ class Spec(object):
         deptype = dp.canonical_deptype(deptype)
         return [d for d in self._dependents.select(parent=name, deptypes=deptype)]
 
-    def edges_to_dependencies(self, name=None, deptype="all"):
+    def edges_to_dependencies(self, name=None, deptype="all", languages=None):
         """Return a list of edges connecting this node in the DAG
         to children.
 
@@ -1406,7 +1414,12 @@ class Spec(object):
             deptype (str or tuple): allowed dependency types
         """
         deptype = dp.canonical_deptype(deptype)
-        return [d for d in self._dependencies.select(child=name, deptypes=deptype)]
+        return [
+            d for d in self._dependencies.select(child=name, deptypes=deptype, languages=languages)
+        ]
+
+    def compilers(self, languages=None):
+        return [d.spec for d in self.edges_to_dependencies(languages=languages)]
 
     def dependencies(self, name=None, deptype="all"):
         """Return a list of direct dependencies (nodes in the DAG).
@@ -1555,7 +1568,7 @@ class Spec(object):
                 "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
             )
 
-    def add_dependency_edge(self, dependency_spec, deptype):
+    def add_dependency_edge(self, dependency_spec, deptype, languages=None):
         """Add a dependency edge to this spec.
 
         Args:
@@ -1582,7 +1595,7 @@ class Spec(object):
                 edge.add_type(deptype)
                 return
 
-        edge = DependencySpec(self, dependency_spec, deptype)
+        edge = DependencySpec(self, dependency_spec, deptype, languages=languages)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
@@ -5009,10 +5022,47 @@ def promote_compiler_props_to_deps(specs):
                 compiler_specs[key] = None
                 continue
 
+        # What languages does the compiler support (todo: when spec)
+        compiler_languages = set(compiler_spec.package.compiles.keys())
+
+        # What languages are required for the package
+        languages_enabled = []
+        for language, when_to_lang_spec in spec.package.language.items():
+            for when, lang_spec in when_to_lang_spec.items():
+                if when is None or spec.satisfies(when):
+                    languages_enabled.append(language)
+                    break
+
+        # Languages on the edge type
+        languages = []
+        for language in languages_enabled:
+            if language not in compiler_languages:
+                tty.warn("Compiler {} does not support language {}", compiler_spec, language)
+                continue
+            languages.append(language)
+
+        # What is injected.
+        runtime_specs = []
+        for language in languages:
+            when_to_spec = compiler_spec.package.can_inject.get(language, None)
+            if not when_to_spec:
+                # nothing to inject
+                continue
+            for when, runtime_spec in when_to_spec.items():
+                if when is None or compiler_spec.satisfies(when):
+                    s = runtime_spec.copy()
+                    s.versions = vn.VersionList(":")
+                    s.namespace = spack.repo.path.repo_for_pkg(s).namespace
+                    s._mark_concrete()
+                    runtime_specs.append(s)
+                    break
+
         # Remove the CompilerSpec property, and replace with concrete database match
         # Notice: technically the compiler should be a build/link type dep.
         try:
-            spec.add_dependency_edge(compiler_spec, deptype="build")
+            spec.add_dependency_edge(compiler_spec, deptype="build", languages=languages)
+            for dep in runtime_specs:
+                spec.add_dependency_edge(dep, deptype="link")
             spec._compiler = None
         except spack.error.SpecError:
             # This means it was already a dep

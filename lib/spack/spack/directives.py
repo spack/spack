@@ -398,8 +398,8 @@ def _language(pkg, spec, when=None):
         conditions[when_spec] = spec
 
 
-def _can_inject(pkg, spec, when=None):
-    # pkg.can_inject[name][when] = spec
+def _can_inject(pkg, spec, language, when=None):
+    # pkg.can_inject[language][when] = spec
 
     # validate
     when_spec = make_when_spec(when)
@@ -407,11 +407,13 @@ def _can_inject(pkg, spec, when=None):
         return
     spec = spack.spec.Spec(spec)
 
+    assert isinstance(language, str)
+
     if not spec.name:
         raise ValueError("Invalid can_inject directive in package '%s':" % pkg.name, spec)
 
     # register
-    conditions = pkg.can_inject.setdefault(spec.name, {})
+    conditions = pkg.can_inject.setdefault(language, {})
     if when_spec in conditions:
         conditions[when_spec].constrain(spec, deps=False)
     else:
@@ -533,8 +535,8 @@ def compiles(spec, when=None):
 
 
 @directive("can_inject")
-def can_inject(spec, when=None):
-    return lambda pkg: _can_inject(pkg, spec, when=when)
+def can_inject(spec, language, when=None):
+    return lambda pkg: _can_inject(pkg, spec, language, when=when)
 
 
 @directive("language")

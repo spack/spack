@@ -147,8 +147,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     compiles("c", when="languages=c")
     compiles("cxx", when="languages=c++")
     compiles("fortran", when="languages=fortran")
-    can_inject("libstdcxx")
-    can_inject("libgfortran")
+
+    # Dependencies on the parent
+    can_inject("libstdcxx", language="cxx")
+    can_inject("libgfortran", language="fortran")
 
     depends_on("flex", type="build", when="@master")
 
