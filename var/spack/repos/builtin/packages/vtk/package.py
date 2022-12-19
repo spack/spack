@@ -23,11 +23,7 @@ class Vtk(CMakePackage):
 
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
     version("9.1.0", sha256="8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96")
-    version(
-        "9.0.3",
-        sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a",
-        preferred=True,
-    )
+    version("9.0.3", sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a")
     version("9.0.1", sha256="1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7")
     version("9.0.0", sha256="15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715")
     version("8.2.0", sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb")
@@ -149,7 +145,6 @@ class Vtk(CMakePackage):
     depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
     depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
     depends_on("nlohmann-json", when="@9.2:")
-    # depends_on("verdict", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
     patch("find_fujitsu_mpi.patch", when="@:8.2.0%fj")
@@ -228,6 +223,8 @@ class Vtk(CMakePackage):
                         "-DVTK_MODULE_USE_EXTERNAL_VTK_fmt:BOOL=OFF",
                     ]
                 )
+            if spec.satisfies("@9.2:"):
+                cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
 
         # Some variable names have changed
         if spec.satisfies("@8.2.0"):
