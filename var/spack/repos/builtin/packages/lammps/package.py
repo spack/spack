@@ -525,8 +525,8 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("eigen@3:", when="+machdyn")
     depends_on("py-cython", when="+mliap+python")
     depends_on("py-cython", when="+ml-iap+python")
-    depends_on("py-numpy", when="+mliap+python")
-    depends_on("py-numpy", when="+ml-iap+python")
+    depends_on("py-numpy", when="+python")
+    depends_on("py-mpi4py", when="+python+mpi")
     depends_on("py-setuptools", when="@20220217:+python", type="build")
     depends_on("n2p2@2.1.4:", when="+user-hdnnp")
     depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
@@ -534,6 +534,8 @@ class Lammps(CMakePackage, CudaPackage):
 
     depends_on("googletest", type="test")
     depends_on("libyaml", type="test")
+
+    extends("python", when="+python")
 
     conflicts("+cuda", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
@@ -689,3 +691,6 @@ class Lammps(CMakePackage, CudaPackage):
 
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
+        if "+python" in self.spec:
+            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
