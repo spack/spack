@@ -6,6 +6,7 @@
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.environment as ev
+import spack.spec
 
 description = "concretize an environment and write a lockfile"
 section = "environments"
@@ -15,6 +16,11 @@ level = "long"
 def setup_parser(subparser):
     subparser.add_argument(
         "-f", "--force", action="store_true", help="Re-concretize even if already concretized."
+    )
+    subparser.add_argument(
+        "--compilers-as-deps",
+        action="store_true",
+        help="Post-process the DAG so that compilers appear as build dependencies",
     )
     subparser.add_argument(
         "--test",
@@ -43,6 +49,8 @@ def concretize(parser, args):
 
     with env.write_transaction():
         concretized_specs = env.concretize(force=args.force, tests=tests)
+        if args.compilers_as_deps:
+            spack.spec.promote_compiler_props_to_deps(spec for _, spec in concretized_specs)
         if not args.quiet:
             ev.display_specs(concretized_specs)
         env.write()

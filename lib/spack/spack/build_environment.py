@@ -761,13 +761,13 @@ def setup_package(pkg, dirty, context="build"):
     env_base = EnvironmentModifications() if dirty else clean_environment()
     env_mods = EnvironmentModifications()
 
+    env_mods.extend(modifications_from_dependencies(pkg.spec, context, custom_mods_only=False))
+
     # setup compilers for build contexts
     need_compiler = context == "build" or (context == "test" and pkg.test_requires_compiler)
     if need_compiler:
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
-
-    env_mods.extend(modifications_from_dependencies(pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)

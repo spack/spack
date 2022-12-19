@@ -162,6 +162,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         "profiler", default=True, description="Use internal profiler to measure execution time"
     )
 
+    language("cxx")
+
     depends_on("mpi")
     depends_on("gsl")
     depends_on("lapack")

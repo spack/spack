@@ -666,14 +666,16 @@ class DependencySpec(object):
     - spec: Spec depended on by parent.
     - parent: Spec that depends on `spec`.
     - deptypes: list of strings, representing dependency relationships.
+    - languages: used to mark the dependency as the chosen compiler for a language.
     """
 
-    __slots__ = "parent", "spec", "deptypes"
+    __slots__ = "parent", "spec", "deptypes", "languages"
 
-    def __init__(self, parent, spec, deptypes):
+    def __init__(self, parent, spec, deptypes, languages):
         self.parent = parent
         self.spec = spec
         self.deptypes = dp.canonical_deptype(deptypes)
+        self.languages = dp.canonical_language(languages)
 
     def update_deptypes(self, deptypes):
         deptypes = set(deptypes)
@@ -685,7 +687,7 @@ class DependencySpec(object):
         return changed
 
     def copy(self):
-        return DependencySpec(self.parent, self.spec, self.deptypes)
+        return DependencySpec(self.parent, self.spec, self.deptypes, self.languages)
 
     def add_type(self, type):
         self.deptypes = dp.canonical_deptype(self.deptypes + dp.canonical_deptype(type))
@@ -694,6 +696,7 @@ class DependencySpec(object):
         yield self.parent.name if self.parent else None
         yield self.spec.name if self.spec else None
         yield self.deptypes
+        yield self.languages
 
     def __str__(self):
         return "%s %s--> %s" % (
@@ -703,10 +706,12 @@ class DependencySpec(object):
         )
 
     def canonical(self):
-        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
+        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes, self.languages
 
     def flip(self):
-        return DependencySpec(parent=self.spec, spec=self.parent, deptypes=self.deptypes)
+        return DependencySpec(
+            parent=self.spec, spec=self.parent, deptypes=self.deptypes, languages=self.languages
+        )
 
 
 class CompilerFlag(str):
@@ -920,7 +925,7 @@ class _EdgeMap(collections.abc.Mapping):
 
         return clone
 
-    def select(self, parent=None, child=None, deptypes=dp.all_deptypes):
+    def select(self, parent=None, child=None, deptypes=dp.all_deptypes, languages=None):
         """Select a list of edges and return them.
 
         If an edge:
@@ -960,6 +965,9 @@ class _EdgeMap(collections.abc.Mapping):
                 for dep in selected
                 if not dep.deptypes or any(d in deptypes for d in dep.deptypes)
             )
+
+        if languages:
+            selected = (d for d in selected if languages in d.languages)
 
         return list(selected)
 
@@ -1264,7 +1272,7 @@ class Spec(object):
         self.versions = vn.VersionList(":")
         self.variants = vt.VariantMap(self)
         self.architecture = None
-        self.compiler = None
+        self._compiler = None
         self.compiler_flags = FlagMap(self)
         self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
         self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
@@ -1338,6 +1346,21 @@ class Spec(object):
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
 
+    @property
+    def compiler(self):
+        # Legacy compiler as property
+        if self._compiler is not None:
+            return self._compiler
+
+        # Otherwise find a compiler among build deps
+        compiler_names = ("gcc", "llvm", "nvhpc")
+        compiler = next(
+            (s for s in self.dependencies(deptype="build") if s.name in compiler_names), None
+        )
+        if compiler is None:
+            return None
+        return CompilerSpec(compiler.name, compiler.versions)
+
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
@@ -1390,7 +1413,7 @@ class Spec(object):
         deptype = dp.canonical_deptype(deptype)
         return [d for d in self._dependents.select(parent=name, deptypes=deptype)]
 
-    def edges_to_dependencies(self, name=None, deptype="all"):
+    def edges_to_dependencies(self, name=None, deptype="all", languages=None):
         """Return a list of edges connecting this node in the DAG
         to children.
 
@@ -1399,7 +1422,12 @@ class Spec(object):
             deptype (str or tuple): allowed dependency types
         """
         deptype = dp.canonical_deptype(deptype)
-        return [d for d in self._dependencies.select(child=name, deptypes=deptype)]
+        return [
+            d for d in self._dependencies.select(child=name, deptypes=deptype, languages=languages)
+        ]
+
+    def compilers(self, languages=None):
+        return [d.spec for d in self.edges_to_dependencies(languages=languages)]
 
     def dependencies(self, name=None, deptype="all"):
         """Return a list of direct dependencies (nodes in the DAG).
@@ -1525,7 +1553,7 @@ class Spec(object):
             raise DuplicateCompilerSpecError(
                 "Spec for '%s' cannot have two compilers." % self.name
             )
-        self.compiler = compiler
+        self._compiler = compiler
 
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
@@ -1548,7 +1576,7 @@ class Spec(object):
                 "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
             )
 
-    def add_dependency_edge(self, dependency_spec, deptype):
+    def add_dependency_edge(self, dependency_spec, deptype, languages=None):
         """Add a dependency edge to this spec.
 
         Args:
@@ -1575,7 +1603,7 @@ class Spec(object):
                 edge.add_type(deptype)
                 return
 
-        edge = DependencySpec(self, dependency_spec, deptype)
+        edge = DependencySpec(self, dependency_spec, deptype, languages=languages)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
@@ -1858,8 +1886,8 @@ class Spec(object):
         if self.architecture:
             d.update(self.architecture.to_dict())
 
-        if self.compiler:
-            d.update(self.compiler.to_dict())
+        if self._compiler:
+            d.update(self._compiler.to_dict())
 
         if self.namespace:
             d["namespace"] = self.namespace
@@ -2091,9 +2119,9 @@ class Spec(object):
             spec.architecture = ArchSpec.from_dict(node)
 
         if "compiler" in node:
-            spec.compiler = CompilerSpec.from_dict(node)
+            spec._compiler = CompilerSpec.from_dict(node)
         else:
-            spec.compiler = None
+            spec._compiler = None
 
         if "parameters" in node:
             for name, values in node["parameters"].items():
@@ -2209,7 +2237,7 @@ class Spec(object):
             else:
                 raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
         if change_spec.compiler:
-            new_spec.compiler = change_spec.compiler
+            new_spec._compiler = change_spec.compiler
         if change_spec.compiler_flags:
             for flagname, flagvals in change_spec.compiler_flags.items():
                 new_spec.compiler_flags[flagname] = flagvals
@@ -3519,7 +3547,7 @@ class Spec(object):
             changed |= self.compiler.constrain(other.compiler)
         elif self.compiler is None:
             changed |= self.compiler != other.compiler
-            self.compiler = other.compiler
+            self._compiler = other.compiler
 
         changed |= self.versions.intersect(other.versions)
         changed |= self.variants.constrain(other.variants)
@@ -3816,7 +3844,7 @@ class Spec(object):
                 self.name != other.name
                 and self.versions != other.versions
                 and self.architecture != other.architecture
-                and self.compiler != other.compiler
+                and self._compiler != other._compiler
                 and self.variants != other.variants
                 and self._normal != other._normal
                 and self.concrete != other.concrete
@@ -3831,7 +3859,7 @@ class Spec(object):
         self.name = other.name
         self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture else None
-        self.compiler = other.compiler.copy() if other.compiler else None
+        self._compiler = other._compiler.copy() if other._compiler else None
         if cleardeps:
             self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
             self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
@@ -4977,6 +5005,76 @@ def save_dependency_specfiles(
 
         with open(json_path, "w") as fd:
             fd.write(dep_spec.to_json(hash=ht.dag_hash))
+
+
+def promote_compiler_props_to_deps(specs):
+    """Remove and replace CompilerSpec props with matching Spec deps from the database"""
+    compiler_specs = dict()
+
+    for spec in [s for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash())]:
+        # Either already processed, or abstract spec
+        if not spec._compiler:
+            continue
+
+        key = str(spec._compiler)
+
+        # Look up the query cache
+        compiler_spec = compiler_specs.get(key, False)
+
+        if compiler_spec is False:
+            try:
+                compiler = spack.compilers.compiler_for_spec(spec._compiler, spec.architecture)
+                compiler_spec = compiler.to_concrete_external_spec()
+                compiler_specs[key] = compiler_spec
+            except spack.compilers.NoCompilerForSpecError:
+                compiler_specs[key] = None
+                continue
+
+        # What languages does the compiler support (todo: when spec)
+        compiler_languages = set(compiler_spec.package.compiles.keys())
+
+        # What languages are required for the package
+        languages_enabled = []
+        for language, when_to_lang_spec in spec.package.language.items():
+            for when, lang_spec in when_to_lang_spec.items():
+                if when is None or spec.satisfies(when):
+                    languages_enabled.append(language)
+                    break
+
+        # Languages on the edge type
+        languages = []
+        for language in languages_enabled:
+            if language not in compiler_languages:
+                tty.warn("Compiler {} does not support language {}", compiler_spec, language)
+                continue
+            languages.append(language)
+
+        # What is injected.
+        runtime_specs = []
+        for language in languages:
+            when_to_spec = compiler_spec.package.can_inject.get(language, None)
+            if not when_to_spec:
+                # nothing to inject
+                continue
+            for when, runtime_spec in when_to_spec.items():
+                if when is None or compiler_spec.satisfies(when):
+                    s = runtime_spec.copy()
+                    s.versions = vn.VersionList(":")
+                    s.namespace = spack.repo.path.repo_for_pkg(s).namespace
+                    s._mark_concrete()
+                    runtime_specs.append(s)
+                    break
+
+        # Remove the CompilerSpec property, and replace with concrete database match
+        # Notice: technically the compiler should be a build/link type dep.
+        try:
+            spec.add_dependency_edge(compiler_spec, deptype="build", languages=languages)
+            for dep in runtime_specs:
+                spec.add_dependency_edge(dep, deptype="link")
+            spec._compiler = None
+        except spack.error.SpecError:
+            # This means it was already a dep
+            pass
 
 
 class SpecParseError(spack.error.SpecError):

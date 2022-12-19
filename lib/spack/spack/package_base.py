@@ -1337,7 +1337,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return self.prefix
 
     @property  # type: ignore[misc]
-    @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:

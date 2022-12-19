@@ -32,6 +32,19 @@ def deptype_chars(*type_tuples):
     return "".join(t[0] if t in types else " " for t in all_deptypes)
 
 
+def canonical_language(language):
+    if language is None:
+        return ()
+
+    if isinstance(language, str):
+        return (language,)
+
+    if isinstance(language, (tuple, list, set)):
+        return tuple(sorted(set(language)))
+
+    raise ValueError("Invalid dependency type: %s" % repr(language))
+
+
 def canonical_deptype(deptype):
     """Convert deptype to a canonical sorted tuple, or raise ValueError.
 

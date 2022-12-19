@@ -477,7 +477,7 @@ class Concretizer(object):
                 other_compiler, spec.architecture
             ):
                 _compiler_concretization_failure(other_compiler, spec.architecture)
-            spec.compiler = other_compiler
+            spec._compiler = other_compiler
             return True
 
         if other_compiler:  # Another node has abstract compiler information
@@ -488,7 +488,7 @@ class Concretizer(object):
                     # Concretize compiler spec versions as a package to build
                     cpkg_spec = spack.compilers.pkg_spec_for_compiler(other_compiler)
                     self.concretize_version(cpkg_spec)
-                    spec.compiler = spack.spec.CompilerSpec(
+                    spec._compiler = spack.spec.CompilerSpec(
                         other_compiler.name, cpkg_spec.versions
                     )
                     return True
@@ -509,7 +509,7 @@ class Concretizer(object):
 
         # copy concrete version into other_compiler
         try:
-            spec.compiler = next(
+            spec._compiler = next(
                 c for c in matches if _proper_compiler_style(c, spec.architecture)
             ).copy()
         except StopIteration:

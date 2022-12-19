@@ -19,6 +19,7 @@ from llnl.util.filesystem import path_contains_subdirectory, paths_containing_li
 
 import spack.compilers
 import spack.error
+import spack.repo
 import spack.spec
 import spack.util.executable
 import spack.util.module_cmd
@@ -549,6 +550,22 @@ class Compiler(object):
         are not enough to find the install prefix of the compiler, since
         the can be symlinks, wrappers, or filenames instead of absolute paths."""
         raise NotImplementedError("prefix is not implemented for this compiler")
+
+    @property
+    def package_name(self):
+        """Return the corresponding Spack package name of the compiler. For example:
+        spack.compiler.gcc.Gcc -> gcc
+        spack.compiler.clang.Clang -> llvm+clang"""
+        return self.__class__.__name__.lower()
+
+    def to_concrete_external_spec(self):
+        """Returns a concrete Spec from this compiler instance."""
+        s = spack.spec.Spec(external_path=self.prefix)
+        s.name = self.package_name
+        s.versions = self.spec.versions
+        s.namespace = spack.repo.path.repo_for_pkg(s).namespace
+        s._mark_concrete()
+        return s
 
     #
     # Compiler classes have methods for querying the version of

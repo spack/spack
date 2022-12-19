@@ -2215,7 +2215,7 @@ class SpecBuilder(object):
         self._specs[pkg].versions = spack.version.ver([version])
 
     def node_compiler(self, pkg, compiler):
-        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
+        self._specs[pkg]._compiler = spack.spec.CompilerSpec(compiler)
 
     def node_compiler_version(self, pkg, compiler, version):
         self._specs[pkg].compiler.versions = spack.version.VersionList([version])

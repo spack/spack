@@ -330,7 +330,7 @@ class SpecNodeParser:
                     )
 
                 compiler_name = self.ctx.current_token.value[1:]
-                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
+                initial_spec._compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
@@ -340,7 +340,7 @@ class SpecNodeParser:
                     )
 
                 compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
-                initial_spec.compiler = spack.spec.CompilerSpec(
+                initial_spec._compiler = spack.spec.CompilerSpec(
                     compiler_name.strip(), compiler_version
                 )
                 self.has_compiler = True

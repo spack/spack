@@ -93,7 +93,6 @@ properties = {
                     "required": [
                         "version",
                         "arch",
-                        "compiler",
                         "namespace",
                         "parameters",
                     ],
