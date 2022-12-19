@@ -17,7 +17,6 @@ class PyDarshan(PythonPackage):
     version(
         "3.4.2.0",
         sha256="eb00eb758c96899c0d523b71eb00caa3b967509c27fd504c579ac8c9b521845c",
-        preferred=True,
     )
     version(
         "3.4.1.0",

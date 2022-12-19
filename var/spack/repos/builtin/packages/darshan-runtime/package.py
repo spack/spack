@@ -28,7 +28,6 @@ class DarshanRuntime(AutotoolsPackage):
     version(
         "3.4.2",
         sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b",
-        preferred=True,
     )
     version(
         "3.4.1",
