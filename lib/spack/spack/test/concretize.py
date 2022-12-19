@@ -2002,7 +2002,7 @@ class TestConcretize(object):
         assert spec["python"].prefix == prefix
         assert spec["python"] == python_spec
 
-    def test_external_python_extension_find_unified_python(self, monkeypatch):
+    def test_external_python_extension_find_unified_python(self):
         """Test that python extensions use the same python as other specs in unified env"""
         external_conf = {
             "py-extension1": {
