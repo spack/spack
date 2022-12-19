@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
     version("master", branch="master", submodules=True)
+    version("1.13.1", tag="v1.13.1", submodules=True)
     version("1.13.0", tag="v1.13.0", submodules=True)
     version("1.12.1", tag="v1.12.1", submodules=True)
     version("1.12.0", tag="v1.12.0", submodules=True)
@@ -336,6 +337,15 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch?full_index=1",
         sha256="8ff7d285e52e4718bad1ca01ceb3bb6471d7828329036bb94222717fcaa237da",
         when="@:1.9.1 ^cuda@11.4.100:",
+    )
+
+    # PyTorch does not build with GCC 12 (fixed on master)
+    # See: https://github.com/pytorch/pytorch/issues/77614
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/4a5e339b764261d20fc409071dc7a8b8989aa195.patch?full_index=1",
+        sha256="dc8b3a9bea4693f32d6850ea2ce6ce75e1778538bfba464b50efca92bac425e3",
+        when="@:1.13 %gcc@12:",
+        working_dir="third_party/gloo",
     )
 
     @when("@1.5.0:")
