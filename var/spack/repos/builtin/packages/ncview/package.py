@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import subprocess
+
 from spack.package import *
 
 
@@ -23,7 +25,8 @@ class Ncview(AutotoolsPackage):
     # Avoid checking if compiler is the same as for netcdf-c,
     # this doesn't work with package relocation, doesn't work
     # on cray where compiler wrappers (cc etc.) are used.
-    patch("bypass_compiler_check.patch")
+    #variant("cc_check", default=True, description="Check for consistency with netcdf-c compiler")
+    #patch("bypass_compiler_check.patch", when="+cc_check")
 
     def configure_args(self):
         spec = self.spec
@@ -36,7 +39,12 @@ class Ncview(AutotoolsPackage):
         config_args.append("--with-udunits2_incdir={}".format(spec["udunits"].prefix.include))
         config_args.append("--with-udunits2_libdir={}".format(spec["udunits"].prefix.lib))
 
-        if spec.satisfies("^netcdf-c+mpi"):
-            config_args.append("CC={}".format(spec["mpi"].mpicc))
+        #if spec.satisfies("^netcdf-c+mpi"):
+        #    config_args.append("CC={}".format(spec["mpi"].mpicc))
+
+        #nc_config = which("nc-config")
+        #cc = nc_config("--cc", "2>&1")
+        cc = subprocess.check_output(['nc-config', '--cc']).decode().rstrip('\n')
+        config_args.append("CC={}".format(cc))
 
         return config_args
