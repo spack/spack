@@ -99,8 +99,8 @@ def _bunzip2(archive_file):
     compressed_file_name = PurePath(archive_file).name
     decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
     working_dir = Path.cwd()
-    archive_out = os.path.join(working_dir, decompressed_file)
-    copy_path = os.path.join(working_dir, compressed_file_name)
+    archive_out = PurePath(working_dir, decompressed_file)
+    copy_path = PurePath(working_dir, compressed_file_name)
     if is_bz2_supported():
         f_bz = bz2.BZ2File(archive_file, mode="rb")
         with open(archive_out, "wb") as ar:
@@ -125,7 +125,7 @@ def _gunzip(archive_file):
     """
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
     working_dir = Path.cwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
+    destination_abspath = PurePath(working_dir, decompressed_file)
     if is_gzip_supported():
         f_in = gzip.open(archive_file, "rb")
         with open(destination_abspath, "wb") as f_out:
@@ -139,9 +139,9 @@ def _gunzip(archive_file):
 def _system_gunzip(archive_file):
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
     working_dir = Path.cwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
+    destination_abspath = PurePath(working_dir, decompressed_file)
     compressed_file = PurePath(archive_file).name
-    copy_path = os.path.join(working_dir, compressed_file)
+    copy_path = PurePath(working_dir, compressed_file)
     shutil.copy(archive_file, copy_path)
     gzip = which("gzip")
     gzip.add_default_arg("-d")
@@ -184,7 +184,7 @@ def _lzma_decomp(archive_file):
     on Unix and 7z on Windows"""
     if is_lzma_supported():
         decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
-        archive_out = os.path.join(Path.cwd(), decompressed_file)
+        archive_out = PurePath(Path.cwd(), decompressed_file)
         with open(archive_out, "wb") as ar:
             with lzma.open(archive_file) as lar:
                 shutil.copyfileobj(lar, ar)
@@ -231,9 +231,9 @@ def _xz(archive_file):
         raise RuntimeError("XZ tool unavailable on Windows")
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     working_dir = Path.cwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
+    destination_abspath = PurePath(working_dir, decompressed_file)
     compressed_file = PurePath(archive_file).name
-    copy_path = os.path.join(working_dir, compressed_file)
+    copy_path = PurePath(working_dir, compressed_file)
     shutil.copy(archive_file, copy_path)
     xz = which("xz", required=True)
     xz.add_default_arg("-d")

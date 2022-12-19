@@ -143,7 +143,7 @@ class FilePatch(Patch):
             # Cannot use pkg.package_dir because it's a property and we have
             # classes, not instances.
             pkg_dir = Path.resolve(PurePath(cls.module.__file__).parent)
-            path = os.path.join(pkg_dir, self.relative_path)
+            path = PurePath(pkg_dir, self.relative_path)
             if Path(path).exists():
                 abs_path = path
                 break
@@ -222,7 +222,7 @@ class UrlPatch(Patch):
             else:
                 raise NoSuchPatchError("Patch failed to download: %s" % self.url)
 
-        self.path = os.path.join(root, files.pop())
+        self.path = PurePath(root, files.pop())
 
         if not Path(self.path).is_file():
             raise NoSuchPatchError("Archive %s contains no patch file!" % self.url)
@@ -253,7 +253,7 @@ class UrlPatch(Patch):
         # with different contents, therefore apply a subset of the hash.
         name = "{0}-{1}".format(PurePath(self.url).name, fetch_digest[:7])
 
-        per_package_ref = os.path.join(self.owner.split(".")[-1], name)
+        per_package_ref = PurePath(self.owner.split(".")[-1], name)
         # Reference starting with "spack." is required to avoid cyclic imports
         mirror_ref = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
 

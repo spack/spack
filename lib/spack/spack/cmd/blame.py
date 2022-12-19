@@ -121,7 +121,7 @@ def blame(parser, args):
     # Get name of file to blame
     blame_file = None
     if Path(args.package_or_file).is_file():
-        path = os.path.realpath(args.package_or_file)
+        path = Path(args.package_or_file).resolve()
         if path.startswith(spack.paths.prefix):
             blame_file = path
 

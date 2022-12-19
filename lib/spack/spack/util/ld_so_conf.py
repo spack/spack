@@ -78,7 +78,7 @@ def _process_ld_so_conf_queue(queue):
 
             cwd = PurePath(p).parent
             os.chdir(cwd)
-            queue.extend(os.path.join(cwd, p) for p in glob.glob(include_path))
+            queue.extend(PurePath(cwd, p) for p in glob.glob(include_path))
 
     return dedupe(paths)
 
@@ -130,7 +130,7 @@ def host_dynamic_linker_search_paths():
             # a symlink to /usr/lib64. So, best effort attempt is to just strip
             # two path components and join with etc/ld.so.conf.
             possible_prefix = os.path.dirname(PurePath(dynamic_linker).parent)
-            possible_conf = os.path.join(possible_prefix, "etc", conf_name)
+            possible_conf = PurePath(possible_prefix, "etc", conf_name)
 
             if Path(possible_conf).exists():
                 conf_file = possible_conf

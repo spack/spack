@@ -162,7 +162,7 @@ def sanitize_file_path(pth):
     for cmp in pth_cmpnts:
         san_cmp = re.sub(illegal_chars, "", cmp)
         pth.append(san_cmp)
-    return drive + os.path.join(*pth)
+    return drive + PurePath(*pth)
 
 
 def system_path_filter(_func=None, arg_slice=None):
@@ -354,7 +354,7 @@ def add_padding(path, length):
     # coming from os.path.join below
     padding = _get_padding_string(padding_length - 1)
 
-    return os.path.join(path, padding)
+    return PurePath(path, padding)
 
 
 def canonicalize_path(path, default_wd=None):
@@ -380,10 +380,10 @@ def canonicalize_path(path, default_wd=None):
     path = substitute_path_variables(path)
     if not PurePath(path).is_absolute():
         if filename:
-            path = os.path.join(filename, path)
+            path = PurePath(filename, path)
         else:
             base = default_wd or Path.cwd()
-            path = os.path.join(base, path)
+            path = PurePath(base, path)
             tty.debug("Using working directory %s as base for abspath" % base)
 
     return os.path.normpath(path)

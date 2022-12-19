@@ -42,17 +42,17 @@ class Cce(Compiler):
         if self.PrgEnv in self.modules:
             # Old module-based interface to cray compilers
             return {
-                "cc": os.path.join("cce", "cc"),
-                "cxx": os.path.join("case-insensitive", "CC"),
-                "f77": os.path.join("cce", "ftn"),
-                "fc": os.path.join("cce", "ftn"),
+                "cc": PurePath("cce", "cc"),
+                "cxx": PurePath("case-insensitive", "CC"),
+                "f77": PurePath("cce", "ftn"),
+                "fc": PurePath("cce", "ftn"),
             }
 
         return {
-            "cc": os.path.join("cce", "craycc"),
-            "cxx": os.path.join("cce", "case-insensitive", "crayCC"),
-            "f77": os.path.join("cce", "crayftn"),
-            "fc": os.path.join("cce", "crayftn"),
+            "cc": PurePath("cce", "craycc"),
+            "cxx": PurePath("cce", "case-insensitive", "crayCC"),
+            "f77": PurePath("cce", "crayftn"),
+            "fc": PurePath("cce", "crayftn"),
         }
 
     @property

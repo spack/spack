@@ -793,7 +793,7 @@ spack:
 
 def _signing_key():
     signing_key_dir = spack_paths.mock_gpg_keys_path
-    signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
+    signing_key_path = PurePath(signing_key_dir, "package-signing-key")
     with open(signing_key_path) as fd:
         key = fd.read()
     return key
@@ -802,15 +802,15 @@ def _signing_key():
 def create_rebuild_env(tmpdir, pkg_name, broken_tests=False):
     working_dir = tmpdir.join("working_dir")
 
-    log_dir = os.path.join(working_dir.strpath, "logs")
-    repro_dir = os.path.join(working_dir.strpath, "repro")
-    test_dir = os.path.join(working_dir.strpath, "test")
+    log_dir = PurePath(working_dir.strpath, "logs")
+    repro_dir = PurePath(working_dir.strpath, "repro")
+    test_dir = PurePath(working_dir.strpath, "test")
     env_dir = working_dir.join("concrete_env")
 
     mirror_dir = working_dir.join("mirror")
     mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
-    broken_specs_path = os.path.join(working_dir.strpath, "naughty-list")
+    broken_specs_path = PurePath(working_dir.strpath, "naughty-list")
     broken_specs_url = url_util.path_to_file_url(broken_specs_path)
     temp_storage_url = "file:///path/to/per/pipeline/storage"
 
@@ -861,8 +861,8 @@ spack:
             if not Path(env_dir.strpath).exists():
                 os.makedirs(env_dir.strpath)
 
-            shutil.copyfile(env.manifest_path, os.path.join(env_dir.strpath, "spack.yaml"))
-            shutil.copyfile(env.lock_path, os.path.join(env_dir.strpath, "spack.lock"))
+            shutil.copyfile(env.manifest_path, PurePath(env_dir.strpath, "spack.yaml"))
+            shutil.copyfile(env.lock_path, PurePath(env_dir.strpath, "spack.lock"))
 
             root_spec_dag_hash = None
 
@@ -873,7 +873,7 @@ spack:
             assert root_spec_dag_hash
 
     return Bunch(
-        broken_spec_file=os.path.join(broken_specs_path, root_spec_dag_hash),
+        broken_spec_file=PurePath(broken_specs_path, root_spec_dag_hash),
         ci_job_url=ci_job_url,
         ci_pipeline_url=ci_pipeline_url,
         env_dir=env_dir,
@@ -995,7 +995,7 @@ def test_ci_rebuild(
         repro_files = list(Path(rebuild_env.repro_dir).iterdir())
         assert all([f in repro_files for f in expected_repro_files])
 
-        install_script_path = os.path.join(rebuild_env.repro_dir, "install.sh")
+        install_script_path = PurePath(rebuild_env.repro_dir, "install.sh")
         install_line = None
         with open(install_script_path) as fd:
             for line in fd:
@@ -1022,7 +1022,7 @@ def test_ci_rebuild(
 
         # Ensure also produce CDash output for skipped (or notrun) tests
         test_files = list(Path(rebuild_env.test_dir).iterdir())
-        with open(os.path.join(rebuild_env.test_dir, test_files[0]), "r") as f:
+        with open(PurePath(rebuild_env.test_dir, test_files[0]), "r") as f:
             have = False
             for line in f:
                 if "notrun" in line:
@@ -1265,7 +1265,7 @@ spack:
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
 
-            buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
+            buildcache_path = PurePath(mirror_dir.strpath, "build_cache")
 
             # Now test the --prune-dag (default) option of spack ci generate
             mirror_cmd("add", "test-ci", mirror_url)
@@ -1310,7 +1310,7 @@ spack:
 
             # Test generating buildcache index while we have bin mirror
             buildcache_cmd("update-index", "--mirror-url", mirror_url)
-            index_path = os.path.join(buildcache_path, "index.json")
+            index_path = PurePath(buildcache_path, "index.json")
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
                 jsonschema.validate(index_object, db_idx_schema)
@@ -1322,7 +1322,7 @@ spack:
             bc_files_list = list(Path(buildcache_path).iterdir())
             for file_name in bc_files_list:
                 if file_name.endswith(".spec.json.sig"):
-                    spec_json_path = os.path.join(buildcache_path, file_name)
+                    spec_json_path = PurePath(buildcache_path, file_name)
                     with open(spec_json_path) as json_fd:
                         json_object = Spec.extract_json_from_clearsig(json_fd.read())
                         jsonschema.validate(json_object, specfile_schema)
@@ -1626,8 +1626,8 @@ spack:
             buildcache_cmd("create", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
-            buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
-            index_path = os.path.join(buildcache_path, "index.json")
+            buildcache_path = PurePath(mirror_dir.strpath, "build_cache")
+            index_path = PurePath(buildcache_path, "index.json")
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
                 jsonschema.validate(index_object, db_idx_schema)
@@ -2155,8 +2155,8 @@ spack:
             if not Path(working_dir.strpath).exists():
                 os.makedirs(working_dir.strpath)
 
-            shutil.copyfile(env.manifest_path, os.path.join(working_dir.strpath, "spack.yaml"))
-            shutil.copyfile(env.lock_path, os.path.join(working_dir.strpath, "spack.lock"))
+            shutil.copyfile(env.manifest_path, PurePath(working_dir.strpath, "spack.yaml"))
+            shutil.copyfile(env.lock_path, PurePath(working_dir.strpath, "spack.lock"))
 
             job_spec = None
 
@@ -2164,12 +2164,12 @@ spack:
                 if s.name == "archive-files":
                     job_spec = s
 
-            job_spec_json_path = os.path.join(working_dir.strpath, "archivefiles.json")
+            job_spec_json_path = PurePath(working_dir.strpath, "archivefiles.json")
             with open(job_spec_json_path, "w") as fd:
                 fd.write(job_spec.to_json(hash=ht.dag_hash))
 
-            artifacts_root = os.path.join(working_dir.strpath, "scratch_dir")
-            pipeline_path = os.path.join(artifacts_root, "pipeline.yml")
+            artifacts_root = PurePath(working_dir.strpath, "scratch_dir")
+            pipeline_path = PurePath(artifacts_root, "pipeline.yml")
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
@@ -2178,7 +2178,7 @@ spack:
                 "specs", False, job_spec, "test-debian6-%s" % target_name, None
             )
 
-            repro_file = os.path.join(working_dir.strpath, "repro.json")
+            repro_file = PurePath(working_dir.strpath, "repro.json")
             repro_details = {
                 "job_name": job_name,
                 "job_spec_json": "archivefiles.json",
@@ -2187,11 +2187,11 @@ spack:
             with open(repro_file, "w") as fd:
                 fd.write(json.dumps(repro_details))
 
-            install_script = os.path.join(working_dir.strpath, "install.sh")
+            install_script = PurePath(working_dir.strpath, "install.sh")
             with open(install_script, "w") as fd:
                 fd.write("#!/bin/bash\n\n#fake install\nspack install blah\n")
 
-            spack_info_file = os.path.join(working_dir.strpath, "spack_info.txt")
+            spack_info_file = PurePath(working_dir.strpath, "spack_info.txt")
             with open(spack_info_file, "w") as fd:
                 fd.write(
                     "\nMerge {0} into {1}\n\n".format(

@@ -15,8 +15,8 @@ def post_install(spec):
         # os.walk explicitly set not to follow links
         for root, dirs, files in os.walk(spec.prefix, followlinks=False):
             for d in dirs:
-                if not os.path.islink(os.path.join(root, d)):
-                    fp.set_permissions_by_spec(os.path.join(root, d), spec)
+                if not os.path.islink(PurePath(root, d)):
+                    fp.set_permissions_by_spec(PurePath(root, d), spec)
             for f in files:
-                if not os.path.islink(os.path.join(root, f)):
-                    fp.set_permissions_by_spec(os.path.join(root, f), spec)
+                if not os.path.islink(PurePath(root, f)):
+                    fp.set_permissions_by_spec(PurePath(root, f), spec)

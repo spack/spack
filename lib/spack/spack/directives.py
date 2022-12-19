@@ -738,7 +738,7 @@ def resource(**kwargs):
         # Check if the path falls within the main package stage area
         test_path = "stage_folder_root"
         normalized_destination = os.path.normpath(
-            os.path.join(test_path, destination)
+            PurePath(test_path, destination)
         )  # Normalized absolute path
 
         if test_path not in normalized_destination:

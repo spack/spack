@@ -439,7 +439,7 @@ def test_log_pathname(test_stage, spec):
     Returns:
         (str): the pathname of the test log file
     """
-    return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
+    return PurePath(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
 
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
@@ -1003,7 +1003,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (resource.name, self.version))
+            fetcher, PurePath(self.name, "%s-%s" % (resource.name, self.version))
         )
         stage = ResourceStage(
             resource.fetcher,
@@ -1022,7 +1022,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (self.name, self.version)), self.spec
+            fetcher, PurePath(self.name, "%s-%s" % (self.name, self.version)), self.spec
         )
         # Construct a path where the stage should build..
         s = self.spec
@@ -1084,11 +1084,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the build environment file path associated with staging."""
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.stage.path, "spack-build.env")
+        old_filename = PurePath(self.stage.path, "spack-build.env")
         if Path(old_filename).exists():
             return old_filename
         else:
-            return os.path.join(self.stage.path, _spack_build_envfile)
+            return PurePath(self.stage.path, _spack_build_envfile)
 
     @property
     def env_mods_path(self):
@@ -1096,7 +1096,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Return the build environment modifications file path associated with
         staging.
         """
-        return os.path.join(self.stage.path, _spack_build_envmodsfile)
+        return PurePath(self.stage.path, _spack_build_envmodsfile)
 
     @property
     def metadata_dir(self):
@@ -1110,28 +1110,28 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.metadata_dir, "build.env")
+        old_filename = PurePath(self.metadata_dir, "build.env")
         if Path(old_filename).exists():
             return old_filename
         else:
-            return os.path.join(self.metadata_dir, _spack_build_envfile)
+            return PurePath(self.metadata_dir, _spack_build_envfile)
 
     @property
     def log_path(self):
         """Return the build log file path associated with staging."""
         # Backward compatibility: Return the name of an existing log path.
         for filename in ["spack-build.out", "spack-build.txt"]:
-            old_log = os.path.join(self.stage.path, filename)
+            old_log = PurePath(self.stage.path, filename)
             if Path(old_log).exists():
                 return old_log
 
         # Otherwise, return the current log path name.
-        return os.path.join(self.stage.path, _spack_build_logfile)
+        return PurePath(self.stage.path, _spack_build_logfile)
 
     @property
     def phase_log_files(self):
         """Find sorted phase log files written to the staging directory"""
-        logs_dir = os.path.join(self.stage.path, "spack-build-*-out.txt")
+        logs_dir = PurePath(self.stage.path, "spack-build-*-out.txt")
         log_files = glob.glob(logs_dir)
         log_files.sort()
         return log_files
@@ -1141,17 +1141,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the build log file path on successful installation."""
         # Backward compatibility: Return the name of an existing install log.
         for filename in ["build.out", "build.txt"]:
-            old_log = os.path.join(self.metadata_dir, filename)
+            old_log = PurePath(self.metadata_dir, filename)
             if Path(old_log).exists():
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(self.metadata_dir, _spack_build_logfile)
+        return PurePath(self.metadata_dir, _spack_build_logfile)
 
     @property
     def configure_args_path(self):
         """Return the configure args file path associated with staging."""
-        return os.path.join(self.stage.path, _spack_configure_argsfile)
+        return PurePath(self.stage.path, _spack_configure_argsfile)
 
     @property
     def test_install_log_path(self):
@@ -1166,17 +1166,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def times_log_path(self):
         """Return the times log json file."""
-        return os.path.join(self.metadata_dir, _spack_times_log)
+        return PurePath(self.metadata_dir, _spack_times_log)
 
     @property
     def install_configure_args_path(self):
         """Return the configure args file path on successful installation."""
-        return os.path.join(self.metadata_dir, _spack_configure_argsfile)
+        return PurePath(self.metadata_dir, _spack_configure_argsfile)
 
     @property
     def install_test_root(self):
         """Return the install test root directory."""
-        return os.path.join(self.metadata_dir, "test")
+        return PurePath(self.metadata_dir, "test")
 
     @property
     def installed(self):
@@ -1499,9 +1499,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.source_path
-        good_file = os.path.join(archive_dir, ".spack_patched")
-        no_patches_file = os.path.join(archive_dir, ".spack_no_patches")
-        bad_file = os.path.join(archive_dir, ".spack_patch_failed")
+        good_file = PurePath(archive_dir, ".spack_patched")
+        no_patches_file = PurePath(archive_dir, ".spack_no_patches")
+        bad_file = PurePath(archive_dir, ".spack_patch_failed")
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
@@ -1868,8 +1868,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         paths = [srcs] if isinstance(srcs, str) else srcs
 
         for path in paths:
-            src_path = os.path.join(self.stage.source_path, path)
-            dest_path = os.path.join(self.install_test_root, path)
+            src_path = PurePath(self.stage.source_path, path)
+            dest_path = PurePath(self.install_test_root, path)
             if Path(src_path).is_dir():
                 fsys.install_tree(src_path, dest_path)
             else:

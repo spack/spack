@@ -598,8 +598,8 @@ def log(pkg):
         for glob_expr in pkg.builder.archive_files:
             # Check that we are trying to copy things that are
             # in the stage tree (not arbitrary files)
-            abs_expr = os.path.realpath(glob_expr)
-            if os.path.realpath(pkg.stage.path) not in abs_expr:
+            abs_expr = Path(glob_expr).resolve()
+            if Path(pkg.stage.path).resolve() not in abs_expr:
                 errors.write("[OUTSIDE SOURCE PATH]: {0}\n".format(glob_expr))
                 continue
             # Now that we are sure that the path is within the correct

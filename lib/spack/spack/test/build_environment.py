@@ -36,14 +36,14 @@ def os_pathsep_join(path, *pths):
 
 
 def prep_and_join(path, *pths):
-    return os.path.sep + os.path.join(path, *pths)
+    return os.path.sep + PurePath(path, *pths)
 
 
 @pytest.fixture
 def build_environment(working_env):
-    cc = Executable(os.path.join(build_env_path, "cc"))
-    cxx = Executable(os.path.join(build_env_path, "c++"))
-    fc = Executable(os.path.join(build_env_path, "fc"))
+    cc = Executable(PurePath(build_env_path, "cc"))
+    cxx = Executable(PurePath(build_env_path, "c++"))
+    fc = Executable(PurePath(build_env_path, "fc"))
 
     realcc = "/bin/mycc"
     prefix = "/spack-test-prefix"
@@ -295,7 +295,7 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, wor
     s.concretize()
     pkg = s.package
 
-    module_path = os.path.join("path", "to", "module")
+    module_path = PurePath("path", "to", "module")
 
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
@@ -305,7 +305,7 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, wor
 
     spack.build_environment.setup_package(pkg, False)
 
-    spack_path = os.path.join(spack.paths.prefix, os.path.join("lib", "spack", "env"))
+    spack_path = PurePath(spack.paths.prefix, os.path.join("lib", "spack", "env"))
 
     paths = os.environ["PATH"].split(os.pathsep)
 
@@ -389,10 +389,10 @@ def test_wrapper_variables(
         prefix = str(installation_dir_with_headers)
         include_dirs = normpaths(header_dir_var.split(os.pathsep))
 
-        assert os.path.join(prefix, "include") in include_dirs
-        assert os.path.join(prefix, "include", "boost") not in include_dirs
-        assert os.path.join(prefix, "path", "to") not in include_dirs
-        assert os.path.join(prefix, "path", "to", "subdir") not in include_dirs
+        assert PurePath(prefix, "include") in include_dirs
+        assert PurePath(prefix, "include", "boost") not in include_dirs
+        assert PurePath(prefix, "path", "to") not in include_dirs
+        assert PurePath(prefix, "path", "to", "subdir") not in include_dirs
 
     finally:
         delattr(dep_pkg, "libs")

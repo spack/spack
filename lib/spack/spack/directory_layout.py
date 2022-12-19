@@ -156,8 +156,8 @@ class DirectoryLayout(object):
         _check_concrete(spec)
         # Attempts to convert to JSON if possible.
         # Otherwise just returns the YAML.
-        yaml_path = os.path.join(self.metadata_path(spec), self._spec_file_name_yaml)
-        json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
+        yaml_path = PurePath(self.metadata_path(spec), self._spec_file_name_yaml)
+        json_path = PurePath(self.metadata_path(spec), self.spec_file_name)
         if Path(yaml_path).exists() and fs.can_write_to_dir(yaml_path):
             self.write_spec(spec, json_path)
             try:
@@ -220,13 +220,13 @@ class DirectoryLayout(object):
         self.check_upstream = True
 
     def metadata_path(self, spec):
-        return os.path.join(spec.prefix, self.metadata_dir)
+        return PurePath(spec.prefix, self.metadata_dir)
 
     def env_metadata_path(self, spec):
-        return os.path.join(self.metadata_path(spec), "install_environment.json")
+        return PurePath(self.metadata_path(spec), "install_environment.json")
 
     def build_packages_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.packages_dir)
+        return PurePath(self.metadata_path(spec), self.packages_dir)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)
@@ -282,11 +282,11 @@ class DirectoryLayout(object):
             path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, "spec.json"]
-            pattern = os.path.join(self.root, *path_elems)
+            pattern = PurePath(self.root, *path_elems)
             spec_files = glob.glob(pattern)
             if not spec_files:  # we're probably looking at legacy yaml...
                 path_elems += [self.metadata_dir, "spec.yaml"]
-                pattern = os.path.join(self.root, *path_elems)
+                pattern = PurePath(self.root, *path_elems)
                 spec_files = glob.glob(pattern)
             specs.extend([self.read_spec(s) for s in spec_files])
         return specs
@@ -304,7 +304,7 @@ class DirectoryLayout(object):
                 self.deprecated_dir,
                 "*_spec.*",
             ]  # + self.spec_file_name]
-            pattern = os.path.join(self.root, *path_elems)
+            pattern = PurePath(self.root, *path_elems)
             spec_files = glob.glob(pattern)
             get_depr_spec_file = lambda x: os.path.join(
                 os.path.dirname(PurePath(x).parent), self.spec_file_name
@@ -336,7 +336,7 @@ class DirectoryLayout(object):
 
         path = self.relative_path_for_spec(spec)
         assert not path.startswith(self.root)
-        return os.path.join(self.root, path)
+        return PurePath(self.root, path)
 
     def remove_install_directory(self, spec, deprecated=False):
         """Removes a prefix and any empty parent directories from the root.

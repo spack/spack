@@ -180,9 +180,9 @@ def test_install_with_source(mock_packages, mock_archive, mock_fetch, config, in
     """Verify that source has been copied into place."""
     install("--source", "--keep-stage", "trivial-install-test-package")
     spec = Spec("trivial-install-test-package").concretized()
-    src = os.path.join(spec.prefix.share, "trivial-install-test-package", "src")
+    src = PurePath(spec.prefix.share, "trivial-install-test-package", "src")
     assert filecmp.cmp(
-        os.path.join(mock_archive.path, "configure"), os.path.join(src, "configure")
+        PurePath(mock_archive.path, "configure"), os.path.join(src, "configure")
     )
 
 
@@ -227,7 +227,7 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, inst
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
-    with open(os.path.join(spec.prefix, "only_in_old"), "w") as f:
+    with open(PurePath(spec.prefix, "only_in_old"), "w") as f:
         f.write("This content is here to differentiate installations.")
 
     bad_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
@@ -318,9 +318,9 @@ def test_install_overwrite_multiple(
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
-    with open(os.path.join(libdwarf.prefix, "only_in_old"), "w") as f:
+    with open(PurePath(libdwarf.prefix, "only_in_old"), "w") as f:
         f.write("This content is here to differentiate installations.")
-    with open(os.path.join(cmake.prefix, "only_in_old"), "w") as f:
+    with open(PurePath(cmake.prefix, "only_in_old"), "w") as f:
         f.write("This content is here to differentiate installations.")
 
     bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
@@ -531,11 +531,11 @@ def test_extra_files_are_archived(
 
     install("archive-files")
 
-    archive_dir = os.path.join(spack.store.layout.metadata_path(s), "archived-files")
-    config_log = os.path.join(archive_dir, mock_archive.expanded_archive_basedir, "config.log")
+    archive_dir = PurePath(spack.store.layout.metadata_path(s), "archived-files")
+    config_log = PurePath(archive_dir, mock_archive.expanded_archive_basedir, "config.log")
     assert Path(config_log).exists()
 
-    errors_txt = os.path.join(archive_dir, "errors.txt")
+    errors_txt = PurePath(archive_dir, "errors.txt")
     assert Path(errors_txt).exists()
 
 

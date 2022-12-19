@@ -26,7 +26,7 @@ def data():
     global _data
     if not _data:
         json_dir = Path.resolve(PurePath(__file__).parent)
-        json_file = os.path.join(json_dir, "images.json")
+        json_file = PurePath(json_dir, "images.json")
         with open(json_file) as f:
             _data = json.load(f)
     return _data

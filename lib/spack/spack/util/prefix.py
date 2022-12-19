@@ -48,7 +48,7 @@ class Prefix(str):
         Returns:
             the newly created installation prefix
         """
-        return Prefix(os.path.join(self, name))
+        return Prefix(PurePath(self, name))
 
     def join(self, string: str) -> "Prefix":  # type: ignore[override]
         """Concatenate a string to a prefix.
@@ -62,7 +62,7 @@ class Prefix(str):
         Returns:
             the newly created installation prefix
         """
-        return Prefix(os.path.join(self, string))
+        return Prefix(PurePath(self, string))
 
     def __getstate__(self) -> Dict[str, str]:
         """Control how object is pickled.

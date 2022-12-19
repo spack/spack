@@ -381,7 +381,7 @@ def mock_stage(tmpdir_factory, monkeypatch, request):
         new_stage_path = str(new_stage)
 
         # Ensure the source directory exists within the new stage path
-        source_path = os.path.join(new_stage_path, spack.stage._source_path_subdir)
+        source_path = PurePath(new_stage_path, spack.stage._source_path_subdir)
         mkdirp(source_path)
 
         monkeypatch.setattr(spack.stage, "_stage_root", new_stage_path)
@@ -456,7 +456,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     if "disable_clean_stage_check" in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(stage_path, f)
+            path = PurePath(stage_path, f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage
@@ -633,9 +633,9 @@ def default_config():
 
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
-    defaults_path = os.path.join(spack.paths.etc_path, "defaults")
+    defaults_path = PurePath(spack.paths.etc_path, "defaults")
     if is_windows:
-        defaults_path = os.path.join(defaults_path, "windows")
+        defaults_path = PurePath(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
         yield defaults_config
 
@@ -785,7 +785,7 @@ def no_compilers_yaml(mutable_config):
     for scope, local_config in mutable_config.scopes.items():
         if not local_config.path:  # skip internal scopes
             continue
-        compilers_yaml = os.path.join(local_config.path, "compilers.yaml")
+        compilers_yaml = PurePath(local_config.path, "compilers.yaml")
         if Path(compilers_yaml).exists():
             Path(compilers_yaml).unlink()
 
@@ -1044,7 +1044,7 @@ class ConfigUpdate(object):
         self.monkeypatch = monkeypatch
 
     def __call__(self, filename):
-        file = os.path.join(self.root_for_conf, filename + ".yaml")
+        file = PurePath(self.root_for_conf, filename + ".yaml")
         with open(file) as f:
             config_settings = syaml.load_config(f)
         spack.config.set("modules:default", config_settings)
@@ -1069,7 +1069,7 @@ def module_configuration(monkeypatch, request, mutable_config):
     # Key for specific settings relative to this module type
     writer_key = str(writer_mod.__name__).split(".")[-1]
     # Root folder for configuration
-    root_for_conf = os.path.join(spack.paths.test_path, "data", "modules", writer_key)
+    root_for_conf = PurePath(spack.paths.test_path, "data", "modules", writer_key)
 
     # ConfigUpdate, when called, will modify configuration, so we need to use
     # the mutable_config fixture
@@ -1644,8 +1644,8 @@ repo:
     )
 
     shutil.copytree(
-        os.path.join(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
-        os.path.join(str(repodir), spack.repo.packages_dir_name),
+        PurePath(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
+        PurePath(str(repodir), spack.repo.packages_dir_name),
     )
 
     with spack.repo.use_repositories(str(repodir)) as repo:
@@ -1788,7 +1788,7 @@ def noncyclical_dir_structure(tmpdir):
 
 @pytest.fixture(scope="function")
 def mock_config_data():
-    config_data_dir = os.path.join(spack.paths.test_path, "data", "config")
+    config_data_dir = PurePath(spack.paths.test_path, "data", "config")
     return config_data_dir, list(Path(config_data_dir).iterdir())
 
 
@@ -1812,7 +1812,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
             basename = PurePath(url).name
             if os.path.splitext(url)[1]:
                 if basename in config_files:
-                    filename = os.path.join(config_data_dir, basename)
+                    filename = PurePath(config_data_dir, basename)
 
                     with open(filename, "r") as f:
                         lines = f.readlines()
@@ -1856,7 +1856,7 @@ def mock_spider_configs(mock_config_data, monkeypatch):
             if os.path.splitext(url)[1]:
                 urls.append(url)
             else:
-                urls.extend([os.path.join(url, f) for f in config_files])
+                urls.extend([PurePath(url, f) for f in config_files])
 
         return [], set(urls)
 
@@ -1901,7 +1901,7 @@ def binary_with_rpaths(prefix_tmpdir):
         gcc = spack.util.executable.which("gcc")
         executable = source.dirpath("main.x")
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
-        rpaths = [x if PurePath(x).is_absolute() else os.path.join("$ORIGIN", x) for x in rpaths]
+        rpaths = [x if PurePath(x).is_absolute() else PurePath("$ORIGIN", x) for x in rpaths]
         rpath_str = ":".join(rpaths)
         opts = [
             "-Wl,--disable-new-dtags",

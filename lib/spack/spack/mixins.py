@@ -97,7 +97,7 @@ def filter_compiler_wrappers(*files, **kwargs):
                 # filter spack wrapper and links to spack wrapper in case
                 # build system runs realpath
                 wrapper = os.environ[env_var]
-                for wrapper_path in (wrapper, os.path.realpath(wrapper)):
+                for wrapper_path in (wrapper, Path(wrapper).resolve()):
                     replacements.append((wrapper_path, -idx, compiler_path))
 
         for wrapper_path, _, compiler_path in sorted(replacements, reverse=True):

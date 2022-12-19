@@ -52,10 +52,10 @@ class Aocc(Compiler):
     @property
     def link_paths(self):
         link_paths = {
-            "cc": os.path.join("aocc", "clang"),
-            "cxx": os.path.join("aocc", "clang++"),
-            "f77": os.path.join("aocc", "flang"),
-            "fc": os.path.join("aocc", "flang"),
+            "cc": PurePath("aocc", "clang"),
+            "cxx": PurePath("aocc", "clang++"),
+            "f77": PurePath("aocc", "flang"),
+            "fc": PurePath("aocc", "flang"),
         }
 
         return link_paths

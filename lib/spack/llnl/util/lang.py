@@ -10,7 +10,7 @@ import contextlib
 import functools
 import inspect
 import itertools
-import os
+from pathlib import Path, PurePath
 import re
 import sys
 import traceback
@@ -214,9 +214,9 @@ def list_modules(directory, **kwargs):
         if name == "__init__.py":
             continue
 
-        path = os.path.join(directory, name)
+        path = PurePath(directory, name)
         if list_directories and Path(path).is_dir():
-            init_py = os.path.join(path, "__init__.py")
+            init_py = PurePath(path, "__init__.py")
             if Path(init_py).is_file():
                 yield name
 

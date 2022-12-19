@@ -19,7 +19,7 @@ from spack.stage import Stage
 def test_fetch_missing_cache(tmpdir, _fetch_method):
     """Ensure raise a missing cache file."""
     testpath = str(tmpdir)
-    non_existing = os.path.join(testpath, "non-existing")
+    non_existing = PurePath(testpath, "non-existing")
     with spack.config.override("config:url_fetch_method", _fetch_method):
         url = url_util.path_to_file_url(non_existing)
         fetcher = CacheURLFetchStrategy(url=url)
@@ -32,7 +32,7 @@ def test_fetch_missing_cache(tmpdir, _fetch_method):
 def test_fetch(tmpdir, _fetch_method):
     """Ensure a fetch after expanding is effectively a no-op."""
     testpath = str(tmpdir)
-    cache = os.path.join(testpath, "cache.tar.gz")
+    cache = PurePath(testpath, "cache.tar.gz")
     touch(cache)
     url = url_util.path_to_file_url(cache)
     with spack.config.override("config:url_fetch_method", _fetch_method):

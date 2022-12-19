@@ -134,7 +134,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
                 continue
 
             # Ignore files in the exclude locations
-            if any(os.path.realpath(f).startswith(e) for e in excludes):
+            if any(Path(f).resolve().startswith(e) for e in excludes):
                 continue
 
             changed.add(f)
@@ -409,7 +409,7 @@ def style(parser, args):
     assert os.path.isfile(os.path.join(spack.paths.prefix, ".flake8"))
 
     # validate spack root if the user provided one
-    args.root = os.path.realpath(args.root) if args.root else spack.paths.prefix
+    args.root = Path(args.root).resolve() if args.root else spack.paths.prefix
     spack_script = os.path.join(args.root, "bin", "spack")
     if not Path(spack_script).exists():
         tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
@@ -418,7 +418,7 @@ def style(parser, args):
     if file_list:
 
         def prefix_relative(path):
-            return os.path.relpath(Path.resolve(os.path.realpath(path)), args.root)
+            return os.path.relpath(Path.resolve(Path(path).resolve()), args.root)
 
         file_list = [prefix_relative(p) for p in file_list]
 

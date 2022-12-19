@@ -273,7 +273,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
     tty.debug("Fetching text at {0}".format(url))
 
     filename = PurePath(url).name
-    path = os.path.join(dest_dir, filename)
+    path = PurePath(dest_dir, filename)
 
     fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
@@ -475,7 +475,7 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 def _iter_local_prefix(path):
     for root, _, files in os.walk(path):
         for f in files:
-            yield os.path.relpath(os.path.join(root, f), path)
+            yield os.path.relpath(PurePath(root, f), path)
 
 
 def list_url(url, recursive=False):
@@ -488,7 +488,7 @@ def list_url(url, recursive=False):
         return [
             subpath
             for subpath in Path(local_path).iterdir()
-            if os.path.isfile(os.path.join(local_path, subpath))
+            if os.path.isfile(PurePath(local_path, subpath))
         ]
 
     if url.scheme == "s3":

@@ -86,7 +86,7 @@ all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update(dict((key, spack.schema.env.schema) for key in spack.schema.env.keys))
 
 #: Path to the default configuration
-configuration_defaults_path = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
+configuration_defaults_path = ("defaults", PurePath(spack.paths.etc_path, "defaults"))
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -139,7 +139,7 @@ class ConfigScope(object):
 
     def get_section_filename(self, section):
         _validate_section_name(section)
-        return os.path.join(self.path, "%s.yaml" % section)
+        return PurePath(self.path, "%s.yaml" % section)
 
     def get_section(self, section):
         if section not in self.sections:
@@ -286,7 +286,7 @@ class SingleFileScope(ConfigScope):
             parent = PurePath(self.path).parent
             mkdirp(parent)
 
-            tmp = os.path.join(parent, ".%s.tmp" % PurePath(self.path).name)
+            tmp = PurePath(parent, ".%s.tmp" % PurePath(self.path).name)
             with open(tmp, "w") as f:
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
             rename(tmp, self.path)
@@ -749,8 +749,8 @@ command_line_scopes: List[str] = []
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
     platform = spack.platforms.host().name
-    plat_name = os.path.join(name, platform)
-    plat_path = os.path.join(path, platform)
+    plat_name = PurePath(name, platform)
+    plat_path = PurePath(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
 
 
@@ -809,7 +809,7 @@ def _config():
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     configuration_paths.append(
-        ("site", os.path.join(spack.paths.etc_path)),
+        ("site", PurePath(spack.paths.etc_path)),
     )
 
     # User configuration can override both spack defaults and site config
@@ -926,8 +926,8 @@ def set(path, value, scope=None):
 
 
 def add_default_platform_scope(platform):
-    plat_name = os.path.join("defaults", platform)
-    plat_path = os.path.join(configuration_defaults_path[1], platform)
+    plat_name = PurePath("defaults", platform)
+    plat_path = PurePath(configuration_defaults_path[1], platform)
     config.push_scope(ConfigScope(plat_name, plat_path))
 
 
@@ -1382,7 +1382,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
                 "Will not fetch configuration from {0} since a version already"
                 "exists in {1}".format(config_url, dest_dir)
             )
-            path = os.path.join(dest_dir, basename)
+            path = PurePath(dest_dir, basename)
         else:
             path = _fetch_file(config_url)
 

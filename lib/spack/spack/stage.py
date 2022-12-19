@@ -718,7 +718,7 @@ class ResourceStage(Stage):
                     )
                 )
 
-                src = os.path.realpath(source_path)
+                src = Path(source_path).resolve()
 
                 if Path(src).is_dir():
                     install_tree(src, destination_path)

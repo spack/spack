@@ -54,7 +54,7 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         if basename in self.exclude_list:
             return
 
-        filepath = os.path.join(root, rel_path)
+        filepath = PurePath(root, rel_path)
         s = os.lstat(filepath)
         identifier = (s.st_ino, s.st_dev)
 
@@ -77,7 +77,7 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
             return
 
         # Register the (ino, dev) pair as ignored (if the symlink is not dangling)
-        filepath = os.path.join(root, rel_path)
+        filepath = PurePath(root, rel_path)
         try:
             s = os.stat(filepath)
         except OSError:
@@ -109,7 +109,7 @@ def patch_sonames(patchelf, root, rel_paths):
     given shared libraries."""
     fixed = []
     for rel_path in rel_paths:
-        filepath = os.path.join(root, rel_path)
+        filepath = PurePath(root, rel_path)
         normalized = os.path.normpath(filepath)
         args = ["--set-soname", normalized, normalized]
         output = patchelf(*args, output=str, error=str, fail_on_error=False)

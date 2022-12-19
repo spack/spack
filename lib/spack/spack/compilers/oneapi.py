@@ -24,10 +24,10 @@ class Oneapi(Compiler):
 
     # Named wrapper links within build_env_path
     link_paths = {
-        "cc": os.path.join("oneapi", "icx"),
-        "cxx": os.path.join("oneapi", "icpx"),
-        "f77": os.path.join("oneapi", "ifx"),
-        "fc": os.path.join("oneapi", "ifx"),
+        "cc": PurePath("oneapi", "icx"),
+        "cxx": PurePath("oneapi", "icpx"),
+        "f77": PurePath("oneapi", "ifx"),
+        "fc": PurePath("oneapi", "ifx"),
     }
 
     PrgEnv = "PrgEnv-oneapi"

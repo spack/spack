@@ -250,7 +250,7 @@ class TestHeaderList(object):
 
 
 #: Directory where the data for the test below is stored
-search_dir = os.path.join(spack.paths.test_path, "data", "directory_search")
+search_dir = PurePath(spack.paths.test_path, "data", "directory_search")
 
 
 @pytest.mark.parametrize(
@@ -301,8 +301,8 @@ def test_library_type_search(lib_list, kwargs):
         (find_headers, ["a", "c"], search_dir, {"recursive": True}),
         (find_headers, ["c", "b", "a"], search_dir, {"recursive": True}),
         (find_headers, ["a", "c"], search_dir, {"recursive": True}),
-        (find_libraries, ["liba", "libd"], os.path.join(search_dir, "b"), {"recursive": False}),
-        (find_headers, ["b", "d"], os.path.join(search_dir, "b"), {"recursive": False}),
+        (find_libraries, ["liba", "libd"], PurePath(search_dir, "b"), {"recursive": False}),
+        (find_headers, ["b", "d"], PurePath(search_dir, "b"), {"recursive": False}),
     ],
 )
 def test_searching_order(search_fn, search_list, root, kwargs):
@@ -343,9 +343,9 @@ def test_searching_order(search_fn, search_list, root, kwargs):
             "*/*bar.tx?",
             {"recursive": False},
             [
-                os.path.join(search_dir, os.path.join("a", "foobar.txt")),
-                os.path.join(search_dir, os.path.join("b", "bar.txp")),
-                os.path.join(search_dir, os.path.join("c", "bar.txt")),
+                PurePath(search_dir, os.path.join("a", "foobar.txt")),
+                PurePath(search_dir, os.path.join("b", "bar.txp")),
+                PurePath(search_dir, os.path.join("c", "bar.txt")),
             ],
         ),
         (
@@ -353,9 +353,9 @@ def test_searching_order(search_fn, search_list, root, kwargs):
             "*/*bar.tx?",
             {"recursive": True},
             [
-                os.path.join(search_dir, os.path.join("a", "foobar.txt")),
-                os.path.join(search_dir, os.path.join("b", "bar.txp")),
-                os.path.join(search_dir, os.path.join("c", "bar.txt")),
+                PurePath(search_dir, os.path.join("a", "foobar.txt")),
+                PurePath(search_dir, os.path.join("b", "bar.txp")),
+                PurePath(search_dir, os.path.join("c", "bar.txt")),
             ],
         ),
     ],

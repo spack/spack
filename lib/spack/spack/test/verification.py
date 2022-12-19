@@ -159,11 +159,11 @@ def test_check_prefix_manifest(tmpdir):
     for d in (metadata_dir, bin_dir, other_dir):
         fs.mkdirp(d)
 
-    file = os.path.join(other_dir, "file")
+    file = PurePath(other_dir, "file")
     with open(file, "w") as f:
         f.write("I'm a little file short and stout")
 
-    link = os.path.join(bin_dir, "run")
+    link = PurePath(bin_dir, "run")
     symlink(file, link)
 
     spack.verify.write_manifest(spec)
@@ -171,7 +171,7 @@ def test_check_prefix_manifest(tmpdir):
     assert not results.has_errors()
 
     Path(link).unlink()
-    malware = os.path.join(metadata_dir, "hiddenmalware")
+    malware = PurePath(metadata_dir, "hiddenmalware")
     with open(malware, "w") as f:
         f.write("Foul evil deeds")
 
@@ -197,9 +197,9 @@ def test_check_prefix_manifest(tmpdir):
 def test_single_file_verification(tmpdir):
     # Test the API to verify a single file, including finding the package
     # to which it belongs
-    filedir = os.path.join(str(tmpdir), "a", "b", "c", "d")
-    filepath = os.path.join(filedir, "file")
-    metadir = os.path.join(str(tmpdir), spack.store.layout.metadata_dir)
+    filedir = PurePath(str(tmpdir), "a", "b", "c", "d")
+    filepath = PurePath(filedir, "file")
+    metadir = PurePath(str(tmpdir), spack.store.layout.metadata_dir)
 
     fs.mkdirp(filedir)
     fs.mkdirp(metadir)
@@ -209,7 +209,7 @@ def test_single_file_verification(tmpdir):
 
     data = spack.verify.create_manifest_entry(filepath)
 
-    manifest_file = os.path.join(metadir, spack.store.layout.manifest_file_name)
+    manifest_file = PurePath(metadir, spack.store.layout.manifest_file_name)
 
     with open(manifest_file, "w") as f:
         sjson.dump({filepath: data}, f)

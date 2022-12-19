@@ -128,7 +128,7 @@ class AppleClang(spack.compilers.clang.Clang):
         developer_root = os.path.join(
             spack.stage.get_stage_root(), "xcode-select", self.name, str(self.version)
         )
-        xcode_link = os.path.join(developer_root, "Xcode.app")
+        xcode_link = PurePath(developer_root, "Xcode.app")
 
         if not Path(developer_root).exists():
             tty.warn(
@@ -163,13 +163,13 @@ class AppleClang(spack.compilers.clang.Clang):
             bins = ["c++", "c89", "c99", "cc", "clang", "clang++", "cpp"]
 
             for real_dir in real_dirs:
-                dev_dir = os.path.join(developer_root, "Contents", "Developer", real_dir)
+                dev_dir = PurePath(developer_root, "Contents", "Developer", real_dir)
                 for fname in Path(dev_dir).iterdir():
                     if fname in bins:
-                        Path(os.path.join(dev_dir, fname)).unlink()
+                        Path(PurePath(dev_dir, fname)).unlink()
                         symlink(
-                            os.path.join(spack.paths.build_env_path, "cc"),
-                            os.path.join(dev_dir, fname),
+                            PurePath(spack.paths.build_env_path, "cc"),
+                            PurePath(dev_dir, fname),
                         )
 
             symlink(developer_root, xcode_link)

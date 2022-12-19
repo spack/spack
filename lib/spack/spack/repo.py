@@ -1314,7 +1314,7 @@ def create_repo(root, namespace=None):
                 raise BadRepoError("Cannot create new repo in %s: directory is not empty." % root)
         existed = True
 
-    full_path = os.path.realpath(root)
+    full_path = Path(root).resolve()
     parent = PurePath(full_path).parent
     if not os.access(parent, os.R_OK | os.W_OK):
         raise BadRepoError("Cannot create repository in %s: can't access parent!" % root)

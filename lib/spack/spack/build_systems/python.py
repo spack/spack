@@ -128,7 +128,7 @@ class PythonExtension(spack.package_base.PackageBase):
                         dst,
                     )
             else:
-                orig_link_target = os.path.realpath(src)
+                orig_link_target = Path(src).resolve()
                 new_link_target = Path(merge_map[orig_link_target]).resolve()
                 view.link(new_link_target, dst)
 

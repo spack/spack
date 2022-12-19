@@ -34,10 +34,10 @@ class Gcc(spack.compiler.Compiler):
 
     # Named wrapper links within build_env_path
     link_paths = {
-        "cc": os.path.join("gcc", "gcc"),
-        "cxx": os.path.join("gcc", "g++"),
-        "f77": os.path.join("gcc", "gfortran"),
-        "fc": os.path.join("gcc", "gfortran"),
+        "cc": PurePath("gcc", "gcc"),
+        "cxx": PurePath("gcc", "g++"),
+        "f77": PurePath("gcc", "gfortran"),
+        "fc": PurePath("gcc", "gfortran"),
     }
 
     PrgEnv = "PrgEnv-gnu"

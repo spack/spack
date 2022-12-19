@@ -45,7 +45,7 @@ def link_tree(stage):
 def check_file_link(filename, expected_target):
     assert Path(filename).is_file()
     assert islink(filename)
-    assert Path.resolve(os.path.realpath(filename)) == os.path.abspath(expected_target)
+    assert Path.resolve(Path(filename).resolve()) == os.path.abspath(expected_target)
 
 
 def check_dir(filename):

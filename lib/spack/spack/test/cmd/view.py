@@ -35,7 +35,7 @@ def test_view_link_type(
     install("libdwarf")
     viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
     view(cmd, viewpath, "libdwarf")
-    package_prefix = os.path.join(viewpath, "libdwarf")
+    package_prefix = PurePath(viewpath, "libdwarf")
     assert Path(package_prefix).exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands
@@ -50,7 +50,7 @@ def test_view_link_type_remove(
     install("needs-relocation")
     viewpath = str(tmpdir.mkdir("view_{0}".format(add_cmd)))
     view(add_cmd, viewpath, "needs-relocation")
-    bindir = os.path.join(viewpath, "bin")
+    bindir = PurePath(viewpath, "bin")
     assert Path(bindir).exists()
 
     view("remove", viewpath, "needs-relocation")
@@ -68,7 +68,7 @@ def test_view_projections(
     projection_file = create_projection_file(tmpdir, view_projection)
     view(cmd, viewpath, "--projection-file={0}".format(projection_file), "libdwarf")
 
-    package_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
+    package_prefix = PurePath(viewpath, "libdwarf-20130207/libdwarf")
     assert Path(package_prefix).exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands
@@ -90,8 +90,8 @@ def test_view_multiple_projections(
     projection_file = create_projection_file(tmpdir, view_projection)
     view("add", viewpath, "--projection-file={0}".format(projection_file), "libdwarf", "extendee")
 
-    libdwarf_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
-    extendee_prefix = os.path.join(viewpath, "extendee-gcc/bin")
+    libdwarf_prefix = PurePath(viewpath, "libdwarf-20130207/libdwarf")
+    extendee_prefix = PurePath(viewpath, "extendee-gcc/bin")
     assert Path(libdwarf_prefix).exists()
     assert Path(extendee_prefix).exists()
 
@@ -110,8 +110,8 @@ def test_view_multiple_projections_all_first(
     projection_file = create_projection_file(tmpdir, view_projection)
     view("add", viewpath, "--projection-file={0}".format(projection_file), "libdwarf", "extendee")
 
-    libdwarf_prefix = os.path.join(viewpath, "libdwarf-20130207/libdwarf")
-    extendee_prefix = os.path.join(viewpath, "extendee-gcc/bin")
+    libdwarf_prefix = PurePath(viewpath, "libdwarf-20130207/libdwarf")
+    extendee_prefix = PurePath(viewpath, "extendee-gcc/bin")
     assert Path(libdwarf_prefix).exists()
     assert Path(extendee_prefix).exists()
 
@@ -134,7 +134,7 @@ def test_view_extension(tmpdir, mock_packages, mock_archive, mock_fetch, config,
     assert "extension1@1.0" in all_installed
     assert "extension1@2.0" in all_installed
     assert "extension2@1.0" in all_installed
-    assert os.path.exists(os.path.join(viewpath, "bin", "extension1"))
+    assert os.path.exists(PurePath(viewpath, "bin", "extension1"))
 
 
 def test_view_extension_remove(
@@ -147,7 +147,7 @@ def test_view_extension_remove(
     view("remove", viewpath, "extension1@1.0")
     all_installed = extensions("--show", "installed", "extendee")
     assert "extension1@1.0" in all_installed
-    assert not os.path.exists(os.path.join(viewpath, "bin", "extension1"))
+    assert not os.path.exists(PurePath(viewpath, "bin", "extension1"))
 
 
 def test_view_extension_conflict(
@@ -171,13 +171,13 @@ def test_view_extension_conflict_ignored(
     viewpath = str(tmpdir.mkdir("view"))
     view("symlink", viewpath, "extension1@1.0")
     view("symlink", viewpath, "-i", "extension1@2.0")
-    with open(os.path.join(viewpath, "bin", "extension1"), "r") as fin:
+    with open(PurePath(viewpath, "bin", "extension1"), "r") as fin:
         assert fin.read() == "1.0"
 
 
 def test_view_fails_with_missing_projections_file(tmpdir):
     viewpath = str(tmpdir.mkdir("view"))
-    projection_file = os.path.join(str(tmpdir), "nonexistent")
+    projection_file = PurePath(str(tmpdir), "nonexistent")
     with pytest.raises(SystemExit):
         view("symlink", "--projection-file", projection_file, viewpath, "foo")
 
@@ -200,7 +200,7 @@ def test_view_files_not_ignored(
         proj = str(tmpdir.join("proj.yaml"))
         with open(proj, "w") as f:
             f.write('{"projections":{"all":"{name}"}}')
-        prefix_in_view = os.path.join(viewpath, "view-not-ignored")
+        prefix_in_view = PurePath(viewpath, "view-not-ignored")
         args = ["--projection-file", proj]
     else:
         prefix_in_view = viewpath

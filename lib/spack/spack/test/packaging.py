@@ -57,8 +57,8 @@ def test_buildcache(mock_archive, tmpdir):
     pspec = Spec("patchelf").concretized()
     pkg = pspec.package
     fake_fetchify(pkg.fetcher, pkg)
-    mkdirp(os.path.join(pkg.prefix, "bin"))
-    patchelfscr = os.path.join(pkg.prefix, "bin", "patchelf")
+    mkdirp(PurePath(pkg.prefix, "bin"))
+    patchelfscr = PurePath(pkg.prefix, "bin", "patchelf")
     f = open(patchelfscr, "w")
     body = """#!/bin/bash
 echo $PATH"""
@@ -77,17 +77,17 @@ echo $PATH"""
     pkghash = "/" + str(spec.dag_hash(7))
 
     # Put some non-relocatable file in there
-    filename = os.path.join(spec.prefix, "dummy.txt")
+    filename = PurePath(spec.prefix, "dummy.txt")
     with open(filename, "w") as script:
         script.write(spec.prefix)
 
     # Create an absolute symlink
-    linkname = os.path.join(spec.prefix, "link_to_dummy.txt")
+    linkname = PurePath(spec.prefix, "link_to_dummy.txt")
     symlink(filename, linkname)
 
     # Create the build cache  and
     # put it directly into the mirror
-    mirror_path = os.path.join(str(tmpdir), "test-mirror")
+    mirror_path = PurePath(str(tmpdir), "test-mirror")
     spack.mirror.create(mirror_path, specs=[])
 
     # register mirror with spack config
@@ -153,8 +153,8 @@ echo $PATH"""
     assert "link_to_dummy.txt" in files
     assert "dummy.txt" in files
     #    assert os.path.realpath(
-    #        os.path.join(spec.prefix, 'link_to_dummy.txt')
-    #    ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+    #        PurePath(spec.prefix, 'link_to_dummy.txt')
+    #    ) == os.path.realpath(PurePath(spec.prefix, 'dummy.txt'))
 
     args = parser.parse_args(["keys"])
     buildcache.buildcache(parser, args)
@@ -208,7 +208,7 @@ def test_unsafe_relocate_text(tmpdir):
         with open(filename, "r") as script:
             for line in script:
                 assert new_dir in line
-        ensure_binary_is_relocatable(os.path.realpath(filename))
+        ensure_binary_is_relocatable(Path(filename).resolve())
     # Remove cached binary specs since we deleted the mirror
     bindist._cached_specs = set()
 
@@ -218,7 +218,7 @@ def test_relocate_links(tmpdir):
 
     own_prefix_path = str(tmpdir.join("prefix_a", "file"))
     dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
-    system_path = os.path.join(os.path.sep, "system", "path")
+    system_path = PurePath(os.path.sep, "system", "path")
 
     # Old prefixes to new prefixes
     prefix_to_prefix = OrderedDict(
@@ -228,7 +228,7 @@ def test_relocate_links(tmpdir):
             # map <tmpdir>/prefix_b -> <tmpdir>/new_prefix_b
             (str(tmpdir.join("prefix_b")), str(tmpdir.join("new_prefix_b"))),
             # map <tmpdir> -> /fallback/path -- this is just to see we respect order.
-            (str(tmpdir), os.path.join(os.path.sep, "fallback", "path")),
+            (str(tmpdir), PurePath(os.path.sep, "fallback", "path")),
         ]
     )
 
@@ -275,32 +275,32 @@ def test_replace_paths(tmpdir):
 
         prefix2hash = dict()
 
-        old_spack_dir = os.path.join("%s" % tmpdir, "Users", "developer", "spack")
+        old_spack_dir = PurePath("%s" % tmpdir, "Users", "developer", "spack")
         mkdirp(old_spack_dir)
 
-        oldprefix_a = os.path.join("%s" % old_spack_dir, "pkgA-%s" % hash_a)
-        oldlibdir_a = os.path.join("%s" % oldprefix_a, "lib")
+        oldprefix_a = PurePath("%s" % old_spack_dir, "pkgA-%s" % hash_a)
+        oldlibdir_a = PurePath("%s" % oldprefix_a, "lib")
         mkdirp(oldlibdir_a)
         prefix2hash[str(oldprefix_a)] = hash_a
 
-        oldprefix_b = os.path.join("%s" % old_spack_dir, "pkgB-%s" % hash_b)
-        oldlibdir_b = os.path.join("%s" % oldprefix_b, "lib")
+        oldprefix_b = PurePath("%s" % old_spack_dir, "pkgB-%s" % hash_b)
+        oldlibdir_b = PurePath("%s" % oldprefix_b, "lib")
         mkdirp(oldlibdir_b)
         prefix2hash[str(oldprefix_b)] = hash_b
 
-        oldprefix_c = os.path.join("%s" % old_spack_dir, "pkgC-%s" % hash_c)
-        oldlibdir_c = os.path.join("%s" % oldprefix_c, "lib")
-        oldlibdir_cc = os.path.join("%s" % oldlibdir_c, "C")
+        oldprefix_c = PurePath("%s" % old_spack_dir, "pkgC-%s" % hash_c)
+        oldlibdir_c = PurePath("%s" % oldprefix_c, "lib")
+        oldlibdir_cc = PurePath("%s" % oldlibdir_c, "C")
         mkdirp(oldlibdir_c)
         prefix2hash[str(oldprefix_c)] = hash_c
 
-        oldprefix_d = os.path.join("%s" % old_spack_dir, "pkgD-%s" % hash_d)
-        oldlibdir_d = os.path.join("%s" % oldprefix_d, "lib")
+        oldprefix_d = PurePath("%s" % old_spack_dir, "pkgD-%s" % hash_d)
+        oldlibdir_d = PurePath("%s" % oldprefix_d, "lib")
         mkdirp(oldlibdir_d)
         prefix2hash[str(oldprefix_d)] = hash_d
 
-        oldprefix_local = os.path.join("%s" % tmpdir, "usr", "local")
-        oldlibdir_local = os.path.join("%s" % oldprefix_local, "lib")
+        oldprefix_local = PurePath("%s" % tmpdir, "usr", "local")
+        oldlibdir_local = PurePath("%s" % oldprefix_local, "lib")
         mkdirp(oldlibdir_local)
         prefix2hash[str(oldprefix_local)] = hash_loco
         libfile_a = "libA.%s" % suffix
@@ -309,11 +309,11 @@ def test_replace_paths(tmpdir):
         libfile_d = "libD.%s" % suffix
         libfile_loco = "libloco.%s" % suffix
         old_libnames = [
-            os.path.join(oldlibdir_a, libfile_a),
-            os.path.join(oldlibdir_b, libfile_b),
-            os.path.join(oldlibdir_c, libfile_c),
-            os.path.join(oldlibdir_d, libfile_d),
-            os.path.join(oldlibdir_local, libfile_loco),
+            PurePath(oldlibdir_a, libfile_a),
+            PurePath(oldlibdir_b, libfile_b),
+            PurePath(oldlibdir_c, libfile_c),
+            PurePath(oldlibdir_d, libfile_d),
+            PurePath(oldlibdir_local, libfile_loco),
         ]
 
         for old_libname in old_libnames:
@@ -322,41 +322,41 @@ def test_replace_paths(tmpdir):
 
         hash2prefix = dict()
 
-        new_spack_dir = os.path.join("%s" % tmpdir, "Users", "Shared", "spack")
+        new_spack_dir = PurePath("%s" % tmpdir, "Users", "Shared", "spack")
         mkdirp(new_spack_dir)
 
-        prefix_a = os.path.join(new_spack_dir, "pkgA-%s" % hash_a)
-        libdir_a = os.path.join(prefix_a, "lib")
+        prefix_a = PurePath(new_spack_dir, "pkgA-%s" % hash_a)
+        libdir_a = PurePath(prefix_a, "lib")
         mkdirp(libdir_a)
         hash2prefix[hash_a] = str(prefix_a)
 
-        prefix_b = os.path.join(new_spack_dir, "pkgB-%s" % hash_b)
-        libdir_b = os.path.join(prefix_b, "lib")
+        prefix_b = PurePath(new_spack_dir, "pkgB-%s" % hash_b)
+        libdir_b = PurePath(prefix_b, "lib")
         mkdirp(libdir_b)
         hash2prefix[hash_b] = str(prefix_b)
 
-        prefix_c = os.path.join(new_spack_dir, "pkgC-%s" % hash_c)
-        libdir_c = os.path.join(prefix_c, "lib")
-        libdir_cc = os.path.join(libdir_c, "C")
+        prefix_c = PurePath(new_spack_dir, "pkgC-%s" % hash_c)
+        libdir_c = PurePath(prefix_c, "lib")
+        libdir_cc = PurePath(libdir_c, "C")
         mkdirp(libdir_cc)
         hash2prefix[hash_c] = str(prefix_c)
 
-        prefix_d = os.path.join(new_spack_dir, "pkgD-%s" % hash_d)
-        libdir_d = os.path.join(prefix_d, "lib")
+        prefix_d = PurePath(new_spack_dir, "pkgD-%s" % hash_d)
+        libdir_d = PurePath(prefix_d, "lib")
         mkdirp(libdir_d)
         hash2prefix[hash_d] = str(prefix_d)
 
-        prefix_local = os.path.join("%s" % tmpdir, "usr", "local")
-        libdir_local = os.path.join(prefix_local, "lib")
+        prefix_local = PurePath("%s" % tmpdir, "usr", "local")
+        libdir_local = PurePath(prefix_local, "lib")
         mkdirp(libdir_local)
         hash2prefix[hash_loco] = str(prefix_local)
 
         new_libnames = [
-            os.path.join(libdir_a, libfile_a),
-            os.path.join(libdir_b, libfile_b),
-            os.path.join(libdir_cc, libfile_c),
-            os.path.join(libdir_d, libfile_d),
-            os.path.join(libdir_local, libfile_loco),
+            PurePath(libdir_a, libfile_a),
+            PurePath(libdir_b, libfile_b),
+            PurePath(libdir_cc, libfile_c),
+            PurePath(libdir_d, libfile_d),
+            PurePath(libdir_local, libfile_loco),
         ]
 
         for new_libname in new_libnames:
@@ -370,11 +370,11 @@ def test_replace_paths(tmpdir):
         out_dict = macho_find_paths(
             [oldlibdir_a, oldlibdir_b, oldlibdir_c, oldlibdir_cc, oldlibdir_local],
             [
-                os.path.join(oldlibdir_a, libfile_a),
-                os.path.join(oldlibdir_b, libfile_b),
-                os.path.join(oldlibdir_local, libfile_loco),
+                PurePath(oldlibdir_a, libfile_a),
+                PurePath(oldlibdir_b, libfile_b),
+                PurePath(oldlibdir_local, libfile_loco),
             ],
-            os.path.join(oldlibdir_cc, libfile_c),
+            PurePath(oldlibdir_cc, libfile_c),
             old_spack_dir,
             prefix2prefix,
         )
@@ -384,19 +384,19 @@ def test_replace_paths(tmpdir):
             oldlibdir_c: libdir_c,
             oldlibdir_cc: libdir_cc,
             libdir_local: libdir_local,
-            os.path.join(oldlibdir_a, libfile_a): os.path.join(libdir_a, libfile_a),
-            os.path.join(oldlibdir_b, libfile_b): os.path.join(libdir_b, libfile_b),
-            os.path.join(oldlibdir_local, libfile_loco): os.path.join(libdir_local, libfile_loco),
-            os.path.join(oldlibdir_cc, libfile_c): os.path.join(libdir_cc, libfile_c),
+            PurePath(oldlibdir_a, libfile_a): os.path.join(libdir_a, libfile_a),
+            PurePath(oldlibdir_b, libfile_b): os.path.join(libdir_b, libfile_b),
+            PurePath(oldlibdir_local, libfile_loco): os.path.join(libdir_local, libfile_loco),
+            PurePath(oldlibdir_cc, libfile_c): os.path.join(libdir_cc, libfile_c),
         }
 
         out_dict = macho_find_paths(
             [oldlibdir_a, oldlibdir_b, oldlibdir_c, oldlibdir_cc, oldlibdir_local],
             [
-                os.path.join(oldlibdir_a, libfile_a),
-                os.path.join(oldlibdir_b, libfile_b),
-                os.path.join(oldlibdir_cc, libfile_c),
-                os.path.join(oldlibdir_local, libfile_loco),
+                PurePath(oldlibdir_a, libfile_a),
+                PurePath(oldlibdir_b, libfile_b),
+                PurePath(oldlibdir_cc, libfile_c),
+                PurePath(oldlibdir_local, libfile_loco),
             ],
             None,
             old_spack_dir,
@@ -408,10 +408,10 @@ def test_replace_paths(tmpdir):
             oldlibdir_c: libdir_c,
             oldlibdir_cc: libdir_cc,
             libdir_local: libdir_local,
-            os.path.join(oldlibdir_a, libfile_a): os.path.join(libdir_a, libfile_a),
-            os.path.join(oldlibdir_b, libfile_b): os.path.join(libdir_b, libfile_b),
-            os.path.join(oldlibdir_local, libfile_loco): os.path.join(libdir_local, libfile_loco),
-            os.path.join(oldlibdir_cc, libfile_c): os.path.join(libdir_cc, libfile_c),
+            PurePath(oldlibdir_a, libfile_a): os.path.join(libdir_a, libfile_a),
+            PurePath(oldlibdir_b, libfile_b): os.path.join(libdir_b, libfile_b),
+            PurePath(oldlibdir_local, libfile_loco): os.path.join(libdir_local, libfile_loco),
+            PurePath(oldlibdir_cc, libfile_c): os.path.join(libdir_cc, libfile_c),
         }
 
         out_dict = macho_find_paths(

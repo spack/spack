@@ -88,7 +88,7 @@ def check_expand_archive(stage, stage_name, expected_file_list):
     assert _archive_fn in stage_contents
     assert archive_dir in stage_contents
 
-    source_path = os.path.join(stage_path, archive_dir)
+    source_path = PurePath(stage_path, archive_dir)
     assert source_path == stage.source_path
 
     source_contents = list(Path(source_path).iterdir())
@@ -100,7 +100,7 @@ def check_expand_archive(stage, stage_name, expected_file_list):
             # the archive directory.
             assert _hidden_fn in stage_contents
 
-            fn = os.path.join(stage_path, _hidden_fn)
+            fn = PurePath(stage_path, _hidden_fn)
             contents = _hidden_contents
 
         elif _include == _include_readme:
@@ -108,15 +108,15 @@ def check_expand_archive(stage, stage_name, expected_file_list):
             # the tarball didn't explode; otherwise, it will be in the
             # original archive subdirectory of it.
             if _archive_base in source_contents:
-                fn = os.path.join(source_path, _archive_base, _readme_fn)
+                fn = PurePath(source_path, _archive_base, _readme_fn)
             else:
-                fn = os.path.join(source_path, _readme_fn)
+                fn = PurePath(source_path, _readme_fn)
             contents = _readme_contents
 
         elif _include == _include_extra:
             assert _extra_fn in source_contents
 
-            fn = os.path.join(source_path, _extra_fn)
+            fn = PurePath(source_path, _extra_fn)
             contents = _extra_contents
 
         else:
@@ -134,7 +134,7 @@ def check_fetch(stage, stage_name):
     """
     stage_path = get_stage_path(stage, stage_name)
     assert _archive_fn in list(Path(stage_path).iterdir())
-    assert os.path.join(stage_path, _archive_fn) == stage.fetcher.archive_file
+    assert PurePath(stage_path, _archive_fn) == stage.fetcher.archive_file
 
 
 def check_destroy(stage, stage_name):
@@ -146,7 +146,7 @@ def check_destroy(stage, stage_name):
 
     # tmp stage needs to remove tmp dir too.
     if not stage.managed_by_spack:
-        target = os.path.realpath(stage_path)
+        target = Path(stage_path).resolve()
         assert not Path(target).exists()
 
 
@@ -158,7 +158,7 @@ def check_setup(stage, stage_name, archive):
     assert Path(stage_path).is_dir()
 
     # Make sure it points to a valid directory
-    target = os.path.realpath(stage_path)
+    target = Path(stage_path).resolve()
     assert Path(target).is_dir()
     assert not Path(target).is_symlink()
 
@@ -174,7 +174,7 @@ def get_stage_path(stage, stage_name):
     stage_path = spack.stage.get_stage_root()
     if stage_name is not None:
         # If it is a named stage, we know where the stage should be
-        return os.path.join(stage_path, stage_name)
+        return PurePath(stage_path, stage_name)
     else:
         # If it's unnamed, ensure that we ran mkdtemp in the right spot.
         assert stage.path is not None
@@ -368,7 +368,7 @@ def check_stage_dir_perms(prefix, path):
     group_paths, user_node, user_paths = partition_path(path.replace(skip, ""), user)
 
     for p in group_paths:
-        p_status = os.stat(os.path.join(prefix, p))
+        p_status = os.stat(PurePath(prefix, p))
         assert p_status.st_gid == prefix_status.st_gid
         assert p_status.st_mode == prefix_status.st_mode
 
@@ -378,7 +378,7 @@ def check_stage_dir_perms(prefix, path):
         user_paths.insert(0, user_node)
 
     for p in user_paths:
-        p_status = os.stat(os.path.join(prefix, p))
+        p_status = os.stat(PurePath(prefix, p))
         assert uid == p_status.st_uid
         assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
@@ -440,7 +440,7 @@ class TestStage(object):
         composite_stage.expand_archive()
         assert composite_stage.expanded  # Archive is expanded
 
-        assert os.path.exists(os.path.join(composite_stage.source_path, resource_dst_name))
+        assert os.path.exists(PurePath(composite_stage.source_path, resource_dst_name))
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_expand_resource(self, composite_stage_with_expanding_resource):
@@ -459,7 +459,7 @@ class TestStage(object):
         assert composite_stage.expanded  # Archive is expanded
 
         for fname in mock_resource.files:
-            file_path = os.path.join(root_stage.source_path, "resource-dir", fname)
+            file_path = PurePath(root_stage.source_path, "resource-dir", fname)
             assert Path(file_path).exists()
 
         # Perform a little cleanup
@@ -489,7 +489,7 @@ class TestStage(object):
         composite_stage.expand_archive()
 
         for fname in mock_resource.files:
-            file_path = os.path.join(root_stage.source_path, "resource-expand", fname)
+            file_path = PurePath(root_stage.source_path, "resource-expand", fname)
             assert Path(file_path).exists()
 
         # Perform a little cleanup
@@ -666,7 +666,7 @@ class TestStage(object):
         """Test _first_accessible_path names."""
         spack_dir = tmpdir.join("paths")
         name = str(spack_dir)
-        files = [os.path.join(os.path.sep, "no", "such", "path"), name]
+        files = [PurePath(os.path.sep, "no", "such", "path"), name]
 
         # Ensure the tmpdir path is returned since the user should have access
         path = spack.stage._first_accessible_path(files)
@@ -765,13 +765,13 @@ class TestStage(object):
         assert spack.stage._resolve_paths([]) == []
 
         # resolved path without user appends user
-        paths = [os.path.join(os.path.sep, "a", "b", "c")]
+        paths = [PurePath(os.path.sep, "a", "b", "c")]
         user = getpass.getuser()
-        can_paths = [os.path.join(paths[0], user)]
+        can_paths = [PurePath(paths[0], user)]
         assert spack.stage._resolve_paths(paths) == can_paths
 
         # resolved path with node including user does not append user
-        paths = [os.path.join(os.path.sep, "spack-{0}".format(user), "stage")]
+        paths = [PurePath(os.path.sep, "spack-{0}".format(user), "stage")]
         assert spack.stage._resolve_paths(paths) == paths
 
         tempdir = "$tempdir"
@@ -779,19 +779,19 @@ class TestStage(object):
         user = getpass.getuser()
         temp_has_user = user in can_tempdir.split(os.sep)
         paths = [
-            os.path.join(tempdir, "stage"),
-            os.path.join(tempdir, "$user"),
-            os.path.join(tempdir, "$user", "$user"),
-            os.path.join(tempdir, "$user", "stage", "$user"),
+            PurePath(tempdir, "stage"),
+            PurePath(tempdir, "$user"),
+            PurePath(tempdir, "$user", "$user"),
+            PurePath(tempdir, "$user", "stage", "$user"),
         ]
 
         res_paths = [canonicalize_path(p) for p in paths]
         if temp_has_user:
             res_paths[1] = can_tempdir
-            res_paths[2] = os.path.join(can_tempdir, user)
-            res_paths[3] = os.path.join(can_tempdir, "stage", user)
+            res_paths[2] = PurePath(can_tempdir, user)
+            res_paths[3] = PurePath(can_tempdir, "stage", user)
         else:
-            res_paths[0] = os.path.join(res_paths[0], user)
+            res_paths[0] = PurePath(res_paths[0], user)
 
         assert spack.stage._resolve_paths(paths) == res_paths
 
@@ -910,7 +910,7 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     _, test_stage_path = tmp_build_stage_dir
     mkdirp(test_stage_path)
 
-    nondir = os.path.join(test_stage_path, "afile")
+    nondir = PurePath(test_stage_path, "afile")
     touch(nondir)
     path = str(nondir)
 

@@ -184,8 +184,8 @@ class TestCopyTree:
             with fs.working_dir("dest/a"):
                 assert os.path.exists(os.readlink("b2"))
 
-            assert os.path.realpath("dest/f/2") == Path("dest/a/b/2").resolve()
-            assert os.path.realpath("dest/2") == Path("dest/1").resolve()
+            assert Path("dest/f/2").resolve() == Path("dest/a/b/2").resolve()
+            assert Path("dest/2").resolve() == Path("dest/1").resolve()
 
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
@@ -364,16 +364,16 @@ def test_recursive_search_of_headers_from_prefix(installation_dir_with_headers):
         include_dirs = [dir.replace("/", "\\") for dir in include_dirs]
 
     # Check that the header files we expect are all listed
-    assert os.path.join(prefix, "include", "ex3.h") in header_list
-    assert os.path.join(prefix, "include", "boost", "ex3.h") in header_list
-    assert os.path.join(prefix, "path", "to", "ex1.h") in header_list
-    assert os.path.join(prefix, "path", "to", "subdir", "ex2.h") in header_list
+    assert PurePath(prefix, "include", "ex3.h") in header_list
+    assert PurePath(prefix, "include", "boost", "ex3.h") in header_list
+    assert PurePath(prefix, "path", "to", "ex1.h") in header_list
+    assert PurePath(prefix, "path", "to", "subdir", "ex2.h") in header_list
 
     # Check that when computing directories we exclude <prefix>/include/boost
-    assert os.path.join(prefix, "include") in include_dirs
-    assert os.path.join(prefix, "include", "boost") not in include_dirs
-    assert os.path.join(prefix, "path", "to") in include_dirs
-    assert os.path.join(prefix, "path", "to", "subdir") in include_dirs
+    assert PurePath(prefix, "include") in include_dirs
+    assert PurePath(prefix, "include", "boost") not in include_dirs
+    assert PurePath(prefix, "path", "to") in include_dirs
+    assert PurePath(prefix, "path", "to", "subdir") in include_dirs
 
 
 if sys.platform == "win32":
@@ -493,8 +493,8 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
-    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", filename)
-    target_file = os.path.join(str(tmpdir), filename)
+    original_file = PurePath(spack.paths.test_path, "data", "filter_file", filename)
+    target_file = PurePath(str(tmpdir), filename)
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(regex, replacement, target_file, **keyword_args)
@@ -509,8 +509,8 @@ def test_filter_files_multiple(tmpdir):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
-    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "x86_cpuid_info.c")
-    target_file = os.path.join(str(tmpdir), "x86_cpuid_info.c")
+    original_file = PurePath(spack.paths.test_path, "data", "filter_file", "x86_cpuid_info.c")
+    target_file = PurePath(str(tmpdir), "x86_cpuid_info.c")
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(r"\<malloc.h\>", "<unistd.h>", target_file)
@@ -526,8 +526,8 @@ def test_filter_files_multiple(tmpdir):
 
 
 def test_filter_files_start_stop(tmpdir):
-    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "start_stop.txt")
-    target_file = os.path.join(str(tmpdir), "start_stop.txt")
+    original_file = PurePath(spack.paths.test_path, "data", "filter_file", "start_stop.txt")
+    target_file = PurePath(str(tmpdir), "start_stop.txt")
     shutil.copy(original_file, target_file)
     # None of the following should happen:
     #   - filtering starts after A is found in the file:
@@ -719,15 +719,15 @@ def test_lexists_islink_isdir(tmpdir):
     root = str(tmpdir)
 
     # Create a directory and a file, an a bunch of symlinks.
-    dir = os.path.join(root, "dir")
-    file = os.path.join(root, "file")
-    nonexistent = os.path.join(root, "does_not_exist")
-    symlink_to_dir = os.path.join(root, "symlink_to_dir")
-    symlink_to_file = os.path.join(root, "symlink_to_file")
-    dangling_symlink = os.path.join(root, "dangling_symlink")
-    symlink_to_dangling_symlink = os.path.join(root, "symlink_to_dangling_symlink")
-    symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
-    symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
+    dir = PurePath(root, "dir")
+    file = PurePath(root, "file")
+    nonexistent = PurePath(root, "does_not_exist")
+    symlink_to_dir = PurePath(root, "symlink_to_dir")
+    symlink_to_file = PurePath(root, "symlink_to_file")
+    dangling_symlink = PurePath(root, "dangling_symlink")
+    symlink_to_dangling_symlink = PurePath(root, "symlink_to_dangling_symlink")
+    symlink_to_symlink_to_dir = PurePath(root, "symlink_to_symlink_to_dir")
+    symlink_to_symlink_to_file = PurePath(root, "symlink_to_symlink_to_file")
 
     Path(dir).mkdir()
     with open(file, "wb") as f:

@@ -53,7 +53,7 @@ def set_up_package(name, repository, url_attr):
 
 def check_mirror():
     with Stage("spack-mirror-test") as stage:
-        mirror_root = os.path.join(stage.path, "test-mirror")
+        mirror_root = PurePath(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
         with spack.config.override("mirrors", mirrors):

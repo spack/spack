@@ -115,11 +115,11 @@ test_args_without_paths = [
 pkg_prefix = "/spack-test-prefix"
 
 # Compilers to use during tests
-cc = Executable(os.path.join(build_env_path, "cc"))
-ld = Executable(os.path.join(build_env_path, "ld"))
-cpp = Executable(os.path.join(build_env_path, "cpp"))
-cxx = Executable(os.path.join(build_env_path, "c++"))
-fc = Executable(os.path.join(build_env_path, "fc"))
+cc = Executable(PurePath(build_env_path, "cc"))
+ld = Executable(PurePath(build_env_path, "ld"))
+cpp = Executable(PurePath(build_env_path, "cpp"))
+cxx = Executable(PurePath(build_env_path, "c++"))
+fc = Executable(PurePath(build_env_path, "fc"))
 
 #: the "real" compiler the wrapper is expected to invoke
 real_cc = "/bin/mycc"

@@ -471,7 +471,7 @@ def _format_job_needs(
 def get_change_revisions():
     """If this is a git repo get the revisions to use when checking
     for changed packages and spack core modules."""
-    git_dir = os.path.join(spack.paths.prefix, ".git")
+    git_dir = PurePath(spack.paths.prefix, ".git")
     if Path(git_dir).exists() and Path(git_dir).is_dir():
         # TODO: This will only find changed packages from the last
         # TODO: commit.  While this may work for single merge commits
@@ -739,24 +739,24 @@ def generate_gitlab_ci_yaml(
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
         proj_dir = os.environ.get("CI_PROJECT_DIR", Path.cwd())
-        pipeline_artifacts_dir = os.path.join(proj_dir, "jobs_scratch_dir")
+        pipeline_artifacts_dir = PurePath(proj_dir, "jobs_scratch_dir")
 
     pipeline_artifacts_dir = Path(pipeline_artifacts_dir).resolve()
-    concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
+    concrete_env_dir = PurePath(pipeline_artifacts_dir, "concrete_environment")
 
     # Now that we've added the mirrors we know about, they should be properly
     # reflected in the environment manifest file, so copy that into the
     # concrete environment directory, along with the spack.lock file.
     if not Path(concrete_env_dir).exists():
         os.makedirs(concrete_env_dir)
-    shutil.copyfile(env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
-    shutil.copyfile(env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
+    shutil.copyfile(env.manifest_path, PurePath(concrete_env_dir, "spack.yaml"))
+    shutil.copyfile(env.lock_path, PurePath(concrete_env_dir, "spack.lock"))
 
-    job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
-    job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
-    job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
-    local_mirror_dir = os.path.join(pipeline_artifacts_dir, "mirror")
-    user_artifacts_dir = os.path.join(pipeline_artifacts_dir, "user_data")
+    job_log_dir = PurePath(pipeline_artifacts_dir, "logs")
+    job_repro_dir = PurePath(pipeline_artifacts_dir, "reproduction")
+    job_test_dir = PurePath(pipeline_artifacts_dir, "tests")
+    local_mirror_dir = PurePath(pipeline_artifacts_dir, "mirror")
+    user_artifacts_dir = PurePath(pipeline_artifacts_dir, "user_data")
 
     # We communicate relative paths to the downstream jobs to avoid issues in
     # situations where the CI_PROJECT_DIR varies between the pipeline
@@ -769,7 +769,7 @@ def generate_gitlab_ci_yaml(
     rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
     rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
     rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
-    rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
+    rel_local_mirror_dir = PurePath(local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
 
     # Speed up staging by first fetching binary indices from all mirrors
@@ -1088,10 +1088,10 @@ def generate_gitlab_ci_yaml(
                 ]
 
                 if enable_artifacts_buildcache:
-                    bc_root = os.path.join(local_mirror_dir, "build_cache")
+                    bc_root = PurePath(local_mirror_dir, "build_cache")
                     artifact_paths.extend(
                         [
-                            os.path.join(bc_root, p)
+                            PurePath(bc_root, p)
                             for p in [
                                 bindist.tarball_name(release_spec, ".spec.json"),
                                 bindist.tarball_directory_name(release_spec),
@@ -1315,7 +1315,7 @@ def generate_gitlab_ci_yaml(
 
         if spack_buildcache_copy:
             # Write out the file describing specs that should be copied
-            copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
+            copy_specs_dir = PurePath(pipeline_artifacts_dir, "specs_to_copy")
 
             if not Path(copy_specs_dir).exists():
                 os.makedirs(copy_specs_dir)
@@ -1408,7 +1408,7 @@ def import_signing_key(base64_signing_key):
         decoded_key = decoded_key.decode("utf8")
 
     with TemporaryDirectory() as tmpdir:
-        sign_key_path = os.path.join(tmpdir, "signing_key")
+        sign_key_path = PurePath(tmpdir, "signing_key")
         with open(sign_key_path, "w") as fd:
             fd.write(decoded_key)
 
@@ -1583,7 +1583,7 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
 
     stage_dir = job_pkg.stage.path
     tty.debug("stage dir: {0}".format(stage_dir))
-    build_out_src = os.path.join(stage_dir, "spack-build-out.txt")
+    build_out_src = PurePath(stage_dir, "spack-build-out.txt")
     copy_files_to_artifacts(build_out_src, job_log_dir)
 
 
@@ -1601,7 +1601,7 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
         tty.error(msg.format(test_stage))
         return
 
-    copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
+    copy_files_to_artifacts(PurePath(test_stage, "*", "*.txt"), job_test_dir)
 
 
 def download_and_extract_artifacts(url, work_dir):
@@ -1635,7 +1635,7 @@ def download_and_extract_artifacts(url, work_dir):
         msg = "Error response code ({0}) in reproduce_ci_job".format(response_code)
         raise SpackError(msg)
 
-    artifacts_zip_path = os.path.join(work_dir, "artifacts.zip")
+    artifacts_zip_path = PurePath(work_dir, "artifacts.zip")
 
     if not Path(work_dir).exists():
         os.makedirs(work_dir)
@@ -1653,7 +1653,7 @@ def download_and_extract_artifacts(url, work_dir):
 def get_spack_info():
     """If spack is running from a git repo, return the most recent git log
     entry, otherwise, return a string containing the spack version."""
-    git_path = os.path.join(spack.paths.prefix, ".git")
+    git_path = PurePath(spack.paths.prefix, ".git")
     if Path(git_path).exists():
         git = spack.util.git.git()
         if git:
@@ -1688,7 +1688,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     print("checkout_commit: {0}".format(checkout_commit))
     print("merge_commit: {0}".format(merge_commit))
 
-    dot_git_path = os.path.join(spack.paths.prefix, ".git")
+    dot_git_path = PurePath(spack.paths.prefix, ".git")
     if not Path(dot_git_path).exists():
         tty.error("Unable to find the path to your local spack clone")
         return False
@@ -1728,7 +1728,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     # Finally, attempt to put the cloned repo into the same state used during
     # the pipeline build job
-    repro_spack_path = os.path.join(repro_dir, "spack")
+    repro_spack_path = PurePath(repro_dir, "spack")
     with fs.working_dir(repro_spack_path):
         co_out = git(
             "checkout", checkout_commit, output=str, error=os.devnull, fail_on_error=False
@@ -1808,11 +1808,11 @@ def reproduce_ci_job(url, work_dir):
     # Using the relative concrete environment path found in the generated
     # pipeline variable above, copy the spack environment files so they'll
     # be found in the same location as when the job ran in the cloud.
-    concrete_env_dir = os.path.join(work_dir, relative_concrete_env_dir)
+    concrete_env_dir = PurePath(work_dir, relative_concrete_env_dir)
     os.makedirs(concrete_env_dir, exist_ok=True)
-    copy_lock_path = os.path.join(concrete_env_dir, "spack.lock")
-    orig_yaml_path = os.path.join(repro_lock_dir, "spack.yaml")
-    copy_yaml_path = os.path.join(concrete_env_dir, "spack.yaml")
+    copy_lock_path = PurePath(concrete_env_dir, "spack.lock")
+    orig_yaml_path = PurePath(repro_lock_dir, "spack.yaml")
+    copy_yaml_path = PurePath(concrete_env_dir, "spack.yaml")
     shutil.copyfile(lock_file, copy_lock_path)
     shutil.copyfile(orig_yaml_path, copy_yaml_path)
 
@@ -1870,8 +1870,8 @@ def reproduce_ci_job(url, work_dir):
         mount_as_dir = "/work"
         if repro_details:
             mount_as_dir = repro_details["ci_project_dir"]
-            mounted_repro_dir = os.path.join(mount_as_dir, rel_repro_dir)
-            mounted_env_dir = os.path.join(mount_as_dir, relative_concrete_env_dir)
+            mounted_repro_dir = PurePath(mount_as_dir, rel_repro_dir)
+            mounted_env_dir = PurePath(mount_as_dir, relative_concrete_env_dir)
 
         # We will also try to clone spack from your local checkout and
         # reproduce the state present during the CI build, and put that into
@@ -1961,7 +1961,7 @@ def reproduce_ci_job(url, work_dir):
     inst_list.append("    - Run the install script\n\n")
     inst_list.append(
         "        $ {0}\n".format(
-            os.path.join(mounted_repro_dir, "install.sh") if job_image else install_script
+            PurePath(mounted_repro_dir, "install.sh") if job_image else install_script
         )
     )
 
@@ -2002,7 +2002,7 @@ def process_command(name, commands, repro_dir):
     st = os.stat(script)
     Path(script).chmod(st.st_mode | stat.S_IEXEC)
 
-    copy_path = os.path.join(repro_dir, script)
+    copy_path = PurePath(repro_dir, script)
     shutil.copyfile(script, copy_path)
 
     # Run the generated install.sh shell script as if it were being run in
@@ -2060,7 +2060,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
     in the broken specs list.
     """
     tmpdir = tempfile.mkdtemp()
-    file_path = os.path.join(tmpdir, "broken.txt")
+    file_path = PurePath(tmpdir, "broken.txt")
 
     broken_spec_details = {
         "broken-spec": {

@@ -406,7 +406,7 @@ def exploding_archive_catch(stage):
 
     # Expand all tarballs in their own directory to contain
     # exploding tarballs.
-    tarball_container = os.path.join(stage.path, "spack-expanded-archive")
+    tarball_container = PurePath(stage.path, "spack-expanded-archive")
     mkdirp(tarball_container)
     orig_dir = Path.cwd()
     os.chdir(tarball_container)
@@ -432,15 +432,15 @@ def exploding_archive_handler(tarball_container, stage):
     files = list(Path(tarball_container).iterdir())
     non_hidden = [f for f in files if not f.startswith(".")]
     if len(non_hidden) == 1:
-        src = os.path.join(tarball_container, non_hidden[0])
+        src = PurePath(tarball_container, non_hidden[0])
         if Path(src).is_dir():
             stage.srcdir = non_hidden[0]
             shutil.move(src, stage.source_path)
             if len(files) > 1:
                 files.remove(non_hidden[0])
                 for f in files:
-                    src = os.path.join(tarball_container, f)
-                    dest = os.path.join(stage.path, f)
+                    src = PurePath(tarball_container, f)
+                    dest = PurePath(stage.path, f)
                     shutil.move(src, dest)
             Path(tarball_container).rmdir()
         else:
@@ -649,7 +649,7 @@ def resolve_link_target_relative_to_the_link(link):
     if PurePath(target).is_absolute():
         return target
     link_dir = os.path.dirname(Path(link).resolve())
-    return os.path.join(link_dir, target)
+    return PurePath(link_dir, target)
 
 
 @system_path_filter
@@ -949,7 +949,7 @@ def replace_directory_transaction(directory_name):
 
     # We have to jump through hoops to support Windows, since
     # Path(directory_name).rename(Path(tmpdir)) errors there.
-    backup_dir = os.path.join(tmpdir, "backup")
+    backup_dir = PurePath(tmpdir, "backup")
     Path(directory_name).rename(Path(backup_dir))
     tty.debug("Directory moved [src={0}, dest={1}]".format(directory_name, backup_dir))
 
@@ -991,7 +991,7 @@ def hash_directory(directory, ignore=[]):
     # Adapted from https://stackoverflow.com/a/3431835/771663
     for root, dirs, files in os.walk(directory):
         for name in sorted(files):
-            filename = os.path.join(root, name)
+            filename = PurePath(root, name)
             if filename not in ignore:
                 # TODO: if caching big files becomes an issue, convert this to
                 # TODO: read in chunks. Currently it's used only for testing
@@ -1008,7 +1008,7 @@ def write_tmp_and_move(filename):
     """Write to a temporary file, then move into place."""
     dirname = PurePath(filename).parent
     basename = PurePath(filename).name
-    tmp = os.path.join(dirname, ".%s.tmp" % basename)
+    tmp = PurePath(dirname, ".%s.tmp" % basename)
     with open(tmp, "w") as f:
         yield f
     shutil.move(tmp, filename)
@@ -1064,7 +1064,7 @@ def force_symlink(src, dest):
 def join_path(prefix, *args):
     path = str(prefix)
     for elt in args:
-        path = os.path.join(path, str(elt))
+        path = PurePath(path, str(elt))
     return path
 
 
@@ -1102,7 +1102,7 @@ def temp_cwd():
 @contextmanager
 @system_path_filter
 def temp_rename(orig_path, temp_path):
-    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
+    same_path = Pure(orig_path).resolve() == Pure(temp_path).resolve()
     if not same_path:
         shutil.move(orig_path, temp_path)
     try:
@@ -1166,17 +1166,17 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
     if ignore(rel_path):
         return
 
-    source_path = os.path.join(source_root, rel_path)
-    dest_path = os.path.join(dest_root, rel_path)
+    source_path = PurePath(source_root, rel_path)
+    dest_path = PurePath(dest_root, rel_path)
 
     # preorder yields directories before children
     if order == "pre":
         yield (source_path, dest_path)
 
     for f in Path(source_path).iterdir():
-        source_child = os.path.join(source_path, f)
-        dest_child = os.path.join(dest_path, f)
-        rel_child = os.path.join(rel_path, f)
+        source_child = PurePath(source_path, f)
+        dest_child = PurePath(dest_path, f)
+        rel_child = PurePath(rel_path, f)
 
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
@@ -1192,7 +1192,7 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
                     yield t
 
         # Treat as a file.
-        elif not ignore(os.path.join(rel_path, f)):
+        elif not ignore(PurePath(rel_path, f)):
             yield (source_child, dest_child)
 
     if order == "post":
@@ -1230,7 +1230,7 @@ class BaseDirectoryVisitor(object):
     """Base class and interface for :py:func:`visit_directory_tree`."""
 
     def visit_file(self, root, rel_path, depth):
-        """Handle the non-symlink file at ``os.path.join(root, rel_path)``
+        """Handle the non-symlink file at ``PurePath(root, rel_path)``
 
         Parameters:
             root (str): root directory
@@ -1239,7 +1239,7 @@ class BaseDirectoryVisitor(object):
         pass
 
     def visit_symlinked_file(self, root, rel_path, depth):
-        """Handle the symlink to a file at ``os.path.join(root, rel_path)``.
+        """Handle the symlink to a file at ``PurePath(root, rel_path)``.
         Note: ``rel_path`` is the location of the symlink, not to what it is
         pointing to. The symlink may be dangling.
 
@@ -1251,7 +1251,7 @@ class BaseDirectoryVisitor(object):
 
     def before_visit_dir(self, root, rel_path, depth):
         """Return True from this function to recurse into the directory at
-        os.path.join(root, rel_path). Return False in order not to recurse further.
+        PurePath(root, rel_path). Return False in order not to recurse further.
 
         Parameters:
             root (str): root directory
@@ -1310,11 +1310,11 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
         rel_path (str): current relative path from the root
         depth (str): current depth from the root
     """
-    dir = os.path.join(root, rel_path)
+    dir = PurePath(root, rel_path)
     dir_entries = sorted(os.scandir(dir), key=lambda d: d.name)
 
     for f in dir_entries:
-        rel_child = os.path.join(rel_path, f.name)
+        rel_child = PurePath(rel_path, f.name)
         islink = f.is_symlink()
         # On Windows, symlinks to directories are distinct from
         # symlinks to files, and it is possible to create a
@@ -1372,7 +1372,7 @@ def last_modification_time_recursive(path):
     path = Path(path).resolve()
     times = [os.stat(path).st_mtime]
     times.extend(
-        os.lstat(os.path.join(root, name)).st_mtime
+        os.lstat(PurePath(root, name)).st_mtime
         for root, dirs, files in os.walk(path)
         for name in dirs + files
     )
@@ -1389,7 +1389,7 @@ def remove_empty_directories(root):
     """
     for dirpath, subdirs, files in os.walk(root, topdown=False):
         for sd in subdirs:
-            sdp = os.path.join(dirpath, sd)
+            sdp = PurePath(dirpath, sd)
             try:
                 Path(sdp).rmdir()
             except OSError:
@@ -1476,7 +1476,7 @@ def remove_linked_tree(path):
 
     if Path(path).exists():
         if Path(path).is_symlink():
-            shutil.rmtree(os.path.realpath(path), **kwargs)
+            shutil.rmtree(Pure(path).resolve(), **kwargs)
             Path(path).unlink()
         else:
             shutil.rmtree(path, **kwargs)
@@ -1517,7 +1517,7 @@ def safe_remove(*files_or_dirs):
             # The monotonic ID is a simple way to make the filename
             # or directory name unique in the temporary folder
             basename = PurePath(file_or_dir).name + "-{0}".format(id)
-            temporary_path = os.path.join(dst_root, basename)
+            temporary_path = PurePath(dst_root, basename)
             shutil.move(file_or_dir, temporary_path)
             removed[file_or_dir] = temporary_path
         yield removed
@@ -1628,8 +1628,8 @@ def _find_recursive(root, search_files):
     root = Path(root).resolve()
     for path, _, list_files in os.walk(root):
         for search_file in search_files:
-            matches = glob.glob(os.path.join(path, search_file))
-            matches = [os.path.join(path, x) for x in matches]
+            matches = glob.glob(PurePath(path, search_file))
+            matches = [PurePath(path, x) for x in matches]
             found_files[search_file].extend(matches)
 
     answer = []
@@ -1649,8 +1649,8 @@ def _find_non_recursive(root, search_files):
     root = Path(root).resolve()
 
     for search_file in search_files:
-        matches = glob.glob(os.path.join(root, search_file))
-        matches = [os.path.join(root, x) for x in matches]
+        matches = glob.glob(PurePath(root, search_file))
+        matches = [PurePath(root, x) for x in matches]
         found_files[search_file].extend(matches)
 
     answer = []
@@ -1781,7 +1781,7 @@ class HeaderList(FileList):
             # If the path contains a subdirectory named 'include' then stop
             # there and don't add anything else to the path.
             m = self.include_regex.match(d)
-            value = os.path.join(*m.group(1, 2)) if m else d
+            value = PurePath(*m.group(1, 2)) if m else d
             values.append(value)
         return values
 
@@ -2293,7 +2293,7 @@ class WindowsSimulatedRPath(object):
         perspective, and will cause an error when Developer
         mode is not enabled"""
         file_name = PurePath(path).name
-        dest_file = os.path.join(dest_dir, file_name)
+        dest_file = PurePath(dest_dir, file_name)
         if Path(dest_dir).exists() and not dest_file == path:
             try:
                 symlink(path, dest_file)
@@ -2375,7 +2375,7 @@ def files_in(*search_paths):
         files.extend(
             filter(
                 lambda x: Path(x[1]).is_file(),
-                [(f, os.path.join(d, f)) for f in list(Path(d).iterdir())],
+                [(f, PurePath(d, f)) for f in list(Path(d).iterdir())],
             )
         )
     return files
@@ -2407,7 +2407,7 @@ def search_paths_for_executables(*path_hints):
         path = Path(path).resolve()
         executable_paths.append(path)
 
-        bin_dir = os.path.join(path, "bin")
+        bin_dir = PurePath(path, "bin")
         if Path(bin_dir).is_dir():
             executable_paths.append(bin_dir)
 
@@ -2435,11 +2435,11 @@ def search_paths_for_libraries(*path_hints):
         path = Path(path).resolve()
         library_paths.append(path)
 
-        lib_dir = os.path.join(path, "lib")
+        lib_dir = PurePath(path, "lib")
         if Path(lib_dir).is_dir():
             library_paths.append(lib_dir)
 
-        lib64_dir = os.path.join(path, "lib64")
+        lib64_dir = PurePath(path, "lib64")
         if Path(lib64_dir).is_dir():
             library_paths.append(lib64_dir)
 
@@ -2510,7 +2510,7 @@ def prefixes(path):
     elif parts[0].endswith(":"):
         # Handle drive letters e.g. C:/ on Windows
         parts[0] = parts[0] + sep
-    paths = [os.path.join(*parts[: i + 1]) for i in range(len(parts))]
+    paths = [PurePath(*parts[: i + 1]) for i in range(len(parts))]
 
     try:
         paths.remove(sep)
@@ -2545,7 +2545,7 @@ def md5sum(file):
 def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if Path(dir).exists():
-        for entry in [os.path.join(dir, entry) for entry in Path(dir).iterdir()]:
+        for entry in [PurePath(dir, entry) for entry in Path(dir).iterdir()]:
             if Path(entry).is_file() or Path(entry).is_symlink():
                 Path(entry).unlink()
             else:

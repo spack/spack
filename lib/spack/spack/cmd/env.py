@@ -697,7 +697,7 @@ def env_depfile(args):
     # Special make targets are useful when including a makefile in another, and you
     # need to "namespace" the targets to avoid conflicts.
     if args.make_target_prefix is None:
-        target_prefix = os.path.join(env.env_subdir_path, "makedeps")
+        target_prefix = PurePath(env.env_subdir_path, "makedeps")
     else:
         target_prefix = args.make_target_prefix
 
@@ -709,13 +709,13 @@ def env_depfile(args):
         if name in ("all", "clean") and PurePath(target_prefix).is_absolute():
             return name
         else:
-            return os.path.join(target_prefix, name)
+            return PurePath(target_prefix, name)
 
     def get_install_target(name):
-        return os.path.join(target_prefix, "install", name)
+        return PurePath(target_prefix, "install", name)
 
     def get_install_deps_target(name):
-        return os.path.join(target_prefix, "install-deps", name)
+        return PurePath(target_prefix, "install-deps", name)
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
@@ -748,12 +748,12 @@ def env_depfile(args):
         all_install_related_targets.append(get_install_target(tgt))
         all_install_related_targets.append(get_install_deps_target(tgt))
         if args.make_target_prefix is None:
-            phony_convenience_targets.append(os.path.join("install", tgt))
-            phony_convenience_targets.append(os.path.join("install-deps", tgt))
+            phony_convenience_targets.append(PurePath("install", tgt))
+            phony_convenience_targets.append(PurePath("install-deps", tgt))
 
     buf = io.StringIO()
 
-    template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
+    template = spack.tengine.make_environment().get_template(PurePath("depfile", "Makefile"))
 
     rendered = template.render(
         {

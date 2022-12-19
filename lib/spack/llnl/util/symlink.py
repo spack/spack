@@ -54,8 +54,8 @@ def _win32_junction(path, link):
         raise OSError(errno.EEXIST, "File  exists: %s -> %s" % (link, path))
 
     if not PurePath(path).is_absolute():
-        parent = os.path.join(link, os.pardir)
-        path = os.path.join(parent, path)
+        parent = PurePath(link, os.pardir)
+        path = PurePath(parent, path)
         path = Path(path).resolve()
 
     CreateHardLink(link, path)

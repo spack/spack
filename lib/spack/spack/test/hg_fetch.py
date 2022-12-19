@@ -54,7 +54,7 @@ def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_re
         with working_dir(s.package.stage.source_path):
             assert h() == t.revision
 
-            file_path = os.path.join(s.package.stage.source_path, t.file)
+            file_path = PurePath(s.package.stage.source_path, t.file)
             assert Path(s.package.stage.source_path).is_dir()
             assert Path(file_path).is_file()
 
