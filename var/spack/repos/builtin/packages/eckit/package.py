@@ -88,7 +88,7 @@ class Eckit(CMakePackage):
     def cmake_args(self):
         args = [
             # Some features that we want to build are experimental:
-            self.define("ENABLE_EXPERIMENTAL", True),
+            self.define("ENABLE_EXPERIMENTAL", self._enable_experimental),
             self.define_from_variant("ENABLE_BUILD_TOOLS", "tools"),
             # We let ecBuild find the MPI library. We could help it by setting
             # CMAKE_C_COMPILER to mpicc but that might give CMake a wrong
@@ -154,3 +154,7 @@ class Eckit(CMakePackage):
         ctest_args = ["-j", str(make_jobs)]
         with working_dir(self.build_directory):
             ctest(*ctest_args)
+
+    @property
+    def _enable_experimental(self):
+        return "linalg=armadillo" in self.spec
