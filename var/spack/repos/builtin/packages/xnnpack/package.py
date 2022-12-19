@@ -42,8 +42,8 @@ class Xnnpack(CMakePackage):
     )
     resource(
         name="fp16",
-        url="https://github.com/Maratyszcza/FP16/archive/3c54eacb74f6f5e39077300c5564156c424d77ba.zip",
-        sha256="0d56bb92f649ec294dbccb13e04865e3c82933b6f6735d1d7145de45da700156",
+        url="https://github.com/Maratyszcza/FP16/archive/0a92994d729ff76a58f692d3028ca1b64b145d91.zip",
+        sha256="e66e65515fa09927b348d3d584c68be4215cfe664100d01c9dbc7655a5716d70",
         destination="deps",
         placement="fp16",
     )
@@ -62,26 +62,15 @@ class Xnnpack(CMakePackage):
         placement="pthreadpool",
     )
     resource(
-        name="googletest",
-        url="https://github.com/google/googletest/archive/5a509dbd2e5a6c694116e329c5a20dc190653724.zip",
-        sha256="fcfac631041fce253eba4fc014c28fd620e33e3758f64f8ed5487cc3e1840e3d",
-        destination="deps",
-        placement="googletest",
-    )
-    resource(
-        name="googlebenchmark",
-        url="https://github.com/google/benchmark/archive/v1.4.1.zip",
-        sha256="61ae07eb5d4a0b02753419eb17a82b7d322786bb36ab62bd3df331a4d47c00a7",
-        destination="deps",
-        placement="googlebenchmark",
-    )
-    resource(
         name="psimd",
-        git="https://github.com/Maratyszcza/psimd.git",
-        branch="master",
+        url="https://github.com/Maratyszcza/psimd/archive/10b4ffc6ea9e2e11668f86969586f88bc82aaefa.tar.gz",
+        sha256="1fefd66702cb2eb3462b962f33d4fb23d59a55d5889ee6372469d286c4512df4",
         destination="deps",
         placement="psimd",
     )
+
+    # https://github.com/google/XNNPACK/pull/2797
+    patch("2797.patch", when="@:2022-03-27")
 
     def cmake_args(self):
         # TODO: XNNPACK has a XNNPACK_USE_SYSTEM_LIBS option, but it seems to be broken
@@ -96,14 +85,8 @@ class Xnnpack(CMakePackage):
             self.define(
                 "PTHREADPOOL_SOURCE_DIR", join_path(self.stage.source_path, "deps", "pthreadpool")
             ),
-            self.define(
-                "GOOGLETEST_SOURCE_DIR", join_path(self.stage.source_path, "deps", "googletest")
-            ),
-            self.define(
-                "GOOGLEBENCHMARK_SOURCE_DIR",
-                join_path(self.stage.source_path, "deps", "googlebenchmark"),
-            ),
             self.define("PSIMD_SOURCE_DIR", join_path(self.stage.source_path, "deps", "psimd")),
-            self.define("XNNPACK_BUILD_TESTS", self.run_tests),
-            self.define("XNNPACK_BUILD_BENCHMARKS", self.run_tests),
+            self.define("BUILD_SHARED_LIBS", True),
+            self.define("XNNPACK_BUILD_TESTS", False),
+            self.define("XNNPACK_BUILD_BENCHMARKS", False),
         ]
