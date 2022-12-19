@@ -267,7 +267,7 @@ def create(name, init_file=None, with_view=None, keep_relative=False):
         fs.mkdirp(env_root_path())
     validate_env_name(name)
     if exists(name):
-        raise SpackEnvironmentError("'%s': environment already exists" % name)
+        raise SpackEnvironmentError("'%s': environment already exists at %s" % (name, root(name)))
     return Environment(root(name), init_file, with_view, keep_relative)
 
 
