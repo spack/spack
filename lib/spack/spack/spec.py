@@ -52,6 +52,7 @@ import collections
 import collections.abc
 import io
 import itertools
+import json
 import os
 import re
 import sys

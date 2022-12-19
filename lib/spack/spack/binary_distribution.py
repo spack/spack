@@ -5,6 +5,7 @@
 
 import codecs
 import collections
+import gzip
 import hashlib
 import json
 import multiprocessing.pool
@@ -39,7 +40,6 @@ import spack.repo
 import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
-import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -289,6 +289,7 @@ class BinaryCacheIndex(object):
         """
 
         hash_url = url_util.join(mirror_url, _build_cache_relative_path, filename + ".hash")
+        data_gz_url = url_util.join(mirror_url, _build_cache_relative_path, filename + ".gz")
         data_url = url_util.join(mirror_url, _build_cache_relative_path, filename)
 
         hash_key, data_key = self._cache_keys_for(mirror_url, filename)
@@ -321,8 +322,14 @@ class BinaryCacheIndex(object):
                 # At this point: we need to fetch the file. No two ways about it.
                 # Do the fetch now, so that if it fails we don't leave any cruft behind.
                 # We will catch the exception this raises outside the write_transaction
-                _, _, fs = web_util.read_from_url(data_url)
-                data = codecs.getreader("utf-8")(fs).read()
+                try:
+                    # Try to fetch and decompress the compressed form first
+                    _, _, fs = web_util.read_from_url(data_gz_url)
+                    data = gzip.decompress(fs.read()).decode("utf-8")
+                except (URLError, web_util.SpackWebError):
+                    # On network errors, fall back to fetching the uncompressed form
+                    _, _, fs = web_util.read_from_url(data_url)
+                    data = codecs.getreader("utf-8")(fs).read()
 
                 # Stash the final updated file in the cache at the appropriate key
                 with self._file_cache.write_transaction(data_key) as (_, data_f):
@@ -761,6 +768,11 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, concurrency
         with open(index_json_path, "w") as f:
             f.write(index)
 
+        # Write out the compressed index JSON
+        index_json_gz_path = os.path.join(temp_dir, "index.json.gz")
+        with gzip.open(index_json_gz_path, "w") as f:
+            f.write(index.encode("utf-8"))
+
         # Write the hash out to a local file
         index_hash_path = os.path.join(temp_dir, "index.json.hash")
         with open(index_hash_path, "w") as f:
@@ -772,6 +784,14 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, concurrency
             url_util.join(cache_prefix, "index.json"),
             keep_original=False,
             extra_args={"ContentType": "application/json"},
+        )
+
+        # Push the compressed index
+        web_util.push_to_url(
+            index_json_gz_path,
+            url_util.join(cache_prefix, "index.json.gz"),
+            keep_original=False,
+            extra_args={"ContentType": "application/gzip"},
         )
 
         # Push the hash
