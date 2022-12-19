@@ -152,6 +152,16 @@ class Eckit(CMakePackage):
 
     def check(self):
         ctest_args = ["-j", str(make_jobs)]
+
+        broken_tests = []
+        if self._enable_experimental:
+            # The following test quasi-randomly fails not because it reveals a bug in the library
+            # but because its implementation has a bug (static initialization order fiasco):
+            broken_tests.append("eckit_test_experimental_singleton_singleton")
+
+        if broken_tests:
+            ctest_args.extend(["-E", "|".join(broken_tests)])
+
         with working_dir(self.build_directory):
             ctest(*ctest_args)
 
