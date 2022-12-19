@@ -98,37 +98,91 @@ class PartialSpecBuilder(SpecBuilder):
 PartialResult = collections.namedtuple("PartialResult", ["result", "build_requirements"])
 
 
+def is_extension(abstract_spec):
+    if abstract_spec.virtual:
+        return False
+    return spack.repo.path.get_pkg_class(abstract_spec.name)(abstract_spec).is_extension
+
+
+def extension_for(abstract_spec):
+    return set(spack.repo.path.get_pkg_class(abstract_spec.name)(abstract_spec).extendees).pop()
+
+
+def missing_extensions(partial_solve, *asp_results):
+    missing = []
+    all_extensions = [
+        x
+        for asp_result in asp_results
+        for x in asp_result.all_specs_by_package.values()
+        if is_extension(x)
+    ]
+
+    keys = list(partial_solve.build_requirements)
+    for build_requirement in keys:
+        if not is_extension(build_requirement):
+            continue
+
+        for known_extension in all_extensions:
+            if known_extension.satisfies(build_requirement):
+                requestors = partial_solve.build_requirements[build_requirement]
+                for requestor in requestors:
+                    requestor.add_build_dependency(known_extension)
+                partial_solve.build_requirements.pop(build_requirement)
+                break
+        else:
+            extended_package_name = extension_for(build_requirement)
+            extended_spec = [
+                asp_result.all_specs_by_package[extended_package_name]
+                for asp_result in asp_results
+            ][0]
+            item = build_requirement.copy()
+            item.constrain(f"^{extended_spec.format()}")
+            missing.append(item)
+
+    return missing
+
+
 class SpecComposer:
     def __init__(self):
         #: Used as a stack of partial results
-        self.solve_stack = []
+        # self.solve_stack = []
+
+        #: The top level solve requested by the user
+        self.top_solve = None
+
+        #: The build tools to be composed last
+        self.build_tools = None
         #: True when push_final is called
         self.closed = False
 
-    def push_partial(self, result):
+    def push_partial(self, *results):
         assert self.closed is False, "cannot push a partial result when the stack is closed"
         build_requirements = collections.defaultdict(list)
 
-        for root_spec in result.all_specs_by_package.values():
-            br = getattr(root_spec, "build_requirements", None)
-            if br is None:
-                continue
-            for pkg_name, requirements in br.items():
-                build_requirements[requirements.merged()].append(root_spec)
-        partial = PartialResult(
-            result=result,
-            build_requirements=build_requirements,
-        )
-        self.solve_stack.append(partial)
+        for result in results:
+            for root_spec in result.all_specs_by_package.values():
+                br = getattr(root_spec, "build_requirements", None)
+                if br is None:
+                    continue
+                for pkg_name, requirements in br.items():
+                    if is_extension(root_spec) and extension_for(root_spec) == pkg_name:
+                        extended_spec = result.all_specs_by_package[pkg_name]
+                        required_spec = requirements.merged()
+                        if extended_spec.satisfies(required_spec):
+                            root_spec.add_build_dependency(extended_spec)
+                            continue
+                    build_requirements[requirements.merged()].append(root_spec)
+
+        partial = PartialResult(result=results, build_requirements=build_requirements)
+
+        # self.solve_stack.append(partial)
+        self.top_solve = partial
         return list(build_requirements)
 
     def push_final(self, *results):
         assert self.closed is False, "cannot push a final result when the stack is closed"
-        partial = PartialResult(
-            result=results,
-            build_requirements=None,
-        )
-        self.solve_stack.append(partial)
+        partial = PartialResult(result=results, build_requirements=None)
+        self.build_tools = partial
         self.closed = True
 
     def pop(self, invalidate):
@@ -136,8 +190,8 @@ class SpecComposer:
 
     def compose(self):
         assert self.closed is True, "cannot compose from an open stack"
-        current_concrete = self.solve_stack.pop()
-        current_partial = self.solve_stack.pop()
+        current_concrete = self.build_tools
+        current_partial = self.top_solve
 
         for build_result in current_concrete.result:
             for input_spec, build_spec in build_result.specs_by_input.items():
@@ -145,7 +199,8 @@ class SpecComposer:
                 for root_spec in root_specs:
                     root_spec.add_build_dependency(build_spec)
 
-        result = current_partial.result
+        # TODO: find a more robust way to extract this
+        result = current_partial.result[0]
 
         # FIXME: Unify duplicated code from UnifiedBuilder.finalize_specs
         # Add external paths to specs with just external modules
@@ -193,15 +248,8 @@ class IterativeSolver:
         self.reuse = spack.config.get("concretizer:reuse", False)
         self.composer = SpecComposer()
 
-    def solve(
-        self,
-        specs,
-        out=None,
-        timers=False,
-        stats=False,
-        tests=False,
-    ):
-        # FIXME: Add back reusable specs
+    def solve(self, specs, out=None, timers=False, stats=False, tests=False):
+        # FIXME: Add back reusable specs and solve in rounds
         setup = SpackSolverSetup(tests=tests)
 
         setup.mode = SolverMode.SEPARATE_BUILD_DEPENDENCIES
@@ -210,9 +258,23 @@ class IterativeSolver:
             setup, specs, reuse=[], output=output, builder_cls=PartialSpecBuilder
         )
 
-        build_requirements = self.composer.push_partial(result)
+        self.composer.push_partial(result)
+        missing = missing_extensions(self.composer.top_solve, result)
 
         solver = Solver()
+        while missing:
+            abstract_specs = missing
+            results = [
+                x
+                for x in solver.solve_in_rounds(
+                    abstract_specs, setup=setup, builder_cls=PartialSpecBuilder, tests=tests
+                )
+            ]
+            all_results = self.composer.top_solve.result + tuple(results)
+            self.composer.push_partial(*all_results)
+            missing = missing_extensions(self.composer.top_solve, *all_results)
+
+        build_requirements = list(self.composer.top_solve.build_requirements)
         build_results = [x for x in solver.solve_in_rounds(build_requirements, tests=tests)]
         self.composer.push_final(*build_results)
 

@@ -2604,7 +2604,9 @@ class Solver(object):
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
-    def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
+    def solve_in_rounds(
+        self, specs, out=None, timers=False, stats=False, tests=False, setup=None, builder_cls=None
+    ):
         """Solve for a stable model of specs in multiple rounds.
 
         This relaxes the assumption of solve that everything must be consistent and
@@ -2622,7 +2624,7 @@ class Solver(object):
         """
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self._reusable_specs())
-        setup = SpackSolverSetup(tests=tests)
+        setup = setup or SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False
@@ -2631,7 +2633,7 @@ class Solver(object):
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
-                setup, input_specs, reuse=reusable_specs, output=output
+                setup, input_specs, reuse=reusable_specs, output=output, builder_cls=builder_cls
             )
             yield result
 
@@ -2644,6 +2646,9 @@ class Solver(object):
                 break
 
             input_specs = result.unsolved_specs
+            if setup.mode == SolverMode.SEPARATE_BUILD_DEPENDENCIES:
+                continue
+
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
 

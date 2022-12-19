@@ -1541,7 +1541,7 @@ class Spec(object):
             dspec = next(dspec for dspec in orig if deptypes == dspec.deptypes)
             dspec.spec.constrain(spec)
         except StopIteration:
-            self.add_dependency_edge(spec, deptypes)
+            self.add_dependency_edge(spec, deptypes=deptypes)
             return
             # raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
         except spack.error.UnsatisfiableSpecError:
@@ -1555,7 +1555,7 @@ class Spec(object):
         Args:
             build_dependency (Spec): build dependency to be added
         """
-        assert build_dependency.concrete, "Cannot add an abstract build dependency"
+        # assert build_dependency.concrete, "Cannot add an abstract build dependency"
         dependency_type = ("build",)
         edges = self._dependencies.get(build_dependency.name, tuple())
         for edge in edges:
@@ -1566,7 +1566,7 @@ class Spec(object):
             except spack.error.UnsatisfiableSpecError:
                 continue
         else:
-            self.add_dependency_edge(build_dependency, dependency_type)
+            self.add_dependency_edge(build_dependency, deptypes=dependency_type)
 
     def add_dependency_edge(self, dependency_spec: "Spec", *, deptypes: dp.DependencyArgument):
         """Add a dependency edge to this spec.
