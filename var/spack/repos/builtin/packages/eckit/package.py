@@ -149,3 +149,8 @@ class Eckit(CMakePackage):
             args.append(self.define("CURSES_NEED_NCURSES", True))
 
         return args
+
+    def check(self):
+        ctest_args = ["-j", str(make_jobs)]
+        with working_dir(self.build_directory):
+            ctest(*ctest_args)
