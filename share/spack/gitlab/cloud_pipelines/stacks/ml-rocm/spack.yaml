@@ -118,8 +118,10 @@ spack:
     match_behavior: first
     mappings:
       - match:
+          - llvm-amdgpu
           - llvm
           - py-torch
+          - rocblas
         runner-attributes:
           tags: [ "spack", "huge", "x86_64_v4" ]
           variables:
