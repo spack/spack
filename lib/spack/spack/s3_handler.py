@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import urllib.error
+import urllib.parse
 import urllib.request
 import urllib.response
-from io import BufferedReader, IOBase
+from io import BufferedReader, BytesIO, IOBase
 
 import spack.util.s3 as s3_util
-import spack.util.url as url_util
 
 
 # NOTE(opadron): Workaround issue in boto where its StreamingBody
@@ -42,8 +42,8 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-def _s3_open(url):
-    parsed = url_util.parse(url)
+def _s3_open(url, method="GET"):
+    parsed = urllib.parse.urlparse(url)
     s3 = s3_util.get_s3_session(url, method="fetch")
 
     bucket = parsed.netloc
@@ -52,27 +52,29 @@ def _s3_open(url):
     if key.startswith("/"):
         key = key[1:]
 
-    obj = s3.get_object(Bucket=bucket, Key=key)
+    if method not in ("GET", "HEAD"):
+        raise urllib.error.URLError(
+            "Only GET and HEAD verbs are currently supported for the s3:// scheme"
+        )
 
-    # NOTE(opadron): Apply workaround here (see above)
-    stream = WrapStream(obj["Body"])
+    try:
+        if method == "GET":
+            obj = s3.get_object(Bucket=bucket, Key=key)
+            # NOTE(opadron): Apply workaround here (see above)
+            stream = WrapStream(obj["Body"])
+        elif method == "HEAD":
+            obj = s3.head_object(Bucket=bucket, Key=key)
+            stream = BytesIO()
+    except s3.ClientError as e:
+        raise urllib.error.URLError(e) from e
+
     headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
     return url, headers, stream
 
 
-class UrllibS3Handler(urllib.request.HTTPSHandler):
+class UrllibS3Handler(urllib.request.BaseHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
-        from botocore.exceptions import ClientError  # type: ignore[import]
-
-        try:
-            url, headers, stream = _s3_open(orig_url)
-            return urllib.response.addinfourl(stream, headers, url)
-        except ClientError as err:
-            raise urllib.error.URLError(err) from err
-
-
-S3OpenerDirector = urllib.request.build_opener(UrllibS3Handler())
-
-open = S3OpenerDirector.open
+        url, headers, stream = _s3_open(orig_url, method=req.get_method())
+        return urllib.response.addinfourl(stream, headers, url)
