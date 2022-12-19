@@ -61,7 +61,7 @@ __all__ = [
     "build_system",
     "compiles",
     "can_inject",
-    "language"
+    "language",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
