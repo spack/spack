@@ -157,6 +157,12 @@ class Vtk(CMakePackage):
         when="@:9.0.1 ^freetype@2.10.3:",
     )
 
+    patch(
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.patch",
+        sha256="65175731c080961f85d779d613ac1f6bce89783745e54e864edec7637b03b18a",
+        when="@9.1",
+    )
+
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
         return url.format(version.up_to(2), version)
