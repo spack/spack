@@ -15,9 +15,9 @@ class Vtk(CMakePackage):
     available software system for 3D computer graphics, image
     processing and visualization."""
 
-    homepage = "http://www.vtk.org"
+    homepage = "https://www.vtk.org"
     url = "https://www.vtk.org/files/release/9.0/VTK-9.0.0.tar.gz"
-    list_url = "http://www.vtk.org/download/"
+    list_url = "https://www.vtk.org/download/"
 
     maintainers = ["chuckatkins", "danlipsa"]
 
