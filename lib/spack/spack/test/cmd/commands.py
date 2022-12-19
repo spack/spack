@@ -16,7 +16,7 @@ import spack.main
 import spack.paths
 from spack.cmd.commands import _positional_to_subroutine
 
-commands = spack.main.SpackCommand("commands")
+commands = spack.main.SpackCommand("commands", subprocess=True)
 
 parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
@@ -104,17 +104,18 @@ _cmd-spack-install:
 
 
 def test_rst_with_header(tmpdir):
+    local_commands = spack.main.SpackCommand("commands")
     fake_header = "this is a header!\n\n"
 
     filename = tmpdir.join("header.txt")
     with filename.open("w") as f:
         f.write(fake_header)
 
-    out = commands("--format=rst", "--header", str(filename))
+    out = local_commands("--format=rst", "--header", str(filename))
     assert out.startswith(fake_header)
 
     with pytest.raises(spack.main.SpackCommandError):
-        commands("--format=rst", "--header", "asdfjhkf")
+        local_commands("--format=rst", "--header", "asdfjhkf")
 
 
 def test_rst_update(tmpdir):
@@ -207,13 +208,14 @@ def test_update_completion_arg(tmpdir, monkeypatch):
 
     monkeypatch.setattr(spack.cmd.commands, "update_completion_args", mock_args)
 
+    local_commands = spack.main.SpackCommand("commands")
     # ensure things fail if --update-completion isn't specified alone
     with pytest.raises(spack.main.SpackCommandError):
-        commands("--update-completion", "-a")
+        local_commands("--update-completion", "-a")
 
     # ensure arg is restored
     assert "--update-completion" not in mock_bashfile.read()
-    commands("--update-completion")
+    local_commands("--update-completion")
     assert "--update-completion" in mock_bashfile.read()
 
 

@@ -12,6 +12,7 @@ class PyAsttokens(PythonPackage):
     homepage = "https://github.com/gristlabs/asttokens"
     pypi = "asttokens/asttokens-2.0.5.tar.gz"
 
+    version("2.0.8", sha256="c61e16246ecfb2cde2958406b4c8ebc043c9e6d73aaa83c941673b35e5d3a76b")
     version("2.0.5", sha256="9a54c114f02c7a9480d56550932546a3f1fe71d8a02f1bc7ccd0ee3ee35cf4d5")
 
     depends_on("py-setuptools@44:", type="build")

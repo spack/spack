@@ -6,7 +6,6 @@
 import filecmp
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -38,30 +37,24 @@ pytestmark = pytest.mark.skipif(
     not has_develop_branch(), reason="requires git with develop branch"
 )
 
-# The style tools have requirements to use newer Python versions.  We simplify by
-# requiring Python 3.6 or higher to run spack style.
-skip_old_python = pytest.mark.skipif(
-    sys.version_info < (3, 6), reason="requires Python 3.6 or higher"
-)
-
 
 @pytest.fixture(scope="function")
-def flake8_package():
+def flake8_package(tmpdir):
     """Style only checks files that have been modified. This fixture makes a small
     change to the ``flake8`` mock package, yields the filename, then undoes the
     change on cleanup.
     """
     repo = spack.repo.Repo(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
-    tmp = filename + ".tmp"
+    rel_path = os.path.dirname(os.path.relpath(filename, spack.paths.prefix))
+    tmp = tmpdir / rel_path / "flake8-ci-package.py"
+    tmp.ensure()
+    tmp = str(tmp)
 
-    try:
-        shutil.copy(filename, tmp)
-        package = FileFilter(filename)
-        package.filter("state = 'unmodified'", "state = 'modified'", string=True)
-        yield filename
-    finally:
-        shutil.move(tmp, filename)
+    shutil.copy(filename, tmp)
+    package = FileFilter(tmp)
+    package.filter("state = 'unmodified'", "state = 'modified'", string=True)
+    yield tmp
 
 
 @pytest.fixture
@@ -71,20 +64,17 @@ def flake8_package_with_errors(scope="function"):
     filename = repo.filename_for_package_name("flake8")
     tmp = filename + ".tmp"
 
-    try:
-        shutil.copy(filename, tmp)
-        package = FileFilter(filename)
+    shutil.copy(filename, tmp)
+    package = FileFilter(tmp)
 
-        # this is a black error (quote style and spacing before/after operator)
-        package.filter('state = "unmodified"', "state    =    'modified'", string=True)
+    # this is a black error (quote style and spacing before/after operator)
+    package.filter('state = "unmodified"', "state    =    'modified'", string=True)
 
-        # this is an isort error (orderign) and a flake8 error (unused import)
-        package.filter(
-            "from spack.package import *", "from spack.package import *\nimport os", string=True
-        )
-        yield filename
-    finally:
-        shutil.move(tmp, filename)
+    # this is an isort error (orderign) and a flake8 error (unused import)
+    package.filter(
+        "from spack.package import *", "from spack.package import *\nimport os", string=True
+    )
+    yield tmp
 
 
 def test_changed_files_from_git_rev_base(tmpdir, capfd):
@@ -95,14 +85,14 @@ def test_changed_files_from_git_rev_base(tmpdir, capfd):
         git("checkout", "-b", "main")
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
-        git("commit", "--allow-empty", "-m", "initial commit")
+        git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
 
         tmpdir.ensure("bin/spack")
         assert changed_files(base="HEAD") == ["bin/spack"]
         assert changed_files(base="main") == ["bin/spack"]
 
         git("add", "bin/spack")
-        git("commit", "-m", "v1")
+        git("commit", "--no-gpg-sign", "-m", "v1")
         assert changed_files(base="HEAD") == []
         assert changed_files(base="HEAD~") == ["bin/spack"]
 
@@ -116,7 +106,7 @@ def test_changed_no_base(tmpdir, capfd):
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
         git("add", ".")
-        git("commit", "-m", "initial commit")
+        git("commit", "--no-gpg-sign", "-m", "initial commit")
 
         with pytest.raises(SystemExit):
             changed_files(base="foobar")
@@ -125,7 +115,7 @@ def test_changed_no_base(tmpdir, capfd):
         assert "This repository does not have a 'foobar'" in err
 
 
-def test_changed_files_all_files(flake8_package):
+def test_changed_files_all_files():
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set(
         [
@@ -139,13 +129,18 @@ def test_changed_files_all_files(flake8_package):
 
     # a builtin package
     zlib = spack.repo.path.get_pkg_class("zlib")
-    assert zlib.module.__file__ in files
+    zlib_file = zlib.module.__file__
+    if zlib_file.endswith("pyc"):
+        zlib_file = zlib_file[:-1]
+    assert zlib_file in files
 
     # a core spack file
     assert os.path.join(spack.paths.module_path, "spec.py") in files
 
     # a mock package
-    assert flake8_package in files
+    repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    filename = repo.filename_for_package_name("flake8")
+    assert filename in files
 
     # this test
     assert __file__ in files
@@ -154,14 +149,6 @@ def test_changed_files_all_files(flake8_package):
     assert not any(f.startswith(spack.paths.external_path) for f in files)
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 6), reason="doesn't apply to newer python")
-def test_fail_on_old_python():
-    """Ensure that `spack style` runs but fails with older python."""
-    output = style(fail_on_error=False)
-    assert "spack style requires Python 3.6" in output
-
-
-@skip_old_python
 def test_bad_root(tmpdir):
     """Ensure that `spack style` doesn't run on non-spack directories."""
     output = style("--root", str(tmpdir), fail_on_error=False)
@@ -196,7 +183,7 @@ def external_style_root(flake8_package_with_errors, tmpdir):
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
         git("add", ".")
-        git("commit", "-m", "initial commit")
+        git("commit", "--no-gpg-sign", "-m", "initial commit")
         git("branch", "-m", "develop")
         git("checkout", "-b", "feature")
 
@@ -208,12 +195,11 @@ def external_style_root(flake8_package_with_errors, tmpdir):
     # add the buggy file on the feature branch
     with tmpdir.as_cwd():
         git("add", str(py_file))
-        git("commit", "-m", "add new file")
+        git("commit", "--no-gpg-sign", "-m", "add new file")
 
     yield tmpdir, py_file
 
 
-@skip_old_python
 @pytest.mark.skipif(not which("isort"), reason="isort is not installed.")
 @pytest.mark.skipif(not which("black"), reason="black is not installed.")
 def test_fix_style(external_style_root):
@@ -233,7 +219,6 @@ def test_fix_style(external_style_root):
     assert filecmp.cmp(broken_py, fixed_py)
 
 
-@skip_old_python
 @pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 @pytest.mark.skipif(not which("isort"), reason="isort is not installed.")
 @pytest.mark.skipif(not which("mypy"), reason="mypy is not installed.")
@@ -263,7 +248,6 @@ def test_external_root(external_style_root):
     assert "lib/spack/spack/dummy.py:7: [F401] 'os' imported but unused" in output
 
 
-@skip_old_python
 @pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 def test_style(flake8_package, tmpdir):
     root_relative = os.path.relpath(flake8_package, spack.paths.prefix)
@@ -290,7 +274,6 @@ def test_style(flake8_package, tmpdir):
     assert "spack style checks were clean" in output
 
 
-@skip_old_python
 @pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 def test_style_with_errors(flake8_package_with_errors):
     root_relative = os.path.relpath(flake8_package_with_errors, spack.paths.prefix)
@@ -302,7 +285,6 @@ def test_style_with_errors(flake8_package_with_errors):
     assert "spack style found errors" in output
 
 
-@skip_old_python
 @pytest.mark.skipif(not which("black"), reason="black is not installed.")
 @pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 def test_style_with_black(flake8_package_with_errors):
@@ -312,7 +294,6 @@ def test_style_with_black(flake8_package_with_errors):
     assert "spack style found errors" in output
 
 
-@skip_old_python
 def test_skip_tools():
     output = style("--skip", "isort,mypy,black,flake8")
     assert "Nothing to run" in output

@@ -17,8 +17,10 @@ class Ncl(Package):
     Numerous analysis functions are built-in."""
 
     homepage = "https://www.ncl.ucar.edu"
-
+    git = "https://github.com/NCAR/ncl.git"
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
+
+    maintainers = ["vanderwb"]
 
     version("6.6.2", sha256="cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e")
     version("6.5.0", sha256="133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591")
@@ -26,12 +28,19 @@ class Ncl(Package):
 
     patch("for_aarch64.patch", when="target=aarch64:")
 
-    patch("spack_ncl.patch")
+    # Use Spack config file, which we generate during the installation:
+    patch("set_spack_config.patch")
     # Make ncl compile with hdf5 1.10 (upstream as of 6.5.0)
     patch("hdf5.patch", when="@6.4.0")
     # ymake-filter's buffer may overflow (upstream as of 6.5.0)
     patch("ymake-filter.patch", when="@6.4.0")
     # ymake additional local library and includes will be filtered improperly
+    # WARNING: it is tempting to replace '-Dlinux=linux -Dx86_64=x86_64' with '-Ulinux -Ux86_64'
+    # to get rid of 'error: detected recursion whilst expanding macro "linux"' but that breaks
+    # the building because the Makefile generation logic depends on whether those macros are
+    # defined. Also, the errors can be ignored since "GCC detects when it is expanding recursive
+    # macros, emits an error message, and *continues* after the offending macro invocation"
+    # (see https://gcc.gnu.org/onlinedocs/cpp/Traditional-macros.html#Traditional-macros).
     patch("ymake.patch", when="@6.4.0:")
     # ncl does not build with gcc@10:
     # https://github.com/NCAR/ncl/issues/123
@@ -83,14 +92,13 @@ class Ncl(Package):
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
     # statement.
-    depends_on("hdf5@:1.10+szip")
+    depends_on("hdf5+szip")
     depends_on("szip")
 
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
-    depends_on("esmf", type="run")
-
-    # In Spack, we also do not have an option to compile netcdf-c without DAP
-    # support, so we will tell the ncl configuration script that we have it.
+    # There might be more requirements to ESMF but at least the NetCDF support is required to run
+    # the examples (see https://www.ncl.ucar.edu/Applications/ESMF.shtml)
+    depends_on("esmf+netcdf", type="run")
 
     # Some of the optional dependencies according to the manual:
     depends_on("hdf", when="+hdf4")
@@ -138,6 +146,7 @@ class Ncl(Package):
 
     def setup_run_environment(self, env):
         env.set("NCARG_ROOT", self.spec.prefix)
+        env.set("ESMFBINDIR", self.spec["esmf"].prefix.bin)
 
     def prepare_site_config(self):
         fc_flags = []
@@ -148,12 +157,17 @@ class Ncl(Package):
             fc_flags.append(self.compiler.openmp_flag)
             cc_flags.append(self.compiler.openmp_flag)
 
+        if self.spec.satisfies("^hdf5@1.11:"):
+            cc_flags.append("-DH5_USE_110_API")
+
         if self.compiler.name == "gcc":
             fc_flags.append("-fno-range-check")
             c2f_flags.extend(["-lgfortran", "-lm"])
         elif self.compiler.name == "intel":
             fc_flags.append("-fp-model precise")
-            cc_flags.append("-fp-model precise" " -std=c99" " -D_POSIX_C_SOURCE=2 -D_GNU_SOURCE")
+            cc_flags.extend(
+                ["-fp-model precise", "-std=c99", "-D_POSIX_C_SOURCE=2", "-D_GNU_SOURCE"]
+            )
             c2f_flags.extend(["-lifcore", "-lifport"])
 
         if self.spec.satisfies("%gcc@10:"):
@@ -238,7 +252,7 @@ class Ncl(Package):
                 # If you are using NetCDF V4.x, did you enable NetCDF-4 support?
                 "y\n",
                 # Did you build NetCDF with OPeNDAP support?
-                "y\n",
+                "y\n" if self.spec.satisfies("^netcdf-c+dap") else "n\n",
                 # Build GDAL support (optional) into NCL?
                 "y\n" if "+gdal" in self.spec else "n\n",
                 # Build EEMD support (optional) into NCL?
@@ -280,6 +294,15 @@ class Ncl(Package):
 
         with open(config_answers_filename, "r") as f:
             config_script(input=f)
+
+        if self.spec.satisfies("^hdf+external-xdr") and not self.spec["hdf"].satisfies("^libc"):
+            hdf4 = self.spec["hdf"]
+
+            filter_file(
+                "(#define HDFlib.*)",
+                r"\1 {}".format(hdf4["rpc"].libs.link_flags),
+                "config/Site.local",
+            )
 
     def prepare_src_tree(self):
         if "+triangle" in self.spec:

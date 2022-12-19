@@ -19,10 +19,15 @@ class Glib(Package):
     """
 
     homepage = "https://developer.gnome.org/glib/"
-    url = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
+    url = "https://download.gnome.org/sources/glib/2.53/glib-2.53.1.tar.xz"
+    list_url = "https://download.gnome.org/sources/glib"
+    list_depth = 1
 
     maintainers = ["michaelkuhn"]
 
+    version("2.74.1", sha256="0ab981618d1db47845e56417b0d7c123f81a3427b2b9c93f5a46ff5bbb964964")
+    version("2.74.0", sha256="3652c7f072d7b031a6b5edd623f77ebc5dcd2ae698598abcc89ff39ca75add30")
+    version("2.72.4", sha256="8848aba518ba2f4217d144307a1d6cb9afcc92b54e5c13ac1f8c4d4608e96f0e")
     version("2.72.3", sha256="4a39a2f624b8512d500d5840173eda7fa85f51c109052eae806acece85d345f0")
     version("2.72.2", sha256="78d599a133dba7fe2036dfa8db8fb6131ab9642783fc9578b07a20995252d2de")
     version("2.72.1", sha256="c07e57147b254cef92ce80a0378dc0c02a4358e7de4702e9f403069781095fe2")
@@ -119,10 +124,12 @@ class Glib(Package):
     depends_on("gettext")
     depends_on("perl", type=("build", "run"))
     depends_on("python", type=("build", "run"), when="@2.53.4:")
-    depends_on("pcre+utf", when="@2.48:")
+    depends_on("pcre2", when="@2.73.2:")
+    depends_on("pcre+utf", when="@2.48:2.73.1")
     depends_on("uuid", when="+libmount")
     depends_on("util-linux", when="+libmount")
     depends_on("iconv")
+    depends_on("elf")  # bin/gresource
 
     # The following patch is needed for gcc-6.1
     patch("g_date_strftime.patch", when="@2.42.1")
@@ -137,12 +144,12 @@ class Glib(Package):
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
     patch("meson-gettext.patch", when="@2.58:2.64")
-    patch("meson-gettext-2.66.patch", when="@2.66:2.68,2.72:")
+    patch("meson-gettext-2.66.patch", when="@2.66:2.68,2.72")
     patch("meson-gettext-2.70.patch", when="@2.70")
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
-        url = "http://ftp.gnome.org/pub/gnome/sources/glib"
+        url = "https://download.gnome.org/sources/glib"
         return url + "/%s/glib-%s.tar.xz" % (version.up_to(2), version)
 
     def patch(self):
@@ -162,7 +169,9 @@ class Glib(Package):
         return find_libraries(["libglib*"], root=self.prefix, recursive=True)
 
     def meson_args(self):
-        args = ["-Dgettext=external"]
+        args = []
+        if self.spec.satisfies("@:2.72"):
+            args.append("-Dgettext=external")
         if self.spec.satisfies("@2.63.5:"):
             if "+libmount" in self.spec:
                 args.append("-Dlibmount=enabled")
@@ -193,6 +202,7 @@ class Glib(Package):
         else:
             args.append("-Dselinux=false")
         args.append("-Dgtk_doc=false")
+        args.append("-Dlibelf=enabled")
         return args
 
     def install(self, spec, prefix):
@@ -275,7 +285,7 @@ class Glib(Package):
         filter_file(
             "^#!/usr/bin/env @PYTHON@",
             "#!/usr/bin/env {0}".format(os.path.basename(self.spec["python"].command.path)),
-            *files
+            *files,
         )
 
     @run_before("install")

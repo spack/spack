@@ -21,7 +21,7 @@ class NaluWind(CMakePackage, CudaPackage):
     homepage = "https://nalu-wind.readthedocs.io"
     git = "https://github.com/exawind/nalu-wind.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers = ["jrood-nrel", "psakievich"]
 
     tags = ["ecp", "ecp-apps"]
 
@@ -51,7 +51,7 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on("mpi")
     depends_on("yaml-cpp@0.5.3:")
     depends_on(
-        "trilinos@stable:"
+        "trilinos@13:"
         "+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost"
         "~superlu-dist~superlu+hdf5+shards~hypre+gtest"
     )

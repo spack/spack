@@ -17,6 +17,8 @@ class Neovim(CMakePackage):
 
     version("master", branch="master")
     version("stable", tag="stable")
+    version("0.8.0", sha256="505e3dfb71e2f73495c737c034a416911c260c0ba9fd2092c6be296655be4d18")
+    version("0.7.2", sha256="ccab8ca02a0c292de9ea14b39f84f90b635a69282de38a6b4ccc8565bc65d096")
     version("0.7.0", sha256="792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df")
     version(
         "0.6.1",
@@ -94,11 +96,11 @@ class Neovim(CMakePackage):
     # base dependencies
     depends_on("cmake@3.0:", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("gettext", type=("build", "link"))
+    depends_on("gettext")
     depends_on("gperf", type="link")
     depends_on("jemalloc", type="link", when="platform=linux")
-    depends_on("lua-lpeg", type="link")
-    depends_on("lua-mpack", type="link")
+    depends_on("lua-lpeg")
+    depends_on("lua-mpack")
     depends_on("libiconv", type="link")
     depends_on("libtermkey", type="link")
     depends_on("libuv", type="link")
@@ -110,27 +112,29 @@ class Neovim(CMakePackage):
 
     # versions
     with when("@0.4:"):
-        depends_on("libuv@1.28:")
-        depends_on("libluv@1.30.0:")
-        depends_on("libtermkey@0.18:")
-        depends_on("libvterm@0.1:")
-        depends_on("unibilium@2.0:")
-        depends_on("msgpack-c@1.0.0:")
-    with when("@0.5:,stable,master"):
-        depends_on("libuv@1.42:")
+        depends_on("libuv@1.28:", type="link")
+        depends_on("libluv@1.30.0:", type="link")
+        depends_on("libtermkey@0.18:", type="link")
+        depends_on("libvterm@0.1:", type="link")
+        depends_on("unibilium@2.0:", type="link")
+        depends_on("msgpack-c@1.0.0:", type="link")
+    with when("@0.5:"):
+        depends_on("libuv@1.42:", type="link")
         depends_on("tree-sitter")
     with when("@0.6:"):
-        depends_on("cmake@3.10:")
-        depends_on("gperf@3.1:")
-        depends_on("libiconv@1.15:")
-        depends_on("libtermkey@0.22:")
-        depends_on("libvterm@0.1.4:")
-        depends_on("msgpack-c@3.0.0:")
-    with when("@0.6:,master"):
+        depends_on("cmake@3.10:", type="build")
+        depends_on("gperf@3.1:", type="link")
+        depends_on("libiconv@1.15:", type="link")
+        depends_on("libtermkey@0.22:", type="link")
+        depends_on("libvterm@0.1.4:", type="link")
+        depends_on("msgpack-c@3.0.0:", type="link")
+    with when("@0.7:"):
         depends_on("gettext@0.20.1:")
-        depends_on("libluv@1.43.0:")
-        depends_on("libuv@1.44.1:")
+        depends_on("libluv@1.43.0:", type="link")
+        depends_on("libuv@1.44.1:", type="link")
         depends_on("tree-sitter@0.20.6:")
+    with when("@0.8:"):
+        depends_on("libvterm@0.3:", type="link")
 
     @when("^lua")
     def cmake_args(self):

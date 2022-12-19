@@ -2,6 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import glob
+import os
+
 from spack.package import *
 
 
@@ -17,6 +21,10 @@ class PyScipy(PythonPackage):
     maintainers = ["adamjstewart", "rgommers"]
 
     version("master", branch="master")
+    version("1.9.3", sha256="fbc5c05c85c1a02be77b1ff591087c83bc44579c6d2bd9fb798bb64ea5e1a027")
+    version("1.9.2", sha256="99e7720caefb8bca6ebf05c7d96078ed202881f61e0c68bd9e0f3e8097d6f794")
+    version("1.9.1", sha256="26d28c468900e6d5fdb37d2812ab46db0ccd22c63baa095057871faa3a498bc9")
+    version("1.9.0", sha256="c0dfd7d2429452e7e94904c6a3af63cbaa3cf51b348bd9d35b42db7e9ad42791")
     version("1.8.1", sha256="9e3fb1b0e896f14a85aa9a28d5f755daaeeb54c897b746df7a55ccb02b340f33")
     version("1.8.0", sha256="31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd")
     version("1.7.3", sha256="ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf")
@@ -42,54 +50,59 @@ class PyScipy(PythonPackage):
     version("1.2.2", sha256="a4331e0b8dab1ff75d2c67b5158a8bb9a83c799d7140094dda936d876c7cfbb1")
     version("1.2.1", sha256="e085d1babcb419bbe58e2e805ac61924dac4ca45a07c9fa081144739e500aa3c")
     version("1.1.0", sha256="878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1")
-    version("1.0.0", sha256="87ea1f11a0e9ec08c264dc64551d501fa307289460705f6fccd84cbfc7926d10")
-    version("0.19.1", sha256="a19a2ca7a7336495ec180adeaa0dfdcf41e96dbbee90d51c3ed828ba570884e6")
-    version("0.18.1", sha256="8ab6e9c808bf2fb3e8576cd8cf07226d9cdc18b012c06d9708429a821ac6634e")
-    version("0.17.0", sha256="f600b755fb69437d0f70361f9e560ab4d304b1b66987ed5a28bdd9dd7793e089")
-    version("0.15.1", sha256="a212cbc3b79e9a563aa45fc5c517b3499198bd7eb7e7be1e047568a5f48c259a")
-    version("0.15.0", sha256="0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1")
 
-    # pyproject.toml
-    depends_on("py-wheel@:0.37", type="build")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@:51.0.0", when="@1.6", type="build")
-    depends_on("py-setuptools@:57", when="@1.7", type="build")
-    depends_on("py-setuptools@:59", when="@1.8:", type="build")
+    # TODO: remove once pip build supports BLAS/LAPACK specification
+    # https://github.com/mesonbuild/meson-python/pull/167
+    depends_on("py-build", when="@1.9:", type="build")
+
+    depends_on("py-meson-python@0.9:", when="@1.9.2:", type="build")
+    depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
+    depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
+    depends_on("meson@0.62.2", when="@1.9.0:1.9.1", type="build")
+    depends_on("py-cython@0.29.32:2", when="@1.9.2:", type="build")
+    depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.18:2", when="@1.7:", type="build")
-    depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
-    depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:2.6", when="@1.6.2:1.7.1", type=("build", "link"))
+    depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:", type=("build", "link"))
+    depends_on("py-pybind11@2.4.3:2.9", when="@1.9.0", type=("build", "link"))
+    depends_on("py-pybind11@2.4.3:2.8", when="@1.8", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.7", when="@1.7.2:1.7", type=("build", "link"))
-    depends_on("py-pybind11@2.4.3:2.8", when="@1.8:", type=("build", "link"))
-    depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type=("build", "link"))
+    depends_on("py-pybind11@2.4.3:2.6", when="@1.6.2:1.7.1", type=("build", "link"))
+    depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
+    depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
+    depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
+    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:", type=("build", "link"))
+    depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type=("build", "link"))
+    depends_on("py-pythran@0.10", when="@1.8", type=("build", "link"))
     depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type=("build", "link"))
-    depends_on("py-pythran@0.10:", when="@1.8:", type=("build", "link"))
-    # setup.py
-    depends_on("py-numpy@1.5.1:+blas+lapack", when="@:0.15", type=("build", "link", "run"))
-    depends_on("py-numpy@1.6.2:+blas+lapack", when="@0.16:0.17", type=("build", "link", "run"))
-    depends_on("py-numpy@1.7.1:+blas+lapack", when="@0.18.0:0.18", type=("build", "link", "run"))
-    depends_on("py-numpy@1.8.2:+blas+lapack", when="@0.19:1.2", type=("build", "link", "run"))
-    depends_on("py-numpy@1.13.3:+blas+lapack", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("py-numpy@1.14.5:+blas+lapack", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("py-numpy@1.16.5:+blas+lapack", when="@1.6:1.6.1", type=("build", "link", "run"))
+    depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type=("build", "link"))
+    depends_on("py-wheel@:0.37", type="build")
+    depends_on("pkgconfig", when="@1.9:", type="build")
+    depends_on("py-setuptools", when="@:1.8", type="build")
+    depends_on("py-setuptools@:59", when="@1.8", type="build")
+    depends_on("py-setuptools@:57", when="@1.7", type="build")
+    depends_on("py-setuptools@:51.0.0", when="@1.6", type="build")
+    depends_on("py-numpy@1.18.5:1.25+blas+lapack", when="@1.9:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.17.3:1.24+blas+lapack", when="@1.8", type=("build", "link", "run"))
     depends_on(
         "py-numpy@1.16.5:1.22+blas+lapack", when="@1.6.2:1.7", type=("build", "link", "run")
     )
-    depends_on("py-numpy@1.17.3:1.24+blas+lapack", when="@1.8:", type=("build", "link", "run"))
-    depends_on("python@2.6:2.8,3.2:", when="@:0.17", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@0.18:1.2", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("python@3.7:", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
+    depends_on("py-numpy@1.16.5:+blas+lapack", when="@1.6:1.6.1", type=("build", "link", "run"))
+    depends_on("py-numpy@1.14.5:+blas+lapack", when="@1.5.0:1.5", type=("build", "link", "run"))
+    depends_on("py-numpy@1.13.3:+blas+lapack", when="@1.3:1.4", type=("build", "link", "run"))
+    depends_on("py-numpy@1.8.2:+blas+lapack", when="@:1.2", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@1.9:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
     depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
-    depends_on("python@3.8:3.10", when="@1.8:", type=("build", "link", "run"))
+    depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
+    depends_on("python@3.7:", when="@1.6:1.6.1", type=("build", "link", "run"))
+    depends_on("python@3.6:", when="@1.5.0:1.5", type=("build", "link", "run"))
+    depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
-    # NOTE: scipy should use the same Blas/Lapack as numpy
-    # This is achieved by calling the set_blas_lapack() and setup_build_environment()
-    # from numpy in the scipy spec
+    # NOTE: scipy should use the same BLAS/LAPACK as numpy.
+    # For scipy 1.8 and older, this is achieved by calling the set_blas_lapack()
+    # and setup_build_environment() from numpy in the scipy spec.
     depends_on("blas")
     depends_on("lapack")
     # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
@@ -97,6 +110,16 @@ class PyScipy(PythonPackage):
 
     # https://github.com/scipy/scipy/pull/11324
     conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
+
+    # https://github.com/mesonbuild/meson/pull/10909#issuecomment-1282241479
+    # Intel OneAPI ifx claims to support -fvisibility, but this does not work.
+    # Meson adds this flag for all Python extensions which include Fortran code.
+    conflicts("%oneapi", when="@1.9:")
+
+    # FIXME: mysterious build issues with MKL
+    conflicts("^intel-mkl", when="@1.9:")
+    conflicts("^intel-oneapi-mkl", when="@1.9:")
+    conflicts("^intel-parallel-studio", when="@1.9:")
 
     # https://github.com/scipy/scipy/issues/12860
     patch(
@@ -107,10 +130,36 @@ class PyScipy(PythonPackage):
 
     patch("scipy-clang.patch", when="@1.5.0:1.6.3 %clang")
 
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, "build", "meson-logs", "meson-log.txt")]
+
     @run_before("install")
     def set_blas_lapack(self):
-        # Pick up Blas/Lapack from numpy
-        self.spec["py-numpy"].package.set_blas_lapack()
+        # Pick up BLAS/LAPACK from numpy
+        if self.spec.satisfies("@:1.8"):
+            self.spec["py-numpy"].package.set_blas_lapack()
+
+    @run_before("install")
+    def set_fortran_compiler(self):
+        if self.compiler.f77 is None or self.compiler.fc is None:
+            raise InstallError(
+                "py-scipy requires Fortran compilers. Configure Fortran compiler to proceed."
+            )
+
+        if self.spec.satisfies("%fj"):
+            with open("setup.cfg", "w") as f:
+                f.write("[config_fc]\n")
+                f.write("fcompiler = fujitsu\n")
+        elif self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi"):
+            if self.spec.satisfies("target=x86:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intel\n")
+            elif self.spec.satisfies("target=x86_64:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intelem\n")
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
@@ -122,14 +171,53 @@ class PyScipy(PythonPackage):
             if self.spec.satisfies("^py-numpy@1.16:1.17"):
                 env.set("NPY_DISTUTILS_APPEND_FLAGS", "1")
 
-        # Pick up Blas/Lapack from numpy
-        self.spec["py-numpy"].package.setup_build_environment(env)
+        # https://github.com/scipy/scipy/issues/14935
+        if self.spec.satisfies("%intel ^py-pythran") or self.spec.satisfies("%oneapi ^py-pythran"):
+            if self.spec["py-pythran"].version < Version("0.12"):
+                env.set("SCIPY_USE_PYTHRAN", "0")
 
-    def install_options(self, spec, prefix):
-        args = []
-        if spec.satisfies("%fj"):
-            args.extend(["config_fc", "--fcompiler=fujitsu"])
-        return args
+        # Pick up BLAS/LAPACK from numpy
+        if self.spec.satisfies("@:1.8"):
+            self.spec["py-numpy"].package.setup_build_environment(env)
+
+    # TODO: remove once pip build supports BLAS/LAPACK specification
+    # https://github.com/mesonbuild/meson-python/pull/167
+    @when("@1.9:")
+    def install(self, spec, prefix):
+        blas = spec["blas"].libs.names[0]
+        lapack = spec["lapack"].libs.names[0]
+        # FIXME: MKL support doesn't work, why?
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            blas = "mkl-dynamic-lp64-seq"
+        if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            lapack = "mkl-dynamic-lp64-seq"
+
+        if spec["blas"].name in ["blis", "amdblis"]:
+            blas = "blis"
+
+        args = [
+            "setup",
+            "build",
+            "-Dblas=" + blas,
+            "-Dlapack=" + lapack,
+            "--prefix=" + join_path(os.getcwd(), "build-install"),
+            "-Ddebug=false",
+            "-Doptimization=2",
+        ]
+        meson = which("meson")
+        meson(*args)
+        args = [
+            "-m",
+            "build",
+            "--wheel",
+            "-Cbuilddir=build",
+            "--no-isolation",
+            "--skip-dependency-check",
+            ".",
+        ]
+        python(*args)
+        args = std_pip_args + ["--prefix=" + prefix, glob.glob(join_path("dist", "scipy*.whl"))[0]]
+        pip(*args)
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

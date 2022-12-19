@@ -5,6 +5,7 @@
 
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -85,12 +86,11 @@ def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
     # assert baz_headers.basenames == ['baz.h']
     assert baz_headers.directories == [spec["baz"].home.include]
 
-    if "platform=windows" in spec:
-        lib_suffix = ".lib"
-    elif "platform=darwin" in spec:
+    lib_suffix = ".so"
+    if sys.platform == "win32":
+        lib_suffix = ".dll"
+    elif sys.platform == "darwin":
         lib_suffix = ".dylib"
-    else:
-        lib_suffix = ".so"
 
     foo_libs = spec[foo].libs
     assert foo_libs.basenames == ["libFoo" + lib_suffix]
@@ -144,13 +144,12 @@ class MockStage(object):
         return getattr(self.wrapped_stage, attr)
 
 
-def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
+def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, working_env):
     s = Spec("canfail").concretized()
 
     instance_rm_prefix = s.package.remove_prefix
 
     try:
-        s.package.succeed = False
         s.package.remove_prefix = mock_remove_prefix
         with pytest.raises(MockInstallError):
             s.package.do_install()
@@ -161,7 +160,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         # must clear failure markings for the package before re-installing it
         spack.store.db.clear_failure(s, True)
 
-        s.package.succeed = True
+        s.package.set_install_succeed()
         s.package.stage = MockStage(s.package.stage)
 
         s.package.do_install(restage=True)
@@ -174,18 +173,20 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_failing_overwrite_install_should_keep_previous_installation(mock_fetch, install_mockery):
+def test_failing_overwrite_install_should_keep_previous_installation(
+    mock_fetch, install_mockery, working_env
+):
     """
     Make sure that whenever `spack install --overwrite` fails, spack restores
     the original install prefix instead of cleaning it.
     """
     # Do a successful install
     s = Spec("canfail").concretized()
-    s.package.succeed = True
+    s.package.set_install_succeed()
 
     # Do a failing overwrite install
     s.package.do_install()
-    s.package.succeed = False
+    s.package.set_install_fail()
     kwargs = {"overwrite": [s.dag_hash()]}
 
     with pytest.raises(Exception):
@@ -238,13 +239,11 @@ def test_install_dependency_symlinks_pkg(install_mockery, mock_fetch, mutable_mo
 
 def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
     """Test install times added."""
-    spec = Spec("dev-build-test-install-phases")
-    spec.concretize()
-    pkg = spec.package
-    pkg.do_install()
+    spec = Spec("dev-build-test-install-phases").concretized()
+    spec.package.do_install()
 
     # Ensure dependency directory exists after the installation.
-    install_times = os.path.join(pkg.prefix, ".spack", "install_times.json")
+    install_times = os.path.join(spec.package.prefix, ".spack", "install_times.json")
     assert os.path.isfile(install_times)
 
     # Ensure the phases are included
@@ -253,12 +252,8 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
     # The order should be maintained
     phases = [x["name"] for x in times["phases"]]
-    total = sum([x["seconds"] for x in times["phases"]])
-    for name in ["one", "two", "three", "install"]:
-        assert name in phases
-
-    # Give a generous difference threshold
-    assert abs(total - times["total"]["seconds"]) < 5
+    assert phases == ["stage", "one", "two", "three", "install"]
+    assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 
 def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):
@@ -346,12 +341,11 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
+def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, working_env):
     s = Spec("canfail").concretized()
 
     # If remove_prefix is called at any point in this test, that is an error
-    s.package.succeed = False  # make the build fail
-    monkeypatch.setattr(spack.package_base.Package, "remove_prefix", mock_remove_prefix)
+    monkeypatch.setattr(spack.package_base.PackageBase, "remove_prefix", mock_remove_prefix)
     with pytest.raises(spack.build_environment.ChildError):
         s.package.do_install(keep_prefix=True)
     assert os.path.exists(s.package.prefix)
@@ -359,7 +353,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     # must clear failure markings for the package before re-installing it
     spack.store.db.clear_failure(s, True)
 
-    s.package.succeed = True  # make the build succeed
+    s.package.set_install_succeed()
     s.package.stage = MockStage(s.package.stage)
     s.package.do_install(keep_prefix=True)
     assert s.package.spec.installed
@@ -368,14 +362,14 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
 
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
     s = Spec("canfail").concretized()
-    monkeypatch.setattr(spack.package_base.Package, "remove_prefix", mock_remove_prefix)
+    monkeypatch.setattr(spack.package_base.PackageBase, "remove_prefix", mock_remove_prefix)
 
-    s.package.succeed = True
+    s.package.set_install_succeed()
     s.package.do_install()
     assert s.package.spec.installed
 
     # If Package.install is called after this point, it will fail
-    s.package.succeed = False
+    s.package.set_install_fail()
     s.package.do_install()
 
 
@@ -431,7 +425,7 @@ def test_uninstall_by_spec_errors(mutable_database):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd):
+def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd, ensure_debug):
     """Test install phases with the nosource package."""
     spec = Spec("nosource").concretized()
     pkg = spec.package
@@ -446,7 +440,9 @@ def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd)
 
 
 @pytest.mark.disable_clean_stage_check
-def test_nosource_bundle_pkg_install(install_mockery, mock_fetch, mock_packages, capfd):
+def test_nosource_bundle_pkg_install(
+    install_mockery, mock_fetch, mock_packages, capfd, ensure_debug
+):
     """Test install phases with the nosource-bundle package."""
     spec = Spec("nosource-bundle").concretized()
     pkg = spec.package
@@ -589,7 +585,9 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
     source = spec.package.stage.source_path
     config = os.path.join(source, "config.log")
     fs.touchp(config)
-    spec.package.archive_files = ["missing", "..", config]
+    monkeypatch.setattr(
+        type(spec.package), "archive_files", ["missing", "..", config], raising=False
+    )
 
     spack.installer.log(spec.package)
 

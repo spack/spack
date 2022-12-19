@@ -14,7 +14,7 @@ class Hipblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
     git = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
@@ -22,13 +22,33 @@ class Hipblas(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+
+    version("5.3.0", sha256="873d55749479873994679840906c4257316dfb09a6200411204ad4a8c2480565")
+    version("5.2.3", sha256="4d66db9b000b6207b5270d90556b724bfdb08ebbfcc675f014287e0be7ee6344")
+    version("5.2.1", sha256="ccae36b118b7a1eb4b2f7d65fb163f54ab9c5cf774dbe2ec60971d4f78ae8308")
     version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
     version("5.1.3", sha256="f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1")
     version("5.1.0", sha256="22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92")
-    version("5.0.2", sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646")
-    version("5.0.0", sha256="63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41")
-    version("4.5.2", sha256="82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978")
-    version("4.5.0", sha256="187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e")
+    version(
+        "5.0.2",
+        sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2",
@@ -128,6 +148,9 @@ class Hipblas(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)
@@ -164,6 +187,8 @@ class Hipblas(CMakePackage):
             args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
         elif self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
 

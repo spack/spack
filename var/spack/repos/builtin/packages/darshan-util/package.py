@@ -22,9 +22,13 @@ class DarshanUtil(AutotoolsPackage):
 
     version("main", branch="main", submodules="True")
     version(
+        "3.4.1",
+        sha256="77c0a4675d94a0f9df5710e5b8658cc9ef0f0981a6dafb114d0389b1af64774c",
+        preferred=True,
+    )
+    version(
         "3.4.0",
         sha256="7cc88b7c130ec3b574f6b73c63c3c05deec67b1350245de6d39ca91d4cff0842",
-        preferred=True,
     )
     version(
         "3.4.0-pre1", sha256="57d0fd40329b9f8a51bdc9d7635b646692b341d80339115ab203357321706c09"
@@ -46,8 +50,15 @@ class DarshanUtil(AutotoolsPackage):
     version("3.0.0", sha256="95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0")
 
     variant("bzip2", default=False, description="Enable bzip2 compression")
-    variant("apmpi", default=False, description="Compile with AutoPerf MPI module support")
-    variant("apxc", default=False, description="Compile with AutoPerf XC module support")
+    variant(
+        "apmpi",
+        default=False,
+        description="Compile with AutoPerf MPI module support",
+        when="@3.3:",
+    )
+    variant(
+        "apxc", default=False, description="Compile with AutoPerf XC module support", when="@3.3:"
+    )
 
     depends_on("zlib")
     depends_on("bzip2", when="+bzip2", type=("build", "link", "run"))
@@ -61,13 +72,6 @@ class DarshanUtil(AutotoolsPackage):
     depends_on("m4", type="build", when="@3.4.0:")
 
     patch("retvoid.patch", when="@3.2.0:3.2.1")
-
-    conflicts(
-        "+apmpi", when="@:3.2.1", msg="+apmpi variant only available starting from version 3.3.0"
-    )
-    conflicts(
-        "+apxc", when="@:3.2.1", msg="+apxc variant only available starting from version 3.3.0"
-    )
 
     @property
     def configure_directory(self):
@@ -93,20 +97,26 @@ class DarshanUtil(AutotoolsPackage):
         return extra_args
 
     @property
-    def basepath(self):
-        return join_path("darshan-test", "example-output")
+    def test_log_path(self):
+        if self.version < Version("3.4.1"):
+            return join_path(
+                "darshan-test",
+                "example-output",
+                "mpi-io-test-x86_64-{0}.darshan".format(self.version),
+            )
+        else:
+            return join_path(
+                "darshan-util", "pydarshan", "darshan", "tests", "input", "sample.darshan"
+            )
 
     @run_after("install")
     def _copy_test_inputs(self):
-        # add darshan-test/example-output/mpi-io-test-spack-expected.txt"
-        test_inputs = [
-            join_path(self.basepath, "mpi-io-test-x86_64-{0}.darshan".format(self.spec.version))
-        ]
+        test_inputs = [self.test_log_path]
         self.cache_extra_test_sources(test_inputs)
 
     def _test_parser(self):
         purpose = "Verify darshan-parser can parse an example log \
-                   from the current version and check some expected counter values"
+                   and check some expected counter values"
         # Switch to loading the expected strings from the darshan source in future
         # filename = self.test_suite.current_test_cache_dir.
         #            join(join_path(self.basepath, "mpi-io-test-spack-expected.txt"))
@@ -116,9 +126,7 @@ class DarshanUtil(AutotoolsPackage):
             r"MPI-IO\s+-1\s+\w+\s+MPIIO_INDEP_OPENS\s+\d+",
             r"STDIO\s+0\s+\w+\s+STDIO_OPENS\s+\d+",
         ]
-        logname = self.test_suite.current_test_cache_dir.join(
-            join_path(self.basepath, "mpi-io-test-x86_64-{0}.darshan".format(self.spec.version))
-        )
+        logname = self.test_suite.current_test_cache_dir.join(self.test_log_path)
         exe = "darshan-parser"
         options = [logname]
         status = [0]

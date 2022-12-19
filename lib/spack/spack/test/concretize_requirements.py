@@ -7,6 +7,7 @@ import sys
 
 import pytest
 
+import spack.build_systems.generic
 import spack.config
 import spack.repo
 import spack.util.spack_yaml as syaml
@@ -102,7 +103,7 @@ def fake_installs(monkeypatch, tmpdir):
     stage_path = str(tmpdir.ensure("fake-stage", dir=True))
     universal_unused_stage = spack.stage.DIYStage(stage_path)
     monkeypatch.setattr(
-        spack.package_base.Package, "_make_stage", MakeStage(universal_unused_stage)
+        spack.build_systems.generic.Package, "_make_stage", MakeStage(universal_unused_stage)
     )
 
 
@@ -297,3 +298,118 @@ packages:
     s1 = Spec("y").concretized()
     assert s1.satisfies("@2.3")
     assert s1.satisfies("%gcc")
+
+
+@pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])
+def test_default_requirements_with_all(spec_str, requirement_str, concretize_scope, test_repo):
+    """Test that default requirements are applied to all packages."""
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    conf_str = """\
+packages:
+  all:
+    require: "{}"
+""".format(
+        requirement_str
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec(spec_str).concretized()
+    for s in spec.traverse():
+        assert s.satisfies(requirement_str)
+
+
+@pytest.mark.parametrize(
+    "requirements,expectations",
+    [
+        (("%gcc", "%clang"), ("%gcc", "%clang")),
+        (("%gcc ~shared", "@1.0"), ("%gcc ~shared", "@1.0 +shared")),
+    ],
+)
+def test_default_and_package_specific_requirements(
+    concretize_scope, requirements, expectations, test_repo
+):
+    """Test that specific package requirements override default package requirements."""
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    generic_req, specific_req = requirements
+    generic_exp, specific_exp = expectations
+    conf_str = """\
+packages:
+  all:
+    require: "{}"
+  x:
+    require: "{}"
+""".format(
+        generic_req, specific_req
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec("x").concretized()
+    assert spec.satisfies(specific_exp)
+    for s in spec.traverse(root=False):
+        assert s.satisfies(generic_exp)
+
+
+@pytest.mark.parametrize("mpi_requirement", ["mpich", "mpich2", "zmpi"])
+def test_requirements_on_virtual(mpi_requirement, concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+packages:
+  mpi:
+    require: "{}"
+""".format(
+        mpi_requirement
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath").concretized()
+    assert "mpi" in spec
+    assert mpi_requirement in spec
+
+
+@pytest.mark.parametrize(
+    "mpi_requirement,specific_requirement",
+    [
+        ("mpich", "@3.0.3"),
+        ("mpich2", "%clang"),
+        ("zmpi", "%gcc"),
+    ],
+)
+def test_requirements_on_virtual_and_on_package(
+    mpi_requirement, specific_requirement, concretize_scope, mock_packages
+):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+packages:
+  mpi:
+    require: "{0}"
+  {0}:
+    require: "{1}"
+""".format(
+        mpi_requirement, specific_requirement
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath").concretized()
+    assert "mpi" in spec
+    assert mpi_requirement in spec
+    assert spec["mpi"].satisfies(specific_requirement)
+
+
+def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+    packages:
+      mpi:
+        require: "mpich"
+    """
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath ^zmpi")
+    with pytest.raises(UnsatisfiableSpecError):
+        spec.concretize()

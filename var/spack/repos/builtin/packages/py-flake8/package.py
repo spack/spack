@@ -13,6 +13,7 @@ class PyFlake8(PythonPackage):
     homepage = "https://github.com/PyCQA/flake8"
     pypi = "flake8/flake8-4.0.1.tar.gz"
 
+    version("5.0.4", sha256="6fbe320aad8d6b95cec8b8e47bc933004678dc63095be98528b7bdd2a9f510db")
     version("5.0.2", sha256="9cc32bc0c5d16eacc014c7ec6f0e9565fd81df66c2092c3c9df06e3c1ac95e5d")
     version("5.0.1", sha256="9c51d3d1426379fd444d3b79eabbeb887849368bd053039066439523d8486961")
     version("5.0.0", sha256="503b06b6795189e55298a70b695b1eb4f6b8d479fae81352fc97c72ca242509e")
@@ -85,10 +86,7 @@ class PyFlake8(PythonPackage):
     # Python version-specific backports
     depends_on("py-importlib-metadata", when="@3.8:3.9.2 ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@:4.2", when="@4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-enum34", when="@3: ^python@:3.3", type=("build", "run"))
-    depends_on("py-typing", when="@3.7: ^python@:3.4", type=("build", "run"))
-    depends_on("py-configparser", when="@3: ^python@:3.1", type=("build", "run"))
-    depends_on("py-functools32", when="@3.7.4: ^python@:3.1", type=("build", "run"))
+    depends_on("py-importlib-metadata@1.1:4.2", when="@5.0.4: ^python@:3.7", type=("build", "run"))
 
     @when("@:3.5")
     def patch(self):

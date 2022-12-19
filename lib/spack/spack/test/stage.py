@@ -19,9 +19,11 @@ from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_
 import spack.paths
 import spack.stage
 import spack.util.executable
+import spack.util.url as url_util
 from spack.resource import Resource
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
+from spack.util.web import FetchError
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -39,10 +41,6 @@ _readme_contents = "hello world!\n"
 _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
-
-_file_prefix = "file://"
-if sys.platform == "win32":
-    _file_prefix += "/"
 
 
 # Mock fetch directories are expected to appear as follows:
@@ -217,7 +215,7 @@ def mock_stage_archive(tmp_build_stage_dir):
         # Create the archive directory and associated file
         archive_dir = tmpdir.join(_archive_base)
         archive = tmpdir.join(_archive_fn)
-        archive_url = _file_prefix + str(archive)
+        archive_url = url_util.path_to_file_url(str(archive))
         archive_dir.ensure(dir=True)
 
         # Create the optional files as requested and make sure expanded
@@ -282,7 +280,7 @@ def mock_expand_resource(tmpdir):
 
     archive_name = "resource.tar.gz"
     archive = tmpdir.join(archive_name)
-    archive_url = _file_prefix + str(archive)
+    archive_url = url_util.path_to_file_url(str(archive))
 
     filename = "resource-file.txt"
     test_file = resource_dir.join(filename)
@@ -413,7 +411,7 @@ class TestStage(object):
         property of the stage should refer to the path of that file.
         """
         test_noexpand_fetcher = spack.fetch_strategy.from_kwargs(
-            url=_file_prefix + mock_noexpand_resource, expand=False
+            url=url_util.path_to_file_url(mock_noexpand_resource), expand=False
         )
         with Stage(test_noexpand_fetcher) as stage:
             stage.fetch()
@@ -431,7 +429,7 @@ class TestStage(object):
 
         resource_dst_name = "resource-dst-name.sh"
         test_resource_fetcher = spack.fetch_strategy.from_kwargs(
-            url=_file_prefix + mock_noexpand_resource, expand=False
+            url=url_util.path_to_file_url(mock_noexpand_resource), expand=False
         )
         test_resource = Resource("test_resource", test_resource_fetcher, resource_dst_name, None)
         resource_stage = ResourceStage(test_resource_fetcher, root_stage, test_resource)
@@ -525,7 +523,7 @@ class TestStage(object):
         with stage:
             try:
                 stage.fetch(mirror_only=True)
-            except spack.fetch_strategy.FetchError:
+            except FetchError:
                 pass
         check_destroy(stage, self.stage_name)
 
@@ -540,7 +538,7 @@ class TestStage(object):
         stage = Stage(failing_fetch_strategy, name=self.stage_name, search_fn=search_fn)
 
         with stage:
-            with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
+            with pytest.raises(FetchError, match=expected):
                 stage.fetch(mirror_only=False, err_msg=err_msg)
 
         check_destroy(stage, self.stage_name)

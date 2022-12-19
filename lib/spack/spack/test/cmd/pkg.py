@@ -13,6 +13,7 @@ import pytest
 
 from llnl.util.filesystem import mkdirp, working_dir
 
+import spack.cmd.pkg
 import spack.main
 import spack.repo
 from spack.util.executable import which
@@ -81,7 +82,7 @@ def mock_pkg_git_repo(tmpdir_factory):
         git("rm", "-rf", "pkg-c")
         git("-c", "commit.gpgsign=false", "commit", "-m", "change pkg-b, remove pkg-c, add pkg-d")
 
-    with spack.repo.use_repositories(mock_repo):
+    with spack.repo.use_repositories(str(repo_path)):
         yield mock_repo_packages
 
 
@@ -293,3 +294,24 @@ def test_pkg_hash(mock_packages):
 
     output = pkg("hash", "multimethod").strip().split()
     assert len(output) == 1 and all(len(elt) == 32 for elt in output)
+
+
+@pytest.mark.skipif(not spack.cmd.pkg.get_grep(), reason="grep is not installed")
+def test_pkg_grep(mock_packages, capfd):
+    # only splice-* mock packages have the string "splice" in them
+    pkg("grep", "-l", "splice", output=str)
+    output, _ = capfd.readouterr()
+    assert output.strip() == "\n".join(
+        spack.repo.path.get_pkg_class(name).module.__file__
+        for name in ["splice-a", "splice-h", "splice-t", "splice-vh", "splice-z"]
+    )
+
+    # ensure that this string isn't fouhnd
+    pkg("grep", "abcdefghijklmnopqrstuvwxyz", output=str, fail_on_error=False)
+    assert pkg.returncode == 1
+    output, _ = capfd.readouterr()
+    assert output.strip() == ""
+
+    # ensure that we return > 1 for an error
+    pkg("grep", "--foobarbaz-not-an-option", output=str, fail_on_error=False)
+    assert pkg.returncode == 2

@@ -16,19 +16,38 @@ class Rccl(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rccl"
     git = "https://github.com/ROCmSoftwarePlatform/rccl.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["librccl"]
 
+    version("5.3.0", sha256="51da5099fa58c2be882319cebe9ceabe2062feebcc0c5849e8c109030882c10a")
+    version("5.2.3", sha256="ecba09f4c95b4b2dae81b88231a972ac956d29909b5e712e21cf2a74bd251ff4")
+    version("5.2.1", sha256="cfd17dc003f19900e44928d81111570d3720d4905321f2a18c909909c4bee822")
     version("5.2.0", sha256="6ee3a04da0d16eb53f768a088633a7d8ecc4416a2d0c07f7ba8426ab7892b060")
     version("5.1.3", sha256="56491257f27b48bf85f4b91434a2a6e49a448337c889db181b02c8a4a260a4bc")
     version("5.1.0", sha256="02b0180857e615326f9cab775573436b9162899ad8e526830f54392b8a51b1f5")
-    version("5.0.2", sha256="a2377ad2332b93d3443a8ee74f4dd9f965ae8cbbfad473f8f57ca17905389a39")
-    version("5.0.0", sha256="80eb70243f11b80e215458a67c278cd5a655f6e486289962b92ba3504e50af5c")
-    version("4.5.2", sha256="36de0d3f3ffad491758d89c208ef72c5be5e0db766053a9c766e9c5c6a33a487")
-    version("4.5.0", sha256="f806f9f65c490abddc562cb4812e12701582bbb449e41cc4797d00e0dedf084e")
+    version(
+        "5.0.2",
+        sha256="a2377ad2332b93d3443a8ee74f4dd9f965ae8cbbfad473f8f57ca17905389a39",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="80eb70243f11b80e215458a67c278cd5a655f6e486289962b92ba3504e50af5c",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="36de0d3f3ffad491758d89c208ef72c5be5e0db766053a9c766e9c5c6a33a487",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="f806f9f65c490abddc562cb4812e12701582bbb449e41cc4797d00e0dedf084e",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="c5db71423dc654e8d2c3111e142e65c89436bc636827d95d41a09a87f44fe246",
@@ -91,7 +110,8 @@ class Rccl(CMakePackage):
     )
 
     patch("0001-Fix-numactl-path-issue.patch", when="@3.7.0:4.3.2")
-    patch("0002-Fix-numactl-rocm-smi-path-issue.patch", when="@4.5.0:")
+    patch("0002-Fix-numactl-rocm-smi-path-issue.patch", when="@4.5.0:5.2.1")
+    patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:")
 
     depends_on("cmake@3.5:", type="build")
     for ver in [
@@ -112,6 +132,9 @@ class Rccl(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -135,9 +158,23 @@ class Rccl(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         depends_on("numactl@2:", when="@" + ver)
-    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0"]:
+    for ver in [
+        "4.5.0",
+        "4.5.2",
+        "5.0.0",
+        "5.0.2",
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+    ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 
     @classmethod

@@ -30,6 +30,8 @@ class Zziplib(AutotoolsPackage):
     # see zzip/CMakeLists.txt
     depends_on("coreutils", type="build", when="@0.13.71:")
     depends_on("pkgconfig", type="build", when="@0.13.71:")
+    depends_on("zip", type="build", when="@0.13.71:")
+    depends_on("unzip", type="build", when="@0.13.71:")
 
     @when("@0.13.71:")
     def autoreconf(self, spec, prefix):

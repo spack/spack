@@ -106,8 +106,11 @@ class Dealii(CMakePackage, CudaPackage):
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
     # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
     # adopt https://github.com/boostorg/serialization/pull/105 as a fix
+    #
+    # dealii does not build with Boost 1.80.0
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -115,7 +118,7 @@ class Dealii(CMakePackage, CudaPackage):
         when="~python",
     )
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams+python",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -179,10 +182,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("p4est", when="+p4est+mpi")
     depends_on("petsc+mpi~int64", when="+petsc+mpi~int64")
     depends_on("petsc+mpi+int64", when="+petsc+mpi+int64")
-    depends_on("petsc@:3.6.4", when="@:8.4.1+petsc+mpi")
     depends_on("scalapack", when="@9.0:+scalapack")
     depends_on("slepc", when="+slepc+petsc+mpi")
-    depends_on("slepc@:3.6.3", when="@:8.4.1+slepc+petsc+mpi")
     depends_on("slepc~arpack", when="+slepc+petsc+mpi+int64")
     depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
@@ -247,6 +248,27 @@ class Dealii(CMakePackage, CudaPackage):
         "https://github.com/dealii/dealii/commit/3b815e21c4bfd82c792ba80e4d90314c8bb9edc9.patch?full_index=1",
         sha256="90ae9ddefe77fffd297bba6b070ab68d07306d4ef525ee994e8c49cef68f76f3",
         when="@9.2.0 ^boost@1.72.0:",
+    )
+
+    # Fix issues due to override of CMake FIND_PACKAGE macro
+    # https://github.com/dealii/dealii/pull/14158/files
+    patch(
+        "https://github.com/dealii/dealii/commit/06bb9dc07efb6fea9912ee0d66264af548c552c8.patch?full_index=1",
+        sha256="8a1f7b9a155c8c496ce08b2abb1ba5d329b3b29169f36c11678aa4e3cebf97a2",
+        when="@9.4.0 ^hdf5",
+    )
+    patch(
+        "https://github.com/dealii/dealii/commit/40076ac1a013cd7d221f9dda913b4d0e6452c21e.patch?full_index=1",
+        sha256="7869dfab1116b6e862279bb6642c2c8fe49d87c42cfc6f031e03330f9f26a6c3",
+        when="@9.4.0 ^python",
+    )
+
+    # Fix issues with the FIND_GINKGO module for the newer Ginkgo versions
+    # https://github.com/dealii/dealii/pull/14413
+    patch(
+        "https://github.com/dealii/dealii/commit/df6c5de8d6785fce701c10575982858f3aeb4cbd.patch?full_index=1",
+        sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
+        when="@:9.4.0+ginkgo ^ginkgo@1.5.0:",
     )
 
     # Check for sufficiently modern versions
@@ -575,6 +597,9 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define("SCALAPACK_FOUND", True),
                     self.define("SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
                     self.define("SCALAPACK_LIBRARIES", scalapack_libs.joined(";")),
+                    # If SCALAPACK_LIBRARY is not set, deal.II still searches
+                    # for SCALAPACK despite the above settings:
+                    self.define("SCALAPACK_LIBRARY", scalapack_libs.joined(";")),
                 ]
             )
 
@@ -589,6 +614,11 @@ class Dealii(CMakePackage, CudaPackage):
             options.extend(
                 [
                     self.define("CMAKE_CXX_FLAGS_RELEASE", " ".join(cxx_flags_release)),
+                ]
+            )
+        if len(cxx_flags) > 0:
+            options.extend(
+                [
                     self.define("CMAKE_CXX_FLAGS", " ".join(cxx_flags)),
                 ]
             )

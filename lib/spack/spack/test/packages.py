@@ -84,12 +84,6 @@ class TestPackage(object):
         # Will error if inheritor package cannot find inherited patch files
         s.concretize()
 
-    def test_dependency_extensions(self):
-        s = Spec("extension2")
-        s.concretize()
-        deps = set(x.name for x in s.package.dependency_activations())
-        assert deps == set(["extension1"])
-
     def test_import_class_from_package(self):
         from spack.pkg.builtin.mock.mpich import Mpich  # noqa: F401
 
@@ -131,6 +125,14 @@ def test_url_for_version_with_no_urls(mock_packages, config):
 
     with pytest.raises(spack.package_base.NoURLError):
         pkg_cls(spec).url_for_version("1.1")
+
+
+def test_custom_cmake_prefix_path(mock_packages, config):
+    spec = Spec("depends-on-define-cmake-prefix-paths").concretized()
+
+    assert spack.build_environment.get_cmake_prefix_path(spec.package) == [
+        spec["define-cmake-prefix-paths"].prefix.test
+    ]
 
 
 def test_url_for_version_with_only_overrides(mock_packages, config):
@@ -313,3 +315,11 @@ def test_has_test_method_fails(capsys):
 
     captured = capsys.readouterr()[1]
     assert "is not a class" in captured
+
+
+def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
+    spec = Spec("deprecated-versions")
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+
+    assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")
+    assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")

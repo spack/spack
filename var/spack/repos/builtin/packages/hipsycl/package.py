@@ -24,6 +24,7 @@ class Hipsycl(CMakePackage):
     provides("sycl")
 
     version("stable", branch="stable", submodules=True)
+    version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)
     version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
     version("0.9.1", commit="fe8465cd5399a932f7221343c07c9942b0fe644c", submodules=True)
     version(
@@ -45,7 +46,8 @@ class Hipsycl(CMakePackage):
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
     # LLVM PTX backend requires cuda7:10.1 (https://tinyurl.com/v82k5qq)
-    depends_on("cuda@9:10.1", when="@0.8.1: +cuda")
+    depends_on("cuda@9:10.1", when="@0.8.1: +cuda ^llvm@9")
+    depends_on("cuda@9:", when="@0.8.1: +cuda ^llvm@10:")
     # hipSYCL@:0.8.0 requires cuda@9:10.0 due to a known bug
     depends_on("cuda@9:10.0", when="@:0.8.0 +cuda")
 
@@ -132,7 +134,9 @@ class Hipsycl(CMakePackage):
         #    the libc++.so and libc++abi.so dyn linked to the sycl
         #    ptx backend
         rpaths = set()
-        so_paths = filesystem.find(self.spec["llvm"].prefix, "libc++.so")
+        so_paths = filesystem.find_libraries(
+            "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
+        )
         if len(so_paths) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide a "
@@ -140,11 +144,13 @@ class Hipsycl(CMakePackage):
                 "found: {0}".format(so_paths)
             )
         rpaths.add(path.dirname(so_paths[0]))
-        so_paths = filesystem.find(self.spec["llvm"].prefix, "libc++abi.so")
+        so_paths = filesystem.find_libraries(
+            "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
+        )
         if len(so_paths) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide a "
-                "unique directory containing libc++abi.so, "
+                "unique directory containing libc++abi, "
                 "found: {0}".format(so_paths)
             )
         rpaths.add(path.dirname(so_paths[0]))

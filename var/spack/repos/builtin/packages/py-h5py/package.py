@@ -16,6 +16,7 @@ class PyH5py(PythonPackage):
     maintainers = ["bryanherman", "takluyver"]
 
     version("master", branch="master")
+    version("3.7.0", sha256="3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3")
     version("3.6.0", sha256="8752d2814a92aba4e2b2a5922d2782d0029102d99caaf3c201a566bc0b40db29")
     version("3.5.0", sha256="77c7be4001ac7d3ed80477de5b6942501d782de1bbe4886597bdfec2a7ab821f")
     version("3.4.0", sha256="ee1c683d91ab010d5e85cb61e8f9e7ee0d8eab545bf3dd50a9618f1d0e8f615e")
@@ -51,7 +52,6 @@ class PyH5py(PythonPackage):
     # Build and runtime dependencies
     depends_on("py-cached-property@1.5:", type=("build", "run"), when="^python@:3.7")
     depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
-    depends_on("py-numpy@1.12:", type=("build", "run"), when="@3: ^python@3.6.0:3.6")
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3: ^python@3.7.0:3.7")
     depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3: ^python@3.8.0:3.8")
     depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3: ^python@3.9.0:")

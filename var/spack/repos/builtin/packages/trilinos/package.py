@@ -30,10 +30,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://trilinos.org/"
-    url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+    url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ["keitat", "sethrj", "kuberry"]
+    maintainers = ["keitat", "sethrj", "kuberry", "jwillenbring", "psakievich"]
 
     tags = ["e4s"]
 
@@ -41,6 +41,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("13.4.1", sha256="5465cbff3de7ef4ac7d40eeff9d99342c00d9d20eee0a5f64f0a523093f5f1b3")
     version("13.4.0", sha256="39550006e059043b7e2177f10467ae2f77fe639901aee91cbc1e359516ff8d3e")
     version("13.2.0", sha256="0ddb47784ba7b8a6b9a07a4822b33be508feb4ccd54301b2a5d10c9e54524b90")
     version(
@@ -231,6 +232,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("+epetraextexperimental")
         conflicts("+epetraextgraphreorderings")
     with when("+teko"):
+        conflicts("~ml")
         conflicts("~stratimikos")
         conflicts("@:12 gotype=long")
     with when("+piro"):
@@ -418,10 +420,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hwloc+cuda", when="@13: +kokkos+cuda")
     depends_on("hypre@develop", when="@master: +hypre")
     depends_on("netcdf-c+mpi+parallel-netcdf", when="+exodus+mpi@12.12.1:")
+    depends_on("superlu-dist@:4.3", when="@11.14.1:12.6.1+superlu-dist")
     depends_on("superlu-dist@4.4:5.3", when="@12.6.2:12.12.1+superlu-dist")
     depends_on("superlu-dist@5.4:6.2.0", when="@12.12.2:13.0.0+superlu-dist")
-    depends_on("superlu-dist@6.3.0:", when="@13.0.1:99 +superlu-dist")
-    depends_on("superlu-dist@:4.3", when="@11.14.1:12.6.1+superlu-dist")
+    depends_on("superlu-dist@6.3.0:7", when="@13.0.1:13.4.0 +superlu-dist")
+    depends_on("superlu-dist@6.3.0:", when="@13.4.1:13 +superlu-dist")
     depends_on("superlu-dist@develop", when="@master: +superlu-dist")
 
     # ###################### Patches ##########################
@@ -436,7 +439,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     patch(
         "https://patch-diff.githubusercontent.com/raw/trilinos/Trilinos/pull/10545.patch?full_index=1",
         sha256="62272054f7cc644583c269e692c69f0a26af19e5a5bd262db3ea3de3447b3358",
-        when="@:13.4.0 +complex",
+        when="@:13.4 +complex",
     )
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
@@ -450,8 +453,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     def flag_handler(self, name, flags):
-        is_cce = self.spec.satisfies("%cce")
         spec = self.spec
+        is_cce = spec.satisfies("%cce")
 
         if name == "cxxflags":
             if "+mumps" in spec:
@@ -476,12 +479,26 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             elif spec.satisfies("+stk +shared platform=darwin"):
                 flags.append("-Wl,-undefined,dynamic_lookup")
 
+            # Fortran lib (assumes clang is built with gfortran!)
+            if "+fortran" in spec and spec.compiler.name in ["gcc", "clang", "apple-clang"]:
+                fc = Executable(self.compiler.fc)
+                libgfortran = fc(
+                    "--print-file-name", "libgfortran." + dso_suffix, output=str
+                ).strip()
+                # if libgfortran is equal to "libgfortran.<dso_suffix>" then
+                # print-file-name failed, use static library instead
+                if libgfortran == "libgfortran." + dso_suffix:
+                    libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
+                # -L<libdir> -lgfortran required for OSX
+                # https://github.com/spack/spack/pull/25823#issuecomment-917231118
+                flags.append("-L{0} -lgfortran".format(os.path.dirname(libgfortran)))
+
         if is_cce:
             return (None, None, flags)
         return (flags, None, None)
 
     def url_for_version(self, version):
-        url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
+        url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
@@ -522,7 +539,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         options = []
 
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
         define_from_variant = self.define_from_variant
 
         def _make_definer(prefix):
@@ -908,22 +925,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                         options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 
         # ################# System-specific ######################
-
-        # Fortran lib (assumes clang is built with gfortran!)
-        if "+fortran" in spec and spec.compiler.name in ["gcc", "clang", "apple-clang"]:
-            fc = Executable(spec["mpi"].mpifc) if ("+mpi" in spec) else Executable(spack_fc)
-            libgfortran = fc("--print-file-name", "libgfortran." + dso_suffix, output=str).strip()
-            # if libgfortran is equal to "libgfortran.<dso_suffix>" then
-            # print-file-name failed, use static library instead
-            if libgfortran == "libgfortran." + dso_suffix:
-                libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
-            # -L<libdir> -lgfortran required for OSX
-            # https://github.com/spack/spack/pull/25823#issuecomment-917231118
-            options.append(
-                define(
-                    "Trilinos_EXTRA_LINK_FLAGS", "-L%s/ -lgfortran" % os.path.dirname(libgfortran)
-                )
-            )
 
         if sys.platform == "darwin" and macos_version() >= Version("10.12"):
             # use @rpath on Sierra due to limit of dynamic loader

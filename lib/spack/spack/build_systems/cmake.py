@@ -2,24 +2,24 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
+import collections.abc
 import inspect
 import os
 import platform
 import re
 import sys
-from typing import List
+from typing import List, Tuple
 
-import six
-
-from llnl.util.compat import Sequence
-from llnl.util.filesystem import working_dir
+import llnl.util.filesystem as fs
 
 import spack.build_environment
-from spack.directives import conflicts, depends_on, variant
-from spack.package_base import InstallError, PackageBase, run_after
-from spack.util.path import convert_to_posix_path
+import spack.builder
+import spack.package_base
+import spack.util.path
+from spack.directives import build_system, depends_on, variant
+from spack.multimethod import when
+
+from ._checks import BaseBuilder, execute_build_time_tests
 
 # Regex to extract the primary generator from the CMake generator
 # string.
@@ -35,56 +35,141 @@ def _extract_primary_generator(generator):
     return primary_generator
 
 
-class CMakePackage(PackageBase):
+class CMakePackage(spack.package_base.PackageBase):
     """Specialized class for packages built using CMake
 
     For more information on the CMake build system, see:
     https://cmake.org/cmake/help/latest/
+    """
 
-    This class provides three phases that can be overridden:
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
+    build_system_class = "CMakePackage"
 
-        1. :py:meth:`~.CMakePackage.cmake`
-        2. :py:meth:`~.CMakePackage.build`
-        3. :py:meth:`~.CMakePackage.install`
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "cmake"
+
+    build_system("cmake")
+
+    with when("build_system=cmake"):
+        # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+        variant(
+            "build_type",
+            default="RelWithDebInfo",
+            description="CMake build type",
+            values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+        )
+        # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
+        # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
+        variant(
+            "ipo",
+            default=False,
+            when="^cmake@3.9:",
+            description="CMake interprocedural optimization",
+        )
+        depends_on("cmake", type="build")
+        depends_on("ninja", type="build", when="platform=windows")
+
+    def flags_to_build_system_args(self, flags):
+        """Return a list of all command line arguments to pass the specified
+        compiler flags to cmake. Note CMAKE does not have a cppflags option,
+        so cppflags will be added to cflags, cxxflags, and fflags to mimic the
+        behavior in other tools.
+        """
+        # Has to be dynamic attribute due to caching
+        setattr(self, "cmake_flag_args", [])
+
+        flag_string = "-DCMAKE_{0}_FLAGS={1}"
+        langs = {"C": "c", "CXX": "cxx", "Fortran": "f"}
+
+        # Handle language compiler flags
+        for lang, pre in langs.items():
+            flag = pre + "flags"
+            # cmake has no explicit cppflags support -> add it to all langs
+            lang_flags = " ".join(flags.get(flag, []) + flags.get("cppflags", []))
+            if lang_flags:
+                self.cmake_flag_args.append(flag_string.format(lang, lang_flags))
+
+        # Cmake has different linker arguments for different build types.
+        # We specify for each of them.
+        if flags["ldflags"]:
+            ldflags = " ".join(flags["ldflags"])
+            ld_string = "-DCMAKE_{0}_LINKER_FLAGS={1}"
+            # cmake has separate linker arguments for types of builds.
+            for type in ["EXE", "MODULE", "SHARED", "STATIC"]:
+                self.cmake_flag_args.append(ld_string.format(type, ldflags))
+
+        # CMake has libs options separated by language. Apply ours to each.
+        if flags["ldlibs"]:
+            libs_flags = " ".join(flags["ldlibs"])
+            libs_string = "-DCMAKE_{0}_STANDARD_LIBRARIES={1}"
+            for lang in langs:
+                self.cmake_flag_args.append(libs_string.format(lang, libs_flags))
+
+    # Legacy methods (used by too many packages to change them,
+    # need to forward to the builder)
+    def define(self, *args, **kwargs):
+        return self.builder.define(*args, **kwargs)
+
+    def define_from_variant(self, *args, **kwargs):
+        return self.builder.define_from_variant(*args, **kwargs)
+
+
+@spack.builder.builder("cmake")
+class CMakeBuilder(BaseBuilder):
+    """The cmake builder encodes the default way of building software with CMake. IT
+    has three phases that can be overridden:
+
+        1. :py:meth:`~.CMakeBuilder.cmake`
+        2. :py:meth:`~.CMakeBuilder.build`
+        3. :py:meth:`~.CMakeBuilder.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override :py:meth:`~.CMakePackage.cmake_args`.
+    necessary will be to override :py:meth:`~.CMakeBuilder.cmake_args`.
+
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:meth:`~.CMakePackage.root_cmakelists_dir` | Location of the    |
+        | :py:meth:`~.CMakeBuilder.root_cmakelists_dir` | Location of the    |
         |                                               | root CMakeLists.txt|
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.CMakePackage.build_directory`     | Directory where to |
+        | :py:meth:`~.CMakeBuilder.build_directory`     | Directory where to |
         |                                               | build the package  |
         +-----------------------------------------------+--------------------+
 
-
-    The generator used by CMake can be specified by providing the
-    generator attribute. Per
+    The generator used by CMake can be specified by providing the ``generator``
+    attribute. Per
     https://cmake.org/cmake/help/git-master/manual/cmake-generators.7.html,
-    the format is: [<secondary-generator> - ]<primary_generator>. The
-    full list of primary and secondary generators supported by CMake may
-    be found in the documentation for the version of CMake used;
-    however, at this time Spack supports only the primary generators
-    "Unix Makefiles" and "Ninja." Spack's CMake support is agnostic with
-    respect to primary generators. Spack will generate a runtime error
-    if the generator string does not follow the prescribed format, or if
+    the format is: [<secondary-generator> - ]<primary_generator>.
+
+    The full list of primary and secondary generators supported by CMake may be found
+    in the documentation for the version of CMake used; however, at this time Spack
+    supports only the primary generators "Unix Makefiles" and "Ninja." Spack's CMake
+    support is agnostic with respect to primary generators. Spack will generate a
+    runtime error if the generator string does not follow the prescribed format, or if
     the primary generator is not supported.
     """
 
     #: Phases of a CMake package
-    phases = ["cmake", "build", "install"]
-    #: This attribute is used in UI queries that need to know the build
-    #: system base class
-    build_system_class = "CMakePackage"
+    phases: Tuple[str, ...] = ("cmake", "build", "install")
 
-    build_targets = []  # type: List[str]
-    install_targets = ["install"]
+    #: Names associated with package methods in the old build-system format
+    legacy_methods: Tuple[str, ...] = ("cmake_args", "check")
 
-    build_time_test_callbacks = ["check"]
+    #: Names associated with package attributes in the old build-system format
+    legacy_attributes: Tuple[str, ...] = (
+        "generator",
+        "build_targets",
+        "install_targets",
+        "build_time_test_callbacks",
+        "archive_files",
+        "root_cmakelists_dir",
+        "std_cmake_args",
+        "build_dirname",
+        "build_directory",
+    )
 
     #: The build system generator to use.
     #:
@@ -94,27 +179,14 @@ class CMakePackage(PackageBase):
     #:
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
+    generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
 
-    generator = "Unix Makefiles"
-
-    if sys.platform == "win32":
-        generator = "Ninja"
-        depends_on("ninja")
-
-    # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
-    variant(
-        "build_type",
-        default="RelWithDebInfo",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
-    # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
-    variant("ipo", default=False, description="CMake interprocedural optimization")
-    # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
-    conflicts("+ipo", when="^cmake@:3.8", msg="+ipo is not supported by CMake < 3.9")
-
-    depends_on("cmake", type="build")
+    #: Targets to be used during the build phase
+    build_targets: List[str] = []
+    #: Targets to be used during the install phase
+    install_targets = ["install"]
+    #: Callback names for build-time test
+    build_time_test_callbacks = ["check"]
 
     @property
     def archive_files(self):
@@ -127,40 +199,30 @@ class CMakePackage(PackageBase):
 
         This path is relative to the root of the extracted tarball,
         not to the ``build_directory``. Defaults to the current directory.
-
-        :return: directory containing CMakeLists.txt
         """
-        return self.stage.source_path
+        return self.pkg.stage.source_path
 
     @property
     def std_cmake_args(self):
         """Standard cmake arguments provided as a property for
         convenience of package writers
-
-        :return: standard cmake arguments
         """
         # standard CMake arguments
-        std_cmake_args = CMakePackage._std_args(self)
-        std_cmake_args += getattr(self, "cmake_flag_args", [])
+        std_cmake_args = CMakeBuilder.std_args(self.pkg, generator=self.generator)
+        std_cmake_args += getattr(self.pkg, "cmake_flag_args", [])
         return std_cmake_args
 
     @staticmethod
-    def _std_args(pkg):
+    def std_args(pkg, generator=None):
         """Computes the standard cmake arguments for a generic package"""
-
-        try:
-            generator = pkg.generator
-        except AttributeError:
-            generator = CMakePackage.generator
-
-        # Make sure a valid generator was chosen
+        generator = generator or "Unix Makefiles"
         valid_primary_generators = ["Unix Makefiles", "Ninja"]
         primary_generator = _extract_primary_generator(generator)
         if primary_generator not in valid_primary_generators:
             msg = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
             msg += "primary generators: '{0}'".format("', '".join(valid_primary_generators))
-            raise InstallError(msg)
+            raise spack.package_base.InstallError(msg)
 
         try:
             build_type = pkg.spec.variants["build_type"].value
@@ -172,11 +234,11 @@ class CMakePackage(PackageBase):
         except KeyError:
             ipo = False
 
-        define = CMakePackage.define
+        define = CMakeBuilder.define
         args = [
             "-G",
             generator,
-            define("CMAKE_INSTALL_PREFIX", convert_to_posix_path(pkg.prefix)),
+            define("CMAKE_INSTALL_PREFIX", pkg.prefix),
             define("CMAKE_BUILD_TYPE", build_type),
             define("BUILD_TESTING", pkg.run_tests),
         ]
@@ -238,7 +300,7 @@ class CMakePackage(PackageBase):
             value = "ON" if value else "OFF"
         else:
             kind = "STRING"
-            if isinstance(value, Sequence) and not isinstance(value, six.string_types):
+            if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
                 value = ";".join(str(v) for v in value)
             else:
                 value = str(value)
@@ -252,7 +314,7 @@ class CMakePackage(PackageBase):
         of ``cmake_var``.
 
         This utility function is similar to
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`.
+        :meth:`~spack.build_systems.autotools.AutotoolsBuilder.with_or_without`.
 
         Examples:
 
@@ -292,122 +354,75 @@ class CMakePackage(PackageBase):
         if variant is None:
             variant = cmake_var.lower()
 
-        if variant not in self.variants:
-            raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.name))
+        if variant not in self.pkg.variants:
+            raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.pkg.name))
 
-        if variant not in self.spec.variants:
+        if variant not in self.pkg.spec.variants:
             return ""
 
-        value = self.spec.variants[variant].value
+        value = self.pkg.spec.variants[variant].value
         if isinstance(value, (tuple, list)):
             # Sort multi-valued variants for reproducibility
             value = sorted(value)
 
         return self.define(cmake_var, value)
 
-    def flags_to_build_system_args(self, flags):
-        """Produces a list of all command line arguments to pass the specified
-        compiler flags to cmake. Note CMAKE does not have a cppflags option,
-        so cppflags will be added to cflags, cxxflags, and fflags to mimic the
-        behavior in other tools."""
-        # Has to be dynamic attribute due to caching
-        setattr(self, "cmake_flag_args", [])
-
-        flag_string = "-DCMAKE_{0}_FLAGS={1}"
-        langs = {"C": "c", "CXX": "cxx", "Fortran": "f"}
-
-        # Handle language compiler flags
-        for lang, pre in langs.items():
-            flag = pre + "flags"
-            # cmake has no explicit cppflags support -> add it to all langs
-            lang_flags = " ".join(flags.get(flag, []) + flags.get("cppflags", []))
-            if lang_flags:
-                self.cmake_flag_args.append(flag_string.format(lang, lang_flags))
-
-        # Cmake has different linker arguments for different build types.
-        # We specify for each of them.
-        if flags["ldflags"]:
-            ldflags = " ".join(flags["ldflags"])
-            ld_string = "-DCMAKE_{0}_LINKER_FLAGS={1}"
-            # cmake has separate linker arguments for types of builds.
-            for type in ["EXE", "MODULE", "SHARED", "STATIC"]:
-                self.cmake_flag_args.append(ld_string.format(type, ldflags))
-
-        # CMake has libs options separated by language. Apply ours to each.
-        if flags["ldlibs"]:
-            libs_flags = " ".join(flags["ldlibs"])
-            libs_string = "-DCMAKE_{0}_STANDARD_LIBRARIES={1}"
-            for lang in langs:
-                self.cmake_flag_args.append(libs_string.format(lang, libs_flags))
-
     @property
     def build_dirname(self):
-        """Returns the directory name to use when building the package
-
-        :return: name of the subdirectory for building the package
-        """
-        return "spack-build-%s" % self.spec.dag_hash(7)
+        """Directory name to use when building the package."""
+        return "spack-build-%s" % self.pkg.spec.dag_hash(7)
 
     @property
     def build_directory(self):
-        """Returns the directory to use when building the package
-
-        :return: directory where to build the package
-        """
-        return os.path.join(self.stage.path, self.build_dirname)
+        """Full-path to the directory to use when building the package."""
+        return os.path.join(self.pkg.stage.path, self.build_dirname)
 
     def cmake_args(self):
-        """Produces a list containing all the arguments that must be passed to
-        cmake, except:
+        """List of all the arguments that must be passed to cmake, except:
 
             * CMAKE_INSTALL_PREFIX
             * CMAKE_BUILD_TYPE
             * BUILD_TESTING
 
         which will be set automatically.
-
-        :return: list of arguments for cmake
         """
         return []
 
-    def cmake(self, spec, prefix):
+    def cmake(self, pkg, spec, prefix):
         """Runs ``cmake`` in the build directory"""
         options = self.std_cmake_args
         options += self.cmake_args()
         options.append(os.path.abspath(self.root_cmakelists_dir))
-        with working_dir(self.build_directory, create=True):
-            inspect.getmodule(self).cmake(*options)
+        with fs.working_dir(self.build_directory, create=True):
+            inspect.getmodule(self.pkg).cmake(*options)
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         """Make the build targets"""
-        with working_dir(self.build_directory):
+        with fs.working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
-                inspect.getmodule(self).make(*self.build_targets)
+                inspect.getmodule(self.pkg).make(*self.build_targets)
             elif self.generator == "Ninja":
                 self.build_targets.append("-v")
-                inspect.getmodule(self).ninja(*self.build_targets)
+                inspect.getmodule(self.pkg).ninja(*self.build_targets)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         """Make the install targets"""
-        with working_dir(self.build_directory):
+        with fs.working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
-                inspect.getmodule(self).make(*self.install_targets)
+                inspect.getmodule(self.pkg).make(*self.install_targets)
             elif self.generator == "Ninja":
-                inspect.getmodule(self).ninja(*self.install_targets)
+                inspect.getmodule(self.pkg).ninja(*self.install_targets)
 
-    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
+    spack.builder.run_after("build")(execute_build_time_tests)
 
     def check(self):
-        """Searches the CMake-generated Makefile for the target ``test``
-        and runs it if found.
+        """Search the CMake-generated files for the targets ``test`` and ``check``,
+        and runs them if found.
         """
-        with working_dir(self.build_directory):
+        with fs.working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
-                self._if_make_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
-                self._if_make_target_execute("check")
+                self.pkg._if_make_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
+                self.pkg._if_make_target_execute("check")
             elif self.generator == "Ninja":
-                self._if_ninja_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
-                self._if_ninja_target_execute("check")
-
-    # Check that self.prefix is there after installation
-    run_after("install")(PackageBase.sanity_check_prefix)
+                self.pkg._if_ninja_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
+                self.pkg._if_ninja_target_execute("check")

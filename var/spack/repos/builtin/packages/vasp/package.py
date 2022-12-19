@@ -20,6 +20,7 @@ class Vasp(MakefilePackage):
     url = "file://{0}/vasp.5.4.4.pl2.tgz".format(os.getcwd())
     manual_download = True
 
+    version("6.3.2", sha256="f7595221b0f9236a324ea8afe170637a578cdd5a837cc7679e7f7812f6edf25a")
     version("6.2.0", sha256="49e7ba351bd634bc5f5f67a8ef1e38e64e772857a1c02f602828898a84197e25")
     version("6.1.1", sha256="e37a4dfad09d3ad0410833bcd55af6b599179a085299026992c2d8e319bf6927")
     version("5.4.4.pl2", sha256="98f75fd75399a23d76d060a6155f4416b340a1704f256a00146f89024035bc8e")
@@ -44,6 +45,8 @@ class Vasp(MakefilePackage):
         description="Enable VASPsol implicit solvation model\n"
         "https://github.com/henniggroup/VASPsol",
     )
+
+    variant("shmem", default=True, description="Enable use_shmem build flag")
 
     depends_on("rsync", type="build")
     depends_on("blas")
@@ -111,6 +114,10 @@ class Vasp(MakefilePackage):
             else:
                 make_include = join_path("arch", "makefile.include.linux_" + spec.compiler.name)
 
+        # Recent versions of vasp have renamed the makefile.include files
+        # to leave out the linux_ string
+        if not os.path.exists(make_include):
+            make_include = make_include.replace("linux_", "")
         os.rename(make_include, "makefile.include")
 
         # This bunch of 'filter_file()' is to make these options settable
@@ -146,8 +153,11 @@ class Vasp(MakefilePackage):
             "-Davoidalloc",
             "-Duse_bse_te",
             "-Dtbdyn",
-            "-Duse_shmem",
         ]
+
+        if "+shmem" in spec:
+            cpp_options.append("-Duse_shmem")
+
         if "%nvhpc" in self.spec:
             cpp_options.extend(['-DHOST=\\"LinuxPGI\\"', "-DPGI16", "-Dqd_emulate"])
         elif "%aocc" in self.spec:

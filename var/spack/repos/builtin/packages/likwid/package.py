@@ -6,6 +6,8 @@
 import glob
 import os
 
+import llnl.util.tty as tty
+
 from spack.package import *
 
 
@@ -56,8 +58,20 @@ class Likwid(Package):
         when="@5.1.0",
         sha256="62da145da0a09de21020f9726290e1daf7437691bab8a92d7254bc192d5f3061",
     )
+    patch(
+        "https://github.com/RRZE-HPC/likwid/releases/download/v5.2.0/likwid-icx-mem-group-fix.patch",
+        sha256="af4ce278ef20cd1df26d8749a6b0e2716e4286685dae5a5e1eb4af8c383f7d10",
+        when="@5.2.0:",
+    )
     variant("fortran", default=True, description="with fortran interface")
     variant("cuda", default=False, description="with Nvidia GPU profiling support")
+
+    variant(
+        "accessmode",
+        default="perf_event",
+        values=("perf_event", "accessdaemon"),
+        description="the default mode for MSR access",
+    )
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
@@ -121,11 +135,17 @@ class Likwid(Package):
         )
         filter_file("^PREFIX .*", "PREFIX = " + prefix, "config.mk")
 
-        # FIXME: once https://github.com/spack/spack/issues/4432 is
-        # resolved, install as root by default and remove this
-        filter_file("^ACCESSMODE .*", "ACCESSMODE = perf_event", "config.mk")
-        filter_file("^BUILDFREQ .*", "BUILDFREQ = false", "config.mk")
-        filter_file("^BUILDDAEMON .*", "BUILDDAEMON = false", "config.mk")
+        filter_file(
+            "^ACCESSMODE .*",
+            "ACCESSMODE = {}".format(spec.variants["accessmode"].value),
+            "config.mk",
+        )
+        if "accessmode=accessdaemon" in spec:
+            # Disable the chown, see the `spack_perms_fix` template and script
+            filter_file("^INSTALL_CHOWN .*", "INSTALL_CHOWN =", "config.mk")
+        else:
+            filter_file("^BUILDFREQ .*", "BUILDFREQ = false", "config.mk")
+            filter_file("^BUILDDAEMON .*", "BUILDDAEMON = false", "config.mk")
 
         if "+fortran" in self.spec:
             filter_file("^FORTRAN_INTERFACE .*", "FORTRAN_INTERFACE = true", "config.mk")
@@ -182,3 +202,33 @@ class Likwid(Package):
         env["PWD"] = os.getcwd()
         make()
         make("install")
+
+    # Until tty output works better from build steps, this ends up in
+    # the build log.  See https://github.com/spack/spack/pull/10412.
+    @run_after("install")
+    def caveats(self):
+        if "accessmode=accessdaemon" in self.spec:
+            perm_script = "spack_perms_fix.sh"
+            perm_script_path = join_path(self.spec.prefix, perm_script)
+            daemons = glob.glob(join_path(self.spec.prefix, "sbin", "*"))
+            with open(perm_script_path, "w") as f:
+                env = spack.tengine.make_environment(dirs=self.package_dir)
+                t = env.get_template(perm_script + ".j2")
+                f.write(
+                    t.render({"prefix": self.spec.prefix, "chowns": daemons, "chmods": daemons})
+                )
+            tty.warn(
+                """
+            For full functionality, you'll need to chown and chmod some files
+            after installing the package.  This has security implications.
+
+            We've installed a script that will make the necessary changes;
+            read through it and then execute it as root (e.g. via sudo).
+
+            The script is named:
+
+            {0}
+            """.format(
+                    perm_script_path
+                )
+            )

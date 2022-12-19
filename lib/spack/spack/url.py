@@ -25,17 +25,17 @@ This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
+import io
 import os
 import re
-
-from six import StringIO
-from six.moves.urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
+import spack.util.path as spath
 import spack.version
 
 
@@ -366,17 +366,15 @@ def split_url_extension(path):
 
     # Strip off sourceforge download suffix.
     # e.g. https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download
-    match = re.search(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$", path)
-    if match:
-        prefix, suffix = match.groups()
+    prefix, suffix = spath.find_sourceforge_suffix(path)
 
-    ext = comp.extension(prefix)
+    ext = comp.extension_from_path(prefix)
     if ext is not None:
         prefix = comp.strip_extension(prefix)
 
     else:
         prefix, suf = strip_query_and_fragment(prefix)
-        ext = comp.extension(prefix)
+        ext = comp.extension_from_path(prefix)
         prefix = comp.strip_extension(prefix)
         suffix = suf + suffix
         if ext is None:
@@ -875,7 +873,7 @@ def color_url(path, **kwargs):
     vends = [vo + vl - 1 for vo in voffs]
 
     nerr = verr = 0
-    out = StringIO()
+    out = io.StringIO()
     for i in range(len(path)):
         if i == vs:
             out.write("@c")

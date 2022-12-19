@@ -21,7 +21,6 @@ class Plplot(CMakePackage):
     variant("java", default=False, description="Enable Java binding")
     variant("lua", default=False, description="Enable Lua binding")
     variant("pango", default=False, description="Enable Pango")
-    variant("python", default=False, description="Enable Python binding")
     variant("qt", default=False, description="Enable QT binding")
     variant("tcl", default=True, description="Enable TCL binding")
     variant("wx", default=False, description="Enable WxWidgets")
@@ -33,8 +32,6 @@ class Plplot(CMakePackage):
     depends_on("java", when="+java")
     depends_on("lua", when="+lua")
     depends_on("pango", when="+pango")
-    depends_on("py-numpy", type=("build", "run"), when="+python")
-    depends_on("python@2.7:2.8", type=("build", "run"), when="+python")
     depends_on("qt", when="+qt")
     depends_on("tcl", when="+tcl")
     depends_on("wxwidgets", when="+wx")
@@ -60,11 +57,6 @@ class Plplot(CMakePackage):
             args += ["-DENABLE_lua=ON"]
         else:
             args += ["-DENABLE_lua=OFF"]
-
-        if "+python" in self.spec:
-            args += ["-DENABLE_python=ON"]
-        else:
-            args += ["-DENABLE_python=OFF"]
 
         if "+qt" in self.spec:
             args += ["-DENABLE_qt=ON"]

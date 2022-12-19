@@ -139,6 +139,10 @@ class IntelMkl(IntelPackage):
 
     depends_on("cpio", type="build")
 
+    conflicts("target=ppc64:", msg="intel-mkl is only available for x86_64")
+    conflicts("target=ppc64le:", msg="intel-mkl is only available for x86_64")
+    conflicts("target=aarch64:", msg="intel-mkl is only available for x86_64")
+
     variant("shared", default=True, description="Builds shared library")
     variant("ilp64", default=False, description="64 bit integers")
     variant(

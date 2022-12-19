@@ -8,7 +8,6 @@ import functools
 import os
 import re
 
-import spack.bootstrap
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -47,6 +46,8 @@ def init(gnupghome=None, force=False):
             global objects are set already
     """
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
+    import spack.bootstrap
+
     if force:
         clear()
 
@@ -59,7 +60,7 @@ def init(gnupghome=None, force=False):
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        spack.bootstrap.ensure_core_dependencies()
         GPG, GPGCONF = _gpg(), _gpgconf()
 
     GPG.add_default_env("GNUPGHOME", GNUPGHOME)
@@ -239,7 +240,7 @@ def trust(keyfile):
     keys = _get_unimported_public_keys(output)
 
     # Import them
-    GPG("--import", keyfile)
+    GPG("--batch", "--import", keyfile)
 
     # Set trust to ultimate
     key_to_fpr = dict(public_keys_to_fingerprint())
@@ -285,7 +286,7 @@ def sign(key, file, output, clearsign=False):
             signature, if False creates a detached signature
     """
     signopt = "--clearsign" if clearsign else "--detach-sign"
-    GPG(signopt, "--armor", "--default-key", key, "--output", output, file)
+    GPG(signopt, "--armor", "--local-user", key, "--output", output, file)
 
 
 @_autoinit

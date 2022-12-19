@@ -13,15 +13,15 @@
 
 """
 import collections
+import collections.abc
 import ctypes
+import io
 import re
-from typing import List  # novm
+from typing import List
 
 import ruamel.yaml as yaml
 from ruamel.yaml import RoundTripDumper, RoundTripLoader
-from six import StringIO, string_types
 
-from llnl.util.compat import Mapping
 from llnl.util.tty.color import cextra, clen, colorize
 
 import spack.error
@@ -52,7 +52,7 @@ class syaml_int(int):
 
 #: mapping from syaml type -> primitive type
 syaml_types = {
-    syaml_str: string_types,
+    syaml_str: str,
     syaml_int: int,
     syaml_dict: dict,
     syaml_list: list,
@@ -225,7 +225,7 @@ def file_line(mark):
 #: This is nasty but YAML doesn't give us many ways to pass arguments --
 #: yaml.dump() takes a class (not an instance) and instantiates the dumper
 #: itself, so we can't just pass an instance
-_annotations = []  # type: List[str]
+_annotations: List[str] = []
 
 
 class LineAnnotationDumper(OrderedLineDumper):
@@ -263,7 +263,7 @@ class LineAnnotationDumper(OrderedLineDumper):
         result = super(LineAnnotationDumper, self).represent_data(data)
         if data is None:
             result.value = syaml_str("null")
-        elif isinstance(result.value, string_types):
+        elif isinstance(result.value, str):
             result.value = syaml_str(data)
         if markable(result.value):
             mark(result.value, data)
@@ -318,7 +318,7 @@ def dump_config(*args, **kwargs):
 def dump_annotated(data, stream=None, *args, **kwargs):
     kwargs["Dumper"] = LineAnnotationDumper
 
-    sio = StringIO()
+    sio = io.StringIO()
     yaml.dump(data, sio, *args, **kwargs)
 
     # write_line_break() is not called by YAML for empty lines, so we
@@ -327,7 +327,7 @@ def dump_annotated(data, stream=None, *args, **kwargs):
 
     getvalue = None
     if stream is None:
-        stream = StringIO()
+        stream = io.StringIO()
         getvalue = stream.getvalue
 
     # write out annotations and lines, accounting for color
@@ -352,7 +352,7 @@ def sorted_dict(dict_like):
     """
     result = syaml_dict(sorted(dict_like.items()))
     for key, value in result.items():
-        if isinstance(value, Mapping):
+        if isinstance(value, collections.abc.Mapping):
             result[key] = sorted_dict(value)
     return result
 

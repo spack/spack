@@ -78,7 +78,7 @@ repos:
     )
 
 
-def test_config_edit():
+def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
     dms = spack.config.default_modify_scope("compilers")
@@ -116,6 +116,14 @@ def test_config_edit_edits_spack_yaml(mutable_mock_env_path):
     env = ev.create("test")
     with env:
         assert config("edit", "--print-file").strip() == env.manifest_path
+
+
+def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_path):
+    """Test adding to non-env config scope with an active environment"""
+    env = ev.create("test")
+    with env:
+        config("--scope=user", "add", "config:install_tree:root:/usr")
+    assert spack.config.get("config:install_tree:root", scope="user") == "/usr"
 
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
@@ -598,6 +606,14 @@ def check_config_updated(data):
     assert data["install_tree"]["projections"] == {"all": "{name}-{version}"}
 
 
+def test_config_update_shared_linking(mutable_config):
+    # Old syntax: config:shared_linking:rpath/runpath
+    # New syntax: config:shared_linking:{type:rpath/runpath,bind:True/False}
+    with spack.config.override("config:shared_linking", "runpath"):
+        assert spack.config.get("config:shared_linking:type") == "runpath"
+        assert not spack.config.get("config:shared_linking:bind")
+
+
 def test_config_prefer_upstream(
     tmpdir_factory, install_mockery, mock_fetch, mutable_config, gen_mock_layout, monkeypatch
 ):
@@ -626,13 +642,13 @@ def test_config_prefer_upstream(
 
     # Make sure only the non-default variants are set.
     assert packages["boost"] == {
-        "compiler": ["gcc@4.5.0"],
+        "compiler": ["gcc@10.2.1"],
         "variants": "+debug +graph",
         "version": ["1.63.0"],
     }
-    assert packages["dependency-install"] == {"compiler": ["gcc@4.5.0"], "version": ["2.0"]}
+    assert packages["dependency-install"] == {"compiler": ["gcc@10.2.1"], "version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
-    assert packages["hdf5"] == {"compiler": ["gcc@4.5.0"], "version": ["2.3"]}
+    assert packages["hdf5"] == {"compiler": ["gcc@10.2.1"], "version": ["2.3"]}
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output

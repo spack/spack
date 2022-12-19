@@ -14,6 +14,11 @@ class PySphinx(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("5.3.0", sha256="51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5")
+    version("5.2.3", sha256="5b10cb1022dac8c035f75767799c39217a05fc0fe2d6fe5597560d38e44f0363")
+    version("5.2.2", sha256="7225c104dc06169eb73b061582c4bc84a9594042acae6c1582564de274b7df2f")
+    version("5.2.1", sha256="c009bb2e9ac5db487bcf53f015504005a330ff7c631bb6ab2604e0d65bae8b54")
+    version("5.2.0", sha256="1790c2098937dcfa7871c9d102c24eccd4a8b883b67c5c1e26892fb52d102542")
     version("5.1.1", sha256="ba3224a4e206e1fbdecf98a4fae4992ef9b24b85ebf7b584bb340156eaf08d89")
     version("5.1.0", sha256="7893d10d9d852c16673f9b1b7e9eda1606b420b7810270294d6e4b44c0accacc")
     version("5.0.2", sha256="b18e978ea7565720f26019c702cd85c84376e948370f1cd43d60265010e1c7b0")
@@ -54,17 +59,16 @@ class PySphinx(PythonPackage):
 
     extends("python", ignore="bin/(pybabel|pygmentize)")
 
-    # See here for upstream list of dependencies:
-    # https://github.com/sphinx-doc/sphinx/blob/master/setup.py
-    # See http://www.sphinx-doc.org/en/stable/changes.html for when each
-    # dependency was added or removed.
+    depends_on("py-flit-core@3.7:", when="@5.2:", type="build")
+    depends_on("py-setuptools", when="@4.4:5.1", type="build")
+    depends_on("py-setuptools", when="@:4.3", type=("build", "run"))
+
     depends_on("python@3.7:", when="@6:", type=("build", "run"))
     depends_on("python@3.6:", when="@4.3:5", type=("build", "run"))
     depends_on("python@3.6:3.9", when="@4:4.2", type=("build", "run"))
     depends_on("python@3.5:3.9", when="@2:3", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:3.9", when="@:1", type=("build", "run"))
 
-    depends_on("py-sphinxcontrib-websupport", when="@1.6:1", type=("build", "run"))
     depends_on("py-sphinxcontrib-applehelp", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-devhelp", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-jsmath", when="@2:", type=("build", "run"))
@@ -73,24 +77,30 @@ class PySphinx(PythonPackage):
     depends_on("py-sphinxcontrib-serializinghtml@1.1.5:", when="@4.1.1:", type=("build", "run"))
     depends_on("py-sphinxcontrib-serializinghtml", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-qthelp", when="@2:", type=("build", "run"))
-    depends_on("py-six@1.5:", when="@:1", type=("build", "run"))
-    depends_on("py-jinja2@2.3:", type=("build", "run"))
+    depends_on("py-jinja2@3:", when="@5.2:", type=("build", "run"))
     depends_on("py-jinja2@2.3:2", when="@:4.0.1", type=("build", "run"))
-    depends_on("py-pygments@2.0:", type=("build", "run"))
+    depends_on("py-jinja2@2.3:", type=("build", "run"))
+    depends_on("py-pygments@2.12:", when="@5.2:", type=("build", "run"))
+    depends_on("py-pygments@2:", type=("build", "run"))
     depends_on("py-docutils@0.14:0.19", when="@5.1:", type=("build", "run"))
     depends_on("py-docutils@0.14:0.18", when="@5.0", type=("build", "run"))
     depends_on("py-docutils@0.14:0.17", when="@4", type=("build", "run"))
     depends_on("py-docutils@0.12:0.16", when="@:3", type=("build", "run"))
+    depends_on("py-snowballstemmer@2:", when="@5.2:", type=("build", "run"))
     depends_on("py-snowballstemmer@1.1:", type=("build", "run"))
+    depends_on("py-babel@2.9:", when="@5.2:", type=("build", "run"))
     depends_on("py-babel@1.3:", type=("build", "run"))
     depends_on("py-alabaster@0.7", type=("build", "run"))
+    depends_on("py-imagesize@1.3:", when="@5.2:", type=("build", "run"))
     depends_on("py-imagesize", when="@1.4:", type=("build", "run"))
     depends_on("py-requests@2.5.0:", type=("build", "run"))
-    depends_on("py-setuptools", when="@:4.3", type=("build", "run"))
-    depends_on("py-setuptools", when="@4.4:", type="build")
-    depends_on("py-sphinx-rtd-theme@0.1:", when="@:1.3", type=("build", "run"))
+    depends_on("py-packaging@21:", when="@5.2:", type=("build", "run"))
     depends_on("py-packaging", when="@1.7:", type=("build", "run"))
+    depends_on("py-importlib-metadata@4.8:", when="@5.2: ^python@:3.9", type=("build", "run"))
     depends_on("py-importlib-metadata@4.4:", when="@4.4: ^python@:3.9", type=("build", "run"))
-    depends_on("py-typing", when="@1.6.1", type=("build", "run"))
-    depends_on("py-typing", when="@1.6.2:^python@2.7:3.4", type=("build", "run"))
+    depends_on("py-colorama@0.4.5:", when="@5.2: platform=windows", type=("build", "run"))
     depends_on("py-colorama@0.3.5:", when="platform=windows", type=("build", "run"))
+
+    depends_on("py-sphinxcontrib-websupport", when="@1.6:1", type=("build", "run"))
+    depends_on("py-six@1.5:", when="@:1", type=("build", "run"))
+    depends_on("py-sphinx-rtd-theme@0.1:", when="@:1.3", type=("build", "run"))

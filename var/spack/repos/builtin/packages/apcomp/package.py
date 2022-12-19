@@ -50,6 +50,7 @@ class Apcomp(Package):
 
     depends_on("cmake@3.9:", type="build")
     depends_on("mpi", when="+mpi")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     root_cmakelists_dir = "src"
 

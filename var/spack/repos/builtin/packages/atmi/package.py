@@ -15,18 +15,37 @@ class Atmi(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/atmi"
     git = "https://github.com/RadeonOpenCompute/atmi.git"
-    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.3.0", sha256="dffc0eb0bc1617843e7f728dbd6c8b12326c5c8baa34369aa267aab40f5deb6a")
+    version("5.2.3", sha256="5f66c59e668cf968e86b556a0a52ee0202d1b370d8406e291a874cbfd200ee17")
+    version("5.2.1", sha256="6b33445aa67444c038cd756f855a58a72dd35db57e7b63da37fe78a8585b982b")
     version("5.2.0", sha256="33e77905a607734157d46c736c924c7c50b6b13f2b2ddbf711cb08e37f2efa4f")
     version("5.1.3", sha256="a43448d77705b2b07e1758ffe8035aa6ba146abc2167984e8cb0f1615797b341")
     version("5.1.0", sha256="6a758f5a8332e6774cd8e14a4e5ce05e43b1e05298d817b4068c35fa1793d333")
-    version("5.0.2", sha256="3aea040f5a246539ab118f2183cf3e802a21e0e6215a53025eda77f382341747")
-    version("5.0.0", sha256="208c1773170722b60b74357e264e698df5871e9d9d490d64011e6ea76750d9cf")
-    version("4.5.2", sha256="c235cfb8bdd89deafecf9123264217b8cc5577a5469e3e1f24587fa820d0792e")
-    version("4.5.0", sha256="64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf")
+    version(
+        "5.0.2",
+        sha256="3aea040f5a246539ab118f2183cf3e802a21e0e6215a53025eda77f382341747",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="208c1773170722b60b74357e264e698df5871e9d9d490d64011e6ea76750d9cf",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="c235cfb8bdd89deafecf9123264217b8cc5577a5469e3e1f24587fa820d0792e",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="4497fa6d33547b946e2a51619f2777ec36e9cff1b07fd534eb8a5ef0d8e30650",
@@ -106,6 +125,9 @@ class Atmi(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         depends_on("comgr@" + ver, type="link", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
@@ -117,7 +139,11 @@ class Atmi(CMakePackage):
     # Removing direct reference to /usr/bin/rysnc for rsync command.
     patch("0002-Remove-usr-bin-rsync-reference.patch", when="@4.0.0:5.0.0")
     # Reset the installation path and remove direct reference to rsync.
-    patch("0002-Remove-usr-bin-rsync-reference-5.2.0.patch", when="@5.0.2:")
+    patch("0002-Remove-usr-bin-rsync-reference-5.2.0.patch", when="@5.0.2:5.2.0")
+    # Remove direct reference to /usr/bin/rsync path for rsync command
+    patch(
+        "0002-Remove-direct-reference-to-usr-bin-rysnc-for-rsync-cmd-5.2.1.patch", when="@5.2.1:"
+    )
 
     def cmake_args(self):
         args = [self.define("ROCM_VERSION", self.spec.version)]

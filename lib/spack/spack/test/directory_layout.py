@@ -24,11 +24,10 @@ from spack.util.path import path_to_os_path
 max_packages = 10
 
 
-def test_yaml_directory_layout_parameters(tmpdir, config):
+def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     """This tests the various parameters that can be used to configure
     the install location"""
-    spec = Spec("python")
-    spec.concretize()
+    spec = default_mock_concretization("python")
 
     # Ensure default layout matches expected spec format
     layout_default = DirectoryLayout(str(tmpdir))
@@ -60,7 +59,7 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
     arch_scheme = (
         "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"
     )
-    ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"
+    ns_scheme = "{architecture}/{namespace}/{name}-{version}-{hash:7}"
     arch_ns_scheme_projections = {"all": arch_scheme, "python": ns_scheme}
     layout_arch_ns = DirectoryLayout(str(tmpdir), projections=arch_ns_scheme_projections)
 
@@ -178,7 +177,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
         layout.create_install_directory(spec)
         installed_specs[spec] = layout.path_for_spec(spec)
 
-    with spack.repo.use_repositories(mock_db):
+    with spack.repo.use_repositories(spack.paths.mock_packages_path):
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():
@@ -215,11 +214,9 @@ def test_find(temporary_store, config, mock_packages):
         assert found_specs[name].eq_dag(spec)
 
 
-def test_yaml_directory_layout_build_path(tmpdir, config):
+def test_yaml_directory_layout_build_path(tmpdir, default_mock_concretization):
     """This tests build path method."""
-    spec = Spec("python")
-    spec.concretize()
-
+    spec = default_mock_concretization("python")
     layout = DirectoryLayout(str(tmpdir))
     rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
     assert layout.build_packages_path(spec) == os.path.join(spec.prefix, rel_path)

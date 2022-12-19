@@ -11,10 +11,8 @@ import os
 import signal
 import sys
 import time
-from typing import TYPE_CHECKING, Optional  # novm
-
-if TYPE_CHECKING:
-    from types import ModuleType  # novm
+from types import ModuleType
+from typing import Optional
 
 import pytest
 
@@ -24,7 +22,7 @@ import llnl.util.tty.pty as pty
 
 from spack.util.executable import which
 
-termios = None  # type: Optional[ModuleType]
+termios: Optional[ModuleType] = None
 try:
     import termios as term_mod
 
@@ -72,11 +70,7 @@ def test_log_python_output_with_invalid_utf8(capfd, tmpdir):
         with log.log_output("foo.txt"):
             sys.stdout.buffer.write(b"\xc3\x28\n")
 
-        # python2 and 3 treat invalid UTF-8 differently
-        if sys.version_info.major == 2:
-            expected = b"\xc3(\n"
-        else:
-            expected = b"<line lost: output was not encoded as UTF-8>\n"
+        expected = b"<line lost: output was not encoded as UTF-8>\n"
         with open("foo.txt", "rb") as f:
             written = f.read()
             assert written == expected
@@ -341,6 +335,7 @@ def no_termios():
         (mock_shell_tstp_tstp_cont_cont, no_termios),
     ],
 )
+@pytest.mark.xfail(reason="Fails almost consistently when run with coverage and xdist")
 def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     """Functional tests for foregrounding and backgrounding a logged process.
 
@@ -460,10 +455,10 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
         (mock_shell_v_v_no_termios, no_termios),
     ],
 )
+@pytest.mark.xfail(reason="Fails almost consistently when run with coverage and xdist")
 def test_foreground_background_output(test_fn, capfd, termios_on_or_off, tmpdir):
     """Tests hitting 'v' toggles output, and that force_echo works."""
     if sys.version_info >= (3, 8) and sys.platform == "darwin" and termios_on_or_off == no_termios:
-
         return
 
     shell = pty.PseudoShell(test_fn, synchronized_logger)

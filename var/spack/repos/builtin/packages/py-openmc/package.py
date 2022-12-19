@@ -17,11 +17,14 @@ class PyOpenmc(PythonPackage):
     programming model."""
 
     homepage = "https://docs.openmc.org/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.13.0"
+    url = "https://github.com/openmc-dev/openmc/tarball/v0.13.2"
     git = "https://github.com/openmc-dev/openmc.git"
+    maintainers = ["paulromano"]
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("0.13.2", commit="030f73a8690ed19e91806e46c8caf338d252e74a", submodules=True)
+    version("0.13.1", commit="33bc948f4b855c037975f16d16091fe4ecd12de3", submodules=True)
     version("0.13.0", commit="cff247e35785e7236d67ccf64a3401f0fc50a469", submodules=True)
     version("0.12.2", commit="cbfcf908f8abdc1ef6603f67872dcf64c5c657b1", submodules=True)
     version("0.12.1", commit="36913589c4f43b7f843332181645241f0f10ae9e", submodules=True)
@@ -31,7 +34,17 @@ class PyOpenmc(PythonPackage):
     variant("mpi", default=False, description="Enable MPI support")
 
     # keep py-openmc and openmc at the same version
-    for ver in ["develop", "master", "0.13.0", "0.12.2", "0.12.1", "0.12.0", "0.11.0"]:
+    for ver in [
+        "develop",
+        "master",
+        "0.13.2",
+        "0.13.1",
+        "0.13.0",
+        "0.12.2",
+        "0.12.1",
+        "0.12.0",
+        "0.11.0",
+    ]:
         depends_on(
             "openmc+mpi@{0}".format(ver), when="@{0}+mpi".format(ver), type=("build", "run")
         )
@@ -40,7 +53,8 @@ class PyOpenmc(PythonPackage):
         )
 
     depends_on("git", type="build")
-    depends_on("python@3.6:", type=("build", "run"), when="@0.13:")
+    depends_on("python@3.7:", type=("build", "run"), when="@0.13.2:")
+    depends_on("python@3.6:", type=("build", "run"), when="@0.13.0:0.13.1")
     depends_on("python@3.5:", type=("build", "run"), when="@:0.12")
     depends_on("py-cython", type="build")
     depends_on("py-h5py~mpi", when="~mpi", type=("build", "run"))
@@ -49,7 +63,7 @@ class PyOpenmc(PythonPackage):
     depends_on("py-lxml", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
-    depends_on("py-numpy@1.9:", type=("build", "run"))
+    depends_on("py-numpy@1.9:1.21", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-scipy", type=("build", "run"))

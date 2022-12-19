@@ -14,6 +14,7 @@ class PyMsgpack(PythonPackage):
     pypi = "msgpack/msgpack-1.0.0.tar.gz"
     git = "https://github.com/msgpack/msgpack-python"
 
+    version("1.0.4", sha256="f5d869c18f030202eb412f08b28d2afeea553d6613aee89e200d7aca7ef01f5f")
     version("1.0.3", sha256="51fdc7fb93615286428ee7758cecc2f374d5ff363bdd884c7ea622a7a327a81e")
     version("1.0.2", sha256="fae04496f5bc150eefad4e9571d1a76c55d021325dcd484ce45065ebbdd00984")
     version("1.0.1", sha256="7033215267a0e9f60f4a5e4fb2228a932c404f237817caff8dc3115d9e7cd975")
@@ -23,3 +24,5 @@ class PyMsgpack(PythonPackage):
     version("0.6.0", sha256="4478a5f68142414084cd43af8f21cef9619ad08bb3c242ea505330dade6ca9ea")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@35.0.2:", when="@1.0.4:", type="build")
+    depends_on("py-cython@0.29.30:0.29", when="@1.0.4:", type="build")

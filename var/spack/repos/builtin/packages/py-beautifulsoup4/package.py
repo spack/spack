@@ -14,6 +14,7 @@ class PyBeautifulsoup4(PythonPackage):
     homepage = "https://www.crummy.com/software/BeautifulSoup"
     pypi = "beautifulsoup4/beautifulsoup4-4.8.0.tar.gz"
 
+    version("4.11.1", sha256="ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693")
     version("4.10.0", sha256="c23ad23c521d818955a4151a67d81580319d4bf548d3d49f4223ae041ff98891")
     version("4.9.3", sha256="84729e322ad1d5b4d25f805bfa05b902dd96450f43842c4e99067d5e1369eb25")
     version("4.8.0", sha256="25288c9e176f354bf277c0a10aa96c782a6a18a17122dba2e8cec4a97e03343b")
@@ -24,10 +25,10 @@ class PyBeautifulsoup4(PythonPackage):
     variant("lxml", default=False, description="Enable lxml parser")
     variant("html5lib", default=False, description="Enable html5lib parser")
 
-    depends_on("python@3:", type=("build", "run"), when="@4.10.0:")
+    depends_on("python@3.6:", when="@4.11.0:", type=("build", "run"))
+    depends_on("python@3:", when="@4.10.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-soupsieve@1.3:", when="@4.9.0: ^python@3:", type=("build", "run"))
-    depends_on("py-soupsieve@1.3:1", when="@4.9.0: ^python@:2.8", type=("build", "run"))
+    depends_on("py-soupsieve@1.3:", when="@4.9.0:", type=("build", "run"))
     depends_on("py-soupsieve@1.2:", when="@4.7.0:", type=("build", "run"))
 
     depends_on("py-lxml", when="+lxml", type=("build", "run"))

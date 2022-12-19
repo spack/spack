@@ -9,9 +9,9 @@ import socket
 import sys
 import time
 from datetime import datetime
-from typing import Dict, Tuple  # novm
 
 import llnl.util.tty as tty
+from llnl.util.lang import pretty_seconds
 
 import spack.util.string
 
@@ -80,7 +80,7 @@ class OpenFileTracker(object):
 
     def __init__(self):
         """Create a new ``OpenFileTracker``."""
-        self._descriptors = {}  # type: Dict[Tuple[int, int], OpenFile]
+        self._descriptors = {}
 
     def get_fh(self, path):
         """Get a filehandle for a lockfile.
@@ -102,7 +102,7 @@ class OpenFileTracker(object):
         try:
             # see whether we've seen this inode/pid before
             stat = os.stat(path)
-            key = (stat.st_ino, pid)
+            key = (stat.st_dev, stat.st_ino, pid)
             open_file = self._descriptors.get(key)
 
         except OSError as e:
@@ -128,31 +128,31 @@ class OpenFileTracker(object):
 
             # if we just created the file, we'll need to get its inode here
             if not stat:
-                inode = os.fstat(fd).st_ino
-                key = (inode, pid)
+                stat = os.fstat(fd)
+                key = (stat.st_dev, stat.st_ino, pid)
 
             self._descriptors[key] = open_file
 
         open_file.refs += 1
         return open_file.fh
 
-    def release_fh(self, path):
-        """Release a filehandle, only closing it if there are no more references."""
-        try:
-            inode = os.stat(path).st_ino
-        except OSError as e:
-            if e.errno != errno.ENOENT:  # only handle file not found
-                raise
-            inode = None  # this will not be in self._descriptors
-
-        key = (inode, os.getpid())
+    def release_by_stat(self, stat):
+        key = (stat.st_dev, stat.st_ino, os.getpid())
         open_file = self._descriptors.get(key)
-        assert open_file, "Attempted to close non-existing lock path: %s" % path
+        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_inode
 
         open_file.refs -= 1
         if not open_file.refs:
             del self._descriptors[key]
             open_file.fh.close()
+
+    def release_by_fh(self, fh):
+        self.release_by_stat(os.fstat(fh.fileno()))
+
+    def purge(self):
+        for key in list(self._descriptors.keys()):
+            self._descriptors[key].fh.close()
+            del self._descriptors[key]
 
 
 #: Open file descriptors for locks in this process. Used to prevent one process
@@ -166,7 +166,7 @@ def _attempts_str(wait_time, nattempts):
         return ""
 
     attempts = spack.util.string.plural(nattempts, "attempt")
-    return " after {0:0.2f}s and {1}".format(wait_time, attempts)
+    return " after {} and {}".format(pretty_seconds(wait_time), attempts)
 
 
 class LockType(object):
@@ -318,8 +318,8 @@ class Lock(object):
             raise LockROFileError(self.path)
 
         self._log_debug(
-            "{0} locking [{1}:{2}]: timeout {3} sec".format(
-                op_str.lower(), self._start, self._length, timeout
+            "{} locking [{}:{}]: timeout {}".format(
+                op_str.lower(), self._start, self._length, pretty_seconds(timeout or 0)
             )
         )
 
@@ -340,7 +340,8 @@ class Lock(object):
             total_wait_time = time.time() - start_time
             return total_wait_time, num_attempts
 
-        raise LockTimeoutError("Timed out waiting for a {0} lock.".format(op_str.lower()))
+        total_wait_time = time.time() - start_time
+        raise LockTimeoutError(op_str.lower(), self.path, total_wait_time, num_attempts)
 
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
@@ -386,8 +387,12 @@ class Lock(object):
         try:
             os.makedirs(parent)
         except OSError as e:
-            # makedirs can fail when diretory already exists.
-            if not (e.errno == errno.EEXIST and os.path.isdir(parent) or e.errno == errno.EISDIR):
+            # os.makedirs can fail in a number of ways when the directory already exists.
+            # With EISDIR, we know it exists, and others like EEXIST, EACCES, and EROFS
+            # are fine if we ensure that the directory exists.
+            # Python 3 allows an exist_ok parameter and ignores any OSError as long as
+            # the directory exists.
+            if not (e.errno == errno.EISDIR or os.path.isdir(parent)):
                 raise
         return parent
 
@@ -426,8 +431,7 @@ class Lock(object):
 
         """
         fcntl.lockf(self._file, fcntl.LOCK_UN, self._length, self._start, os.SEEK_SET)
-
-        file_tracker.release_fh(self.path)
+        file_tracker.release_by_fh(self._file)
         self._file = None
         self._reads = 0
         self._writes = 0
@@ -775,6 +779,18 @@ class LockLimitError(LockError):
 
 class LockTimeoutError(LockError):
     """Raised when an attempt to acquire a lock times out."""
+
+    def __init__(self, lock_type, path, time, attempts):
+        fmt = "Timed out waiting for a {} lock after {}.\n    Made {} {} on file: {}"
+        super(LockTimeoutError, self).__init__(
+            fmt.format(
+                lock_type,
+                pretty_seconds(time),
+                attempts,
+                "attempt" if attempts == 1 else "attempts",
+                path,
+            )
+        )
 
 
 class LockUpgradeError(LockError):

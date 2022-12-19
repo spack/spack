@@ -21,6 +21,12 @@ class Ccache(CMakePackage):
 
     executables = ["^ccache$"]
 
+    version("4.7.4", sha256="dc283906b73bd7c461178ca472a459e9d86b5523405035921bd8204e77620264")
+    version("4.7.3", sha256="577841df9e9d9659d58a2f4e0f6eaceb7e29816988ffb2b12390e17b109b4ac4")
+    version("4.7.2", sha256="6b346f441342a25a6c1d7e010957a593f416e94b5d66fdf2e2992953b3860b9d")
+    version("4.7.1", sha256="fa00c8446d910acebd10dc43e7b77e3b78e774ac3f621618e8d055dcc631e914")
+    version("4.6.3", sha256="f46ba3706ad80c30d4d5874dee2bf9227a7fcd0ccaac31b51919a3053d84bd05")
+    version("4.6.2", sha256="6a746a9bed01585388b68e2d58af2e77741fc8d66bc360b5a0b4c41fc284dafe")
     version("4.6.1", sha256="59b28a57c3a45e48d6049001999c9f94cd4d3e9b0196994bed9a6a7437ffa3bc")
     version("4.6", sha256="73a1767ac6b7c0404a1a55f761a746d338e702883c7137fbf587023062258625")
     version("4.5.1", sha256="f0d3cff5d555d6868f14a7d05696f0370074e475304fd5aa152b98f892364981")
@@ -43,6 +49,8 @@ class Ccache(CMakePackage):
     version("3.3", sha256="b220fce435fe3d86b8b90097e986a17f6c1f971e0841283dd816adb238c5fd6a")
     version("3.2.9", sha256="1e13961b83a3d215c4013469c149414a79312a22d3c7bf9f946abac9ee33e63f")
 
+    variant("redis", default=True, description="Enable Redis secondary storage")
+
     depends_on("cmake@3.15:", when="@4.7:", type="build")
     depends_on("cmake@3.10:", when="@4.4:", type="build")
     depends_on("cmake@3.4.3:", when="@4.0:", type="build")
@@ -53,14 +61,22 @@ class Ccache(CMakePackage):
 
     depends_on("zstd", when="@4.0:")
 
-    depends_on("hiredis@0.13.3:", when="@4.4:")
+    depends_on("hiredis@0.13.3:", when="@4.4: +redis")
     depends_on("pkgconfig", type="build", when="@4.4:")
 
+    conflicts("%gcc@:7", when="@4.7.1:")
     conflicts("%gcc@:5", when="@4.4:")
+    conflicts("%clang@:7", when="@4.7:")
     conflicts("%clang@:4", when="@4.4:")
 
     def cmake_args(self):
-        return [self.define("ENABLE_TESTING", False)]
+        return [
+            self.define("ENABLE_TESTING", False),
+            self.define("ENABLE_DOCUMENTATION", False),
+            self.define_from_variant("REDIS_STORAGE_BACKEND", "redis"),
+            self.define("ZSTD_FROM_INTERNET", False),
+            self.define("HIREDIS_FROM_INTERNET", False),
+        ]
 
     # Before 4.0 this was an Autotools package
     @when("@:3")

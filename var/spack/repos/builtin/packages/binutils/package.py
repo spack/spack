@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
+import spack.build_systems.autotools
 from spack.package import *
 
 
@@ -40,13 +41,21 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     version("2.20.1", sha256="71d37c96451333c5c0b84b170169fdcb138bbb27397dc06281905d9717c8ed64")
 
     variant("plugins", default=True, description="enable plugins, needed for gold linker")
-    variant("gold", default=False, description="build the gold linker")
+    # When you build ld.gold you automatically get ld, even when you add the
+    # --disable-ld flag
+    variant("gold", default=False, when="+ld", description="build the gold linker")
     variant("libiberty", default=False, description="Also install libiberty.")
     variant("nls", default=True, description="Enable Native Language Support")
     variant("headers", default=False, description="Install extra headers (e.g. ELF)")
     variant("lto", default=False, description="Enable lto.")
     variant("ld", default=False, description="Enable ld.")
-    variant("gas", default=False, description="Enable as assembler.")
+    # When you build binutils with ~ld and +gas and load it in your PATH, you
+    # may end up with incompatibilities between a potentially older system ld
+    # and a recent assembler. For instance the linker on ubuntu 16.04 from
+    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
+    # "unable to initialize decompress status for section .debug_info"
+    # when compiling with debug symbols on gcc.
+    variant("gas", default=False, when="+ld", description="Enable as assembler.")
     variant("interwork", default=False, description="Enable interwork.")
     variant(
         "libs",
@@ -72,91 +81,17 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on("m4", type="build", when="@:2.29 +gold")
     depends_on("bison", type="build", when="@:2.29 +gold")
 
-    # 2.38 with +gas needs makeinfo due to a bug, see:
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
-    depends_on("texinfo", type="build", when="@2.38 +gas")
-    # 2.34 needs makeinfo due to a bug, see:
+    # 2.34:2.38 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
-    depends_on("texinfo", type="build", when="@2.34")
+    depends_on("texinfo", type="build", when="@2.34:2.38")
 
     conflicts("+gold", when="platform=darwin", msg="Binutils cannot build linkers on macOS")
-
-    # When you build binutils with ~ld and +gas and load it in your PATH, you
-    # may end up with incompatibilities between a potentially older system ld
-    # and a recent assembler. For instance the linker on ubuntu 16.04 from
-    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
-    # "unable to initialize decompress status for section .debug_info"
-    # when compiling with debug symbols on gcc.
-    conflicts("+gas", "~ld", msg="Assembler not always compatible with system ld")
-
-    # When you build ld.gold you automatically get ld, even when you add the
-    # --disable-ld flag
-    conflicts("~ld", "+gold")
 
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"GNU (nm|readelf).* (\S+)", output)
         return Version(match.group(2)).dotted.up_to(3) if match else None
-
-    def setup_build_environment(self, env):
-
-        if self.spec.satisfies("%cce"):
-            env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
-
-        if "+nls" in self.spec:
-            env.append_flags("LDFLAGS", "-lintl")
-
-    def configure_args(self):
-        spec = self.spec
-
-        args = [
-            "--disable-dependency-tracking",
-            "--disable-werror",
-            "--enable-multilib",
-            "--enable-64-bit-bfd",
-            "--enable-targets=all",
-            "--with-system-zlib",
-            "--with-sysroot=/",
-        ]
-
-        args += self.enable_or_disable("libs")
-        args += self.enable_or_disable("lto")
-        args += self.enable_or_disable("ld")
-        args += self.enable_or_disable("gas")
-        args += self.enable_or_disable("interwork")
-        args += self.enable_or_disable("gold")
-        args += self.enable_or_disable("plugins")
-
-        if "+libiberty" in spec:
-            args.append("--enable-install-libiberty")
-        else:
-            args.append("--disable-install-libiberty")
-
-        if "+nls" in spec:
-            args.append("--enable-nls")
-        else:
-            args.append("--disable-nls")
-
-        # To avoid namespace collisions with Darwin/BSD system tools,
-        # prefix executables with "g", e.g., gar, gnm; see Homebrew
-        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
-        if spec.satisfies("platform=darwin"):
-            args.append("--program-prefix=g")
-
-        return args
-
-    @run_after("install")
-    def install_headers(self):
-        # some packages (like TAU) need the ELF headers, so install them
-        # as a subdirectory in include/extras
-        if "+headers" in self.spec:
-            extradir = join_path(self.prefix.include, "extra")
-            mkdirp(extradir)
-            # grab the full binutils set of headers
-            install_tree("include", extradir)
-            # also grab the headers from the bfd directory
-            install(join_path(self.build_directory, "bfd", "*.h"), extradir)
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -204,3 +139,55 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             self.run_test(
                 exe, "--version", expected, installed=True, purpose=reason, skip_missing=True
             )
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    def configure_args(self):
+        args = [
+            "--disable-dependency-tracking",
+            "--disable-werror",
+            "--enable-multilib",
+            "--enable-64-bit-bfd",
+            "--enable-targets=all",
+            "--with-system-zlib",
+            "--with-sysroot=/",
+        ]
+        args += self.enable_or_disable("libs")
+        args += self.enable_or_disable("lto")
+        args += self.enable_or_disable("ld")
+        args += self.enable_or_disable("gas")
+        args += self.enable_or_disable("interwork")
+        args += self.enable_or_disable("gold")
+        args += self.enable_or_disable("nls")
+        args += self.enable_or_disable("plugins")
+
+        if "+libiberty" in self.spec:
+            args.append("--enable-install-libiberty")
+        else:
+            args.append("--disable-install-libiberty")
+
+        # To avoid namespace collisions with Darwin/BSD system tools,
+        # prefix executables with "g", e.g., gar, gnm; see Homebrew
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
+        if self.spec.satisfies("platform=darwin"):
+            args.append("--program-prefix=g")
+
+        return args
+
+    @run_after("install", when="+headers")
+    def install_headers(self):
+        # some packages (like TAU) need the ELF headers, so install them
+        # as a subdirectory in include/extras
+        extradir = join_path(self.prefix.include, "extra")
+        mkdirp(extradir)
+        # grab the full binutils set of headers
+        install_tree("include", extradir)
+        # also grab the headers from the bfd directory
+        install(join_path(self.build_directory, "bfd", "*.h"), extradir)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("%cce"):
+            env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
+
+        if "+nls" in self.spec:
+            env.append_flags("LDFLAGS", "-lintl")

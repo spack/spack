@@ -15,39 +15,58 @@ import shutil
 import ssl
 import sys
 import traceback
-
-import six
-from six.moves.urllib.error import URLError
-from six.moves.urllib.request import Request, urlopen
+import urllib.parse
+from html.parser import HTMLParser
+from urllib.error import URLError
+from urllib.request import HTTPSHandler, Request, build_opener
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, rename
+from llnl.util.filesystem import mkdirp, rename, working_dir
 
 import spack
 import spack.config
 import spack.error
+import spack.gcs_handler
+import spack.s3_handler
 import spack.url
 import spack.util.crypto
 import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
+from spack.util.executable import CommandNotFoundError, which
 from spack.util.path import convert_to_posix_path
+
+
+def _urlopen():
+    s3 = spack.s3_handler.UrllibS3Handler()
+    gcs = spack.gcs_handler.GCSHandler()
+
+    # One opener with HTTPS ssl enabled
+    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl.create_default_context()))
+
+    # One opener with HTTPS ssl disabled
+    without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
+
+    # And dynamically dispatch based on the config:verify_ssl.
+    def dispatch_open(*args, **kwargs):
+        opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
+        return opener.open(*args, **kwargs)
+
+    return dispatch_open
+
+
+#: Dispatches to the correct OpenerDirector.open, based on Spack configuration.
+urlopen = llnl.util.lang.Singleton(_urlopen)
 
 #: User-Agent used in Request objects
 SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
 
-if sys.version_info < (3, 0):
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParseError, HTMLParser  # novm
-else:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
 
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
+# Also, HTMLParseError is deprecated and never raised.
+class HTMLParseError(Exception):
+    pass
 
 
 class LinkParser(HTMLParser):
@@ -65,120 +84,41 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-def uses_ssl(parsed_url):
-    if parsed_url.scheme == "https":
-        return True
-
-    if parsed_url.scheme == "s3":
-        endpoint_url = os.environ.get("S3_ENDPOINT_URL")
-        if not endpoint_url:
-            return True
-
-        if url_util.parse(endpoint_url, scheme="https").scheme == "https":
-            return True
-
-    elif parsed_url.scheme == "gs":
-        tty.debug("(uses_ssl) GCS Blob is https")
-        return True
-
-    return False
-
-
-__UNABLE_TO_VERIFY_SSL = (lambda pyver: ((pyver < (2, 7, 9)) or ((3,) < pyver < (3, 4, 3))))(
-    sys.version_info
-)
-
-
 def read_from_url(url, accept_content_type=None):
-    url = url_util.parse(url)
-    context = None
-
-    verify_ssl = spack.config.get("config:verify_ssl")
+    if isinstance(url, str):
+        url = urllib.parse.urlparse(url)
 
     # Timeout in seconds for web requests
     timeout = spack.config.get("config:connect_timeout", 10)
-
-    # Don't even bother with a context unless the URL scheme is one that uses
-    # SSL certs.
-    if uses_ssl(url):
-        if verify_ssl:
-            if __UNABLE_TO_VERIFY_SSL:
-                # User wants SSL verification, but it cannot be provided.
-                warn_no_ssl_cert_checking()
-            else:
-                # User wants SSL verification, and it *can* be provided.
-                context = ssl.create_default_context()  # novm
-        else:
-            # User has explicitly indicated that they do not want SSL
-            # verification.
-            if not __UNABLE_TO_VERIFY_SSL:
-                context = ssl._create_unverified_context()
-
-    url_scheme = url.scheme
-    url = url_util.format(url)
-    if sys.platform == "win32" and url_scheme == "file":
-        url = convert_to_posix_path(url)
-    req = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
-
-    content_type = None
-    is_web_url = url_scheme in ("http", "https")
-    if accept_content_type and is_web_url:
-        # Make a HEAD request first to check the content type.  This lets
-        # us ignore tarballs and gigantic files.
-        # It would be nice to do this with the HTTP Accept header to avoid
-        # one round-trip.  However, most servers seem to ignore the header
-        # if you ask for a tarball with Accept: text/html.
-        req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=timeout, context=context)
-
-        content_type = get_header(resp.headers, "Content-type")
-
-    # Do the real GET request when we know it's just HTML.
-    req.get_method = lambda: "GET"
+    request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
     try:
-        response = _urlopen(req, timeout=timeout, context=context)
+        response = urlopen(request, timeout=timeout)
     except URLError as err:
-        raise SpackWebError("Download failed: {ERROR}".format(ERROR=str(err)))
+        raise SpackWebError("Download failed: {}".format(str(err)))
 
-    if accept_content_type and not is_web_url:
-        content_type = get_header(response.headers, "Content-type")
+    if accept_content_type:
+        try:
+            content_type = get_header(response.headers, "Content-type")
+            reject_content_type = not content_type.startswith(accept_content_type)
+        except KeyError:
+            content_type = None
+            reject_content_type = True
 
-    reject_content_type = accept_content_type and (
-        content_type is None or not content_type.startswith(accept_content_type)
-    )
-
-    if reject_content_type:
-        tty.debug(
-            "ignoring page {0}{1}{2}".format(
-                url, " with content type " if content_type is not None else "", content_type or ""
-            )
-        )
-
-        return None, None, None
+        if reject_content_type:
+            msg = "ignoring page {}".format(url.geturl())
+            if content_type:
+                msg += " with content type {}".format(content_type)
+            tty.debug(msg)
+            return None, None, None
 
     return response.geturl(), response.headers, response
 
 
-def warn_no_ssl_cert_checking():
-    tty.warn(
-        "Spack will not check SSL certificates. You need to update "
-        "your Python to enable certificate verification."
-    )
-
-
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
-    if sys.platform == "win32":
-        if remote_path[1] == ":":
-            remote_path = "file://" + remote_path
-    remote_url = url_util.parse(remote_path)
-    verify_ssl = spack.config.get("config:verify_ssl")
-
-    if __UNABLE_TO_VERIFY_SSL and verify_ssl and uses_ssl(remote_url):
-        warn_no_ssl_cert_checking()
-
-    remote_file_path = url_util.local_file_path(remote_url)
-    if remote_file_path is not None:
+    remote_url = urllib.parse.urlparse(remote_path)
+    if remote_url.scheme == "file":
+        remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
         if keep_original:
             shutil.copy(local_file_path, remote_file_path)
@@ -204,9 +144,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         while remote_path.startswith("/"):
             remote_path = remote_path[1:]
 
-        s3 = s3_util.create_s3_session(
-            remote_url, connection=s3_util.get_mirror_connection(remote_url)
-        )
+        s3 = s3_util.get_s3_session(remote_url, method="push")
         s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
@@ -224,34 +162,200 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         )
 
 
-def url_exists(url):
-    url = url_util.parse(url)
-    local_path = url_util.local_file_path(url)
-    if local_path:
-        return os.path.exists(local_path)
+def base_curl_fetch_args(url, timeout=0):
+    """Return the basic fetch arguments typically used in calls to curl.
 
-    if url.scheme == "s3":
-        # Check for URL specific connection information
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+    The arguments include those for ensuring behaviors such as failing on
+    errors for codes over 400, printing HTML headers, resolving 3xx redirects,
+    status or failure handling, and connection timeouts.
 
+    It also uses the following configuration option to set an additional
+    argument as needed:
+
+        * config:connect_timeout (int): connection timeout
+        * config:verify_ssl (str): Perform SSL verification
+
+    Arguments:
+        url (str): URL whose contents will be fetched
+        timeout (int): Connection timeout, which is only used if higher than
+            config:connect_timeout
+
+    Returns (list): list of argument strings
+    """
+    curl_args = [
+        "-f",  # fail on >400 errors
+        "-D",
+        "-",  # "-D -" prints out HTML headers
+        "-L",  # resolve 3xx redirects
+        url,
+    ]
+    if not spack.config.get("config:verify_ssl"):
+        curl_args.append("-k")
+
+    if sys.stdout.isatty() and tty.msg_enabled():
+        curl_args.append("-#")  # status bar when using a tty
+    else:
+        curl_args.append("-sS")  # show errors if fail
+
+    connect_timeout = spack.config.get("config:connect_timeout", 10)
+    if timeout:
+        connect_timeout = max(int(connect_timeout), int(timeout))
+    if connect_timeout > 0:
+        curl_args.extend(["--connect-timeout", str(connect_timeout)])
+
+    return curl_args
+
+
+def check_curl_code(returncode):
+    """Check standard return code failures for provided arguments.
+
+    Arguments:
+        returncode (int): curl return code
+
+    Raises FetchError if the curl returncode indicates failure
+    """
+    if returncode != 0:
+        if returncode == 22:
+            # This is a 404. Curl will print the error.
+            raise FetchError("URL was not found!")
+
+        if returncode == 60:
+            # This is a certificate error.  Suggest spack -k
+            raise FetchError(
+                "Curl was unable to fetch due to invalid certificate. "
+                "This is either an attack, or your cluster's SSL "
+                "configuration is bad.  If you believe your SSL "
+                "configuration is bad, you can try running spack -k, "
+                "which will not check SSL certificates."
+                "Use this at your own risk."
+            )
+
+        raise FetchError("Curl failed with error {0}".format(returncode))
+
+
+def _curl(curl=None):
+    if not curl:
         try:
-            s3.get_object(Bucket=url.netloc, Key=url.path.lstrip("/"))
-            return True
-        except s3.ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchKey":
-                return False
-            raise err
+            curl = which("curl", required=True)
+        except CommandNotFoundError as exc:
+            tty.error(str(exc))
+            raise FetchError("Missing required curl fetch method")
+    return curl
 
-    elif url.scheme == "gs":
-        gcs = gcs_util.GCSBlob(url)
-        return gcs.exists()
 
-    # otherwise, just try to "read" from the URL, and assume that *any*
-    # non-throwing response contains the resource represented by the URL
+def fetch_url_text(url, curl=None, dest_dir="."):
+    """Retrieves text-only URL content using the configured fetch method.
+    It determines the fetch method from:
+
+        * config:url_fetch_method (str): fetch method to use (e.g., 'curl')
+
+    If the method is `curl`, it also uses the following configuration
+    options:
+
+        * config:connect_timeout (int): connection time out
+        * config:verify_ssl (str): Perform SSL verification
+
+    Arguments:
+        url (str): URL whose contents are to be fetched
+        curl (spack.util.executable.Executable or None): (optional) curl
+            executable if curl is the configured fetch method
+        dest_dir (str): (optional) destination directory for fetched text
+            file
+
+    Returns (str or None): path to the fetched file
+
+    Raises FetchError if the curl returncode indicates failure
+    """
+    if not url:
+        raise FetchError("A URL is required to fetch its text")
+
+    tty.debug("Fetching text at {0}".format(url))
+
+    filename = os.path.basename(url)
+    path = os.path.join(dest_dir, filename)
+
+    fetch_method = spack.config.get("config:url_fetch_method")
+    tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
+    if fetch_method == "curl":
+        curl_exe = _curl(curl)
+        if not curl_exe:
+            raise FetchError("Missing required fetch method (curl)")
+
+        curl_args = ["-O"]
+        curl_args.extend(base_curl_fetch_args(url))
+
+        # Curl automatically downloads file contents as filename
+        with working_dir(dest_dir, create=True):
+            _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
+            check_curl_code(curl_exe.returncode)
+
+        return path
+
+    else:
+        try:
+            _, _, response = read_from_url(url)
+
+            returncode = response.getcode()
+            if returncode and returncode != 200:
+                raise FetchError("Urllib failed with error code {0}".format(returncode))
+
+            output = codecs.getreader("utf-8")(response).read()
+            if output:
+                with working_dir(dest_dir, create=True):
+                    with open(filename, "w") as f:
+                        f.write(output)
+
+                return path
+
+        except SpackWebError as err:
+            raise FetchError("Urllib fetch failed to verify url: {0}".format(str(err)))
+
+    return None
+
+
+def url_exists(url, curl=None):
+    """Determines whether url exists.
+
+    A scheme-specific process is used for Google Storage (`gs`) and Amazon
+    Simple Storage Service (`s3`) URLs; otherwise, the configured fetch
+    method defined by `config:url_fetch_method` is used.
+
+    Arguments:
+        url (str): URL whose existence is being checked
+        curl (spack.util.executable.Executable or None): (optional) curl
+            executable if curl is the configured fetch method
+
+    Returns (bool): True if it exists; False otherwise.
+    """
+    tty.debug("Checking existence of {0}".format(url))
+    url_result = urllib.parse.urlparse(url)
+
+    # Use curl if configured to do so
+    use_curl = spack.config.get(
+        "config:url_fetch_method", "urllib"
+    ) == "curl" and url_result.scheme not in ("gs", "s3")
+    if use_curl:
+        curl_exe = _curl(curl)
+        if not curl_exe:
+            return False
+
+        # Telling curl to fetch the first byte (-r 0-0) is supposed to be
+        # portable.
+        curl_args = ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
+        if not spack.config.get("config:verify_ssl"):
+            curl_args.append("-k")
+        _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
+        return curl_exe.returncode == 0
+
+    # Otherwise use urllib.
     try:
-        read_from_url(url)
+        urlopen(
+            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
+            timeout=spack.config.get("config:connect_timeout", 10),
+        )
         return True
-    except (SpackWebError, URLError):
+    except URLError as e:
+        tty.debug("Failure reading URL: " + str(e))
         return False
 
 
@@ -265,7 +369,7 @@ def _debug_print_delete_results(result):
 
 
 def remove_url(url, recursive=False):
-    url = url_util.parse(url)
+    url = urllib.parse.urlparse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
@@ -277,7 +381,7 @@ def remove_url(url, recursive=False):
 
     if url.scheme == "s3":
         # Try to find a mirror for potential connection information
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="push")
         bucket = url.netloc
         if recursive:
             # Because list_objects_v2 can only return up to 1000 items
@@ -374,9 +478,9 @@ def _iter_local_prefix(path):
 
 
 def list_url(url, recursive=False):
-    url = url_util.parse(url)
-
+    url = urllib.parse.urlparse(url)
     local_path = url_util.local_file_path(url)
+
     if local_path:
         if recursive:
             return list(_iter_local_prefix(local_path))
@@ -387,7 +491,7 @@ def list_url(url, recursive=False):
         ]
 
     if url.scheme == "s3":
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="fetch")
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
@@ -482,11 +586,6 @@ def spider(root_urls, depth=0, concurrency=32):
         except HTMLParseError as e:
             # This error indicates that Python's HTML parser sucks.
             msg = "Got an error parsing HTML."
-
-            # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
-            if sys.version_info[:3] < (2, 7, 3):
-                msg += " Use Python 2.7.3 or newer for better HTML parsing."
-
             tty.warn(msg, url, "HTMLParseError: " + str(e))
 
         except Exception as e:
@@ -499,7 +598,7 @@ def spider(root_urls, depth=0, concurrency=32):
 
         return pages, links, subcalls
 
-    if isinstance(root_urls, six.string_types):
+    if isinstance(root_urls, str):
         root_urls = [root_urls]
 
     # Clear the local cache of visited pages before starting the search
@@ -510,7 +609,7 @@ def spider(root_urls, depth=0, concurrency=32):
 
     collect = current_depth < depth
     for root in root_urls:
-        root = url_util.parse(root)
+        root = urllib.parse.urlparse(root)
         spider_args.append((root, collect))
 
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
@@ -538,38 +637,6 @@ def spider(root_urls, depth=0, concurrency=32):
     return pages, links
 
 
-def _urlopen(req, *args, **kwargs):
-    """Wrapper for compatibility with old versions of Python."""
-    url = req
-    try:
-        url = url.get_full_url()
-    except AttributeError:
-        pass
-
-    # Note: 'context' parameter was only introduced starting
-    # with versions 2.7.9 and 3.4.3 of Python.
-    if __UNABLE_TO_VERIFY_SSL:
-        del kwargs["context"]
-
-    opener = urlopen
-    if url_util.parse(url).scheme == "s3":
-        import spack.s3_handler
-
-        opener = spack.s3_handler.open
-    elif url_util.parse(url).scheme == "gs":
-        import spack.gcs_handler
-
-        opener = spack.gcs_handler.gcs_open
-
-    try:
-        return opener(req, *args, **kwargs)
-    except TypeError as err:
-        # If the above fails because of 'context', call without 'context'.
-        if "context" in kwargs and "context" in str(err):
-            del kwargs["context"]
-        return opener(req, *args, **kwargs)
-
-
 def find_versions_of_archive(
     archive_urls, list_url=None, list_depth=0, concurrency=32, reference_package=None
 ):
@@ -590,7 +657,7 @@ def find_versions_of_archive(
         list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
         concurrency (int): maximum number of concurrent requests
-        reference_package (spack.package_base.Package or None): a spack package
+        reference_package (spack.package_base.PackageBase or None): a spack package
             used as a reference for url detection.  Uses the url_for_version
             method on the package to produce reference urls which, if found,
             are preferred.
@@ -714,6 +781,10 @@ def get_header(headers, header_name):
             if unfuzz(header) == unfuzzed_header_name:
                 return value
         raise
+
+
+class FetchError(spack.error.SpackError):
+    """Superclass for fetch-related errors."""
 
 
 class SpackWebError(spack.error.SpackError):

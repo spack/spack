@@ -16,6 +16,7 @@ class RXts(RPackage):
 
     cran = "xts"
 
+    version("0.12.2", sha256="9c287ceaeb758ff4c9596be6a688db5683d50b45e7610e6d068891ca10dca743")
     version("0.12.1", sha256="d680584af946fc30be0b2046e838cff7b3a65e00df1eadba325ca5e96f3dca2c")
     version("0.11-2", sha256="12772f6a66aab5b84b0665c470f11a3d8d8a992955c027261cfe8e6077ee13b8")
     version("0.9-7", sha256="f11f7cb98f4b92b7f6632a2151257914130880c267736ef5a264b5dc2dfb7098")

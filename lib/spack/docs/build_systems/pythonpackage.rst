@@ -5,9 +5,9 @@
 
 .. _pythonpackage:
 
--------------
-PythonPackage
--------------
+------
+Python
+------
 
 Python packages and modules have their own special build system. This
 documentation covers everything you'll need to know in order to write
@@ -50,8 +50,9 @@ important to understand.
    include `setuptools <https://setuptools.pypa.io/>`__,
    `flit <https://flit.pypa.io/>`_,
    `poetry <https://python-poetry.org/>`_,
-   `hatchling <https://hatch.pypa.io/latest/>`_, and
-   `meson <https://meson-python.readthedocs.io/>`_.
+   `hatchling <https://hatch.pypa.io/latest/>`_,
+   `meson <https://meson-python.readthedocs.io/>`_, and
+   `pdm <https://pdm.fming.dev/latest/>`_.
 
 ^^^^^^^^^^^
 Downloading
@@ -368,6 +369,16 @@ it uses the meson build system. Meson uses the default
 See https://meson-python.readthedocs.io/en/latest/usage/start.html
 for more information.
 
+"""
+pdm
+"""
+
+If the ``pyproject.toml`` lists ``pdm.pep517.api`` as the ``build-backend``,
+it uses the PDM build system. PDM uses the default ``pyproject.toml``
+keys to list dependencies.
+
+See https://pdm.fming.dev/latest/ for more information.
+
 """"""
 wheels
 """"""
@@ -571,6 +582,19 @@ libraries. Make sure not to add modules/packages containing the word
 "test", as these likely won't end up in the installation directory,
 or may require test dependencies like pytest to be installed.
 
+Instead of defining the ``import_modules`` explicity, only the subset
+of module names to be skipped can be defined by using ``skip_modules``.
+If a defined module has submodules, they are skipped as well, e.g.,
+in case the ``plotting`` modules should be excluded from the
+automatically detected ``import_modules`` ``['nilearn', 'nilearn.surface',
+'nilearn.plotting', 'nilearn.plotting.data']`` set:
+
+.. code-block:: python
+
+        skip_modules = ['nilearn.plotting']
+
+This will set ``import_modules`` to ``['nilearn', 'nilearn.surface']``
+
 Import tests can be run during the installation using ``spack install
 --test=root`` or at any time after the installation using
 ``spack test run``.
@@ -700,10 +724,9 @@ extends vs. depends_on
 
 This is very similar to the naming dilemma above, with a slight twist.
 As mentioned in the :ref:`Packaging Guide <packaging_extensions>`,
-``extends`` and ``depends_on`` are very similar, but ``extends`` adds
-the ability to *activate* the package. Activation involves symlinking
-everything in the installation prefix of the package to the installation
-prefix of Python. This allows the user to import a Python module without
+``extends`` and ``depends_on`` are very similar, but ``extends`` ensures
+that the extension and extendee share the same prefix in views.
+This allows the user to import a Python module without
 having to add that module to ``PYTHONPATH``.
 
 When deciding between ``extends`` and ``depends_on``, the best rule of
@@ -711,7 +734,7 @@ thumb is to check the installation prefix. If Python libraries are
 installed to ``<prefix>/lib/pythonX.Y/site-packages``, then you
 should use ``extends``. If Python libraries are installed elsewhere
 or the only files that get installed reside in ``<prefix>/bin``, then
-don't use ``extends``, as symlinking the package wouldn't be useful.
+don't use ``extends``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Alternatives to Spack
@@ -758,3 +781,4 @@ For more information on build backend tools, see:
 * poetry: https://python-poetry.org/
 * hatchling: https://hatch.pypa.io/latest/
 * meson: https://meson-python.readthedocs.io/
+* pdm: https://pdm.fming.dev/latest/

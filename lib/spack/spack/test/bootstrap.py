@@ -7,6 +7,8 @@ import sys
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap.config
+import spack.bootstrap.core
 import spack.compilers
 import spack.environment
 import spack.store
@@ -33,7 +35,7 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
     # Test that within the context manager we use the bootstrap store
     # and that outside we restore the correct location
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.store.root == spack.bootstrap.store_path()
+        assert spack.store.root == spack.bootstrap.config.store_path()
     assert spack.store.root == user_path
 
 
@@ -51,7 +53,7 @@ def test_store_path_customization(config_value, expected, mutable_config):
     spack.config.set("bootstrap:root", config_value)
 
     # Check the store path
-    current = spack.bootstrap.store_path()
+    current = spack.bootstrap.config.store_path()
     assert current == spack.util.path.canonicalize_path(expected)
 
 
@@ -61,7 +63,7 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
 
     # Check the correct exception is raised
     with pytest.raises(RuntimeError, match="bootstrapping is currently disabled"):
-        spack.bootstrap.store_path()
+        spack.bootstrap.config.store_path()
 
 
 def test_raising_exception_module_importable():
@@ -69,7 +71,7 @@ def test_raising_exception_module_importable():
         ImportError,
         match='cannot bootstrap the "asdf" Python module',
     ):
-        spack.bootstrap.ensure_module_importable_or_raise("asdf")
+        spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
 
 
 def test_raising_exception_executables_in_path():
@@ -77,7 +79,7 @@ def test_raising_exception_executables_in_path():
         RuntimeError,
         match="cannot bootstrap any of the asdf, fdsa executables",
     ):
-        spack.bootstrap.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
+        spack.bootstrap.core.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
 
 
 @pytest.mark.regression("25603")
@@ -134,7 +136,7 @@ def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
 
 
 @pytest.mark.regression("26548")
-def test_custom_store_in_environment(mutable_config, tmpdir):
+def test_bootstrap_custom_store_in_environment(mutable_config, tmpdir):
     # Test that the custom store in an environment is taken into account
     # during bootstrapping
     spack_yaml = tmpdir.join("spack.yaml")
@@ -175,13 +177,15 @@ def test_nested_use_of_context_manager(mutable_config):
 def test_status_function_find_files(
     mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing
 ):
+    import spack.bootstrap.status
+
     if not expected_missing:
         mock_executable("foo", "echo Hello WWorld!")
 
     monkeypatch.setattr(
-        spack.bootstrap,
+        spack.bootstrap.status,
         "_optional_requirements",
-        lambda: [spack.bootstrap._required_system_executable("foo", "NOT FOUND")],
+        lambda: [spack.bootstrap.status._required_system_executable("foo", "NOT FOUND")],
     )
     monkeypatch.setenv("PATH", str(tmpdir.join("bin")))
 
@@ -192,15 +196,15 @@ def test_status_function_find_files(
 @pytest.mark.regression("31042")
 def test_source_is_disabled(mutable_config):
     # Get the configuration dictionary of the current bootstrapping source
-    conf = next(iter(spack.bootstrap.bootstrapping_sources()))
+    conf = next(iter(spack.bootstrap.core.bootstrapping_sources()))
 
     # The source is not explicitly enabled or disabled, so the following
     # call should raise to skip using it for bootstrapping
     with pytest.raises(ValueError):
-        spack.bootstrap.source_is_enabled_or_raise(conf)
+        spack.bootstrap.core.source_is_enabled_or_raise(conf)
 
     # Try to explicitly disable the source and verify that the behavior
     # is the same as above
     spack.config.add("bootstrap:trusted:{0}:{1}".format(conf["name"], False))
     with pytest.raises(ValueError):
-        spack.bootstrap.source_is_enabled_or_raise(conf)
+        spack.bootstrap.core.source_is_enabled_or_raise(conf)

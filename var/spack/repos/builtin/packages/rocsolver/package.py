@@ -15,7 +15,7 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
@@ -34,13 +34,33 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+
+    version("5.3.0", sha256="4569f860d240d50e94e77d498050f5cafe5ad11daddaead3e7e9eaa1957878a7")
+    version("5.2.3", sha256="b278a1640f31fb1905f18dc5127d57e2b1d36fd2b4f39ae811b5537fa6ce87d4")
+    version("5.2.1", sha256="74c127efaefec70a14dff6fa0e92276f38a6c313bf1271d68d03a4222d1fc3b6")
     version("5.2.0", sha256="94d46ebe1266eaa05df50c1789dc27d3f2dbf3cb5af156e757777a82ed6ef356")
     version("5.1.3", sha256="5a8f3b95ac9a131c31538196e954ea53b863009c092cce0c0ef869a0cd5dd554")
     version("5.1.0", sha256="88de515a6e75eaa3c50c9c8ae1e7ae8e3b46e712e388f44f79b63fefa9fc0831")
-    version("5.0.2", sha256="298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688")
-    version("5.0.0", sha256="d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1")
-    version("4.5.2", sha256="4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f")
-    version("4.5.0", sha256="0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c")
+    version(
+        "5.0.2",
+        sha256="298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f",
@@ -139,6 +159,9 @@ class Rocsolver(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
@@ -189,6 +212,8 @@ class Rocsolver(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
 

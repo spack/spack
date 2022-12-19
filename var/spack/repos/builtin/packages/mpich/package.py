@@ -150,8 +150,14 @@ with '-Wl,-commons,use_dylibs' and without
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
-    # https://github.com/spack/spack/issues/31678
-    patch("mpich-oneapi-config-rpath.patch", when="@4.0.2 %oneapi")
+    # Set correct rpath flags for Intel Fortran Compiler (%oneapi)
+    # See https://github.com/pmodels/mpich/pull/5824
+    # and https://github.com/spack/spack/issues/31678
+    # We do not fetch the patch from the upstream repo because it cannot be applied to older
+    # versions.
+    with when("%oneapi"):
+        patch("mpich-oneapi-config-rpath/step1.patch", when="@:4.0.2")
+        patch("mpich-oneapi-config-rpath/step2.patch", when="@3.1.1:4.0.2")
 
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
@@ -188,6 +194,18 @@ with '-Wl,-commons,use_dylibs' and without
         when="@4.0:4.0.2",
     )
 
+    # Fix checking whether the datatype is contiguous
+    # https://github.com/pmodels/yaksa/pull/189
+    # https://github.com/pmodels/mpich/issues/5391
+    # The problem has been fixed starting version 4.0 by updating the yaksa git submodule, which
+    # has not been done for the 3.4.x branch. The following patch is a backport of the
+    # aforementioned pull request for the unreleased version of yaksa that is vendored with MPICH.
+    # Note that Spack builds MPICH against a non-vendored yaksa only starting version 4.0.
+    with when("@3.4"):
+        # Apply the patch only when yaksa is used:
+        patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
+        patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
+
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -198,6 +216,7 @@ with '-Wl,-commons,use_dylibs' and without
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on("libfabric@:1.6", when="device=ch3 netmod=ofi")
+    depends_on("libfabric@1.5:", when="@3.4: device=ch4 netmod=ofi")
 
     depends_on("ucx", when="netmod=ucx")
     depends_on("mxm", when="netmod=mxm")
@@ -383,8 +402,7 @@ with '-Wl,-commons,use_dylibs' and without
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = self.spec.external_modules
-        if external_modules and "cray" in external_modules[0]:
+        if self.spec.satisfies("platform=cray"):
             # This is intended to support external MPICH instances registered
             # by Spack on Cray machines prior to a879c87; users defining an
             # external MPICH entry for Cray should generally refer to the
@@ -413,8 +431,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = spec.external_modules
-        if external_modules and "cray" in external_modules[0]:
+        if self.spec.satisfies("platform=cray"):
             spec.mpicc = spack_cc
             spec.mpicxx = spack_cxx
             spec.mpifc = spack_fc
@@ -507,7 +524,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         if "+cuda" in spec:
             config_args.append("--with-cuda={0}".format(spec["cuda"].prefix))
-        elif spec.satisfies("@:3.3,3.4.4:"):
+        elif not spec.satisfies("@3.4:3.4.3"):
             # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
             # (see https://github.com/pmodels/mpich/pull/5060):
             config_args.append("--without-cuda")
@@ -566,7 +583,7 @@ with '-Wl,-commons,use_dylibs' and without
         elif "datatype-engine=dataloop" in spec:
             config_args.append("--with-datatype-engine=dataloop")
         elif "datatype-engine=auto" in spec:
-            config_args.append("--with-datatye-engine=auto")
+            config_args.append("--with-datatype-engine=auto")
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)

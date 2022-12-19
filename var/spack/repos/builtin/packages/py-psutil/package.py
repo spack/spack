@@ -11,8 +11,10 @@ class PyPsutil(PythonPackage):
     running processes and system utilization (CPU, memory, disks, network)
     in Python."""
 
+    homepage = "https://github.com/giampaolo/psutil"
     pypi = "psutil/psutil-5.6.3.tar.gz"
 
+    version("5.9.2", sha256="feb861a10b6c3bb00701063b37e4afc754f8217f0f09c42280586bd6ac712b5c")
     version("5.8.0", sha256="0c9ccb99ab76025f2f0bbecf341d4656e9c1351db8cc8a03ccd62e318ab4b5c6")
     version("5.7.2", sha256="90990af1c3c67195c44c9a889184f84f5b2320dce3ee3acbd054e3ba0b4a7beb")
     version("5.6.3", sha256="863a85c1c0a5103a12c05a35e59d336e1d665747e531256e061213e2e90f63f3")
@@ -22,4 +24,5 @@ class PyPsutil(PythonPackage):
     version("5.0.1", sha256="9d8b7f8353a2b2eb6eb7271d42ec99d0d264a9338a37be46424d56b4e473b39e")
 
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@5.9.2:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

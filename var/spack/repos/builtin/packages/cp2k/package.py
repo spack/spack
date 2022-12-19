@@ -53,7 +53,10 @@ class Cp2k(MakefilePackage, CudaPackage):
         description=("Enable the alternative PEXSI method" "for density matrix evaluation"),
     )
     variant(
-        "elpa", default=False, description="Enable optimised diagonalisation routines from ELPA"
+        "elpa",
+        default=False,
+        description="Enable optimised diagonalisation routines from ELPA",
+        when="@8.3:",
     )
     variant(
         "sirius",
@@ -164,9 +167,6 @@ class Cp2k(MakefilePackage, CudaPackage):
         conflicts("~mpi", msg="elpa requires MPI")
         depends_on("elpa+openmp", when="+openmp")
         depends_on("elpa~openmp", when="~openmp")
-        depends_on("elpa@2011.12:2016.13", when="@:5")
-        depends_on("elpa@2011.12:2017.11", when="@6.0:6")
-        depends_on("elpa@2018.05:2020.11.001", when="@7.0:8.2")
         depends_on("elpa@2021.05:", when="@8.3:")
         depends_on("elpa@2021.11.001:", when="@9.1:")
 
@@ -761,20 +761,21 @@ class Cp2k(MakefilePackage, CudaPackage):
         In case such approach causes issues in the future, it might be necessary
         to generate and override entire libcp2k.pc.
         """
-        with open(join_path(self.prefix.lib.pkgconfig, "libcp2k.pc"), "r+") as handle:
-            content = handle.read().rstrip()
+        if self.spec.satisfies("@9.1:"):
+            with open(join_path(self.prefix.lib.pkgconfig, "libcp2k.pc"), "r+") as handle:
+                content = handle.read().rstrip()
 
-            content += " " + self.spec["blas"].libs.ld_flags
-            content += " " + self.spec["lapack"].libs.ld_flags
-            content += " " + self.spec["fftw-api"].libs.ld_flags
+                content += " " + self.spec["blas"].libs.ld_flags
+                content += " " + self.spec["lapack"].libs.ld_flags
+                content += " " + self.spec["fftw-api"].libs.ld_flags
 
-            if "^fftw+openmp" in self.spec:
-                content += " -lfftw3_omp"
+                if "^fftw+openmp" in self.spec:
+                    content += " -lfftw3_omp"
 
-            content += "\n"
+                content += "\n"
 
-            handle.seek(0)
-            handle.write(content)
+                handle.seek(0)
+                handle.write(content)
 
     def check(self):
         data_dir = join_path(self.stage.source_path, "data")

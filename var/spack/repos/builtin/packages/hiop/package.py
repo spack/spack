@@ -19,9 +19,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
-    maintainers = ["ashermancinelli", "CameronRutherford", "pelesh"]
+    maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version("0.7.1", commit="8064ef6b2249ad2feca92a9d1e90060bad3eebc7", submodules=True)
+    version("0.7.0", commit="5f42ab34b419b7cf64d0fffb29d443b009dbfd75", submodules=True)
     version("0.6.2", commit="55652fbe923ab9107d002d0d070865bd22375b28")
     version("0.6.1", commit="a9e2697b00aa13ecf0ae4783dd8a41dee11dc50e")
     version("0.6.0", commit="21af7eb0d6427be73546cf303abc84e834a5a55d")
@@ -61,8 +63,12 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         description="Ultra safety checks - " "used for increased robustness and self-diagnostics",
     )
     variant("ginkgo", default=False, description="Enable/disable ginkgo solver")
-    variant("cusolver", default=False, description="Enable/disable cuSovler")
-
+    variant(
+        "cusolver_lu",
+        default=False,
+        when="+cuda @0.7.1:",
+        description="Enable/disable cuSovler LU refactorization",
+    )
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
@@ -95,7 +101,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
     depends_on("cuda@11:", when="@develop:+cuda")
-
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
@@ -109,19 +114,18 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipsparse", when="+rocm")
 
     depends_on("suite-sparse", when="+kron")
+    depends_on("suite-sparse", when="+cusolver_lu")
 
     depends_on("coinhsl+blas", when="+sparse")
     depends_on("metis", when="+sparse")
 
-    depends_on("ginkgo@glu_experimental", when="+ginkgo")
+    depends_on("ginkgo@1.5.0.glu_experimental", when="+ginkgo")
 
     conflicts(
         "+shared",
         when="+cuda+raja",
         msg="umpire+cuda exports device code and requires static libs",
     )
-    conflicts("+cusolver", when="~cuda", msg="Cusolver requires CUDA")
-    conflicts("+cusolver", when="@:0.5", msg="Cusolver support was introduced in HiOp 0.6")
 
     flag_handler = build_system_flags
 
@@ -157,7 +161,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_COINHSL", "sparse"),
                 self.define_from_variant("HIOP_TEST_WITH_BSUB", "jsrun"),
                 self.define_from_variant("HIOP_USE_GINKGO", "ginkgo"),
-                self.define_from_variant("HIOP_USE_CUSOLVER", "cusolver"),
+                self.define_from_variant("HIOP_USE_CUSOLVER_LU", "cusolver_lu"),
             ]
         )
 

@@ -149,11 +149,9 @@ grouped by functionality.
 Package-related modules
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-:mod:`spack.package`
-  Contains the :class:`~spack.package_base.Package` class, which
-  is the superclass for all packages in Spack.  Methods on ``Package``
-  implement all phases of the :ref:`package lifecycle
-  <package-lifecycle>` and manage the build process.
+:mod:`spack.package_base`
+  Contains the :class:`~spack.package_base.PackageBase` class, which
+  is the superclass for all packages in Spack.
 
 :mod:`spack.util.naming`
   Contains functions for mapping between Spack package names,
@@ -177,14 +175,11 @@ Spec-related modules
 ^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.spec`
-  Contains :class:`~spack.spec.Spec` and :class:`~spack.spec.SpecParser`.
-  Also implements most of the logic for normalization and concretization
+  Contains :class:`~spack.spec.Spec`. Also implements most of the logic for concretization
   of specs.
 
-:mod:`spack.parse`
-  Contains some base classes for implementing simple recursive descent
-  parsers: :class:`~spack.parse.Parser` and :class:`~spack.parse.Lexer`.
-  Used by :class:`~spack.spec.SpecParser`.
+:mod:`spack.parser`
+  Contains :class:`~spack.parser.SpecParser` and functions related to parsing specs.
 
 :mod:`spack.concretize`
   Contains :class:`~spack.concretize.Concretizer` implementation,

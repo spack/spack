@@ -8,7 +8,7 @@ import sys
 from spack.package import *
 
 
-class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
+class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
     """The Ohio MicroBenchmark suite is a collection of independent MPI
     message passing performance microbenchmarks developed and written at
     The Ohio State University. It includes traditional benchmarks and
@@ -16,8 +16,15 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
     and can be used for both traditional and GPU-enhanced nodes."""
 
     homepage = "https://mvapich.cse.ohio-state.edu/benchmarks/"
-    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.6.3.tar.gz"
+    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-7.0.1.tar.gz"
 
+    maintainers = ["natshineman", "harisubramoni", "MatthewLieber"]
+
+    version("7.0.1", sha256="04954aea082ba1b90a461ffab82a3cee43fe2d5a60fed99f5cb4585ac7da8c66")
+    version("7.0", sha256="958e2faf9f3a4a244d7baac3469acee0375447decff6026c442552f0f6f08306")
+    version("6.2", sha256="bb9dbc87dcf8ec6785977a61f6fceee8febf1a682488eaab4c58cf50e4fa985f")
+    version("6.1", sha256="ecccedc868264f75db4d9529af79005419a2775113c7fae8f4e4a8434362e4a7")
+    version("6.0", sha256="309fb7583ff54562343b0e0df1eebde3fc245191e183be362f031ac74f4ab542")
     version("5.9", sha256="d619740a1c2cc7c02a9763931546b320d0fa4093c415ff3873c2958e121c0609")
     version(
         "5.7.1",
@@ -33,6 +40,11 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
     version("5.3", sha256="d7b3ad4bee48ac32f5bef39650a88f8f2c23a3050b17130c63966283edced89b")
 
     depends_on("mpi")
+    variant("papi", description="Enable/Disable support for papi", default=False)
+    variant("graphing", description="Enable/Disable support for graphing", default=False)
+    depends_on("papi", when="+papi")
+    depends_on("gnuplot", when="+graphing")
+    depends_on("imagemagick", when="+graphing")
 
     def configure_args(self):
         spec = self.spec
@@ -43,6 +55,22 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
             cuda_arch = spec.variants["cuda_arch"].value
             if "none" not in cuda_arch:
                 config_args.append("NVCCFLAGS=" + " ".join(self.cuda_flags(cuda_arch)))
+
+        if "+rocm" in spec:
+            config_args.extend(["--enable-rocm", "--with-rocm=%s" % spec["hip"].prefix])
+            rocm_arch = spec.variants["amdgpu_target"].value
+            if "none" not in rocm_arch:
+                config_args.append("HCC_AMDGPU_TARGET=" + " ".join(self.hip_flags(rocm_arch)))
+
+        if "+papi" in spec:
+            config_args.extend(["--enable-papi", "--with-papi=%s" % spec["papi"].prefix])
+        if "+graphing" in spec:
+            config_args.extend(
+                [
+                    "--with-convert=%s/bin" % spec["imagemagick"].prefix,
+                    "--with-gnuplot=%s/bin" % spec["gnuplot"].prefix,
+                ]
+            )
 
         # librt not available on darwin (and not required)
         if not sys.platform == "darwin":

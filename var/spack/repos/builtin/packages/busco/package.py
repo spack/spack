@@ -13,7 +13,9 @@ class Busco(PythonPackage):
     homepage = "https://busco.ezlab.org/"
     url = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
     git = "https://gitlab.com/ezlab/busco.git"
+    maintainers = ["snehring"]
 
+    version("5.4.3", sha256="8b92dcc32691f7c1629aaaa7bd54f96073273ba7de5a3a8586fe552c51a9d36a")
     version("4.1.3", sha256="08ded26aeb4f6aef791cd88524c3c00792a054c7672ea05219f468d495e7b072")
 
     # TODO: check the installation procedure for version 3.0.2
@@ -31,20 +33,25 @@ class Busco(PythonPackage):
     depends_on("blast-plus")
     depends_on("hmmer")
     depends_on("augustus")
-    depends_on("py-biopython", when="@4.1.3", type=("build", "run"))
+    depends_on("py-biopython", when="@4.1.3:", type=("build", "run"))
+    depends_on("py-pandas", when="@5:", type="run")
+    depends_on("bbmap", when="@5:", type="run")
+    depends_on("prodigal", when="@5:", type="run")
+    depends_on("metaeuk", when="@5:", type="run")
+    depends_on("sepp", when="@5:", type="run")
 
     def install(self, spec, prefix):
-        if self.spec.satisfies("@4.1.3"):
+        if self.spec.satisfies("@4.1.3:"):
             install_tree("bin", prefix.bin)
             install_tree("config", prefix.config)
-            super(self, PythonPackage).install(spec, prefix)
+            super(Busco, self).install(spec, prefix)
         if self.spec.satisfies("@3.0.1"):
             with working_dir("scripts"):
                 mkdirp(prefix.bin)
                 install("generate_plot.py", prefix.bin)
                 install("run_BUSCO.py", prefix.bin)
             install_tree("config", prefix.config)
-            super(self, PythonPackage).install(spec, prefix)
+            super(Busco, self).install(spec, prefix)
         if self.spec.satisfies("@2.0.1"):
             mkdirp(prefix.bin)
             install("BUSCO.py", prefix.bin)

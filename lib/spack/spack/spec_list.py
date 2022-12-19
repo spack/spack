@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 
-from six import string_types
-
 import spack.variant
 from spack.error import SpackError
 from spack.spec import Spec
@@ -21,7 +19,7 @@ class SpecList(object):
         self._reference = reference  # TODO: Do we need defensive copy here?
 
         # Validate yaml_list before assigning
-        if not all(isinstance(s, string_types) or isinstance(s, (list, dict)) for s in yaml_list):
+        if not all(isinstance(s, str) or isinstance(s, (list, dict)) for s in yaml_list):
             raise ValueError(
                 "yaml_list can contain only valid YAML types!  Found:\n  %s"
                 % [type(s) for s in yaml_list]
@@ -33,6 +31,13 @@ class SpecList(object):
         self._expanded_list = None
         self._constraints = None
         self._specs = None
+
+    @property
+    def is_matrix(self):
+        for item in self.specs_as_yaml_list:
+            if isinstance(item, dict):
+                return True
+        return False
 
     @property
     def specs_as_yaml_list(self):
@@ -84,7 +89,7 @@ class SpecList(object):
         remove = [
             s
             for s in self.yaml_list
-            if (isinstance(s, string_types) and not s.startswith("$")) and Spec(s) == Spec(spec)
+            if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
         ]
         if not remove:
             msg = "Cannot remove %s from SpecList %s\n" % (spec, self.name)
@@ -138,7 +143,7 @@ class SpecList(object):
 
             for item in yaml:
                 # if it's a reference, expand it
-                if isinstance(item, string_types) and item.startswith("$"):
+                if isinstance(item, str) and item.startswith("$"):
                     # replace the reference and apply the sigil if needed
                     name, sigil = self._parse_reference(item)
                     referent = [

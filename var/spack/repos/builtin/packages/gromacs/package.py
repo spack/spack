@@ -9,16 +9,15 @@ from spack.package import *
 
 
 class Gromacs(CMakePackage):
-    """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
-    dynamics package primarily designed for simulations of proteins, lipids
-    and nucleic acids. It was originally developed in the Biophysical
-    Chemistry department of University of Groningen, and is now maintained
-    by contributors in universities and research centers across the world.
+    """GROMACS is a molecular dynamics package primarily designed for simulations
+    of proteins, lipids and nucleic acids. It was originally developed in
+    the Biophysical Chemistry department of University of Groningen, and is now
+    maintained by contributors in universities and research centers across the world.
 
     GROMACS is one of the fastest and most popular software packages
     available and can run on CPUs as well as GPUs. It is free, open source
-    released under the GNU General Public License. Starting from version 4.6,
-    GROMACS is released under the GNU Lesser General Public License.
+    released under the GNU Lesser General Public License. Before the version 4.6,
+    GROMACS was released under the GNU General Public License.
     """
 
     homepage = "https://www.gromacs.org"
@@ -29,6 +28,7 @@ class Gromacs(CMakePackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
     version("2022.2", sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf")
     version("2022.1", sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450")
     version("2022", sha256="fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68")
@@ -142,7 +142,9 @@ class Gromacs(CMakePackage):
 
     depends_on("mpi", when="+mpi")
 
+    # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
     # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs 2021.5, 2020.6, 2019.6
     # Plumed 2.7.4 needs Gromacs 2021.4, 2020.6, 2019.6
     # Plumed 2.7.3 needs Gromacs 2021.4, 2020.6, 2019.6
     # Plumed 2.7.2 needs Gromacs 2021,   2020.6, 2019.6
@@ -170,6 +172,14 @@ class Gromacs(CMakePackage):
 
     depends_on("plumed+mpi", when="+plumed+mpi")
     depends_on("plumed~mpi", when="+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2022.3+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2022.3+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2021.6+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2021.6+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2020.7+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2020.7+plumed~mpi")
+    depends_on("plumed@2.7.5+mpi", when="@2021.5+plumed+mpi")
+    depends_on("plumed@2.7.5~mpi", when="@2021.5+plumed~mpi")
     depends_on("plumed@2.7.3:2.8.0+mpi", when="@2021.4+plumed+mpi")
     depends_on("plumed@2.7.3:2.8.0~mpi", when="@2021.4+plumed~mpi")
     depends_on("plumed@2.7.1:2.7.2+mpi", when="@2021+plumed+mpi")
@@ -182,8 +192,8 @@ class Gromacs(CMakePackage):
     depends_on("plumed@2.6.2:2.7.0~mpi", when="@2020.4+plumed~mpi")
     depends_on("plumed@2.6.1+mpi", when="@2020.2+plumed+mpi")
     depends_on("plumed@2.6.1~mpi", when="@2020.2+plumed~mpi")
-    depends_on("plumed@2.6.1:2.8.0+mpi", when="@2019.6+plumed+mpi")
-    depends_on("plumed@2.6.1:2.8.0~mpi", when="@2019.6+plumed~mpi")
+    depends_on("plumed@2.6.1:2.8.1+mpi", when="@2019.6+plumed+mpi")
+    depends_on("plumed@2.6.1:2.8.1~mpi", when="@2019.6+plumed~mpi")
     depends_on("plumed@2.5.3:2.6.0+mpi", when="@2019.4+plumed+mpi")
     depends_on("plumed@2.5.3:2.6.0~mpi", when="@2019.4+plumed~mpi")
     depends_on("plumed@2.5.2+mpi", when="@2019.2+plumed+mpi")
@@ -203,8 +213,9 @@ class Gromacs(CMakePackage):
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
     depends_on("cmake@3.9.6:3", type="build", when="@2020")
-    depends_on("cmake@3.13.0:3", type="build", when="@2021:")
-    depends_on("cmake@3.16.0:3", type="build", when="@master")
+    depends_on("cmake@3.13.0:3", type="build", when="@2021")
+    depends_on("cmake@3.16.3:3", type="build", when="@2022:")
+    depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
@@ -368,14 +379,13 @@ class Gromacs(CMakePackage):
         else:
             if "+cuda" in self.spec or "+opencl" in self.spec:
                 options.append("-DGMX_GPU:BOOL=ON")
+                if "+opencl" in self.spec:
+                    options.append("-DGMX_USE_OPENCL=ON")
             else:
                 options.append("-DGMX_GPU:BOOL=OFF")
 
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
-
-        if "+opencl" in self.spec:
-            options.append("-DGMX_USE_OPENCL=on")
 
         if "+lapack" in self.spec:
             options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
@@ -489,6 +499,18 @@ class Gromacs(CMakePackage):
                 options.append(
                     "-DFFTWF_LIBRARIES={0}".format(self.spec["amdfftw"].libs.joined(";"))
                 )
+            elif "^armpl-gcc" in self.spec:
+                options.append(
+                    "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["armpl-gcc"].headers.directories[0])
+                )
+                options.append(
+                    "-DFFTWF_LIBRARY={0}".format(self.spec["armpl-gcc"].libs.joined(";"))
+                )
+            elif "^acfl" in self.spec:
+                options.append(
+                    "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["acfl"].headers.directories[0])
+                )
+                options.append("-DFFTWF_LIBRARY={0}".format(self.spec["acfl"].libs.joined(";")))
 
         # Ensure that the GROMACS log files report how the code was patched
         # during the build, so that any problems are easier to diagnose.

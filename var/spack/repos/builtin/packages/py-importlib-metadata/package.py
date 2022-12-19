@@ -11,7 +11,9 @@ class PyImportlibMetadata(PythonPackage):
 
     homepage = "https://importlib-metadata.readthedocs.io/"
     pypi = "importlib_metadata/importlib_metadata-1.2.0.tar.gz"
+    git = "https://github.com/python/importlib_metadata"
 
+    version("4.12.0", sha256="637245b8bab2b6502fcbc752cc4b7a6f6243bb02b31c5c26156ad103d3d45670")
     version("4.11.1", sha256="175f4ee440a0317f6e8d81b7f8d4869f93316170a65ad2b007d2929186c8052c")
     version("4.8.2", sha256="75bdec14c397f528724c1bfd9709d660b33a4d2e77387a3358f20b848bb5e5fb")
     version("4.8.1", sha256="f284b3e11256ad1e5d03ab86bb2ccd6f5339688ff17a4d797a0fe7df326f23b1")
@@ -32,9 +34,6 @@ class PyImportlibMetadata(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm@3.4.1:+toml", when="@3:", type="build")
     depends_on("py-setuptools-scm", type="build")
+
     depends_on("py-zipp@0.5:", type=("build", "run"))
     depends_on("py-typing-extensions@3.6.4:", when="@3: ^python@:3.7", type=("build", "run"))
-
-    depends_on("py-pathlib2", when="^python@:2", type=("build", "run"))
-    depends_on("py-contextlib2", when="^python@:2", type=("build", "run"))
-    depends_on("py-configparser@3.5:", when="^python@:2", type=("build", "run"))

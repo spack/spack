@@ -18,19 +18,38 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
     libraries = ["librocalution_hip"]
 
+    version("5.3.0", sha256="f623449789a5c9c9137ae51d4dbbee5c6940d8813826629cb4b7e84f07fab494")
+    version("5.2.3", sha256="8e0d77099bf7dc0d00505e1c936b072a59719102c75398dc1416cbef31902253")
+    version("5.2.1", sha256="f246bd5b5d1b5821c29b566610a1c1d5c5cc361e0e5c373b8b04168b05e9b26f")
     version("5.2.0", sha256="a5aac471bbec87d019ad7c6db779c73327ad40ecdea09dc5ab2106e62cd6b7eb")
     version("5.1.3", sha256="7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7")
     version("5.1.0", sha256="d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e")
-    version("5.0.2", sha256="b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2")
-    version("5.0.0", sha256="df9e7eacb8cc1bd5c7c4071b20356a885ee8ae13e6ab5afdabf88a272ab32c7e")
-    version("4.5.2", sha256="8be38922320cd9d4fc465a30f0322843849f62c0c7dad2bdbe52290a1b69d2a0")
-    version("4.5.0", sha256="191629fef002fd1a0793a6b4fe5a6b8c43ac49d3cd173ba64a91359f54659e5b")
+    version(
+        "5.0.2",
+        sha256="b01adaf858b9c3683523b087a55fafb655864f5db8e2a1acdbf588f53d6972e2",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="df9e7eacb8cc1bd5c7c4071b20356a885ee8ae13e6ab5afdabf88a272ab32c7e",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="8be38922320cd9d4fc465a30f0322843849f62c0c7dad2bdbe52290a1b69d2a0",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="191629fef002fd1a0793a6b4fe5a6b8c43ac49d3cd173ba64a91359f54659e5b",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="d3a7b9290f99bdc7382d1d5259c3f5e0e66a43aef4d05b7c2cd78b0e4a5c59bc",
@@ -111,6 +130,9 @@ class Rocalution(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -141,6 +163,9 @@ class Rocalution(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         for tgt in itertools.chain(["auto"], amdgpu_targets):
             depends_on(
@@ -151,7 +176,9 @@ class Rocalution(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     # This fix is added to address the compilation failure and it is
     # already taken in 5.2.3 rocm release.
-    patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2.0:")
+    patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2")
+    # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
+    patch("0004-fix-navi-1x.patch", when="@5.2.0:")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocalution-test")
@@ -200,5 +227,8 @@ class Rocalution(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args

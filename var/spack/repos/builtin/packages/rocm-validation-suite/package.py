@@ -16,18 +16,37 @@ class RocmValidationSuite(CMakePackage):
     compatible platform."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.3.0", sha256="d6afb8a5f4eaf860fd510bcfe65e735cbf96d4b8817c758ea7aee84d4c994382")
+    version("5.2.3", sha256="5dfbd41c694bf2eb4368edad8653dc60ec2927d174fc7aaa5fa416156c5f921f")
+    version("5.2.1", sha256="a0ea3ab9cbb8ac17bfa4537713a4d7075f869949bfdead4565a46f75864bd4a9")
     version("5.2.0", sha256="2dfef5d66f544230957ac9aaf647b2f1dccf3cc7592cc322cae9fbdcf3321365")
     version("5.1.3", sha256="0140a4128c31749c078d9e1dc863cbbd690efc65843c34a4b80f0056e5b8c7b6")
     version("5.1.0", sha256="d9b9771b885bd94e5d0352290d3fe0fa12f94ce3f384c3844002cd7614880010")
-    version("5.0.2", sha256="f249fe700a5a96c6dabf12130a3e366ae6025fe1442a5d11d08801d6c0265af4")
-    version("5.0.0", sha256="d4ad31db0377096117714c9f4648cb37d6808ce618cd0bb5e4cc89cc9b4e37fd")
-    version("4.5.2", sha256="e2a128395367a60a17d4d0f62daee7d34358c75332ed582243b18da409589ab8")
-    version("4.5.0", sha256="54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5")
+    version(
+        "5.0.2",
+        sha256="f249fe700a5a96c6dabf12130a3e366ae6025fe1442a5d11d08801d6c0265af4",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="d4ad31db0377096117714c9f4648cb37d6808ce618cd0bb5e4cc89cc9b4e37fd",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="e2a128395367a60a17d4d0f62daee7d34358c75332ed582243b18da409589ab8",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69",
@@ -90,8 +109,12 @@ class RocmValidationSuite(CMakePackage):
     patch("002-remove-force-setting-hip-inc-path.patch", when="@4.1.0:4.3.2")
     patch("003-cmake-change-to-remove-installs-and-sudo.patch", when="@4.1.0:4.3.2")
     patch("004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch", when="@4.3.0:4.3.2")
-    patch("005-cleanup-path-reference-donot-download-googletest-yaml.patch", when="@4.5.0:")
-    patch("006-library-path.patch", when="@4.5.0:")
+    patch("005-cleanup-path-reference-donot-download-googletest-yaml.patch", when="@4.5.0:5.2")
+    patch("006-library-path.patch", when="@4.5.0:5.2")
+    patch(
+        "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.3.patch",
+        when="@5.3.0:",
+    )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib", type="link")
@@ -121,6 +144,9 @@ class RocmValidationSuite(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)
@@ -142,9 +168,13 @@ class RocmValidationSuite(CMakePackage):
         depends_on("hip-rocclr@" + ver, when="@" + ver)
 
     def patch(self):
-        if "@4.5.0:" in self.spec:
+        if "@4.5.0:5.1" in self.spec:
             filter_file(
                 "@ROCM_PATH@/rvs", self.spec.prefix.rvs, "rvs/conf/deviceid.sh.in", string=True
+            )
+        elif "@5.2.0:" in self.spec:
+            filter_file(
+                "@ROCM_PATH@/bin", self.spec.prefix.bin, "rvs/conf/deviceid.sh.in", string=True
             )
 
     def cmake_args(self):

@@ -9,8 +9,9 @@ import os
 import platform
 import re
 import shutil
+import sys
 import tempfile
-from typing import List, Sequence  # novm
+from typing import List, Optional, Sequence
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -26,6 +27,8 @@ from spack.util.environment import filter_system_paths
 from spack.util.path import system_path_filter
 
 __all__ = ["Compiler"]
+
+is_windows = sys.platform == "win32"
 
 
 @llnl.util.lang.memoized
@@ -56,25 +59,25 @@ def get_compiler_version_output(compiler_path, *args, **kwargs):
     return _get_compiler_version_output(compiler_path, *args, **kwargs)
 
 
-def tokenize_flags(flags_str):
+def tokenize_flags(flags_values, propagate=False):
     """Given a compiler flag specification as a string, this returns a list
     where the entries are the flags. For compiler options which set values
     using the syntax "-flag value", this function groups flags and their
     values together. Any token not preceded by a "-" is considered the
     value of a prior flag."""
-    tokens = flags_str.split()
+    tokens = flags_values.split()
     if not tokens:
         return []
     flag = tokens[0]
-    flags = []
+    flags_with_propagation = []
     for token in tokens[1:]:
         if not token.startswith("-"):
             flag += " " + token
         else:
-            flags.append(flag)
+            flags_with_propagation.append((flag, propagate))
             flag = token
-    flags.append(flag)
-    return flags
+    flags_with_propagation.append((flag, propagate))
+    return flags_with_propagation
 
 
 #: regex for parsing linker lines
@@ -195,20 +198,20 @@ class Compiler(object):
     and how to identify the particular type of compiler."""
 
     # Subclasses use possible names of C compiler
-    cc_names = []  # type: List[str]
+    cc_names: List[str] = []
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = []  # type: List[str]
+    cxx_names: List[str] = []
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []  # type: List[str]
+    f77_names: List[str] = []
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []  # type: List[str]
+    fc_names: List[str] = []
 
     # Optional prefix regexes for searching for this type of compiler.
     # Prefixes are sometimes used for toolchains
-    prefixes = []  # type: List[str]
+    prefixes: List[str] = []
 
     # Optional suffix regexes for searching for this type of compiler.
     # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
@@ -219,7 +222,7 @@ class Compiler(object):
     version_argument = "-dumpversion"
 
     #: Return values to ignore when invoking the compiler to get its version
-    ignore_version_errors = ()  # type: Sequence[int]
+    ignore_version_errors: Sequence[int] = ()
 
     #: Regex used to extract version from compiler's output
     version_regex = "(.*)"
@@ -271,9 +274,9 @@ class Compiler(object):
         return ["-O", "-O0", "-O1", "-O2", "-O3"]
 
     # Cray PrgEnv name that can be used to load this compiler
-    PrgEnv = None  # type: str
+    PrgEnv: Optional[str] = None
     # Name of module used to switch versions of this compiler
-    PrgEnv_compiler = None  # type: str
+    PrgEnv_compiler: Optional[str] = None
 
     def __init__(
         self,
@@ -286,7 +289,7 @@ class Compiler(object):
         environment=None,
         extra_rpaths=None,
         enable_implicit_rpaths=None,
-        **kwargs
+        **kwargs,
     ):
         self.spec = cspec
         self.operating_system = str(operating_system)
@@ -311,11 +314,13 @@ class Compiler(object):
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
         # in compilers/__init__.py
-        self.flags = {}
-        for flag in spack.spec.FlagMap.valid_compiler_flags():
+        self.flags = spack.spec.FlagMap(self.spec)
+        for flag in self.flags.valid_compiler_flags():
             value = kwargs.get(flag, None)
             if value is not None:
-                self.flags[flag] = tokenize_flags(value)
+                values_with_propagation = tokenize_flags(value, False)
+                for value, propagation in values_with_propagation:
+                    self.flags.add_flag(flag, value, propagation)
 
         # caching value for compiler reported version
         # used for version checks for API, e.g. C++11 flag
@@ -537,6 +542,14 @@ class Compiler(object):
             )
             return self.extract_version_from_output(output)
 
+    @property
+    def prefix(self):
+        """Query the compiler for its install prefix. This is the install
+        path as reported by the compiler. Note that paths for cc, cxx, etc
+        are not enough to find the install prefix of the compiler, since
+        the can be symlinks, wrappers, or filenames instead of absolute paths."""
+        raise NotImplementedError("prefix is not implemented for this compiler")
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.
@@ -582,7 +595,16 @@ class Compiler(object):
         # defined for the compiler
         compiler_names = getattr(cls, "{0}_names".format(language))
         prefixes = [""] + cls.prefixes
-        suffixes = [""] + cls.suffixes
+        suffixes = [""]
+        # Windows compilers generally have an extension of some sort
+        # as do most files on Windows, handle that case here
+        if is_windows:
+            ext = r"\.(?:exe|bat)"
+            cls_suf = [suf + ext for suf in cls.suffixes]
+            ext_suf = [ext]
+            suffixes = suffixes + cls.suffixes + cls_suf + ext_suf
+        else:
+            suffixes = suffixes + cls.suffixes
         regexp_fmt = r"^({0}){1}({2})$"
         return [
             re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))

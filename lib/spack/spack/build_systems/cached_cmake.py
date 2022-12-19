@@ -3,12 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+from typing import Tuple
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.filesystem import install, mkdirp
 
-from spack.build_systems.cmake import CMakePackage
-from spack.package_base import run_after
+import spack.builder
+
+from .cmake import CMakeBuilder, CMakePackage
 
 
 def cmake_cache_path(name, value, comment=""):
@@ -28,44 +30,50 @@ def cmake_cache_option(name, boolean_value, comment=""):
     return 'set({0} {1} CACHE BOOL "{2}")\n'.format(name, value, comment)
 
 
-class CachedCMakePackage(CMakePackage):
-    """Specialized class for packages built using CMake initial cache.
+class CachedCMakeBuilder(CMakeBuilder):
 
-    This feature of CMake allows packages to increase reproducibility,
-    especially between Spack- and manual builds. It also allows packages to
-    sidestep certain parsing bugs in extremely long ``cmake`` commands, and to
-    avoid system limits on the length of the command line."""
+    #: Phases of a Cached CMake package
+    #: Note: the initconfig phase is used for developer builds as a final phase to stop on
+    phases: Tuple[str, ...] = ("initconfig", "cmake", "build", "install")
 
-    phases = ["initconfig", "cmake", "build", "install"]
+    #: Names associated with package methods in the old build-system format
+    legacy_methods: Tuple[str, ...] = CMakeBuilder.legacy_methods + (
+        "initconfig_compiler_entries",
+        "initconfig_mpi_entries",
+        "initconfig_hardware_entries",
+        "std_initconfig_entries",
+        "initconfig_package_entries",
+    )
+
+    #: Names associated with package attributes in the old build-system format
+    legacy_attributes: Tuple[str, ...] = CMakeBuilder.legacy_attributes + (
+        "cache_name",
+        "cache_path",
+    )
 
     @property
     def cache_name(self):
         return "{0}-{1}-{2}@{3}.cmake".format(
-            self.name,
-            self.spec.architecture,
-            self.spec.compiler.name,
-            self.spec.compiler.version,
+            self.pkg.name,
+            self.pkg.spec.architecture,
+            self.pkg.spec.compiler.name,
+            self.pkg.spec.compiler.version,
         )
 
     @property
     def cache_path(self):
-        return os.path.join(self.stage.source_path, self.cache_name)
-
-    def flag_handler(self, name, flags):
-        if name in ("cflags", "cxxflags", "cppflags", "fflags"):
-            return (None, None, None)  # handled in the cmake cache
-        return (flags, None, None)
+        return os.path.join(self.pkg.stage.source_path, self.cache_name)
 
     def initconfig_compiler_entries(self):
         # This will tell cmake to use the Spack compiler wrappers when run
         # through Spack, but use the underlying compiler when run outside of
         # Spack
-        spec = self.spec
+        spec = self.pkg.spec
 
         # Fortran compiler is optional
         if "FC" in os.environ:
             spack_fc_entry = cmake_cache_path("CMAKE_Fortran_COMPILER", os.environ["FC"])
-            system_fc_entry = cmake_cache_path("CMAKE_Fortran_COMPILER", self.compiler.fc)
+            system_fc_entry = cmake_cache_path("CMAKE_Fortran_COMPILER", self.pkg.compiler.fc)
         else:
             spack_fc_entry = "# No Fortran compiler defined in spec"
             system_fc_entry = "# No Fortran compiler defined in spec"
@@ -81,8 +89,8 @@ class CachedCMakePackage(CMakePackage):
             "  " + cmake_cache_path("CMAKE_CXX_COMPILER", os.environ["CXX"]),
             "  " + spack_fc_entry,
             "else()\n",
-            "  " + cmake_cache_path("CMAKE_C_COMPILER", self.compiler.cc),
-            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", self.compiler.cxx),
+            "  " + cmake_cache_path("CMAKE_C_COMPILER", self.pkg.compiler.cc),
+            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", self.pkg.compiler.cxx),
             "  " + system_fc_entry,
             "endif()\n",
         ]
@@ -126,7 +134,7 @@ class CachedCMakePackage(CMakePackage):
         return entries
 
     def initconfig_mpi_entries(self):
-        spec = self.spec
+        spec = self.pkg.spec
 
         if not spec.satisfies("^mpi"):
             return []
@@ -160,13 +168,13 @@ class CachedCMakePackage(CMakePackage):
                 mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpiexec")
 
         if not os.path.exists(mpiexec):
-            msg = "Unable to determine MPIEXEC, %s tests may fail" % self.name
+            msg = "Unable to determine MPIEXEC, %s tests may fail" % self.pkg.name
             entries.append("# {0}\n".format(msg))
             tty.warn(msg)
         else:
             # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
             # vs the older versions which expect MPIEXEC
-            if self.spec["cmake"].satisfies("@3.10:"):
+            if self.pkg.spec["cmake"].satisfies("@3.10:"):
                 entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE", mpiexec))
             else:
                 entries.append(cmake_cache_path("MPIEXEC", mpiexec))
@@ -180,7 +188,7 @@ class CachedCMakePackage(CMakePackage):
         return entries
 
     def initconfig_hardware_entries(self):
-        spec = self.spec
+        spec = self.pkg.spec
 
         entries = [
             "#------------------{0}".format("-" * 60),
@@ -197,13 +205,7 @@ class CachedCMakePackage(CMakePackage):
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
             cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
             entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", cudacompiler))
-
-            if spec.satisfies("^mpi"):
-                entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${MPI_CXX_COMPILER}"))
-            else:
-                entries.append(
-                    cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}")
-                )
+            entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}"))
 
         return entries
 
@@ -212,7 +214,7 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
             "#------------------{0}".format("-" * 60),
-            "# CMake executable path: {0}".format(self.spec["cmake"].command.path),
+            "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
         ]
 
@@ -220,7 +222,7 @@ class CachedCMakePackage(CMakePackage):
         """This method is to be overwritten by the package"""
         return []
 
-    def initconfig(self, spec, prefix):
+    def initconfig(self, pkg, spec, prefix):
         cache_entries = (
             self.std_initconfig_entries()
             + self.initconfig_compiler_entries()
@@ -236,11 +238,28 @@ class CachedCMakePackage(CMakePackage):
 
     @property
     def std_cmake_args(self):
-        args = super(CachedCMakePackage, self).std_cmake_args
+        args = super(CachedCMakeBuilder, self).std_cmake_args
         args.extend(["-C", self.cache_path])
         return args
 
-    @run_after("install")
+    @spack.builder.run_after("install")
     def install_cmake_cache(self):
-        mkdirp(self.spec.prefix.share.cmake)
-        install(self.cache_path, self.spec.prefix.share.cmake)
+        fs.mkdirp(self.pkg.spec.prefix.share.cmake)
+        fs.install(self.cache_path, self.pkg.spec.prefix.share.cmake)
+
+
+class CachedCMakePackage(CMakePackage):
+    """Specialized class for packages built using CMake initial cache.
+
+    This feature of CMake allows packages to increase reproducibility,
+    especially between Spack- and manual builds. It also allows packages to
+    sidestep certain parsing bugs in extremely long ``cmake`` commands, and to
+    avoid system limits on the length of the command line.
+    """
+
+    CMakeBuilder = CachedCMakeBuilder
+
+    def flag_handler(self, name, flags):
+        if name in ("cflags", "cxxflags", "cppflags", "fflags"):
+            return None, None, None  # handled in the cmake cache
+        return flags, None, None

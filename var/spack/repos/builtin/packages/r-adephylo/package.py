@@ -14,6 +14,7 @@ class RAdephylo(RPackage):
 
     cran = "adephylo"
 
+    version("1.1-13", sha256="2aa132fee9d0a14ac09b0a96af40ac332cb4e13c892908803c335aa7319ca76d")
     version("1.1-11", sha256="154bf2645eac4493b85877933b9445442524ca4891aefe4e80c294c398cff61a")
 
     depends_on("r-ade4@1.7-10:", type=("build", "run"))

@@ -37,6 +37,9 @@ class PyMatplotlib(PythonPackage):
         "pylab",
     ]
 
+    version("3.6.2", sha256="b03fd10a1709d0101c054883b550f7c4c5e974f751e2680318759af005964990")
+    version("3.6.1", sha256="e2d1b7225666f7e1bcc94c0bc9c587a82e3e8691da4757e357e5c2515222ee37")
+    version("3.6.0", sha256="c5108ebe67da60a9204497d8d403316228deb52b550388190c53a57394d41531")
     version("3.5.3", sha256="339cac48b80ddbc8bfd05daae0a3a73414651a8596904c2a881cfd1edb65f26c")
     version("3.5.2", sha256="48cf850ce14fa18067f2d9e0d646763681948487a8080ec0af2686468b4607a2")
     version("3.5.1", sha256="b2e9810e09c3a47b73ce9cab5a72243a1258f61e7900969097a817232246ce1c")
@@ -69,22 +72,43 @@ class PyMatplotlib(PythonPackage):
     # https://matplotlib.org/tutorials/introductory/usage.html#backends
     # From `lib/matplotlib/rcsetup.py`:
     interactive_bk = [
+        # GTK
+        conditional("gtk", when="@:2"),
+        conditional("gtkagg", when="@:2"),
+        conditional("gtkcairo", when="@:2"),
         "gtk3agg",
         "gtk3cairo",
-        "macosx",
-        "nbagg",
-        "qt4agg",
-        "qt4cairo",
+        conditional("gtk4agg", when="@3.5:"),
+        conditional("gtk4cairo", when="@3.5:"),
+        # Qt
+        conditional("qtagg", when="@3.5:"),
+        conditional("qtcairo", when="@3.5:"),
+        conditional("qt4agg", when="@:3.4"),
+        conditional("qt4cairo", when="@2.2:3.4"),
         "qt5agg",
-        "qt5cairo",
+        conditional("qt5cairo", when="@2.2:"),
+        # Tk
         "tkagg",
         "tkcairo",
-        "webagg",
+        # Wx
         "wx",
         "wxagg",
-        "wxcairo",
+        conditional("wxcairo", when="@2.2:"),
+        # Other
+        "macosx",
+        "nbagg",
+        "webagg",
     ]
-    non_interactive_bk = ["agg", "cairo", "pdf", "pgf", "ps", "svg", "template"]
+    non_interactive_bk = [
+        "agg",
+        "cairo",
+        conditional("gdk", when="@:2"),
+        "pdf",
+        "pgf",
+        "ps",
+        "svg",
+        "template",
+    ]
     all_backends = interactive_bk + non_interactive_bk
 
     default_backend = "agg"
@@ -101,91 +125,119 @@ class PyMatplotlib(PythonPackage):
     )
     variant("movies", default=False, description="Enable support for saving movies")
     variant("animation", default=False, description="Enable animation support")
-    variant("image", default=True, description="Enable reading/saving JPEG, BMP and TIFF files")
+    variant(
+        "image",
+        default=True,
+        when="@:3.2",
+        description="Enable reading/saving JPEG, BMP and TIFF files",
+    )
     variant("latex", default=False, description="Enable LaTeX text rendering support")
     variant("fonts", default=False, description="Enable support for system font detection")
 
     # https://matplotlib.org/stable/devel/dependencies.html
-    # Required dependencies
+    # Runtime dependencies
+    # Mandatory dependencies
     extends("python", ignore=r"bin/nosetests.*$|bin/pbr$")
-    depends_on("python@2.7:2.8,3.4:", when="@:2", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@3:", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@3.1:", type=("build", "link", "run"))
+    depends_on("python@3.8:", when="@3.6:", type=("build", "link", "run"))
     depends_on("python@3.7:", when="@3.4:", type=("build", "link", "run"))
-    depends_on("freetype@2.3:")  # freetype 2.6.1 needed for tests to pass
-    depends_on("qhull@2020.2:", when="@3.4:")
-    # starting from qhull 2020.2 libqhull.so on which py-matplotlib@3.3 versions
-    # rely on does not exist anymore, only libqhull_r.so
-    depends_on("qhull@2015.2:2020.1", when="@3.3.0:3.3")
-    depends_on("libpng@1.2:")
-    depends_on("py-setuptools", type=("build", "run"))  # See #3813
-    depends_on("py-certifi@2020.6.20:", when="@3.3.1:", type="build")
-    depends_on("py-setuptools-scm@4:6", when="@3.5:", type="build")
-    depends_on("py-setuptools-scm-git-archive", when="@3.5:", type="build")
+    depends_on("python@3.6:", when="@3.1:", type=("build", "link", "run"))
+    depends_on("python@3.5:", when="@3:", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@:2", type=("build", "link", "run"))
+    depends_on("py-contourpy@1.0.1:", when="@3.6:", type=("build", "run"))
     depends_on("py-cycler@0.10:", type=("build", "run"))
     depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
     depends_on("py-kiwisolver@1.0.1:", type=("build", "run"), when="@2.2.0:")
-    depends_on("py-numpy@1.11:", type=("build", "run"))
-    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "run"))
-    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "run"))
+    depends_on("py-numpy@1.19:", when="@3.6:", type=("build", "run"))
     depends_on("py-numpy@1.17:", when="@3.5:", type=("build", "run"))
+    depends_on("py-numpy@1.16:", when="@3.4:", type=("build", "run"))
+    depends_on("py-numpy@1.15:", when="@3.3:", type=("build", "run"))
+    depends_on("py-numpy@1.11:", type=("build", "run"))
+    depends_on("py-packaging@20:", when="@3.6:", type=("build", "run"))
     depends_on("py-packaging", when="@3.5:", type=("build", "run"))
     depends_on("pil@6.2:", when="@3.3:", type=("build", "run"))
-    depends_on("py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:", type=("build", "run"))
     depends_on("py-pyparsing@2.2.1:", when="@3.4:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.1:", type=("build", "run"))
+    depends_on("py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:", type=("build", "run"))
     depends_on("py-python-dateutil@2.7:", when="@3.4:", type=("build", "run"))
+    depends_on("py-python-dateutil@2.1:", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))
+
+    # Historical dependencies
     depends_on("py-pytz", type=("build", "run"), when="@:2")
-    depends_on("py-subprocess32", type=("build", "run"), when="^python@:2.7")
-    depends_on("py-functools32", type=("build", "run"), when="@:2.0 ^python@:2.7")
-    depends_on(
-        "py-backports-functools-lru-cache", type=("build", "run"), when="@2.1.0:2 ^python@:2"
-    )
-    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2.0:2")
+    depends_on("py-six@1.10.0:", type=("build", "run"), when="@2")
     depends_on("py-six@1.9.0:", type=("build", "run"), when="@:1")
 
-    # Optional backend dependencies
-    depends_on("tk@8.3:8.5,8.6.2:", when="backend=tkagg", type="run")
-    depends_on("tk@8.3:8.5,8.6.2:", when="backend=tkcairo", type="run")
-    depends_on("python+tkinter", when="backend=tkagg", type="run")
-    depends_on("python+tkinter", when="backend=tkcairo", type="run")
-    depends_on("py-pyqt4@4.6:", when="backend=qt4agg", type="run")  # or py-pyside@1.0.3:
-    depends_on("py-pyqt4@4.6:", when="backend=qt4cairo", type="run")  # or py-pyside@1.0.3:
-    depends_on("py-pyqt5", when="backend=qt5agg", type="run")
-    depends_on("py-pyqt5", when="backend=qt5cairo", type="run")
-    depends_on("py-pygobject", when="backend=gtk3agg", type="run")
-    depends_on("py-pygobject", when="backend=gtk3cairo", type="run")
-    depends_on("py-wxpython@4:", when="backend=wx", type="run")
-    depends_on("py-wxpython@4:", when="backend=wxagg", type="run")
-    depends_on("py-wxpython@4:", when="backend=wxcairo", type="run")
-    depends_on("py-cairocffi@0.8:", when="backend=gtk3cairo", type="run")
-    depends_on("py-cairocffi@0.8:", when="backend=qt4cairo", type="run")
-    depends_on("py-cairocffi@0.8:", when="backend=qt5cairo", type="run")
-    depends_on("py-cairocffi@0.8:", when="backend=tkcairo", type="run")
-    depends_on("py-cairocffi@0.8:", when="backend=wxcairo", type="run")
-    depends_on("py-cairocffi@0.8:", when="backend=cairo", type="run")
-    depends_on("py-tornado", when="backend=webagg", type="run")
+    # Optional dependencies
+    # Backends
+    # Tk
+    for backend in ["tkagg", "tkcairo"]:
+        depends_on("tk@8.4:8.5,8.6.2:", when="backend=" + backend, type="run")
+        depends_on("python+tkinter", when="backend=" + backend, type="run")
+    # Qt
+    for backend in ["qt4agg", "qt4cairo"]:
+        depends_on("py-pyqt4@4.6:", when="backend=" + backend, type="run")
+    for backend in ["qt5agg", "qt5cairo"]:
+        depends_on("py-pyqt5", when="backend=" + backend, type="run")
+    # https://github.com/spack/spack/pull/32696
+    # for backend in ["qtagg", "qtcairo"]:
+    #     depends_on("py-pyqt6@6.1:", when="backend=" + backend, type="run")
+    # GTK
+    for backend in ["gtk", "gtkagg", "gtkcairo", "gtk3agg", "gtk3cairo", "gtk4agg", "gtk4cairo"]:
+        depends_on("py-pygobject", when="backend=" + backend, type="run")
+        depends_on("py-pycairo@1.14:", when="backend=" + backend, type="run")
+    # Cairo
+    for backend in [
+        "gtkcairo",
+        "gtk3cairo",
+        "gtk4cairo",
+        "qtcairo",
+        "qt4cairo",
+        "qt5cairo",
+        "tkcairo",
+        "wxcairo",
+        "cairo",
+    ]:
+        depends_on("py-pycairo@1.14:", when="backend=" + backend, type="run")
+    # Wx
+    for backend in ["wx", "wxagg", "wxcairo"]:
+        depends_on("py-wxpython@4:", when="backend=" + backend, type="run")
+    # Other
+    depends_on("py-tornado@5:", when="backend=webagg", type="run")
+    depends_on("py-ipykernel", when="backend=nbagg", type="run")
 
     # Optional dependencies
     depends_on("ffmpeg", when="+movies")
     depends_on("imagemagick", when="+animation")
     depends_on("pil@3.4:", when="+image", type=("build", "run"))
     depends_on("texlive", when="+latex", type="run")
-    depends_on("ghostscript@9.0:", when="+latex", type="run")
+    depends_on("ghostscript@9:", when="+latex", type="run")
     depends_on("fontconfig@2.7:", when="+fonts")
     depends_on("pkgconfig", type="build")
+
+    # C libraries
+    depends_on("freetype@2.3:")  # freetype 2.6.1 needed for tests to pass
+    depends_on("qhull@2020.2:", when="@3.4:")
+    # starting from qhull 2020.2 libqhull.so on which py-matplotlib@3.3 versions
+    # rely on does not exist anymore, only libqhull_r.so
+    depends_on("qhull@2015.2:2020.1", when="@3.3")
+    depends_on("libpng@1.2:")
+
+    # Dependencies for building matplotlib
+    # Setup dependencies
+    depends_on("py-certifi@2020.6.20:", when="@3.3.1:", type="build")
+    depends_on("py-setuptools-scm@7:", when="@3.6:", type="build")
+    depends_on("py-setuptools-scm@4:6", when="@3.5", type="build")
+    depends_on("py-setuptools-scm-git-archive", when="@3.5", type="build")
 
     # Testing dependencies
     # https://matplotlib.org/stable/devel/development_setup.html#additional-dependencies-for-testing
     depends_on("py-pytest@3.6:", type="test")
     depends_on("ghostscript@9.0:", type="test")
-    # depends_on('inkscape@:0', type='test')
+    # depends_on("inkscape@:0", type="test")
 
-    msg = "MacOSX backend requires the Cocoa headers included with XCode"
+    msg = "MacOSX backend requires macOS 10.12+"
     conflicts("platform=linux", when="backend=macosx", msg=msg)
     conflicts("platform=cray", when="backend=macosx", msg=msg)
-
-    conflicts("~image", when="@3.3:", msg="Pillow is no longer an optional dependency")
+    conflicts("platform=windows", when="backend=macosx", msg=msg)
 
     # https://github.com/matplotlib/matplotlib/pull/21662
     patch("matplotlibrc.patch", when="@3.5.0")

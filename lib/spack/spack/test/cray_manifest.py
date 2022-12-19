@@ -233,6 +233,34 @@ def test_generate_specs_from_manifest():
     assert openmpi_spec["hwloc"]
 
 
+def test_translate_cray_platform_to_linux(monkeypatch):
+    """Manifests might list specs on newer Cray platforms as being "cray",
+    but Spack identifies such platforms as "linux". Make sure we
+    automaticaly transform these entries.
+    """
+    test_linux_platform = spack.platforms.test.Test("linux")
+
+    def the_host_is_linux():
+        return test_linux_platform
+
+    monkeypatch.setattr(spack.platforms, "host", the_host_is_linux)
+
+    cray_arch = JsonArchEntry(platform="cray", os="rhel8", target="x86_64").to_dict()
+    spec_json = JsonSpecEntry(
+        name="cray-mpich",
+        hash="craympichfakehashaaa",
+        prefix="/path/to/cray-mpich/",
+        version="1.0.0",
+        arch=cray_arch,
+        compiler=_common_compiler.spec_json(),
+        dependencies={},
+        parameters={},
+    ).to_dict()
+
+    (spec,) = entries_to_specs([spec_json]).values()
+    assert spec.architecture.platform == "linux"
+
+
 def test_translate_compiler_name():
     nvidia_compiler = JsonCompilerEntry(
         name="nvidia",
@@ -365,3 +393,38 @@ def test_read_old_manifest_v1_2(tmpdir, mutable_config, mock_packages, mutable_d
 """
         )
     cray_manifest.read(manifest_file_path, True)
+
+
+def test_convert_validation_error(tmpdir, mutable_config, mock_packages, mutable_database):
+    manifest_dir = str(tmpdir.mkdir("manifest_dir"))
+    # Does not parse as valid JSON
+    invalid_json_path = os.path.join(manifest_dir, "invalid-json.json")
+    with open(invalid_json_path, "w") as f:
+        f.write(
+            """\
+{
+"""
+        )
+    with pytest.raises(cray_manifest.ManifestValidationError) as e:
+        cray_manifest.read(invalid_json_path, True)
+    str(e)
+
+    # Valid JSON, but does not conform to schema (schema-version is not a string
+    # of length > 0)
+    invalid_schema_path = os.path.join(manifest_dir, "invalid-schema.json")
+    with open(invalid_schema_path, "w") as f:
+        f.write(
+            """\
+{
+  "_meta": {
+    "file-type": "cray-pe-json",
+    "system-type": "EX",
+    "schema-version": ""
+  },
+  "specs": []
+}
+"""
+        )
+    with pytest.raises(cray_manifest.ManifestValidationError) as e:
+        cray_manifest.read(invalid_schema_path, True)
+    str(e)

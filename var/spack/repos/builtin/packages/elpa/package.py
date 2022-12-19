@@ -24,47 +24,6 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     version(
         "2021.05.001", sha256="a4f1a4e3964f2473a5f8177f2091a9da5c6b5ef9280b8272dfefcbc3aad44d41"
     )
-    version(
-        "2020.05.001", sha256="66ff1cf332ce1c82075dc7b5587ae72511d2bcb3a45322c94af6b01996439ce5"
-    )
-    version(
-        "2019.11.001", sha256="10374a8f042e23c7e1094230f7e2993b6f3580908a213dbdf089792d05aff357"
-    )
-    version(
-        "2019.05.002", sha256="d2eab5e5d74f53601220b00d18185670da8c00c13e1c1559ecfb0cd7cb2c4e8d"
-    )
-    version(
-        "2018.11.001", sha256="cc27fe8ba46ce6e6faa8aea02c8c9983052f8e73a00cfea38abf7613cb1e1b16"
-    )
-    version(
-        "2018.05.001.rc1",
-        sha256="598c01da20600a4514ea4d503b93e977ac0367e797cab7a7c1b0e0e3e86490db",
-    )
-    version(
-        "2017.11.001", sha256="59f99c3abe2190fac0db8a301d0b9581ee134f438669dbc92551a54f6f861820"
-    )
-    version(
-        "2017.05.003", sha256="bccd49ce35a323bd734b17642aed8f2588fea4cc78ee8133d88554753bc3bf1b"
-    )
-    version(
-        "2017.05.002", sha256="568b71024c094d667b5cbb23045ad197ed5434071152ac608dae490ace5eb0aa"
-    )
-    version(
-        "2017.05.001", sha256="28f7edad60984d93da299016ad33571dc6db1cdc9fab0ceaef05dc07de2c7dfd"
-    )
-    version(
-        "2016.11.001.pre",
-        sha256="69b67f0f6faaa2b3b5fd848127b632be32771636d2ad04583c5269d550956f92",
-    )
-    version(
-        "2016.05.004", sha256="08c59dc9da458bab856f489d779152e5506e04f0d4b8d6dcf114ca5fbbe46c58"
-    )
-    version(
-        "2016.05.003", sha256="c8da50c987351514e61491e14390cdea4bdbf5b09045261991876ed5b433fca4"
-    )
-    version(
-        "2015.11.001", sha256="c0761a92a31c08a4009c9688c85fc3fc8fde9b6ce05e514c3e1587cf045e9eba"
-    )
 
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
@@ -75,8 +34,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("scalapack", when="+mpi")
     depends_on("rocblas", when="+rocm")
     depends_on("libtool", type="build")
-    depends_on("python@:2", type="build", when="@:2020.05.001")
-    depends_on("python@3:", type="build", when="@2020.11.001:")
+    depends_on("python@3:", type="build")
 
     with when("@2021.11.01:"):
         variant(
@@ -84,15 +42,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         )
         depends_on("scalapack", when="+autotune")
 
-    patch("python_shebang.patch", when="@:2020.05.001")
-
     # fails to build due to broken type-bound procedures in OMP parallel regions
     conflicts(
         "+openmp",
         when="@2021.05.001: %gcc@:7",
         msg="ELPA-2021.05.001+ requires GCC-8+ for OpenMP support",
     )
-    conflicts("+rocm", when="@:2020", msg="ROCm support was introduced in ELPA 2021.05.001")
     conflicts("+mpi", when="+rocm", msg="ROCm support and MPI are not yet compatible")
 
     def url_for_version(self, version):
@@ -135,13 +90,15 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         options += self.with_or_without("mpi")
 
         # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
-        simd_features = ["vsx", "sse", "avx", "avx2", "avx512", "sve128", "sve256", "sve512"]
+        # Don't include vsx; as of 2022.05 it fails (reported upstream).
+        # Altivec SSE intrinsics are used anyway.
+        simd_features = ["sse", "avx", "avx2", "avx512", "sve128", "sve256", "sve512"]
 
         for feature in simd_features:
             msg = "--enable-{0}" if feature in spec.target else "--disable-{0}"
             options.append(msg.format(feature))
 
-        if spec.target.family == "aarch64":
+        if spec.target.family != "x86_64":
             options.append("--disable-sse-assembly")
 
         if "%aocc" in spec:
@@ -156,11 +113,6 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             gcc_options = []
             gfortran_options = ["-ffree-line-length-none"]
 
-            if self.compiler.version >= Version("10.0.0") and spec.version <= Version(
-                "2019.11.001"
-            ):
-                gfortran_options.append("-fallow-argument-mismatch")
-
             space_separator = " "
             options.extend(
                 [
@@ -172,7 +124,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         if "%aocc" in spec:
             options.extend(["FCFLAGS=-O3", "CFLAGS=-O3"])
 
-        cuda_flag = "nvidia-gpu" if "@2021.05.001:" in self.spec else "gpu"
+        cuda_flag = "nvidia-gpu"
         if "+cuda" in spec:
             prefix = spec["cuda"].prefix
             options.append("--enable-{0}".format(cuda_flag))

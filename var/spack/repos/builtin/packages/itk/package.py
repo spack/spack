@@ -65,26 +65,23 @@ class Itk(CMakePackage):
     depends_on("zlib")
 
     def cmake_args(self):
-        force = CMakePackage.define
-        from_variant = self.define_from_variant
         use_mkl = "^mkl" in self.spec
-
         args = [
-            force("BUILD_SHARED_LIBS", True),
-            force("ITK_USE_SYSTEM_LIBRARIES", True),
-            force("ITK_USE_MKL", use_mkl),
-            from_variant("Module_ITKReview", "review"),
-            from_variant("Module_RTK", "rtk"),
-            from_variant("Module_ITKIOMINC", "minc"),
-            from_variant("Module_ITKIOTransformMINC", "minc"),
+            self.define("BUILD_SHARED_LIBS", True),
+            self.define("ITK_USE_SYSTEM_LIBRARIES", True),
+            self.define("ITK_USE_MKL", use_mkl),
+            self.define_from_variant("Module_ITKReview", "review"),
+            self.define_from_variant("Module_RTK", "rtk"),
+            self.define_from_variant("Module_ITKIOMINC", "minc"),
+            self.define_from_variant("Module_ITKIOTransformMINC", "minc"),
         ]
 
         if not use_mkl:
             args.extend(
                 [
-                    force("USE_FFTWD", True),
-                    force("USE_FFTWF", True),
-                    force("USE_SYSTEM_FFTW", True),
+                    self.define("USE_FFTWD", True),
+                    self.define("USE_FFTWF", True),
+                    self.define("USE_SYSTEM_FFTW", True),
                 ]
             )
 

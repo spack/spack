@@ -11,8 +11,11 @@ class PyLlvmlite(PythonPackage):
 
     homepage = "https://llvmlite.readthedocs.io/en/latest/index.html"
     pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
+    git = "https://github.com/numba/llvmlite.git"
 
+    version("0.39.1", sha256="b43abd7c82e805261c425d50335be9a6c4f84264e34d6d6e475207300005d572")
     version("0.39.0", sha256="01098be54f1aa25e391cebba8ea71cd1533f8cd1f50e34c7dd7540c2560a93af")
+    version("0.38.1", sha256="0622a86301fcf81cc50d7ed5b4bebe992c030580d413a8443b328ed4f4d82561")
     version("0.38.0", sha256="a99d166ccf3b116f3b9ed23b9b70ba2415640a9c978f3aaa13fad49c58f4965c")
     version("0.37.0", sha256="6392b870cd018ec0c645d6bbb918d6aa0eeca8c62674baaee30862d6b6865b15")
     version("0.34.0", sha256="f03ee0d19bca8f2fe922bb424a909d05c28411983b0c2bc58b020032a0d11f63")
@@ -23,14 +26,12 @@ class PyLlvmlite(PythonPackage):
     version("0.26.0", sha256="13e84fe6ebb0667233074b429fd44955f309dead3161ec89d9169145dbad2ebf")
     version("0.25.0", sha256="fd64def9a51dd7dc61913a7a08eeba5b9785522740bec5a7c5995b2a90525025")
     version("0.23.0", sha256="bc8b1b46274d05b578fe9e980a6d98fa71c8727f6f9ed31d4d8468dce7aa5762")
-    version("0.20.0", sha256="b2f174848df16bb9195a07fec102110a06d018da736bd9b3570a54d44c797c29")
 
     depends_on("py-setuptools", type="build")
     depends_on("python@3.7:3.10", type=("build", "run"), when="@0.38.0:")
     depends_on("python@3.7:3.9", type=("build", "run"), when="@0.37")
     depends_on("python@3.6:", type=("build", "run"), when="@0.33:")
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
-    depends_on("py-enum34", type=("build", "run"), when="@:0.32.0 ^python@:3.3")
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
     depends_on("llvm@11.0:11~flang", when="@0.37.0:")
@@ -51,7 +52,6 @@ class PyLlvmlite(PythonPackage):
     depends_on("llvm@7.0.0:8.0~flang", when="@0.29.0:0.32")
     depends_on("llvm@7.0.0:7.0~flang", when="@0.27.0:0.28")
     depends_on("llvm@6.0.0:6.0~flang", when="@0.23.0:0.26")
-    depends_on("llvm@4.0.0:4.0~flang", when="@0.17.0:0.20")
     depends_on("binutils", type="build")
 
     def setup_build_environment(self, env):
