@@ -142,6 +142,11 @@ class PyScipy(PythonPackage):
 
     @run_before("install")
     def set_fortran_compiler(self):
+        if self.compiler.f77 is None or self.compiler.fc is None:
+            raise InstallError(
+                "py-scipy requires Fortran compilers. Configure Fortran compiler to proceed."
+            )
+
         if self.spec.satisfies("%fj"):
             with open("setup.cfg", "w") as f:
                 f.write("[config_fc]\n")

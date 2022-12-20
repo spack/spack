@@ -38,7 +38,7 @@ class Fmt(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("98", "11", "14", "17"),
+        values=("98", "11", "14", "17", "20"),
         multi=False,
         description="Use the specified C++ standard when building",
     )
@@ -105,5 +105,8 @@ class Fmt(CMakePackage):
         # Can't build docs without doxygen+python+virtualenv
         # and call to build "doc" target
         args.append("-DFMT_DOC=OFF")
+
+        # Don't build tests
+        args.append(self.define("FMT_TEST", self.run_tests))
 
         return args
