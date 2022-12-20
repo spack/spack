@@ -551,7 +551,7 @@ class BaseConfiguration(object):
     @property
     def literals_to_load(self):
         """List of literal modules to be loaded."""
-        return self.conf.get("load", [])
+        return [self.spec.format(s) for s in self.conf.get("load", [])]
 
     @property
     def specs_to_prereq(self):
