@@ -735,8 +735,8 @@ class Boost(Package):
             "-j",
             "%s" % jobs,
         ]
-            if not self.spec.satisfies("platform=windows"):
-                b2_options.append(path_to_config)
+        if not self.spec.satisfies("platform=windows"):
+            b2_options.append(path_to_config)
 
         threading_opts = self.determine_b2_options(spec, b2_options)
         
