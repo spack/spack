@@ -428,7 +428,7 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=timer.NU
     tty.debug("Searching for binary cache of {0}".format(pkg_id))
 
     timer.start("search")
-    matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
+    matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True, concrete=False)
     timer.stop("search")
 
     return _process_binary_cache_tarball(

@@ -83,9 +83,12 @@ class BinaryCacheIndex(object):
         # mapping from mirror urls to the time.time() of the last index fetch.
         self._last_fetch_times: typing.Dict[str, float] = {}
 
-        # mapping from mirror urls to the dict[str, Spec] of concrete specs
-        # available indexed by DAG hash.
-        self._mirror_specs: typing.Dict[str, typing.Dict[str, Spec]] = {}
+        # mapping from mirror urls to either:
+        #  - The dict[str, Spec] of concrete specs available indexed by DAG hash, or
+        #  - The set[str] of DAG hashes of available concrete specs.
+        self._mirror_specs: typing.Dict[
+            str, typing.Union[typing.Dict[str, Spec], typing.Set[str]]
+        ] = {}
 
     def clear(self) -> None:
         """For testing purposes we need to be able to empty the cache and
@@ -118,7 +121,11 @@ class BinaryCacheIndex(object):
         return result
 
     def find_built_spec(
-        self, spec, *, mirrors_to_check: typing.Optional[typing.Dict[str, str]] = None
+        self,
+        spec,
+        *,
+        mirrors_to_check: typing.Optional[typing.Dict[str, str]] = None,
+        concrete: bool = True,
     ) -> list:
         """Look in our cache for the built spec corresponding to ``spec``.
 
@@ -133,6 +140,8 @@ class BinaryCacheIndex(object):
             spec (spack.spec.Spec): Concrete spec to find
             mirrors_to_check: Optional mapping containing mirrors to check.  If
                 None, just assumes all configured mirrors.
+            concrete (bool): If False, the ``"spec"`` key is removed from the
+                output ``dicts``, which may improve performance.
 
         Returns:
             An list of objects containing the mirror url when ``spec`` was found:
@@ -153,6 +162,10 @@ class BinaryCacheIndex(object):
             if mirrors_to_check is not None
             else map(lambda m: m.fetch_url, spack.mirror.MirrorCollection().values())
         )
+
+        if not concrete:
+            # Fast path: we don't need to load the full Spec objects
+            return [{"mirror_url": mu} for mu in m_urls if spec_hash in self._load_hashes_for(mu)]
 
         found = []
         for mu in m_urls:
@@ -184,17 +197,50 @@ class BinaryCacheIndex(object):
 
         return {shash: parse(shash, sdict) for shash, sdict in db["installs"].items()}
 
-    def _load_specs_for(self, mirror_url: str) -> dict:
+    def _load_hashes_for(self, mirror_url: str) -> collections.abc.Container:
         """
-        Lazily load the index for the given mirror into memory.
+        Lazily load part of the index for the given mirror into memory.
 
-        Returns the final entry in ``self._mirror_specs``, or an empty dict if
+        This version only loads the DAG hashes for the concrete specs. If the
+        full Spec objects are required, see ``_load_specs_for()``.
+
+        Returns the final entry in ``self._mirror_specs``, or an empty set if
         the mirror is not in the cache.
         """
 
         if mirror_url in self._mirror_specs:
             # Specs are already loaded, don't reload
             return self._mirror_specs[mirror_url]
+
+        _, data_key = self._cache_keys_for(mirror_url, "index.json")
+        if not self._file_cache.init_entry(data_key):
+            # Data file doesn't exist, we don't have anything to load
+            return set()
+
+        # Load and convert to set
+        with self._file_cache.read_transaction(data_key) as data_f:
+            data = json.load(data_f)
+        result = set(self._specs_from_index(data).keys())
+
+        # Memoize and return
+        self._mirror_specs[mirror_url] = result
+        return result
+
+    def _load_specs_for(self, mirror_url: str) -> typing.Dict[str, Spec]:
+        """
+        Lazily load the index for the given mirror into memory.
+
+        This version loads the full concrete Spec objects. If only the DAG
+        hashes are required, see ``_load_hashes_for()``.
+
+        Returns the final entry in ``self._mirror_specs``, or an empty dict if
+        the mirror is not in the cache.
+        """
+
+        previous = self._mirror_specs.get(mirror_url)
+        if isinstance(previous, dict):
+            # Specs are already loaded, don't reload
+            return previous
 
         _, data_key = self._cache_keys_for(mirror_url, "index.json")
         if not self._file_cache.init_entry(data_key):
@@ -1876,7 +1922,12 @@ def try_direct_fetch(spec, mirrors=None):
     return found_specs
 
 
-def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
+def get_mirrors_for_spec(
+    spec=None,
+    mirrors_to_check: typing.Optional[typing.Dict[str, str]] = None,
+    index_only: bool = False,
+    concrete: bool = True,
+):
     """
     Check if concrete spec exists on mirrors and return a list
     indicating the mirrors on which it can be found
@@ -1887,6 +1938,8 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
             with the mirrors in this dictionary.
         index_only (bool): When ``index_only`` is set to ``True``, only the local
             cache is checked, no requests are made.
+        concrete (bool): If ``False``, the concrete spec may not be returned for
+            improved performance.
 
     Return:
         A list of objects, each containing a ``mirror_url`` and ``spec`` key
@@ -1899,7 +1952,9 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
-    results = binary_index.find_built_spec(spec, mirrors_to_check=mirrors_to_check)
+    results = binary_index.find_built_spec(
+        spec, mirrors_to_check=mirrors_to_check, concrete=concrete
+    )
 
     # The index may be out-of-date. If we aren't only considering indices, try
     # to fetch directly since we know where the file should be.

@@ -371,8 +371,10 @@ def test_built_spec_cache(mirror_dir):
     gspec, cspec = Spec("garply").concretized(), Spec("corge").concretized()
 
     for s in [gspec, cspec]:
-        results = bindist.get_mirrors_for_spec(s)
-        assert any([r["spec"] == s for r in results])
+        results = bindist.get_mirrors_for_spec(s, concrete=True)
+        assert any(r["spec"] == s for r in results)
+        results = bindist.get_mirrors_for_spec(s, concrete=False)
+        assert results and all("spec" not in r for r in results)
 
 
 def fake_dag_hash(spec):

@@ -343,7 +343,10 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
                 continue
 
             up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=s, mirrors_to_check=mirrors_to_check, index_only=check_index_only
+                spec=s,
+                mirrors_to_check=mirrors_to_check,
+                index_only=check_index_only,
+                concrete=False,
             )
 
             skey = _spec_deps_key(s)
