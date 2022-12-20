@@ -6,6 +6,7 @@
 import os
 import platform
 import re
+import sys
 
 from spack.build_systems.generic import GenericBuilder
 from spack.package import *
@@ -31,6 +32,10 @@ class Msmpi(Package):
 
     @classmethod
     def determine_version(cls, exe):
+        # MSMPI is typically MS only, don't detect on other platforms
+        # to avoid potential collisions with other mpiexec executables
+        if sys.platform != "win32":
+            return None
         output = Executable(exe)(output=str, error=str)
         ver_str = re.search(r"\[Version ([0-9.]+)\]", output)
         return Version(ver_str.group(1)) if ver_str else None
