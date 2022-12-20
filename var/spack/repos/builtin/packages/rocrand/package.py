@@ -123,12 +123,12 @@ class Rocrand(CMakePackage):
 
     # Add hiprand sources thru the below
     for d_version, d_commit in [
-        ("5.3.0", "125d691d3bcc6de5f5d63cf5f5a993c636251208"),
-        ("5.2.3", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
-        ("5.2.1", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
-        ("5.2.0", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
-        ("5.1.3", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
-        ("5.1.0", "7190cc2199d8d97dbb6ce3fd179f1a62ad8fb13b"),
+        ("5.3.0", "12e2f070337945318295c330bf69c6c060928b9e"),
+        ("5.2.3", "12e2f070337945318295c330bf69c6c060928b9e"),
+        ("5.2.1", "12e2f070337945318295c330bf69c6c060928b9e"),
+        ("5.2.0", "12e2f070337945318295c330bf69c6c060928b9e"),
+        ("5.1.3", "20ac3db9d7462c15a3e96a6f0507cd5f2ee089c4"),
+        ("5.1.0", "20ac3db9d7462c15a3e96a6f0507cd5f2ee089c4"),
     ]:
         resource(
             name="hipRAND",
