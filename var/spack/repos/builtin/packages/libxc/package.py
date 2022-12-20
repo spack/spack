@@ -13,6 +13,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
     homepage = "https://tddft.org/programs/libxc/"
     url = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
 
+    version("6.0.0", sha256="1784853c265432b9b0060a2d49c62266f5f86a778be952500c7b4584ded2ca03")
     version("5.2.3", sha256="7b7a96d8eeb472c7b8cca7ac38eae27e0a8113ef44dae5359b0eb12592b4bcf2")
     version("5.1.7", sha256="1a818fdfe5c5f74270bc8ef0c59064e8feebcd66b8f642c08aecc1e7d125be34")
     version("5.1.5", sha256="02e4615a22dc3ec87a23efbd3d9be5bfad2445337140bad1720699571c45c3f9")
