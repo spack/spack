@@ -498,7 +498,7 @@ class Boost(Package):
         with open("user-config.jam", "w") as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            if not spec.satisfies('%intel') and not spec.satisfies('platform=windows'):
+            if not spec.satisfies("%intel") and not spec.satisfies("platform=windows"):
                 # using intel-linux : : spack_cxx in user-config.jam leads to
                 # error: at project-config.jam:12
                 # error: duplicate initialization of intel-linux with the following parameters:  # noqa
@@ -524,7 +524,7 @@ class Boost(Package):
 
             if "+python" in spec:
                 f.write(self.bjam_python_line(spec))
-                
+       
         options.append("-show-libraries")
 
     def determine_b2_options(self, spec, options):
@@ -700,7 +700,7 @@ class Boost(Package):
 
         bootstrap_options = []
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
-        
+
         if self.spec.satisfies("platform=windows"):
             bootstrap = Executable("cmd.exe")
             bootstrap("/c", ".\\bootstrap.bat", *bootstrap_options)
@@ -718,15 +718,15 @@ class Boost(Package):
 
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = "./b2" if spec.satisfies("@1.47:") else "./bjam"
-        if self.spec.satisfies('platform=windows'):
-            b2name = 'b2.exe' if spec.satisfies('@1.47:') else 'bjam.exe'
+        if self.spec.satisfies("platform=windows"):
+            b2name = "b2.exe" if spec.satisfies("@1.47:") else "bjam.exe"
 
         b2 = Executable(b2name)
         jobs = make_jobs
         path_to_config = ''
-        if not spec.satisfies('platform=windows'):
-            path_to_config = '--user-config=%s' % os.path.join(
-                self.stage.source_path, 'user-config.jam')
+        if not spec.satisfies("platform=windows"):
+            path_to_config = "--user-config=%s" % os.path.join(
+                self.stage.source_path, "user-config.jam")
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
@@ -739,10 +739,10 @@ class Boost(Package):
             b2_options.append(path_to_config)
 
         threading_opts = self.determine_b2_options(spec, b2_options)
-        
+
         # Windows just wants a b2 call with no args
         if self.spec.satisfies("platform=windows"):
-          b2_options.clear()
+            b2_options.clear()
 
         # Create headers if building from a git checkout
         if "@develop" in spec:
