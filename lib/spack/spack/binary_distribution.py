@@ -29,7 +29,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 
 import spack.cmd
 import spack.config as config
-import spack.database as spack_db
+import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -161,6 +161,29 @@ class BinaryCacheIndex(object):
                 found.append({"mirror_url": mu, "spec": spec})
         return found
 
+    @classmethod
+    def _specs_from_index(cls, data: dict) -> typing.Dict[str, typing.Tuple[dict, bool]]:
+        """Read an index.json and extract the list of contained specs.
+
+        Returns a dict, keys are DAG hash of the Specs and values are a tuple of:
+            sdict (dict): Spec in node-dict form
+            in_buildcache (bool): If False, this spec is not actually in the buildcache
+        """
+        if "database" not in data:
+            raise ValueError("Corrupt index.json, no database field!")
+        db = data["database"]
+        if "version" not in db or db["version"] != "6":
+            raise ValueError("Corrupt index.json, must be version 6!")
+        if "installs" not in db:
+            raise ValueError("Corrupt index.json, no installs field!")
+
+        def parse(shash: str, rec: dict) -> typing.Tuple[dict, bool]:
+            sdict = rec["spec"]
+            sdict[ht.dag_hash.name] = shash
+            return sdict, rec.get("in_buildcache", False)
+
+        return {shash: parse(shash, sdict) for shash, sdict in db["installs"].items()}
+
     def _load_specs_for(self, mirror_url: str) -> dict:
         """
         Lazily load the index for the given mirror into memory.
@@ -178,16 +201,28 @@ class BinaryCacheIndex(object):
             # Data file doesn't exist, we don't have anything to load
             return dict()
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            db_root_dir = os.path.join(tmpdir, "db_root")
-            db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
+        with self._file_cache.read_transaction(data_key) as data_f:
+            data = json.load(data_f)
+        raw_specs = self._specs_from_index(data)
+        result = {shash: Spec.from_node_dict(sdict) for shash, (sdict, _) in raw_specs.items()}
 
-            with self._file_cache.read_transaction(data_key):
-                db._read_from_file(self._file_cache.cache_path(data_key))
+        # Add dependency links between Specs
+        for shash, spec in result.items():
+            sdict = raw_specs[shash][0]
+            if "dependencies" in sdict:
+                for _, dhash, dtypes, _ in Spec.read_yaml_dep_specs(sdict["dependencies"]):
+                    spec._add_dependency(result[dhash], dtypes)
 
-            spec_list = db.query_local(installed=False, in_buildcache=True)
+        # Mark all Specs as concrete
+        for spec in result.values():
+            spec._mark_root_concrete()
 
-        result = {s.dag_hash(): s for s in spec_list}
+        # Only keep the root specs that are actually in_buildcache
+        for shash, (_, in_bc) in raw_specs.items():
+            if not in_bc:
+                del result[shash]
+
+        # Memoize and return
         self._mirror_specs[mirror_url] = result
         return result
 
@@ -657,7 +692,7 @@ def sign_specfile(key, force, specfile_path):
     spack.util.gpg.sign(key, specfile_path, signed_specfile_path, clearsign=True)
 
 
-def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_dir, concurrency):
+def _read_specs_and_push_index(file_list, read_method, cache_prefix, concurrency):
     """Read all the specs listed in the provided list, using thread given thread parallelism,
         generate the index, and push it to the mirror.
 
@@ -666,8 +701,6 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         read_method: A function taking a single argument, either a url or a file path,
             and which reads the spec file at that location, and returns the spec.
         cache_prefix (str): prefix of the build cache on s3 where index should be pushed.
-        db: A spack database used for adding specs and then writing the index.
-        temp_dir (str): Location to write index.json and hash for pushing
         concurrency (int): Number of parallel processes to use when fetching
 
     Return:
@@ -694,41 +727,60 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         tp.terminate()
         tp.join()
 
-    for fetched_spec in fetched_specs:
-        db.add(fetched_spec, None)
-        db.mark(fetched_spec, "in_buildcache", True)
+    # Recursively lower the Specs into spec-dict (+ record) form
+    installs = {}
 
-    # Now generate the index, compute its hash, and push the two files to
+    def add(spec):
+        key = spec.dag_hash()
+        if key in installs:
+            return installs[key]
+        for edge in spec.edges_to_dependencies(deptype=ht.dag_hash.deptype):
+            add(edge.spec)
+        result = {"spec": spec.node_dict_with_hashes()}
+        installs[key] = result
+        return result
+
+    for s in fetched_specs:
+        r = add(s)
+        r["in_buildcache"] = True
+
+    db = {
+        "database": {
+            "version": "6",
+            "installs": installs,
+        },
+    }
+
+    # Now convert the index to JSON, compute its hash, and push the two files to
     # the mirror.
-    index_json_path = os.path.join(temp_dir, "index.json")
-    with open(index_json_path, "w") as f:
-        db._write_to_file(f)
+    index = sjson.dump(db)
+    index_hash = compute_hash(index)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Write out the index JSON
+        index_json_path = os.path.join(temp_dir, "index.json")
+        with open(index_json_path, "w") as f:
+            f.write(index)
 
-    # Read the index back in and compute its hash
-    with open(index_json_path) as f:
-        index_string = f.read()
-        index_hash = compute_hash(index_string)
+        # Write the hash out to a local file
+        index_hash_path = os.path.join(temp_dir, "index.json.hash")
+        with open(index_hash_path, "w") as f:
+            f.write(index_hash)
 
-    # Write the hash out to a local file
-    index_hash_path = os.path.join(temp_dir, "index.json.hash")
-    with open(index_hash_path, "w") as f:
-        f.write(index_hash)
+        # Push the index itself
+        web_util.push_to_url(
+            index_json_path,
+            url_util.join(cache_prefix, "index.json"),
+            keep_original=False,
+            extra_args={"ContentType": "application/json"},
+        )
 
-    # Push the index itself
-    web_util.push_to_url(
-        index_json_path,
-        url_util.join(cache_prefix, "index.json"),
-        keep_original=False,
-        extra_args={"ContentType": "application/json"},
-    )
-
-    # Push the hash
-    web_util.push_to_url(
-        index_hash_path,
-        url_util.join(cache_prefix, "index.json.hash"),
-        keep_original=False,
-        extra_args={"ContentType": "text/plain"},
-    )
+        # Push the hash
+        web_util.push_to_url(
+            index_hash_path,
+            url_util.join(cache_prefix, "index.json.hash"),
+            keep_original=False,
+            extra_args={"ContentType": "text/plain"},
+        )
 
 
 def _specs_from_cache_aws_cli(cache_prefix):
@@ -867,23 +919,12 @@ def generate_package_index(cache_prefix, concurrency=32):
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
-    tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, "db_root")
-    db = spack_db.Database(
-        None,
-        db_dir=db_root_dir,
-        enable_transaction_locking=False,
-        record_fields=["spec", "ref_count", "in_buildcache"],
-    )
-
     try:
-        _read_specs_and_push_index(file_list, read_fn, cache_prefix, db, db_root_dir, concurrency)
+        _read_specs_and_push_index(file_list, read_fn, cache_prefix, concurrency)
     except Exception as err:
         msg = "Encountered problem pushing package index to {0}: {1}".format(cache_prefix, err)
         tty.warn(msg)
         tty.debug("\n" + traceback.format_exc())
-    finally:
-        shutil.rmtree(tmpdir)
 
 
 def generate_key_index(key_prefix, tmpdir=None):
