@@ -524,7 +524,7 @@ class Boost(Package):
 
             if "+python" in spec:
                 f.write(self.bjam_python_line(spec))
-       
+
         options.append("-show-libraries")
 
     def determine_b2_options(self, spec, options):
@@ -723,10 +723,11 @@ class Boost(Package):
 
         b2 = Executable(b2name)
         jobs = make_jobs
-        path_to_config = ''
+        path_to_config = ""
         if not spec.satisfies("platform=windows"):
             path_to_config = "--user-config=%s" % os.path.join(
-                self.stage.source_path, "user-config.jam")
+                self.stage.source_path, "user-config.jam"
+            )
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
