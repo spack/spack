@@ -15,6 +15,7 @@ import tarfile
 import tempfile
 import time
 import traceback
+import urllib.parse
 import warnings
 from contextlib import closing
 from urllib.error import HTTPError, URLError
@@ -29,6 +30,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
+import spack.fetch_strategy
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -550,6 +552,96 @@ def _binary_index():
 binary_index = llnl.util.lang.Singleton(_binary_index)
 
 
+class LocalBinaryCache(object):
+    """
+    The LocalBinaryCache caches files that would have been pulled from a (usually remote)
+    buildcache in a closer local directory. For cases where the Spack instance is being wiped
+    regularly (e.g. containers and/or CI) this can reduce the network I/O needed to
+    reinstall the packages.
+
+    By default this class does nothing and all requests go straight to the remote URL.
+    To change this set `config:binary_cache_root` to a value other than `null`.
+    """
+
+    def __init__(self):
+        self._file_caches = []
+        settings = config.get("config:local_binary_cache", None)
+        if settings is not None:
+            if isinstance(settings, str):
+                settings = [{"root": settings}]
+            for cache in settings:
+                prefixes = tuple(cache.get("prefixes", [""]))
+                self._file_caches.append((prefixes, file_cache.FileCache(cache["root"])))
+
+    def __bool__(self):
+        return len(self._file_caches) > 0
+
+    def destroy(self):
+        for _, c in self._file_caches:
+            c.destroy()
+
+    @staticmethod
+    def _url2key(url):
+        url_hash = hashlib.sha256(url.encode("utf-8")).hexdigest()
+        parsed_url = urllib.parse.urlparse(url)
+        return "{0}_{1}".format(url_hash[:10], parsed_url.path.split("/")[-1])
+
+    def get(self, url, checksum, force=False):
+        """
+        Get the cached file for the given URL, fetching if needed.
+
+        Args:
+            url (str): Remote URL to fetch from.
+            checksum (str): Checksum for the target file.
+            force (bool): If True, cache even if ``url`` is a local path.
+
+        Returns tuple of:
+            cached_path (str): Path to the cached file
+            fetched (bool): ``True`` if the file had to be fetched, ``False`` otherwise
+
+            If the cache is disabled or if ``url`` is local (and ``force`` is not ``True``),
+            all fields above are None.
+        """
+        if len(self._file_caches) == 0 or (not force and url_util.local_file_path(url)):
+            return None, None
+
+        for prefixes, cache in self._file_caches:
+            if any(url[: len(prefix)] == prefix for prefix in prefixes):
+                break
+        else:
+            return None, None
+        checker = spack.util.crypto.Checker(checksum)
+        key = self.__class__._url2key(url)
+        cached_path = cache.cache_path(key)
+
+        # Check if the key is already in the cache with a valid checksum
+        if cache.init_entry(key):
+            with cache.read_transaction(key):
+                if checker.check(cached_path):
+                    tty.debug("Reusing cached result for url {0}".format(url))
+                    return cached_path, False
+
+        # Otherwise, attempt to fetch from the remote url and save to the cache
+        tty.debug("Saving url to local binary cache: {0}".format(url))
+        _, _, response = web_util.read_from_url(url)
+        with cache.write_transaction(key, binary=True) as (_, cache_f):
+            shutil.copyfileobj(response, cache_f)
+
+        # Validate the checksum. At this point failure is a hard error.
+        if not checker.check(cached_path):
+            raise NoChecksumException("File failed checksum verification.")
+
+        return cached_path, True
+
+
+def _local_binary_cache():
+    """Get the singleton local binary cache instance."""
+    return LocalBinaryCache()
+
+
+local_binary_cache = llnl.util.lang.Singleton(_local_binary_cache)
+
+
 class NoOverwriteException(spack.error.SpackError):
     """
     Raised when a file exists and must be overwritten.
@@ -845,18 +937,6 @@ def tarball_path_name(spec, ext):
     <tarball_directory_name>/<tarball_name>
     """
     return os.path.join(tarball_directory_name(spec), tarball_name(spec, ext))
-
-
-def checksum_tarball(file):
-    # calculate sha256 hash of tar file
-    block_size = 65536
-    hasher = hashlib.sha256()
-    with open(file, "rb") as tfile:
-        buf = tfile.read(block_size)
-        while len(buf) > 0:
-            hasher.update(buf)
-            buf = tfile.read(block_size)
-    return hasher.hexdigest()
 
 
 def select_signing_key(key=None):
@@ -1286,7 +1366,7 @@ def _build_tarball(
     shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
-    checksum = checksum_tarball(tarfile_path)
+    checksum = spack.util.crypto.checksum(hashlib.sha256, tarfile_path)
 
     # add sha256 checksum to spec.json
 
@@ -1423,21 +1503,34 @@ def try_verify(specfile_path):
     return True
 
 
-def try_fetch(url_to_fetch):
+def try_fetch(url_to_fetch, cache=True, checksum=None, **kwargs):
     """Utility function to try and fetch a file from a url, stage it
     locally, and return the path to the staged file.
 
     Args:
         url_to_fetch (str): Url pointing to remote resource to fetch
+        cache (bool): If False, don't cache via the LocalBinaryCache
+        checksum (str): Checksum for the fetched file, if available
 
     Returns:
         Path to locally staged resource or ``None`` if it could not be fetched.
     """
-    stage = Stage(url_to_fetch, keep=True)
+
+    fetcher = None
+    if cache and checksum is not None:
+        cached_path, fetched = local_binary_cache.get(url_to_fetch, checksum, **kwargs)
+        if cached_path is not None:
+            fetcher = spack.fetch_strategy.CacheURLFetchStrategy(cached_path, notify=not fetched)
+            checksum = None
+    fetcher = fetcher or spack.fetch_strategy.from_url_scheme(url_to_fetch, checksum=checksum)
+
+    stage = Stage(fetcher, keep=True)
     stage.create()
 
     try:
         stage.fetch()
+        if checksum is not None:
+            stage.check()
     except web_util.FetchError:
         stage.destroy()
         return None
@@ -1480,7 +1573,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
        }
     """
     if not spack.mirror.MirrorCollection():
-        tty.die("Please add a spack mirror to allow " + "download of pre-compiled packages.")
+        tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
 
     tarball = tarball_path_name(spec, ".spack")
     specfile_prefix = tarball_name(spec, ".spec")
@@ -1513,14 +1606,19 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
 
     tried_to_verify_sigs = []
 
+    specfile_loaders = [
+        ("json.sig", Spec.extract_json_from_clearsig),
+        ("json", sjson.load),
+    ]
+
     # Assumes we care more about finding a spec file by preferred ext
     # than by mirrory priority.  This can be made less complicated as
     # we remove support for deprecated spec formats and buildcache layouts.
-    for ext in ["json.sig", "json"]:
+    for ext, loader in specfile_loaders:
         for mirror_to_try in mirrors_to_try:
             specfile_url = "{0}.{1}".format(mirror_to_try["specfile"], ext)
             spackfile_url = mirror_to_try["spackfile"]
-            local_specfile_stage = try_fetch(specfile_url)
+            local_specfile_stage = try_fetch(specfile_url, cache=False)
             if local_specfile_stage:
                 local_specfile_path = local_specfile_stage.save_filename
                 signature_verified = False
@@ -1533,6 +1631,18 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     signature_verified = try_verify(local_specfile_path)
                     if not signature_verified:
                         tty.warn("Failed to verify: {0}".format(specfile_url))
+
+                # Extract the hash from the specfile to verify the spackfile
+                with open(local_specfile_path, "r") as specfile:
+                    specfile_data = loader(specfile.read())
+                if (
+                    "buildcache_layout_version" in specfile_data
+                    and int(specfile_data["buildcache_layout_version"]) >= 1
+                ):
+                    checksum = specfile_data["binary_cache_checksum"]["hash"]
+                else:
+                    # Old-form buildcache layout, don't verify
+                    checksum = None
 
                 if unsigned or signature_verified or not ext.endswith(".sig"):
                     # We will download the tarball in one of three cases:
@@ -1551,7 +1661,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     #     verify signature, checksum doesn't match) we will fail at
                     #     that point instead of trying to download more tarballs from
                     #     the remaining mirrors, looking for one we can use.
-                    tarball_stage = try_fetch(spackfile_url)
+                    tarball_stage = try_fetch(spackfile_url, checksum=checksum)
                     if tarball_stage:
                         return {
                             "tarball_stage": tarball_stage,
@@ -1821,11 +1931,9 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
             raise UnsignedPackageException(
                 "To install unsigned packages, use the --no-check-signature option."
             )
-    # get the sha256 checksum of the tarball
-    local_checksum = checksum_tarball(tarfile_path)
 
     # if the checksums don't match don't install
-    if local_checksum != remote_checksum["hash"]:
+    if not spack.util.crypto.Checker(remote_checksum["hash"]).check(tarfile_path):
         raise NoChecksumException(
             "Package tarball failed checksum verification.\n" "It cannot be installed."
         )
@@ -1882,16 +1990,6 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         if not unsigned and not signature_verified:
             raise UnsignedPackageException(
                 "To install unsigned packages, use the --no-check-signature option."
-            )
-
-        # compute the sha256 checksum of the tarball
-        local_checksum = checksum_tarball(tarfile_path)
-
-        # if the checksums don't match don't install
-        if local_checksum != bchecksum["hash"]:
-            _delete_staged_downloads(download_result)
-            raise NoChecksumException(
-                "Package tarball failed checksum verification.\n" "It cannot be installed."
             )
 
     new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.layout.root))
