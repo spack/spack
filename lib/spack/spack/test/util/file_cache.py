@@ -43,8 +43,8 @@ def test_failed_write_and_read_cache_file(file_cache):
 
     # Cache dir should have exactly one (lock) file
     files = os.listdir(file_cache.root)
-    assert len(files) == 1
-    assert re.fullmatch(r"^\..*\.lock$", files[0])
+    assert len(files) <= 1
+    assert not files or re.fullmatch(r"^\..*\.lock$", files[0])
 
     # File does not exist
     assert not file_cache.init_entry("test.yaml")
