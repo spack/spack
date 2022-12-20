@@ -23,7 +23,8 @@ class PyAtlasDirectionVectors(PythonPackage):
     depends_on('py-voxcell@3.0.0:', type=('build', 'run'))
     # note: this is an extra not declared in setup.py
     # since we're not opensourcing regiodesics
-    depends_on('regiodesics@0.1.0:', type='run')
+    # FIXME regiodesics requires an ancient boost
+    # depends_on('regiodesics@0.1.0:', type='run')
     depends_on('py-pytest', type='test')
 
     def patch(self):
