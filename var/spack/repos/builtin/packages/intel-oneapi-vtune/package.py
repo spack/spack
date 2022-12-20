@@ -26,12 +26,12 @@ class IntelOneapiVtune(IntelOneApiPackage):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/vtune-profiler.html"
 
     version(
-    version(
         "2023.0.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19136/l_oneapi_vtune_p_2023.0.0.25339_offline.sh",
         sha256="77fb356b501177d7bd5c936729ba4c1ada45935dc45a8ecd2f1164c276feb1ea",
         expand=False,
     )
+    version(
         "2022.4.1",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19027/l_oneapi_vtune_p_2022.4.1.16919_offline.sh",
         sha256="eb4b4da61eea52c08fc139dbf4630e2c52cbcfaea8f1376c545c0863839366d1",

@@ -28,12 +28,12 @@ class IntelOneapiItac(IntelOneApiPackage):
     maintainers = ["rscohn2"]
 
     version(
-    version(
         "2021.8.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19129/l_itac_oneapi_p_2021.8.0.25341_offline.sh",
         sha256="9e943e07cbe7bcb2c6ec181cea5a2fd2241555bed695050f5069467fe7140c37",
         expand=False,
     )
+    version(
         "2021.7.1",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19024/l_itac_oneapi_p_2021.7.1.15324_offline.sh",
         sha256="fb26689efdb7369e211b5cf05f3e30d491a2787f24fef174b23241b997cc442f",
