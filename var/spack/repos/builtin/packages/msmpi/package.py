@@ -18,7 +18,7 @@ class Msmpi(Package):
     url = "https://github.com/microsoft/Microsoft-MPI/archive/refs/tags/v10.1.1.tar.gz"
     git = "https://github.com/microsoft/Microsoft-MPI.git"
 
-    executable = ["mpiexec.exe"]
+    executable = ["mpiexec"]
 
     version("10.1.1", sha256="63c7da941fc4ffb05a0f97bd54a67968c71f63389a0d162d3182eabba1beab3d")
     version("10.0.0", sha256="cfb53cf53c3cf0d4935ab58be13f013a0f7ccb1189109a5b8eea0fcfdcaef8c1")
@@ -31,9 +31,9 @@ class Msmpi(Package):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)()
-        ver_str = re.search("[Version ([0-9.]+)]", output)
-        return Version(ver_str.group(0)) if ver_str else None
+        output = Executable(exe)(output=str, error=str)
+        ver_str = re.search(r"\[Version ([0-9.]+)\]", output)
+        return Version(ver_str.group(1)) if ver_str else None
 
 
 class GenericBuilder(GenericBuilder):
