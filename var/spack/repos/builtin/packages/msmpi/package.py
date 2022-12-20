@@ -37,7 +37,7 @@ class Msmpi(Package):
         if sys.platform != "win32":
             return None
         output = Executable(exe)(output=str, error=str)
-        ver_str = re.search(r"\[Version ([0-9.]+)\]", output)
+        ver_str = re.search(r"Microsoft MPI Startup Program \[Version ([0-9.]+)\]", output)
         return Version(ver_str.group(1)) if ver_str else None
 
 
