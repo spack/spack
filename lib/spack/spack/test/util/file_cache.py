@@ -5,6 +5,7 @@
 
 """Test Spack's FileCache."""
 import os
+import re
 import sys
 
 import pytest
@@ -30,6 +31,28 @@ def test_write_and_read_cache_file(file_cache):
     with file_cache.read_transaction("test.yaml") as stream:
         text = stream.read()
         assert text == "foobar\n"
+
+
+def test_failed_write_and_read_cache_file(file_cache):
+    """Test failing to write then attempting to read a cached file."""
+    with pytest.raises(RuntimeError, match=r"^foobar$"):
+        with file_cache.write_transaction("test.yaml") as (old, new):
+            assert old is None
+            assert new is not None
+            raise RuntimeError("foobar")
+
+    # Cache dir should have exactly one (lock) file
+    files = os.listdir(file_cache.root)
+    assert len(files) == 1
+    assert re.fullmatch(r"^\..*\.lock$", files[0])
+
+    # File does not exist
+    assert not file_cache.init_entry("test.yaml")
+
+    # Attempting to read will cause a FileNotFoundError
+    with pytest.raises(FileNotFoundError, match=r"test\.yaml"):
+        with file_cache.read_transaction("test.yaml"):
+            pass
 
 
 def test_write_and_remove_cache_file(file_cache):
