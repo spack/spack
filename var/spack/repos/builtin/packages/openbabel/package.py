@@ -17,7 +17,7 @@ class Openbabel(CMakePackage):
     url = "https://github.com/openbabel/openbabel/archive/openbabel-3-0-0.tar.gz"
     git = "https://github.com/openbabel/openbabel.git"
 
-    maintainers = ["RMeli",]
+    maintainers = ["RMeli"]
 
     version("master", branch="master")
     version("3.1.1", tag="openbabel-3-1-1")
