@@ -13,6 +13,7 @@ class PyBluepyopt(PythonPackage):
     pypi = "bluepyopt/bluepyopt-1.9.27.tar.gz"
 
     # NOTE : while adding new release check pmi_rank.patch compatibility
+    version("1.13.86", sha256="37b4abcc4a53ed5af50fa0b3bc4d0003332b7f2f2b6e4d9f0b9de8638254e753")
     version('1.10.38', sha256='fb1411c6a8fbfac52d36b837225bae882fd6524acfb4d0580189312ef3c1cfcc')
     version('1.9.37', sha256='4399af71de48b288832e92f0de73c431bf88d6e76e2c4ea250c3b38fb38a45a8')
     version('1.9.27', sha256='4cce15b92b32311c808cae5e005b664deb6e8dc5df4ca13ea7b59252ae346522')
@@ -27,17 +28,17 @@ class PyBluepyopt(PythonPackage):
     variant('neuron', default=True, description="Use BluePyOpt together with NEURON")
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pandas', type='run')
-    depends_on('py-numpy', type='run')
-    depends_on('py-efel', type='run')
-    depends_on('py-deap', type='run')
-    depends_on('py-scoop@0.7:', type='run', when='@:1.9.37')
-    depends_on('py-ipyparallel', type='run')
-    depends_on('py-pickleshare', type='run')
-    depends_on('py-future', type='run')
-    depends_on('py-jinja2', type='run')
-    depends_on('py-pebble@4.3.10:', type='run')
-    depends_on('neuron', type='run', when='+neuron')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-deap', type=('build', 'run'))
+    depends_on('py-efel', type=('build', 'run'))
+    depends_on('py-ipyparallel', type=('build', 'run'))
+    depends_on('py-pickleshare', type=('build', 'run'))
+    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on('py-future', type=('build', 'run'))
+    depends_on('py-pebble@4.3.10:', type=('build', 'run'))
+    depends_on('py-scoop@0.7:', type=('build', 'run'), when='@:1.9.37')
+    depends_on('neuron', type=('build', 'run'), when='+neuron')
 
     def setup_run_environment(self, env):
         env.unset('PMI_RANK')
