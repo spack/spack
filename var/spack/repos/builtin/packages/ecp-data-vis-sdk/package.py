@@ -180,6 +180,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         when="+vtkm",
         propagate=["cuda", "rocm"] + cuda_arch_variants + amdgpu_target_variants,
     )
+    # TODO: When Ascent is updated to use VTK-m >= 1.8 move examples to
+    # the main spec.
+    depends_on("vtk-m+examples", when="+vtkm ^vtk-m@1.8:")
     depends_on("vtk-m+openmp", when="~rocm+vtkm")
     depends_on("vtk-m~openmp", when="+rocm+vtkm")
 
