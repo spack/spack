@@ -418,10 +418,7 @@ def install_fn(args):
 
 def list_fn(args):
     """list binary packages available from mirrors"""
-    try:
-        specs = bindist.update_cache_and_get_specs()
-    except bindist.FetchCacheError as e:
-        tty.die(e)
+    specs = bindist.update_cache_and_get_specs()
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
