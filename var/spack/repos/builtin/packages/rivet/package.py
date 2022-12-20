@@ -329,8 +329,17 @@ class Rivet(AutotoolsPackage):
         env.unset("PYTHONHOME")
 
     def flag_handler(self, name, flags):
+        new_flags = False
         if self.spec.satisfies("@3.1.2:") and name == "cxxflags":
             flags.append("-faligned-new")
+            new_flags = True
+        if self.spec.satisfies("%clang") and name == "cxxflags":
+            flags.append("-fPIC")
+            new_flags = True
+        if self.spec.satisfies("%clang") and name == "cflags":
+            flags.append("-fPIC")
+            new_flags = True
+        if new_flags:
             return (None, None, flags)
         return (flags, None, None)
 
