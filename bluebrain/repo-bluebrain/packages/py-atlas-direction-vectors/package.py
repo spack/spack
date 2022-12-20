@@ -16,7 +16,6 @@ class PyAtlasDirectionVectors(PythonPackage):
     depends_on('py-atlas-commons@0.1.4:', type=('build', 'run'))
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-click@7.0:', type=('build', 'run'))
-    depends_on('py-numba', type=('build', 'run'))
     depends_on('py-numpy@1.15.0:', type=('build', 'run'))
     depends_on('py-numpy-quaternion', type=('build', 'run'))
     depends_on('py-scipy@1.4.1:', type=('build', 'run'))
@@ -29,8 +28,7 @@ class PyAtlasDirectionVectors(PythonPackage):
 
     def patch(self):
         # Purge version constraints caused by old (outdated) numba incompatibilities
-        filter_file(r'"numba.*",', '"numba",', 'setup.py')
-        filter_file(r'"numpy-quaternion.*",', '"numpy-quaternion",', 'setup.py')
+        filter_file(r'\[numba\]', '', 'setup.py')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
