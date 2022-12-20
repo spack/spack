@@ -829,7 +829,7 @@ def get_versions(args, name):
     valid_url = True
     try:
         parsed = urllib.parse.urlparse(args.url)
-        if not parsed.scheme or parsed.scheme != "file":
+        if not parsed.scheme or parsed.scheme == "file":
             valid_url = False  # No point in spidering these
     except (ValueError, TypeError):
         valid_url = False
