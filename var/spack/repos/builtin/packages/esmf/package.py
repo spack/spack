@@ -245,7 +245,8 @@ class Esmf(MakefilePackage):
         #######
 
         # ESMF_OS must be set for Cray systems
-        if "platform=cray" in self.spec:
+        cray_identifiers = [ "platform=cray", "^cray-mpich", "^cray-mvapich2" ]
+        if any(cray_id in self.spec for cray_id in cray_identifiers):
             os.environ["ESMF_OS"] = "Unicos"
 
         #######

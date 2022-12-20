@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import subprocess
+
 from spack.package import *
 
 
@@ -31,7 +33,8 @@ class Ncview(AutotoolsPackage):
         config_args.append("--with-udunits2_incdir={}".format(spec["udunits"].prefix.include))
         config_args.append("--with-udunits2_libdir={}".format(spec["udunits"].prefix.lib))
 
-        if spec.satisfies("^netcdf-c+mpi"):
-            config_args.append("CC={}".format(spec["mpi"].mpicc))
+        # Use the same C compiler that was used for netcdf-c
+        cc = subprocess.check_output(['nc-config', '--cc']).decode().rstrip('\n')
+        config_args.append("CC={}".format(cc))
 
         return config_args
