@@ -265,7 +265,7 @@ class BinaryCacheIndex(object):
                 try:
                     _, _, fs = web_util.read_from_url(hash_url)
                     expected_hash = codecs.getreader("utf-8")(fs).read()
-                except (URLError, web_util.SpackWebError):
+                except web_util.SpackWebError:
                     pass  # No expected hash upstream, ignore
                 else:
                     previous_hash = hash_f.read()
