@@ -17,6 +17,7 @@ from .sim_model import SimModel, copy_all, make_link
 _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"
 _BUILD_NEURODAMUS_FNAME = "build_neurodamus.sh"
 PYNEURODAMUS_DEFAULT_V = PyNeurodamus.LATEST_STABLE
+COMMON_DEFAULT_V = "2.6.4"
 
 
 def version_from_model_core_dep(model_v, core_v):
@@ -31,10 +32,14 @@ def version_from_model_core_dep(model_v, core_v):
                when='@' + this_version)
 
 
-def version_from_model_ndpy_dep(model_v, ndamus_v=PYNEURODAMUS_DEFAULT_V):
-    """New version scheme following dependency on neurodamus-py
+def version_from_model_ndpy_dep(
+    model_v,
+    ndamus_v=PYNEURODAMUS_DEFAULT_V,
+    common_v=COMMON_DEFAULT_V
+):
+    """New version scheme following dependency on neurodamus-py and common
     """
-    this_version = model_v + "-" + ndamus_v  # e.g. 1.1-3.0.2
+    this_version = model_v + "-" + ndamus_v + "-" + common_v  # e.g. 1.1-3.0.2-2.6.4
     version(this_version, tag=model_v, submodules=True, get_full_repo=True)
     depends_on('py-neurodamus@' + ndamus_v, type=('build', 'run'),
                when='@' + this_version)
@@ -54,7 +59,7 @@ class NeurodamusModel(SimModel):
     resource(
         name='common_mods',
         git='ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/common.git',
-        tag='2.6.4',
+        tag=COMMON_DEFAULT_V,
         destination='common_latest'
     )
 
