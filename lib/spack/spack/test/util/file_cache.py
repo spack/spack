@@ -5,7 +5,6 @@
 
 """Test Spack's FileCache."""
 import os
-import re
 import sys
 
 import pytest
