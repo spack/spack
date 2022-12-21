@@ -2383,6 +2383,8 @@ FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fr
 
 
 class DefaultIndexFetcher:
+    """Fetcher for index.json, using separate index.json.hash as cache invalidation strategy"""
+
     def __init__(self, url, local_hash, urlopen=web_util.urlopen):
         self.url = url
         self.local_hash = local_hash
@@ -2391,22 +2393,23 @@ class DefaultIndexFetcher:
     def conditional_fetch(self):
         # Do an intermediate fetch for the hash
         # and a conditional fetch for the contents
-        url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.json.hash")
+        if self.local_hash:
+            url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.json.hash")
 
-        try:
-            response = self.urlopen(urllib.request.Request(url_index_hash))
-        except urllib.error.URLError as e:
-            raise FetchIndexError("Could not fetch {}".format(url_index_hash), e) from e
+            try:
+                response = self.urlopen(urllib.request.Request(url_index_hash))
+            except urllib.error.URLError as e:
+                raise FetchIndexError("Could not fetch {}".format(url_index_hash), e) from e
 
-        # Validate the hash
-        remote_hash = response.read(64)
-        if not re.match(rb"[a-f\d]{64}$", remote_hash):
-            raise FetchIndexError("Invalid hash format in {}".format(url_index_hash))
-        remote_hash = remote_hash.decode("utf-8")
+            # Validate the hash
+            remote_hash = response.read(64)
+            if not re.match(rb"[a-f\d]{64}$", remote_hash):
+                raise FetchIndexError("Invalid hash format in {}".format(url_index_hash))
+            remote_hash = remote_hash.decode("utf-8")
 
-        # No need to update further
-        if self.local_hash and remote_hash == self.local_hash:
-            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+            # No need to update further
+            if remote_hash == self.local_hash:
+                return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download index.json
         url_index = url_util.join(self.url, _build_cache_relative_path, "index.json")
@@ -2423,12 +2426,13 @@ class DefaultIndexFetcher:
 
         computed_hash = compute_hash(result)
 
-        if computed_hash != remote_hash:
-            raise FetchIndexError(
-                "Remote hash {} of {} does not match computed hash {}".format(
-                    remote_hash, url_index, computed_hash
-                )
-            )
+        # We don't handle computed_hash != remote_hash here, which can happen
+        # when remote index.json and index.json.hash are out of sync, or if
+        # the hash algorithm changed.
+        # The most likely scenario is that we got index.json got updated
+        # while we fetched index.json.hash. Warning about an issue thus feels
+        # wrong, as it's more of an issue with race conditions in the cache
+        # invalidation strategy.
 
         # For now we only handle etags on http(s), since 304 error handling
         # in s3:// is not there yet.
@@ -2441,13 +2445,15 @@ class DefaultIndexFetcher:
 
         return FetchIndexResult(
             etag=etag,
-            hash=remote_hash,
+            hash=computed_hash,
             data=result,
             fresh=False,
         )
 
 
 class EtagIndexFetcher:
+    """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
+
     def __init__(self, url, etag, urlopen=web_util.urlopen):
         self.url = url
         self.etag = etag

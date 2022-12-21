@@ -782,26 +782,17 @@ def test_default_index_fetch_200():
     assert result.hash == index_json_hash
 
 
-def test_default_index_hash_mismatch():
-    # Test what happens when index.json / index.json.hash mismatch
-    # on the remote; compute_hash(index.json) != index.json.hash.
+def test_default_index_dont_fetch_index_json_hash_if_no_local_hash():
+    # When we don't have local hash, we should not be fetching the
+    # remote index.json.hash file, but only index.json.
     index_json = '{"Hello": "World"}'
-    index_json_modified = '{"Hello": "World!"}'
     index_json_hash = bindist.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
-        if url.endswith("index.json.hash"):
+        if url.endswith("index.json"):
             return urllib.response.addinfourl(
-                io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
-                url=url,
-                code=200,
-            )
-
-        elif url.endswith("index.json"):
-            return urllib.response.addinfourl(
-                io.BytesIO(index_json_modified.encode()),
+                io.BytesIO(index_json.encode()),
                 headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
                 url=url,
                 code=200,
@@ -810,11 +801,16 @@ def test_default_index_hash_mismatch():
         assert False, "Unexpected request {}".format(url)
 
     fetcher = bindist.DefaultIndexFetcher(
-        url="https://www.example.com", local_hash="outdated", urlopen=urlopen
+        url="https://www.example.com", local_hash=None, urlopen=urlopen
     )
 
-    with pytest.raises(bindist.FetchIndexError, match="does not match computed hash"):
-        fetcher.conditional_fetch()
+    result = fetcher.conditional_fetch()
+
+    assert isinstance(result, bindist.FetchIndexResult)
+    assert result.data == index_json
+    assert result.hash == index_json_hash
+    assert result.etag == "59bcc3ad6775562f845953cf01624225"
+    assert not result.fresh
 
 
 def test_default_index_not_modified():
