@@ -577,7 +577,7 @@ class UnsignedPackageException(spack.error.SpackError):
 
 
 def compute_hash(data):
-    if not isinstance(data, bytes):
+    if isinstance(data, str):
         data = data.encode("utf-8")
     return hashlib.sha256(data).hexdigest()
 
