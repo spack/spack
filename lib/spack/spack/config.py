@@ -101,7 +101,7 @@ config_defaults = {
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
         "concretizer": "clingo",
-        "license_dir": spack.paths.default_license_dir,
+        "license_dir": str(spack.paths.default_license_dir),
     }
 }
 
@@ -135,7 +135,7 @@ class ConfigScope(object):
 
     @property
     def is_platform_dependent(self):
-        return os.sep in self.name
+        return os.sep in str(self.name)
 
     def get_section_filename(self, section):
         _validate_section_name(section)
@@ -926,9 +926,9 @@ def set(path, value, scope=None):
 
 
 def add_default_platform_scope(platform):
-    plat_name = PurePath("defaults", platform)
-    plat_path = PurePath(configuration_defaults_path[1], platform)
-    config.push_scope(ConfigScope(plat_name, plat_path))
+    plat_name = PurePath("defaults") / platform
+    plat_path = PurePath(configuration_defaults_path[1]) / platform
+    config.push_scope(ConfigScope(str(plat_name), plat_path))
 
 
 def scopes():
@@ -1295,9 +1295,9 @@ def _config_from(scopes_or_paths):
             continue
 
         # Otherwise we need to construct it
-        path = os.path.normpath(scope_or_path)
-        assert Path(path).is_dir(), '"{0}" must be a directory'.format(path)
-        name = PurePath(path).name
+        path = Path(scope_or_path).resolve(strict=False)
+        assert path.is_dir(), '"{0}" must be a directory'.format(str(path))
+        name = path.name
         scopes.append(ConfigScope(name, path))
 
     configuration = Configuration(*scopes)

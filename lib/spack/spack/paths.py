@@ -127,8 +127,8 @@ def _get_user_config_path():
 # Configuration in /etc/spack on the system
 def _get_system_config_path():
     return Path(
-        os.getenv("SPACK_SYSTEM_CONFIG_PATH") or PurePath("etc", "spack").absolute()
-    ).expand_user()
+        os.getenv("SPACK_SYSTEM_CONFIG_PATH") or Path("etc", "spack").absolute()
+    ).expanduser()
 
 
 #: User configuration location
