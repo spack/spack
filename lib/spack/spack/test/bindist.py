@@ -685,7 +685,7 @@ def test_etag_fetching_304():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = bindist.EtagIndexFetch(
+    fetcher = bindist.EtagIndexFetcher(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_304,
@@ -710,7 +710,7 @@ def test_etag_fetching_200():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = bindist.EtagIndexFetch(
+    fetcher = bindist.EtagIndexFetcher(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_200,
@@ -735,7 +735,7 @@ def test_etag_fetching_404():
             fp=None,
         )
 
-    fetcher = bindist.EtagIndexFetch(
+    fetcher = bindist.EtagIndexFetcher(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_404,

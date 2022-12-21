@@ -454,7 +454,7 @@ class BinaryCacheIndex(object):
 
         etag = cache_entry.get("etag", None)
         if etag:
-            fetcher = EtagIndexFetch(mirror_url, etag)
+            fetcher = EtagIndexFetcher(mirror_url, etag)
         else:
             fetcher = DefaultIndexFetcher(
                 mirror_url, local_hash=cache_entry.get("index_hash", None)
@@ -2447,7 +2447,7 @@ class DefaultIndexFetcher:
         )
 
 
-class EtagIndexFetch:
+class EtagIndexFetcher:
     def __init__(self, url, etag, urlopen=web_util.urlopen):
         self.url = url
         self.etag = etag
