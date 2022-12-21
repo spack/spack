@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers = ["adamjstewart", "rgommers"]
 
     version("main", branch="main")
+    version("1.24.0", sha256="c4ab7c9711fe6b235e86487ca74c1b092a6dd59a3cb45b63241ea0a148501853")
     version("1.23.5", sha256="1b1766d6f397c18153d40015ddfc79ddb715cabadc04d2d228d4e5a8bc4ded1a")
     version("1.23.4", sha256="ed2cc92af0efad20198638c69bb0fc2870a58dabfba6eb722c933b48556c686c")
     version("1.23.3", sha256="51bf49c0cd1d52be0a240aa66f3458afc4b95d8993d2d04f0d91fa60c10af6cd")
@@ -93,7 +94,9 @@ class PyNumpy(PythonPackage):
     depends_on("python@3.6:3.10", type=("build", "link", "run"), when="@1.19")
     depends_on("python@3.7:3.10", type=("build", "link", "run"), when="@1.20:1.21")
     depends_on("python@3.8:", type=("build", "link", "run"), when="@1.22:")
-    depends_on("py-setuptools@:59", type=("build", "run"))
+    # https://github.com/spack/spack/pull/32078
+    depends_on("py-setuptools@:63", type=("build", "run"))
+    depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
     # Check pyproject.toml for updates to the required cython version
     depends_on("py-cython@0.29.13:2", when="@1.18.0:", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:", type="build")
