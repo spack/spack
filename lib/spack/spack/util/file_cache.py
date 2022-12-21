@@ -144,7 +144,6 @@ class FileCache(object):
                 cm.tmp_file.close()
 
                 if value:
-                    # remove tmp on exception & raise it
                     os.remove(cm.tmp_filename)
 
                 else:
