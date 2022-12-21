@@ -16,37 +16,37 @@ spack:
 
   compilers:
   - compiler:
-      spec: dpcpp@2022.1.0
+      spec: dpcpp@2023.0.0
       paths:
-        cc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icx
-        cxx: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/dpcpp
-        f77: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
-        fc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
+        cc: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/icx
+        cxx: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/dpcpp
+        f77: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/ifx
+        fc: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/ifx
       flags: {}
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
       environment:
         prepend_path:
-          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2023.0.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
-      spec: oneapi@2022.1.0
+      spec: oneapi@2023.0.0
       paths:
-        cc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icx
-        cxx: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icpx
-        f77: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
-        fc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
+        cc: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/icx
+        cxx: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/icpx
+        f77: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/ifx
+        fc: /opt/intel/oneapi/compiler/2023.0.0/linux/bin/ifx
       flags: {}
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
       environment:
         prepend_path:
-          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2023.0.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
-      spec: gcc@9.4.0
+      spec: gcc@11.1.0
       paths:
         cc: /usr/bin/gcc
         cxx: /usr/bin/g++
@@ -293,7 +293,7 @@ spack:
     after_script:
       - cat /proc/loadavg || true
 
-    image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+    image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023-01-01
 
     match_behavior: first
     mappings:
@@ -478,7 +478,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+      image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023-01-01
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:
