@@ -28,6 +28,7 @@ class Lammps(CMakePackage, CudaPackage):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20221222", sha256="75372ee7ef982767fc4ed4dc95e20ddca8247419adeb0c1276c40e43d1eab955")
     version("20221103", sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e")
     version("20220915", sha256="392b8d35fc7919b0efaf8b389259a9b795a817e58e75e380467c63d03a0dab75")
     version("20220803", sha256="f37cb0b35c1682ffceae5826aadce47278aa7003099a1655fcea43acd7d37926")
@@ -346,6 +347,7 @@ class Lammps(CMakePackage, CudaPackage):
         "misc": {},
         "mliap": {"when": "@:20210702"},
         "ml-iap": {"when": "@20210728:"},
+        "ml-pod": {"when": "@20221222:"},
         "ml-snap": {"when": "@20210728:"},
         "ml-hdnnp": {"when": "@20210702:"},
         "molecule": {"default": True},
