@@ -343,7 +343,10 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
                 continue
 
             up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=s, mirrors_to_check=mirrors_to_check, index_only=check_index_only
+                spec=s,
+                mirrors_to_check=mirrors_to_check,
+                index_only=check_index_only,
+                concrete=False,
             )
 
             skey = _spec_deps_key(s)
@@ -774,10 +777,7 @@ def generate_gitlab_ci_yaml(
 
     # Speed up staging by first fetching binary indices from all mirrors
     # (including the override mirror we may have just added above).
-    try:
-        bindist.binary_index.update()
-    except bindist.FetchCacheError as e:
-        tty.error(e)
+    bindist.binary_index.update()
 
     staged_phases = {}
     try:

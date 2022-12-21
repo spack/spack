@@ -480,7 +480,10 @@ def ci_rebuild(args):
         None
         if full_rebuild
         else bindist.get_mirrors_for_spec(
-            job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+            job_spec,
+            mirrors_to_check=mirrors_to_check,
+            index_only=False,
+            concrete=False,
         )
     )
 
