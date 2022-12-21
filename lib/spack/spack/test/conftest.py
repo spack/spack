@@ -1542,7 +1542,7 @@ def mock_svn_repository(tmpdir_factory):
 def mutable_mock_env_path(tmpdir, mutable_config):
     """Fixture for mocking the internal spack environments directory."""
     saved_path = ev.environment.default_env_path
-    mock_path = tmpdir.join("mock-env-path")
+    mock_path = tmpdir.join(".mock-env-path")
     ev.environment.default_env_path = str(mock_path)
     yield mock_path
     ev.environment.default_env_path = saved_path
