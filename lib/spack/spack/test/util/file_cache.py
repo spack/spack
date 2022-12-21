@@ -33,6 +33,7 @@ def test_write_and_read_cache_file(file_cache):
         assert text == "foobar\n"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Locks not supported on Windows")
 def test_failed_write_and_read_cache_file(file_cache):
     """Test failing to write then attempting to read a cached file."""
     with pytest.raises(RuntimeError, match=r"^foobar$"):
