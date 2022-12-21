@@ -680,7 +680,9 @@ def test_etag_fetching_304():
         url = request.get_full_url()
         if url == "https://www.example.com/build_cache/index.json":
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
-            raise urllib.error.HTTPError(url, 304, "Not Modified", hdrs={}, fp=None)
+            raise urllib.error.HTTPError(
+                url, 304, "Not Modified", hdrs={}, fp=None  # type: ignore[arg-type]
+            )
         assert False, "Should not fetch {}".format(url)
 
     fetcher = bindist.EtagIndexFetch(
@@ -702,7 +704,7 @@ def test_etag_fetching_200():
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
             return urllib.response.addinfourl(
                 io.BytesIO(b"Result"),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},
+                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
                 url=url,
                 code=200,
             )
@@ -729,7 +731,7 @@ def test_etag_fetching_404():
             request.get_full_url(),
             404,
             "Not found",
-            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},
+            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
             fp=None,
         )
 
@@ -750,9 +752,9 @@ def test_default_index_fetch_200():
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
         if url.endswith("index.json.hash"):
-            return urllib.response.addinfourl(
+            return urllib.response.addinfourl(  # type: ignore[arg-type]
                 io.BytesIO(index_json_hash.encode()),
-                headers={},
+                headers={},  # type: ignore[arg-type]
                 url=url,
                 code=200,
             )
@@ -760,7 +762,7 @@ def test_default_index_fetch_200():
         elif url.endswith("index.json"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json.encode()),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},
+                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
                 url=url,
                 code=200,
             )
@@ -792,7 +794,7 @@ def test_default_index_hash_mismatch():
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_hash.encode()),
-                headers={},
+                headers={},  # type: ignore[arg-type]
                 url=url,
                 code=200,
             )
@@ -800,7 +802,7 @@ def test_default_index_hash_mismatch():
         elif url.endswith("index.json"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_modified.encode()),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},
+                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
                 url=url,
                 code=200,
             )
@@ -824,7 +826,7 @@ def test_default_index_not_modified():
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_hash.encode()),
-                headers={},
+                headers={},  # type: ignore[arg-type]
                 url=url,
                 code=200,
             )
@@ -847,7 +849,7 @@ def test_default_index_invalid_hash_file(index_json):
     def urlopen(request: urllib.request.Request):
         return urllib.response.addinfourl(
             io.BytesIO(),
-            headers={},
+            headers={},  # type: ignore[arg-type]
             url=request.get_full_url(),
             code=200,
         )
@@ -870,7 +872,7 @@ def test_default_index_json_404():
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_hash.encode()),
-                headers={},
+                headers={},  # type: ignore[arg-type]
                 url=url,
                 code=200,
             )
@@ -880,7 +882,7 @@ def test_default_index_json_404():
                 url,
                 code=404,
                 msg="Not Found",
-                hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},
+                hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
                 fp=None,
             )
 
