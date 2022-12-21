@@ -5,6 +5,8 @@
 import collections
 import os
 import sys
+import urllib.error
+import urllib.request
 
 import pytest
 
@@ -13,6 +15,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.mirror
 import spack.paths
+import spack.s3_handler
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
@@ -223,11 +226,14 @@ class MockPaginator(object):
 
 
 class MockClientError(Exception):
-    def __init__(self):
-        self.response = {
-            "Error": {"Code": "NoSuchKey"},
-            "ResponseMetadata": {"HTTPStatusCode": 404},
-        }
+    def __init__(
+        self,
+        response={
+            "Error": {"Code": "NoSuchKey", "Message": "message"},
+            "ResponseMetadata": {"HTTPStatusCode": 404, "HTTPHeaders": {}},
+        },
+    ):
+        self.response = response
 
 
 class MockS3Client(object):
@@ -328,3 +334,42 @@ def test_s3_url_exists(monkeypatch, capfd):
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
+
+
+def test_s3_request_to_s3_client_kwargs():
+    # Test that a Request object is translated into the kwargs of
+    # s3_client.get_object/head_object. This should include some
+    # common headers (currently only If-None-Match).
+    request = urllib.request.Request(
+        "s3://my-bucket/x/y",
+        headers={"If-None-Match": '"4a32bff46fc73651fe9b3d519ddd5423"'},
+        method="HEAD",
+    )
+
+    assert spack.s3_handler.request_to_s3_client_kwargs(request) == {
+        "Bucket": "my-bucket",
+        "Key": "x/y",
+        "IfNoneMatch": "4a32bff46fc73651fe9b3d519ddd5423",
+    }
+
+
+def test_client_error_to_http_error_adaptor():
+    err = spack.s3_handler.client_error_to_http_error("s3://my-bucket/x/y", MockClientError())
+    assert isinstance(err, urllib.error.HTTPError)
+    assert err.status == 404
+
+    err = spack.s3_handler.client_error_to_http_error(
+        "s3://my-bucket/x/y", MockClientError(response={})
+    )
+    assert not isinstance(err, urllib.error.HTTPError) and isinstance(err, urllib.error.URLError)
+
+    err = spack.s3_handler.client_error_to_http_error(
+        "s3://my-bucket/x/y",
+        MockClientError(
+            response={
+                "Error": {"Code": "NoSuchKey", "Message": "message"},
+                "ResponseMetadata": {"HTTPHeaders": {}},
+            }
+        ),
+    )
+    assert not isinstance(err, urllib.error.HTTPError) and isinstance(err, urllib.error.URLError)
