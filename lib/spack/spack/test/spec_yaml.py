@@ -507,16 +507,3 @@ ordered_spec = collections.OrderedDict(
         ("version", "1.2.11"),
     ]
 )
-
-
-@pytest.mark.regression("31092")
-def test_strify_preserves_order():
-    """Ensure that ``spack_json._strify()`` dumps dictionaries in the right order.
-
-    ``_strify()`` is used in ``spack_json.dump()``, which is used in
-    ``Spec.dag_hash()``, so if this goes wrong, ``Spec`` hashes can vary between python
-    versions.
-
-    """
-    strified = sjson._strify(ordered_spec)
-    assert list(ordered_spec.items()) == list(strified.items())
