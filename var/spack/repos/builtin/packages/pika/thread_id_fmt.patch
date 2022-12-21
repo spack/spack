@@ -1,0 +1,57 @@
+From 33655188fe4b9bcfad1e98a05e9ebcc22afc7ef8 Mon Sep 17 00:00:00 2001
+From: Mikael Simberg <mikael.simberg@iki.fi>
+Date: Wed, 14 Dec 2022 16:38:06 +0100
+Subject: [PATCH] Don't use pthread_self/GetCurrentThreadId where not needed in
+ logging module
+
+Use std::this_thread::get_id instead.
+---
+ .../src/format/formatter/thread_id.cpp        | 23 +++----------------
+ 1 file changed, 3 insertions(+), 20 deletions(-)
+
+diff --git a/libs/pika/logging/src/format/formatter/thread_id.cpp b/libs/pika/logging/src/format/formatter/thread_id.cpp
+index df279666e24f24bba37fa8f1571794e9f0cf6e0e..bb100f11de61e120e34f7ceb6a5e54dc7b1b483a 100644
+--- a/libs/pika/logging/src/format/formatter/thread_id.cpp
++++ b/libs/pika/logging/src/format/formatter/thread_id.cpp
+@@ -22,17 +22,12 @@
+ #include <fmt/format.h>
+ #include <fmt/ostream.h>
+ #include <fmt/printf.h>
++#include <fmt/std.h>
+ 
+ #include <memory>
+ #include <ostream>
+ #include <type_traits>
+ 
+-#if defined(PIKA_WINDOWS)
+-#include <windows.h>
+-#else
+-#include <pthread.h>
+-#endif
+-
+ namespace pika { namespace util { namespace logging { namespace formatter {
+ 
+     thread_id::~thread_id() = default;
+@@ -41,20 +36,8 @@ namespace pika::util::logging::formatter {
+     {
+         void operator()(std::ostream& to) const override
+         {
+-            auto id =
+-#if defined(PIKA_WINDOWS)
+-                ::GetCurrentThreadId();
+-#else
+-                pthread_self();
+-#endif
+-            if constexpr (std::is_pointer_v<decltype(id)>)
+-            {
+-                fmt::print(to, "{}", fmt::ptr(id));
+-            }
+-            else
+-            {
+-                fmt::print(to, "{}", id);
+-            }
++            auto id = std::this_thread::get_id();
++            fmt::print(to, "{}", id);
+         }
+     };
+ 

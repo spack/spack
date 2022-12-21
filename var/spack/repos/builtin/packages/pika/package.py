@@ -130,6 +130,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         when="@0.7.0 platform=darwin",
     )
 
+    # Fix constexpr/fmt bug on macOS
+    # Upstream patch is
+    # https://github.com/pika-org/pika/commit/33655188fe4b9bcfad1e98a05e9ebcc22afc7ef8.patch,
+    # but it requires changes to apply to 0.11.0.
+    patch("thread_id_fmt.patch", when="@0.11 platform=darwin")
+
     def cmake_args(self):
         spec, args = self.spec, []
 
