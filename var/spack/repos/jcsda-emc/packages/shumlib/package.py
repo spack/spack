@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import subprocess
 
 from spack import *
 
@@ -27,6 +28,8 @@ class Shumlib(MakefilePackage):
     # version('2021.03.1', commit='58f599ce9cfb4bd47197125548a44039695fa7f1')
     # version('2020.11.1', commit='58f599ce9cfb4bd47197125548a44039695fa7f1')
 
+    depends_on("patchelf", type="build", when="platform=linux")
+
     def edit(self, spec, prefix):
         env['LIBDIR_OUT'] = os.path.join(self.build_directory, 'spack-build')
         # env['LIBDIR_ROOT'] = self.build_directory
@@ -44,3 +47,40 @@ class Shumlib(MakefilePackage):
     def install(self, spec, prefix):
         install_tree(os.path.join(os.getenv('LIBDIR_OUT'), 'include'), prefix.include)
         install_tree(os.path.join(os.getenv('LIBDIR_OUT'), 'lib'), prefix.lib)
+
+    @run_after("install")
+    def lib_path_fix(self):
+        # The shared libraries are not installed correctly. shumlib
+        # build expects the build location being the final location.
+        # Fix by replacing the hard-coded build path with RPATH. On
+        # macOS, this problem doesn't exist, the libraries are linked
+        # without path, LD_LIBRARY_PATH needs to be set to find them.
+        if self.spec.satisfies("platform=linux"):
+            patchelf = which("patchelf")
+            libdirs = ['lib', 'lib64']
+            for libdir in libdirs:
+                libpath = os.path.join(self.prefix, libdir)
+                if not os.path.isdir(libpath):
+                    continue
+                allfiles = os.listdir(libpath)
+                for filename in allfiles:
+                    if filename.startswith("lib") and filename.endswith('.so'):
+                        filepath = os.path.join(libpath, filename)
+                        ldd_output = subprocess.check_output(['ldd', filepath])
+                        ldd_output = ldd_output.decode("utf-8").split('\n')
+                        for line in ldd_output:
+                            if self.build_directory in line:
+                                so_name_old = line.strip().split()[0]
+                                # Sanity check that we really got the correct
+                                # part of the string, at this stage (post install)
+                                # the original build path still exists.
+                                if not os.path.isfile(so_name_old):
+                                    raise Exception("{} does not exist!".format(
+                                        so_name_old))
+                                so_name_new = os.path.join(self.prefix, libdir,
+                                    os.path.basename(so_name_old))
+                                patchelf_output = patchelf(
+                                    "--replace-needed",
+                                    so_name_old,
+                                    so_name_new,
+                                    filepath)
