@@ -774,10 +774,7 @@ def generate_gitlab_ci_yaml(
 
     # Speed up staging by first fetching binary indices from all mirrors
     # (including the override mirror we may have just added above).
-    try:
-        bindist.binary_index.update()
-    except bindist.FetchCacheError as e:
-        tty.error(e)
+    bindist.binary_index.update()
 
     staged_phases = {}
     try:
