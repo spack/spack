@@ -77,7 +77,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "debug_bounds_check": [False, "Use bounds checking - will increase runtime"],
         "debug_dualview_modify_check": [False, "Debug check on dual views"],
         "deprecated_code": [False, "Whether to enable deprecated code"],
-        "examples": [False, "Whether to build OpenMP  backend"],
+        "examples": [False, "Whether to build examples"],
         "explicit_instantiation": [False, "Explicitly instantiate template types"],
         "hpx_async_dispatch": [False, "Whether HPX supports asynchronous dispath"],
         "profiling": [True, "Create bindings for profiling tools"],
