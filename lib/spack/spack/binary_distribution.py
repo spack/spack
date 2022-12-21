@@ -2464,7 +2464,7 @@ class EtagIndexFetcher:
         try:
             response = self.urlopen(urllib.request.Request(url, headers=headers))
         except urllib.error.HTTPError as e:
-            if e.code == 304:
+            if e.getcode() == 304:
                 # Not modified; that means fresh.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
             raise FetchIndexError("Could not fetch index {}".format(url), e) from e
