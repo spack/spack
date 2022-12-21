@@ -356,7 +356,7 @@ def test_s3_request_to_s3_client_kwargs():
 def test_client_error_to_http_error_adaptor():
     err = spack.s3_handler.client_error_to_http_error("s3://my-bucket/x/y", MockClientError())
     assert isinstance(err, urllib.error.HTTPError)
-    assert err.status == 404
+    assert err.getcode() == 404
 
     err = spack.s3_handler.client_error_to_http_error(
         "s3://my-bucket/x/y", MockClientError(response={})
