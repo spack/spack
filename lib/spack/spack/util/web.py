@@ -783,6 +783,36 @@ def get_header(headers, header_name):
         raise
 
 
+def parse_etag(header_value):
+    """Parse a strong etag from an ETag: <value> header value.
+    We don't allow for weakness indicators because it's unclear
+    what that means for cache invalidation."""
+    if header_value is None:
+        return None
+
+    # First follow rfc7232 section 2.3 mostly:
+    #  ETag       = entity-tag
+    #  entity-tag = [ weak ] opaque-tag
+    #  weak       = %x57.2F ; "W/", case-sensitive
+    #  opaque-tag = DQUOTE *etagc DQUOTE
+    #  etagc      = %x21 / %x23-7E / obs-text
+    #             ; VCHAR except double quotes, plus obs-text
+    # obs-text    = %x80-FF
+
+    # That means quotes are required.
+    valid = re.match(r'"([\x21\x23-\x7e\x80-\xFF]+)"$', header_value)
+    if valid:
+        return valid.group(1)
+
+    # However, not everybody adheres to the RFC (some servers send
+    # wrong etags, but also s3:// is simply a different standard).
+    # In that case, it's common that quotes are omitted, everything
+    # else stays the same.
+    valid = re.match(r"([\x21\x23-\x7e\x80-\xFF]+)$", header_value)
+
+    return valid.group(1) if valid else None
+
+
 class FetchError(spack.error.SpackError):
     """Superclass for fetch-related errors."""
 
