@@ -171,6 +171,10 @@ class Hdf(AutotoolsPackage):
             # configure script.
             config_args.append("LIBS=%s" % self.spec["rpc"].libs.link_flags)
 
+            # crayftn doesn't respect LIBRARY_PATH, so configure fails without this
+            if self.spec.compiler.name == "cce":
+                config_args.append("LDFLAGS=%s" % self.spec["rpc"].libs.search_flags)
+
         # https://github.com/Parallel-NetCDF/PnetCDF/issues/61
         if self.spec.satisfies("%gcc@10:"):
             config_args.extend(
