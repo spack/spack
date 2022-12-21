@@ -156,7 +156,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("py-cinemasci", when="+cinema")
 
     dav_sdk_depends_on(
-        "paraview@5.10:+mpi+python+kits+shared+catalyst+libcatalyst",
+        "paraview@5.10:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst",
         when="+paraview",
         propagate=["hdf5", "adios2"],
     )
@@ -180,6 +180,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         when="+vtkm",
         propagate=["cuda", "rocm"] + cuda_arch_variants + amdgpu_target_variants,
     )
+    # TODO: When Ascent is updated to use VTK-m >= 1.8 move examples to
+    # the main spec.
+    depends_on("vtk-m+examples", when="+vtkm ^vtk-m@1.8:")
     depends_on("vtk-m+openmp", when="~rocm+vtkm")
     depends_on("vtk-m~openmp", when="+rocm+vtkm")
 

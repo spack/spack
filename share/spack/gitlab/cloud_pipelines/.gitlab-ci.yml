@@ -158,113 +158,113 @@ protected-publish:
 # still run on UO runners and be signed
 # using the previous approach.
 ########################################
-.e4s-mac:
-  variables:
-    SPACK_CI_STACK_NAME: e4s-mac
-  allow_failure: True
+# .e4s-mac:
+#   variables:
+#     SPACK_CI_STACK_NAME: e4s-mac
+#   allow_failure: True
 
-.mac-pr:
-  only:
-  - /^pr[\d]+_.*$/
-  - /^github\/pr[\d]+_.*$/
-  variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
-    SPACK_PRUNE_UNTOUCHED: "True"
+# .mac-pr:
+#   only:
+#   - /^pr[\d]+_.*$/
+#   - /^github\/pr[\d]+_.*$/
+#   variables:
+#     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+#     SPACK_PRUNE_UNTOUCHED: "True"
 
-.mac-protected:
-  only:
-  - /^develop$/
-  - /^releases\/v.*/
-  - /^v.*/
-  - /^github\/develop$/
-  variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+# .mac-protected:
+#   only:
+#   - /^develop$/
+#   - /^releases\/v.*/
+#   - /^v.*/
+#   - /^github\/develop$/
+#   variables:
+#     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
 
-.mac-pr-build:
-  extends: [ ".mac-pr", ".build" ]
-  variables:
-    AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+# .mac-pr-build:
+#   extends: [ ".mac-pr", ".build" ]
+#   variables:
+#     AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
+#     AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
 
-.mac-protected-build:
-  extends: [ ".mac-protected", ".build" ]
-  variables:
-    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
-    SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
+# .mac-protected-build:
+#   extends: [ ".mac-protected", ".build" ]
+#   variables:
+#     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+#     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+#     SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
 
-e4s-mac-pr-generate:
-  extends: [".e4s-mac", ".mac-pr"]
-  stage: generate
-  script:
-    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
-    - . "./share/spack/setup-env.sh"
-    - spack --version
-    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-    - spack env activate --without-view .
-    - spack ci generate --check-index-only
-      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
-      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
-      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
-  artifacts:
-    paths:
-      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  tags:
-  - lambda
-  interruptible: true
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
-  timeout: 60 minutes
+# e4s-mac-pr-generate:
+#   extends: [".e4s-mac", ".mac-pr"]
+#   stage: generate
+#   script:
+#     - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+#     - . "./share/spack/setup-env.sh"
+#     - spack --version
+#     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+#     - spack env activate --without-view .
+#     - spack ci generate --check-index-only
+#       --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+#       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+#       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+#   artifacts:
+#     paths:
+#       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+#   tags:
+#   - lambda
+#   interruptible: true
+#   retry:
+#     max: 2
+#     when:
+#       - runner_system_failure
+#       - stuck_or_timeout_failure
+#   timeout: 60 minutes
 
-e4s-mac-protected-generate:
-  extends: [".e4s-mac", ".mac-protected"]
-  stage: generate
-  script:
-    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
-    - . "./share/spack/setup-env.sh"
-    - spack --version
-    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
-    - spack env activate --without-view .
-    - spack ci generate --check-index-only
-      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
-      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
-  artifacts:
-    paths:
-      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  tags:
-  - omicron
-  interruptible: true
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
-  timeout: 60 minutes
+# e4s-mac-protected-generate:
+#   extends: [".e4s-mac", ".mac-protected"]
+#   stage: generate
+#   script:
+#     - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+#     - . "./share/spack/setup-env.sh"
+#     - spack --version
+#     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+#     - spack env activate --without-view .
+#     - spack ci generate --check-index-only
+#       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+#       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+#   artifacts:
+#     paths:
+#       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+#   tags:
+#   - omicron
+#   interruptible: true
+#   retry:
+#     max: 2
+#     when:
+#       - runner_system_failure
+#       - stuck_or_timeout_failure
+#   timeout: 60 minutes
 
-e4s-mac-pr-build:
-  extends: [ ".e4s-mac", ".mac-pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-mac-pr-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-mac-pr-generate
+# e4s-mac-pr-build:
+#   extends: [ ".e4s-mac", ".mac-pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-mac-pr-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-mac-pr-generate
 
-e4s-mac-protected-build:
-  extends: [ ".e4s-mac", ".mac-protected-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-mac-protected-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-mac-protected-generate
+# e4s-mac-protected-build:
+#   extends: [ ".e4s-mac", ".mac-protected-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-mac-protected-generate
+#     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-mac-protected-generate
 
 ########################################
 # E4S pipeline
