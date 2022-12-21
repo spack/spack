@@ -480,9 +480,9 @@ class BinaryCacheIndex(object):
         }
 
         # clean up the old cache_key if necessary
-        old_index = cache_entry.get("index_path", None)
-        if old_index:
-            self._index_file_cache.remove(old_index)
+        old_cache_key = cache_entry.get("index_path", None)
+        if old_cache_key:
+            self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should
         # regenerate the spec cache as a result.
