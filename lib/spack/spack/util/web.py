@@ -50,9 +50,10 @@ def _urlopen():
     without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
 
     # And dynamically dispatch based on the config:verify_ssl.
-    def dispatch_open(*args, **kwargs):
+    def dispatch_open(fullurl, data=None, timeout=None):
         opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
-        return opener.open(*args, **kwargs)
+        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        return opener.open(fullurl, data, timeout)
 
     return dispatch_open
 
@@ -89,11 +90,10 @@ def read_from_url(url, accept_content_type=None):
         url = urllib.parse.urlparse(url)
 
     # Timeout in seconds for web requests
-    timeout = spack.config.get("config:connect_timeout", 10)
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
     try:
-        response = urlopen(request, timeout=timeout)
+        response = urlopen(request)
     except URLError as err:
         raise SpackWebError("Download failed: {}".format(str(err)))
 
