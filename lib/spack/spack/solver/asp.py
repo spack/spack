@@ -2480,14 +2480,8 @@ class Solver(object):
                 )
 
             # Specs from buildcaches
-            try:
-                index = spack.binary_distribution.update_cache_and_get_specs()
-                reusable_specs.extend(index)
-            except (spack.binary_distribution.FetchCacheError, IndexError):
-                # this is raised when no mirrors had indices.
-                # TODO: update mirror configuration so it can indicate that the
-                # TODO: source cache (or any mirror really) doesn't have binaries.
-                pass
+            index = spack.binary_distribution.update_cache_and_get_specs()
+            reusable_specs.extend(index)
         return reusable_specs
 
     def solve(

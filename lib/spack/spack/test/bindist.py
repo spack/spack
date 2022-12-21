@@ -15,6 +15,7 @@ from llnl.util.filesystem import join_path, visit_directory_tree
 import spack.binary_distribution as bindist
 import spack.caches
 import spack.config
+import spack.database as spack_db
 import spack.fetch_strategy
 import spack.hooks.sbang as sbang
 import spack.main
@@ -453,6 +454,42 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
         assert "libelf" not in cache_list
 
 
+@pytest.mark.usefixtures(
+    "install_mockery_mutable_config",
+    "mock_packages",
+    "mock_fetch",
+)
+def test_index_legacy_compatible(monkeypatch, tmpdir, mutable_config):
+    """Check that Spack buildcache index is compatible with the older Database-based
+    implementation.
+
+    TODO: Remove this test if/when the index.json format changes."""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join("mirror_dir")
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
+    spack.config.set("mirrors", {"test": mirror_url})
+
+    s = Spec("libdwarf").concretized()
+
+    # Install a package
+    install_cmd("--no-cache", s.name)
+
+    # Create a buildcache, remove dependency and update index
+    buildcache_cmd("create", "-uad", mirror_dir.strpath, s.name)
+    os.remove(*glob.glob(os.path.join(mirror_dir.join("build_cache").strpath, "*libelf*")))
+    buildcache_cmd("update-index", "-d", mirror_dir.strpath)
+
+    # Parse the index.json using the current Database
+    db_dir = tmpdir.join("db_dir", "db_root")
+    db = spack_db.Database(None, db_dir=db_dir.strpath, enable_transaction_locking=False)
+    db._read_from_file(mirror_dir.join("build_cache", "index.json").strpath)
+
+    # Ensure libdwarf appears exactly once and libelf never appears
+    assert len(db.query_local(query_spec="libdwarf", installed=False, in_buildcache=True)) == 1
+    assert len(db.query_local(query_spec="libelf", installed=False, in_buildcache=True)) == 0
+
+
 def test_generate_indices_key_error(monkeypatch, capfd):
     def mock_list_url(url, recursive=False):
         print("mocked list_url({0}, {1})".format(url, recursive))
@@ -589,29 +626,6 @@ def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
         "Extracting archive-files-2.0-" "l3vdiqvbobmspwyb4q2b62fz6nitd4hk from binary cache"
     )
     assert expect_line in output
-
-
-def test_FetchCacheError_only_accepts_lists_of_errors():
-    with pytest.raises(TypeError, match="list"):
-        bindist.FetchCacheError("error")
-
-
-def test_FetchCacheError_pretty_printing_multiple():
-    e = bindist.FetchCacheError([RuntimeError("Oops!"), TypeError("Trouble!")])
-    str_e = str(e)
-    print("'" + str_e + "'")
-    assert "Multiple errors" in str_e
-    assert "Error 1: RuntimeError: Oops!" in str_e
-    assert "Error 2: TypeError: Trouble!" in str_e
-    assert str_e.rstrip() == str_e
-
-
-def test_FetchCacheError_pretty_printing_single():
-    e = bindist.FetchCacheError([RuntimeError("Oops!")])
-    str_e = str(e)
-    assert "Multiple errors" not in str_e
-    assert "RuntimeError: Oops!" in str_e
-    assert str_e.rstrip() == str_e
 
 
 def test_build_manifest_visitor(tmpdir):
