@@ -38,7 +38,6 @@ _versions = {
             "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux_ppc64le.run",
         ),
     },
-
     "11.8.0": {
         "Linux-aarch64": (
             "e6e9a8d31163c9776b5e313fd7590877c5684e1ecddee741154f95704d4ed27c",
