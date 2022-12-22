@@ -22,9 +22,9 @@ class MSBuildPackage(spack.package_base.PackageBase):
     build_system_class = "MSBuildPackage"
 
     build_system("msbuild")
-    conflicts("platform=linux",  when="build_system=msbuild")
+    conflicts("platform=linux", when="build_system=msbuild")
     conflicts("platform=darwin", when="build_system=msbuild")
-    conflicts("platform=cray",   when="build_system=msbuild")
+    conflicts("platform=cray", when="build_system=msbuild")
 
 
 @spack.builder.builder("msbuild")
@@ -58,11 +58,7 @@ class MSBuildBuilder(BaseBuilder):
         |                                               | is located          |
         +-----------------------------------------------+---------------------+
     """
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
-        m.msbuild = Executable("msbuild")
-        # analog to configure for win32
-        m.cscript = Executable("cscript")
+
     phases = ("build", "install")
 
     #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.build` phase
@@ -109,7 +105,9 @@ class MSBuildBuilder(BaseBuilder):
     def build(self, pkg, spec, prefix):
         """Run "msbuild" on the build targets specified by the builder."""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).msbuild(*self.msbuild_args(), self.define_targets(*self.build_targets))
+            inspect.getmodule(self.pkg).msbuild(
+                *self.msbuild_args(), self.define_targets(*self.build_targets)
+            )
 
     def install(self, pkg, spec, prefix):
         """Run "msbuild" on the install targets specified by the builder.

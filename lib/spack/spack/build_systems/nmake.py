@@ -115,7 +115,8 @@ class NMakeBuilder(BaseBuilder):
         return []
 
     def nmake_install_args(self):
-        """Define arguments appropriate only for install phase to NMake. This is an empty list by default.
+        """Define arguments appropriate only for install phase to NMake.
+        This is an empty list by default.
         Individual packages should override to specify NMake args to command line"""
         return []
 
@@ -126,7 +127,7 @@ class NMakeBuilder(BaseBuilder):
         if self.nmakefile_name:
             opts.append("/f {}".format(self.nmakefile_name))
         with fs.working_dir(self.build_directory):
-            nmake(
+            inspect.getmodule(self.pkg).nmake(
                 *opts, *self.build_targets, ignore_quotes=self.ignore_quotes
             )
 
