@@ -593,15 +593,10 @@ def set_module_variables_for_package(pkg):
         # analog to configure for win32
         m.cscript = Executable("cscript")
 
-    m.env = os.environ
-
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
 
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
-        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
