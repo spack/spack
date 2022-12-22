@@ -107,18 +107,15 @@ class Qgis(CMakePackage):
     depends_on("proj@4.4.0:")
     depends_on("proj@4.9.3:", when="@3.8.2:")
     depends_on("py-psycopg2", type=("build", "run"))  # TODO: is build dependency necessary?
-    depends_on("py-pyqt4", when="@2")
-    depends_on("py-pyqt5@5.3:", when="@3")
+    depends_on("py-pyqt5@5.3:")
     depends_on("py-requests", type=("build", "run"))  # TODO: is build dependency necessary?
-    depends_on("python@3.0.0:", type=("build", "run"), when="@3")
-    depends_on("python@3.6:", type=("build", "run"), when="@3.18:")
-    depends_on("python@3.7:", type=("build", "run"), when="@3.20:")
+    depends_on("python", type=("build", "run"))
     depends_on("qca@2.2.1")
     depends_on("qjson")
     depends_on("qscintilla +python")
     depends_on("qt+dbus")
     depends_on("qt+dbus@5.12.0:", when="@3.20:")
-    depends_on("qtkeychain@0.5:", when="@3:")
+    depends_on("qtkeychain@0.5:")
     depends_on("qwt@5:")
     depends_on("qwtpolar")
     depends_on("sqlite@3.0.0: +column_metadata")
@@ -149,15 +146,11 @@ class Qgis(CMakePackage):
     depends_on("bison@2.4:", type="build")
     depends_on("pkgconfig", type="build")
 
-    # Take care of conflicts using depends_on
     depends_on("qt@5.9.0:5.12", when="@3.8")
     depends_on("qt@5.9.0:", when="@3.10.0:")
-    depends_on("qtkeychain@:1.5", when="^qt@4")
-    depends_on("qt@:4", when="@2")
-    depends_on("py-pyqt5@5.3:", when="@3")
 
-    patch("pyqt5.patch", when="@:3.14 ^qt@5")
-    patch("pyqt5_3165x.patch", when="@3.16.5: ^qt@5")
+    patch("pyqt5.patch", when="@:3.14")
+    patch("pyqt5_3165x.patch", when="@3.16.5:")
 
     def cmake_args(self):
         spec = self.spec
