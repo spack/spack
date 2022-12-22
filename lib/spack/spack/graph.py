@@ -518,12 +518,10 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         super().visit(edge)
 
     def node_entry(self, node):
-        format_option = "{name}{@version}{%compiler}{/hash:7}"
-        options = f'[label="{node.format(format_option)}", group="build_dependencies"]'
+        node_str = node.format("{name}{@version}{%compiler}{/hash:7}")
+        options = f'[label="{node_str}", group="build_dependencies", fillcolor="coral"]'
         if node.dag_hash() in self.main_unified_space:
-            options = (
-                f'[label="{node.format(format_option)}", group="main_psid", fillcolor="coral"]'
-            )
+            options = f'[label="{node_str}", group="main_psid"]'
         return node.dag_hash(), options
 
     def edge_entry(self, edge):
