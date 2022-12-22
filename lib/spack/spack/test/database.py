@@ -1059,3 +1059,24 @@ def test_query_installed_when_package_unknown(database, tmpdir):
             assert not s.installed_upstream
             with pytest.raises(spack.repo.UnknownNamespaceError):
                 s.package
+
+
+def test_sqlite_roundtrip(database: spack.database.Database, tmpdir):
+    # Test that export to sqlite and importing back gives the same database.
+    assert len(database.query_local()) > 0
+    export = str(tmpdir.join("dump.sqlite"))
+    database.to_sqlite(export)
+    new_db = spack.database.Database(str(tmpdir))
+    new_db.from_sqlite(export)
+    assert new_db.query_local() == database.query_local()
+
+
+def test_sqlite_export_failure(database: spack.database.Database, tmpdir):
+    export = str(tmpdir.join("dump.sqlite"))
+    # works
+    database.to_sqlite(export)
+
+    with pytest.raises(ValueError):
+        database.to_sqlite(export)
+
+    database.to_sqlite(export, force=True)

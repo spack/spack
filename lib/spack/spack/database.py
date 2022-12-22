@@ -22,6 +22,7 @@ filesystem.
 
 import contextlib
 import datetime
+import json
 import os
 import socket
 import sys
@@ -35,6 +36,8 @@ try:
 except ImportError:
     _use_uuid = False
     pass
+
+import sqlite3
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -811,6 +814,11 @@ class Database(object):
                     (k, v.to_dict(include_fields=self._record_fields))
                     for k, v in self._data.items()
                 )
+
+        self._init_from_install_dict(installs)
+
+    def _init_from_install_dict(self, installs: dict):
+        """Index db from [{hash: spec_dict}] format"""
 
         def invalid_record(hash_key, error):
             msg = "Invalid record in Spack database: " "hash: %s, cause: %s: %s"
@@ -1627,6 +1635,43 @@ class Database(object):
                 status = "explicit" if explicit else "implicit"
                 tty.debug(message.format(status, s=spec))
                 rec.explicit = explicit
+
+    def to_sqlite(self, path, force=False):
+        """Export a database to a sqlite format, keyed by hash and pkg name"""
+        with self.read_transaction():
+            entries = (
+                (
+                    hash,
+                    record.spec.name,
+                    json.dumps(record.to_dict(include_fields=self._record_fields)),
+                )
+                for hash, record in self._data.items()
+            )
+
+        if os.path.lexists(path):
+            if force:
+                os.remove(path)
+            else:
+                raise ValueError("File exists {}".format(path))
+
+        connection = sqlite3.connect(path)
+        cursor = connection.cursor()
+        cursor.execute("CREATE TABLE specs (hash TEXT PRIMARY KEY, name TEXT, data TEXT)")
+        cursor.execute("CREATE INDEX spec_name ON specs (name)")
+        cursor.executemany("INSERT INTO specs (hash, name, data) VALUES (?, ?, ?)", entries)
+        connection.commit()
+
+    def from_sqlite(self, path):
+        """Populate index.json database from sqlite format"""
+        connection = sqlite3.connect(path)
+        cursor = connection.cursor()
+        installs = {
+            hash: json.loads(data) for hash, data in cursor.execute("SELECT hash, data FROM specs")
+        }
+
+        # Overwrite current database with sqlite data.
+        with self.write_transaction():
+            self._init_from_install_dict(installs)
 
 
 class UpstreamDatabaseLockingError(SpackError):
