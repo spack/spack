@@ -17,36 +17,63 @@ spack:
     cmake:
       variants: ~ownlibs
     mesa:
-      variants: +glx ~osmesa +opengl ~opengles +llvm
-    paraview:
-      variants: +qt
-    visit:
-      variants: +gui
+      require: "@21 +glx +osmesa +opengl ~opengles +llvm swr=auto"
+    libosmesa:
+      require: ^mesa +osmesa
+    libglx:
+      require: ^mesa +glx
     all:
       target: [x86_64]
 
-  # Currently disabled: sensei
+  definitions:
+  - paraview_specs:
+    - matrix:
+      - - paraview
+      - - +qt~osmesa # GUI Support w/ GLX Rendering
+        - ~qt~osmesa # GLX Rendering
+        - ~qt+osmesa # OSMesa Rendering
+  - visit_specs:
+    - matrix:
+      - - visit
+      - - +gui~osmesa # GUI Support w/ GLX Rendering
+        - ~gui~osmesa # GLX Rendering
+        - ~gui+osmesa # OSMesa Rendering
+  - sdk_base_spec:
+    - matrix:
+      - - ecp-data-vis-sdk
+            +ascent
+            +adios2
+            +cinema
+            +darshan
+            +faodel
+            +hdf5
+            +pnetcdf
+            +sensei
+            +sz
+            +unifyfs
+            +veloc
+            +vtkm
+            +zfp
+      - - ~cuda ~rocm
+        # Current testing of GPU supported configurations
+        # is provided in the E4S stack
+        # - +cuda ~rocm
+        # - ~cuda +rocm
+
   specs:
-    - ecp-data-vis-sdk ~cuda ~rocm ~sensei
-        +adios2
-        +ascent
-        +cinema
-        +darshan
-        +faodel
-        +hdf5
-        +paraview
-        +pnetcdf
-        +sz
-        +unifyfs
-        +veloc
-        +vtkm
-        +zfp
-        +visit
+    # Test ParaView builds with different GL backends
+    - matrix:
+      - [$sdk_base_spec]
+      - [$^paraview_specs]
+    # Test ParaView builds with differnt GL backends
+    - matrix:
+      - [$sdk_base_spec]
+      - [$^visit_specs]
 
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
   gitlab-ci:
-    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
     script:
       - uname -a || true
       - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
@@ -64,13 +91,15 @@ spack:
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack --color=always --backtrace ci rebuild
     after_script:
-      - cat /proc/loadavg || true
+     - cat /proc/loadavg || true
 
     match_behavior: first
     mappings:
       - match:
-          - llvm
-          - qt
+        - llvm
+        - qt
+        - paraview
+        - visit
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
           variables:
@@ -79,12 +108,11 @@ spack:
             KUBERNETES_MEMORY_REQUEST: 42G
 
       - match:
-            - ecp-data-vis-sdk
-            - mesa
-            - openblas
-            - paraview
-            - visit
-            - vtk-m
+        - ecp-data-vis-sdk
+        - mesa
+        - openblas
+        - vtk
+        - vtk-m
         runner-attributes:
           tags: [ "spack", "large", "x86_64" ]
           variables:
@@ -93,24 +121,24 @@ spack:
             KUBERNETES_MEMORY_REQUEST: 12G
 
       - match:
-            - adios2
-            - ascent
-            - binutils
-            - blt
-            - boost
-            - conduit
-            - double-conversion
-            - dray
-            - eigen
-            - faodel
-            - hdf5
-            - mfem
-            - nasm
-            - openmpi
-            - pegtl
-            - py-cinemasci
-            - raja
-            - vtk-h
+        - adios2
+        - ascent
+        - binutils
+        - blt
+        - boost
+        - conduit
+        - double-conversion
+        - dray
+        - eigen
+        - faodel
+        - hdf5
+        - mfem
+        - nasm
+        - openmpi
+        - pegtl
+        - py-cinemasci
+        - raja
+        - vtk-h
         runner-attributes:
           tags: [ "spack", "medium", "x86_64" ]
           variables:
@@ -119,33 +147,32 @@ spack:
             KUBERNETES_MEMORY_REQUEST: "4G"
 
       - match:
-            - darshan-util
-            - docbook-xml
-            - gdbm
-            - gettext
-            - hwloc
-            - libevent
-            - libmd
-            - libpciaccess
-            - libsigsegv
-            - libunwind
-            - libxml2
-            - libzmq
-            - numactl
-            - openssh
-            - pcre
-            - perl-data-dumper
-            - py-cycler
-            - py-decorator
-            - py-mistune
-            - py-pycparser
-            - py-setuptools
-            - py-wheel
-            - readline
-            - sqlite
-            - tar
-            - util-linux-uuid
-
+        - darshan-util
+        - docbook-xml
+        - gdbm
+        - gettext
+        - hwloc
+        - libevent
+        - libmd
+        - libpciaccess
+        - libsigsegv
+        - libunwind
+        - libxml2
+        - libzmq
+        - numactl
+        - openssh
+        - pcre
+        - perl-data-dumper
+        - py-cycler
+        - py-decorator
+        - py-mistune
+        - py-pycparser
+        - py-setuptools
+        - py-wheel
+        - readline
+        - sqlite
+        - tar
+        - util-linux-uuid
         runner-attributes:
           tags: [ "spack", "small", "x86_64" ]
           variables:
@@ -162,7 +189,7 @@ spack:
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
     service-job-attributes:
-      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version

@@ -1264,7 +1264,7 @@ def generate_gitlab_ci_yaml(
 
             final_job["stage"] = "stage-rebuild-index"
             final_job["script"] = [
-                "spack buildcache update-index --keys -d {0}".format(index_target_mirror)
+                "spack buildcache update-index --keys --mirror-url {0}".format(index_target_mirror)
             ]
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
@@ -1777,9 +1777,9 @@ def reproduce_ci_job(url, work_dir):
     download_and_extract_artifacts(url, work_dir)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
-    concrete_env_dir = os.path.dirname(lock_file)
+    repro_lock_dir = os.path.dirname(lock_file)
 
-    tty.debug("Concrete environment directory: {0}".format(concrete_env_dir))
+    tty.debug("Found lock file in: {0}".format(repro_lock_dir))
 
     yaml_files = fs.find(work_dir, ["*.yaml", "*.yml"])
 
@@ -1801,6 +1801,20 @@ def reproduce_ci_job(url, work_dir):
 
     if pipeline_yaml:
         tty.debug("\n{0} is likely your pipeline file".format(yf))
+
+    relative_concrete_env_dir = pipeline_yaml["variables"]["SPACK_CONCRETE_ENV_DIR"]
+    tty.debug("Relative environment path used by cloud job: {0}".format(relative_concrete_env_dir))
+
+    # Using the relative concrete environment path found in the generated
+    # pipeline variable above, copy the spack environment files so they'll
+    # be found in the same location as when the job ran in the cloud.
+    concrete_env_dir = os.path.join(work_dir, relative_concrete_env_dir)
+    os.makedirs(concrete_env_dir, exist_ok=True)
+    copy_lock_path = os.path.join(concrete_env_dir, "spack.lock")
+    orig_yaml_path = os.path.join(repro_lock_dir, "spack.yaml")
+    copy_yaml_path = os.path.join(concrete_env_dir, "spack.yaml")
+    shutil.copyfile(lock_file, copy_lock_path)
+    shutil.copyfile(orig_yaml_path, copy_yaml_path)
 
     # Find the install script in the unzipped artifacts and make it executable
     install_script = fs.find(work_dir, "install.sh")[0]
@@ -1857,6 +1871,7 @@ def reproduce_ci_job(url, work_dir):
         if repro_details:
             mount_as_dir = repro_details["ci_project_dir"]
             mounted_repro_dir = os.path.join(mount_as_dir, rel_repro_dir)
+            mounted_env_dir = os.path.join(mount_as_dir, relative_concrete_env_dir)
 
         # We will also try to clone spack from your local checkout and
         # reproduce the state present during the CI build, and put that into
@@ -1940,7 +1955,7 @@ def reproduce_ci_job(url, work_dir):
     inst_list.append("        $ source {0}/share/spack/setup-env.sh\n".format(spack_root))
     inst_list.append(
         "        $ spack env activate --without-view {0}\n\n".format(
-            mounted_repro_dir if job_image else repro_dir
+            mounted_env_dir if job_image else repro_dir
         )
     )
     inst_list.append("    - Run the install script\n\n")

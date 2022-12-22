@@ -87,7 +87,6 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@:0.19")
-    depends_on("py-dataclasses", type=("build", "run"), when="@0.20: ^python@:3.6")
     depends_on("py-packaging", type=("build", "run"), when="@0.26:")
 
     # Framework dependencies
@@ -160,7 +159,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     # Patch vendored copy of eigen to fix build on aarch64
     # https://github.com/horovod/horovod/issues/3605
     # https://gitlab.com/libeigen/eigen/-/commit/fd1dcb6b45a2c797ad4c4d6cc7678ee70763b4ed
-    patch("eigen.patch", when="@0.21: target=aarch64:")
+    patch("eigen.patch", when="@0.21:0.25 target=aarch64:")
 
     @property
     def import_modules(self):

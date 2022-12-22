@@ -11,8 +11,6 @@ import re
 import subprocess
 import warnings
 
-import six
-
 from .microarchitecture import generic_microarchitecture, TARGETS
 from .schema import TARGETS_JSON
 
@@ -80,10 +78,9 @@ def proc_cpuinfo():
 
 
 def _check_output(args, env):
-    output = subprocess.Popen(  # pylint: disable=consider-using-with
-        args, stdout=subprocess.PIPE, env=env
-    ).communicate()[0]
-    return six.text_type(output.decode("utf-8"))
+    with subprocess.Popen(args, stdout=subprocess.PIPE, env=env) as proc:
+        output = proc.communicate()[0]
+    return str(output.decode("utf-8"))
 
 
 def _machine():
@@ -293,7 +290,7 @@ def compatibility_check(architecture_family):
             this test can be used, e.g. x86_64 or ppc64le etc.
     """
     # Turn the argument into something iterable
-    if isinstance(architecture_family, six.string_types):
+    if isinstance(architecture_family, str):
         architecture_family = (architecture_family,)
 
     def decorator(func):

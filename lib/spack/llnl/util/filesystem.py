@@ -99,7 +99,9 @@ def getuid():
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     if is_windows:
-        if os.path.exists(dst):
+        # Windows path existence checks will sometimes fail on junctions/links/symlinks
+        # so check for that case
+        if os.path.exists(dst) or os.path.islink(dst):
             os.remove(dst)
     os.rename(src, dst)
 
@@ -288,7 +290,10 @@ def filter_file(regex, repl, *filenames, **kwargs):
         shutil.copy(filename, tmp_filename)
 
         try:
-            extra_kwargs = {"errors": "surrogateescape"}
+            # To avoid translating line endings (\n to \r\n and vis versa)
+            # we force os.open to ignore translations and use the line endings
+            # the file comes with
+            extra_kwargs = {"errors": "surrogateescape", "newline": ""}
 
             # Open as a text file and filter until the end of the file is
             # reached or we found a marker in the line if it was specified
@@ -2278,10 +2283,17 @@ class WindowsSimulatedRPath(object):
         """
         self._addl_rpaths = self._addl_rpaths | set(paths)
 
-    def _link(self, path, dest):
+    def _link(self, path, dest_dir):
+        """Perform link step of simulated rpathing, installing
+        simlinks of file in path to the dest_dir
+        location. This method deliberately prevents
+        the case where a path points to a file inside the dest_dir.
+        This is because it is both meaningless from an rpath
+        perspective, and will cause an error when Developer
+        mode is not enabled"""
         file_name = os.path.basename(path)
-        dest_file = os.path.join(dest, file_name)
-        if os.path.exists(dest):
+        dest_file = os.path.join(dest_dir, file_name)
+        if os.path.exists(dest_dir) and not dest_file == path:
             try:
                 symlink(path, dest_file)
             # For py2 compatibility, we have to catch the specific Windows error code
@@ -2295,7 +2307,7 @@ class WindowsSimulatedRPath(object):
                         "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
                         if already_linked
                         else "library with name %s already exists at location %s."
-                        % (file_name, dest)
+                        % (file_name, dest_dir)
                     )
                     pass
                 else:

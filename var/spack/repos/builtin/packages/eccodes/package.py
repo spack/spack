@@ -78,7 +78,6 @@ class Eccodes(CMakePackage):
     variant(
         "memfs", default=False, description="Enable memory based access to definitions/samples"
     )
-    variant("python", default=False, description="Enable the Python 2 interface")
     variant("fortran", default=False, description="Enable the Fortran support")
     variant("shared", default=True, description="Build shared versions of the libraries")
 
@@ -115,12 +114,6 @@ class Eccodes(CMakePackage):
     depends_on("libaec", when="+aec")
     # Can be built with Python 2 or Python 3.
     depends_on("python", when="+memfs", type="build")
-    # The interface is available only for Python 2.
-    # Python 3 interface is available as a separate packages:
-    # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
-    depends_on("python@2.6:2", when="+python", type=("build", "link", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    extends("python", when="+python")
 
     depends_on("cmake@3.6:", type="build")
     depends_on("cmake@3.12:", when="@2.19:", type="build")
@@ -150,7 +143,7 @@ class Eccodes(CMakePackage):
                 name=center,
                 destination="spack-definitions",
                 placement="definitions.{0}".format(center),
-                **kwargs
+                **kwargs,
             )
 
     # Enforce linking against the specified JPEG2000 backend, see also
@@ -237,13 +230,13 @@ class Eccodes(CMakePackage):
             r"(^\s*kind_of_double\s*=\s*)(\d{1,2})(\s*$)",
             "\\1kind(real\\2)\\3",
             "fortran/grib_types.f90",
-            **kwargs
+            **kwargs,
         )
         filter_file(
             r"(^\s*kind_of_\w+\s*=\s*)(\d{1,2})(\s*$)",
             "\\1kind(x\\2)\\3",
             "fortran/grib_types.f90",
-            **kwargs
+            **kwargs,
         )
 
         # Replace integer kinds:
@@ -252,7 +245,7 @@ class Eccodes(CMakePackage):
                 r"(^\s*integer\((?:kind=)?){0}(\).*)".format(size),
                 "\\1selected_int_kind({0})\\2".format(r),
                 *patch_kind_files,
-                **kwargs
+                **kwargs,
             )
 
         # Replace real kinds:
@@ -261,7 +254,7 @@ class Eccodes(CMakePackage):
                 r"(^\s*real\((?:kind=)?){0}(\).*)".format(size),
                 "\\1selected_real_kind({0}, {1})\\2".format(p, r),
                 *patch_kind_files,
-                **kwargs
+                **kwargs,
             )
 
         # Enable getarg and exit subroutines:
@@ -269,7 +262,7 @@ class Eccodes(CMakePackage):
             r"(^\s*program\s+\w+)(\s*$)",
             "\\1; use f90_unix_env; use f90_unix_proc\\2",
             *patch_unix_ext_files,
-            **kwargs
+            **kwargs,
         )
 
     @property
@@ -333,9 +326,6 @@ class Eccodes(CMakePackage):
             self.define_from_variant("ENABLE_ECCODES_THREADS", "pthreads"),
             self.define_from_variant("ENABLE_ECCODES_OMP_THREADS", "openmp"),
             self.define_from_variant("ENABLE_MEMFS", "memfs"),
-            self.define_from_variant(
-                "ENABLE_PYTHON{0}".format("2" if self.spec.satisfies("@2.20.0:") else ""), "python"
-            ),
             self.define_from_variant("ENABLE_FORTRAN", "fortran"),
             self.define("BUILD_SHARED_LIBS", "BOTH" if "+shared" in self.spec else "OFF"),
             self.define("ENABLE_TESTS", self.run_tests),

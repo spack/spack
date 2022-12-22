@@ -24,7 +24,6 @@ class PyRuamelYaml(PythonPackage):
     depends_on("python@3.5:", when="@0.17:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@28.7:", when="@0.17:", type=("build"))
-    depends_on("py-ruamel-ordereddict", when="@0.15:^python@:2", type=("build", "run"))
     depends_on("py-ruamel-yaml-clib@0.1.2:", when="@0.16:^python@:3.8", type=("build", "run"))
 
     @run_after("install")

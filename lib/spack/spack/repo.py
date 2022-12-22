@@ -9,7 +9,7 @@ import contextlib
 import errno
 import functools
 import importlib
-import importlib.machinery  # novm
+import importlib.machinery
 import importlib.util
 import inspect
 import itertools
@@ -24,7 +24,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Dict  # novm
+from typing import Dict
 
 import ruamel.yaml as yaml
 
@@ -79,7 +79,7 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):
     def __init__(self, fullname, path, prepend=None):
         super(_PrependFileLoader, self).__init__(fullname, path)
         self.prepend = prepend
@@ -144,7 +144,7 @@ class ReposFinder(object):
         loader = self.compute_loader(fullname)
         if loader is None:
             return None
-        return importlib.util.spec_from_loader(fullname, loader)  # novm
+        return importlib.util.spec_from_loader(fullname, loader)
 
     def compute_loader(self, fullname):
         # namespaces are added to repo, and package modules are leaves.
@@ -366,7 +366,7 @@ class FastPackageChecker(collections.abc.Mapping):
     """
 
     #: Global cache, reused by every instance
-    _paths_cache = {}  # type: Dict[str, Dict[str, os.stat_result]]
+    _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
 
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
@@ -384,7 +384,7 @@ class FastPackageChecker(collections.abc.Mapping):
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
 
-    def _create_new_cache(self):  # type: () -> Dict[str, os.stat_result]
+    def _create_new_cache(self) -> Dict[str, os.stat_result]:
         """Create a new cache for packages in a repo.
 
         The implementation here should try to minimize filesystem
@@ -394,7 +394,7 @@ class FastPackageChecker(collections.abc.Mapping):
         """
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
-        cache = {}  # type: Dict[str, os.stat_result]
+        cache: Dict[str, os.stat_result] = {}
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
             pkg_dir = os.path.join(self.packages_path, pkg_name)
@@ -753,6 +753,14 @@ class RepoPath(object):
 
     def all_package_names(self, include_virtuals=False):
         return self._all_package_names(include_virtuals)
+
+    def package_path(self, name):
+        """Get path to package.py file for this repo."""
+        return self.repo_for_pkg(name).package_path(name)
+
+    def all_package_paths(self):
+        for name in self.all_package_names():
+            yield self.package_path(name)
 
     def packages_with_tags(self, *tags):
         r = set()
@@ -1152,6 +1160,14 @@ class Repo(object):
         if include_virtuals:
             return names
         return [x for x in names if not self.is_virtual(x)]
+
+    def package_path(self, name):
+        """Get path to package.py file for this repo."""
+        return os.path.join(self.root, packages_dir_name, name, package_file_name)
+
+    def all_package_paths(self):
+        for name in self.all_package_names():
+            yield self.package_path(name)
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())

@@ -12,14 +12,14 @@ from spack.package import *
 class PyShapely(PythonPackage):
     """Manipulation and analysis of geometric objects in the Cartesian plane."""
 
-    homepage = "https://github.com/Toblerity/Shapely"
-    pypi = "Shapely/Shapely-1.7.1.tar.gz"
-    git = "https://github.com/Toblerity/Shapely.git"
+    homepage = "https://github.com/shapely/shapely"
+    pypi = "shapely/shapely-1.7.1.tar.gz"
+    git = "https://github.com/shapely/shapely.git"
 
     maintainers = ["adamjstewart"]
 
     version("main", branch="main")
-    version("master", branch="main", deprecated=True)
+    version("2.0.0", sha256="11f1b1231a6c04213fb1226c6968d1b1b3b369ec42d1e9655066af87631860ea")
     version("1.8.5", sha256="e82b6d60ecfb124120c88fe106a478596bbeab142116d7e7f64a364dac902a92")
     version("1.8.4", sha256="a195e51caafa218291f2cbaa3fef69fd3353c93ec4b65b2a4722c4cf40c3198c")
     version("1.8.3", sha256="1ce9da186d48efc50130af96d62ffb4d2e175235143d804ef395aad156d45bb3")
@@ -33,17 +33,20 @@ class PyShapely(PythonPackage):
     depends_on("python@3.6:", when="@1.8:", type=("build", "link", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@1.7", type=("build", "link", "run"))
     depends_on("python@2.6:", when="@:1.6", type=("build", "link", "run"))
-    depends_on("py-setuptools@:63", type="build")
-    depends_on("py-cython@0.29.24:2", type="build")
+    depends_on("py-setuptools@61:", when="@2:", type="build")
+    depends_on("py-setuptools@:63", when="@:1", type="build")
+    depends_on("py-cython@0.29:0", when="@2:", type="build")
+    depends_on("py-cython@0.29.24:2", when="@:1", type="build")
+    depends_on("py-numpy@1.14:", when="@2:", type=("build", "link", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
-    depends_on("geos@3.3:3.10", when="@:1.7")
-    depends_on("geos@3.6:3.10", when="@1.8:")
+    depends_on("geos@3.5:", when="@2:")
+    depends_on("geos@3.3:", when="@:1")
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-cov", type="test")
 
-    # https://github.com/Toblerity/Shapely/pull/891
+    # https://github.com/shapely/shapely/pull/891
     patch(
-        "https://github.com/Toblerity/Shapely/commit/98f6b36710bbe05b4ab59231cb0e08b06fe8b69c.patch?full_index=1",
+        "https://github.com/shapely/shapely/commit/98f6b36710bbe05b4ab59231cb0e08b06fe8b69c.patch?full_index=1",
         sha256="8583cdc97648277fa4faea8bd88d49e43390e87f697b966bd2b4290fba945ba0",
         when="@:1.7.0",
     )
@@ -54,6 +57,14 @@ class PyShapely(PythonPackage):
     # Also need to add logic to find libgeos_c.so from spack geos modules, if loaded.
     # This patch only works for 1.8.0/1.8.1, but may also be needed for 1.8.2-1.8.5
     patch("shapely-1.8.0-geos.py.patch", when="@1.8.0:1.8.1")
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/{0}/{0}hapely/{0}hapely-{1}.tar.gz"
+        if version >= Version("2"):
+            letter = "s"
+        else:
+            letter = "S"
+        return url.format(letter, version)
 
     @when("^python@3.7:")
     def patch(self):
@@ -69,7 +80,7 @@ class PyShapely(PythonPackage):
 
         # Shapely uses ctypes.util.find_library, which searches LD_LIBRARY_PATH
         # Our RPATH logic works fine, but the unit tests fail without this
-        # https://github.com/Toblerity/Shapely/issues/909
+        # https://github.com/shapely/shapely/issues/909
         libs = ":".join(self.spec["geos"].libs.directories)
         if sys.platform == "darwin":
             env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", libs)
@@ -85,4 +96,9 @@ class PyShapely(PythonPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):
-        python("-m", "pytest")
+        # https://shapely.readthedocs.io/en/latest/installation.html#testing-shapely
+        if self.version >= Version("2"):
+            with working_dir("spack-test", create=True):
+                python("-m", "pytest", "--pyargs", "shapely.tests")
+        else:
+            python("-m", "pytest")

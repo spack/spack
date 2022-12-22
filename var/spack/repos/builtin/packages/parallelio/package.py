@@ -31,18 +31,17 @@ class Parallelio(CMakePackage):
     variant(
         "fortran", default=True, description="enable fortran interface (requires netcdf fortran)"
     )
+    variant("mpi", default=True, description="Use mpi to build, otherwise use mpi-serial")
 
     patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
 
     depends_on("cmake@3.7:")
-    depends_on("mpi")
-    depends_on("netcdf-c +mpi", type="link")
+    depends_on("mpi", when="+mpi")
+    depends_on("mpi-serial", when="~mpi")
+    depends_on("netcdf-c +mpi", type="link", when="+mpi")
+    depends_on("netcdf-c ~mpi", type="link", when="~mpi")
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
-
-    #resource(name="CMake_Fortran_utils",
-    #         git="https://github.com/CESM-Development/CMake_Fortran_utils.git",
-    #         tag="master")
 
     resource(name="genf90",
              git="https://github.com/PARALLELIO/genf90.git",
@@ -53,15 +52,14 @@ class Parallelio(CMakePackage):
         return url.format(version.underscored)
 
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
-    patch("gfortran.patch", when="+fortran %gcc@10:")
+    patch("gfortran.patch", when="@:2.5.8 +fortran %gcc@10:")
 
     def cmake_args(self):
         define = self.define
         define_from_variant = self.define_from_variant
         spec = self.spec
-        env["CC"] = spec["mpi"].mpicc
-        env["FC"] = spec["mpi"].mpifc
         src = self.stage.source_path
+
         args = [
             define("NetCDF_C_PATH", spec["netcdf-c"].prefix),
             define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix),
@@ -71,28 +69,48 @@ class Parallelio(CMakePackage):
             define("PIO_ENABLE_EXAMPLES", False),
         ]
         if spec.satisfies("+pnetcdf"):
-            args.extend([
-                define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix),
-                define("PnetCDF_Fortran_PATH", spec["parallel-netcdf"].prefix),
-            ])
-        args.extend([
-            define_from_variant("PIO_ENABLE_TIMING", "timing"),
-        ])
-        # Compatibility flags for gfortran
-        fflags = []
-        if self.compiler.name in ["gcc", "clang", "apple-clang"]:
-            gfortran_major_ver = int(spack.compiler.get_compiler_version_output(
-                                     self.compiler.fc, "-dumpversion").split(".")[0])
-            if gfortran_major_ver >= 10:
-                fflags.append("-fallow-argument-mismatch")
-        if fflags:
-            args.extend([
-                self.define("CMAKE_Fortran_FLAGS", " ".join(fflags))
-            ])
-
+            args.extend(
+                [
+                    define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix),
+                ]
+            )
+        if spec.satisfies("+fortran"):
+            args.extend(
+                [
+                    define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix),
+                ]
+            )
+        if spec.satisfies("+mpi"):
+            env["CC"] = spec["mpi"].mpicc
+            env["FC"] = spec["mpi"].mpifc
+        else:
+            env["FFLAGS"] = "-DNO_MPIMOD"
+            args.extend(
+                [
+                    define("PIO_USE_MPISERIAL", True),
+                    define("PIO_ENABLE_TESTS", False),
+                    define("MPISERIAL_PATH", spec["mpi-serial"].prefix),
+                ]
+            )
+        args.extend(
+            [
+                define_from_variant("PIO_ENABLE_TIMING", "timing"),
+                define_from_variant("PIO_ENABLE_LOGGING", "logging"),
+                define_from_variant("PIO_ENABLE_FORTRAN", "fortran"),
+            ]
+        )
         return args
 
     def url_for_version(self, version):
         return "https://github.com/NCAR/ParallelIO/archive/pio{0}.tar.gz".format(
             version.underscored
         )
+
+    def setup_run_environment(self, env):
+        env.set("PIO_VERSION_MAJOR", "2")
+        valid_values = "netcdf"
+        if self.spec.satisfies("+mpi"):
+            valid_values += ",netcdf4p,netcdf4c"
+            if self.spec.satisfies("+pnetcdf"):
+                valid_values += ",pnetcdf"
+        env.set("PIO_TYPENAME_VALID_VALUES", valid_values)

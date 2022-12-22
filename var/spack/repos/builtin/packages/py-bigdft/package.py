@@ -19,9 +19,7 @@ class PyBigdft(PythonPackage):
     version("1.9.1", sha256="3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41")
     version("1.9.0", sha256="4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8")
 
-    depends_on("python@:2.8", type=("build", "run"), when="@:1.8.3")
-    depends_on("python@3.0:", type=("build", "run"), when="@1.9.0:")
-    depends_on("python@3.0:", type=("build", "run"), when="@develop")
+    depends_on("python@3.0:", type=("build", "run"))
     depends_on("py-numpy")
     depends_on("py-setuptools")
 
