@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Pcre(AutotoolsPackage):
+class Pcre(CMakePackage):
     """The PCRE package contains Perl Compatible Regular Expression
     libraries. These are useful for implementing regular expression
     pattern matching using the same syntax and semantics as Perl 5."""
@@ -51,3 +51,25 @@ class Pcre(AutotoolsPackage):
             args.append("--enable-unicode-properties")
 
         return args
+
+    def cmake_args(self):
+        args = []
+
+        if "+jit" in self.spec:
+            args.append("-DPCRE_SUPPORT_JIT:BOOL=ON")
+
+        if "+multibyte" in self.spec:
+            args.append("-DPCRE_BUILD_PCRE16:BOOL=ON")
+            args.append("-DPCRE_BUILD_PCRE32:BOOL=ON")
+
+        if "+utf" in self.spec:
+            args.append("-DPCRE_SUPPORT_UTF:BOOL=ON")
+            args.append("-DPCRE_SUPPORT_UNICODE_PROPERTIES:BOOL=ON")
+
+        return args
+
+    def cmake(self, spec, prefix):
+        if self.spec.satisfies("platform=windows"):
+            super(Pcre, self).cmake(spec, prefix)
+        else:
+            configure("--prefix=" + prefix, *self.configure_args())

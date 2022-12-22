@@ -10,7 +10,7 @@ from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
-class Openblas(MakefilePackage):
+class Openblas(MakefilePackage, CMakePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
@@ -442,6 +442,11 @@ class Openblas(MakefilePackage):
 
         return make_defs
 
+    def cmake_args(self):
+        cmake_defs = []
+        make_defs.extend(['-DUSE_THREAD:BOOL=FALSE', '-DTARGET:STRING=GENERIC'])
+        return cmake_defs
+
     @property
     def headers(self):
         # As in netlib-lapack, the only public headers for cblas and lapacke in
@@ -463,6 +468,10 @@ class Openblas(MakefilePackage):
             name += suffix
 
         return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
+
+    @when("platform=windows")
+    def cmake(self, spec, prefix):
+        super(Openblas, self).cmake(spec, prefix)
 
     @property
     def build_targets(self):
