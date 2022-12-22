@@ -39,7 +39,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.reporters.cdash import CDash
+from spack.reporters import CDash
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.util.pattern import Bunch
 
@@ -2363,5 +2363,6 @@ class CDashHandler(object):
         it = iter(cli_args)
         kv = {x.replace("--", "").replace("-", "_"): next(it) for x in it}
 
+        kv.setdefault("cdash_track", None)
         reporter = CDash(Bunch(**kv))
         reporter.test_skipped_report(directory_name, spec, reason)

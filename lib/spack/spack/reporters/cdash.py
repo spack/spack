@@ -45,9 +45,31 @@ CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
 CDASH_PHASES.add("update")
 
 
+CDashConfiguration = collections.namedtuple(
+    "CDashConfiguration", ["upload_url", "packages", "build", "site", "buildstamp", "track"]
+)
+
+
 def build_stamp(track, timestamp):
     buildstamp_format = "%Y%m%d-%H%M-{0}".format(track)
     return time.strftime(buildstamp_format, time.localtime(timestamp))
+
+
+def installed_specs(args):
+    if getattr(args, "spec", ""):
+        packages = args.spec
+    elif getattr(args, "specs", ""):
+        packages = args.specs
+    elif getattr(args, "package", ""):
+        # Ensure CI 'spack test run' can output CDash results
+        packages = args.package
+    else:
+        packages = []
+        for file in args.specfiles:
+            with open(file, "r") as f:
+                s = spack.spec.Spec.from_yaml(f)
+                packages.append(s.format())
+    return packages
 
 
 class CDash(Reporter):
@@ -65,13 +87,22 @@ class CDash(Reporter):
 
     def __init__(self, args):
         super().__init__(args)
+
+        configuration = CDashConfiguration(
+            upload_url=args.cdash_upload_url,
+            packages=installed_specs(args),
+            build=args.cdash_build,
+            site=args.cdash_site,
+            buildstamp=args.cdash_buildstamp,
+            track=args.cdash_track,
+        )
+
         #: Set to False if any error occurs when building the CDash report
         self.success = True
 
-        # Posixpath is used here to support the underlying template enginge
-        # Jinja2, which expects `/` path separators
-        self.template_dir = posixpath.join("reports", "cdash")
-        self.cdash_upload_url = args.cdash_upload_url
+        # Jinja2 expects `/` path separators
+        self.template_dir = "reports/cdash"
+        self.cdash_upload_url = configuration.upload_url
 
         if self.cdash_upload_url:
             self.buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
@@ -82,30 +113,17 @@ class CDash(Reporter):
             tty.verbose("Using CDash auth token from environment")
             self.authtoken = os.environ.get("SPACK_CDASH_AUTH_TOKEN")
 
-        if getattr(args, "spec", ""):
-            packages = args.spec
-        elif getattr(args, "specs", ""):
-            packages = args.specs
-        elif getattr(args, "package", ""):
-            # Ensure CI 'spack test run' can output CDash results
-            packages = args.package
-        else:
-            packages = []
-            for file in args.specfiles:
-                with open(file, "r") as f:
-                    s = spack.spec.Spec.from_yaml(f)
-                    packages.append(s.format())
-        self.install_command = " ".join(packages)
-        self.base_buildname = args.cdash_build or self.install_command
-        self.site = args.cdash_site or socket.gethostname()
+        self.install_command = " ".join(configuration.packages)
+        self.base_buildname = configuration.build or self.install_command
+        self.site = configuration.site or socket.gethostname()
         self.osname = platform.system()
         self.osrelease = platform.release()
         self.target = spack.platforms.host().target("default_target")
         self.endtime = int(time.time())
         self.buildstamp = (
-            args.cdash_buildstamp
-            if args.cdash_buildstamp
-            else build_stamp(args.cdash_track, self.endtime)
+            configuration.buildstamp
+            if configuration.buildstamp
+            else build_stamp(configuration.track, self.endtime)
         )
         self.buildIds = collections.OrderedDict()
         self.revision = ""
