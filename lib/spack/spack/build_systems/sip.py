@@ -39,7 +39,7 @@ class SIPPackage(spack.package_base.PackageBase):
     build_system("sip")
 
     with when("build_system=sip"):
-        extends("python")
+        extends("python", type=("build", "link", "run"))
         depends_on("py-sip", type="build")
 
     @property

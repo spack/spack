@@ -23,6 +23,8 @@ class PyPyqt4(SIPPackage):
         deprecated=True,
     )
 
+    # Requires distutils
+    depends_on("python@:3.11", type=("build", "link", "run"))
     depends_on("qt@4")
     depends_on("py-sip@4.16.4:4", type="build")
 
