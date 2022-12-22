@@ -20,12 +20,10 @@ import spack.package_base
 from spack.install_test import TestSuite
 from spack.reporters import CDash, JUnit, Reporter
 
-report_writers = {None: Reporter, "junit": JUnit, "cdash": CDash}
+REPORT_WRITERS = {None: Reporter, "junit": JUnit, "cdash": CDash}
 
 #: Allowed report formats
-valid_formats = list(report_writers.keys())
-
-__all__ = ["valid_formats", "collect_info"]
+VALID_FORMATS = list(REPORT_WRITERS.keys())
 
 
 def fetch_log(pkg, do_fn, dir):
@@ -255,10 +253,12 @@ class collect_info(object):
             self.filename = "cdash_report"
         else:
             self.format_name = format_name
+
         # Check that the format is valid.
-        if self.format_name not in valid_formats:
+        if self.format_name not in VALID_FORMATS:
             raise ValueError("invalid report type: {0}".format(self.format_name))
-        self.report_writer = report_writers[self.format_name](args)
+
+        self.report_writer = REPORT_WRITERS[self.format_name](args)
 
     def __call__(self, type, dir=None):
         self.type = type

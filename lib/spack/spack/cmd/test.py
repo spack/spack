@@ -66,7 +66,7 @@ def setup_parser(subparser):
     run_parser.add_argument(
         "--log-format",
         default=None,
-        choices=spack.report.valid_formats,
+        choices=spack.report.VALID_FORMATS,
         help="format to be used for log files",
     )
     run_parser.add_argument(

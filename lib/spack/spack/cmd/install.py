@@ -235,7 +235,7 @@ packages. If neither are chosen, don't run tests for any packages.""",
     subparser.add_argument(
         "--log-format",
         default=None,
-        choices=spack.report.valid_formats,
+        choices=spack.report.VALID_FORMATS,
         help="format to be used for log files",
     )
     subparser.add_argument(
