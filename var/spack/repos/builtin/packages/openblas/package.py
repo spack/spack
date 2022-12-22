@@ -212,6 +212,7 @@ class Openblas(MakefilePackage, CMakePackage):
     )
 
     depends_on("perl", type="build")
+    depends_on("cmake", when="platform=windows")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -444,7 +445,7 @@ class Openblas(MakefilePackage, CMakePackage):
 
     def cmake_args(self):
         cmake_defs = []
-        make_defs.extend(['-DUSE_THREAD:BOOL=FALSE', '-DTARGET:STRING=GENERIC'])
+        make_defs.extend(["-DUSE_THREAD:BOOL=FALSE", "-DTARGET:STRING=GENERIC"])
         return cmake_defs
 
     @property
