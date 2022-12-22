@@ -30,10 +30,8 @@ from spack.util.log_parse import parse_log_events
 from .base import Reporter
 from .extract import extract_test_parts
 
-__all__ = ["CDash"]
-
 # Mapping Spack phases to the corresponding CTest/CDash phase.
-map_phases_to_cdash = {
+MAP_PHASES_TO_CDASH = {
     "autoreconf": "configure",
     "cmake": "configure",
     "configure": "configure",
@@ -43,8 +41,8 @@ map_phases_to_cdash = {
 }
 
 # Initialize data structures common to each phase's report.
-cdash_phases = set(map_phases_to_cdash.values())
-cdash_phases.add("update")
+CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
+CDASH_PHASES.add("update")
 
 
 def build_stamp(track, timestamp):
@@ -67,7 +65,9 @@ class CDash(Reporter):
 
     def __init__(self, args):
         super().__init__(args)
+        #: Set to False if any error occurs when building the CDash report
         self.success = True
+
         # Posixpath is used here to support the underlying template enginge
         # Jinja2, which expects `/` path separators
         self.template_dir = posixpath.join("reports", "cdash")
@@ -130,7 +130,7 @@ class CDash(Reporter):
         self.current_package_name = package["name"]
         self.buildname = self.report_build_name(self.current_package_name)
         report_data = self.initialize_report(directory_name)
-        for phase in cdash_phases:
+        for phase in CDASH_PHASES:
             report_data[phase] = {}
             report_data[phase]["loglines"] = []
             report_data[phase]["status"] = 0
@@ -150,10 +150,10 @@ class CDash(Reporter):
                 match = self.phase_regexp.search(line)
             if match:
                 current_phase = match.group(1)
-                if current_phase not in map_phases_to_cdash:
+                if current_phase not in MAP_PHASES_TO_CDASH:
                     current_phase = ""
                     continue
-                cdash_phase = map_phases_to_cdash[current_phase]
+                cdash_phase = MAP_PHASES_TO_CDASH[current_phase]
                 if cdash_phase not in phases_encountered:
                     phases_encountered.append(cdash_phase)
                 report_data[cdash_phase]["loglines"].append(
