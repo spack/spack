@@ -14,9 +14,11 @@ class PySip(PythonPackage):
     homepage = "https://www.riverbankcomputing.com/software/sip"
     pypi = "sip/sip-6.4.0.tar.gz"
 
+    version("6.7.5", sha256="9655d089e1d0c5fbf66bde11558a874980729132b5bd0c2ae355ac1a7b893ab4")
     version("6.6.2", sha256="0e3efac1c5dfd8e525ae57140927df26993e13f58b89d1577c314f4105bfd90d")
     version("6.4.0", sha256="42ec368520b8da4a0987218510b1b520b4981e4405086c1be384733affc2bcb0")
     version("5.5.0", sha256="5d024c419b30fea8a6de8c71a560c7ab0bc3c221fbfb14d55a5b865bd58eaac5")
+    version("4.19.25", sha256="3d36986f7327b7b966bb6eacf22bcf6e4d0a3d24e392276ef92af89988818062")
     version("4.19.21", sha256="3bfd58e875a87471c00e008f25a01d8312885aa01efc4f688e5cac861c8676e4")
     version("4.19.20", sha256="475f85277a6601c406ade508b6c935b9f2a170c16fd3ae9dd4cdee7a4f7f340d")
     version("4.19.19", sha256="348cd6229b095a3090e851555814f5147bffcb601cec891f1038eb6b38c9d856")
@@ -34,6 +36,8 @@ class PySip(PythonPackage):
     )
 
     depends_on("python", type=("build", "link", "run"))
+    # Requires distutils
+    depends_on("python@:3.11", type=("build", "link", "run"), when="@:4")
 
     depends_on("py-ply", when="@6.6:", type=("build", "run"))
 
@@ -47,11 +51,10 @@ class PySip(PythonPackage):
         depends_on("bison", type="build")
 
     def url_for_version(self, version):
-        if version < Version("5.0.0"):
-            return "https://www.riverbankcomputing.com/hg/sip/archive/{0}.tar.gz".format(
-                version.dotted
-            )
-        return super(PySip, self).url_for_version(version)
+        if version < Version("5"):
+            url = "https://www.riverbankcomputing.com/hg/sip/archive/{0}.tar.gz"
+            return url.format(version.dotted)
+        return super().url_for_version(version)
 
     @when("@:4")
     def install(self, spec, prefix):
