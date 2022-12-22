@@ -6,11 +6,13 @@
 import os
 import re
 
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
-class Openblas(MakefilePackage, CMakePackage):
+class Openblas(CMakePackage, MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
@@ -250,6 +252,35 @@ class Openblas(MakefilePackage, CMakePackage):
                 + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
             )
 
+    @property
+    def headers(self):
+        # As in netlib-lapack, the only public headers for cblas and lapacke in
+        # openblas are cblas.h and lapacke.h. The remaining headers are private
+        # headers either included in one of these two headers, or included in
+        # one of the source files implementing functions declared in these
+        # headers.
+        return find_headers(["cblas", "lapacke"], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = "libopenblas"
+        search_shared = bool(spec.variants["shared"].value)
+        suffix = spec.variants["symbol_suffix"].value
+        if suffix != "none":
+            name += suffix
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
+
+
+class SetupEnvironment(object):
+    def setup_build_environment(self, env):
+        pass
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
     @staticmethod
     def _read_targets(target_file):
         """Parse a list of available targets from the OpenBLAS/TargetList.txt
@@ -443,37 +474,6 @@ class Openblas(MakefilePackage, CMakePackage):
 
         return make_defs
 
-    def cmake_args(self):
-        cmake_defs = []
-        make_defs.extend(["-DUSE_THREAD:BOOL=FALSE", "-DTARGET:STRING=GENERIC"])
-        return cmake_defs
-
-    @property
-    def headers(self):
-        # As in netlib-lapack, the only public headers for cblas and lapacke in
-        # openblas are cblas.h and lapacke.h. The remaining headers are private
-        # headers either included in one of these two headers, or included in
-        # one of the source files implementing functions declared in these
-        # headers.
-        return find_headers(["cblas", "lapacke"], self.prefix.include)
-
-    @property
-    def libs(self):
-        spec = self.spec
-
-        # Look for openblas{symbol_suffix}
-        name = "libopenblas"
-        search_shared = bool(spec.variants["shared"].value)
-        suffix = spec.variants["symbol_suffix"].value
-        if suffix != "none":
-            name += suffix
-
-        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
-
-    @when("platform=windows")
-    def cmake(self, spec, prefix):
-        super(Openblas, self).cmake(spec, prefix)
-
     @property
     def build_targets(self):
         return ["-s"] + self.make_defs + ["all"]
@@ -509,3 +509,10 @@ class Openblas(MakefilePackage, CMakePackage):
 
         output = compile_c_and_execute(source_file, [include_flags], link_flags.split())
         compare_output_file(output, blessed_file)
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
+    def cmake_args(self):
+        cmake_defs = []
+        make_defs.extend(["-DUSE_THREAD:BOOL=FALSE", "-DTARGET:STRING=GENERIC"])
+        return cmake_defs
