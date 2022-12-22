@@ -38,6 +38,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     variant("tls", default=False, description="Build Emacs with gnutls")
     variant("native", default=False, description="enable native compilation of elisp")
     variant("treesitter", default=False, description="Build with tree-sitter support")
+    variant("json", default=False, description="Build with json support")
 
     depends_on("pkgconfig", type="build")
 
@@ -61,6 +62,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libtool", type="build", when="@master:")
     depends_on("texinfo", type="build", when="@master:")
     depends_on("gcc@11: +strip languages=jit", when="+native")
+    depends_on("jansson", when="+json")
 
     conflicts("@:26.3", when="platform=darwin os=catalina")
     conflicts("+native", when="@:27", msg="native compilation require @master")
@@ -97,6 +99,9 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
         if "+treesitter" in spec:
             args.append("--with-tree-sitter")
+
+        if "+json" in spec:
+            args.append("--with-json")
 
         return args
 
