@@ -18,9 +18,7 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 from spack.install_test import TestSuite
-from spack.reporter import Reporter
-from spack.reporters.cdash import CDash
-from spack.reporters.junit import JUnit
+from spack.reporters import CDash, JUnit, Reporter
 
 report_writers = {None: Reporter, "junit": JUnit, "cdash": CDash}
 

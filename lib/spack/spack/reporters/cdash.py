@@ -24,10 +24,11 @@ import spack.package_base
 import spack.platforms
 import spack.util.git
 from spack.error import SpackError
-from spack.reporter import Reporter
-from spack.reporters.extract import extract_test_parts
 from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
+
+from .base import Reporter
+from .extract import extract_test_parts
 
 __all__ = ["CDash"]
 

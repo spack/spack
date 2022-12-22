@@ -4,10 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-__all__ = ["Reporter"]
-
-
-class Reporter(object):
+class Reporter:
     """Base class for report writers."""
 
     def __init__(self, args):

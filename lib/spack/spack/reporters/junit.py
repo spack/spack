@@ -7,9 +7,8 @@ import os.path
 import posixpath
 
 import spack.tengine
-from spack.reporter import Reporter
 
-__all__ = ["JUnit"]
+from .base import Reporter
 
 
 class JUnit(Reporter):
