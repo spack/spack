@@ -15,7 +15,7 @@ class JUnit(Reporter):
     """Generate reports of spec installations for JUnit."""
 
     def __init__(self, args):
-        Reporter.__init__(self, args)
+        super().__init__(args)
         # Posixpath is used here to support the underlying template enginge
         # Jinja2, which expects `/` path separators
         self.template_file = posixpath.join("reports", "junit.xml")

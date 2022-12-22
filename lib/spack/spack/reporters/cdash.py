@@ -66,7 +66,7 @@ class CDash(Reporter):
     """
 
     def __init__(self, args):
-        Reporter.__init__(self, args)
+        super().__init__(args)
         self.success = True
         # Posixpath is used here to support the underlying template enginge
         # Jinja2, which expects `/` path separators
