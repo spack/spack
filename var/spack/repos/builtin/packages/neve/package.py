@@ -13,7 +13,7 @@ class Neve(MakefilePackage):
     homepage = "https://github.com/ECP-ExaGraph"
     git = "https://github.com/ECP-ExaGraph/neve.git"
 
-    version("master", branch= "master")
+    version("master", branch="master")
 
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("opt", default=True, description="Optimization flags")
