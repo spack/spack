@@ -34,7 +34,7 @@ class PyPyqt5(SIPPackage):
 
     depends_on("py-sip@6.4:6", type="build")
     depends_on("py-pyqt-builder@1.9:1", type="build")
-    depends_on("qt@5")
+    depends_on("qt@5+opengl")
 
     def configure_args(self):
         # https://www.riverbankcomputing.com/static/Docs/PyQt5/installation.html
