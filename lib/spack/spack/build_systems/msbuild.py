@@ -30,7 +30,7 @@ class MSBuildPackage(spack.package_base.PackageBase):
 @spack.builder.builder("msbuild")
 class MSBuildBuilder(BaseBuilder):
     """The MSBuild builder encodes the most common way of building software with
-    Mircosoft's MSBuild tool. It has three phases that can be overridden, if need be:
+    Mircosoft's MSBuild tool. It has two phases that can be overridden, if need be:
 
             1. :py:meth:`~.MSBuildBuilder.build`
             2. :py:meth:`~.MSBuildBuilder.install`

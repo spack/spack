@@ -30,7 +30,7 @@ class NMakePackage(spack.package_base.PackageBase):
 @spack.builder.builder("nmake")
 class NMakeBuilder(BaseBuilder):
     """The NMake builder encodes the most common way of building software with
-    Mircosoft's MSBuild tool. It has three phases that can be overridden, if need be:
+    Mircosoft's MSBuild tool. It has two phases that can be overridden, if need be:
 
             1. :py:meth:`~.NMakeBuilder.build`
             2. :py:meth:`~.NMakeBuilder.install`
@@ -100,9 +100,9 @@ class NMakeBuilder(BaseBuilder):
         there are multiple nmake files in the same directory."""
         return ""
 
-    def define(self, msbuild_arg, value):
+    def define(self, nmake_arg, value):
         """Helper method to format arguments to nmake command line"""
-        return "{}={}".format(msbuild_arg, value)
+        return "{}={}".format(nmake_arg, value)
 
     def override_env(self, var_name, new_value):
         """Helper method to format arguments for overridding env variables on the
@@ -121,7 +121,7 @@ class NMakeBuilder(BaseBuilder):
         return []
 
     def build(self, pkg, spec, prefix):
-        """Run "msbuild" on the build targets specified by the builder."""
+        """Run "nmake" on the build targets specified by the builder."""
         opts = self.std_nmake_args
         opts += self.nmake_args()
         if self.nmakefile_name:
@@ -132,7 +132,7 @@ class NMakeBuilder(BaseBuilder):
             )
 
     def install(self, pkg, spec, prefix):
-        """Run "msbuild" on the install targets specified by the builder.
+        """Run "nmake" on the install targets specified by the builder.
         This is INSTALL by default"""
         opts = self.std_nmake_args
         opts += self.nmake_args()
