@@ -41,5 +41,5 @@ class Bacio(CMakePackage):
         return args
 
     def patch(self):
-        if self.spec.satisifes("@2.4.1"):
+        if self.spec.satisfies("@2.4.1"):
             filter_file(".*", "2.4.1", "VERSION")
