@@ -61,9 +61,9 @@ class MSBuildBuilder(BaseBuilder):
 
     phases = ("build", "install")
 
-    #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.build` phase
+    #: Targets for ``make`` during the :py:meth:`~.MSBuildBuilder.build` phase
     build_targets: List[str] = []
-    #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.install` phase
+    #: Targets for ``msbuild`` during the :py:meth:`~.MSBuildBuilder.install` phase
     install_targets: List[str] = ["INSTALL"]
 
     @property
