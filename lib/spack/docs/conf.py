@@ -74,6 +74,7 @@ apidoc_args = [
     "--force",  # Overwrite existing files
     "--no-toc",  # Don't create a table of contents file
     "--output-dir=.",  # Directory to place all output
+    "--module-first",  # emit module docs before submodule docs
 ]
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/spack"])
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
