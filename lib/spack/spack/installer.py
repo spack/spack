@@ -462,11 +462,10 @@ def combine_phase_logs(phase_log_files, log_path):
         phase_log_files (list): a list or iterator of logs to combine
         log_path (str): the path to combine them to
     """
-
-    with open(log_path, "w") as log_file:
+    with open(log_path, "wb") as log_file:
         for phase_log_file in phase_log_files:
-            with open(phase_log_file, "r") as phase_log:
-                log_file.write(phase_log.read())
+            with open(phase_log_file, "rb") as phase_log:
+                shutil.copyfileobj(phase_log, log_file)
 
 
 def dump_packages(spec, path):
