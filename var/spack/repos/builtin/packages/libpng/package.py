@@ -28,7 +28,13 @@ class Libpng(AutotoolsPackage):
 
     depends_on("zlib@1.0.4:")  # 1.2.5 or later recommended
 
-    variant("shared", default=True)
+    variant(
+        "libs",
+        default="shared,static",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
 
     def configure_args(self):
         args = [
@@ -38,8 +44,16 @@ class Libpng(AutotoolsPackage):
             f"CPPFLAGS={self.spec['zlib'].headers.include_flags}",
             f"LDFLAGS={self.spec['zlib'].libs.search_flags}",
         ]
-        if "~shared" in self.spec:
-            args += ["--enable-static", "--disable-shared"]
+
+        if self.spec.satisfies("libs=shared"):
+            args += ["--enable-shared"]
+        else:
+            args += ["--disable-shared"]
+        if self.spec.satisfies("libs=static"):
+            args += ["--enable-static"]
+        else:
+            args += ["--disable-static"]
+
         return args
 
     def check(self):
