@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers = ["adamjstewart", "rgommers"]
 
     version("main", branch="main")
+    version("1.24.0", sha256="c4ab7c9711fe6b235e86487ca74c1b092a6dd59a3cb45b63241ea0a148501853")
     version("1.23.5", sha256="1b1766d6f397c18153d40015ddfc79ddb715cabadc04d2d228d4e5a8bc4ded1a")
     version("1.23.4", sha256="ed2cc92af0efad20198638c69bb0fc2870a58dabfba6eb722c933b48556c686c")
     version("1.23.3", sha256="51bf49c0cd1d52be0a240aa66f3458afc4b95d8993d2d04f0d91fa60c10af6cd")
@@ -83,31 +84,19 @@ class PyNumpy(PythonPackage):
     version("1.14.2", sha256="facc6f925c3099ac01a1f03758100772560a0b020fb9d70f210404be08006bcb")
     version("1.14.1", sha256="fa0944650d5d3fb95869eaacd8eedbd2d83610c85e271bd9d3495ffa9bc4dc9c")
     version("1.14.0", sha256="3de643935b212307b420248018323a44ec51987a336d1d747c1322afc3c099fb")
-    version("1.13.3", sha256="36ee86d5adbabc4fa2643a073f93d5504bdfed37a149a3a49f4dde259f35a750")
-    version("1.13.1", sha256="c9b0283776085cb2804efff73e9955ca279ba4edafd58d3ead70b61d209c4fbb")
-    version("1.13.0", sha256="dcff367b725586830ff0e20b805c7654c876c2d4585c0834a6049502b9d6cf7e")
-    version("1.12.1", sha256="a65266a4ad6ec8936a1bc85ce51f8600634a31a258b722c9274a80ff189d9542")
-    version("1.12.0", sha256="ff320ecfe41c6581c8981dce892fe6d7e69806459a899e294e4bf8229737b154")
-    version("1.11.3", sha256="2e0fc5248246a64628656fe14fcab0a959741a2820e003bd15538226501b82f7")
-    version("1.11.2", sha256="c1ed4d1d2a795409c7df1eb4bfee65c0e3326cfc7c57875fa39e5c7414116d9a")
-    version("1.11.1", sha256="4e9c289b9d764d10353a224a5286dda3e0425b13b112719bdc3e9864ae648d79")
-    version("1.11.0", sha256="9109f260850627e4b83a3c4bcef4f2f99357eb4a5eaae75dec51c32f3c197aa3")
-    version("1.10.4", sha256="8ce443dc79656a9fc97a7837f1444d324aef2c9b53f31f83441f57ad1f1f3659")
-    version("1.9.3", sha256="baa074bb1c7f9c822122fb81459b7caa5fc49267ca94cca69465c8dcfd63ac79")
-    version("1.9.2", sha256="e37805754f4ebb575c434d134f6bebb8b857d9843c393f6943c7be71ef57311c")
-    version("1.9.1", sha256="2a545c0d096d86035b12160fcba5e4c0a08dcabbf902b4f867eb64deb31a2b7a")
 
     variant("blas", default=True, description="Build with BLAS support")
     variant("lapack", default=True, description="Build with LAPACK support")
 
-    depends_on("python@2.7:2.8,3.4:3.6", type=("build", "link", "run"), when="@:1.13")
     depends_on("python@2.7:2.8,3.4:3.8", type=("build", "link", "run"), when="@1.14:1.15")
     depends_on("python@2.7:2.8,3.5:3.9", type=("build", "link", "run"), when="@1.16")
     depends_on("python@3.5:3.9", type=("build", "link", "run"), when="@1.17:1.18")
     depends_on("python@3.6:3.10", type=("build", "link", "run"), when="@1.19")
     depends_on("python@3.7:3.10", type=("build", "link", "run"), when="@1.20:1.21")
     depends_on("python@3.8:", type=("build", "link", "run"), when="@1.22:")
-    depends_on("py-setuptools@:59", type=("build", "run"))
+    # https://github.com/spack/spack/pull/32078
+    depends_on("py-setuptools@:63", type=("build", "run"))
+    depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
     # Check pyproject.toml for updates to the required cython version
     depends_on("py-cython@0.29.13:2", when="@1.18.0:", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:", type="build")
@@ -130,13 +119,11 @@ class PyNumpy(PythonPackage):
     patch("add_fj_compiler.patch", when="@1.19.3:1.19.5%fj")
     patch("add_fj_compiler2.patch", when="@1.19.0:1.19.2%fj")
     patch("add_fj_compiler3.patch", when="@1.14.0:1.18.5%fj")
-    patch("add_fj_compiler4.patch", when="@:1.13.3%fj")
 
     patch("check_executables.patch", when="@1.20.0:")
     patch("check_executables2.patch", when="@1.19.0:1.19.5")
     patch("check_executables3.patch", when="@1.16.0:1.18.5")
     patch("check_executables4.patch", when="@1.14.0:1.15.4")
-    patch("check_executables5.patch", when="@:1.13.3")
 
     # Backport bug fix for f2py's define for threading when building with Mingw
     patch(

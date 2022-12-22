@@ -26,9 +26,16 @@ class DarshanRuntime(AutotoolsPackage):
 
     version("main", branch="main", submodules=True)
     version(
+        "3.4.2",
+        sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b",
+    )
+    version(
+        "3.4.1",
+        sha256="77c0a4675d94a0f9df5710e5b8658cc9ef0f0981a6dafb114d0389b1af64774c",
+    )
+    version(
         "3.4.0",
         sha256="7cc88b7c130ec3b574f6b73c63c3c05deec67b1350245de6d39ca91d4cff0842",
-        preferred=True,
     )
     version(
         "3.4.0-pre1", sha256="57d0fd40329b9f8a51bdc9d7635b646692b341d80339115ab203357321706c09"
@@ -52,6 +59,7 @@ class DarshanRuntime(AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("zlib")
     depends_on("hdf5", when="+hdf5")
+    depends_on("parallel-netcdf", when="+parallel-netcdf")
     depends_on("papi", when="+apxc")
     depends_on("autoconf", type="build", when="@main")
     depends_on("automake", type="build", when="@main")
@@ -64,6 +72,12 @@ class DarshanRuntime(AutotoolsPackage):
 
     variant("mpi", default=True, description="Compile with MPI support")
     variant("hdf5", default=False, description="Compile with HDF5 module", when="@3.2:")
+    variant(
+        "parallel-netcdf",
+        default=False,
+        description="Compile with Parallel NetCDF module",
+        when="@3.4.1:",
+    )
     variant("apmpi", default=False, description="Compile with AutoPerf MPI module", when="@3.3:")
     variant(
         "apmpi_sync",
@@ -103,6 +117,8 @@ class DarshanRuntime(AutotoolsPackage):
                 extra_args.append("--enable-hdf5-mod=%s" % spec["hdf5"].prefix)
             else:
                 extra_args.append("--enable-hdf5-mod")
+        if "+parallel-netcdf" in spec:
+            extra_args.append("--enable-pnetcdf-mod")
         if "+apmpi" in spec:
             extra_args.append("--enable-apmpi-mod")
         if "+apmpi_sync" in spec:

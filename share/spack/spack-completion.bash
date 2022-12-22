@@ -408,7 +408,7 @@ _spack_bootstrap() {
 }
 
 _spack_bootstrap_now() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --dev"
 }
 
 _spack_bootstrap_status() {
@@ -556,7 +556,7 @@ _spack_buildcache_sync() {
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --mirror-url -k --keys"
+    SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
 }
 
 _spack_cd() {
@@ -580,7 +580,7 @@ _spack_change() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred -a --add-to-package"
     else
         _all_packages
     fi
@@ -1439,7 +1439,7 @@ _spack_module_tcl_setdefault() {
 _spack_patch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1450,7 +1450,7 @@ _spack_pkg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="add list diff added changed removed source hash"
+        SPACK_COMPREPLY="add list diff added changed removed grep source hash"
     fi
 }
 
@@ -1503,6 +1503,15 @@ _spack_pkg_removed() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_pkg_grep() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="--help"
     else
         SPACK_COMPREPLY=""
     fi

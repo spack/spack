@@ -12,20 +12,37 @@ class RocmGdb(AutotoolsPackage):
     based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.3.0", sha256="402537baf0779cae586d608505e81173ba85f976fe993f1633e3afe81669350f")
     version("5.2.3", sha256="c2df5cccd8bb07ea331b45091fb3141999a37a67696d273f3888b48f6d4281aa")
     version("5.2.1", sha256="77169d88f24e6ccb6aef3945448b179edffe806a51a3e996236b08fb510f3979")
     version("5.2.0", sha256="70c5b443292b9bb114844eb63b72cfab1b65f083511ee39d55db7a633c63bf5a")
     version("5.1.3", sha256="81f5e368facdcc424a37cb5809f0b436bedb9a6d9af4d17785b3c446ab0a7821")
     version("5.1.0", sha256="cf638149b269f838aaec59c5801098b9c0fc42f6c86a39309a8995b56978b424")
-    version("5.0.2", sha256="0eced8cd5a2996cb4bcf254f2bd9defe24112d21c2f750e98f784ecdf94ba5c9")
-    version("5.0.0", sha256="aa311fb557bd95e35c6e4dfd245188f35c294a93bacb77fe4d3b178b1d0097e8")
-    version("4.5.2", sha256="e278abf50f1758ce396b26a6719d0af09a6053c195516a44ec9b2be925d79203")
-    version("4.5.0", sha256="dd37c8b1ea6bb41b1263183637575d7bf4746cabc573dbff888e23b0379877b0")
+    version(
+        "5.0.2",
+        sha256="0eced8cd5a2996cb4bcf254f2bd9defe24112d21c2f750e98f784ecdf94ba5c9",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="aa311fb557bd95e35c6e4dfd245188f35c294a93bacb77fe4d3b178b1d0097e8",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="e278abf50f1758ce396b26a6719d0af09a6053c195516a44ec9b2be925d79203",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="dd37c8b1ea6bb41b1263183637575d7bf4746cabc573dbff888e23b0379877b0",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="995756a24b1e1510647dac1476a3a9a8e3af8e9fd9f4af1d00dd2db28e7a4ef2",
@@ -108,6 +125,7 @@ class RocmGdb(AutotoolsPackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("rocm-dbgapi@" + ver, type="link", when="@" + ver)
         depends_on("comgr@" + ver, type="link", when="@" + ver)
@@ -137,4 +155,6 @@ class RocmGdb(AutotoolsPackage):
             "--with-python",
             "--with-rocm-dbgapi={0}".format(self.spec["rocm-dbgapi"].prefix),
         ]
+        if self.spec.satisfies("@5.2.0:"):
+            options.append("--disable-gprofng")
         return options

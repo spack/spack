@@ -13,22 +13,39 @@ class RocmCmake(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
     version("master", branch="master")
 
+    version("5.3.0", sha256="659a8327f13e6786103dd562d3632e89a51244548fca081f46c753857cf09d04")
     version("5.2.3", sha256="c63b707ec07d24fda5a2a6fffeda4df4cc04ceea5df3b8822cbe4e6600e358b4")
     version("5.2.1", sha256="3d179496fb8f5f96230f736a313990f66705dc91fd10948a3042b495a440bf63")
     version("5.2.0", sha256="be8646c4f7babfe9a103c97d0e9f369322f8ac6cfa528edacdbdcf7f3ef44943")
     version("5.1.3", sha256="19b2da0d56300aab454655b57435ab3ed9e101ecb96561336ea8865bbd993c23")
     version("5.1.0", sha256="2eff47b7cf5bd56d465ff3c110eb936d31860df60182a82ba511ba11bbcf23fc")
-    version("5.0.2", sha256="86a4ae0f84dcf5be95a252295eb732d6a7a271297eed37800a9d492c16474d0c")
-    version("5.0.0", sha256="45eb958fac33aafea86fb498127ebf8f567646ce9d7288d46afbd087500553a1")
-    version("4.5.2", sha256="85f2ef51327e4b09d81a221b4ad31c97923dabc1bc8ff127dd6c570742185751")
-    version("4.5.0", sha256="c77b71454010adbeea5357773aa98dd0725f655f51a411815807cabf29258395")
+    version(
+        "5.0.2",
+        sha256="86a4ae0f84dcf5be95a252295eb732d6a7a271297eed37800a9d492c16474d0c",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="45eb958fac33aafea86fb498127ebf8f567646ce9d7288d46afbd087500553a1",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="85f2ef51327e4b09d81a221b4ad31c97923dabc1bc8ff127dd6c570742185751",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="c77b71454010adbeea5357773aa98dd0725f655f51a411815807cabf29258395",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="acf2a58e2cd486f473194bf01247c52dbf20bd5f6465810fb221470298f2557f",

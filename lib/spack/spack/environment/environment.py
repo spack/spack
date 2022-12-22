@@ -11,6 +11,8 @@ import shutil
 import stat
 import sys
 import time
+import urllib.parse
+import urllib.request
 
 import ruamel.yaml as yaml
 
@@ -19,7 +21,6 @@ import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 
-import spack.bootstrap
 import spack.compilers
 import spack.concretize
 import spack.config
@@ -43,6 +44,7 @@ import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.url
 from spack.filesystem_view import (
     SimpleFilesystemView,
     inverse_view_func_parser,
@@ -927,46 +929,54 @@ class Environment(object):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
 
-            # strip file URL prefix, if needed, to avoid unnecessary remote
-            # config processing for local files
-            config_path = config_path.replace("file://", "")
+            include_url = urllib.parse.urlparse(config_path)
 
-            if not os.path.exists(config_path):
+            # Transform file:// URLs to direct includes.
+            if include_url.scheme == "file":
+                config_path = urllib.request.url2pathname(include_url.path)
+
+            # Any other URL should be fetched.
+            elif include_url.scheme in ("http", "https", "ftp"):
                 # Stage any remote configuration file(s)
-                if spack.util.url.is_url_format(config_path):
-                    staged_configs = (
-                        os.listdir(self.config_stage_dir)
-                        if os.path.exists(self.config_stage_dir)
-                        else []
+                staged_configs = (
+                    os.listdir(self.config_stage_dir)
+                    if os.path.exists(self.config_stage_dir)
+                    else []
+                )
+                remote_path = urllib.request.url2pathname(include_url.path)
+                basename = os.path.basename(remote_path)
+                if basename in staged_configs:
+                    # Do NOT re-stage configuration files over existing
+                    # ones with the same name since there is a risk of
+                    # losing changes (e.g., from 'spack config update').
+                    tty.warn(
+                        "Will not re-stage configuration from {0} to avoid "
+                        "losing changes to the already staged file of the "
+                        "same name.".format(remote_path)
                     )
-                    basename = os.path.basename(config_path)
-                    if basename in staged_configs:
-                        # Do NOT re-stage configuration files over existing
-                        # ones with the same name since there is a risk of
-                        # losing changes (e.g., from 'spack config update').
-                        tty.warn(
-                            "Will not re-stage configuration from {0} to avoid "
-                            "losing changes to the already staged file of the "
-                            "same name.".format(config_path)
-                        )
 
-                        # Recognize the configuration stage directory
-                        # is flattened to ensure a single copy of each
-                        # configuration file.
-                        config_path = self.config_stage_dir
-                        if basename.endswith(".yaml"):
-                            config_path = os.path.join(config_path, basename)
-                    else:
-                        staged_path = spack.config.fetch_remote_configs(
-                            config_path,
-                            self.config_stage_dir,
-                            skip_existing=True,
+                    # Recognize the configuration stage directory
+                    # is flattened to ensure a single copy of each
+                    # configuration file.
+                    config_path = self.config_stage_dir
+                    if basename.endswith(".yaml"):
+                        config_path = os.path.join(config_path, basename)
+                else:
+                    staged_path = spack.config.fetch_remote_configs(
+                        config_path,
+                        self.config_stage_dir,
+                        skip_existing=True,
+                    )
+                    if not staged_path:
+                        raise SpackEnvironmentError(
+                            "Unable to fetch remote configuration {0}".format(config_path)
                         )
-                        if not staged_path:
-                            raise SpackEnvironmentError(
-                                "Unable to fetch remote configuration {0}".format(config_path)
-                            )
-                        config_path = staged_path
+                    config_path = staged_path
+
+            elif include_url.scheme:
+                raise ValueError(
+                    "Unsupported URL scheme for environment include: {}".format(config_path)
+                )
 
             # treat relative paths as relative to the environment
             if not os.path.isabs(config_path):
@@ -996,7 +1006,7 @@ class Environment(object):
         if missing:
             msg = "Detected {0} missing include path(s):".format(len(missing))
             msg += "\n   {0}".format("\n   ".join(missing))
-            tty.die("{0}\nPlease correct and try again.".format(msg))
+            raise spack.config.ConfigFileError(msg)
 
         return scopes
 
@@ -1344,6 +1354,8 @@ class Environment(object):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
+        import spack.bootstrap
+
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -1368,7 +1380,7 @@ class Environment(object):
         # Ensure we don't try to bootstrap clingo in parallel
         if spack.config.get("config:concretizer", "clingo") == "clingo":
             with spack.bootstrap.ensure_bootstrap_configuration():
-                spack.bootstrap.ensure_clingo_importable_or_raise()
+                spack.bootstrap.ensure_core_dependencies()
 
         # Ensure all the indexes have been built or updated, since
         # otherwise the processes in the pool may timeout on waiting

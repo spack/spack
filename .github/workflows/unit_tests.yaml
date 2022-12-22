@@ -47,10 +47,10 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
+    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -94,10 +94,10 @@ jobs:
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
+    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -133,7 +133,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -145,16 +145,16 @@ jobs:
       shell: runuser -u spack-test -- bash {0}
       run: |
           source share/spack/setup-env.sh
-          spack -d solve zlib
+          spack -d bootstrap now --dev
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
+    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # @v2
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -185,10 +185,10 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
+    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages

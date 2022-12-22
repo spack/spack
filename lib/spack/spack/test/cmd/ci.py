@@ -231,7 +231,7 @@ spack:
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys -d {0}".format(mirror_url)
+            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
 
             assert "variables" in yaml_contents
@@ -810,10 +810,10 @@ def create_rebuild_env(tmpdir, pkg_name, broken_tests=False):
     env_dir = working_dir.join("concrete_env")
 
     mirror_dir = working_dir.join("mirror")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
     broken_specs_path = os.path.join(working_dir.strpath, "naughty-list")
-    broken_specs_url = url_util.join("file://", broken_specs_path)
+    broken_specs_url = url_util.path_to_file_url(broken_specs_path)
     temp_storage_url = "file:///path/to/per/pipeline/storage"
 
     broken_tests_packages = [pkg_name] if broken_tests else []
@@ -954,7 +954,7 @@ def test_ci_rebuild_mock_success(
             assert "Cannot copy test logs" in out
 
 
-@pytest.mark.xfail(reason="fails intermittently and covered by gitlab ci")
+@pytest.mark.skip(reason="fails intermittently and covered by gitlab ci")
 def test_ci_rebuild(
     tmpdir,
     working_env,
