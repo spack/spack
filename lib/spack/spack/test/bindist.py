@@ -854,8 +854,7 @@ def test_default_index_invalid_hash_file(index_json):
         url="https://www.example.com", local_hash=index_json_hash, urlopen=urlopen
     )
 
-    with pytest.raises(bindist.FetchIndexError, match="Invalid hash format"):
-        fetcher.conditional_fetch()
+    assert fetcher.get_remote_hash() is None
 
 
 def test_default_index_json_404():

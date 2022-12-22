@@ -2389,33 +2389,35 @@ class DefaultIndexFetcher:
         self.url = url
         self.local_hash = local_hash
         self.urlopen = urlopen
+        self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
+
+    def get_remote_hash(self):
+        # Failure to fetch index.json.hash is not fatal
+        url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.json.hash")
+        try:
+            response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
+        except urllib.error.URLError:
+            return None
+
+        # Validate the hash
+        remote_hash = response.read(64)
+        if not re.match(rb"[a-f\d]{64}$", remote_hash):
+            return None
+        return remote_hash.decode("utf-8")
 
     def conditional_fetch(self):
         # Do an intermediate fetch for the hash
         # and a conditional fetch for the contents
-        if self.local_hash:
-            url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.json.hash")
 
-            try:
-                response = self.urlopen(urllib.request.Request(url_index_hash))
-            except urllib.error.URLError as e:
-                raise FetchIndexError("Could not fetch {}".format(url_index_hash), e) from e
-
-            # Validate the hash
-            remote_hash = response.read(64)
-            if not re.match(rb"[a-f\d]{64}$", remote_hash):
-                raise FetchIndexError("Invalid hash format in {}".format(url_index_hash))
-            remote_hash = remote_hash.decode("utf-8")
-
-            # No need to update further
-            if remote_hash == self.local_hash:
-                return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+        # Early exit if our cache is up to date.
+        if self.local_hash and self.local_hash == self.get_remote_hash():
+            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download index.json
         url_index = url_util.join(self.url, _build_cache_relative_path, "index.json")
 
         try:
-            response = self.urlopen(urllib.request.Request(url_index))
+            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
         except urllib.error.URLError as e:
             raise FetchIndexError("Could not fetch index from {}".format(url_index), e)
 
