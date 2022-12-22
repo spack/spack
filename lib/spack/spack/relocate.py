@@ -310,12 +310,14 @@ def modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
             if args_to_add not in args:
                 args += [args_to_add]
 
+    new_rpaths = []
     for orig_rpath in rpaths:
         new_rpath = paths_to_paths.get(orig_rpath)
         if new_rpath and not orig_rpath == new_rpath:
             args_to_add = ["-rpath", orig_rpath, new_rpath]
-            if args_to_add not in args:
+            if args_to_add not in args and new_rpath not in new_rpaths:
                 args += [args_to_add]
+                new_rpaths.append(new_rpath)
 
     # Flatten list of lists
     args = [item for subargs in args for item in subargs]
