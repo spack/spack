@@ -15,6 +15,7 @@ import spack.mirror
 import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
+import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
@@ -54,7 +55,7 @@ def check_mirror():
     with Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
-        mirrors = {"spack-mirror-test": "file://" + mirror_root}
+        mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
         with spack.config.override("mirrors", mirrors):
             with spack.config.override("config:checksum", False):
                 specs = [Spec(x).concretized() for x in repos]

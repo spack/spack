@@ -25,6 +25,7 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
     git = "git://sourceware.org/git/valgrind.git"
 
     version("develop", branch="master")
+    version("3.20.0", sha256="8536c031dbe078d342f121fa881a9ecd205cb5a78e639005ad570011bdb9f3c6")
     version("3.19.0", sha256="dd5e34486f1a483ff7be7300cc16b4d6b24690987877c3278d797534d6738f02")
     version("3.18.1", sha256="00859aa13a772eddf7822225f4b46ee0d39afbe071d32778da4d99984081f7f5")
     version("3.18.0", sha256="8da880f76592fe8284db98e68f6dc9095485bc2ecc88bc05b7df1f278ae7f657")
@@ -70,8 +71,14 @@ clang: error: unknown argument: '-static-libubsan'
     # http://valgrind.10908.n7.nabble.com/Unable-to-compile-on-Mac-OS-X-10-11-td57237.html
     patch("valgrind_3_12_0_osx.patch", when="@3.12.0 platform=darwin")
 
-    for os in ("mojave", "catalina"):
-        conflicts("os=" + os, when="@:3.15")
+    # Valgrind does not seem to support macOS. As of 3.20.0, the newest version of macOS that is
+    # supported by the official repository is 10.13 (macOS High Sierra, released in 2017).
+    # There is a fork available with macOS support: https://github.com/LouisBrunner/valgrind-macos
+    # However, this fork does not yet support 11+ or M1.
+    for os in ["mojave", "catalina", "bigsur", "monterey", "ventura"]:
+        conflicts("os=" + os)
+    for target in ["m1", "m2"]:
+        conflicts("target=" + target)
 
     def configure_args(self):
         spec = self.spec
