@@ -21,6 +21,9 @@ class NetcdfCxx(AutotoolsPackage):
 
     variant("netcdf4", default=True, description="Compile with netCDF4 support")
 
+    # https://github.com/Unidata/netcdf-cxx4/pull/112
+    patch("macos.patch")
+
     @property
     def libs(self):
         shared = True

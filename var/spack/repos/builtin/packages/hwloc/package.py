@@ -146,6 +146,11 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
         url = "https://download.open-mpi.org/release/hwloc/v{0}/hwloc-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
+    @property
+    def libs(self):
+        libs = find_libraries("libhwloc", root=self.prefix, shared=True, recursive=True)
+        return LibraryList(libs)
+
     def configure_args(self):
         args = []
 

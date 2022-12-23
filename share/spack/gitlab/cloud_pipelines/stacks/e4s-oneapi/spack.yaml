@@ -291,13 +291,14 @@ spack:
       - cat /proc/loadavg || true
 
     image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
-    
+
     match_behavior: first
     mappings:
       - match:
           - hipblas
           - llvm
           - llvm-amdgpu
+          - paraview
           - rocblas
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
@@ -317,7 +318,9 @@ spack:
           - mfem
           - mpich
           - openturns
+          - plumed
           - precice
+          - qt
           - raja
           - rust
           - slate

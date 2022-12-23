@@ -23,6 +23,7 @@ class RRgdal(RPackage):
 
     cran = "rgdal"
 
+    version("1.6-2", sha256="7eab4b0adaa788b985cd33da214799d562a943f5788631ebd1301dfc69ca033d")
     version("1.5-32", sha256="4583a4e187492eb936b59bc6bfeefea687b115bc3ae25172e0ed348b38f473ed")
     version("1.5-28", sha256="7f54432cfa8c0db463f68e8856c3ca0a90671dc841ac5203af049eb318e261a2")
     version("1.5-19", sha256="6fbfd71b19e7b8d9dbddc91cb1eef8890c74a1e2bf8f619da165ff51bf1231b2")
