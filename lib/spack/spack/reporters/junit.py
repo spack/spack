@@ -18,9 +18,8 @@ class JUnit(Reporter):
         pass
 
     def __init__(self):
-        # Posixpath is used here to support the underlying template engine
-        # Jinja2, which expects `/` path separators
-        self.template_file = posixpath.join("reports", "junit.xml")
+        # Jinja2 expects `/` path separators
+        self.template_file = "reports/junit.xml"
 
     def build_report(self, filename, report_data):
         if not (os.path.splitext(filename))[1]:
