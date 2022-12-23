@@ -28,11 +28,13 @@ class PyMesonPython(PythonPackage):
     depends_on("meson@0.62:", type=("build", "run"))
     depends_on("py-pyproject-metadata@0.6.1:", when="@0.12:", type=("build", "run"))
     depends_on("py-pyproject-metadata@0.5:", type=("build", "run"))
-    depends_on("py-tomli@1:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.4:", when="^python@:3.9", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@0.11: ^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@:0.10", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7.4:", when="@0.12: ^python@:3.9", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7.4:", when="@:0.11 ^python@:3.7", type=("build", "run"))
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
 
-    # https://github.com/FFY00/meson-python/pull/111
+    # https://github.com/mesonbuild/meson-python/pull/111
     conflicts("platform=darwin os=ventura", when="@:0.7")
     conflicts("platform=darwin os=monterey", when="@:0.7")
     conflicts("platform=darwin os=bigsur", when="@:0.7")
