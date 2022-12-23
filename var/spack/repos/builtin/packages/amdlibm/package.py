@@ -38,7 +38,6 @@ class Amdlibm(SConsPackage):
     variant("verbose", default=False, description="Building with verbosity")
 
     # Mandatory dependencies
-    depends_on("python@3.6.2", when="%aocc@3.2.0", type=("build", "run"))
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("scons@3.1.2:", type=("build"))
     depends_on("mpfr", type=("link"))
@@ -49,6 +48,7 @@ class Amdlibm(SConsPackage):
     conflicts("%gcc@:9.1.0", msg="Minimum supported GCC version is 9.2.0")
     conflicts("%gcc@12.2.0:", msg="Maximum supported GCC version is 12.1.0")
     conflicts("%clang@9:", msg="Minimum supported Clang version is 9.0.0")
+    conflicts("%aocc@3.2.0", msg="dependency on python@3.6.2")
 
     def build_args(self, *args, **kwargs):
         """Setting build arguments for amdlibm"""
