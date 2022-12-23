@@ -83,7 +83,7 @@ class Qscintilla(QMakePackage):
 
             with working_dir(os.path.join(self.stage.source_path, directory)):
                 qscipro = FileFilter("designer.pro")
-                qscipro.filter(f"TEMPLATE = lib", "TEMPLATE = lib\nINCLUDEPATH += {includepath}\n")
+                qscipro.filter("TEMPLATE = lib", f"TEMPLATE = lib\nINCLUDEPATH += {includepath}\n")
 
                 qmake()
                 make()
