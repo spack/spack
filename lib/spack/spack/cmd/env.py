@@ -735,6 +735,8 @@ def env_depfile(args):
     # Root specs without deps are the prereqs for the environment target
     root_install_targets = [get_install_target(h.format("{name}-{version}-{hash}")) for h in roots]
 
+    all_pkg_identifiers = []
+
     # All install and install-deps targets
     all_install_related_targets = []
 
@@ -744,6 +746,7 @@ def env_depfile(args):
     phony_convenience_targets = []
 
     for tgt, _, _, _, _ in make_targets.adjacency_list:
+        all_pkg_identifiers.append(tgt)
         all_install_related_targets.append(get_install_target(tgt))
         all_install_related_targets.append(get_install_deps_target(tgt))
         if args.make_target_prefix is None:
@@ -770,6 +773,7 @@ def env_depfile(args):
             "adjacency_list": make_targets.adjacency_list,
             "phony_convenience_targets": " ".join(phony_convenience_targets),
             "target_prefix": target_prefix,
+            "pkg_ids": " ".join(all_pkg_identifiers),
         }
     )
 
