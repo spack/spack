@@ -86,8 +86,6 @@ class CDash(Reporter):
     """
 
     def __init__(self, args):
-        super().__init__(args)
-
         configuration = CDashConfiguration(
             upload_url=args.cdash_upload_url,
             packages=installed_specs(args),

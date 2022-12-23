@@ -7,9 +7,6 @@
 class Reporter:
     """Base class for report writers."""
 
-    def __init__(self, args):
-        self.args = args
-
     def build_report(self, filename, report_data):
         raise NotImplementedError("must be implemented by derived classes")
 

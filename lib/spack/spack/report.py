@@ -38,6 +38,16 @@ REPORT_WRITERS = {
 VALID_FORMATS = [None, "junit", "cdash"]
 
 
+def create_reporter(fmt: ReportFormat, args):
+    if fmt == ReportFormat.NULL:
+        return NullReporter()
+    if fmt == ReportFormat.JUnit:
+        return JUnit()
+    if fmt == ReportFormat.CDash:
+        return CDash(args)
+    return None
+
+
 def fetch_log(pkg, do_fn, dir):
     log_files = {
         "_install_task": pkg.build_log_path,
@@ -266,8 +276,7 @@ class collect_info(object):
         else:
             self.format_name = fmt
 
-        # Check that the format is valid.
-        self.report_writer = REPORT_WRITERS[self.format_name](args)
+        self.report_writer = create_reporter(fmt, args)
 
     def __call__(self, type, dir=None):
         self.type = type
