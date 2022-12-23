@@ -120,9 +120,9 @@ def test_timer_write():
 
     output = text_buffer.getvalue().splitlines()
     assert "timer" in output[0]
-    assert "1.0000s" in output[0]
+    assert "1.000s" in output[0]
     assert "total" in output[1]
-    assert "3.0000s" in output[1]
+    assert "3.000s" in output[1]
 
     deserialized = json.loads(json_buffer.getvalue())
     assert deserialized == {
