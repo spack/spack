@@ -60,7 +60,7 @@ def mirror_dir(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def test_mirror(mirror_dir):
+def test_mirror(mirror_dir, mutable_config):
     mirror_url = url_util.path_to_file_url(mirror_dir)
     mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
     yield mirror_dir

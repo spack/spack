@@ -26,25 +26,6 @@ uninstall = SpackCommand("uninstall")
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
-@pytest.fixture
-def tmp_scope():
-    """Creates a temporary configuration scope"""
-
-    base_name = "internal-testing-scope"
-    current_overrides = set(
-        x.name for x in spack.config.config.matching_scopes(r"^{0}".format(base_name))
-    )
-
-    num_overrides = 0
-    scope_name = base_name
-    while scope_name in current_overrides:
-        scope_name = "{0}{1}".format(base_name, num_overrides)
-        num_overrides += 1
-
-    with spack.config.override(spack.config.InternalConfigScope(scope_name)):
-        yield scope_name
-
-
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression("8083")
 def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
@@ -154,48 +135,44 @@ mpich@1.0
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
 
-def test_mirror_crud(tmp_scope, capsys):
+def test_mirror_crud(mutable_config, capsys):
     with capsys.disabled():
-        mirror("add", "--scope", tmp_scope, "mirror", "http://spack.io")
+        mirror("add", "mirror", "http://spack.io")
 
-        output = mirror("remove", "--scope", tmp_scope, "mirror")
+        output = mirror("remove", "mirror")
         assert "Removed mirror" in output
 
-        mirror("add", "--scope", tmp_scope, "mirror", "http://spack.io")
+        mirror("add", "mirror", "http://spack.io")
 
         # no-op
-        output = mirror("set-url", "--scope", tmp_scope, "mirror", "http://spack.io")
+        output = mirror("set-url", "mirror", "http://spack.io")
         assert "No changes made" in output
 
-        output = mirror("set-url", "--scope", tmp_scope, "--push", "mirror", "s3://spack-public")
+        output = mirror("set-url", "--push", "mirror", "s3://spack-public")
         assert "Changed (push) url" in output
 
         # no-op
-        output = mirror("set-url", "--scope", tmp_scope, "--push", "mirror", "s3://spack-public")
+        output = mirror("set-url", "--push", "mirror", "s3://spack-public")
         assert "No changes made" in output
 
-        output = mirror("remove", "--scope", tmp_scope, "mirror")
+        output = mirror("remove", "mirror")
         assert "Removed mirror" in output
 
         # Test S3 connection info token
         mirror(
             "add",
-            "--scope",
-            tmp_scope,
             "--s3-access-token",
             "aaaaaazzzzz",
             "mirror",
             "s3://spack-public",
         )
 
-        output = mirror("remove", "--scope", tmp_scope, "mirror")
+        output = mirror("remove", "mirror")
         assert "Removed mirror" in output
 
         # Test S3 connection info id/key
         mirror(
             "add",
-            "--scope",
-            tmp_scope,
             "--s3-access-key-id",
             "foo",
             "--s3-access-key-secret",
@@ -204,14 +181,12 @@ def test_mirror_crud(tmp_scope, capsys):
             "s3://spack-public",
         )
 
-        output = mirror("remove", "--scope", tmp_scope, "mirror")
+        output = mirror("remove", "mirror")
         assert "Removed mirror" in output
 
         # Test S3 connection info with endpoint URL
         mirror(
             "add",
-            "--scope",
-            tmp_scope,
             "--s3-access-token",
             "aaaaaazzzzz",
             "--s3-endpoint-url",
@@ -220,32 +195,32 @@ def test_mirror_crud(tmp_scope, capsys):
             "s3://spack-public",
         )
 
-        output = mirror("remove", "--scope", tmp_scope, "mirror")
+        output = mirror("remove", "mirror")
         assert "Removed mirror" in output
 
-        output = mirror("list", "--scope", tmp_scope)
+        output = mirror("list")
         assert "No mirrors configured" in output
 
         # Test GCS Mirror
-        mirror("add", "--scope", tmp_scope, "mirror", "gs://spack-test")
+        mirror("add", "mirror", "gs://spack-test")
 
-        output = mirror("remove", "--scope", tmp_scope, "mirror")
+        output = mirror("remove", "mirror")
         assert "Removed mirror" in output
 
 
-def test_mirror_nonexisting(tmp_scope):
+def test_mirror_nonexisting(mutable_config):
     with pytest.raises(SpackCommandError):
-        mirror("remove", "--scope", tmp_scope, "not-a-mirror")
-
-    with pytest.raises(SpackCommandError):
-        mirror("set-url", "--scope", tmp_scope, "not-a-mirror", "http://spack.io")
-
-
-def test_mirror_name_collision(tmp_scope):
-    mirror("add", "--scope", tmp_scope, "first", "1")
+        mirror("remove", "not-a-mirror")
 
     with pytest.raises(SpackCommandError):
-        mirror("add", "--scope", tmp_scope, "first", "1")
+        mirror("set-url", "not-a-mirror", "http://spack.io")
+
+
+def test_mirror_name_collision(mutable_config):
+    mirror("add", "first", "1")
+
+    with pytest.raises(SpackCommandError):
+        mirror("add", "first", "1")
 
 
 def test_mirror_destroy(

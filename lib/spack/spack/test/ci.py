@@ -22,22 +22,6 @@ import spack.util.gpg
 import spack.util.spack_yaml as syaml
 
 
-@pytest.fixture
-def tmp_scope():
-    """Creates a temporary configuration scope"""
-    base_name = "internal-testing-scope"
-    current_overrides = set(x.name for x in cfg.config.matching_scopes(r"^{0}".format(base_name)))
-
-    num_overrides = 0
-    scope_name = base_name
-    while scope_name in current_overrides:
-        scope_name = "{0}{1}".format(base_name, num_overrides)
-        num_overrides += 1
-
-    with cfg.override(cfg.InternalConfigScope(scope_name)):
-        yield scope_name
-
-
 def test_urlencode_string():
     s = "Spack Test Project"
 
