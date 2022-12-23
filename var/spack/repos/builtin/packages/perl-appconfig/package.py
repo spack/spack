@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class PerlAppconfig(PerlPackage):
-    """AppConfig - Perl5 module for reading configuration files and parsing command line arguments."""
+    """AppConfig - Perl5 module for reading configuration files and parsing
+    command line arguments."""
 
     homepage = "https://metacpan.org/pod/AppConfig"
     url = "https://cpan.metacpan.org/authors/id/N/NE/NEILB/AppConfig-1.71.tar.gz"
