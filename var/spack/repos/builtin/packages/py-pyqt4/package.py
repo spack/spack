@@ -62,6 +62,9 @@ class PyPyqt4(SIPPackage):
         # https://github.com/spack/spack/issues/14121
         # https://github.com/spack/spack/pull/15297
         # Same code comes by default with py-pyqt5 and py-pyqt6
+        text = """
+# Support PyQt4 sub-packages that have been created by setuptools.
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+"""
         with open(join_path(python_platlib, "PyQt4", "__init__.py"), "a") as f:
-            f.write("\n\n# Support PyQt4 sub-packages that have been created by setuptools.\n")
-            f.write("__path__ = __import__('pkgutil').extend_path(__path__, __name__)\n")
+            f.write(text)

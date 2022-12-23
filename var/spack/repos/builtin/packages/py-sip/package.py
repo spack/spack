@@ -75,12 +75,20 @@ class PySip(PythonPackage):
 
     @run_after("install")
     def extend_path_setup(self):
-        if self.spec.satisfies("@:4"):
-            # See github issue #14121 and PR #15297
-            module = self.spec.variants["module"].value
-            if module != "sip":
-                module = module.split(".")[0]
-                with working_dir(python_platlib):
-                    with open(os.path.join(module, "__init__.py"), "w") as f:
-                        f.write("from pkgutil import extend_path\n")
-                        f.write("__path__ = extend_path(__path__, __name__)\n")
+        # https://github.com/spack/spack/issues/14121
+        # https://github.com/spack/spack/pull/15297
+        # Same code comes by default with py-pyqt5 and py-pyqt6
+        if self.spec.satisfies("@5:"):
+            return
+
+        module = self.spec.variants["module"].value
+        if module == "sip":
+            return
+
+        module = module.split(".")[0]
+        text = f"""
+# Support {module} sub-packages that have been created by setuptools.
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+"""
+        with open(join_path(python_platlib, module, "__init__.py"), "w") as f:
+            f.write(text)
