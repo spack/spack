@@ -25,8 +25,11 @@ class PyPyqt4(SIPPackage):
 
     # Requires distutils
     depends_on("python@:3.11", type=("build", "link", "run"))
+
+    # configure-ng.py
+    depends_on("py-sip@4.19.12:4.19.18 module=PyQt4.sip")
+
     depends_on("qt@4")
-    depends_on("py-sip@4.16.4:4.19.18 module=PyQt4.sip")
 
     build_directory = "."
 
