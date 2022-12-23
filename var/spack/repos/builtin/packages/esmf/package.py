@@ -89,6 +89,7 @@ class Esmf(MakefilePackage):
         when="@8.3.0b09",
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
+    variant("shared", default=True, description="Build shared library")
 
     # Required dependencies
     depends_on("zlib")
@@ -357,6 +358,10 @@ class Esmf(MakefilePackage):
             # FIXME: determine if the following are needed
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
+
+        # Static-only option:
+        if "~shared" in spec:
+            os.environ["ESMF_SHARED_LIB_BUILD"] = "OFF"
 
     @run_after("install")
     def install_findesmf(self):
