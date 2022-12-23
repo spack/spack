@@ -50,9 +50,10 @@ def _urlopen():
     without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
 
     # And dynamically dispatch based on the config:verify_ssl.
-    def dispatch_open(*args, **kwargs):
+    def dispatch_open(fullurl, data=None, timeout=None):
         opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
-        return opener.open(*args, **kwargs)
+        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        return opener.open(fullurl, data, timeout)
 
     return dispatch_open
 
@@ -89,11 +90,10 @@ def read_from_url(url, accept_content_type=None):
         url = urllib.parse.urlparse(url)
 
     # Timeout in seconds for web requests
-    timeout = spack.config.get("config:connect_timeout", 10)
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
     try:
-        response = urlopen(request, timeout=timeout)
+        response = urlopen(request)
     except URLError as err:
         raise SpackWebError("Download failed: {}".format(str(err)))
 
@@ -781,6 +781,36 @@ def get_header(headers, header_name):
             if unfuzz(header) == unfuzzed_header_name:
                 return value
         raise
+
+
+def parse_etag(header_value):
+    """Parse a strong etag from an ETag: <value> header value.
+    We don't allow for weakness indicators because it's unclear
+    what that means for cache invalidation."""
+    if header_value is None:
+        return None
+
+    # First follow rfc7232 section 2.3 mostly:
+    #  ETag       = entity-tag
+    #  entity-tag = [ weak ] opaque-tag
+    #  weak       = %x57.2F ; "W/", case-sensitive
+    #  opaque-tag = DQUOTE *etagc DQUOTE
+    #  etagc      = %x21 / %x23-7E / obs-text
+    #             ; VCHAR except double quotes, plus obs-text
+    # obs-text    = %x80-FF
+
+    # That means quotes are required.
+    valid = re.match(r'"([\x21\x23-\x7e\x80-\xFF]+)"$', header_value)
+    if valid:
+        return valid.group(1)
+
+    # However, not everybody adheres to the RFC (some servers send
+    # wrong etags, but also s3:// is simply a different standard).
+    # In that case, it's common that quotes are omitted, everything
+    # else stays the same.
+    valid = re.match(r"([\x21\x23-\x7e\x80-\xFF]+)$", header_value)
+
+    return valid.group(1) if valid else None
 
 
 class FetchError(spack.error.SpackError):

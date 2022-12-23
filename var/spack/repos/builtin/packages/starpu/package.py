@@ -94,6 +94,7 @@ class Starpu(AutotoolsPackage):
     )
 
     conflicts("+papi", when="+simgrid")
+    conflicts("~blocking", when="+simgrid")
 
     def autoreconf(self, spec, prefix):
         if not os.path.isfile("./configure"):

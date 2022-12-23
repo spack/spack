@@ -25,6 +25,15 @@ class Reframe(Package):
 
     version("master", branch="master")
     version(
+        "4.0.0-dev.4", sha256="35d37ee2747807b539b2c5b75073619870371d1e0fed9778f2a33a8abd37b8a1"
+    )
+    version(
+        "4.0.0-dev.3", sha256="830f00bcf27f693e7c0288e53a7b7fcf5aa5721ba8d451e693da018cf4af9bf4"
+    )
+    version(
+        "4.0.0-dev.2", sha256="a02ed4077965e38a2897984b79d938a229b7e52095cd9d803e6121448efbde11"
+    )
+    version(
         "4.0.0-dev.1", sha256="6db55c20b79764fc1f0e0a13de062850007425fa2c7f54a113b96adee50741ed"
     )
     version(
@@ -106,15 +115,7 @@ class Reframe(Package):
 
     # sanity check
     sanity_check_is_file = ["bin/reframe"]
-    sanity_check_is_dir = [
-        "bin",
-        "config",
-        "docs",
-        "reframe",
-        "tutorials",
-        "unittests",
-        "cscs-checks",
-    ]
+    sanity_check_is_dir = ["bin", "config", "docs", "reframe", "tutorials", "unittests"]
 
     # check if we can run reframe
     @run_after("install")
@@ -124,8 +125,15 @@ class Reframe(Package):
             reframe = Executable(self.prefix + "/bin/reframe")
             reframe("-l")
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def check_hpctestlib(self):
+        if self.spec.satisfies("@3.9.0:"):
+            if not can_access("hpctestlib"):
+                tty.warn("the test library was not installed")
+
     def install(self, spec, prefix):
-        if spec.version >= Version("3.0"):
+        if spec.satisfies("@3.0:"):
             if "+docs" in spec:
                 with working_dir("docs"):
                     make("man")
@@ -139,6 +147,6 @@ class Reframe(Package):
 
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix)
-        if self.spec.version >= Version("3.0"):
+        if self.spec.satisfies("@3.0:"):
             if "+docs" in self.spec:
                 env.prepend_path("MANPATH", self.prefix.docs.man)
