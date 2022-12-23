@@ -26,7 +26,7 @@ class PyPyqt4(SIPPackage):
     # Requires distutils
     depends_on("python@:3.11", type=("build", "link", "run"))
     depends_on("qt@4")
-    depends_on("py-sip@4.16.4:4", type="build")
+    depends_on("py-sip@4.16.4:4.19.18")
 
     build_directory = "."
 
@@ -56,14 +56,3 @@ class PyPyqt4(SIPPackage):
 
     def configure(self, spec, prefix):
         python("configure-ng.py", *self.configure_args())
-
-    @run_after("install")
-    def extend_path_setup(self):
-        # See github issue #14121 and PR #15297
-        module = self.pkg.spec["py-sip"].variants["module"].value
-        if module != "sip":
-            module = module.split(".")[0]
-            with working_dir(inspect.getmodule(self.pkg).python_platlib):
-                with open(os.path.join(module, "__init__.py"), "a") as f:
-                    f.write("from pkgutil import extend_path\n")
-                    f.write("__path__ = extend_path(__path__, __name__)\n")
