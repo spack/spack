@@ -140,11 +140,11 @@ class Timer(object):
     def write_tty(self, out=sys.stdout):
         """Write a human-readable summary of timings"""
         # Individual timers ordered by registration
-        formatted = [(p, pretty_seconds(self.duration(p))) for p in self.phases]
+        formatted = [(p, f"{self.duration(p):.4f}s") for p in self.phases]
 
         # Total time
-        formatted.append(("total", pretty_seconds(self.duration())))
+        formatted.append(("total", f"{self.duration():.4f}s"))
 
         # Write to out
         for name, duration in formatted:
-            out.write("    {:10s} {:>10s}\n".format(name, duration))
+            out.write(f"    {name:10s} {duration:>10s}\n")
