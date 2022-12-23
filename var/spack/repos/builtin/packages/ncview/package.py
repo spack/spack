@@ -21,11 +21,15 @@ class Ncview(AutotoolsPackage):
     depends_on("libxaw")
 
     def patch(self):
-        # Disable the netcdf-c compiler check, save and restore the 
+        # Disable the netcdf-c compiler check, save and restore the
         # modification timestamp of the file to prevent autoreconf.
         patched_file = "configure"
         with keep_modification_time(patched_file):
-            filter_file("if test x\$CC_TEST_SAME != x\$NETCDF_CC_TEST_SAME; then", "if false; then", patched_file)
+            filter_file(
+                "if test x\$CC_TEST_SAME != x\$NETCDF_CC_TEST_SAME; then",
+                "if false; then",
+                patched_file,
+            )
 
     def configure_args(self):
         spec = self.spec
