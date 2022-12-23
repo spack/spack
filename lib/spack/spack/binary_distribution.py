@@ -9,16 +9,12 @@ import hashlib
 import json
 import multiprocessing.pool
 import os
-import re
 import shutil
 import sys
 import tarfile
 import tempfile
 import time
 import traceback
-import urllib.error
-import urllib.parse
-import urllib.request
 import warnings
 from contextlib import closing
 from urllib.error import HTTPError, URLError
@@ -41,8 +37,8 @@ import spack.relocate as relocate
 import spack.repo
 import spack.store
 import spack.traverse as traverse
-import spack.util.file_cache as file_cache
 import spack.util.gpg
+import spack.util.network_cache as network_cache
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -103,18 +99,12 @@ class BinaryCacheIndex(object):
     """
 
     def __init__(self, cache_root):
-        self._index_cache_root = cache_root
+        self._index_cache = network_cache.NetworkCache(cache_root)
 
-        # the key associated with the serialized _local_index_cache
-        self._index_contents_key = "contents.json"
+        # stores a map of mirror URL to last witnessed index revision
+        self._mirror_revs_seen = {}
 
-        # a FileCache instance storing copies of remote binary cache indices
-        self._index_file_cache = None
-
-        # stores a map of mirror URL to index hash and cache key (index path)
-        self._local_index_cache = None
-
-        # hashes of remote indices already ingested into the concrete spec
+        # revisions of remote indices already ingested into the concrete spec
         # cache (_mirrors_for_spec)
         self._specs_already_associated = set()
 
@@ -132,67 +122,50 @@ class BinaryCacheIndex(object):
         #           use the updated source if available)
         self._mirrors_for_spec = {}
 
-    def _init_local_index_cache(self):
-        if not self._index_file_cache:
-            self._index_file_cache = file_cache.FileCache(self._index_cache_root)
-
-            cache_key = self._index_contents_key
-            self._index_file_cache.init_entry(cache_key)
-
-            cache_path = self._index_file_cache.cache_path(cache_key)
-
-            self._local_index_cache = {}
-            if os.path.isfile(cache_path):
-                with self._index_file_cache.read_transaction(cache_key) as cache_file:
-                    self._local_index_cache = json.load(cache_file)
-
     def clear(self):
         """For testing purposes we need to be able to empty the cache and
         clear associated data structures."""
-        if self._index_file_cache:
-            self._index_file_cache.destroy()
-            self._index_file_cache = None
-        self._local_index_cache = None
+        self._index_cache.destroy()
+        self._mirror_revs_seen = {}
         self._specs_already_associated = set()
         self._last_fetch_times = {}
         self._mirrors_for_spec = {}
 
-    def _write_local_index_cache(self):
-        self._init_local_index_cache()
-        cache_key = self._index_contents_key
-        with self._index_file_cache.write_transaction(cache_key) as (old, new):
-            json.dump(self._local_index_cache, new)
+    def _fetch_index(self, mirror_url, **kwargs):
+        index_url = url_util.join(mirror_url, _build_cache_relative_path, "index.json")
+        sha256_url = url_util.join(mirror_url, _build_cache_relative_path, "index.json.hash")
+        return self._index_cache.fetch(index_url, sha256_url=sha256_url, **kwargs)
 
     def regenerate_spec_cache(self, clear_existing=False):
         """Populate the local cache of concrete specs (``_mirrors_for_spec``)
         from the locally cached buildcache index files.  This is essentially a
         no-op if it has already been done, as we keep track of the index
         hashes for which we have already associated the built specs."""
-        self._init_local_index_cache()
 
         if clear_existing:
             self._specs_already_associated = set()
             self._mirrors_for_spec = {}
 
-        for mirror_url in self._local_index_cache:
-            cache_entry = self._local_index_cache[mirror_url]
-            cached_index_path = cache_entry["index_path"]
-            cached_index_hash = cache_entry["index_hash"]
-            if cached_index_hash not in self._specs_already_associated:
-                self._associate_built_specs_with_mirror(cached_index_path, mirror_url)
-                self._specs_already_associated.add(cached_index_hash)
+        for mirror_url, cached_index_rev in self._mirror_revs_seen.items():
+            if cached_index_rev not in self._specs_already_associated:
+                with self._fetch_index(mirror_url, dry_run=True) as r:
+                    self._associate_built_specs_with_mirror(r.path, mirror_url)
+                    self._specs_already_associated.add(r.revision)
 
-    def _associate_built_specs_with_mirror(self, cache_key, mirror_url):
+                    # NB: The revision may have changed since we last modified
+                    # the _mirror_revs_seen, so we update it here. This is safe
+                    # since by this point we are already loading a *new* mirror
+                    # revision, the *exact* revision we load is ambivalent.
+                    self._mirror_revs_seen[mirror_url] = r.revision
+
+    def _associate_built_specs_with_mirror(self, cached_path, mirror_url):
         tmpdir = tempfile.mkdtemp()
 
         try:
             db_root_dir = os.path.join(tmpdir, "db_root")
             db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
 
-            self._index_file_cache.init_entry(cache_key)
-            cache_path = self._index_file_cache.cache_path(cache_key)
-            with self._index_file_cache.read_transaction(cache_key):
-                db._read_from_file(cache_path)
+            db._read_from_file(cached_path)
 
             spec_list = db.query_local(installed=False, in_buildcache=True)
 
@@ -305,7 +278,6 @@ class BinaryCacheIndex(object):
         buildcache ``index.json`` and ``index.json.hash`` files are retrieved
         from each configured mirror and stored locally (both in memory and
         on disk under ``_index_cache_root``)."""
-        self._init_local_index_cache()
 
         mirrors = spack.mirror.MirrorCollection()
         configured_mirror_urls = [m.fetch_url for m in mirrors.values()]
@@ -341,9 +313,7 @@ class BinaryCacheIndex(object):
         ttl = spack.config.get("config:binary_index_ttl", 600)
         now = time.time()
 
-        for cached_mirror_url in self._local_index_cache:
-            cache_entry = self._local_index_cache[cached_mirror_url]
-            cached_index_path = cache_entry["index_path"]
+        for cached_mirror_url, cached_index_rev in self._mirror_revs_seen.items():
             if cached_mirror_url in configured_mirror_urls:
                 # Only do a fetch if the last fetch was longer than TTL ago
                 if (
@@ -360,9 +330,7 @@ class BinaryCacheIndex(object):
                 else:
                     # May need to fetch the index and update the local caches
                     try:
-                        needs_regen = self._fetch_and_cache_index(
-                            cached_mirror_url, cache_entry=cache_entry
-                        )
+                        needs_regen = self._fetch_and_cache_index(cached_mirror_url)
                         self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
                     except FetchIndexError as e:
@@ -374,29 +342,21 @@ class BinaryCacheIndex(object):
                     spec_cache_regenerate_needed |= needs_regen
             else:
                 # No longer have this mirror, cached index should be removed
-                items_to_remove.append(
-                    {
-                        "url": cached_mirror_url,
-                        "cache_key": os.path.join(self._index_cache_root, cached_index_path),
-                    }
-                )
+                items_to_remove.append(cached_mirror_url)
                 if cached_mirror_url in self._last_fetch_times:
                     del self._last_fetch_times[cached_mirror_url]
                 spec_cache_clear_needed = True
                 spec_cache_regenerate_needed = True
 
         # Clean up items to be removed, identified above
-        for item in items_to_remove:
-            url = item["url"]
-            cache_key = item["cache_key"]
-            self._index_file_cache.remove(cache_key)
-            del self._local_index_cache[url]
+        for url in items_to_remove:
+            del self._mirror_revs_seen[url]
 
         # Iterate the configured mirrors now.  Any mirror urls we do not
         # already have in our cache must be fetched, stored, and represented
         # locally.
         for mirror_url in configured_mirror_urls:
-            if mirror_url in self._local_index_cache:
+            if mirror_url in self._mirror_revs_seen:
                 continue
 
             # Need to fetch the index and update the local caches
@@ -413,8 +373,6 @@ class BinaryCacheIndex(object):
             if needs_regen:
                 spec_cache_regenerate_needed = True
 
-        self._write_local_index_cache()
-
         if all_methods_failed:
             raise FetchCacheError(fetch_errors)
         if fetch_errors:
@@ -425,64 +383,26 @@ class BinaryCacheIndex(object):
         if spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
 
-    def _fetch_and_cache_index(self, mirror_url, cache_entry={}):
-        """Fetch a buildcache index file from a remote mirror and cache it.
-
-        If we already have a cached index from this mirror, then we first
-        check if the hash has changed, and we avoid fetching it if not.
+    def _fetch_and_cache_index(self, mirror_url):
+        """Update the cached buildcache index file from a remote mirror.
 
         Args:
             mirror_url (str): Base url of mirror
-            cache_entry (dict): Old cache metadata with keys ``index_hash``, ``index_path``,
-                ``etag``
 
         Returns:
-            True if the local index.json was updated.
+            True if the index.json was updated since it was last loaded.
 
         Throws:
             FetchIndexError
         """
-        # TODO: get rid of this request, handle 404 better
-        if not web_util.url_exists(
-            url_util.join(mirror_url, _build_cache_relative_path, "index.json")
-        ):
-            return False
 
-        etag = cache_entry.get("etag", None)
-        if etag:
-            fetcher = EtagIndexFetcher(mirror_url, etag)
-        else:
-            fetcher = DefaultIndexFetcher(
-                mirror_url, local_hash=cache_entry.get("index_hash", None)
-            )
-
-        result = fetcher.conditional_fetch()
-
-        # Nothing to do
-        if result.fresh:
-            return False
-
-        # Persist new index.json
-        url_hash = compute_hash(mirror_url)
-        cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
-        self._index_file_cache.init_entry(cache_key)
-        with self._index_file_cache.write_transaction(cache_key) as (old, new):
-            new.write(result.data)
-
-        self._local_index_cache[mirror_url] = {
-            "index_hash": result.hash,
-            "index_path": cache_key,
-            "etag": result.etag,
-        }
-
-        # clean up the old cache_key if necessary
-        old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key:
-            self._index_file_cache.remove(old_cache_key)
-
-        # We fetched an index and updated the local index cache, we should
-        # regenerate the spec cache as a result.
-        return True
+        try:
+            with self._fetch_index(mirror_url) as r:
+                self._mirror_revs_seen[mirror_url] = r.revision
+                # If we don't recognize this revision, we need a regen
+                return r.revision not in self._specs_already_associated
+        except (network_cache.FetchError, network_cache.SpackWebError) as e:
+            raise FetchIndexError(e) from None
 
 
 def binary_index_location():
@@ -2354,113 +2274,3 @@ class FetchIndexError(Exception):
             return str(self.args[0])
         else:
             return "{}, due to: {}".format(self.args[0], self.args[1])
-
-
-FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fresh")
-
-
-class DefaultIndexFetcher:
-    """Fetcher for index.json, using separate index.json.hash as cache invalidation strategy"""
-
-    def __init__(self, url, local_hash, urlopen=web_util.urlopen):
-        self.url = url
-        self.local_hash = local_hash
-        self.urlopen = urlopen
-        self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
-
-    def get_remote_hash(self):
-        # Failure to fetch index.json.hash is not fatal
-        url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.json.hash")
-        try:
-            response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
-        except urllib.error.URLError:
-            return None
-
-        # Validate the hash
-        remote_hash = response.read(64)
-        if not re.match(rb"[a-f\d]{64}$", remote_hash):
-            return None
-        return remote_hash.decode("utf-8")
-
-    def conditional_fetch(self):
-        # Do an intermediate fetch for the hash
-        # and a conditional fetch for the contents
-
-        # Early exit if our cache is up to date.
-        if self.local_hash and self.local_hash == self.get_remote_hash():
-            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-
-        # Otherwise, download index.json
-        url_index = url_util.join(self.url, _build_cache_relative_path, "index.json")
-
-        try:
-            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
-        except urllib.error.URLError as e:
-            raise FetchIndexError("Could not fetch index from {}".format(url_index), e)
-
-        try:
-            result = codecs.getreader("utf-8")(response).read()
-        except ValueError as e:
-            return FetchCacheError("Remote index {} is invalid".format(url_index), e)
-
-        computed_hash = compute_hash(result)
-
-        # We don't handle computed_hash != remote_hash here, which can happen
-        # when remote index.json and index.json.hash are out of sync, or if
-        # the hash algorithm changed.
-        # The most likely scenario is that we got index.json got updated
-        # while we fetched index.json.hash. Warning about an issue thus feels
-        # wrong, as it's more of an issue with race conditions in the cache
-        # invalidation strategy.
-
-        # For now we only handle etags on http(s), since 304 error handling
-        # in s3:// is not there yet.
-        if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
-            etag = None
-        else:
-            etag = web_util.parse_etag(
-                response.headers.get("Etag", None) or response.headers.get("etag", None)
-            )
-
-        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
-
-
-class EtagIndexFetcher:
-    """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
-
-    def __init__(self, url, etag, urlopen=web_util.urlopen):
-        self.url = url
-        self.etag = etag
-        self.urlopen = urlopen
-
-    def conditional_fetch(self):
-        # Just do a conditional fetch immediately
-        url = url_util.join(self.url, _build_cache_relative_path, "index.json")
-        headers = {
-            "User-Agent": web_util.SPACK_USER_AGENT,
-            "If-None-Match": '"{}"'.format(self.etag),
-        }
-
-        try:
-            response = self.urlopen(urllib.request.Request(url, headers=headers))
-        except urllib.error.HTTPError as e:
-            if e.getcode() == 304:
-                # Not modified; that means fresh.
-                return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-            raise FetchIndexError("Could not fetch index {}".format(url), e) from e
-        except urllib.error.URLError as e:
-            raise FetchIndexError("Could not fetch index {}".format(url), e) from e
-
-        try:
-            result = codecs.getreader("utf-8")(response).read()
-        except ValueError as e:
-            raise FetchIndexError("Remote index {} is invalid".format(url), e) from e
-
-        headers = response.headers
-        etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
-        return FetchIndexResult(
-            etag=web_util.parse_etag(etag_header_value),
-            hash=compute_hash(result),
-            data=result,
-            fresh=False,
-        )
