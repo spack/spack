@@ -26,7 +26,7 @@ class PyPyqt4(SIPPackage):
     # Requires distutils
     depends_on("python@:3.11", type=("build", "link", "run"))
     depends_on("qt@4")
-    depends_on("py-sip@4.16.4:4.19.18")
+    depends_on("py-sip@4.16.4:4.19.18 module=PyQt4.sip")
 
     build_directory = "."
 
@@ -56,3 +56,12 @@ class PyPyqt4(SIPPackage):
 
     def configure(self, spec, prefix):
         python("configure-ng.py", *self.configure_args())
+
+    @run_after("install")
+    def extend_path_setup(self):
+        # https://github.com/spack/spack/issues/14121
+        # https://github.com/spack/spack/pull/15297
+        # Same code comes by default with py-pyqt5 and py-pyqt6
+        with open(join_path(python_platlib, "PyQt4", "__init__.py"), "a") as f:
+            f.write("\n\n# Support PyQt4 sub-packages that have been created by setuptools.\n")
+            f.write("__path__ = __import__('pkgutil').extend_path(__path__, __name__)\n")

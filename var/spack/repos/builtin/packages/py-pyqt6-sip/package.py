@@ -6,13 +6,12 @@
 from spack.package import *
 
 
-class PyPyqt5Sip(PythonPackage):
-    """The sip module support for PyQt5."""
+class PyPyqt6Sip(PythonPackage):
+    """The sip module support for PyQt6."""
 
     homepage = "https://www.riverbankcomputing.com/software/sip/"
-    pypi = "PyQt5-sip/PyQt5_sip-12.9.0.tar.gz"
+    pypi = "PyQt6-sip/PyQt6_sip-13.4.0.tar.gz"
 
-    version("12.11.0", sha256="b4710fd85b57edef716cc55fae45bfd5bfac6fc7ba91036f1dcc3f331ca0eb39")
-    version("12.9.0", sha256="d3e4489d7c2b0ece9d203ae66e573939f7f60d4d29e089c9f11daa17cfeaae32")
+    version("13.4.0", sha256="6d87a3ee5872d7511b76957d68a32109352caf3b7a42a01d9ee20032b350d979")
 
     depends_on("py-setuptools@30.3:", type="build")

@@ -15,9 +15,14 @@ class PyPyqt6(SIPPackage):
 
     version("6.4.0", sha256="91392469be1f491905fa9e78fa4e4059a89ab616ddf2ecfd525bc1d65c26bb93")
 
-    depends_on("python@3.6.1:", type=("build", "run"))
+    # pyproject.toml
     depends_on("py-sip@6.5:6", type="build")
     depends_on("py-pyqt-builder@1.11:1", type="build")
+
+    # PKG-INFO
+    depends_on("py-pyqt6-sip@13.4:13", type=("build", "run"))
+
+    # README
     depends_on("qt-base@6")
 
     def configure_args(self):

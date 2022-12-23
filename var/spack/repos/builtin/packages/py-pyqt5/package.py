@@ -32,8 +32,14 @@ class PyPyqt5(SIPPackage):
         deprecated=True,
     )
 
+    # pyproject.toml
     depends_on("py-sip@6.4:6", type="build")
     depends_on("py-pyqt-builder@1.9:1", type="build")
+
+    # PKG-INFO
+    depends_on("py-pyqt5-sip@12.11:12", type=("build", "run"))
+
+    # README
     depends_on("qt@5+opengl")
 
     def configure_args(self):
