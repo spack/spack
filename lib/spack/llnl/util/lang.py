@@ -741,6 +741,18 @@ def pretty_string_to_date(date_str, now=None):
     raise ValueError(msg)
 
 
+def pretty_seconds_formatter(seconds):
+    if seconds >= 1:
+        multiplier, unit = 1, "s"
+    elif seconds >= 1e-3:
+        multiplier, unit = 1e3, "ms"
+    elif seconds >= 1e-6:
+        multiplier, unit = 1e6, "us"
+    else:
+        multiplier, unit = 1e9, "ns"
+    return lambda s: "%.3f%s" % (multiplier * s, unit)
+
+
 def pretty_seconds(seconds):
     """Seconds to string with appropriate units
 
@@ -750,15 +762,7 @@ def pretty_seconds(seconds):
     Returns:
         str: Time string with units
     """
-    if seconds >= 1:
-        value, unit = seconds, "s"
-    elif seconds >= 1e-3:
-        value, unit = seconds * 1e3, "ms"
-    elif seconds >= 1e-6:
-        value, unit = seconds * 1e6, "us"
-    else:
-        value, unit = seconds * 1e9, "ns"
-    return "%.3f%s" % (value, unit)
+    return pretty_seconds_formatter(seconds)(seconds)
 
 
 class RequiredAttributeError(ValueError):
