@@ -22,6 +22,12 @@ class Amdfftw(FftwBase):
 
     For single precision build, please use precision value as float.
     Example : spack install amdfftw precision=float
+
+    LICENSING INFORMATION: By downloading, installing and using this software,
+    you agree to the terms and conditions of the AMD AOCL-FFTW license
+    agreement.  You may obtain a copy of this license agreement from
+    https://www.amd.com/en/developer/aocl/fftw/fftw-libraries-4-0-eula.html
+    https://www.amd.com/en/developer/aocl/fftw/fftw-libraries-eula.html
     """
 
     _name = "amdfftw"
@@ -31,6 +37,7 @@ class Amdfftw(FftwBase):
 
     maintainers = ["amd-toolchain-support"]
 
+    version("4.0", sha256="5f02cb05f224bd86bd88ec6272b294c26dba3b1d22c7fb298745fd7b9d2271c0")
     version("3.2", sha256="31cab17a93e03b5b606e88dd6116a1055b8f49542d7d0890dbfcca057087b8d0")
     version("3.1", sha256="3e777f3acef13fa1910db097e818b1d0d03a6a36ef41186247c6ab1ab0afc132")
     version("3.0.1", sha256="87030c6bbb9c710f0a64f4f306ba6aa91dc4b182bb804c9022b35aef274d1a4c")
@@ -44,9 +51,9 @@ class Amdfftw(FftwBase):
     variant(
         "amd-fast-planner",
         default=False,
-        description="Option to reduce the planning time without much"
-        "tradeoff in the performance. It is supported for"
-        "Float and double precisions only.",
+        description="Option to reduce the planning time without much "
+        "tradeoff in the performance. It is supported for "
+        "float and double precisions only.",
     )
     variant("amd-top-n-planner", default=False, description="Build with amd-top-n-planner support")
     variant(
@@ -210,7 +217,7 @@ class Amdfftw(FftwBase):
 
         # Specific SIMD support.
         # float and double precisions are supported
-        simd_features = ["sse2", "avx", "avx2"]
+        simd_features = ["sse2", "avx", "avx2", "avx512"]
 
         simd_options = []
         for feature in simd_features:

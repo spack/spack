@@ -12,20 +12,27 @@ class AoclSparse(CMakePackage):
     """AOCL-Sparse is a library that contains basic linear algebra subroutines
     for sparse matrices and vectors optimized for AMD EPYC family of processors.
     It is designed to be used with C and C++. Current functionality of sparse
-    library supports SPMV function with CSR and ELLPACK formats."""
+    library supports SPMV function with CSR and ELLPACK formats.
 
+    LICENSING INFORMATION: By downloading, installing and using this software,
+    you agree to the terms and conditions of the AMD AOCL-Sparse license agreement.
+    You may obtain a copy of this license agreement from
+    https://www.amd.com/en/developer/aocl/sparse/sparse-libraries-4-0-eula.html
+    https://www.amd.com/en/developer/aocl/sparse/sparse-libraries-eula.html
+    """
+
+    _name = "aocl-sparse"
     homepage = "https://developer.amd.com/amd-aocl/aocl-sparse/"
     url = "https://github.com/amd/aocl-sparse/archive/3.0.tar.gz"
     git = "https://github.com/amd/aocl-sparse.git"
 
     maintainers = ["amd-toolchain-support"]
 
+    version("4.0", sha256="68524e441fdc7bb923333b98151005bed39154d9f4b5e8310b5c37de1d69c2c3")
     version("3.2", sha256="db7d681a8697d6ef49acf3e97e8bec35b048ce0ad74549c3b738bbdff496618f")
     version("3.1", sha256="8536f06095c95074d4297a3d2910654085dd91bce82e116c10368a9f87e9c7b9")
     version("3.0", sha256="1d04ba16e04c065051af916b1ed9afce50296edfa9b1513211a7378e1d6b952e")
     version("2.2", sha256="33c2ed6622cda61d2613ee63ff12c116a6cd209c62e54307b8fde986cd65f664")
-
-    conflicts("%gcc@:9.1", msg="Minimum required GCC version is 9.2.0")
 
     variant(
         "build_type",
@@ -35,6 +42,12 @@ class AoclSparse(CMakePackage):
     )
     variant("shared", default=True, description="Build shared library")
     variant("ilp64", default=False, description="Build with ILP64 support")
+    variant(
+        "AVX",
+        default=False,
+        when="target=zen4:",
+        description="Build with AVX512 support",
+    )
 
     depends_on("boost", when="@2.2")
     depends_on("cmake@3.5:", type="build")
@@ -74,6 +87,13 @@ class AoclSparse(CMakePackage):
             [
                 self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
                 "-DBUILD_CLIENTS_BENCHMARKS:BOOL=%s" % ("ON" if self.run_tests else "OFF"),
+            ]
+        )
+
+        args.extend(
+            [
+                self.define_from_variant("BUILD_WITH_AVX512", "AVX"),
+                "-DUSE_AVX512:BOOL=%s" % ("ON" if self.run_tests else "OFF"),
             ]
         )
 
