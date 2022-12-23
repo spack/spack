@@ -19,11 +19,10 @@ class PyCwlUtils(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", type="build")
 
     depends_on("py-cwl-upgrader@1.2.3:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-rdflib", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-cachecontrol", type=("build", "run"))
-    depends_on("py-schema-salad@8.3.20220825114525:8.999999", type=("build", "run"))
+    depends_on("py-schema-salad@8.3.20220825114525:8", type=("build", "run"))

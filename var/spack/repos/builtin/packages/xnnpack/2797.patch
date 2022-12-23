@@ -1,0 +1,22 @@
+From 142144085b85904c86d5f9985c964338b133e38d Mon Sep 17 00:00:00 2001
+From: xbwee <xiaobin.wee@gmail.com>
+Date: Mon, 28 Mar 2022 16:32:43 +0800
+Subject: [PATCH 1/2] Fix build error for src/jit (macos_x86_64 only).
+
+Because the target XNNPACK depends on ${JIT_SRCS} directly and does not add C++11 property.
+---
+ CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b611cdf0593fb1630ec298052e1ac58ca854966e..7612532d198a4c2915f23608e6ddd290fb8b7489 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -6599,6 +6599,7 @@ ELSE()
+ ENDIF()
+ SET_TARGET_PROPERTIES(XNNPACK PROPERTIES
+   C_STANDARD 99
++  CXX_STANDARD 11
+   C_EXTENSIONS YES)
+ IF(NOT MSVC)
+   SET_PROPERTY(SOURCE ${PROD_MICROKERNEL_SRCS} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-math-errno ")

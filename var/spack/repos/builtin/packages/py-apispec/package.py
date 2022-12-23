@@ -15,7 +15,7 @@ class PyApispec(PythonPackage):
 
     version("6.0.2", sha256="e76d80b739edef4be213092a6384ad7fd933ba7d64f6d5a0aff8d4da1bef7887")
 
-    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-packaging@21.3:", type=("build", "run"))

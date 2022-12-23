@@ -19,6 +19,6 @@ class PyBioblend(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-requests@2.20.0:", type=("build", "run"))
-    depends_on("py-requests-toolbelt@0.5.1:0.8.999999,0.9.1:", type=("build", "run"))
+    depends_on("py-requests-toolbelt@0.5.1:0.8,0.9.1:", type=("build", "run"))
     depends_on("py-tuspy", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"))
