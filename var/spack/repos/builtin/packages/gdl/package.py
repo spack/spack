@@ -26,7 +26,6 @@ class Gdl(CMakePackage):
     variant("hdf5", default=True, description="Enable HDF5")
     variant("openmp", default=True, description="Enable OpenMP")
     variant("proj", default=True, description="Enable LIBPROJ4")
-    variant("embed_python", default=False, description="Ability to embed Python within GDL")
     variant("python", default=False, description="Build the GDL Python module")
     variant("wx", default=False, description="Enable WxWidgets")
     variant("x11", default=False, description="Enable X11")
@@ -44,8 +43,6 @@ class Gdl(CMakePackage):
     # Too many dependencies to test if GDL supports PROJ.6,
     # so restricting to old API
     depends_on("proj@:5", when="+proj")
-    depends_on("py-numpy", type=("build", "run"), when="+embed_python")
-    depends_on("python@2.7:2.8", type=("build", "run"), when="+embed_python")
     depends_on("wxwidgets", when="+wx")
 
     depends_on("eigen")
@@ -61,8 +58,6 @@ class Gdl(CMakePackage):
     depends_on("readline")
     depends_on("libtirpc", type="link")
     depends_on("libgeotiff", type="link")
-
-    conflicts("+python", when="~embed_python")
 
     # Building the Python module requires patches currently targetting 0.9.8
     # othwerwise asking for the Python module *only* builds the Python module
@@ -112,11 +107,6 @@ class Gdl(CMakePackage):
             args += ["-DLIBPROJ4=ON", "-DLIBPROJ4DIR={0}".format(self.spec["proj"].prefix)]
         else:
             args += ["-DLIBPROJ4=OFF"]
-
-        if "+embed_python" in self.spec:
-            args += ["-DPYTHON=ON"]
-        else:
-            args += ["-DPYTHON=OFF"]
 
         if "+python" in self.spec:
             args += ["-DPYTHON_MODULE=ON"]

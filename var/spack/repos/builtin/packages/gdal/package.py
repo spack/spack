@@ -30,6 +30,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     maintainers = ["adamjstewart"]
 
+    version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")
+    version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
     version("3.5.3", sha256="d32223ddf145aafbbaec5ccfa5dbc164147fb3348a3413057f9b1600bb5b3890")
     version("3.5.2", sha256="0874dfdeb9ac42e53c37be4184b19350be76f0530e1f4fa8004361635b9030c2")
     version("3.5.1", sha256="d12c30a9eacdeaab493c0d1c9f88eb337c9cbb5bb40744c751bdd5a5af166ab6")
@@ -89,12 +91,15 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant(
         "arrow", default=False, when="build_system=cmake", description="Required for Arrow driver"
     )
+    variant(
+        "basisu", default=False, when="@3.6:", description="Required for BASISU and KTX2 drivers"
+    )
     variant("blosc", default=False, when="@3.4:", description="Required for Zarr driver")
-    variant("brunsli", default=True, when="@3.4:", description="Required for MRF driver")
+    variant("brunsli", default=False, when="@3.4:", description="Required for MRF driver")
     variant("bsb", default=False, when="@:2", description="Required for BSB driver")
     variant("cfitsio", default=False, description="Required for FITS driver")
     variant("crnlib", default=False, description="Required for DDS driver")
-    variant("curl", default=False, description="Required for network access")
+    variant("curl", default=True, description="Required for network access")
     variant("cryptopp", default=False, when="@2.1:", description="Required for EEDAI driver")
     variant("deflate", default=False, when="@3.2:", description="Required for Deflate compression")
     variant("dods", default=False, when="@:3.4", description="Required for DODS driver")
@@ -124,7 +129,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("jxl", default=False, when="@3.4:", description="Required for JPEGXL driver")
     variant("kdu", default=False, description="Required for JP2KAK and JPIPKAK drivers")
     variant("kea", default=False, description="Required for KEA driver")
-    variant("lerc", default=True, when="@2.4:", description="Required for LERC compression")
+    variant("lerc", default=False, when="@2.4:", description="Required for LERC compression")
     variant("libcsf", default=False, description="Required for PCRaster driver")
     variant("libkml", default=False, description="Required for LIBKML driver")
     variant("liblzma", default=False, description="Required for Zarr driver")
@@ -189,9 +194,10 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         default=False,
         description="Required for PostgreSQL and PostGISRaster drivers",
     )
+    variant("qb3", default=False, when="@3.6:", description="Required for MRF driver")
     variant(
         "qhull",
-        default=True,
+        default=False,
         when="@2.1:",
         description="Used for linear interpolation of gdal_grid",
     )
@@ -255,6 +261,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("blas", when="+armadillo")
     depends_on("lapack", when="+armadillo")
     depends_on("arrow", when="+arrow")
+    # depends_on("basis-universal", when="+basisu")
     depends_on("c-blosc", when="+blosc")
     depends_on("brunsli", when="+brunsli")
     # depends_on('bsb', when='+bsb')
@@ -328,6 +335,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("poppler@:0.71", when="@:2.4 +poppler")
     depends_on("poppler@:21", when="@:3.4.1 +poppler")
     depends_on("postgresql", when="+postgresql")
+    depends_on("qb3", when="+qb3")
     depends_on("qhull", when="+qhull")
     depends_on("qhull@2015:", when="@3.5:+qhull")
     depends_on("qhull@:2020.1", when="@:3.3+qhull")
@@ -471,6 +479,7 @@ class CMakeBuilder(CMakeBuilder):
             # Optional dependencies
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
+            self.define_from_variant("GDAL_USE_BASISU", "basisu"),
             self.define_from_variant("GDAL_USE_BLOSC", "blosc"),
             self.define_from_variant("GDAL_USE_BRUNSLI", "brunsli"),
             self.define_from_variant("GDAL_USE_CFITSIO", "cfitsio"),
@@ -525,6 +534,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("GDAL_USE_PODOFO", "podofo"),
             self.define_from_variant("GDAL_USE_POPPLER", "poppler"),
             self.define_from_variant("GDAL_USE_POSTGRESQL", "postgresql"),
+            self.define_from_variant("GDAL_USE_LIBQB3", "qb3"),
             self.define_from_variant("GDAL_USE_QHULL", "qhull"),
             self.define_from_variant("GDAL_USE_RASDAMAN", "rasdaman"),
             self.define_from_variant("GDAL_USE_RASTERLITE2", "rasterlite2"),

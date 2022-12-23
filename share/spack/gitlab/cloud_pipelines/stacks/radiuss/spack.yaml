@@ -80,12 +80,17 @@ spack:
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack --color=always --backtrace ci rebuild
+    after_script:
+      - cat /proc/loadavg || true
+
     match_behavior: first
     mappings:
       - match:
           - lbann
           - openblas
+          - qt
           - rust
+          - visit
         runner-attributes:
           tags: ["spack", "large", "x86_64"]
           variables:
@@ -106,6 +111,7 @@ spack:
           - samrai
           - vtk-h
           - vtk-m
+          - vtk
         runner-attributes:
           tags: ["spack", "medium", "x86_64"]
           variables:

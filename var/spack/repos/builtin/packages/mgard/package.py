@@ -18,28 +18,50 @@ class Mgard(CMakePackage, CudaPackage):
 
     maintainers = ["robertu94"]
 
+    version("2022-11-18", commit="72dd230ed1af88f62ed3c0f662e2387a6e587748")
     version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
     version("2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
 
+    variant("serial", when="@2022-11-18:", default=True)
+    variant("openmp", when="@2022-11-18:", default=True)
+    variant("timing", when="@2022-11-18:", default=False)
+    variant("unstructured", when="@2022-11-18:", default=False)
+
+    depends_on("python", type=("build",), when="@2022-11-18:")
+    depends_on("sed", type=("build",), when="@2022-11-18:")
     depends_on("zlib")
+    depends_on("pkgconf", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
+    depends_on("protobuf", when="@2022-11-18:")
     depends_on("libarchive", when="@2021-11-12:")
-    depends_on("tclap", when="@2021-11-12:")
+    depends_on("tclap", when="@2021-11-12")
     depends_on("yaml-cpp", when="@2021-11-12:")
     depends_on("cmake@3.19:")
-    depends_on("nvcomp@2.0.2", when="+cuda")
+    depends_on("nvcomp@2.2.0:", when="@2022-11-18:+cuda")
+    depends_on("nvcomp@2.0.2", when="@:2021-11-12+cuda")
     conflicts("cuda_arch=none", when="+cuda")
-    conflicts("~cuda", when="@2021-11-12")
+    conflicts(
+        "~cuda", when="@2021-11-12", msg="without cuda MGARD@2021-11-12 has undefined symbols"
+    )
+    conflicts("%gcc@:7", when="@2022-11-18:", msg="requires std::optional and other c++17 things")
 
     def cmake_args(self):
         args = ["-DBUILD_TESTING=OFF"]
+        args.append(self.define_from_variant("MGARD_ENABLE_CUDA", "cuda"))
         if "+cuda" in self.spec:
-            args.append("-DMGARD_ENABLE_CUDA=ON")
             cuda_arch = self.spec.variants["cuda_arch"].value
             args.append("-DCUDA_ARCH_STRING={}".format(";".join(cuda_arch)))
-            if "75" in cuda_arch:
-                args.append("-DMGARD_ENABLE_CUDA_OPTIMIZE_TURING=ON")
-            if "70" in cuda_arch:
-                args.append("-DMGARD_ENABLE_CUDA_OPTIMIZE_VOLTA=ON")
-
+        if self.spec.satisfies("@:2021-11-12"):
+            if "+cuda" in self.spec:
+                if "75" in cuda_arch:
+                    args.append("-DMGARD_ENABLE_CUDA_OPTIMIZE_TURING=ON")
+                if "70" in cuda_arch:
+                    args.append("-DMGARD_ENABLE_CUDA_OPTIMIZE_VOLTA=ON")
+        elif self.spec.satisfies("@2022-11-18:"):
+            args.append("-DMAXIMUM_DIMENSION=4")  # how do we do variants with arbitrary values
+            args.append("-DMGARD_ENABLE_CLI=OFF")  # the CLI is busted
+            args.append(self.define_from_variant("MGARD_ENABLE_OPENMP", "openmp"))
+            args.append(self.define_from_variant("MGARD_ENABLE_TIMING", "timing"))
+            args.append(self.define_from_variant("MGARD_ENABLE_SERIAL", "serial"))
+            args.append(self.define_from_variant("MGARD_ENABLE_UNSTRUCTURED", "unstructured"))
         return args

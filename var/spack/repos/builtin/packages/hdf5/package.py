@@ -26,12 +26,9 @@ class Hdf5(CMakePackage):
         "lrknox",
         "brtnfld",
         "byrnHDF",
-        "ChristopherHogan",
-        "epourmal",
         "gheber",
         "hyoklee",
         "lkurz",
-        "soumagne",
     ]
 
     tags = ["e4s"]
@@ -46,6 +43,7 @@ class Hdf5(CMakePackage):
     version("develop-1.8", branch="hdf5_1_8")
 
     # Odd versions are considered experimental releases
+    version("1.13.3", sha256="83c7c06671f975cee6944b0b217f95005faa55f79ea5532cf4ac268989866af4")
     version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
 
     # Even versions are maintenance versions
@@ -195,14 +193,18 @@ class Hdf5(CMakePackage):
     )
 
     depends_on("cmake@3.12:", type="build")
+    depends_on("cmake@3.18:", type="build", when="@1.13:")
 
+    depends_on("msmpi", when="+mpi platform=windows")
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
     depends_on("zlib@1.1.2:")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
-    depends_on("pkgconfig", type="run")
+    # Skip this on Windows since pkgconfig is autotools
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("pkgconfig", when="platform=%s" % plat, type="run")
 
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
@@ -498,7 +500,7 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec:
+        if "+mpi" in spec and "platform=windows" not in spec:
             args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
 
             if "+cxx" in self.spec:
@@ -567,7 +569,7 @@ class Hdf5(CMakePackage):
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
             r"\1\2\3",
             *pc_files,
-            backup=False
+            backup=False,
         )
 
         # Create non-versioned symlinks to the versioned pkg-config files:

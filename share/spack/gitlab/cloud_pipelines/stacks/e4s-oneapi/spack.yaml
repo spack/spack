@@ -142,7 +142,7 @@ spack:
   - gptune
   - hdf5 +fortran +hl +shared
   - heffte +fftw
-  - hpx networking=mpi
+  - hpx max_cpu_count=512 networking=mpi
   - hypre
   - kokkos-kernels +openmp
   - kokkos +openmp
@@ -287,15 +287,18 @@ spack:
       - module use /opt/intel/oneapi/modulefiles
       - module load compiler
       - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+    after_script:
+      - cat /proc/loadavg || true
 
     image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
-    
+
     match_behavior: first
     mappings:
       - match:
           - hipblas
           - llvm
           - llvm-amdgpu
+          - paraview
           - rocblas
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
@@ -315,7 +318,9 @@ spack:
           - mfem
           - mpich
           - openturns
+          - plumed
           - precice
+          - qt
           - raja
           - rust
           - slate

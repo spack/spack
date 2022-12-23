@@ -5,12 +5,13 @@
 
 import collections
 import getpass
+import io
 import os
 import sys
 import tempfile
+from datetime import date
 
 import pytest
-from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
@@ -441,6 +442,13 @@ def test_substitute_tempdir(mock_low_high_config):
     assert tempdir + os.sep + os.path.join("foo", "bar", "baz") == spack_path.canonicalize_path(
         os.path.join("$tempdir", "foo", "bar", "baz")
     )
+
+
+def test_substitute_date(mock_low_high_config):
+    test_path = os.path.join("hello", "world", "on", "$date")
+    new_path = spack_path.canonicalize_path(test_path)
+    assert "$date" in test_path
+    assert date.today().strftime("%Y-%m-%d") in new_path
 
 
 PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
@@ -1004,7 +1012,7 @@ def test_write_empty_single_file_scope(tmpdir):
 
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
-    f = StringIO(file_contents)
+    f = io.StringIO(file_contents)
     data = syaml.load_config(f)
     spack.config.validate(data, name)
 
@@ -1244,6 +1252,13 @@ def test_user_config_path_is_overridable(working_env):
 def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
+
+
+def test_default_install_tree(monkeypatch):
+    s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
+    monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
+    projection = spack.config.get("config:install_tree:projections:all", scope="defaults")
+    assert s.format(projection) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
 
 
 def test_local_config_can_be_disabled(working_env):

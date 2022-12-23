@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import sys
 
 import pytest
 
@@ -121,3 +122,35 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
     builder = spack.builder.create(s.package)
     value = getattr(builder, method_name)()
     assert value == expected
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="log_ouput cannot currently be used outside of subprocess on Windows",
+)
+@pytest.mark.regression("33928")
+@pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
+@pytest.mark.disable_clean_stage_check
+def test_build_time_tests_are_executed_from_default_builder():
+    s = spack.spec.Spec("old-style-autotools").concretized()
+    builder = spack.builder.create(s.package)
+    builder.pkg.run_tests = True
+    for phase_fn in builder:
+        phase_fn.execute()
+
+    assert os.environ.get("CHECK_CALLED") == "1", "Build time tests not executed"
+    assert os.environ.get("INSTALLCHECK_CALLED") == "1", "Install time tests not executed"
+
+
+@pytest.mark.regression("34518")
+@pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
+def test_monkey_patching_wrapped_pkg():
+    s = spack.spec.Spec("old-style-autotools").concretized()
+    builder = spack.builder.create(s.package)
+    assert s.package.run_tests is False
+    assert builder.pkg.run_tests is False
+    assert builder.pkg_with_dispatcher.run_tests is False
+
+    s.package.run_tests = True
+    assert builder.pkg.run_tests is True
+    assert builder.pkg_with_dispatcher.run_tests is True

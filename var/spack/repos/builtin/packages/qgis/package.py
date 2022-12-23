@@ -110,7 +110,6 @@ class Qgis(CMakePackage):
     depends_on("py-pyqt4", when="@2")
     depends_on("py-pyqt5@5.3:", when="@3")
     depends_on("py-requests", type=("build", "run"))  # TODO: is build dependency necessary?
-    depends_on("python@2.7:2.8", type=("build", "run"), when="@2")
     depends_on("python@3.0.0:", type=("build", "run"), when="@3")
     depends_on("python@3.6:", type=("build", "run"), when="@3.18:")
     depends_on("python@3.7:", type=("build", "run"), when="@3.20:")
@@ -157,7 +156,6 @@ class Qgis(CMakePackage):
     depends_on("qt@:4", when="@2")
     # Help concretizer
     # +qsci_api is implied by qscintilla+python dependency
-    depends_on("py-pyqt4 +qsci_api", when="@2")
     depends_on("py-pyqt5@5.3: +qsci_api", when="@3")
 
     patch("pyqt5.patch", when="@:3.14 ^qt@5")

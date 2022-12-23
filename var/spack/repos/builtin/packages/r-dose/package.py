@@ -18,6 +18,7 @@ class RDose(RPackage):
 
     bioc = "DOSE"
 
+    version("3.24.1", commit="a78995d3b12bd4baabb69c497102687814cd4c68")
     version("3.22.1", commit="6b711a0f076a9fefcb00ddef66e8f198039e6dfa")
     version("3.22.0", commit="242ac1b746c44fbbf281fbe6e5e4424a8dc74375")
     version("3.20.1", commit="bf434f24d035217822cb1b0ab08a486b9a53edb4")
@@ -32,11 +33,12 @@ class RDose(RPackage):
     depends_on("r@3.4.0:", type=("build", "run"), when="@3.6.1:")
     depends_on("r@3.5.0:", type=("build", "run"), when="@3.16.0:")
     depends_on("r-annotationdbi", type=("build", "run"))
+    depends_on("r-hdo-db", type=("build", "run"), when="@3.24.1:")
     depends_on("r-biocparallel", type=("build", "run"))
-    depends_on("r-do-db", type=("build", "run"))
     depends_on("r-fgsea", type=("build", "run"))
     depends_on("r-ggplot2", type=("build", "run"))
     depends_on("r-gosemsim@2.0.0:", type=("build", "run"))
+    depends_on("r-gosemsim@2.23.1:", type=("build", "run"), when="@3.24.1:")
     depends_on("r-qvalue", type=("build", "run"))
     depends_on("r-reshape2", type=("build", "run"))
 
@@ -44,3 +46,5 @@ class RDose(RPackage):
     depends_on("r-scales", type=("build", "run"), when="@3.2.0:3.4.0")
     depends_on("r-rvcheck", type=("build", "run"), when="@3.4.0")
     depends_on("r-igraph", type=("build", "run"), when="@3.2.0:3.4.0")
+    depends_on("r-do-db", type=("build", "run"))
+    depends_on("r-do-db", when="@:3.22.1")

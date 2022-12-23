@@ -14,8 +14,8 @@ import re
 import subprocess
 import sys
 import tempfile
-
-from six.moves.urllib.parse import urlparse
+from datetime import date
+from urllib.parse import urlparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -70,6 +70,7 @@ def replacements():
         "os": str(arch.os),
         "target": str(arch.target),
         "target_family": str(arch.target.microarchitecture.family),
+        "date": date.today().strftime("%Y-%m-%d"),
     }
 
 
@@ -121,7 +122,7 @@ def path_to_os_path(*pths):
     """
     ret_pths = []
     for pth in pths:
-        if type(pth) is str and not is_path_url(pth):
+        if isinstance(pth, str) and not is_path_url(pth):
             pth = convert_to_platform_path(pth)
         ret_pths.append(pth)
     return ret_pths
@@ -285,6 +286,7 @@ def substitute_config_variables(path):
     - $operating_system  The OS of the current system
     - $target            The ISA target detected for the system
     - $target_family     The family of the target detected for the system
+    - $date              The current date (YYYY-MM-DD)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only

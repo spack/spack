@@ -10,9 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict  # novm
-
-import six
+from typing import Dict
 
 import archspec.cpu
 
@@ -43,7 +41,7 @@ _cache_config_file = []
 # TODO: Caches at module level make it difficult to mock configurations in
 # TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
-_compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
+_compiler_cache: Dict[str, "spack.compiler.Compiler"] = {}
 
 _compiler_to_pkg = {
     "clang": "llvm+clang",
@@ -427,7 +425,7 @@ def compiler_from_dict(items):
         environment,
         extra_rpaths,
         enable_implicit_rpaths=implicit_rpaths,
-        **compiler_flags
+        **compiler_flags,
     )
 
 
@@ -677,18 +675,18 @@ def detect_version(detect_version_args):
 
         try:
             version = callback(path)
-            if version and six.text_type(version).strip() and version != "unknown":
+            if version and str(version).strip() and version != "unknown":
                 value = fn_args._replace(id=compiler_id._replace(version=version))
                 return value, None
 
             error = "Couldn't get version for compiler {0}".format(path)
         except spack.util.executable.ProcessError as e:
-            error = "Couldn't get version for compiler {0}\n".format(path) + six.text_type(e)
+            error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just
             # means something went wrong running a candidate executable.
             error = "Error while executing candidate compiler {0}" "\n{1}: {2}".format(
-                path, e.__class__.__name__, six.text_type(e)
+                path, e.__class__.__name__, str(e)
             )
         return None, error
 
@@ -724,6 +722,8 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
+        # TODO: johnwparent - revist the following line as per discussion at:
+        # https://github.com/spack/spack/pull/33385/files#r1040036318
         target = archspec.cpu.host()
         compiler = compiler_cls(spec, operating_system, str(target.family), paths)
         return [compiler]

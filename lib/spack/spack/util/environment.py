@@ -9,14 +9,12 @@ import inspect
 import json
 import os
 import os.path
+import pickle
 import platform
 import re
+import shlex
 import socket
 import sys
-
-import six
-from six.moves import cPickle
-from six.moves import shlex_quote as cmd_quote
 
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
@@ -25,7 +23,6 @@ import spack.config
 import spack.platforms
 import spack.spec
 import spack.util.executable as executable
-import spack.util.spack_json as sjson
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = sys.platform == "win32"
@@ -131,7 +128,7 @@ def env_var_to_source_line(var, val):
             fname=bash_function_finder.sub(r"\1", var), decl=val
         )
     else:
-        source_line = "{var}={val}; export {var}".format(var=var, val=cmd_quote(val))
+        source_line = "{var}={val}; export {var}".format(var=var, val=shlex.quote(val))
     return source_line
 
 
@@ -154,7 +151,7 @@ def dump_environment(path, environment=None):
 @system_path_filter(arg_slice=slice(1))
 def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
-    cPickle.dump(dict(environment if environment else os.environ), open(path, "wb"), protocol=2)
+    pickle.dump(dict(environment if environment else os.environ), open(path, "wb"), protocol=2)
 
 
 def get_host_environment_metadata():
@@ -627,7 +624,7 @@ class EnvironmentModifications(object):
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        cmd = _shell_set_strings[shell].format(name, cmd_quote(new_env[name]))
+                        cmd = _shell_set_strings[shell].format(name, shlex.quote(new_env[name]))
                     else:
                         cmd = _shell_set_strings[shell].format(name, new_env[name])
                     cmds += cmd
@@ -1015,16 +1012,12 @@ def environment_after_sourcing_files(*files, **kwargs):
             ]
         )
         output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
-        environment = json.loads(output)
-
-        # If we're in python2, convert to str objects instead of unicode
-        # like json gives us.  We can't put unicode in os.environ anyway.
-        return sjson.encode_json_dict(environment)
+        return json.loads(output)
 
     current_environment = kwargs.get("env", dict(os.environ))
     for f in files:
         # Normalize the input to the helper function
-        if isinstance(f, six.string_types):
+        if isinstance(f, str):
             f = [f]
 
         current_environment = _source_single_file(f, environment=current_environment)
@@ -1056,7 +1049,7 @@ def sanitize(environment, exclude, include):
         return subset
 
     # Don't modify input, make a copy instead
-    environment = sjson.decode_json_dict(dict(environment))
+    environment = dict(environment)
 
     # include supersedes any excluded items
     prune = set_intersection(set(environment), *exclude)

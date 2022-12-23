@@ -10,6 +10,7 @@ import pytest
 import spack.cmd.create
 import spack.stage
 import spack.util.executable
+import spack.util.url as url_util
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
@@ -50,7 +51,7 @@ def url_and_build_system(request, tmpdir):
     filename, system = request.param
     tmpdir.ensure("archive", filename)
     tar("czf", "archive.tar.gz", "archive")
-    url = "file://" + str(tmpdir.join("archive.tar.gz"))
+    url = url_util.path_to_file_url(str(tmpdir.join("archive.tar.gz")))
     yield url, system
     orig_dir.chdir()
 

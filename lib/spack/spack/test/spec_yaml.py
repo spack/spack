@@ -12,12 +12,11 @@ from __future__ import print_function
 
 import ast
 import collections
+import collections.abc
 import inspect
 import os
 
 import pytest
-
-from llnl.util.compat import Iterable, Mapping
 
 import spack.hash_types as ht
 import spack.paths
@@ -148,12 +147,12 @@ def test_using_ordered_dict(mock_packages):
     """
 
     def descend_and_check(iterable, level=0):
-        if isinstance(iterable, Mapping):
+        if isinstance(iterable, collections.abc.Mapping):
             assert isinstance(iterable, syaml_dict)
             return descend_and_check(iterable.values(), level=level + 1)
         max_level = level
         for value in iterable:
-            if isinstance(value, Iterable) and not isinstance(value, str):
+            if isinstance(value, collections.abc.Iterable) and not isinstance(value, str):
                 nlevel = descend_and_check(value, level=level + 1)
                 if nlevel > max_level:
                     max_level = nlevel
@@ -508,16 +507,3 @@ ordered_spec = collections.OrderedDict(
         ("version", "1.2.11"),
     ]
 )
-
-
-@pytest.mark.regression("31092")
-def test_strify_preserves_order():
-    """Ensure that ``spack_json._strify()`` dumps dictionaries in the right order.
-
-    ``_strify()`` is used in ``spack_json.dump()``, which is used in
-    ``Spec.dag_hash()``, so if this goes wrong, ``Spec`` hashes can vary between python
-    versions.
-
-    """
-    strified = sjson._strify(ordered_spec)
-    assert list(ordered_spec.items()) == list(strified.items())
