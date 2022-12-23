@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from .base import NullReporter
-from .cdash import CDash
+from .cdash import CDash, CDashConfiguration
 from .junit import JUnit
 
-__all__ = ["NullReporter", "JUnit", "CDash"]
+__all__ = ["NullReporter", "JUnit", "CDash", "CDashConfiguration"]

@@ -19,7 +19,7 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 from spack.install_test import TestSuite
-from spack.reporters import CDash, JUnit, NullReporter
+from spack.reporters import CDash, CDashConfiguration, JUnit, NullReporter
 
 
 class ReportFormat(enum.Enum):
@@ -38,13 +38,38 @@ REPORT_WRITERS = {
 VALID_FORMATS = [None, "junit", "cdash"]
 
 
+def installed_specs(args):
+    if getattr(args, "spec", ""):
+        packages = args.spec
+    elif getattr(args, "specs", ""):
+        packages = args.specs
+    elif getattr(args, "package", ""):
+        # Ensure CI 'spack test run' can output CDash results
+        packages = args.package
+    else:
+        packages = []
+        for file in args.specfiles:
+            with open(file, "r") as f:
+                s = spack.spec.Spec.from_yaml(f)
+                packages.append(s.format())
+    return packages
+
+
 def create_reporter(fmt: ReportFormat, args):
     if fmt == ReportFormat.NULL:
         return NullReporter()
     if fmt == ReportFormat.JUnit:
         return JUnit()
     if fmt == ReportFormat.CDash:
-        return CDash(args)
+        configuration = CDashConfiguration(
+            upload_url=args.cdash_upload_url,
+            packages=installed_specs(args),
+            build=args.cdash_build,
+            site=args.cdash_site,
+            buildstamp=args.cdash_buildstamp,
+            track=args.cdash_track,
+        )
+        return CDash(configuration=configuration)
     return None
 
 

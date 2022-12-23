@@ -12,6 +12,7 @@ import re
 import socket
 import time
 import xml.sax.saxutils
+from typing import Dict
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
@@ -55,23 +56,6 @@ def build_stamp(track, timestamp):
     return time.strftime(buildstamp_format, time.localtime(timestamp))
 
 
-def installed_specs(args):
-    if getattr(args, "spec", ""):
-        packages = args.spec
-    elif getattr(args, "specs", ""):
-        packages = args.specs
-    elif getattr(args, "package", ""):
-        # Ensure CI 'spack test run' can output CDash results
-        packages = args.package
-    else:
-        packages = []
-        for file in args.specfiles:
-            with open(file, "r") as f:
-                s = spack.spec.Spec.from_yaml(f)
-                packages.append(s.format())
-    return packages
-
-
 class CDash(Reporter):
     """Generate reports of spec installations for CDash.
 
@@ -85,16 +69,7 @@ class CDash(Reporter):
     CDash instance hosted at https://mydomain.com/cdash.
     """
 
-    def __init__(self, args):
-        configuration = CDashConfiguration(
-            upload_url=args.cdash_upload_url,
-            packages=installed_specs(args),
-            build=args.cdash_build,
-            site=args.cdash_site,
-            buildstamp=args.cdash_buildstamp,
-            track=args.cdash_track,
-        )
-
+    def __init__(self, configuration: CDashConfiguration):
         #: Set to False if any error occurs when building the CDash report
         self.success = True
 
@@ -123,7 +98,7 @@ class CDash(Reporter):
             if configuration.buildstamp
             else build_stamp(configuration.track, self.endtime)
         )
-        self.buildIds = collections.OrderedDict()
+        self.buildIds: Dict[str, str] = {}
         self.revision = ""
         git = spack.util.git.git()
         with working_dir(spack.paths.spack_root):
