@@ -132,6 +132,7 @@ class ROCmPackage(PackageBase):
         "amdgpu_target",
         description="AMD GPU architecture",
         values=spack.variant.any_combination_of(*amdgpu_targets),
+        sticky=True,
         when="+rocm",
     )
 
