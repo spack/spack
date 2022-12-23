@@ -890,8 +890,8 @@ def load_module_from_file(module_name, module_path):
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
 
-    spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-    module = importlib.util.module_from_spec(spec)  # novm
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    module = importlib.util.module_from_spec(spec)
     # The module object needs to exist in sys.modules before the
     # loader executes the module code.
     #
@@ -990,10 +990,9 @@ def enum(**kwargs):
 
 
 def stable_partition(
-    input_iterable,  # type: Iterable
-    predicate_fn,  # type: Callable[[Any], bool]
-):
-    # type: (...) -> Tuple[List[Any], List[Any]]
+    input_iterable: Iterable,
+    predicate_fn: Callable[[Any], bool],
+) -> Tuple[List[Any], List[Any]]:
     """Partition the input iterable according to a custom predicate.
 
     Args:
@@ -1065,23 +1064,20 @@ class GroupedExceptionHandler(object):
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
-        self.exceptions = []  # type: List[Tuple[str, Exception, List[str]]]
+        self.exceptions: List[Tuple[str, Exception, List[str]]] = []
 
     def __bool__(self):
         """Whether any exceptions were handled."""
         return bool(self.exceptions)
 
-    def forward(self, context):
-        # type: (str) -> GroupedExceptionForwarder
+    def forward(self, context: str) -> "GroupedExceptionForwarder":
         """Return a contextmanager which extracts tracebacks and prefixes a message."""
         return GroupedExceptionForwarder(context, self)
 
-    def _receive_forwarded(self, context, exc, tb):
-        # type: (str, Exception, List[str]) -> None
+    def _receive_forwarded(self, context: str, exc: Exception, tb: List[str]):
         self.exceptions.append((context, exc, tb))
 
-    def grouped_message(self, with_tracebacks=True):
-        # type: (bool) -> str
+    def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
             "{0} raised {1}: {2}{3}".format(
@@ -1099,8 +1095,7 @@ class GroupedExceptionForwarder(object):
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
-    def __init__(self, context, handler):
-        # type: (str, GroupedExceptionHandler) -> None
+    def __init__(self, context: str, handler: GroupedExceptionHandler):
         self._context = context
         self._handler = handler
 

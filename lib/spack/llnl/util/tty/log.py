@@ -21,12 +21,12 @@ import threading
 import traceback
 from contextlib import contextmanager
 from threading import Thread
-from types import ModuleType  # novm
-from typing import Optional  # novm
+from types import ModuleType
+from typing import Optional
 
 import llnl.util.tty as tty
 
-termios = None  # type: Optional[ModuleType]
+termios: Optional[ModuleType] = None
 try:
     import termios as term_mod
 
