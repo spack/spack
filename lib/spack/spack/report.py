@@ -28,13 +28,6 @@ class ReportFormat(enum.Enum):
     CDash = enum.auto()
 
 
-REPORT_WRITERS = {
-    ReportFormat.NULL: NullReporter,
-    ReportFormat.JUnit: JUnit,
-    ReportFormat.CDash: CDash,
-}
-
-#: Allowed report formats
 VALID_FORMATS = [None, "junit", "cdash"]
 
 
