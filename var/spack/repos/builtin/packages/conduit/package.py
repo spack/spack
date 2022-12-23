@@ -168,12 +168,12 @@ class Conduit(CMakePackage):
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
-    
+
     #######################
     # Caliper
     #######################
     depends_on("caliper", when="+caliper")
-    
+
     #######################
     # Documentation related
     #######################
