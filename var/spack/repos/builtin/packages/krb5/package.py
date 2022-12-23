@@ -74,6 +74,10 @@ class Krb5(AutotoolsPackage):
         else:
             args.append("--disable-static")
 
+        # https://github.com/spack/spack/issues/34193
+        if "%gcc@10:" in self.spec:
+            args.append("CFLAGS=-fcommon")
+
         return args
 
     def setup_build_environment(self, env):

@@ -754,6 +754,14 @@ class RepoPath(object):
     def all_package_names(self, include_virtuals=False):
         return self._all_package_names(include_virtuals)
 
+    def package_path(self, name):
+        """Get path to package.py file for this repo."""
+        return self.repo_for_pkg(name).package_path(name)
+
+    def all_package_paths(self):
+        for name in self.all_package_names():
+            yield self.package_path(name)
+
     def packages_with_tags(self, *tags):
         r = set()
         for repo in self.repos:
@@ -1152,6 +1160,14 @@ class Repo(object):
         if include_virtuals:
             return names
         return [x for x in names if not self.is_virtual(x)]
+
+    def package_path(self, name):
+        """Get path to package.py file for this repo."""
+        return os.path.join(self.root, packages_dir_name, name, package_file_name)
+
+    def all_package_paths(self):
+        for name in self.all_package_names():
+            yield self.package_path(name)
 
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())

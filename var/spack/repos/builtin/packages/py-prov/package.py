@@ -17,6 +17,7 @@ class PyProv(PythonPackage):
     pypi = "prov/prov-2.0.0.tar.gz"
 
     version("2.0.0", sha256="b6438f2195ecb9f6e8279b58971e02bc51814599b5d5383366eef91d867422ee")
+    version("1.5.1", sha256="7a2d72b0df43cd9c6e374d815c8ce3cd5ca371d54f98f837853ac9fcc98aee4c")
 
     variant("dot", default=False, description="Graphical visualisation support for prov.model")
 

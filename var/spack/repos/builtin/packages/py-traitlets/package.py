@@ -9,8 +9,10 @@ from spack.package import *
 class PyTraitlets(PythonPackage):
     """Traitlets Python config system"""
 
+    homepage = "https://github.com/ipython/traitlets"
     pypi = "traitlets/traitlets-5.0.4.tar.gz"
 
+    version("5.7.1", sha256="fde8f62c05204ead43c2c1b9389cfc85befa7f54acb5da28529d671175bb4108")
     version("5.3.0", sha256="0bb9f1f9f017aa8ec187d8b1b2a7a6626a2a1d877116baba52a129bfa124f8e2")
     version("5.1.1", sha256="059f456c5a7c1c82b98c2e8c799f39c9b8128f6d0d46941ee118daace9eb70c7")
     version("5.0.4", sha256="86c9351f94f95de9db8a04ad8e892da299a088a64fd283f9f6f18770ae5eae1b")
@@ -26,6 +28,7 @@ class PyTraitlets(PythonPackage):
 
     depends_on("python@3.7:", when="@5:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
+    depends_on("py-hatchling@1.5:", when="@5.5:", type="build")
     depends_on("py-hatchling@0.25:", when="@5.2.1.post0:", type="build")
     depends_on("py-setuptools@40.8:", when="@:5.2.1.a", type="build")
     depends_on("py-ipython-genutils", when="@:5.0", type=("build", "run"))
