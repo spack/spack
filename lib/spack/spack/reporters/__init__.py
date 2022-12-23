@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from .base import Reporter
+from .base import NullReporter
 from .cdash import CDash
 from .junit import JUnit
 
-__all__ = ["Reporter", "JUnit", "CDash"]
+__all__ = ["NullReporter", "JUnit", "CDash"]

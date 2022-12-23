@@ -11,10 +11,23 @@ class Reporter:
         self.args = args
 
     def build_report(self, filename, report_data):
+        raise NotImplementedError("must be implemented by derived classes")
+
+    def test_report(self, filename, report_data):
+        raise NotImplementedError("must be implemented by derived classes")
+
+    def concretization_report(self, filename, msg):
+        raise NotImplementedError("must be implemented by derived classes")
+
+
+class NullReporter(Reporter):
+    """A reporter that does nothing"""
+
+    def concretization_report(self, filename, msg):
         pass
 
     def test_report(self, filename, report_data):
         pass
 
-    def concretization_report(self, filename, msg):
+    def build_report(self, filename, report_data):
         pass

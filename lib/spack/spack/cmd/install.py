@@ -364,8 +364,15 @@ SPACK_CDASH_AUTH_TOKEN
 def _create_log_reporter(args):
     # TODO: remove args injection to spack.report.collect_info, since a class in core
     # TODO: shouldn't know what are the command line arguments a command use.
+    if args.log_format is None:
+        report_format = spack.report.ReportFormat.NULL
+    elif args.log_format == "junit":
+        report_format = spack.report.ReportFormat.JUnit
+    elif args.log_format == "cdash":
+        report_format = spack.report.ReportFormat.CDash
+
     reporter = spack.report.collect_info(
-        spack.package_base.PackageInstaller, "_install_task", args.log_format, args
+        spack.package_base.PackageInstaller, "_install_task", fmt=report_format, args=args
     )
     if args.log_file:
         reporter.filename = args.log_file

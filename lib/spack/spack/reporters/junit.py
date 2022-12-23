@@ -14,6 +14,9 @@ from .base import Reporter
 class JUnit(Reporter):
     """Generate reports of spec installations for JUnit."""
 
+    def concretization_report(self, filename, msg):
+        pass
+
     def __init__(self, args):
         super().__init__(args)
         # Posixpath is used here to support the underlying template engine

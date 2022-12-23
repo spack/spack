@@ -6,6 +6,7 @@
 import argparse
 import codecs
 import collections
+import enum
 import functools
 import os
 import time
@@ -18,12 +19,23 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 from spack.install_test import TestSuite
-from spack.reporters import CDash, JUnit, Reporter
+from spack.reporters import CDash, JUnit, NullReporter
 
-REPORT_WRITERS = {None: Reporter, "junit": JUnit, "cdash": CDash}
+
+class ReportFormat(enum.Enum):
+    NULL = enum.auto()
+    JUnit = enum.auto()
+    CDash = enum.auto()
+
+
+REPORT_WRITERS = {
+    ReportFormat.NULL: NullReporter,
+    ReportFormat.JUnit: JUnit,
+    ReportFormat.CDash: CDash,
+}
 
 #: Allowed report formats
-VALID_FORMATS = list(REPORT_WRITERS.keys())
+VALID_FORMATS = [None, "junit", "cdash"]
 
 
 def fetch_log(pkg, do_fn, dir):
@@ -243,21 +255,18 @@ class collect_info(object):
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
 
-    def __init__(self, cls: Type, function: str, format_name: str, args: argparse.Namespace):
+    def __init__(self, cls, function, fmt: ReportFormat, args):
         self.cls = cls
         self.function = function
         self.filename = None
         self.ctest_parsing = getattr(args, "ctest_parsing", False)
         if args.cdash_upload_url:
-            self.format_name = "cdash"
+            self.format_name = ReportFormat.CDash
             self.filename = "cdash_report"
         else:
-            self.format_name = format_name
+            self.format_name = fmt
 
         # Check that the format is valid.
-        if self.format_name not in VALID_FORMATS:
-            raise ValueError("invalid report type: {0}".format(self.format_name))
-
         self.report_writer = REPORT_WRITERS[self.format_name](args)
 
     def __call__(self, type, dir=None):

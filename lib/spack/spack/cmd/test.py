@@ -231,8 +231,15 @@ environment variables:
 
     # Set up reporter
     setattr(args, "package", [s.format() for s in test_suite.specs])
+    if args.log_format is None:
+        report_format = spack.report.ReportFormat.NULL
+    elif args.log_format == "junit":
+        report_format = spack.report.ReportFormat.JUnit
+    elif args.log_format == "cdash":
+        report_format = spack.report.ReportFormat.CDash
+
     reporter = spack.report.collect_info(
-        spack.package_base.PackageBase, "do_test", args.log_format, args
+        spack.package_base.PackageBase, "do_test", fmt=report_format, args=args
     )
     if not reporter.filename:
         if args.log_file:
