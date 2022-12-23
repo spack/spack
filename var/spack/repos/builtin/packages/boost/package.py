@@ -166,6 +166,7 @@ class Boost(Package):
         ),
         multi=False,
         description="Use the specified C++ standard when building.",
+        is_library=False
     )
 
     # 1.84.0 dropped support for 98/03
