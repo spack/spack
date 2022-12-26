@@ -61,7 +61,7 @@ def symlink(real_path, link_path):
     else:
         # If windows can not make normal symbolic links
         # we try junction for a directory or hardlink
-        # for a file. Then fallback to make a straight copy.
+        # for a file.
         if not os.path.isabs(link_path):
             link_path = os.path.abspath(link_path)
         # os.symlink will fail if link exists, emulate the behavior here
@@ -70,8 +70,7 @@ def symlink(real_path, link_path):
         else:
             windows_non_symlink(real_path, link_path)
             if not os.path.exists(link_path):
-                console.msg("[symlink] Fallback to copying file {} to {}".format(real_path, link_path))
-                shutil.copyfile(real_path, link_path)
+                raise OSError("Failed to create link: %s" % (link_path))
 
 
 def islink(path):
@@ -91,10 +90,7 @@ def windows_is_hardlink(path):
     """
     Determines if a path is a windows hardlink
     """
-    if not is_windows:
-        return False
-
-    if os.path.islink(path):
+    if not is_windows or os.path.islink(path) or not os.path.exists(path):
         return False
 
     try:
