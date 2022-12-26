@@ -19,6 +19,8 @@ class QtDeclarative(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.4.1", sha256="23b5c91e98ec2b8a4118a3d3ace0c2e61b355cc8f2ccb87d189708b69446f917")
+    version("6.4.0", sha256="daf7b97be51451af5afa35e1c0421fb8964003852088b0293c144a12bd664cd1")
     version("6.3.2", sha256="140a3c4973d56d79abf5fea9ae5cf13b3ef7693ed1d826b263802926a4ba84b6")
     version("6.3.1", sha256="1606723c2cc150c9b7339fd33ca5e2ca00d6e738e119c52a1d37ca12d3329ba9")
     version("6.3.0", sha256="b7316d6c195fdc31ecbf5ca2acf2888737539919a02ff8f11a911432d50c17ac")
@@ -40,7 +42,7 @@ class QtDeclarative(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("python", when="@5.7.0:", type="build")
 
-    _versions = ["6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
+    _versions = ["6.4.1", "6.4.0", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
     for v in _versions:
         depends_on("qt-base@" + v, when="@" + v)
         depends_on("qt-shadertools@" + v, when="@" + v)

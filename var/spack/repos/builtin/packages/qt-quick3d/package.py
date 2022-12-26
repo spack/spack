@@ -19,6 +19,8 @@ class QtQuick3d(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.4.1", sha256="67daeed69b9e7b3da516c6205e737fdba30a267978c1fb9d34723a6dc5588585")
+    version("6.4.0", sha256="37987536da151b7c2cddabfde734759ebe6173708d32cb85aa008e151751270e")
     version("6.3.2", sha256="a3ec81393f1cd45eb18ee3d47582998679eef141b856bdd2baa2d41f019a0eea")
     version("6.3.1", sha256="79f0813ff776dc2aa07a8513ecd9d550dd8d449dc8fcd834fb0c9b22ea4a1893")
     version("6.3.0", sha256="413dec87828155ea0c0424e6b40c777bf0710f1ffaf98969c5d8b19ad3992823")
@@ -42,7 +44,7 @@ class QtQuick3d(CMakePackage):
 
     depends_on("assimp@5.0.1:")
 
-    _versions = ["6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
+    _versions = ["6.4.1", "6.4.0", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
     for v in _versions:
         depends_on("qt-base@" + v, when="@" + v)
         depends_on("qt-declarative@" + v, when="@" + v)
@@ -50,7 +52,7 @@ class QtQuick3d(CMakePackage):
 
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_keep = ["xatlas"]
+        vendor_deps_to_keep = ["xatlas", "embree", "tinyexr"]
         with working_dir(vendor_dir):
             for dep in os.listdir():
                 if os.path.isdir(dep):
