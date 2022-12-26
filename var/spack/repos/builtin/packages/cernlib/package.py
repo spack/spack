@@ -30,10 +30,7 @@ class Cernlib(CMakePackage):
 
     @when("@2022.11.08.0-free")
     def patch(self):
-        filter_file(
-            "crypto",
-            "crypt",
-            "packlib/CMakeLists.txt")
+        filter_file("crypto", "crypt", "packlib/CMakeLists.txt")
 
     def cmake_args(self):
         args = ["-DCERNLIB_BUILD_SHARED:BOOL=ON"]
