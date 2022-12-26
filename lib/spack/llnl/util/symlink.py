@@ -6,18 +6,18 @@ import errno
 import os
 import shutil
 import tempfile
-import llnl.util.tty as console
 from os.path import exists, join
 from sys import platform as _platform
 
+import llnl.util.tty as console
 from llnl.util import lang
 
 is_windows = _platform == "win32"
 
 if is_windows:
-    from win32file import CreateHardLink
-
     import subprocess
+
+    from win32file import CreateHardLink
 
 
 def symlink(real_path, link_path):
@@ -56,8 +56,7 @@ def symlink(real_path, link_path):
     if windows_can_symlink():
         # Windows requires target_is_directory=True when
         # the target is a dir.
-        return os.symlink(real_path, link_path,
-                          target_is_directory=os.path.isdir(real_path))
+        return os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
     else:
         # If windows can not make normal symbolic links
         # we try junction for a directory or hardlink
@@ -178,10 +177,13 @@ def windows_non_symlink(path, link):
             if "Junction created" not in result:
                 raise OSError(errno.EEXIST, "Junction exists: %s" % (link))
         except subprocess.CalledProcessError as e:
-            console.msg("[symlink] Junction {} not created for directory "
-                        "{}. error was {}".format(link, path, str(e)))
+            console.msg(
+                "[symlink] Junction {} not created for directory "
+                "{}. error was {}".format(link, path, str(e))
+            )
     if os.path.isfile(path):
         print("[symlink] Calling CreateHardLink(" + link + "," + path + ")")
-        console.msg("[symlink] Junction fallback to create HardLink {} for "
-                    "file {}".format(link, path))
+        console.msg(
+            "[symlink] Junction fallback to create HardLink {} for file {}".format(link, path)
+        )
         CreateHardLink(link, path)
