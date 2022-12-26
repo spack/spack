@@ -57,7 +57,7 @@ def symlink(real_path, link_path):
         # Windows requires target_is_directory=True when
         # the target is a dir.
         return os.symlink(real_path, link_path,
-            target_is_directory=os.path.isdir(real_path))
+                          target_is_directory=os.path.isdir(real_path))
     else:
         # If windows can not make normal symbolic links
         # we try junction for a directory or hardlink
@@ -179,10 +179,9 @@ def windows_non_symlink(path, link):
                 raise OSError(errno.EEXIST, "Junction exists: %s" % (link))
         except subprocess.CalledProcessError as e:
             console.msg("[symlink] Junction {} not created for directory "
-                "{}. error was ".format(link, path, str(e)))
+                        "{}. error was {}".format(link, path, str(e)))
     if os.path.isfile(path):
         print("[symlink] Calling CreateHardLink(" + link + "," + path + ")")
-        console.msg("[symlink] Junction fallback to create HardLink {} for file {}".format(link, path))
+        console.msg("[symlink] Junction fallback to create HardLink {} for "
+                    "file {}".format(link, path))
         CreateHardLink(link, path)
-
-
