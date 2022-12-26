@@ -10,9 +10,7 @@ class Libpsl(AutotoolsPackage):
     """libpsl - C library to handle the Public Suffix List."""
 
     homepage = "https://github.com/rockdaboot/libpsl"
-    url = (
-        "https://github.com/rockdaboot/libpsl/releases/download/0.21.2/libpsl-0.21.2.tar.gz"
-    )
+    url = "https://github.com/rockdaboot/libpsl/releases/download/0.21.2/libpsl-0.21.2.tar.gz"
     list_url = "https://github.com/rockdaboot/libpsl/tags"
 
     version("0.21.2", sha256="e35991b6e17001afa2c0ca3b10c357650602b92596209b7492802f3768a6285f")
@@ -32,7 +30,9 @@ class Libpsl(AutotoolsPackage):
     def url_for_version(self, version):
         if version >= Version("0.21.1"):
             return super(Libpsl, self).url_for_version(version)
-        url_fmt = "https://github.com/rockdaboot/libpsl/releases/download/libpsl-{0}/libpsl-{0}.tar.gz"
+        url_fmt = (
+            "https://github.com/rockdaboot/libpsl/releases/download/libpsl-{0}/libpsl-{0}.tar.gz"
+        )
         return url_fmt.format(version)
 
     def configure_args(self):
