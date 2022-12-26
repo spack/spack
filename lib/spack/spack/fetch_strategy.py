@@ -48,6 +48,7 @@ import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto as crypto
+import spack.util.git
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -765,7 +766,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     @property
     def git(self):
         if not self._git:
-            self._git = which("git", required=True)
+            self._git = spack.util.git.get_git()
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt

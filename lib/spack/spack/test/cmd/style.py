@@ -24,18 +24,12 @@ style_data = os.path.join(spack.paths.test_path, "data", "style")
 style = spack.main.SpackCommand("style")
 
 
-def has_develop_branch():
-    git = which("git")
-    if not git:
-        return False
+@pytest.fixture(autouse=True)
+def has_develop_branch(git):
+    """spack style requires git and a develop branch to run -- skip if we're missing either."""
     git("show-ref", "--verify", "--quiet", "refs/heads/develop", fail_on_error=False)
-    return git.returncode == 0
-
-
-# spack style requires git to run -- skip the tests if it's not there
-pytestmark = pytest.mark.skipif(
-    not has_develop_branch(), reason="requires git with develop branch"
-)
+    if git.returncode != 0:
+        pytest.skip("requires git and a develop branch")
 
 
 @pytest.fixture(scope="function")
@@ -77,9 +71,8 @@ def flake8_package_with_errors(scope="function"):
     yield tmp
 
 
-def test_changed_files_from_git_rev_base(tmpdir, capfd):
+def test_changed_files_from_git_rev_base(git, tmpdir, capfd):
     """Test arbitrary git ref as base."""
-    git = which("git", required=True)
     with tmpdir.as_cwd():
         git("init")
         git("checkout", "-b", "main")
@@ -97,10 +90,9 @@ def test_changed_files_from_git_rev_base(tmpdir, capfd):
         assert changed_files(base="HEAD~") == ["bin/spack"]
 
 
-def test_changed_no_base(tmpdir, capfd):
+def test_changed_no_base(git, tmpdir, capfd):
     """Ensure that we fail gracefully with no base branch."""
     tmpdir.join("bin").ensure("spack")
-    git = which("git", required=True)
     with tmpdir.as_cwd():
         git("init")
         git("config", "user.name", "test user")
@@ -165,10 +157,8 @@ def test_style_is_package(tmpdir):
 
 
 @pytest.fixture
-def external_style_root(flake8_package_with_errors, tmpdir):
+def external_style_root(git, flake8_package_with_errors, tmpdir):
     """Create a mock git repository for running spack style."""
-    git = which("git", required=True)
-
     # create a sort-of spack-looking directory
     script = tmpdir / "bin" / "spack"
     script.ensure()
