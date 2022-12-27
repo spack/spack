@@ -286,10 +286,7 @@ class collect_info(object):
         self.filename = None
         self.ctest_parsing = getattr(args, "ctest_parsing", False)
         if args.cdash_upload_url:
-            self.format_name = ReportFormat.CDash
             self.filename = "cdash_report"
-        else:
-            self.format_name = fmt
 
         self.report_writer = create_reporter(fmt, args)
 
@@ -302,17 +299,13 @@ class collect_info(object):
         self.report_writer.concretization_report(self.filename, msg)
 
     def __enter__(self):
-        if self.format_name:
-            # Start the collector and patch self.function on appropriate class
-            self.collector = InfoCollector(self.cls, self.function, self.specs, self.dir)
-            self.collector.__enter__()
+        self.collector = InfoCollector(self.cls, self.function, self.specs, self.dir)
+        self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.format_name:
-            # Close the collector and restore the original function
-            self.collector.__exit__(exc_type, exc_val, exc_tb)
+        # Close the collector and restore the original function
+        self.collector.__exit__(exc_type, exc_val, exc_tb)
 
-            report_data = {"specs": self.collector.specs}
-            report_data["ctest-parsing"] = self.ctest_parsing
-            report_fn = getattr(self.report_writer, "%s_report" % self.type)
-            report_fn(self.filename, report_data)
+        report_data = {"specs": self.collector.specs, "ctest-parsing": self.ctest_parsing}
+        report_fn = getattr(self.report_writer, "%s_report" % self.type)
+        report_fn(self.filename, report_data)
