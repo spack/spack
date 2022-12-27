@@ -68,9 +68,11 @@ def ensure_configuration_fixture_run_before(request):
 
 
 @pytest.fixture(scope="session")
-@pytest.mark.skipif(not spack.util.git.git(), reason="requires git to be installed")
 def git():
     """Fixture for tests that use git."""
+    if not spack.util.git.git():
+        pytest.skip("requires git to be installed")
+
     return spack.util.git.git(required=True)
 
 

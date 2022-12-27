@@ -213,7 +213,7 @@ def test_debug_fetch(
             assert os.path.isdir(s.package.stage.source_path)
 
 
-def test_git_extra_fetch(tmpdir):
+def test_git_extra_fetch(git, tmpdir):
     """Ensure a fetch after 'expanding' is effectively a no-op."""
     testpath = str(tmpdir)
 
@@ -224,7 +224,7 @@ def test_git_extra_fetch(tmpdir):
         shutil.rmtree(stage.source_path)
 
 
-def test_needs_stage():
+def test_needs_stage(git):
     """Trigger a NoStageError when attempt a fetch without a stage."""
     with pytest.raises(
         spack.fetch_strategy.NoStageError, match=r"set_stage.*before calling fetch"
