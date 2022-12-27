@@ -13,8 +13,8 @@ import shutil
 import sys
 import textwrap
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify as colify
+from llnl.util import lang, tty
+from llnl.util.tty import colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -231,9 +231,23 @@ environment variables:
 
     # Set up reporter
     setattr(args, "package", [s.format() for s in test_suite.specs])
+    reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext
+
+    with reporter("test", test_suite.stage):
+        test_suite(
+            remove_directory=not args.keep_stage,
+            dirty=args.dirty,
+            fail_first=args.fail_first,
+            externals=args.externals,
+        )
+
+
+def create_reporter(args, specs_to_test, test_suite):
     if args.log_format is None:
-        report_format = spack.report.ReportFormat.NULL
-    elif args.log_format == "junit":
+        return None
+
+    report_format = None
+    if args.log_format == "junit":
         report_format = spack.report.ReportFormat.JUnit
     elif args.log_format == "cdash":
         report_format = spack.report.ReportFormat.CDash
@@ -252,14 +266,7 @@ environment variables:
             log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)
         reporter.filename = log_file
     reporter.specs = specs_to_test
-
-    with reporter("test", test_suite.stage):
-        test_suite(
-            remove_directory=not args.keep_stage,
-            dirty=args.dirty,
-            fail_first=args.fail_first,
-            externals=args.externals,
-        )
+    return reporter
 
 
 def test_list(args):

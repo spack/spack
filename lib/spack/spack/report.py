@@ -19,16 +19,15 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 from spack.install_test import TestSuite
-from spack.reporters import CDash, CDashConfiguration, JUnit, NullReporter
+from spack.reporters import CDash, CDashConfiguration, JUnit
 
 
 class ReportFormat(enum.Enum):
-    NULL = enum.auto()
     JUnit = enum.auto()
     CDash = enum.auto()
 
 
-VALID_FORMATS = [None, "junit", "cdash"]
+VALID_FORMATS = ["junit", "cdash"]
 
 
 def installed_specs(args):
@@ -49,8 +48,6 @@ def installed_specs(args):
 
 
 def create_reporter(fmt: ReportFormat, args):
-    if fmt == ReportFormat.NULL:
-        return NullReporter()
     if fmt == ReportFormat.JUnit:
         return JUnit()
     if fmt == ReportFormat.CDash:
