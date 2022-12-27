@@ -11,7 +11,7 @@ import functools
 import os
 import time
 import traceback
-from typing import Any, Callable, Dict, List, Type
+from typing import Any, Callable, Dict, List, Type, Optional
 
 import llnl.util.lang
 
@@ -19,7 +19,7 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 from spack.install_test import TestSuite
-from spack.reporters import CDash, CDashConfiguration, JUnit
+from spack.reporters import CDash, CDashConfiguration, JUnit, Reporter
 
 
 class ReportFormat(enum.Enum):
@@ -280,15 +280,20 @@ class collect_info(object):
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
 
-    def __init__(self, cls, function, fmt: ReportFormat, args):
+    def __init__(
+        self,
+        cls,
+        function,
+        *,
+        reporter: Reporter,
+        filename: Optional[str] = None,
+        ctest_parsing: bool = False,
+    ):
         self.cls = cls
         self.function = function
-        self.filename = None
-        self.ctest_parsing = getattr(args, "ctest_parsing", False)
-        if args.cdash_upload_url:
-            self.filename = "cdash_report"
-
-        self.report_writer = create_reporter(fmt, args)
+        self.filename = filename
+        self.ctest_parsing = ctest_parsing
+        self.report_writer = reporter
 
     def __call__(self, type, dir=None):
         self.type = type

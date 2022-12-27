@@ -252,8 +252,15 @@ def create_reporter(args, specs_to_test, test_suite):
     elif args.log_format == "cdash":
         report_format = spack.report.ReportFormat.CDash
 
+    reporter = spack.report.create_reporter(report_format, args)
+    filename = args.cdash_upload_url
+    ctest_parsing = getattr(args, "ctest_parsing", False)
     reporter = spack.report.collect_info(
-        spack.package_base.PackageBase, "do_test", fmt=report_format, args=args
+        spack.package_base.PackageBase,
+        "do_test",
+        reporter=reporter,
+        filename=filename,
+        ctest_parsing=ctest_parsing,
     )
     if not reporter.filename:
         if args.log_file:

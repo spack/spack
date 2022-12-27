@@ -373,18 +373,25 @@ def _create_log_reporter(args):
         if args.log_format is None:
             return None
 
-        reporter = spack.report.collect_info(
-            spack.package_base.PackageInstaller, "_install_task", fmt=report_format, args=args
+        reporter = spack.report.create_reporter(report_format, args)
+        filename = args.cdash_upload_url
+        ctest_parsing = getattr(args, "ctest_parsing", False)
+        context_manager = spack.report.collect_info(
+            spack.package_base.PackageInstaller,
+            "_install_task",
+            reporter=reporter,
+            filename=filename,
+            ctest_parsing=ctest_parsing,
         )
         if args.log_file:
-            reporter.filename = args.log_file
+            context_manager.filename = args.log_file
 
-        if not reporter.filename:
-            reporter.filename = default_log_file(specs[0])
+        if not context_manager.filename:
+            context_manager.filename = default_log_file(specs[0])
 
-        reporter.specs = specs
+        context_manager.specs = specs
 
-        return reporter
+        return context_manager
 
     return _factory
 
