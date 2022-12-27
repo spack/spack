@@ -35,7 +35,6 @@ class Nco(AutotoolsPackage):
     patch("NUL-0-NULL.patch", when="@:4.6.7")
 
     # https://github.com/nco/nco/issues/244
-    # DH* TODO CHECK - used to be @5.0.1:
     patch("nco-5_0_1-intel-omp.patch", when="@5.0.1 %intel")
 
     variant("doc", default=False, description="Build/install NCO TexInfo-based documentation")
