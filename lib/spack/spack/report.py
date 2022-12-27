@@ -30,24 +30,23 @@ class ReportFormat(enum.Enum):
 VALID_FORMATS = ["junit", "cdash"]
 
 
-def installed_specs(args):
-    if getattr(args, "spec", ""):
-        packages = args.spec
-    elif getattr(args, "specs", ""):
-        packages = args.specs
-    elif getattr(args, "package", ""):
-        # Ensure CI 'spack test run' can output CDash results
-        packages = args.package
-    else:
-        packages = []
-        for file in args.specfiles:
-            with open(file, "r") as f:
-                s = spack.spec.Spec.from_yaml(f)
-                packages.append(s.format())
-    return packages
-
-
 def create_reporter(fmt: ReportFormat, args):
+    def installed_specs(args):
+        if getattr(args, "spec", ""):
+            packages = args.spec
+        elif getattr(args, "specs", ""):
+            packages = args.specs
+        elif getattr(args, "package", ""):
+            # Ensure CI 'spack test run' can output CDash results
+            packages = args.package
+        else:
+            packages = []
+            for file in args.specfiles:
+                with open(file, "r") as f:
+                    s = spack.spec.Spec.from_yaml(f)
+                    packages.append(s.format())
+        return packages
+
     if fmt == ReportFormat.JUnit:
         return JUnit()
     if fmt == ReportFormat.CDash:
