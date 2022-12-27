@@ -187,7 +187,7 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     assert "Unable to find the path" in err
 
     monkeypatch.setattr(spack.paths, "prefix", prefix_save)
-    monkeypatch.setattr(spack.util.git, "get_git", lambda: None)
+    monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
     out, err = capfd.readouterr()
@@ -208,7 +208,7 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
 
     git_cmd = mock_git_cmd()
 
-    monkeypatch.setattr(spack.util.git, "get_git", lambda: git_cmd)
+    monkeypatch.setattr(spack.util.git, "git", lambda: git_cmd)
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c2 else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)

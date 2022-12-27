@@ -5,14 +5,15 @@
 """Single util module where Spack should get a git executable."""
 
 import sys
+from typing import Optional
 
 import llnl.util.lang
 
-import spack.util.executable
+import spack.util.executable as exe
 
 
 @llnl.util.lang.memoized
-def git(required=False):
+def git(required: bool = False):
     """Get a git executable.
 
     Arguments:
@@ -21,11 +22,11 @@ def git(required=False):
     Raises:
         CommandNotFoundError: if required is ``True`` and ``git`` is not present.
     """
-    git = spack.util.executable.which("git", required=required)
+    git: Optional[exe.Executable] = exe.which("git", required=required)
 
     # If we're running under pytest, add this to ignore the fix for CVE-2022-39253 in
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.
-    if "pytest" in sys.modules:
+    if git and "pytest" in sys.modules:
         git.add_default_arg("-c")
         git.add_default_arg("protocol.file.allow=always")
 
