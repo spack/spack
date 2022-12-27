@@ -356,24 +356,6 @@ SPACK_CDASH_AUTH_TOKEN
     parser.print_help()
 
 
-def _create_log_reporter(args):
-    def _factory(specs):
-        if args.log_format is None:
-            return None
-
-        filename = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
-        context_manager = spack.report.collect_info(
-            spack.package_base.PackageInstaller,
-            "_install_task",
-            reporter=args.reporter(),
-            filename=filename,
-            specs=specs,
-        )
-        return context_manager
-
-    return _factory
-
-
 def install_all_specs_from_active_environment(
     install_kwargs, only_concrete, cli_test_arg, reporter_factory
 ):
@@ -516,7 +498,20 @@ def install(parser, args):
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
 
-    reporter_factory = _create_log_reporter(args)
+    def reporter_factory(specs):
+        if args.log_format is None:
+            return None
+
+        filename = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
+        context_manager = spack.report.collect_info(
+            spack.package_base.PackageInstaller,
+            "_install_task",
+            reporter=args.reporter(),
+            filename=filename,
+            specs=specs,
+        )
+        return context_manager
+
     install_kwargs = install_kwargs_from_args(args)
 
     if not args.spec and not args.specfiles:

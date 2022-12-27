@@ -223,9 +223,10 @@ class collect_info:
 
     Args:
         cls: class on which to wrap a function
-        function function to wrap
+        function: function to wrap
         reporter: object that generates the report
         filename: optional filename for the report
+        specs: specs that need reporting
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
