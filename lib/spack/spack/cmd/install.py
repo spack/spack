@@ -362,13 +362,11 @@ def _create_log_reporter(args):
             return None
 
         filename = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
-        ctest_parsing = getattr(args, "ctest_parsing", False)
         context_manager = spack.report.collect_info(
             spack.package_base.PackageInstaller,
             "_install_task",
             reporter=args.reporter(),
             filename=filename,
-            ctest_parsing=ctest_parsing,
         )
         context_manager.specs = specs
 

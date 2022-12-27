@@ -231,20 +231,11 @@ class collect_info:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
 
-    def __init__(
-        self,
-        cls,
-        function,
-        *,
-        reporter: spack.reporters.Reporter,
-        filename: str,
-        ctest_parsing: bool = False,
-    ):
+    def __init__(self, cls, function, *, reporter: spack.reporters.Reporter, filename: str):
         self.cls = cls
         self.function = function
         self.filename = filename
-        self.ctest_parsing = ctest_parsing
-        self.report_writer = reporter
+        self.reporter = reporter
 
     def __call__(self, type, dir=None):
         self.type = type
@@ -252,7 +243,7 @@ class collect_info:
         return self
 
     def concretization_report(self, msg: str):
-        self.report_writer.concretization_report(self.filename, msg)
+        self.reporter.concretization_report(self.filename, msg)
 
     def __enter__(self):
         self.collector = InfoCollector(self.cls, self.function, self.specs, self.dir)
@@ -261,6 +252,6 @@ class collect_info:
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Close the collector and restore the original function
         self.collector.__exit__(exc_type, exc_val, exc_tb)
-        report_data = {"specs": self.collector.specs, "ctest-parsing": self.ctest_parsing}
-        report_fn = getattr(self.report_writer, "%s_report" % self.type)
+        report_data = {"specs": self.collector.specs}
+        report_fn = getattr(self.reporter, "%s_report" % self.type)
         report_fn(self.filename, report_data)

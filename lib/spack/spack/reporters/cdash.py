@@ -47,7 +47,8 @@ CDASH_PHASES.add("update")
 
 
 CDashConfiguration = collections.namedtuple(
-    "CDashConfiguration", ["upload_url", "packages", "build", "site", "buildstamp", "track"]
+    "CDashConfiguration",
+    ["upload_url", "packages", "build", "site", "buildstamp", "track", "ctest_parsing"],
 )
 
 
@@ -105,6 +106,7 @@ class CDash(Reporter):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.main.get_version())
         self.multiple_packages = False
+        self.ctest_parsing = configuration.ctest_parsing
 
     def report_build_name(self, pkg_name):
         return (
@@ -396,7 +398,7 @@ class CDash(Reporter):
                     directory_name,
                     package,
                     duration,
-                    input_data["ctest-parsing"],
+                    self.ctest_parsing,
                 )
 
         self.finalize_report()

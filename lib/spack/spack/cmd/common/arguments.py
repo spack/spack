@@ -153,6 +153,7 @@ def _cdash_reporter(namespace):
             site=namespace.cdash_site,
             buildstamp=namespace.cdash_buildstamp,
             track=namespace.cdash_track,
+            ctest_parsing=getattr(namespace, "ctest_parsing", False),
         )
         return spack.reporters.CDash(configuration=configuration)
 

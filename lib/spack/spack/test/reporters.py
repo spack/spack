@@ -163,6 +163,7 @@ def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
         site="fake-site",
         buildstamp=None,
         track="fake-track",
+        ctest_parsing=False,
     )
     monkeypatch.setattr(tty, "_debug", 1)
 
