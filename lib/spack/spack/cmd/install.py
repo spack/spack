@@ -361,7 +361,7 @@ def _create_log_reporter(args):
         if args.log_format is None:
             return None
 
-        filename = args.cdash_upload_url
+        filename = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
         ctest_parsing = getattr(args, "ctest_parsing", False)
         context_manager = spack.report.collect_info(
             spack.package_base.PackageInstaller,
@@ -370,12 +370,6 @@ def _create_log_reporter(args):
             filename=filename,
             ctest_parsing=ctest_parsing,
         )
-        if args.log_file:
-            context_manager.filename = args.log_file
-
-        if not context_manager.filename:
-            context_manager.filename = default_log_file(specs[0])
-
         context_manager.specs = specs
 
         return context_manager

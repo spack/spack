@@ -32,7 +32,7 @@ def fetch_log(pkg, do_fn, dir):
         return "Cannot open log for {0}".format(pkg.spec.cshort_spec)
 
 
-class InfoCollector(object):
+class InfoCollector:
     """Decorates PackageInstaller._install_task, which is called via
     PackageBase.do_install for individual specs, to collect information
     on the installation of certain specs.
@@ -201,7 +201,7 @@ class InfoCollector(object):
             spec["time"] = sum([float(x["elapsed_time"]) for x in spec["packages"]])
 
 
-class collect_info(object):
+class collect_info:
     """Collects information to build a report while installing and dumps it on exit.
 
     Within the context, only the specs that are passed to it on initialization will be recorded
@@ -237,7 +237,7 @@ class collect_info(object):
         function,
         *,
         reporter: spack.reporters.Reporter,
-        filename: Optional[str] = None,
+        filename: str,
         ctest_parsing: bool = False,
     ):
         self.cls = cls
@@ -251,7 +251,7 @@ class collect_info(object):
         self.dir = dir or os.getcwd()
         return self
 
-    def concretization_report(self, msg):
+    def concretization_report(self, msg: str):
         self.report_writer.concretization_report(self.filename, msg)
 
     def __enter__(self):

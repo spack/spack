@@ -12,12 +12,10 @@ from .base import Reporter
 class JUnit(Reporter):
     """Generate reports of spec installations for JUnit."""
 
+    _jinja_template = "reports/junit.xml"
+
     def concretization_report(self, filename, msg):
         pass
-
-    def __init__(self):
-        # Jinja2 expects `/` path separators
-        self.template_file = "reports/junit.xml"
 
     def build_report(self, filename, report_data):
         if not (os.path.splitext(filename))[1]:
@@ -28,7 +26,7 @@ class JUnit(Reporter):
         # Write the report
         with open(filename, "w") as f:
             env = spack.tengine.make_environment()
-            t = env.get_template(self.template_file)
+            t = env.get_template(self._jinja_template)
             f.write(t.render(report_data))
 
     def test_report(self, filename, report_data):
