@@ -7,11 +7,11 @@
 class Reporter:
     """Base class for report writers."""
 
-    def build_report(self, filename, report_data):
+    def build_report(self, filename: str, report_data: str):
         raise NotImplementedError("must be implemented by derived classes")
 
-    def test_report(self, filename, report_data):
+    def test_report(self, filename: str, report_data: str):
         raise NotImplementedError("must be implemented by derived classes")
 
-    def concretization_report(self, filename, msg):
+    def concretization_report(self, filename: str, msg: str):
         raise NotImplementedError("must be implemented by derived classes")

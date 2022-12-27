@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations"""
-import argparse
 import codecs
 import collections
 import functools
@@ -16,15 +15,15 @@ import llnl.util.lang
 
 import spack.build_environment
 import spack.fetch_strategy
+import spack.install_test
 import spack.package_base
-from spack.install_test import TestSuite
-from spack.reporters import Reporter
+import spack.reporters
 
 
 def fetch_log(pkg, do_fn, dir):
     log_files = {
         "_install_task": pkg.build_log_path,
-        "do_test": os.path.join(dir, TestSuite.test_log_name(pkg.spec)),
+        "do_test": os.path.join(dir, spack.install_test.TestSuite.test_log_name(pkg.spec)),
     }
     try:
         with codecs.open(log_files[do_fn.__name__], "r", "utf-8") as f:
@@ -203,16 +202,10 @@ class InfoCollector(object):
 
 
 class collect_info(object):
-    """Collects information to build a report while installing
-    and dumps it on exit.
+    """Collects information to build a report while installing and dumps it on exit.
 
-    If the format name is not ``None``, this context manager decorates
-    PackageInstaller._install_task when entering the context for a
-    PackageBase.do_install operation and unrolls the change when exiting.
-
-    Within the context, only the specs that are passed to it
-    on initialization will be recorded for the report. Data from
-    other specs will be discarded.
+    Within the context, only the specs that are passed to it on initialization will be recorded
+    for the report. Data from other specs will be discarded.
 
     Examples:
 
@@ -229,10 +222,10 @@ class collect_info(object):
                 Spec('zlib').concretized().do_install()
 
     Args:
-        class: class on which to wrap a function
-        function: function to wrap
-        format_name: one of the supported formats
-        args: args passed to function
+        cls: class on which to wrap a function
+        function function to wrap
+        reporter: object that generates the report
+        filename: optional filename for the report
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
@@ -243,7 +236,7 @@ class collect_info(object):
         cls,
         function,
         *,
-        reporter: Reporter,
+        reporter: spack.reporters.Reporter,
         filename: Optional[str] = None,
         ctest_parsing: bool = False,
     ):
@@ -268,7 +261,6 @@ class collect_info(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Close the collector and restore the original function
         self.collector.__exit__(exc_type, exc_val, exc_tb)
-
         report_data = {"specs": self.collector.specs, "ctest-parsing": self.ctest_parsing}
         report_fn = getattr(self.report_writer, "%s_report" % self.type)
         report_fn(self.filename, report_data)
