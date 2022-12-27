@@ -233,13 +233,13 @@ class CDash(Reporter):
                 f.write(t.render(report_data))
             self.upload(phase_report)
 
-    def build_report(self, directory_name, input_data):
+    def build_report(self, directory_name, specs):
         # Do an initial scan to determine if we are generating reports for more
         # than one package. When we're only reporting on a single package we
         # do not explicitly include the package's name in the CDash build name.
         self.multipe_packages = False
         num_packages = 0
-        for spec in input_data["specs"]:
+        for spec in specs:
             # Do not generate reports for packages that were installed
             # from the binary cache.
             spec["packages"] = [
@@ -257,7 +257,7 @@ class CDash(Reporter):
                 break
 
         # Generate reports for each package in each spec.
-        for spec in input_data["specs"]:
+        for spec in specs:
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])
@@ -386,10 +386,10 @@ class CDash(Reporter):
 
         self.report_test_data(directory_name, package, phases, report_data)
 
-    def test_report(self, directory_name, input_data):
+    def test_report(self, directory_name, specs):
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
-        for spec in input_data["specs"]:
+        for spec in specs:
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])

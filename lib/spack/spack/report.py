@@ -9,7 +9,7 @@ import functools
 import os
 import time
 import traceback
-from typing import Any, Callable, Dict, List, Type, Optional
+from typing import Any, Callable, Dict, List, Type
 
 import llnl.util.lang
 
@@ -231,14 +231,23 @@ class collect_info:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
 
-    def __init__(self, cls, function, *, reporter: spack.reporters.Reporter, filename: str):
+    def __init__(
+        self,
+        cls,
+        function,
+        *,
+        reporter: spack.reporters.Reporter,
+        filename: str,
+        specs: List[spack.spec.Spec],
+    ):
         self.cls = cls
         self.function = function
         self.filename = filename
         self.reporter = reporter
+        self.specs = specs
 
-    def __call__(self, type, dir=None):
-        self.type = type
+    def __call__(self, report_tag: str, dir=None):
+        self.report_tag = report_tag
         self.dir = dir or os.getcwd()
         return self
 
@@ -252,6 +261,5 @@ class collect_info:
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Close the collector and restore the original function
         self.collector.__exit__(exc_type, exc_val, exc_tb)
-        report_data = {"specs": self.collector.specs}
-        report_fn = getattr(self.reporter, "%s_report" % self.type)
-        report_fn(self.filename, report_data)
+        report_fn = getattr(self.reporter, f"{self.report_tag}_report")
+        report_fn(self.filename, self.collector.specs)

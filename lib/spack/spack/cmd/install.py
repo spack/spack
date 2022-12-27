@@ -367,9 +367,8 @@ def _create_log_reporter(args):
             "_install_task",
             reporter=args.reporter(),
             filename=filename,
+            specs=specs,
         )
-        context_manager.specs = specs
-
         return context_manager
 
     return _factory

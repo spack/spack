@@ -253,14 +253,14 @@ def create_reporter(args, specs_to_test, test_suite):
             log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)
         filename = log_file
 
-    reporter = spack.report.collect_info(
+    context_manager = spack.report.collect_info(
         spack.package_base.PackageBase,
         "do_test",
         reporter=args.reporter(),
         filename=filename,
+        specs=specs_to_test,
     )
-    reporter.specs = specs_to_test
-    return reporter
+    return context_manager
 
 
 def test_list(args):
