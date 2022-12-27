@@ -12,7 +12,7 @@ import spack.util.executable
 
 
 @llnl.util.lang.memoized
-def get_git(required=False):
+def git(required=False):
     """Get a git executable.
 
     Arguments:
