@@ -232,12 +232,7 @@ installation for top-level packages (but skip tests for dependencies).
 if 'all' is chosen, run package tests during installation for all
 packages. If neither are chosen, don't run tests for any packages.""",
     )
-    subparser.add_argument(
-        "--log-format",
-        default=None,
-        choices=spack.report.VALID_FORMATS,
-        help="format to be used for log files",
-    )
+    arguments.add_common_arguments(subparser, ["log_format"])
     subparser.add_argument(
         "--log-file",
         default=None,
@@ -362,24 +357,16 @@ SPACK_CDASH_AUTH_TOKEN
 
 
 def _create_log_reporter(args):
-    # TODO: remove args injection to spack.report.collect_info, since a class in core
-    # TODO: shouldn't know what are the command line arguments a command use.
-    if args.log_format == "junit":
-        report_format = spack.report.ReportFormat.JUnit
-    elif args.log_format == "cdash":
-        report_format = spack.report.ReportFormat.CDash
-
     def _factory(specs):
         if args.log_format is None:
             return None
 
-        reporter = spack.report.create_reporter(report_format, args)
         filename = args.cdash_upload_url
         ctest_parsing = getattr(args, "ctest_parsing", False)
         context_manager = spack.report.collect_info(
             spack.package_base.PackageInstaller,
             "_install_task",
-            reporter=reporter,
+            reporter=args.reporter(),
             filename=filename,
             ctest_parsing=ctest_parsing,
         )

@@ -63,12 +63,7 @@ def setup_parser(subparser):
     run_parser.add_argument(
         "--keep-stage", action="store_true", help="Keep testing directory for debugging"
     )
-    run_parser.add_argument(
-        "--log-format",
-        default=None,
-        choices=spack.report.VALID_FORMATS,
-        help="format to be used for log files",
-    )
+    arguments.add_common_arguments(run_parser, ["log_format"])
     run_parser.add_argument(
         "--log-file",
         default=None,
@@ -246,19 +241,12 @@ def create_reporter(args, specs_to_test, test_suite):
     if args.log_format is None:
         return None
 
-    report_format = None
-    if args.log_format == "junit":
-        report_format = spack.report.ReportFormat.JUnit
-    elif args.log_format == "cdash":
-        report_format = spack.report.ReportFormat.CDash
-
-    reporter = spack.report.create_reporter(report_format, args)
     filename = args.cdash_upload_url
     ctest_parsing = getattr(args, "ctest_parsing", False)
     reporter = spack.report.collect_info(
         spack.package_base.PackageBase,
         "do_test",
-        reporter=reporter,
+        reporter=args.reporter(),
         filename=filename,
         ctest_parsing=ctest_parsing,
     )
