@@ -14,7 +14,7 @@ import time
 from collections import OrderedDict, namedtuple
 from contextlib import contextmanager
 
-from llnl.util.lang import pretty_seconds
+from llnl.util.lang import pretty_seconds_formatter
 
 import spack.util.spack_json as sjson
 
@@ -139,12 +139,16 @@ class Timer(object):
 
     def write_tty(self, out=sys.stdout):
         """Write a human-readable summary of timings"""
-        # Individual timers ordered by registration
-        formatted = [(p, pretty_seconds(self.duration(p))) for p in self.phases]
 
-        # Total time
-        formatted.append(("total", pretty_seconds(self.duration())))
+        times = [self.duration(p) for p in self.phases]
+
+        # Get a consistent unit for the time
+        pretty_seconds = pretty_seconds_formatter(max(times))
+
+        # Tuples of (phase, time) including total.
+        formatted = list(zip(self.phases, times))
+        formatted.append(("total", self.duration()))
 
         # Write to out
         for name, duration in formatted:
-            out.write("    {:10s} {:>10s}\n".format(name, duration))
+            out.write(f"    {name:10s} {pretty_seconds(duration):>10s}\n")
