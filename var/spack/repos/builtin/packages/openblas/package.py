@@ -514,5 +514,5 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
         cmake_defs = []
-        make_defs.extend(["-DUSE_THREAD:BOOL=FALSE", "-DTARGET:STRING=GENERIC"])
+        cmake_defs.extend(["-DUSE_THREAD:BOOL=FALSE", "-DTARGET:STRING=GENERIC"])
         return cmake_defs
