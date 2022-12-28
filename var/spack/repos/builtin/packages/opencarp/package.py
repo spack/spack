@@ -33,8 +33,8 @@ class Opencarp(CMakePackage):
     variant(
         "build_type",
         default="Release",
-        description="The build type to build",
-        values=("Release"),
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
 
     # Patch removing problematic steps in CMake process
