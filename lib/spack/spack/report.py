@@ -46,7 +46,7 @@ class InfoCollector:
         #: Specs that will be acted on
         self.input_specs = specs
         #: This is where we record the data that will be included in our report
-        self.specs = []
+        self.specs: List[Dict[str, Any]] = []
 
     def fetch_log(self, pkg: spack.package_base.PackageBase) -> str:
         """Return the stdout log associated with the function being monitored
