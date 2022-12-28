@@ -483,6 +483,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("lustre", default=False, description="Lustre filesystem library support")
     variant("romio", default=True, description="Enable ROMIO support")
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
+    variant(
+        "orterunprefix",
+        default=False,
+        description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
+    )
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -945,6 +950,11 @@ with '-Wl,-commons,use_dylibs' and without
         # Remove ssh/rsh pml
         if spec.satisfies("~rsh"):
             config_args.append("--enable-mca-no-build=plm-rsh")
+
+        # Useful for ssh-based environments
+        if spec.satisfies("@1.3:"):
+            if spec.satisfies("+orterunprefix"):
+                config_args.append("--enable-orterun-prefix-by-default")
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see

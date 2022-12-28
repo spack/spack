@@ -17,14 +17,9 @@ class Eckit(CMakePackage):
     maintainers = ["skosukhin", "climbfuji"]
 
     version("1.20.2", sha256="9c11ddaaf346e40d11312b81ca7f1b510017f26618f4c0f5c5c59c37623fbac8")
-    version("1.20.0", sha256="ed840739318a4733080fa84c6153ecd81453188bcfd8569eed6138c47efba41a")
-    version("1.19.0", commit="53cf89711c4b36700f7e3f95fb99ac1b03fee13b")
-    version("1.18.2", commit="c28d3e6dd5c138ab1d42794ebc7cd5c249f0781d")
-    version("1.18.0", commit="623d42abc7b8acbffe180923398f2a8da7813da1")
-    version("1.17.1", commit="fa4a457945c5ce0f95df5cc76d2ef3940c4a11ec")
-    version("1.16.3", commit="64318b81bf3ba2afd78a592e6535d71e0b2dfd7f")
-    version("1.16.2", commit="1857de5b1eab9fb24fd7c6d56f8954506315247a")
-    version("1.16.1", commit="282cd626fc4e95d8a3dace8e051e84f30accc483")
+    version("1.19.0", sha256="a5fef36b4058f2f0aac8daf5bcc9740565f68da7357ddd242de3a5eed4765cc7")
+    version("1.16.3", sha256="d2aae7d8030e2ce39e5d04e36dd6aa739f3c8dfffe32c61c2a3127c36b573485")
+    version("1.16.0", sha256="9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1")
 
     variant("build_type", default="RelWithDebInfo",
             description="CMake build type",
@@ -102,7 +97,7 @@ class Eckit(CMakePackage):
     def cmake_args(self):
         args = [
             # Some features that we want to build are experimental:
-            self.define("ENABLE_EXPERIMENTAL", True),
+            self.define("ENABLE_EXPERIMENTAL", self._enable_experimental),
             self.define_from_variant("ENABLE_BUILD_TOOLS", "tools"),
             # We let ecBuild find the MPI library. We could help it by setting
             # CMAKE_C_COMPILER to mpicc but that might give CMake a wrong
@@ -156,6 +151,7 @@ class Eckit(CMakePackage):
             # args.append("-DBUILD_SHARED_LIBS=OFF")
             raise InstallError("eckit static build not supported")
 
+        if "linalg=mkl" not in self.spec:
             # ENABLE_LAPACK is ignored if MKL backend is enabled
             # (the LAPACK backend is still built though):
             args.append(self.define("ENABLE_LAPACK", "linalg=lapack" in self.spec))
@@ -178,3 +174,21 @@ class Eckit(CMakePackage):
         if self.spec.satisfies("platform=darwin") and self.spec.satisfies("+admin"):
             env.append_flags("LDFLAGS", self.spec["ncurses"].libs.ld_flags)
 
+    def check(self):
+        ctest_args = ["-j", str(make_jobs)]
+
+        broken_tests = []
+        if self._enable_experimental:
+            # The following test quasi-randomly fails not because it reveals a bug in the library
+            # but because its implementation has a bug (static initialization order fiasco):
+            broken_tests.append("eckit_test_experimental_singleton_singleton")
+
+        if broken_tests:
+            ctest_args.extend(["-E", "|".join(broken_tests)])
+
+        with working_dir(self.build_directory):
+            ctest(*ctest_args)
+
+    @property
+    def _enable_experimental(self):
+        return "linalg=armadillo" in self.spec

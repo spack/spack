@@ -7,7 +7,7 @@ import collections
 import itertools
 import os.path
 import posixpath
-from typing import Any, Dict  # novm
+from typing import Any, Dict
 
 import llnl.util.lang as lang
 
@@ -39,7 +39,7 @@ def get_hash_length():
 
 
 # Caches the configuration {spec_hash: configuration}
-configuration_registry = {}  # type: Dict[str, Any]
+configuration_registry: Dict[str, Any] = {}
 
 
 def make_configuration(spec, module_set_name):

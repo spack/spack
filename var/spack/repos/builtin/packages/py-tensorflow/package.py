@@ -178,7 +178,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("swig", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-future", type="build", when="^python@:2")
 
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
     depends_on("py-absl-py@1:", type=("build", "run"), when="@2.9:")
@@ -306,20 +305,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
 
     # No longer a dependency in latest versions
     depends_on("py-astor@0.6:", type=("build", "run"), when="@1.6:2.1")
-    depends_on("py-backports-weakref@1.0:", type=("build", "run"), when="@1.3: ^python@:3.3")
     depends_on("py-backports-weakref@1.0rc1", type=("build", "run"), when="@1.2")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.5: ^python@:3.3")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.4.0:1.4.1")
     depends_on("py-keras-applications@1.0.8:", type=("build", "run"), when="@1.15:2.1")
     depends_on("py-keras-applications@1.0.6:", type=("build", "run"), when="@1.12:1.14")
     depends_on("py-keras-applications@1.0.5:", type=("build", "run"), when="@1.11")
-    depends_on("py-mock@2:", type=("build", "run"), when="@0.10: ^python@:2")
-    depends_on("py-functools32@3.2.3:", type=("build", "run"), when="@1.15: ^python@:2")
-    depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@3:")
-    depends_on("py-scipy@1.2.2", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@:2")
+    depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0")
     depends_on("py-wheel@0.32:0", type=("build", "run"), when="@2.7")
-    depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6 ^python@3:")
-    depends_on("py-wheel@0.26:", type=("build", "run"), when="@:2.3 ^python@3:")
+    depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-wheel@0.26:", type=("build", "run"), when="@:2.3")
 
     # TODO: add packages for some of these dependencies
     depends_on("mkl", when="+mkl")
@@ -328,6 +321,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on("cuda@:10.2", when="+cuda @:2.3")
     depends_on("cuda@:11.4", when="+cuda @2.4:2.7")
+    # avoid problem fixed by commit a76f797b9cd4b9b15bec4c503b16236a804f676f
+    depends_on("cuda@:11.7.0", when="+cuda @:2.9")
     depends_on("cudnn", when="+cuda")
     depends_on("cudnn@:7", when="@:2.2 +cuda")
     # depends_on('tensorrt', when='+tensorrt')
@@ -425,6 +420,19 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
         when="@2.9:2.10.0",
     )
+
+    # Version 2.10 produces an error related to cuBLAS:
+    # E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register
+    # cuBLAS factory: Attempting to register factory for plugin cuBLAS when one
+    # has already been registered
+    # See https://github.com/tensorflow/tensorflow/issues/57663
+    # This is fixed for 2.11 but 2.10 needs the following patch.
+    patch(
+        "https://github.com/tensorflow/tensorflow/pull/56691.patch?full_index=1",
+        sha256="d635ea6d6c1571505871d0caba3e2cd939ea0f4aff972095d552913a8109def3",
+        when="@2.10",
+    )
+
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
     patch("io_bazel_rules_docker2.patch", when="@1.15:2.0")
     # Avoide build error: "name 'new_http_archive' is not defined"

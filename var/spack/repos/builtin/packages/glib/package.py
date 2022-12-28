@@ -20,9 +20,12 @@ class Glib(Package):
 
     homepage = "https://developer.gnome.org/glib/"
     url = "https://download.gnome.org/sources/glib/2.53/glib-2.53.1.tar.xz"
+    list_url = "https://download.gnome.org/sources/glib"
+    list_depth = 1
 
     maintainers = ["michaelkuhn"]
 
+    version("2.74.3", sha256="e9bc41ecd9690d9bc6a970cc7380119b828e5b6a4b16c393c638b3dc2b87cbcb")
     version("2.74.1", sha256="0ab981618d1db47845e56417b0d7c123f81a3427b2b9c93f5a46ff5bbb964964")
     version("2.74.0", sha256="3652c7f072d7b031a6b5edd623f77ebc5dcd2ae698598abcc89ff39ca75add30")
     version("2.72.4", sha256="8848aba518ba2f4217d144307a1d6cb9afcc92b54e5c13ac1f8c4d4608e96f0e")

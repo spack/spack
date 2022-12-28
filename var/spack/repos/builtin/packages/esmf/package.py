@@ -25,6 +25,7 @@ class Esmf(MakefilePackage):
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
     # generate chksum with spack checksum esmf@x.y.z
+    version("8.4.0", sha256="28531810bf1ae78646cda6494a53d455d194400f19dccd13d6361871de42ed0f")
     version(
         "8.3.1",
         sha256="6c39261e55dcdf9781cdfa344417b9606f7f961889d5ec626150f992f04f146d",
@@ -334,7 +335,7 @@ class Esmf(MakefilePackage):
         ##############
         # ParallelIO #
         ##############
-        if "+parallelio" in spec and "+mpi" in spec:
+        if "+parallelio" in spec:
             os.environ["ESMF_PIO"] = "external"
             os.environ["ESMF_PIO_LIBPATH"] = spec["parallelio"].prefix.lib
             os.environ["ESMF_PIO_INCLUDE"] = spec["parallelio"].prefix.include
@@ -364,6 +365,7 @@ class Esmf(MakefilePackage):
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
 
+        # Static-only option:
         if "~shared" in spec:
             os.environ["ESMF_SHARED_LIB_BUILD"] = "OFF"
 

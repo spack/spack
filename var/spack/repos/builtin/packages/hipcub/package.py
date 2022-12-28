@@ -11,20 +11,37 @@ class Hipcub(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
     git = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.3.0", sha256="4016cfc240b3cc1a97b549ecc4a5b76369610d46247661834630846391e5fad2")
     version("5.2.3", sha256="cab929f10c649f8fd76df989a16d0cd9301bc6aaad91cd2f84498c831378d559")
     version("5.2.1", sha256="07b34d8cdf885838dde264c2a70044505e7b9632cb6efbdb52e2569f95112970")
     version("5.2.0", sha256="ac4dc2310f0eb657e1337c93d8cc4a5d8396f9544a7336eeceb455678a1f9139")
     version("5.1.3", sha256="dc75640689b6a5e15dd3acea643266bdf114ea63efc60be8272f484cf8f04494")
     version("5.1.0", sha256="b30d51fc5fca2584f0c9a6fa8dafc9fbdda96a3acff30288e49b397f8842f705")
-    version("5.0.2", sha256="22effb18f2c38d76fa379f14c9f9ee7a11987a5d1ae4a7e837af87232c8c9183")
-    version("5.0.0", sha256="09c4f1b88aa5f50f04043d379e4960dab556e0fbdf8e25ab03d02a07c1ff7b2f")
-    version("4.5.2", sha256="bec9ba1a6aa0475475ee292e54807accc839ed001338275f48da13e3bfb77514")
-    version("4.5.0", sha256="5902fae0485789f1d1cc6b8e81d9f1b39338170d3139844d5edf0d324f9694c9")
+    version(
+        "5.0.2",
+        sha256="22effb18f2c38d76fa379f14c9f9ee7a11987a5d1ae4a7e837af87232c8c9183",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="09c4f1b88aa5f50f04043d379e4960dab556e0fbdf8e25ab03d02a07c1ff7b2f",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="bec9ba1a6aa0475475ee292e54807accc839ed001338275f48da13e3bfb77514",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="5902fae0485789f1d1cc6b8e81d9f1b39338170d3139844d5edf0d324f9694c9",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="20fcd34323c541c182655b7ff6dc6ff268c0127596f0d9993884621c2b14b67a",
@@ -107,6 +124,7 @@ class Hipcub(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)

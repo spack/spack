@@ -27,4 +27,3 @@ class PyOwslib(PythonPackage):
     depends_on("py-pyproj", type=("build", "run"))
     depends_on("py-pyproj@2:", when="@0.19.2:", type=("build", "run"))
     depends_on("py-pyyaml", when="@0.19.2:", type=("build", "run"))
-    depends_on("py-dataclasses", when="@0.25: ^python@:3.6", type=("build", "run"))

@@ -104,5 +104,3 @@ class PySphinx(PythonPackage):
     depends_on("py-sphinxcontrib-websupport", when="@1.6:1", type=("build", "run"))
     depends_on("py-six@1.5:", when="@:1", type=("build", "run"))
     depends_on("py-sphinx-rtd-theme@0.1:", when="@:1.3", type=("build", "run"))
-    depends_on("py-typing", when="@1.6.2:^python@2.7:3.4", type=("build", "run"))
-    depends_on("py-typing", when="@1.6.1", type=("build", "run"))

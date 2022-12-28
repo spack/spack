@@ -214,9 +214,11 @@ spack:
         - magma
         - mfem
         - mpich
+        - openfoam
         - openturns
         - parallelio
         - precice
+        - qt
         - raja
         - relion
         - rocblas
@@ -227,6 +229,7 @@ spack:
         - sundials
         - trilinos
         - umpire
+        - visit
         - vtk
         - vtk-h
         - vtk-m

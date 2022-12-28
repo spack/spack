@@ -13,21 +13,38 @@ class RocprofilerDev(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
     git = "https://github.com/ROCm-Developer-Tools/rocprofiler.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["librocprofiler64"]
 
+    version("5.3.0", sha256="b0905a329dc1c97a362b951f3f8ef5da9d171cabb001ed4253bd59a2742e7d39")
     version("5.2.3", sha256="4ed22e86633ab177eed85fed8994fcb71017c4c4774998e4d3fc36b6c0a15eac")
     version("5.2.1", sha256="c6768ec428590aadfb0e7ef6e22b8dc5ac8ed97babeb56db07f2d5d41cd122e2")
     version("5.2.0", sha256="1f4db27b56ef1863d4c9e1d96bac9117d66be45156d0637cfe4fd38cae61a23a")
     version("5.1.3", sha256="eca7be451c7bf000fd9c75683e7f5dfbed32dbb385b5ac685d2251ee8c3abc96")
     version("5.1.0", sha256="4a1c6ed887b0159392406af8796508df2794353a4c3aacc801116044fb4a10a5")
-    version("5.0.2", sha256="48f58c3c16dd45fead2086f89a175f74636e81bc2437e30bb6e9361b1083e71d")
-    version("5.0.0", sha256="2ed521f400e4aafd17405c2f9ad2fb3b906a982d3767b233122d9c2964c3245f")
-    version("4.5.2", sha256="baa59826f8fb984993c03d05e2e3cdf0b830b08f8056b18ba206dfbaa367aca9")
-    version("4.5.0", sha256="9b47b086d28fc831dbe0f83ec7e4640057b97edc961f2f050a0968633f32a06b")
+    version(
+        "5.0.2",
+        sha256="48f58c3c16dd45fead2086f89a175f74636e81bc2437e30bb6e9361b1083e71d",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="2ed521f400e4aafd17405c2f9ad2fb3b906a982d3767b233122d9c2964c3245f",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="baa59826f8fb984993c03d05e2e3cdf0b830b08f8056b18ba206dfbaa367aca9",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="9b47b086d28fc831dbe0f83ec7e4640057b97edc961f2f050a0968633f32a06b",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="c6f5fa192c9cdb32553d24ed5c847107d312042e39fa3dd17c83e237c9542a2d",
@@ -107,6 +124,7 @@ class RocprofilerDev(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -117,6 +135,7 @@ class RocprofilerDev(CMakePackage):
 
     # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
     patch("fix-includes.patch")
+    patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3.0")
 
     def patch(self):
         filter_file(
