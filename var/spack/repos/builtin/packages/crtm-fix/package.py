@@ -14,7 +14,13 @@ class CrtmFix(Package):
     homepage = "https://github.com/NOAA-EMC/crtm"
     url = "ftp://ftp.ucar.edu/pub/cpaess/bjohns/fix_REL-2.3.0_emc.tgz"
 
-    maintainers = ["kgerheiser"]
+    maintainers = [
+        "BenjaminTJohnson",
+        "edwardhartnett",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "climbfuji",
+    ]
 
     version("2.4.0", sha256="7924285b8aa25b0b864643f03e7f281ca1816958e24c76aa9531b3ca902bf6e9")
     version("2.4.0_emc", sha256="88d659ae5bc4434f7fafa232ff65b4c48442d2d1a25f8fc96078094fa572ac1a")
