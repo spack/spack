@@ -74,6 +74,7 @@ apidoc_args = [
     "--force",  # Overwrite existing files
     "--no-toc",  # Don't create a table of contents file
     "--output-dir=.",  # Directory to place all output
+    "--module-first",  # emit module docs before submodule docs
 ]
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/spack"])
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
@@ -200,12 +201,14 @@ nitpick_ignore = [
     ("py:class", "_frozen_importlib_external.SourceFileLoader"),
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
+    ("py:class", "TextIO"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack.build_systems._checks.BaseBuilder"),
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.VersionBase"),
+    ("py:class", "spack.spec.DependencySpec"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
