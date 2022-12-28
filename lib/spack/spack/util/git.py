@@ -18,9 +18,6 @@ def git(required: bool = False):
 
     Arguments:
         required: if ``True``, fail if ``git`` is not found. By default return ``None``.
-
-    Raises:
-        CommandNotFoundError: if required is ``True`` and ``git`` is not present.
     """
     git: Optional[exe.Executable] = exe.which("git", required=required)
 
