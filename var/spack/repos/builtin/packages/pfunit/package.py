@@ -129,7 +129,7 @@ class Pfunit(CMakePackage):
             args.append(self.define_from_variant("OPENMP", "openmp"))
             args.append("-DMAX_RANK=%s" % spec.variants["max_array_rank"].value)
 
-        if spec.satisfies("@:4.2.2") and spec.satisfies("%gcc@5:"):
+        if spec.satisfies("@:4.2.1") and spec.satisfies("%gcc@5:"):
             # prevents breakage when max_array_rank is larger than default. Note
             # that 4.0.0-4.2.1 still had a 512 limit
             args.append("-DCMAKE_Fortran_FLAGS=-ffree-line-length-none")
