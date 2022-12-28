@@ -50,6 +50,7 @@ class Googletest(CMakePackage):
             # New style (contains both Google Mock and Google Test)
             args.append(self.define("BUILD_GTEST", True))
             args.append(self.define_from_variant("BUILD_GMOCK", "gmock"))
+            args.append(self.define("CMAKE_POSITION_INDEPENDENT_CODE", True))
 
         return args
 
