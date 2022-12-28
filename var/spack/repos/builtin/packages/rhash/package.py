@@ -30,7 +30,7 @@ class Rhash(MakefilePackage):
 
     # Intel 20xx.yy.z works just fine.  Un-block it from the configure script
     # https://github.com/rhash/RHash/pull/197
-    patch("rhash-intel20.patch")
+    patch("rhash-intel20.patch", when="@1.3.6:")
 
     # For macOS build instructions, see:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/rhash.rb

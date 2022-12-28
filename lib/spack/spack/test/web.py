@@ -182,6 +182,20 @@ def test_get_header():
         spack.util.web.get_header(headers, "ContentLength")
 
 
+def test_etag_parser():
+    # This follows rfc7232 to some extent, relaxing the quote requirement.
+    assert spack.util.web.parse_etag('"abcdef"') == "abcdef"
+    assert spack.util.web.parse_etag("abcdef") == "abcdef"
+
+    # No empty tags
+    assert spack.util.web.parse_etag("") is None
+
+    # No quotes or spaces allowed
+    assert spack.util.web.parse_etag('"abcdef"ghi"') is None
+    assert spack.util.web.parse_etag('"abc def"') is None
+    assert spack.util.web.parse_etag("abc def") is None
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_list_url(tmpdir):
     testpath = str(tmpdir)
