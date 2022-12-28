@@ -27,12 +27,10 @@ class CrtmFix(Package):
     version("2.3.0_emc", sha256="fde73bb41c3c00666ab0eb8c40895e02d36fa8d7b0896c276375214a1ddaab8f")
 
     variant("big_endian", default=True, description="Install big_endian fix files")
-    variant("little_endian", default=False,
-            description="Install little endian fix files")
+    variant("little_endian", default=False, description="Install little endian fix files")
     variant("netcdf", default=True, description="Install netcdf fix files")
 
-    conflicts("+big_endian", when="+little_endian",
-              msg="big_endian and little_endian conflict")
+    conflicts("+big_endian", when="+little_endian", msg="big_endian and little_endian conflict")
 
     def url_for_version(self, version):
         url = "ftp://ftp.ucar.edu/pub/cpaess/bjohns/fix_REL-{}.tgz"
@@ -60,19 +58,22 @@ class CrtmFix(Package):
         # Remove the incorrect file, and install it as noACC,, then install
         # correct file under new name.
         if "+big_endian" in spec and spec.version == Version("2.4.0_emc"):
-            remove_path = join_path(os.getcwd(), "fix", "SpcCoeff",
-                                    "Big_Endian", "amsua_metop-c.SpcCoeff.bin")
+            remove_path = join_path(
+                os.getcwd(), "fix", "SpcCoeff", "Big_Endian", "amsua_metop-c.SpcCoeff.bin"
+            )
             fix_files.remove(remove_path)
 
             # This file is incorrect, install it as a different name.
-            install(join_path("fix", "SpcCoeff", "Big_Endian",
-                              "amsua_metop-c.SpcCoeff.bin"),
-                    join_path(self.prefix.fix, "amsua_metop-c.SpcCoeff.noACC.bin"))
+            install(
+                join_path("fix", "SpcCoeff", "Big_Endian", "amsua_metop-c.SpcCoeff.bin"),
+                join_path(self.prefix.fix, "amsua_metop-c.SpcCoeff.noACC.bin"),
+            )
 
             # This "Little_Endian" file is actually the correct one.
-            install(join_path("fix", "SpcCoeff", "Little_Endian",
-                              "amsua_metop-c_v2.SpcCoeff.bin"),
-                    join_path(self.prefix.fix, "amsua_metop-c.SpcCoeff.bin"))
+            install(
+                join_path("fix", "SpcCoeff", "Little_Endian", "amsua_metop-c_v2.SpcCoeff.bin"),
+                join_path(self.prefix.fix, "amsua_metop-c.SpcCoeff.bin"),
+            )
 
         for f in fix_files:
             install(f, self.prefix.fix)
