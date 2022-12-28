@@ -115,13 +115,6 @@ class Pfunit(CMakePackage):
             self.define_from_variant("BUILD_DOCS", "docs"),
         ]
 
-        if self.spec.satisfies("%gcc@10:"):
-            args.append("-DCMAKE_Fortran_FLAGS_DEBUG=-g -O2 -fallow-argument-mismatch")
-
-        if self.spec.satisfies("%gcc@5:"):
-            # prevents breakage when max_array_rank is larger than default
-            args.append("-DCMAKE_Fortran_FLAGS=-ffree-line-length-none")
-
         if spec.satisfies("@4.0.0:"):
             args.append("-DSKIP_MPI=%s" % ("YES" if "~mpi" in spec else "NO"))
             args.append("-DSKIP_OPENMP=%s" % ("YES" if "~openmp" in spec else "NO"))
@@ -129,9 +122,17 @@ class Pfunit(CMakePackage):
             args.append("-DSKIP_ESMF=%s" % ("YES" if "~esmf" in spec else "NO"))
             args.append("-DMAX_ASSERT_RANK=%s" % spec.variants["max_array_rank"].value)
         else:
+            if spec.satisfies("%gcc@10:"):
+                args.append("-DCMAKE_Fortran_FLAGS_DEBUG=-g -O2 -fallow-argument-mismatch")
+
             args.append(self.define_from_variant("MPI", "mpi"))
             args.append(self.define_from_variant("OPENMP", "openmp"))
             args.append("-DMAX_RANK=%s" % spec.variants["max_array_rank"].value)
+
+        if spec.satisfies("@:4.2.2") and spec.satisfies("%gcc@5:"):
+            # prevents breakage when max_array_rank is larger than default. Note
+            # that 4.0.0-4.2.1 still had a 512 limit
+            args.append("-DCMAKE_Fortran_FLAGS=-ffree-line-length-none")
 
         if spec.satisfies("+mpi"):
             args.extend(
