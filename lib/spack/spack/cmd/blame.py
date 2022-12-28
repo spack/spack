@@ -14,9 +14,9 @@ from llnl.util.tty.colify import colify_table
 
 import spack.paths
 import spack.repo
+import spack.util.git
 import spack.util.spack_json as sjson
 from spack.cmd import spack_is_git_repo
-from spack.util.executable import which
 
 description = "show contributors to packages"
 section = "developer"
@@ -116,7 +116,7 @@ def blame(parser, args):
     # make sure this is a git repo
     if not spack_is_git_repo():
         tty.die("This spack is not a git clone. Can't use 'spack blame'")
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
 
     # Get name of file to blame
     blame_file = None

@@ -15,8 +15,8 @@ import spack
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.paths
+import spack.util.git
 import spack.util.gpg
-from spack.util.executable import which
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"
@@ -84,7 +84,7 @@ def tutorial(parser, args):
     # If you don't put this last, you'll get import errors for the code
     # that follows (exacerbated by the various lazy singletons we use)
     tty.msg("Ensuring we're on the releases/v{0}.{1} branch".format(*spack.spack_version_info[:2]))
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
     with working_dir(spack.paths.prefix):
         git("checkout", tutorial_branch)
     # NO CODE BEYOND HERE

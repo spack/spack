@@ -18,6 +18,7 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.paths as spack_paths
+import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 
@@ -180,14 +181,13 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     monkeypatch.setattr(spack.paths, "prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to find the path" in err
 
     monkeypatch.setattr(spack.paths, "prefix", prefix_save)
-
-    monkeypatch.setattr(spack.util.executable, "which", lambda cmd: None)
+    monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
     out, err = capfd.readouterr()
@@ -208,39 +208,39 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
 
     git_cmd = mock_git_cmd()
 
-    monkeypatch.setattr(spack.util.executable, "which", lambda cmd: git_cmd)
+    monkeypatch.setattr(spack.util.git, "git", lambda: git_cmd)
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c2 else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Missing commit: {0}".format(c2) in err
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c1 else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Missing commit: {0}".format(c1) in err
 
     git_cmd.check = lambda *a, **k: 1 if a[0] == "clone" else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to clone" in err
 
     git_cmd.check = lambda *a, **k: 1 if a[0] == "checkout" else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to checkout" in err
 
     git_cmd.check = lambda *a, **k: 1 if "merge" in a else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to merge {0}".format(c1) in err

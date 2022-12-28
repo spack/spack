@@ -16,17 +16,13 @@ import spack.repo
 from spack.fetch_strategy import GitFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 from spack.version import ver
-
-pytestmark = pytest.mark.skipif(not which("git"), reason="requires git to be installed")
-
 
 _mock_transport_error = "Mock HTTP transport error"
 
 
 @pytest.fixture(params=[None, "1.8.5.2", "1.8.5.1", "1.7.10", "1.7.1", "1.7.0"])
-def git_version(request, monkeypatch):
+def git_version(git, request, monkeypatch):
     """Tests GitFetchStrategy behavior for different git versions.
 
     GitFetchStrategy tries to optimize using features of newer git
@@ -34,7 +30,6 @@ def git_version(request, monkeypatch):
     paths for old versions still work, we fake it out here and make it
     use the backward-compatibility code paths with newer git versions.
     """
-    git = which("git", required=True)
     real_git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
 
     if request.param is None:
@@ -83,6 +78,7 @@ def test_bad_git(tmpdir, mock_bad_git):
 @pytest.mark.parametrize("type_of_test", ["default", "branch", "tag", "commit"])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(
+    git,
     type_of_test,
     secure,
     mock_git_repository,
@@ -217,7 +213,7 @@ def test_debug_fetch(
             assert os.path.isdir(s.package.stage.source_path)
 
 
-def test_git_extra_fetch(tmpdir):
+def test_git_extra_fetch(git, tmpdir):
     """Ensure a fetch after 'expanding' is effectively a no-op."""
     testpath = str(tmpdir)
 
@@ -228,7 +224,7 @@ def test_git_extra_fetch(tmpdir):
         shutil.rmtree(stage.source_path)
 
 
-def test_needs_stage():
+def test_needs_stage(git):
     """Trigger a NoStageError when attempt a fetch without a stage."""
     with pytest.raises(
         spack.fetch_strategy.NoStageError, match=r"set_stage.*before calling fetch"

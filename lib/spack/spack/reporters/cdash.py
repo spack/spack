@@ -22,11 +22,11 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
+import spack.util.git
 from spack.error import SpackError
 from spack.reporter import Reporter
 from spack.reporters.extract import extract_test_parts
 from spack.util.crypto import checksum
-from spack.util.executable import which
 from spack.util.log_parse import parse_log_events
 
 __all__ = ["CDash"]
@@ -108,7 +108,7 @@ class CDash(Reporter):
         )
         self.buildIds = collections.OrderedDict()
         self.revision = ""
-        git = which("git")
+        git = spack.util.git.git()
         with working_dir(spack.paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.main.get_version())

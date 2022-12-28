@@ -9,7 +9,8 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.paths
-from spack.util.executable import ProcessError, which
+import spack.util.git
+from spack.util.executable import ProcessError
 
 _SPACK_UPSTREAM = "https://github.com/spack/spack"
 
@@ -32,7 +33,7 @@ def setup_parser(subparser):
 
 def get_origin_info(remote):
     git_dir = os.path.join(spack.paths.prefix, ".git")
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
     try:
         branch = git("symbolic-ref", "--short", "HEAD", output=str)
     except ProcessError:
@@ -69,13 +70,13 @@ def clone(parser, args):
     if files_in_the_way:
         tty.die(
             "There are already files there! " "Delete these files before boostrapping spack.",
-            *files_in_the_way
+            *files_in_the_way,
         )
 
     tty.msg("Installing:", "%s/bin/spack" % prefix, "%s/lib/spack/..." % prefix)
 
     with working_dir(prefix):
-        git = which("git", required=True)
+        git = spack.util.git.git(required=True)
         git("init", "--shared", "-q")
         git("remote", "add", "origin", origin_url)
         git("fetch", "origin", "%s:refs/remotes/origin/%s" % (branch, branch), "-n", "-q")

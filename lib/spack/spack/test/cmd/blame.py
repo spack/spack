@@ -13,11 +13,8 @@ import spack.cmd
 import spack.paths
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand
-from spack.util.executable import which
 
-pytestmark = pytest.mark.skipif(
-    not which("git") or not spack.cmd.spack_is_git_repo(), reason="needs git"
-)
+pytestmark = pytest.mark.usefixtures("git")
 
 blame = SpackCommand("blame")
 

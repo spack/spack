@@ -13,6 +13,7 @@ import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
 import spack.paths
+import spack.util.git
 from spack.util.executable import which
 
 description = "runs source code style checks on spack"
@@ -81,7 +82,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if root is None:
         root = spack.paths.prefix
 
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
 
     # ensure base is in the repo
     base_sha = git(
