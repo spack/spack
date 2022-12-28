@@ -29,6 +29,13 @@ class Opencarp(CMakePackage):
 
     variant("carputils", default=False, description="Installs the carputils framework")
     variant("meshtool", default=False, description="Installs the meshtool software")
+    
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Release"),
+    )
 
     # Patch removing problematic steps in CMake process
     patch("opencarp7.patch", when="@7.0")
