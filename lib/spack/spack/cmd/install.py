@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import textwrap
+from typing import List
 
 import llnl.util.filesystem as fs
 from llnl.util import lang, tty
@@ -257,6 +258,12 @@ def default_log_file(spec):
     return fs.os.path.join(dirname, basename)
 
 
+def report_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
+    """Return the filename to be used for reporting to JUnit or CDash format."""
+    result = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
+    return result
+
+
 def install_specs(specs, install_kwargs, cli_args):
     try:
         if ev.active_environment():
@@ -399,10 +406,10 @@ def install_all_specs_from_active_environment(
         tty.msg(msg)
         return
 
-    reporter = reporter_factory(specs) or lang.nullcontext
+    reporter = reporter_factory(specs) or lang.nullcontext()
 
     tty.msg("Installing environment {0}".format(env.name))
-    with reporter("build"):
+    with reporter:
         env.install_all(**install_kwargs)
 
     tty.debug("Regenerating environment views for {0}".format(env.name))
@@ -421,7 +428,7 @@ def compute_tests_install_kwargs(specs, cli_test_arg):
     return False
 
 
-def specs_from_cli(args, install_kwargs, reporter_factory):
+def specs_from_cli(args, install_kwargs):
     """Return abstract and concrete spec parsed from the command line."""
     abstract_specs = spack.cmd.parse_specs(args.spec)
     install_kwargs["tests"] = compute_tests_install_kwargs(abstract_specs, args.test)
@@ -431,9 +438,9 @@ def specs_from_cli(args, install_kwargs, reporter_factory):
         )
     except SpackError as e:
         tty.debug(e)
-        reporter = reporter_factory(abstract_specs)
-        if reporter:
-            reporter.concretization_report(e.message)
+        if args.log_format is not None:
+            reporter = args.reporter()
+            reporter.concretization_report(report_filename(args, abstract_specs), e.message)
         raise
     return abstract_specs, concrete_specs
 
@@ -502,14 +509,11 @@ def install(parser, args):
         if args.log_format is None:
             return None
 
-        filename = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
-        context_manager = spack.report.collect_info(
-            spack.package_base.PackageInstaller,
-            "_install_task",
+        context_manager = spack.report.build_context_manager(
             reporter=args.reporter(),
-            filename=filename,
+            filename=report_filename(args, specs=specs),
             specs=specs,
-            raw_logs_directory=os.getcwd(),
+            raw_logs_dir=os.getcwd(),
         )
         return context_manager
 
@@ -526,7 +530,7 @@ def install(parser, args):
         return
 
     # Specs from CLI
-    abstract_specs, concrete_specs = specs_from_cli(args, install_kwargs, reporter_factory)
+    abstract_specs, concrete_specs = specs_from_cli(args, install_kwargs)
 
     # Concrete specs from YAML or JSON files
     specs_from_file = concrete_specs_from_file(args)
@@ -536,8 +540,8 @@ def install(parser, args):
     if len(concrete_specs) == 0:
         tty.die("The `spack install` command requires a spec to install.")
 
-    reporter = reporter_factory(concrete_specs) or lang.nullcontext
-    with reporter("build"):
+    reporter = reporter_factory(concrete_specs) or lang.nullcontext()
+    with reporter:
         if args.overwrite:
             require_user_confirmation_for_overwrite(concrete_specs, args)
             install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]

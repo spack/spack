@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations"""
 import collections
+import contextlib
 import functools
 import os
 import time
@@ -56,7 +57,7 @@ class InfoCollector:
         self.wrap_class = wrap_class
         #: Action to be reported on
         self.do_fn = do_fn
-        #: Backup of PackageBase function
+        #: Backup of the wrapped class function
         self._backup_do_fn = getattr(self.wrap_class, do_fn)
         #: Specs that will be acted on
         self.input_specs = specs
@@ -200,67 +201,50 @@ class InfoCollector:
             spec["time"] = sum([float(x["elapsed_time"]) for x in spec["packages"]])
 
 
-class collect_info:
-    """Collects information to build a report while installing and dumps it on exit.
-
-    Within the context, only the specs that are passed to it on initialization will be recorded
-    for the report. Data from other specs will be discarded.
-
-    Examples:
-
-        .. code-block:: python
-
-            # The file 'junit.xml' is written when exiting
-            # the context
-            s = [Spec('hdf5').concretized()]
-            with collect_info(PackageBase, do_install, s, 'junit', 'a.xml'):
-                # A report will be generated for these specs...
-                for spec in s:
-                    getattr(class, function)(spec)
-                # ...but not for this one
-                Spec('zlib').concretized().do_install()
+@contextlib.contextmanager
+def build_context_manager(
+    reporter: spack.reporters.Reporter,
+    filename: str,
+    specs: List[spack.spec.Spec],
+    raw_logs_dir: str,
+):
+    """Decorate ``PackageInstaller._install_task`` so that an installation report is emitted in
+    the end.
 
     Args:
-        cls: class on which to wrap a function
-        function: function to wrap
-        reporter: object that generates the report
-        filename: optional filename for the report
-        specs: specs that need reporting
-        raw_logs_directory: directory where to find the raw logs for data collection, but
-            only for "test" collection. For "build" Spack knows what to do. See fetch_log.
-
-    Raises:
-        ValueError: when ``format_name`` is not in ``valid_formats``
+        reporter (spack.reporters.Reporter): object that generates the report
+        filename (str):  filename for the report
+        specs (list of spack.spec.Spec): specs that need reporting
+        raw_logs_dir (str): TODO
     """
+    collector = InfoCollector(
+        spack.package_base.PackageInstaller, "_install_task", specs, raw_logs_dir
+    )
+    try:
+        with collector:
+            yield
+    finally:
+        reporter.build_report(filename, specs=collector.specs)
 
-    def __init__(
-        self,
-        cls,
-        function,
-        *,
-        reporter: spack.reporters.Reporter,
-        filename: str,
-        specs: List[spack.spec.Spec],
-        raw_logs_directory: str,
-    ):
-        self.collector = InfoCollector(cls, function, specs, raw_logs_directory)
-        self.reporter = reporter
-        self.filename = filename
 
-    def __call__(self, report_tag: str):
-        self.report_tag = report_tag
-        return self
+@contextlib.contextmanager
+def test_context_manager(
+    reporter: spack.reporters.Reporter,
+    filename: str,
+    specs: List[spack.spec.Spec],
+    raw_logs_dir: str,
+):
+    """Decorate ``PackageBase.do_test`` so that a test report is emitted in the end.
 
-    def concretization_report(self, msg: str):
-        self.reporter.concretization_report(self.filename, msg)
-
-    def __enter__(self):
-        self.collector.__enter__()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # Close the collector and restore the original function
-        self.collector.__exit__(exc_type, exc_val, exc_tb)
-        if self.report_tag == "build":
-            self.reporter.build_report(self.filename, self.collector.specs)
-        elif self.report_tag == "test":
-            self.reporter.test_report(self.filename, self.collector.specs)
+    Args:
+        reporter (spack.reporters.Reporter): object that generates the report
+        filename (str):  filename for the report
+        specs (list of spack.spec.Spec): specs that need reporting
+        raw_logs_dir (str): TODO
+    """
+    collector = InfoCollector(spack.package_base.PackageBase, "do_test", specs, raw_logs_dir)
+    try:
+        with collector:
+            yield
+    finally:
+        reporter.test_report(filename, specs=collector.specs)

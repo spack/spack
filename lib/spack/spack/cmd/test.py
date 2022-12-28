@@ -226,9 +226,9 @@ environment variables:
 
     # Set up reporter
     setattr(args, "package", [s.format() for s in test_suite.specs])
-    reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext
+    reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext()
 
-    with reporter("test"):
+    with reporter:
         test_suite(
             remove_directory=not args.keep_stage,
             dirty=args.dirty,
@@ -253,13 +253,11 @@ def create_reporter(args, specs_to_test, test_suite):
             log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)
         filename = log_file
 
-    context_manager = spack.report.collect_info(
-        spack.package_base.PackageBase,
-        "do_test",
+    context_manager = spack.report.test_context_manager(
         reporter=args.reporter(),
         filename=filename,
         specs=specs_to_test,
-        raw_logs_directory=test_suite.stage,
+        raw_logs_dir=test_suite.stage,
     )
     return context_manager
 
