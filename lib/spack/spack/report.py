@@ -101,8 +101,8 @@ class InfoCollector:
                 # installed explicitly will also be installed as a
                 # dependency of another spec. In this case append to both
                 # spec reports.
-                for s in llnl.util.lang.dedupe([pkg.spec.root, pkg.spec]):
-                    name = name_fmt.format(s.name, s.dag_hash(length=7))
+                for current_spec in llnl.util.lang.dedupe([pkg.spec.root, pkg.spec]):
+                    name = name_fmt.format(current_spec.name, current_spec.dag_hash(length=7))
                     try:
                         item = next((x for x in self.specs if x["name"] == name))
                         item["packages"].append(package)
@@ -118,22 +118,22 @@ class InfoCollector:
                     self.on_success(pkg, kwargs, package)
                     return value
 
-                except spack.build_environment.InstallError as e:
+                except spack.build_environment.InstallError as exc:
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
                     package["result"] = "failure"
-                    package["message"] = e.message or "Installation failure"
+                    package["message"] = exc.message or "Installation failure"
                     package["stdout"] = self.fetch_log(pkg)
                     package["stdout"] += package["message"]
-                    package["exception"] = e.traceback
+                    package["exception"] = exc.traceback
                     raise
 
-                except (Exception, BaseException) as e:
+                except (Exception, BaseException) as exc:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
                     package["result"] = "error"
                     package["stdout"] = self.fetch_log(pkg)
-                    package["message"] = str(e) or "Unknown error"
+                    package["message"] = str(exc) or "Unknown error"
                     package["exception"] = traceback.format_exc()
                     raise
 
@@ -144,13 +144,12 @@ class InfoCollector:
 
         setattr(self.wrap_class, self.do_fn, gather_info(getattr(self.wrap_class, self.do_fn)))
 
-    def on_success(self, pkg, kwargs, package_record):
+    def on_success(self, pkg: spack.package_base.PackageBase, kwargs, package_record):
         """Add additional properties on function call success."""
         raise NotImplementedError("must be implemented by derived classes")
 
-    def init_spec_record(self, input_spec, record):
+    def init_spec_record(self, input_spec: spack.spec.Spec, record):
         """Add additional entries to a spec record when entering the collection context."""
-        pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Restore the original method in PackageBase
@@ -159,10 +158,16 @@ class InfoCollector:
             spec["npackages"] = len(spec["packages"])
             spec["nfailures"] = len([x for x in spec["packages"] if x["result"] == "failure"])
             spec["nerrors"] = len([x for x in spec["packages"] if x["result"] == "error"])
-            spec["time"] = sum([float(x["elapsed_time"]) for x in spec["packages"]])
+            spec["time"] = sum(float(x["elapsed_time"]) for x in spec["packages"])
 
 
 class BuildInfoCollector(InfoCollector):
+    """Collect information for the PackageInstaller._install_task method.
+
+    Args:
+        specs (list of Spec): specs whose install information will be recorded
+    """
+
     def __init__(self, specs):
         super().__init__(spack.installer.PackageInstaller, "_install_task", specs)
 
@@ -183,8 +188,8 @@ class BuildInfoCollector(InfoCollector):
 
     def fetch_log(self, pkg):
         try:
-            with open(pkg.build_log_path, "r", encoding="utf-8") as f:
-                return "".join(f.readlines())
+            with open(pkg.build_log_path, "r", encoding="utf-8") as stream:
+                return "".join(stream.readlines())
         except Exception:
             return f"Cannot open log for {pkg.spec.cshort_spec}"
 
@@ -193,10 +198,16 @@ class BuildInfoCollector(InfoCollector):
 
 
 class TestInfoCollector(InfoCollector):
-    def __init__(self, specs, dir):
+    """Collect information for the PackageBase.do_test method.
+
+    Args:
+        specs (list of Spec): specs whose install information will be recorded
+        record_directory (str): record directory for test log paths
+    """
+
+    def __init__(self, specs, record_directory):
         super().__init__(spack.package_base.PackageBase, "do_test", specs)
-        #: Record directory for test log paths
-        self.dir = dir
+        self.dir = record_directory
 
     def on_success(self, pkg, kwargs, package_record):
         externals = kwargs.get("externals", False)
@@ -208,8 +219,8 @@ class TestInfoCollector(InfoCollector):
     def fetch_log(self, pkg):
         log_file = os.path.join(self.dir, spack.install_test.TestSuite.test_log_name(pkg.spec))
         try:
-            with open(log_file, "r", encoding="utf-8") as f:
-                return "".join(f.readlines())
+            with open(log_file, "r", encoding="utf-8") as stream:
+                return "".join(stream.readlines())
         except Exception:
             return f"Cannot open log for {pkg.spec.cshort_spec}"
 
