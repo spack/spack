@@ -237,7 +237,7 @@ class CDash(Reporter):
         # Do an initial scan to determine if we are generating reports for more
         # than one package. When we're only reporting on a single package we
         # do not explicitly include the package's name in the CDash build name.
-        self.multipe_packages = False
+        self.multiple_packages = False
         num_packages = 0
         for spec in specs:
             # Do not generate reports for packages that were installed

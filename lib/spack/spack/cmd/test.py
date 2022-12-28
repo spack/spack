@@ -228,7 +228,7 @@ environment variables:
     setattr(args, "package", [s.format() for s in test_suite.specs])
     reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext
 
-    with reporter("test", test_suite.stage):
+    with reporter("test"):
         test_suite(
             remove_directory=not args.keep_stage,
             dirty=args.dirty,
@@ -259,6 +259,7 @@ def create_reporter(args, specs_to_test, test_suite):
         reporter=args.reporter(),
         filename=filename,
         specs=specs_to_test,
+        raw_logs_directory=test_suite.stage,
     )
     return context_manager
 

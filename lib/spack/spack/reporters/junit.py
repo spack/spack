@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+from typing import List
 
 import spack.tengine
 
@@ -17,7 +18,7 @@ class JUnit(Reporter):
     def concretization_report(self, filename, msg):
         pass
 
-    def build_report(self, filename, specs):
+    def build_report(self, filename: str, specs: List[spack.spec.Spec]):
         if not (os.path.splitext(filename))[1]:
             # Ensure the report name will end with the proper extension;
             # otherwise, it currently defaults to the "directory" name.

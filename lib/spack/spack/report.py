@@ -227,6 +227,8 @@ class collect_info:
         reporter: object that generates the report
         filename: optional filename for the report
         specs: specs that need reporting
+        raw_logs_directory: directory where to find the raw logs for data collection, but
+            only for "test" collection. For "build" Spack knows what to do. See fetch_log.
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
@@ -240,27 +242,26 @@ class collect_info:
         reporter: spack.reporters.Reporter,
         filename: str,
         specs: List[spack.spec.Spec],
+        raw_logs_directory: str,
     ):
-        self.cls = cls
-        self.function = function
-        self.filename = filename
+        self.collector = InfoCollector(cls, function, specs, raw_logs_directory)
         self.reporter = reporter
-        self.specs = specs
+        self.filename = filename
 
-    def __call__(self, report_tag: str, dir=None):
+    def __call__(self, report_tag: str):
         self.report_tag = report_tag
-        self.dir = dir or os.getcwd()
         return self
 
     def concretization_report(self, msg: str):
         self.reporter.concretization_report(self.filename, msg)
 
     def __enter__(self):
-        self.collector = InfoCollector(self.cls, self.function, self.specs, self.dir)
         self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Close the collector and restore the original function
         self.collector.__exit__(exc_type, exc_val, exc_tb)
-        report_fn = getattr(self.reporter, f"{self.report_tag}_report")
-        report_fn(self.filename, self.collector.specs)
+        if self.report_tag == "build":
+            self.reporter.build_report(self.filename, self.collector.specs)
+        elif self.report_tag == "test":
+            self.reporter.test_report(self.filename, self.collector.specs)

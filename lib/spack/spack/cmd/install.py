@@ -509,6 +509,7 @@ def install(parser, args):
             reporter=args.reporter(),
             filename=filename,
             specs=specs,
+            raw_logs_directory=os.getcwd(),
         )
         return context_manager
 
