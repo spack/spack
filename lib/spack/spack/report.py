@@ -19,6 +19,7 @@ import spack.install_test
 import spack.installer
 import spack.package_base
 import spack.reporters
+import spack.spec
 
 
 class InfoCollector:
@@ -35,7 +36,7 @@ class InfoCollector:
     input_specs: List["spack.spec.Spec"]
     specs: List[Dict[str, Any]]
 
-    def __init__(self, wrap_class, do_fn, specs):
+    def __init__(self, wrap_class, do_fn, specs: List[spack.spec.Spec]):
         #: Class for which to wrap a function
         self.wrap_class = wrap_class
         #: Action to be reported on
@@ -165,7 +166,7 @@ class BuildInfoCollector(InfoCollector):
     """Collect information for the PackageInstaller._install_task method.
 
     Args:
-        specs (list of Spec): specs whose install information will be recorded
+        specs (list of spack.spec.Spec): specs whose install information will be recorded
     """
 
     def __init__(self, specs):
@@ -201,7 +202,7 @@ class TestInfoCollector(InfoCollector):
     """Collect information for the PackageBase.do_test method.
 
     Args:
-        specs (list of Spec): specs whose install information will be recorded
+        specs (list of spack.spec.Spec): specs whose install information will be recorded
         record_directory (str): record directory for test log paths
     """
 
