@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations"""
-import codecs
 import collections
 import functools
 import os
@@ -26,7 +25,7 @@ def fetch_log(pkg, do_fn, dir):
         "do_test": os.path.join(dir, spack.install_test.TestSuite.test_log_name(pkg.spec)),
     }
     try:
-        with codecs.open(log_files[do_fn.__name__], "r", "utf-8") as f:
+        with open(log_files[do_fn.__name__], "r", encoding="utf-8") as f:
             return "".join(f.readlines())
     except Exception:
         return "Cannot open log for {0}".format(pkg.spec.cshort_spec)
