@@ -45,15 +45,7 @@ class Libpng(AutotoolsPackage):
             f"LDFLAGS={self.spec['zlib'].libs.search_flags}",
         ]
 
-        if self.spec.satisfies("libs=shared"):
-            args += ["--enable-shared"]
-        else:
-            args += ["--disable-shared"]
-        if self.spec.satisfies("libs=static"):
-            args += ["--enable-static"]
-        else:
-            args += ["--disable-static"]
-
+        args += self.enable_or_disable("libs")
         return args
 
     def check(self):
