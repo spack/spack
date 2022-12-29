@@ -3,36 +3,41 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from llnl.util import tty
 
 from spack.package import *
 
 
 class Aocc(Package):
     """
-    The AOCC compiler system is a high performance,
-    production quality code generation tool.
-    The AOCC environment provides various options to developers when
-    building and optimizing C, C++, and Fortran applications
-    targeting 32-bit and 64-bit Linux platforms.
-    The AOCC compiler system offers a high level of advanced optimizations,
-    multi-threading and processor support that includes global optimization,
-    vectorization, inter-procedural analyses, loop transformations,
-    and code generation.
-    AMD also provides highly optimized libraries,
-    which extract the optimal performance from
-    each x86 processor core when utilized.
-    The AOCC Compiler Suite simplifies and accelerates development and
-    tuning for x86 applications.
-    Please install only if you agree to terms and conditions depicted
-    under : https://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf
+    The AOCC compiler system is a high performance, production quality code
+    generation tool.  The AOCC environment provides various options to developers
+    when building and optimizing C, C++, and Fortran applications targeting 32-bit
+    and 64-bit Linux platforms.  The AOCC compiler system offers a high level of
+    advanced optimizations, multi-threading and processor support that includes
+    global optimization, vectorization, inter-procedural analyses, loop
+    transformations, and code generation.  AMD also provides highly optimized
+    libraries, which extract the optimal performance from each x86 processor core
+    when utilized.  The AOCC Compiler Suite simplifies and accelerates development
+    and tuning for x86 applications.
+
+    Installation requires acceptance of the EULA by setting the +license-agreed variant.
+    https://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf
+
     Example for installation: \'spack install aocc +license-agreed\'
     """
 
+    _name = "aocc"
     family = "compiler"
     homepage = "https://developer.amd.com/amd-aocc/"
 
     maintainers = ["amd-toolchain-support"]
 
+    version(
+        ver="4.0.0",
+        sha256="2729ec524cbc927618e479994330eeb72df5947e90cfcc49434009eee29bf7d4",
+        url="https://developer.amd.com/wordpress/media/files/aocc-compiler-4.0.0.tar",
+    )
     version(
         ver="3.2.0",
         sha256="8493525b3df77f48ee16f3395a68ad4c42e18233a44b4d9282b25dbb95b113ec",
@@ -60,11 +65,7 @@ class Aocc(Package):
     )
 
     # Licensing
-    license_required = True
-    license_comment = "#"
-    license_files = ["AOCC_EULA.pdf"]
     license_url = "https://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf"
-    install_example = "spack install aocc +license-agreed"
 
     depends_on("libxml2")
     depends_on("zlib")
@@ -75,22 +76,32 @@ class Aocc(Package):
     variant(
         "license-agreed",
         default=False,
-        description="Agree to terms and conditions depicted under : {0}".format(license_url),
+        sticky=True,
+        description="Confirm acceptance of the EULA ({0})".format(license_url),
+    )
+
+    conflicts(
+        "~license-agreed",
+        msg=(
+            "Installation of {0} requires acceptance of the EULA (found at {1}). Set the "
+            "+license-agreed variant to confirm acceptance of the EULA"
+        ).format(_name, license_url),
     )
 
     @run_before("install")
-    def abort_without_license_agreed(self):
-        license_url = "https://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf"
-        install_example = "spack install aocc +license-agreed"
-        if not self.spec.variants["license-agreed"].value:
-            raise InstallError(
-                "\n\n\nNOTE:\nUse +license-agreed "
-                + "during installation "
-                + "to accept terms and conditions "
-                + "depicted under following link \n"
-                + " {0}\n".format(license_url)
-                + "Example: '{0}' \n".format(install_example)
+    def license_reminder(self):
+        if "+license-agreed" in self.spec:
+            tty.msg(
+                "Reminder: by setting +license-agreed you are confirming you agree to the terms "
+                "of the {0} EULA (found at {1})".format(self.spec.name, self.license_url)
             )
+        else:
+            # Conflict means we should never get here...
+            msg = (
+                "Installation of {0} requires acceptance of the EULA (found at {1}). Set the "
+                "+license-agreed variant to confirm acceptance of the EULA"
+            ).format(self.spec.name, self.license_url)
+            raise InstallError(msg)
 
     def install(self, spec, prefix):
         print("Installing AOCC Compiler ... ")
