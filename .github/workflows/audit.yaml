@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
-    - uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # @v2
+    - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912 # @v2
       with:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
