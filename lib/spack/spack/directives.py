@@ -361,6 +361,8 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         return
 
     dep_spec = spack.spec.Spec(spec)
+    if not dep_spec.name:
+        raise DependencyError("Invalid dependency specification in package '%s':" % pkg.name, spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
 
@@ -495,6 +497,8 @@ def provides(*specs, **kwargs):
     """
 
     def _execute_provides(pkg):
+        import spack.parser  # Avoid circular dependency
+
         when = kwargs.get("when")
         when_spec = make_when_spec(when)
         if not when_spec:
@@ -505,7 +509,7 @@ def provides(*specs, **kwargs):
         when_spec.name = pkg.name
 
         for string in specs:
-            for provided_spec in spack.spec.parse(string):
+            for provided_spec in spack.parser.parse(string):
                 if pkg.name == provided_spec.name:
                     raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
 
@@ -767,7 +771,11 @@ class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
 
 
-class CircularReferenceError(DirectiveError):
+class DependencyError(DirectiveError):
+    """This is raised when a dependency specification is invalid."""
+
+
+class CircularReferenceError(DependencyError):
     """This is raised when something depends on itself."""
 
 

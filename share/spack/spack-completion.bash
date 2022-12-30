@@ -556,7 +556,7 @@ _spack_buildcache_sync() {
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --mirror-url -k --keys"
+    SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
 }
 
 _spack_cd() {
@@ -1140,7 +1140,7 @@ _spack_gpg_publish() {
 _spack_graph() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --ascii -d --dot -s --static -i --installed --deptype"
+        SPACK_COMPREPLY="-h --help -a --ascii -d --dot -s --static -c --color -i --installed --deptype"
     else
         _all_packages
     fi
@@ -1450,7 +1450,7 @@ _spack_pkg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="add list diff added changed removed source hash"
+        SPACK_COMPREPLY="add list diff added changed removed grep source hash"
     fi
 }
 
@@ -1503,6 +1503,15 @@ _spack_pkg_removed() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_pkg_grep() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="--help"
     else
         SPACK_COMPREPLY=""
     fi

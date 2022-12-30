@@ -193,6 +193,7 @@ class Hdf5(CMakePackage):
     )
 
     depends_on("cmake@3.12:", type="build")
+    depends_on("cmake@3.18:", type="build", when="@1.13:")
 
     depends_on("msmpi", when="+mpi platform=windows")
     depends_on("mpi", when="+mpi")
