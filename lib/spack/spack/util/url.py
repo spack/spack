@@ -15,7 +15,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-from spack.util.path import convert_to_posix_path
+from llnl.util.path import convert_to_posix_path
 
 
 def validate_scheme(scheme):

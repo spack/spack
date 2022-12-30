@@ -28,6 +28,7 @@ from llnl.util.filesystem import (
     partition_path,
     remove_linked_tree,
 )
+from llnl.util.path import sanitize_file_path
 
 import spack.caches
 import spack.config
@@ -378,7 +379,7 @@ class Stage(object):
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
-            clean_url = os.path.basename(sup.sanitize_file_path(self.default_fetcher.url))
+            clean_url = os.path.basename(sanitize_file_path(self.default_fetcher.url))
             fnames.append(clean_url)
 
         if self.mirror_paths:

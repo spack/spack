@@ -15,7 +15,6 @@ import llnl.util.filesystem as fs
 import spack.build_environment
 import spack.builder
 import spack.package_base
-import spack.util.path
 from spack.directives import build_system, depends_on, variant
 from spack.multimethod import when
 

@@ -42,6 +42,7 @@ import spack.repo
 import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
+import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util

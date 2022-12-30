@@ -30,6 +30,7 @@ import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
+import llnl.util.path
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
@@ -563,7 +564,7 @@ class RepoIndex(object):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
-            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = llnl.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers = {}

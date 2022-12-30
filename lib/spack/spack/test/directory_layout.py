@@ -11,6 +11,8 @@ import os.path
 
 import pytest
 
+from llnl.util.path import path_to_os_path
+
 import spack.paths
 import spack.repo
 from spack.directory_layout import (
@@ -18,7 +20,6 @@ from spack.directory_layout import (
     InvalidDirectoryLayoutParametersError,
 )
 from spack.spec import Spec
-from spack.util.path import path_to_os_path
 
 # number of packages to test (to reduce test time)
 max_packages = 10

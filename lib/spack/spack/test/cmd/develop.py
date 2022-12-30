@@ -12,6 +12,7 @@ import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.spec
+import spack.util.path
 from spack.main import SpackCommand
 
 develop = SpackCommand("develop")

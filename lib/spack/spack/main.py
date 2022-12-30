@@ -46,7 +46,6 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.git
-import spack.util.path
 from spack.error import SpackError
 
 #: names of profile statistics

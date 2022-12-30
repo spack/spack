@@ -23,6 +23,7 @@ from urllib.request import HTTPSHandler, Request, build_opener
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, rename, working_dir
+from llnl.util.path import convert_to_posix_path
 
 import spack
 import spack.config
@@ -36,7 +37,6 @@ import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 from spack.util.executable import CommandNotFoundError, which
-from spack.util.path import convert_to_posix_path
 
 
 def _urlopen():

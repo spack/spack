@@ -31,6 +31,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
+import llnl.util.path
 from llnl.util.lang import classproperty, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
@@ -204,9 +205,9 @@ class DetectablePackageMeta(object):
             def platform_executables(cls):
                 def to_windows_exe(exe):
                     if exe.endswith("$"):
-                        exe = exe.replace("$", "%s$" % spack.util.path.win_exe_ext())
+                        exe = exe.replace("$", "%s$" % llnl.util.path.win_exe_ext())
                     else:
-                        exe += spack.util.path.win_exe_ext()
+                        exe += llnl.util.path.win_exe_ext()
                     return exe
 
                 plat_exe = []

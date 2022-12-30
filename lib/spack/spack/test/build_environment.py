@@ -11,6 +11,7 @@ import sys
 import pytest
 
 from llnl.util.filesystem import HeaderList, LibraryList
+from llnl.util.path import Path, convert_to_platform_path
 
 import spack.build_environment
 import spack.config
@@ -25,7 +26,6 @@ from spack.build_environment import (
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-from spack.util.path import Path, convert_to_platform_path
 
 
 def os_pathsep_join(path, *pths):

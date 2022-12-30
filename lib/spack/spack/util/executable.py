@@ -10,9 +10,9 @@ import subprocess
 import sys
 
 import llnl.util.tty as tty
+from llnl.util.path import Path, format_os_path, path_to_os_path, system_path_filter
 
 import spack.error
-from spack.util.path import Path, format_os_path, path_to_os_path, system_path_filter
 
 __all__ = ["Executable", "which", "ProcessError"]
 

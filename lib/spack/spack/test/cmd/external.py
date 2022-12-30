@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+import llnl.util.path
 from llnl.util.filesystem import getuid, touch
 
 import spack
@@ -35,7 +36,7 @@ def _platform_executables(monkeypatch):
     def _win_exe_ext():
         return ".bat"
 
-    monkeypatch.setattr(spack.util.path, "win_exe_ext", _win_exe_ext)
+    monkeypatch.setattr(llnl.util.path, "win_exe_ext", _win_exe_ext)
 
 
 def define_plat_exe(exe):

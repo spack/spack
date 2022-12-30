@@ -64,7 +64,6 @@ import spack.schema.environment
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
-import spack.util.path
 import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError

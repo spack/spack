@@ -18,12 +18,12 @@ import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
+from llnl.util.path import path_to_os_path, system_path_filter
 
 import spack.config
 import spack.platforms
 import spack.spec
 import spack.util.executable as executable
-from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = sys.platform == "win32"
 

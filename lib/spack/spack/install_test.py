@@ -14,6 +14,7 @@ import llnl.util.tty as tty
 import spack.error
 import spack.paths
 import spack.util.prefix
+import spack.util.path
 import spack.util.spack_json as sjson
 from spack.spec import Spec
 
