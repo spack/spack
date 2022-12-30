@@ -30,13 +30,14 @@ class InfoCollector:
     organized as a list where each item represents the installation of one spec.
 
     """
+
     wrap_class: Type
     do_fn: str
     _backup_do_fn: Callable
-    input_specs: List["spack.spec.Spec"]
+    input_specs: List[spack.spec.Spec]
     specs: List[Dict[str, Any]]
 
-    def __init__(self, wrap_class, do_fn, specs: List[spack.spec.Spec]):
+    def __init__(self, wrap_class: Type, do_fn: str, specs: List[spack.spec.Spec]):
         #: Class for which to wrap a function
         self.wrap_class = wrap_class
         #: Action to be reported on
@@ -52,7 +53,7 @@ class InfoCollector:
         """Return the stdout log associated with the function being monitored
 
         Args:
-            pkg (spack.package_base.PackageBase): package under consideration
+            pkg: package under consideration
         """
         raise NotImplementedError("must be implemented by derived classes")
 
@@ -166,10 +167,10 @@ class BuildInfoCollector(InfoCollector):
     """Collect information for the PackageInstaller._install_task method.
 
     Args:
-        specs (list of spack.spec.Spec): specs whose install information will be recorded
+        specs: specs whose install information will be recorded
     """
 
-    def __init__(self, specs):
+    def __init__(self, specs: List[spack.spec.Spec]):
         super().__init__(spack.installer.PackageInstaller, "_install_task", specs)
 
     def init_spec_record(self, input_spec, record):
@@ -202,11 +203,13 @@ class TestInfoCollector(InfoCollector):
     """Collect information for the PackageBase.do_test method.
 
     Args:
-        specs (list of spack.spec.Spec): specs whose install information will be recorded
-        record_directory (str): record directory for test log paths
+        specs: specs whose install information will be recorded
+        record_directory: record directory for test log paths
     """
 
-    def __init__(self, specs, record_directory):
+    dir: str
+
+    def __init__(self, specs: List[spack.spec.Spec], record_directory: str):
         super().__init__(spack.package_base.PackageBase, "do_test", specs)
         self.dir = record_directory
 
@@ -217,7 +220,7 @@ class TestInfoCollector(InfoCollector):
             package_record["result"] = "skipped"
         package_record["result"] = "success"
 
-    def fetch_log(self, pkg):
+    def fetch_log(self, pkg: spack.package_base.PackageBase):
         log_file = os.path.join(self.dir, spack.install_test.TestSuite.test_log_name(pkg.spec))
         try:
             with open(log_file, "r", encoding="utf-8") as stream:
@@ -238,9 +241,9 @@ def build_context_manager(
     """Decorate a package to generate a report after the installation function is executed.
 
     Args:
-        reporter (spack.reporters.Reporter): object that generates the report
-        filename (str):  filename for the report
-        specs (list of spack.spec.Spec): specs that need reporting
+        reporter: object that generates the report
+        filename:  filename for the report
+        specs: specs that need reporting
     """
     collector = BuildInfoCollector(specs)
     try:
@@ -260,10 +263,10 @@ def test_context_manager(
     """Decorate a package to generate a report after the test function is executed.
 
     Args:
-        reporter (spack.reporters.Reporter): object that generates the report
-        filename (str):  filename for the report
-        specs (list of spack.spec.Spec): specs that need reporting
-        raw_logs_dir (str): record directory for test log paths
+        reporter: object that generates the report
+        filename:  filename for the report
+        specs: specs that need reporting
+        raw_logs_dir: record directory for test log paths
     """
     collector = TestInfoCollector(specs, raw_logs_dir)
     try:
