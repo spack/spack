@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.string import plural
+from llnl.util.string import plural
 
 
 def test_plural():

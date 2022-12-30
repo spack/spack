@@ -5,6 +5,7 @@
 import io
 import sys
 
+import llnl.util.string
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
@@ -24,7 +25,7 @@ def report_tags(category, tags):
     if isatty:
         num = len(tags)
         fmt = "{0} package tag".format(category)
-        buffer.write("{0}:\n".format(spack.util.string.plural(num, fmt)))
+        buffer.write("{0}:\n".format(llnl.util.string.plural(num, fmt)))
 
     if tags:
         colify.colify(tags, output=buffer, tty=isatty, indent=4)

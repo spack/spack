@@ -10,10 +10,10 @@ import sys
 import time
 from datetime import datetime
 
+import llnl.util.string
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
 
-import spack.util.string
 
 if sys.platform != "win32":
     import fcntl
@@ -165,7 +165,7 @@ def _attempts_str(wait_time, nattempts):
     if nattempts <= 1:
         return ""
 
-    attempts = spack.util.string.plural(nattempts, "attempt")
+    attempts = llnl.util.string.plural(nattempts, "attempt")
     return " after {} and {}".format(pretty_seconds(wait_time), attempts)
 
 

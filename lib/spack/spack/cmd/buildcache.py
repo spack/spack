@@ -11,6 +11,7 @@ import tempfile
 import urllib.parse
 
 import llnl.util.tty as tty
+from llnl.util.string import plural
 
 import spack.binary_distribution as bindist
 import spack.cmd
@@ -30,7 +31,6 @@ from spack.cmd import display_specs
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
-from spack.util.string import plural
 
 description = "create, download and install binary packages"
 section = "packaging"

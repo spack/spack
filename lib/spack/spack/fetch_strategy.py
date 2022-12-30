@@ -43,6 +43,7 @@ from llnl.util.filesystem import (
     working_dir,
 )
 from llnl.util.symlink import symlink
+from llnl.util.string import comma_and, quote
 
 import spack.config
 import spack.error
@@ -55,7 +56,6 @@ import spack.util.web as web_util
 import spack.version
 from spack.util.compression import decompressor_for, extension_from_path
 from spack.util.executable import CommandNotFoundError, which
-from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []

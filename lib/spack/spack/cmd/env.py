@@ -11,6 +11,7 @@ import sys
 import tempfile
 
 import llnl.util.filesystem as fs
+import llnl.util.string as string
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
@@ -28,7 +29,6 @@ import spack.environment.shell
 import spack.schema.env
 import spack.tengine
 import spack.traverse as traverse
-import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"

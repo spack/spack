@@ -59,6 +59,7 @@ import warnings
 
 import ruamel.yaml as yaml
 
+import llnl.util.string
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -86,7 +87,6 @@ import spack.util.path as pth
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.string
 import spack.variant as vt
 import spack.version as vn
 
@@ -5041,7 +5041,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super(InvalidDependencyError, self).__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, llnl.util.string.comma_or(deps))
         )
 
 

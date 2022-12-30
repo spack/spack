@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# Need this because of spack.util.string
 from __future__ import absolute_import
 
 import io

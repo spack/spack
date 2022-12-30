@@ -15,10 +15,10 @@ import re
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
+from llnl.util.string import comma_or
 
 import spack.directives
 import spack.error as error
-from spack.util.string import comma_or
 
 special_variant_values = [None, "none", "*"]
 
