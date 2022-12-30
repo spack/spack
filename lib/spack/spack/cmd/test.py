@@ -13,8 +13,8 @@ import shutil
 import sys
 import textwrap
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify as colify
+from llnl.util import lang, tty
+from llnl.util.tty import colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -63,12 +63,7 @@ def setup_parser(subparser):
     run_parser.add_argument(
         "--keep-stage", action="store_true", help="Keep testing directory for debugging"
     )
-    run_parser.add_argument(
-        "--log-format",
-        default=None,
-        choices=spack.report.valid_formats,
-        help="format to be used for log files",
-    )
+    arguments.add_common_arguments(run_parser, ["log_format"])
     run_parser.add_argument(
         "--log-file",
         default=None,
@@ -231,10 +226,23 @@ environment variables:
 
     # Set up reporter
     setattr(args, "package", [s.format() for s in test_suite.specs])
-    reporter = spack.report.collect_info(
-        spack.package_base.PackageBase, "do_test", args.log_format, args
-    )
-    if not reporter.filename:
+    reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext()
+
+    with reporter:
+        test_suite(
+            remove_directory=not args.keep_stage,
+            dirty=args.dirty,
+            fail_first=args.fail_first,
+            externals=args.externals,
+        )
+
+
+def create_reporter(args, specs_to_test, test_suite):
+    if args.log_format is None:
+        return None
+
+    filename = args.cdash_upload_url
+    if not filename:
         if args.log_file:
             if os.path.isabs(args.log_file):
                 log_file = args.log_file
@@ -243,16 +251,15 @@ environment variables:
                 log_file = os.path.join(log_dir, args.log_file)
         else:
             log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)
-        reporter.filename = log_file
-    reporter.specs = specs_to_test
+        filename = log_file
 
-    with reporter("test", test_suite.stage):
-        test_suite(
-            remove_directory=not args.keep_stage,
-            dirty=args.dirty,
-            fail_first=args.fail_first,
-            externals=args.externals,
-        )
+    context_manager = spack.report.test_context_manager(
+        reporter=args.reporter(),
+        filename=filename,
+        specs=specs_to_test,
+        raw_logs_dir=test_suite.stage,
+    )
+    return context_manager
 
 
 def test_list(args):

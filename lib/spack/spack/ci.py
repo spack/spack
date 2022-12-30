@@ -39,9 +39,8 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.reporters.cdash import CDash
+from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
-from spack.util.pattern import Bunch
 
 JOB_RETRY_CONDITIONS = [
     "always",
@@ -2358,10 +2357,14 @@ class CDashHandler(object):
             tty.warn(msg)
 
     def report_skipped(self, spec, directory_name, reason):
-        cli_args = self.args()
-        cli_args.extend(["package", [spec.name]])
-        it = iter(cli_args)
-        kv = {x.replace("--", "").replace("-", "_"): next(it) for x in it}
-
-        reporter = CDash(Bunch(**kv))
+        configuration = CDashConfiguration(
+            upload_url=self.upload_url,
+            packages=[spec.name],
+            build=self.build_name,
+            site=self.site,
+            buildstamp=self.build_stamp,
+            track=None,
+            ctest_parsing=False,
+        )
+        reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)

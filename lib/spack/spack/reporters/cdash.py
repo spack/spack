@@ -12,6 +12,7 @@ import re
 import socket
 import time
 import xml.sax.saxutils
+from typing import Dict
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
@@ -24,15 +25,14 @@ import spack.package_base
 import spack.platforms
 import spack.util.git
 from spack.error import SpackError
-from spack.reporter import Reporter
-from spack.reporters.extract import extract_test_parts
 from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
 
-__all__ = ["CDash"]
+from .base import Reporter
+from .extract import extract_test_parts
 
 # Mapping Spack phases to the corresponding CTest/CDash phase.
-map_phases_to_cdash = {
+MAP_PHASES_TO_CDASH = {
     "autoreconf": "configure",
     "cmake": "configure",
     "configure": "configure",
@@ -42,8 +42,14 @@ map_phases_to_cdash = {
 }
 
 # Initialize data structures common to each phase's report.
-cdash_phases = set(map_phases_to_cdash.values())
-cdash_phases.add("update")
+CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
+CDASH_PHASES.add("update")
+
+
+CDashConfiguration = collections.namedtuple(
+    "CDashConfiguration",
+    ["upload_url", "packages", "build", "site", "buildstamp", "track", "ctest_parsing"],
+)
 
 
 def build_stamp(track, timestamp):
@@ -64,13 +70,13 @@ class CDash(Reporter):
     CDash instance hosted at https://mydomain.com/cdash.
     """
 
-    def __init__(self, args):
-        Reporter.__init__(self, args)
+    def __init__(self, configuration: CDashConfiguration):
+        #: Set to False if any error occurs when building the CDash report
         self.success = True
-        # Posixpath is used here to support the underlying template enginge
-        # Jinja2, which expects `/` path separators
-        self.template_dir = posixpath.join("reports", "cdash")
-        self.cdash_upload_url = args.cdash_upload_url
+
+        # Jinja2 expects `/` path separators
+        self.template_dir = "reports/cdash"
+        self.cdash_upload_url = configuration.upload_url
 
         if self.cdash_upload_url:
             self.buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
@@ -81,38 +87,26 @@ class CDash(Reporter):
             tty.verbose("Using CDash auth token from environment")
             self.authtoken = os.environ.get("SPACK_CDASH_AUTH_TOKEN")
 
-        if getattr(args, "spec", ""):
-            packages = args.spec
-        elif getattr(args, "specs", ""):
-            packages = args.specs
-        elif getattr(args, "package", ""):
-            # Ensure CI 'spack test run' can output CDash results
-            packages = args.package
-        else:
-            packages = []
-            for file in args.specfiles:
-                with open(file, "r") as f:
-                    s = spack.spec.Spec.from_yaml(f)
-                    packages.append(s.format())
-        self.install_command = " ".join(packages)
-        self.base_buildname = args.cdash_build or self.install_command
-        self.site = args.cdash_site or socket.gethostname()
+        self.install_command = " ".join(configuration.packages)
+        self.base_buildname = configuration.build or self.install_command
+        self.site = configuration.site or socket.gethostname()
         self.osname = platform.system()
         self.osrelease = platform.release()
         self.target = spack.platforms.host().target("default_target")
         self.endtime = int(time.time())
         self.buildstamp = (
-            args.cdash_buildstamp
-            if args.cdash_buildstamp
-            else build_stamp(args.cdash_track, self.endtime)
+            configuration.buildstamp
+            if configuration.buildstamp
+            else build_stamp(configuration.track, self.endtime)
         )
-        self.buildIds = collections.OrderedDict()
+        self.buildIds: Dict[str, str] = {}
         self.revision = ""
         git = spack.util.git.git()
         with working_dir(spack.paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.main.get_version())
         self.multiple_packages = False
+        self.ctest_parsing = configuration.ctest_parsing
 
     def report_build_name(self, pkg_name):
         return (
@@ -129,7 +123,7 @@ class CDash(Reporter):
         self.current_package_name = package["name"]
         self.buildname = self.report_build_name(self.current_package_name)
         report_data = self.initialize_report(directory_name)
-        for phase in cdash_phases:
+        for phase in CDASH_PHASES:
             report_data[phase] = {}
             report_data[phase]["loglines"] = []
             report_data[phase]["status"] = 0
@@ -149,10 +143,10 @@ class CDash(Reporter):
                 match = self.phase_regexp.search(line)
             if match:
                 current_phase = match.group(1)
-                if current_phase not in map_phases_to_cdash:
+                if current_phase not in MAP_PHASES_TO_CDASH:
                     current_phase = ""
                     continue
-                cdash_phase = map_phases_to_cdash[current_phase]
+                cdash_phase = MAP_PHASES_TO_CDASH[current_phase]
                 if cdash_phase not in phases_encountered:
                     phases_encountered.append(cdash_phase)
                 report_data[cdash_phase]["loglines"].append(
@@ -239,13 +233,13 @@ class CDash(Reporter):
                 f.write(t.render(report_data))
             self.upload(phase_report)
 
-    def build_report(self, directory_name, input_data):
+    def build_report(self, directory_name, specs):
         # Do an initial scan to determine if we are generating reports for more
         # than one package. When we're only reporting on a single package we
         # do not explicitly include the package's name in the CDash build name.
-        self.multipe_packages = False
+        self.multiple_packages = False
         num_packages = 0
-        for spec in input_data["specs"]:
+        for spec in specs:
             # Do not generate reports for packages that were installed
             # from the binary cache.
             spec["packages"] = [
@@ -263,7 +257,7 @@ class CDash(Reporter):
                 break
 
         # Generate reports for each package in each spec.
-        for spec in input_data["specs"]:
+        for spec in specs:
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])
@@ -392,10 +386,10 @@ class CDash(Reporter):
 
         self.report_test_data(directory_name, package, phases, report_data)
 
-    def test_report(self, directory_name, input_data):
+    def test_report(self, directory_name, specs):
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
-        for spec in input_data["specs"]:
+        for spec in specs:
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])
@@ -404,7 +398,7 @@ class CDash(Reporter):
                     directory_name,
                     package,
                     duration,
-                    input_data["ctest-parsing"],
+                    self.ctest_parsing,
                 )
 
         self.finalize_report()
