@@ -41,7 +41,6 @@ class Crtm(CMakePackage):
     depends_on("git-lfs")
     depends_on("netcdf-fortran", when="@2.4.0:")
     depends_on("netcdf-fortran", when="@v2.3-jedi.4")
-    depends_on("netcdf-fortran", when="@v2.4-jedi")
     depends_on("netcdf-fortran", when="@v2.4-jedi.1")
     depends_on("netcdf-fortran", when="@v2.4-jedi.2")
 
@@ -49,7 +48,6 @@ class Crtm(CMakePackage):
     depends_on("crtm-fix@2.4.0_emc", when="@2.4.0 +fix")
 
     depends_on("ecbuild", type=("build"), when="@v2.3-jedi.4")
-    depends_on("ecbuild", type=("build"), when="@v2.4-jedi")
     depends_on("ecbuild", type=("build"), when="@v2.4-jedi.1")
     depends_on("ecbuild", type=("build"), when="@v2.4-jedi.2")
 
@@ -65,6 +63,5 @@ class Crtm(CMakePackage):
     # Branch release/crtm_jedi
     version("v2.3-jedi.4", commit="bfede42")
     # Branch release/crtm_jedi_v2.4.0
-    version("v2.4-jedi", commit="0ee3593")
     version("v2.4-jedi.1", commit="8222341")
     version("v2.4-jedi.2", commit="62831cb")

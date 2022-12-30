@@ -22,7 +22,6 @@ class CrtmFix(Package):
         "climbfuji",
     ]
 
-    version("2.4.0", sha256="7924285b8aa25b0b864643f03e7f281ca1816958e24c76aa9531b3ca902bf6e9")
     version("2.4.0_emc", sha256="88d659ae5bc4434f7fafa232ff65b4c48442d2d1a25f8fc96078094fa572ac1a")
     version("2.3.0_emc", sha256="fde73bb41c3c00666ab0eb8c40895e02d36fa8d7b0896c276375214a1ddaab8f")
 
