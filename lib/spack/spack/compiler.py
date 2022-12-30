@@ -156,14 +156,14 @@ def _parse_link_paths(string):
 
 
 @system_path_filter
-def _parse_non_system_link_dirs(string):
+def _parse_non_system_link_dirs(string: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 
     Args:
-        string (str): compiler debug output as a string
+        string: compiler debug output as a string
 
     Returns:
-        (list of str): implicit link paths parsed from the compiler output
+        Implicit link paths parsed from the compiler output
     """
     link_dirs = _parse_link_paths(string)
 
