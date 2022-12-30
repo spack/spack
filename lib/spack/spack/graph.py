@@ -555,9 +555,9 @@ def static_graph_dot(
     """Static DOT graph with edges to all possible dependencies.
 
     Args:
-        specs (list of spack.spec.Spec): abstract specs to be represented
-        deptype (str or tuple): dependency types to consider
-        out (TextIO or None): optional output stream. If None sys.stdout is used
+        specs: abstract specs to be represented
+        deptype: dependency types to consider
+        out: optional output stream. If None sys.stdout is used
     """
     out = out or sys.stdout
     builder = StaticDag()
@@ -575,10 +575,10 @@ def graph_dot(
     """DOT graph of the concrete specs passed as input.
 
     Args:
-        specs (list of spack.spec.Spec): specs to be represented
-        builder (DotGraphBuilder): builder to use to render the graph
-        deptype (str or tuple): dependency types to consider
-        out (TextIO or None): optional output stream. If None sys.stdout is used
+        specs: specs to be represented
+        builder: builder to use to render the graph
+        deptype: dependency types to consider
+        out: optional output stream. If None sys.stdout is used
     """
     if not specs:
         raise ValueError("Must provide specs to graph_dot")

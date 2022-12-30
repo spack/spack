@@ -213,7 +213,7 @@ def test_fix_style(external_style_root):
 @pytest.mark.skipif(not which("isort"), reason="isort is not installed.")
 @pytest.mark.skipif(not which("mypy"), reason="mypy is not installed.")
 @pytest.mark.skipif(not which("black"), reason="black is not installed.")
-def test_external_root(external_style_root):
+def test_external_root(external_style_root, capfd):
     """Ensure we can run in a separate root directory w/o configuration files."""
     tmpdir, py_file = external_style_root
 

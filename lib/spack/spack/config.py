@@ -36,7 +36,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import List
+from typing import Dict, List, Optional
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -391,41 +391,44 @@ class Configuration(object):
     This class makes it easy to add a new scope on top of an existing one.
     """
 
-    def __init__(self, *scopes):
+    # convert to typing.OrderedDict when we drop 3.6, or OrderedDict when we reach 3.9
+    scopes: Dict[str, ConfigScope]
+
+    def __init__(self, *scopes: ConfigScope):
         """Initialize a configuration with an initial list of scopes.
 
         Args:
-            scopes (list of ConfigScope): list of scopes to add to this
+            scopes: list of scopes to add to this
                 Configuration, ordered from lowest to highest precedence
 
         """
         self.scopes = collections.OrderedDict()
         for scope in scopes:
             self.push_scope(scope)
-        self.format_updates = collections.defaultdict(list)
+        self.format_updates: Dict[str, List[str]] = collections.defaultdict(list)
 
     @_config_mutator
-    def push_scope(self, scope):
+    def push_scope(self, scope: ConfigScope):
         """Add a higher precedence scope to the Configuration."""
         tty.debug("[CONFIGURATION: PUSH SCOPE]: {}".format(str(scope)), level=2)
         self.scopes[scope.name] = scope
 
     @_config_mutator
-    def pop_scope(self):
+    def pop_scope(self) -> ConfigScope:
         """Remove the highest precedence scope and return it."""
-        name, scope = self.scopes.popitem(last=True)
+        name, scope = self.scopes.popitem(last=True)  # type: ignore[call-arg]
         tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
         return scope
 
     @_config_mutator
-    def remove_scope(self, scope_name):
+    def remove_scope(self, scope_name: str) -> Optional[ConfigScope]:
         """Remove scope by name; has no effect when ``scope_name`` does not exist"""
         scope = self.scopes.pop(scope_name, None)
         tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
         return scope
 
     @property
-    def file_scopes(self):
+    def file_scopes(self) -> List[ConfigScope]:
         """List of writable scopes with an associated file."""
         return [
             s
@@ -433,21 +436,21 @@ class Configuration(object):
             if (type(s) == ConfigScope or type(s) == SingleFileScope)
         ]
 
-    def highest_precedence_scope(self):
+    def highest_precedence_scope(self) -> ConfigScope:
         """Non-internal scope with highest precedence."""
-        return next(reversed(self.file_scopes), None)
+        return next(reversed(self.file_scopes))
 
-    def highest_precedence_non_platform_scope(self):
+    def highest_precedence_non_platform_scope(self) -> ConfigScope:
         """Non-internal non-platform scope with highest precedence
 
         Platform-specific scopes are of the form scope/platform"""
         generator = reversed(self.file_scopes)
-        highest = next(generator, None)
+        highest = next(generator)
         while highest and highest.is_platform_dependent:
-            highest = next(generator, None)
+            highest = next(generator)
         return highest
 
-    def matching_scopes(self, reg_expr):
+    def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
         List of all scopes whose names match the provided regular expression.
 
@@ -456,7 +459,7 @@ class Configuration(object):
         """
         return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
-    def _validate_scope(self, scope):
+    def _validate_scope(self, scope: Optional[str]) -> ConfigScope:
         """Ensure that scope is valid in this configuration.
 
         This should be used by routines in ``config.py`` to validate
@@ -481,7 +484,7 @@ class Configuration(object):
                 "Invalid config scope: '%s'.  Must be one of %s" % (scope, self.scopes.keys())
             )
 
-    def get_config_filename(self, scope, section):
+    def get_config_filename(self, scope, section) -> str:
         """For some scope and section, get the name of the configuration file."""
         scope = self._validate_scope(scope)
         return scope.get_section_filename(section)
@@ -495,7 +498,9 @@ class Configuration(object):
             scope.clear()
 
     @_config_mutator
-    def update_config(self, section, update_data, scope=None, force=False):
+    def update_config(
+        self, section: str, update_data: Dict, scope: Optional[str] = None, force: bool = False
+    ):
         """Update the configuration file for a particular scope.
 
         Overwrites contents of a section in a scope with update_data,
@@ -1315,14 +1320,15 @@ def raw_github_gitlab_url(url):
     return url
 
 
-def collect_urls(base_url):
+def collect_urls(base_url: str) -> list:
     """Return a list of configuration URLs.
 
     Arguments:
-        base_url (str): URL for a configuration (yaml) file or a directory
+        base_url: URL for a configuration (yaml) file or a directory
             containing yaml file(s)
 
-    Returns: (list) list of configuration file(s) or empty list if none
+    Returns:
+        List of configuration file(s) or empty list if none
     """
     if not base_url:
         return []
@@ -1337,20 +1343,21 @@ def collect_urls(base_url):
     return [link for link in links if link.endswith(extension)]
 
 
-def fetch_remote_configs(url, dest_dir, skip_existing=True):
+def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) -> str:
     """Retrieve configuration file(s) at the specified URL.
 
     Arguments:
-        url (str): URL for a configuration (yaml) file or a directory containing
+        url: URL for a configuration (yaml) file or a directory containing
             yaml file(s)
-        dest_dir (str): destination directory
-        skip_existing (bool): Skip files that already exist in dest_dir if
+        dest_dir: destination directory
+        skip_existing: Skip files that already exist in dest_dir if
             ``True``; otherwise, replace those files
 
-    Returns: (str) path to the corresponding file if URL is or contains a
-       single file and it is the only file in the destination directory or
-       the root (dest_dir) directory if multiple configuration files exist
-       or are retrieved.
+    Returns:
+        Path to the corresponding file if URL is or contains a
+        single file and it is the only file in the destination directory or
+        the root (dest_dir) directory if multiple configuration files exist
+        or are retrieved.
     """
 
     def _fetch_file(url):

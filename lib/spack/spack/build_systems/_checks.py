@@ -3,23 +3,25 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+from typing import List
 
 import llnl.util.lang
 
 import spack.builder
 import spack.installer
 import spack.relocate
+import spack.spec
 import spack.store
 
 
-def sanity_check_prefix(builder):
+def sanity_check_prefix(builder: spack.builder.Builder):
     """Check that specific directories and files are created after installation.
 
     The files to be checked are in the ``sanity_check_is_file`` attribute of the
     package object, while the directories are in the ``sanity_check_is_dir``.
 
     Args:
-        builder (spack.builder.Builder): builder that installed the package
+        builder: builder that installed the package
     """
     pkg = builder.pkg
 
@@ -43,7 +45,7 @@ def sanity_check_prefix(builder):
         raise spack.installer.InstallError(msg.format(pkg.name))
 
 
-def apply_macos_rpath_fixups(builder):
+def apply_macos_rpath_fixups(builder: spack.builder.Builder):
     """On Darwin, make installed libraries more easily relocatable.
 
     Some build systems (handrolled, autotools, makefiles) can set their own
@@ -55,20 +57,22 @@ def apply_macos_rpath_fixups(builder):
     packages) that do not install relocatable libraries by default.
 
     Args:
-        builder (spack.builder.Builder): builder that installed the package
+        builder: builder that installed the package
     """
     spack.relocate.fixup_macos_rpaths(builder.spec)
 
 
-def ensure_build_dependencies_or_raise(spec, dependencies, error_msg):
+def ensure_build_dependencies_or_raise(
+    spec: spack.spec.Spec, dependencies: List[spack.spec.Spec], error_msg: str
+):
     """Ensure that some build dependencies are present in the concrete spec.
 
     If not, raise a RuntimeError with a helpful error message.
 
     Args:
-        spec (spack.spec.Spec): concrete spec to be checked.
-        dependencies (list of spack.spec.Spec): list of abstract specs to be satisfied
-        error_msg (str): brief error message to be prepended to a longer description
+        spec: concrete spec to be checked.
+        dependencies: list of abstract specs to be satisfied
+        error_msg: brief error message to be prepended to a longer description
 
     Raises:
           RuntimeError: when the required build dependencies are not found
@@ -83,7 +87,9 @@ def ensure_build_dependencies_or_raise(spec, dependencies, error_msg):
     # Raise an exception on missing deps.
     msg = (
         "{0}: missing dependencies: {1}.\n\nPlease add "
-        "the following lines to the package:\n\n".format(error_msg, ", ".join(missing_deps))
+        "the following lines to the package:\n\n".format(
+            error_msg, ", ".join(str(d) for d in missing_deps)
+        )
     )
 
     for dep in missing_deps:
@@ -95,21 +101,21 @@ def ensure_build_dependencies_or_raise(spec, dependencies, error_msg):
     raise RuntimeError(msg)
 
 
-def execute_build_time_tests(builder):
+def execute_build_time_tests(builder: spack.builder.Builder):
     """Execute the build-time tests prescribed by builder.
 
     Args:
-        builder (Builder): builder prescribing the test callbacks. The name of the callbacks is
+        builder: builder prescribing the test callbacks. The name of the callbacks is
             stored as a list of strings in the ``build_time_test_callbacks`` attribute.
     """
     builder.pkg.run_test_callbacks(builder, builder.build_time_test_callbacks, "build")
 
 
-def execute_install_time_tests(builder):
+def execute_install_time_tests(builder: spack.builder.Builder):
     """Execute the install-time tests prescribed by builder.
 
     Args:
-        builder (Builder): builder prescribing the test callbacks. The name of the callbacks is
+        builder: builder prescribing the test callbacks. The name of the callbacks is
             stored as a list of strings in the ``install_time_test_callbacks`` attribute.
     """
     builder.pkg.run_test_callbacks(builder, builder.install_time_test_callbacks, "install")

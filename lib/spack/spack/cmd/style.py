@@ -48,6 +48,13 @@ tool_names = [
 #: tools we run in spack style
 tools = {}
 
+#: warnings to ignore in mypy
+mypy_ignores = [
+    # same as `disable_error_code = "annotation-unchecked"` in pyproject.toml, which
+    # doesn't exist in mypy 0.971 for Python 3.6
+    "[annotation-unchecked]",
+]
+
 
 def is_package(f):
     """Whether flake8 should consider a file as a core file or a package.
@@ -210,6 +217,10 @@ def rewrite_and_print_output(
 
     for line in output.split("\n"):
         if not line:
+            continue
+        if any(ignore in line for ignore in mypy_ignores):
+            # some mypy annotations can't be disabled in older mypys (e.g. .971, which
+            # is the only mypy that supports python 3.6), so we filter them here.
             continue
         if not args.root_relative and re_obj:
             line = re_obj.sub(translate, line)

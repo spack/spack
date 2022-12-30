@@ -3,12 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations"""
+import argparse
 import codecs
 import collections
 import functools
 import os
 import time
 import traceback
+from typing import Any, Callable, Dict, List, Type
 
 import llnl.util.lang
 
@@ -51,12 +53,16 @@ class InfoCollector(object):
     attribute once exited, and it's organized as a list where
     each item represents the installation of one of the spec.
 
-    Args:
-        specs (list of Spec): specs whose install information will
-           be recorded
     """
 
-    def __init__(self, wrap_class, do_fn, specs, dir):
+    wrap_class: Type
+    do_fn: str
+    _backup_do_fn: Callable
+    input_specs: List["spack.spec.Spec"]
+    specs: List[Dict[str, Any]]
+    dir: str
+
+    def __init__(self, wrap_class: Type, do_fn: str, specs: List["spack.spec.Spec"], dir: str):
         #: Class for which to wrap a function
         self.wrap_class = wrap_class
         #: Action to be reported on
@@ -234,14 +240,14 @@ class collect_info(object):
     Args:
         class: class on which to wrap a function
         function: function to wrap
-        format_name (str or None): one of the supported formats
-        args (dict): args passed to function
+        format_name: one of the supported formats
+        args: args passed to function
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
 
-    def __init__(self, cls, function, format_name, args):
+    def __init__(self, cls: Type, function: str, format_name: str, args: argparse.Namespace):
         self.cls = cls
         self.function = function
         self.filename = None

@@ -24,7 +24,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Dict
+from typing import Dict, Union
 
 import ruamel.yaml as yaml
 
@@ -1284,6 +1284,9 @@ class Repo(object):
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
+
+
+RepoType = Union[Repo, RepoPath]
 
 
 def create_repo(root, namespace=None):
