@@ -339,6 +339,55 @@ class DocbookXml(Package):
             catalog,
         )
 
+        # map all versions to current version
+        dtversions = [
+            "4.2",
+            "4.3",
+            "4.4",
+            "4.5",
+        ]
+        for dtversion in dtversions:
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "public",
+                "-//OASIS//DTD DocBook XML V{0}//EN".format(dtversion),
+                "http://www.oasis-open.org/docbook/xml/{0}/docbookx.dtd".format(dtversion),
+                docbook,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "rewriteSystem",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(prefix),
+                docbook,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "rewriteURI",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(prefix),
+                docbook,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "delegateSystem",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(docbook),
+                catalog,
+            )
+            xmlcatalog(
+                "--noout",
+                "--add",
+                "delegateURI",
+                "http://www.oasis-open.org/docbook/xml/{0}".format(dtversion),
+                "file://{0}".format(docbook),
+                catalog,
+            )
+
     def setup_run_environment(self, env):
         catalog = self.catalog
         env.prepend_path("XML_CATALOG_FILES", catalog, separator=" ")
