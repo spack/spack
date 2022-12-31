@@ -217,19 +217,19 @@ class Hdf5(CMakePackage):
         "api=v116",
         when="@develop-1.8:develop-1.14",
         msg="v116 is not compatible with this release",
-        )
+    )
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
     conflicts(
         "api=v114",
         when="@develop-1.8:develop-1.12",
         msg="v114 is not compatible with this release",
-        )
+    )
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
     conflicts(
         "api=v112",
         when="@develop-1.8:develop-1.10",
         msg="v112 is not compatible with this release",
-        )
+    )
     conflicts("api=v110", when="@1.6:1.8", msg="v110 is not compatible with this release")
     conflicts("api=v110", when="@develop-1.8", msg="v110 is not compatible with this release")
     conflicts("api=v18", when="@1.6", msg="v18 is not compatible with this release")
