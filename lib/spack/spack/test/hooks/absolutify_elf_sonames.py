@@ -9,13 +9,13 @@ import os
 import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util.executable import Executable
 
 import spack.platforms
 from spack.hooks.absolutify_elf_sonames import (
     SharedLibrariesVisitor,
     find_and_patch_sonames,
 )
-from spack.util.executable import Executable
 
 
 def skip_unless_linux(f):

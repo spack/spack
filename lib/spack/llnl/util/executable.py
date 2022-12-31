@@ -8,12 +8,10 @@ import re
 import shlex
 import subprocess
 import sys
+from typing import List, Optional, Union
 
-import llnl.util.envmod as envmod
 import llnl.util.tty as tty
 from llnl.util.path import Path, format_os_path, path_to_os_path, system_path_filter
-
-import spack.error
 
 __all__ = ["Executable", "which", "ProcessError"]
 
@@ -28,12 +26,20 @@ class Executable(object):
         # filter back to platform dependent path
         self.exe = path_to_os_path(*self.exe)
         self.default_env = {}
-
-        self.default_envmod = envmod.EnvironmentModifications()
+        self._default_envmod = None
         self.returncode = None
 
         if not self.exe:
-            raise ProcessError("Cannot construct executable for '%s'" % name)
+            raise ProcessError(f"Cannot construct executable for '{name}'")
+
+    @property
+    def default_envmod(self):
+        from llnl.util.envmod import EnvironmentModifications
+
+        if self._default_envmod is None:
+            self._default_envmod = EnvironmentModifications()
+
+        return self._default_envmod
 
     @system_path_filter
     def add_default_arg(self, arg):
@@ -122,6 +128,8 @@ class Executable(object):
         By default, the subprocess inherits the parent's file descriptors.
 
         """
+        from llnl.util.envmod import EnvironmentModifications
+
         # Environment
         env_arg = kwargs.get("env", None)
 
@@ -131,14 +139,14 @@ class Executable(object):
         env.update(self.default_env)
 
         # Apply env argument
-        if isinstance(env_arg, envmod.EnvironmentModifications):
+        if isinstance(env_arg, EnvironmentModifications):
             env_arg.apply_modifications(env)
         elif env_arg:
             env.update(env_arg)
 
         # Apply extra env
         extra_env = kwargs.get("extra_env", {})
-        if isinstance(extra_env, envmod.EnvironmentModifications):
+        if isinstance(extra_env, EnvironmentModifications):
             extra_env.apply_modifications(env)
         else:
             env.update(extra_env)
@@ -225,27 +233,26 @@ class Executable(object):
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                long_msg = cmd_line_string
+                msg = f"Command {cmd_line_string} exited with status {proc.returncode}."
                 if result:
                     # If the output is not captured in the result, it will have
                     # been stored either in the specified files (e.g. if
                     # 'output' specifies a file) or written to the parent's
                     # stdout/stderr (e.g. if 'output' is not specified)
-                    long_msg += "\n" + result
+                    msg += "\n" + result
 
-                raise ProcessError("Command exited with status %d:" % proc.returncode, long_msg)
+                raise ProcessError(msg)
 
             return result
 
         except OSError as e:
-            raise ProcessError("%s: %s" % (self.exe[0], e.strerror), "Command: " + cmd_line_string)
+            raise ProcessError(f"{self.exe[0]}: {e.strerror}\n    Command: '{cmd_line_string}'")
 
         except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
-                    str(e),
-                    "\nExit status %d when invoking command: %s"
-                    % (proc.returncode, cmd_line_string),
+                    f"{str(e)}\n"
+                    f"    Exit status {proc.returncode} when invoking command: '{cmd_line_string}'"
                 )
 
         finally:
@@ -273,16 +280,31 @@ class Executable(object):
 
 
 @system_path_filter
-def which_string(*args, **kwargs):
-    """Like ``which()``, but return a string instead of an ``Executable``."""
-    path = kwargs.get("path", os.environ.get("PATH", ""))
-    required = kwargs.get("required", False)
+def which_string(*args: str, path: Optional[Union[List[str], str]] = None, required: bool = False):
+    """Finds an executable in the path like command-line which.
+
+    If given multiple executables, returns the first one that is found.
+    If no executables are found, returns None.
+
+    Parameters:
+        *args: One or more executables to search for
+
+    Keyword Arguments:
+        path: colon-separated (semicolon-separated on windows) string or list of
+            paths to search. Defaults to ``os.environ["PATH"]``
+        required: If set to ``True``, raise an error if executable not found
+
+    Returns:
+        Absolute path of the first executable found.
+    """
+    if path is None:
+        path = os.environ.get("PATH") or ""
 
     if isinstance(path, str):
         path = path.split(os.pathsep)
 
     for name in args:
-        win_candidates = []
+        win_candidates: List[str] = []
         if sys.platform == "win32" and (not name.endswith(".exe") and not name.endswith(".bat")):
             win_candidates = [name + ext for ext in [".exe", ".bat"]]
         candidate_names = [name] if not win_candidates else win_candidates
@@ -307,19 +329,19 @@ def which_string(*args, **kwargs):
                         return exe
 
     if required:
-        raise CommandNotFoundError("spack requires '%s'. Make sure it is in your path." % args[0])
+        raise CommandNotFoundError(args[0])
 
     return None
 
 
-def which(*args, **kwargs):
+def which(*args: str, path: Optional[Union[List[str], str]] = None, required: bool = False):
     """Finds an executable in the path like command-line which.
 
     If given multiple executables, returns the first one that is found.
     If no executables are found, returns None.
 
     Parameters:
-        *args (str): One or more executables to search for
+        *args: One or more executables to search for
 
     Keyword Arguments:
         path (list or str): The path to search. Defaults to ``PATH``
@@ -328,13 +350,17 @@ def which(*args, **kwargs):
     Returns:
         Executable: The first executable that is found in the path
     """
-    exe = which_string(*args, **kwargs)
+    exe = which_string(*args, path=path, required=required)
     return Executable(shlex.quote(exe)) if exe else None
 
 
-class ProcessError(spack.error.SpackError):
+class ProcessError(Exception):
     """ProcessErrors are raised when Executables exit with an error code."""
 
 
-class CommandNotFoundError(spack.error.SpackError):
+class CommandNotFoundError(Exception):
     """Raised when ``which()`` can't find a required executable."""
+
+    def __init__(self, command: str):
+        super().__init__(f"Couldn't find command '{command}'. Make sure it is in your path.")
+        self.command = command

@@ -14,6 +14,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
+from llnl.util.executable import Executable
 
 import spack.cmd.env
 import spack.config
@@ -28,7 +29,6 @@ from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
-from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
 from spack.version import Version
 

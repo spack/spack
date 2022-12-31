@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from llnl.util.executable import Executable
+
 from spack.package import *
-from spack.util.executable import Executable
 
 
 class MpasModel(MakefilePackage):

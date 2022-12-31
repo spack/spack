@@ -11,6 +11,7 @@ from typing import List
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.executable import Executable
 
 import spack.build_environment
 import spack.builder
@@ -18,7 +19,6 @@ import spack.package_base
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
 from spack.operating_systems.mac_os import macos_version
-from spack.util.executable import Executable
 from spack.version import Version
 
 from ._checks import (

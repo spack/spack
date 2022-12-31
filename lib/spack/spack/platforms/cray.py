@@ -10,13 +10,13 @@ import re
 import archspec.cpu
 
 import llnl.util.tty as tty
+from llnl.util.executable import Executable
 
 import spack.target
 import spack.version
 from spack.operating_systems.cray_backend import CrayBackend
 from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.paths import build_env_path
-from spack.util.executable import Executable
 from spack.util.module_cmd import module
 
 from ._platform import NoPlatformError, Platform

@@ -2,11 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import llnl.util.executable
 import llnl.util.filesystem as fs
 
 import spack.directives
 import spack.package_base
-import spack.util.executable
 
 from .autotools import AutotoolsBuilder, AutotoolsPackage
 
@@ -22,7 +22,7 @@ class AspellBuilder(AutotoolsBuilder):
         prezip = spec["aspell"].prefix.bin.prezip
         destdir = prefix
 
-        sh = spack.util.executable.which("sh")
+        sh = llnl.util.executable.which("sh")
         sh(
             "./configure",
             "--vars",

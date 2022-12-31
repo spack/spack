@@ -9,18 +9,18 @@ import sys
 
 import pytest
 
+import llnl.util.executable
 import llnl.util.tty as tty
+from llnl.util.executable import which
 from llnl.util.filesystem import is_exe, working_dir
 
 import spack.config
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.util.crypto as crypto
-import spack.util.executable
 import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 from spack.version import ver
 
 
@@ -331,10 +331,10 @@ def test_missing_curl(tmpdir, monkeypatch):
 
     def _which(*args, **kwargs):
         err_msg = err_fmt.format(args[0])
-        raise spack.util.executable.CommandNotFoundError(err_msg)
+        raise llnl.util.executable.CommandNotFoundError(err_msg)
 
     # Patching the 'which' symbol imported by fetch_strategy needed due
-    # to 'from spack.util.executable import which' in this module.
+    # to 'from llnl.util.executable import which' in this module.
     monkeypatch.setattr(fs, "which", _which)
 
     testpath = str(tmpdir)
@@ -359,10 +359,10 @@ def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
 
     def _which(*args, **kwargs):
         err_msg = err_fmt.format(args[0])
-        raise spack.util.executable.CommandNotFoundError(err_msg)
+        raise llnl.util.executable.CommandNotFoundError(err_msg)
 
     # Patching the 'which' symbol imported by spack.util.web needed due
-    # to 'from spack.util.executable import which' in this module.
+    # to 'from llnl.util.executable import which' in this module.
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):
@@ -387,10 +387,10 @@ def test_url_missing_curl(tmpdir, monkeypatch):
 
     def _which(*args, **kwargs):
         err_msg = err_fmt.format(args[0])
-        raise spack.util.executable.CommandNotFoundError(err_msg)
+        raise llnl.util.executable.CommandNotFoundError(err_msg)
 
     # Patching the 'which' symbol imported by spack.util.web needed due
-    # to 'from spack.util.executable import which' in this module.
+    # to 'from llnl.util.executable import which' in this module.
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):

@@ -8,9 +8,10 @@ import functools
 import os
 import re
 
+import llnl.util.executable
+
 import spack.error
 import spack.paths
-import spack.util.executable
 import spack.version
 
 #: Executable instance for "gpg", initialized lazily
@@ -343,13 +344,13 @@ def _verify_exe_or_raise(exe):
 
 
 def _gpgconf():
-    exe = spack.util.executable.which("gpgconf", "gpg2conf", "gpgconf2")
+    exe = llnl.util.executable.which("gpgconf", "gpg2conf", "gpgconf2")
     _verify_exe_or_raise(exe)
 
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
     try:
         exe("--dry-run", "--create-socketdir", output=os.devnull, error=os.devnull)
-    except spack.util.executable.ProcessError:
+    except llnl.util.executable.ProcessError:
         # no dice
         exe = None
 
@@ -357,7 +358,7 @@ def _gpgconf():
 
 
 def _gpg():
-    exe = spack.util.executable.which("gpg2", "gpg")
+    exe = llnl.util.executable.which("gpg2", "gpg")
     _verify_exe_or_raise(exe)
     return exe
 

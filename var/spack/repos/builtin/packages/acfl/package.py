@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
+import spack.platforms
 from spack.package import *
 
 _os_map = {
@@ -176,7 +177,7 @@ class Acfl(Package):
                 if match.group(1).count(".") == 1:
                     return match.group(1) + ".0." + match.group(2)
                 return match.group(1) + "." + match.group(2)
-        except spack.util.executable.ProcessError:
+        except llnl.util.executable.ProcessError:
             pass
         except Exception as e:
             tty.debug(e)

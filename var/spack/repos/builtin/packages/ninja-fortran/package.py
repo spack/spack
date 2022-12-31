@@ -3,9 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from llnl.util.executable import which_string
+
 from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
-from spack.util.executable import which_string
+
+import spack  # noqa
 
 
 class NinjaFortran(Package):

@@ -6,9 +6,9 @@
 import os
 
 import llnl.util.tty as tty
+from llnl.util.envmod import EnvironmentModifications
 
 from spack.package import *
-from llnl.util.envmod import EnvironmentModifications
 
 
 class Heasoft(AutotoolsPackage):

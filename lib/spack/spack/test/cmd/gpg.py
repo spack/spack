@@ -9,13 +9,12 @@ import sys
 import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util.executable import ProcessError
 
 import spack.bootstrap
-import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand
 from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
-from spack.util.executable import ProcessError
 
 #: spack command used by tests below
 gpg = SpackCommand("gpg")

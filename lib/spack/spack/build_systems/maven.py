@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import llnl.util.filesystem as fs
+from llnl.util.executable import which
 
 import spack.builder
 import spack.package_base
 from spack.directives import build_system, depends_on
 from spack.multimethod import when
-from spack.util.executable import which
 
 from ._checks import BaseBuilder
 

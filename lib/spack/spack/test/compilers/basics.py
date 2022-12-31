@@ -12,12 +12,12 @@ import pytest
 
 import llnl.util.envmod
 import llnl.util.filesystem as fs
+from llnl.util.executable import ProcessError
 
 import spack.compiler
 import spack.compilers as compilers
 import spack.spec
 from spack.compiler import Compiler
-from spack.util.executable import ProcessError
 
 
 @pytest.fixture()
@@ -215,7 +215,7 @@ def call_compiler(exe, *args, **kwargs):
 def test_get_compiler_link_paths(monkeypatch, exe, flagname):
     # create fake compiler that emits mock verbose output
     compiler = MockCompiler()
-    monkeypatch.setattr(spack.util.executable.Executable, "__call__", call_compiler)
+    monkeypatch.setattr(llnl.util.executable.Executable, "__call__", call_compiler)
 
     # Grab executable path to test
     paths = [getattr(compiler, exe)]
@@ -798,7 +798,7 @@ fi
     def _call(*args, **kwargs):
         raise ProcessError("Failed intentionally")
 
-    monkeypatch.setattr(spack.util.executable.Executable, "__call__", _call)
+    monkeypatch.setattr(llnl.util.executable.Executable, "__call__", _call)
 
     # Run and no change to environment
     compilers = spack.compilers.get_compilers([compiler_dict])

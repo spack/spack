@@ -292,7 +292,7 @@ class Phist(CMakePackage):
                 tty.warn("========================== %s =======================" % hint)
                 try:
                     make("check")
-                except spack.util.executable.ProcessError:
+                except llnl.util.executable.ProcessError:
                     raise InstallError("run-test of phist ^mpich: Hint: " + hint)
             else:
                 make("check")

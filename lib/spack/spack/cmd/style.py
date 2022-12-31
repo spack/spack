@@ -10,11 +10,11 @@ from itertools import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
+from llnl.util.executable import which
 from llnl.util.filesystem import working_dir
 
 import spack.paths
 import spack.util.git
-from spack.util.executable import which
 
 description = "runs source code style checks on spack"
 section = "developer"

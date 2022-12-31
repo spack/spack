@@ -33,6 +33,7 @@ import llnl.util.envmod
 import llnl.util.filesystem as fsys
 import llnl.util.path
 import llnl.util.tty as tty
+from llnl.util.executable import ProcessError, which
 from llnl.util.lang import classproperty, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
@@ -59,7 +60,6 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
 from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
-from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
 from spack.util.web import FetchError
@@ -1994,7 +1994,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 for line in out:
                     print(line.rstrip("\n"))
 
-                if exc_type is spack.util.executable.ProcessError:
+                if exc_type is llnl.util.executable.ProcessError:
                     out = io.StringIO()
                     spack.build_environment.write_log_summary(
                         out, "test", self.test_log_file, last=1

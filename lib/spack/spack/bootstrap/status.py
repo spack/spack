@@ -5,7 +5,7 @@
 """Query the status of bootstrapping on this machine"""
 import platform
 
-import spack.util.executable
+import llnl.util.executable
 
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
@@ -24,7 +24,7 @@ def _required_system_executable(exes, msg):
     """Search for an executable is the system path only."""
     if isinstance(exes, str):
         exes = (exes,)
-    if spack.util.executable.which_string(*exes):
+    if llnl.util.executable.which_string(*exes):
         return True, None
     return False, msg
 
@@ -33,7 +33,7 @@ def _required_executable(exes, query_spec, msg):
     """Search for an executable in the system path or in the bootstrap store."""
     if isinstance(exes, str):
         exes = (exes,)
-    if spack.util.executable.which_string(*exes) or _executables_in_store(exes, query_spec):
+    if llnl.util.executable.which_string(*exes) or _executables_in_store(exes, query_spec):
         return True, None
     return False, msg
 

@@ -7,10 +7,10 @@ import os.path
 import re
 import sys
 
+import llnl.util.executable
 import llnl.util.tty as tty
 
 import spack.build_environment
-import spack.util.executable
 from spack.package import *
 
 
@@ -399,7 +399,7 @@ class Llvm(CMakePackage, CudaPackage):
             match = version_regex.search(output)
             if match:
                 return match.group(match.lastindex)
-        except spack.util.executable.ProcessError:
+        except llnl.util.executable.ProcessError:
             pass
         except Exception as e:
             tty.debug(e)

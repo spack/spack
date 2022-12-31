@@ -23,7 +23,6 @@ import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.package_base
-import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.parser import SpecSyntaxError

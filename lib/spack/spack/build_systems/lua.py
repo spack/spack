@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import llnl.util.executable
 from llnl.util.filesystem import find
 
 import spack.builder
 import spack.package_base
-import spack.util.executable
 from spack.directives import build_system, depends_on, extends
 from spack.multimethod import when
 
@@ -41,11 +41,11 @@ class LuaPackage(spack.package_base.PackageBase):
 
     @property
     def lua(self):
-        return spack.util.executable.Executable(self.spec["lua-lang"].prefix.bin.lua)
+        return llnl.util.executable.Executable(self.spec["lua-lang"].prefix.bin.lua)
 
     @property
     def luarocks(self):
-        lr = spack.util.executable.Executable(self.spec["lua-lang"].prefix.bin.luarocks)
+        lr = llnl.util.executable.Executable(self.spec["lua-lang"].prefix.bin.luarocks)
         return lr
 
 

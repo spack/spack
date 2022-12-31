@@ -14,6 +14,7 @@ import tempfile
 from typing import List, Optional, Sequence
 
 import llnl.util.envmod as envmod
+import llnl.util.executable
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
@@ -22,7 +23,6 @@ from llnl.util.path import system_path_filter
 import spack.compilers
 import spack.error
 import spack.spec
-import spack.util.executable
 import spack.util.module_cmd
 import spack.version
 
@@ -40,7 +40,7 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         compiler_path (path): path of the compiler to be invoked
         version_arg (str): the argument used to extract version information
     """
-    compiler = spack.util.executable.Executable(compiler_path)
+    compiler = llnl.util.executable.Executable(compiler_path)
     if version_arg:
         output = compiler(version_arg, output=str, error=str, ignore_errors=ignore_errors)
     else:
@@ -54,7 +54,7 @@ def get_compiler_version_output(compiler_path, *args, **kwargs):
     # not just executable name. If we don't do this, and the path changes
     # (e.g., during testing), we can get incorrect results.
     if not os.path.isabs(compiler_path):
-        compiler_path = spack.util.executable.which_string(compiler_path, required=True)
+        compiler_path = llnl.util.executable.which_string(compiler_path, required=True)
 
     return _get_compiler_version_output(compiler_path, *args, **kwargs)
 
@@ -339,7 +339,7 @@ class Compiler(object):
         def accessible_exe(exe):
             # compilers may contain executable names (on Cray or user edited)
             if not os.path.isabs(exe):
-                exe = spack.util.executable.which_string(exe)
+                exe = llnl.util.executable.which_string(exe)
                 if not exe:
                     return False
             return os.path.isfile(exe) and os.access(exe, os.X_OK)
@@ -371,7 +371,7 @@ class Compiler(object):
                 if real_version == spack.version.Version("unknown"):
                     return self.version
                 self._real_version = real_version
-            except spack.util.executable.ProcessError:
+            except llnl.util.executable.ProcessError:
                 self._real_version = self.version
         return self._real_version
 
@@ -422,7 +422,7 @@ class Compiler(object):
                 csource.write(
                     "int main(int argc, char* argv[]) { " "(void)argc; (void)argv; return 0; }\n"
                 )
-            compiler_exe = spack.util.executable.Executable(first_compiler)
+            compiler_exe = llnl.util.executable.Executable(first_compiler)
             for flag_type in flags:
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
@@ -433,7 +433,7 @@ class Compiler(object):
                     compiler_exe(self.verbose_flag, fin, "-o", fout, output=str, error=str)
                 )  # str for py2
             return _parse_non_system_link_dirs(output)
-        except spack.util.executable.ProcessError as pe:
+        except llnl.util.executable.ProcessError as pe:
             tty.debug("ProcessError: Command exited with non-zero status: " + pe.long_message)
             return []
         finally:
@@ -532,7 +532,7 @@ class Compiler(object):
         Use the runtime environment of the compiler (modules and environment
         modifications) to enable the compiler to run properly on any platform.
         """
-        cc = spack.util.executable.Executable(self.cc)
+        cc = llnl.util.executable.Executable(self.cc)
         with self.compiler_environment():
             output = cc(
                 self.version_argument,

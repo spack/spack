@@ -14,11 +14,11 @@ import sys
 
 import pytest
 
+import llnl.util.executable
 from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
 
 import spack.paths
 import spack.stage
-import spack.util.executable
 import spack.util.url as url_util
 from spack.resource import Resource
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
@@ -245,7 +245,7 @@ def mock_stage_archive(tmp_build_stage_dir):
 
         # Create the archive file
         with tmpdir.as_cwd():
-            tar = spack.util.executable.which("tar", required=True)
+            tar = llnl.util.executable.which("tar", required=True)
             tar(*tar_args)
 
         Archive = collections.namedtuple("Archive", ["url", "tmpdir", "stage_path", "archive_dir"])
@@ -287,7 +287,7 @@ def mock_expand_resource(tmpdir):
     test_file.write("test content\n")
 
     with tmpdir.as_cwd():
-        tar = spack.util.executable.which("tar", required=True)
+        tar = llnl.util.executable.which("tar", required=True)
         tar("czf", str(archive_name), subdir)
 
     MockResource = collections.namedtuple("MockResource", ["url", "files"])

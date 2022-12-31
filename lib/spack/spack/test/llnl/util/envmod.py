@@ -7,8 +7,6 @@
 import os
 import sys
 
-import pytest
-
 import llnl.util.envmod as envmod
 
 is_windows = sys.platform == "win32"

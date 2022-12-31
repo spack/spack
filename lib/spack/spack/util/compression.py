@@ -12,9 +12,9 @@ import sys
 from itertools import product
 
 from llnl.util import tty
+from llnl.util.executable import CommandNotFoundError, which
 
 import spack.util.path as spath
-from spack.util.executable import CommandNotFoundError, which
 
 # Supported archive extensions.
 PRE_EXTS = ["tar", "TAR"]

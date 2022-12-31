@@ -28,6 +28,7 @@ import ruamel.yaml as yaml
 import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.executable import which
 from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_tree
 
 import spack.cmd
@@ -51,7 +52,6 @@ from spack.caches import misc_cache_location
 from spack.relocate import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 
 _build_cache_relative_path = "build_cache"
 _build_cache_keys_relative_path = "_pgp"

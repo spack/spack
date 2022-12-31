@@ -16,9 +16,9 @@ import os
 import shlex
 
 import llnl.util.tty as tty
+from llnl.util.executable import which_string
 
 import spack.config
-from spack.util.executable import which_string
 
 #: editors to try if VISUAL and EDITOR are not set
 _default_editors = ["vim", "vi", "emacs", "nano", "notepad"]

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.compilers
 from spack.package import *
 
 
@@ -109,5 +110,5 @@ class Xpmem(AutotoolsPackage):
             # Override the hardcoded prefix for 'cray-xpmem.conf'
             make(
                 "ldsoconfdir={0}".format(self.spec.prefix.etc.join("ld.so.conf.d")),
-                *self.install_targets
+                *self.install_targets,
             )

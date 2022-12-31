@@ -8,10 +8,10 @@ import sys
 
 import pytest
 
+import llnl.util.executable as ex
 import llnl.util.filesystem as fs
 
 import spack
-import spack.util.executable as ex
 from spack.hooks.sbang import filter_shebangs_in_directory
 
 is_windows = sys.platform == "win32"

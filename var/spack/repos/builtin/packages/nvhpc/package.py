@@ -7,6 +7,7 @@
 
 import platform
 
+import spack.compilers
 from spack.package import *
 from spack.util.prefix import Prefix
 

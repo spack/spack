@@ -12,6 +12,7 @@ from datetime import datetime
 from glob import glob
 
 import llnl.util.tty as tty
+from llnl.util.executable import which
 from llnl.util.filesystem import working_dir
 
 import spack.config
@@ -19,7 +20,6 @@ import spack.paths
 import spack.platforms
 import spack.util.git
 from spack.main import get_version
-from spack.util.executable import which
 
 description = "debugging commands for troubleshooting Spack"
 section = "developer"

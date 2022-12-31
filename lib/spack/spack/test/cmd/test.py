@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import re
 import sys
 
 import pytest
@@ -105,7 +106,7 @@ def test_test_output_on_error(
         out = spack_test("run", "test-error", fail_on_error=False)
 
     assert "TestFailure" in out
-    assert "Command exited with status 1" in out
+    assert re.search(r"Command '[^\n]*' exited with status 1", out)
 
 
 def test_test_output_on_failure(
@@ -137,7 +138,7 @@ def test_show_log_on_error(
 @pytest.mark.parametrize(
     "pkg_name,msgs",
     [
-        ("test-error", ["FAILED: Command exited", "TestFailure"]),
+        ("test-error", ["FAILED: Command &#39;", "TestFailure"]),
         ("test-fail", ["FAILED: Expected", "TestFailure"]),
     ],
 )
@@ -189,7 +190,7 @@ def test_cdash_output_test_error(
         report_file = report_dir.join("test-error_Testing.xml")
         assert report_file in report_dir.listdir()
         content = report_file.open().read()
-        assert "FAILED: Command exited with status 1" in content
+        assert re.search(r"FAILED: Command '[^\n]*' exited with status 1", content)
 
 
 def test_cdash_upload_clean_test(

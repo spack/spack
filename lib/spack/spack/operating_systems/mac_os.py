@@ -8,8 +8,8 @@ import platform as py_platform
 import re
 
 import llnl.util.lang
+from llnl.util.executable import Executable
 
-from spack.util.executable import Executable
 from spack.version import Version
 
 from ._operating_system import OperatingSystem
@@ -50,7 +50,7 @@ def macos_version():
     try:
         output = Executable("sw_vers")(output=str, fail_on_error=False)
     except Exception:
-        # FileNotFoundError, or spack.util.executable.ProcessError
+        # FileNotFoundError, or llnl.util.executable.ProcessError
         pass
     else:
         match = re.search(r"ProductVersion:\s*([0-9.]+)", output)

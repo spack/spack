@@ -10,10 +10,11 @@ import sys
 
 import pytest
 
+from llnl.util.executable import which
+
 import spack.config
 import spack.platforms
 from spack.main import SpackCommand, get_version
-from spack.util.executable import which
 
 debug = SpackCommand("debug")
 

@@ -10,6 +10,7 @@ import itertools
 import os
 import sys
 
+import llnl.util.executable as exe
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -17,7 +18,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.paths
 import spack.repo
-import spack.util.executable as exe
 import spack.util.package_hash as ph
 
 description = "query packages associated with particular git revisions"

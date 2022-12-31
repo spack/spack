@@ -7,11 +7,12 @@ import os
 
 import pytest
 
+from llnl.util.executable import which
+
 import spack.cmd.create
 import spack.util.editor
 from spack.main import SpackCommand
 from spack.url import UndetectableNameError
-from spack.util.executable import which
 
 create = SpackCommand("create")
 

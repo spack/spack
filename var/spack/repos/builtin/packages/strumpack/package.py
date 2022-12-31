@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 from llnl.util.envmod import set_env
+
+from spack.package import *
 
 
 class Strumpack(CMakePackage, CudaPackage, ROCmPackage):

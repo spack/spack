@@ -6,11 +6,11 @@
 import os
 
 import llnl.util.tty as tty
+from llnl.util.executable import Executable, which
 from llnl.util.filesystem import mkdirp
 from llnl.util.symlink import symlink
 
 from spack.util.editor import editor
-from spack.util.executable import Executable, which
 
 
 def pre_install(spec):

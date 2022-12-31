@@ -13,11 +13,10 @@ import re
 import shlex
 import sys
 
+import llnl.util.executable as executable
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.path import path_to_os_path
-
-import spack.util.executable as executable
 
 is_windows = sys.platform == "win32"
 

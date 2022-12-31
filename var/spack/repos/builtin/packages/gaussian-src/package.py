@@ -7,6 +7,7 @@ import os
 
 import llnl.util.tty as tty
 
+import spack.compilers
 from spack.package import *
 
 

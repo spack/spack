@@ -6,11 +6,11 @@
 import os
 
 import llnl.util.tty as tty
+from llnl.util.executable import ProcessError
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.paths
 import spack.util.git
-from spack.util.executable import ProcessError
 
 _SPACK_UPSTREAM = "https://github.com/spack/spack"
 

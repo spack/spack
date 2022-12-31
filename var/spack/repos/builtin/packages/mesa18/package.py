@@ -5,6 +5,7 @@
 
 import sys
 
+import spack.variant
 from spack.package import *
 
 

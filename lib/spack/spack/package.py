@@ -19,11 +19,11 @@ pwd = getcwd
 # import most common types used in packages
 from typing import Dict, List, Optional
 
+import llnl.util.executable
 import llnl.util.filesystem
+from llnl.util.executable import *
 from llnl.util.filesystem import *
 from llnl.util.symlink import symlink
-
-import spack.util.executable
 
 # These props will be overridden when the build env is set up.
 from spack.build_environment import MakeExecutable
@@ -87,7 +87,6 @@ from spack.package_base import (
     on_package_attributes,
 )
 from spack.spec import InvalidSpecDetected, Spec
-from spack.util.executable import *
 from spack.variant import (
     any_combination_of,
     auto_or_any_combination_of,

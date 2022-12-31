@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ElementTree
 
 import llnl.util.tty as tty
 from llnl.util.envmod import EnvironmentModifications
+from llnl.util.executable import Executable
 from llnl.util.filesystem import (
     HeaderList,
     LibraryList,
@@ -26,7 +27,6 @@ from llnl.util.filesystem import (
 import spack.error
 from spack.build_environment import dso_suffix
 from spack.package_base import InstallError
-from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.version import Version, ver
 

@@ -5,8 +5,9 @@
 
 import os
 
-from spack.package import *
 from llnl.util.envmod import is_system_path
+
+from spack.package import *
 
 
 class Tcl(AutotoolsPackage, SourceforgePackage):

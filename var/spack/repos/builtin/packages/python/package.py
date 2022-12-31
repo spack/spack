@@ -14,6 +14,7 @@ from shutil import copy
 from typing import Dict, List
 
 import llnl.util.tty as tty
+from llnl.util.envmod import is_system_path
 from llnl.util.filesystem import (
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
@@ -22,7 +23,6 @@ from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
-from llnl.util.envmod import is_system_path
 from spack.util.prefix import Prefix
 
 is_windows = sys.platform == "win32"

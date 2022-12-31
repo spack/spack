@@ -32,6 +32,7 @@ import uuid
 from typing import Callable, List, Optional
 
 import llnl.util.envmod
+import llnl.util.executable
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
 
@@ -47,7 +48,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment
-import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
 import spack.util.url
@@ -399,7 +399,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
 def ensure_executables_in_path_or_raise(
     executables: list,
     abstract_spec: str,
-    cmd_check: Optional[Callable[[spack.util.executable.Executable], bool]] = None,
+    cmd_check: Optional[Callable[[llnl.util.executable.Executable], bool]] = None,
 ):
     """Ensure that some executables are in path or raise.
 
@@ -408,7 +408,7 @@ def ensure_executables_in_path_or_raise(
             in order. The function exits on the first one found.
         abstract_spec (str): abstract spec that provides the executables
         cmd_check (object): callable predicate that takes a
-            ``spack.util.executable.Executable`` command and validate it. Should return
+            ``llnl.util.executable.Executable`` command and validate it. Should return
             ``True`` if the executable is acceptable, ``False`` otherwise.
             Can be used to, e.g., ensure a suitable version of the command before
             accepting for bootstrapping.
@@ -420,7 +420,7 @@ def ensure_executables_in_path_or_raise(
         Executable object
 
     """
-    cmd = spack.util.executable.which(*executables)
+    cmd = llnl.util.executable.which(*executables)
     if cmd:
         if not cmd_check or cmd_check(cmd):
             return cmd
@@ -514,7 +514,7 @@ def verify_patchelf(patchelf):
 
     Arguments:
 
-        patchelf (spack.util.executable.Executable): patchelf executable
+        patchelf (llnl.util.executable.Executable): patchelf executable
     """
     out = patchelf("--version", output=str, error=os.devnull, fail_on_error=False).strip()
     if patchelf.returncode != 0:

@@ -9,12 +9,12 @@ import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
 from llnl.util.envmod import env_flag
+from llnl.util.executable import Executable, ProcessError
 
 import spack.builder
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE, determine_number_of_jobs
 from spack.directives import build_system, extends
 from spack.package_base import PackageBase
-from spack.util.executable import Executable, ProcessError
 
 
 class RacketPackage(PackageBase):

@@ -5,12 +5,12 @@
 
 import os
 
+from llnl.util.executable import Executable, ProcessError
 from llnl.util.lang import memoized
 
 import spack.spec
 from spack.compilers.clang import Clang
 from spack.spec import CompilerSpec
-from spack.util.executable import Executable, ProcessError
 
 
 class ABI(object):

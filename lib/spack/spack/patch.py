@@ -11,6 +11,7 @@ import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
+from llnl.util.executable import which, which_string
 
 import spack
 import spack.error
@@ -20,19 +21,9 @@ import spack.stage
 import spack.util.spack_json as sjson
 from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
-from spack.util.executable import which, which_string
 
 
-def apply_patch(stage, patch_path, level=1, working_dir="."):
-    """Apply the patch at patch_path to code in the stage.
-
-    Args:
-        stage (spack.stage.Stage): stage with code that will be patched
-        patch_path (str): filesystem location for the patch to apply
-        level (int or None): patch level (default 1)
-        working_dir (str): relative path *within* the stage to change to
-            (default '.')
-    """
+def get_patch_exe():
     git_utils_path = os.environ.get("PATH", "")
     if sys.platform == "win32":
         git = which_string("git", required=True)
@@ -46,7 +37,20 @@ def apply_patch(stage, patch_path, level=1, working_dir="."):
     # Note for future developers: The GNU port of patch to windows
     # has issues handling CRLF line endings unless the --binary
     # flag is passed.
-    patch = which("patch", required=True, path=git_utils_path)
+    return which("patch", required=True, path=git_utils_path)
+
+
+def apply_patch(stage, patch_path, level=1, working_dir="."):
+    """Apply the patch at patch_path to code in the stage.
+
+    Args:
+        stage (spack.stage.Stage): stage with code that will be patched
+        patch_path (str): filesystem location for the patch to apply
+        level (int or None): patch level (default 1)
+        working_dir (str): relative path *within* the stage to change to
+            (default '.')
+    """
+    patch = get_patch_exe()
     with llnl.util.filesystem.working_dir(stage.source_path):
         patch("-s", "-p", str(level), "-i", patch_path, "-d", working_dir)
 

@@ -23,6 +23,7 @@ except ImportError:
 from jsonschema import validate
 
 import llnl.util.lock as lk
+from llnl.util.executable import Executable
 from llnl.util.tty.colify import colify
 
 import spack.database
@@ -31,7 +32,6 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.schema.database_index import schema
-from spack.util.executable import Executable
 
 is_windows = sys.platform == "win32"
 

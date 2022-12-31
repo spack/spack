@@ -19,6 +19,7 @@ from datetime import date
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 
+import spack.paths
 import spack.util.spack_yaml as syaml
 
 is_windows = sys.platform == "win32"
@@ -52,9 +53,6 @@ def get_user():
 
 # Substitutions to perform
 def replacements():
-    # break circular import from spack.util.executable
-    import spack.paths
-
     arch = architecture()
 
     return {

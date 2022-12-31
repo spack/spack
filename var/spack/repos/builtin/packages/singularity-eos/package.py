@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+import spack  # noqa
+
 
 class SingularityEos(CMakePackage, CudaPackage):
     """Singularity-EOS: A collection of closure models and tools useful for
@@ -95,7 +97,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     depends_on("kokkos +wrapper+cuda_lambda+cuda_relocatable_device_code", when="+cuda+kokkos")
 
     # fix for older spacks
-    if spack.version.Version(spack.spack_version) >= spack.version.Version("0.17"):
+    if Version(spack.spack_version) >= Version("0.17"):
         depends_on("kokkos-kernels ~shared", when="+kokkos-kernels")
 
     for _flag in list(CudaPackage.cuda_arch_values):

@@ -16,12 +16,12 @@ import tempfile
 import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util.executable import which
 
 import spack.hooks.sbang as sbang
 import spack.paths
 import spack.store
 import spack.util.spack_yaml as syaml
-from spack.util.executable import which
 
 if sys.platform != "win32":
     import grp

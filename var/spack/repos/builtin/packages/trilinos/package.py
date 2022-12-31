@@ -6,6 +6,7 @@
 import os
 import sys
 
+import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version

@@ -13,11 +13,11 @@ import warnings
 import archspec.cpu
 
 import llnl.util.envmod
+import llnl.util.executable
 import llnl.util.filesystem as fs
 from llnl.util import tty
 
 import spack.store
-import spack.util.executable
 
 from .config import spec_for_current_python
 
@@ -186,11 +186,11 @@ def _executables_in_store(executables, query_spec, query_info=None):
             if (
                 os.path.exists(bin_dir)
                 and os.path.isdir(bin_dir)
-                and spack.util.executable.which_string(*executables, path=bin_dir)
+                and llnl.util.executable.which_string(*executables, path=bin_dir)
             ):
                 llnl.util.envmod.path_put_first("PATH", [bin_dir])
                 if query_info is not None:
-                    query_info["command"] = spack.util.executable.which(*executables, path=bin_dir)
+                    query_info["command"] = llnl.util.executable.which(*executables, path=bin_dir)
                     query_info["spec"] = concrete_spec
                 return True
     return False

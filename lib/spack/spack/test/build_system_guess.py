@@ -7,9 +7,10 @@ import sys
 
 import pytest
 
+import llnl.util.executable
+
 import spack.cmd.create
 import spack.stage
-import spack.util.executable
 import spack.util.url as url_util
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
@@ -46,7 +47,7 @@ def url_and_build_system(request, tmpdir):
     the appropriate file name and returns their url along with
     the correct build-system guess
     """
-    tar = spack.util.executable.which("tar")
+    tar = llnl.util.executable.which("tar")
     orig_dir = tmpdir.chdir()
     filename, system = request.param
     tmpdir.ensure("archive", filename)

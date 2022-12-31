@@ -6,6 +6,7 @@
 import os
 
 import llnl.util.tty as tty
+from llnl.util.executable import Executable
 from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
 from llnl.util.lang import elide_list
 
@@ -13,7 +14,6 @@ import spack.bootstrap
 import spack.config
 import spack.relocate
 from spack.util.elf import ElfParsingError, parse_elf
-from spack.util.executable import Executable
 
 
 def is_shared_library_elf(filepath):

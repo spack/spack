@@ -34,6 +34,7 @@ import os
 import re
 
 import llnl.util.tty as tty
+from llnl.util.envmod import EnvironmentModifications
 
 from spack.package import *
 from spack.pkg.builtin.openfoam import (
@@ -42,7 +43,6 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from llnl.util.envmod import EnvironmentModifications
 
 
 class FoamExtend(Package):

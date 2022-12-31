@@ -10,6 +10,7 @@ import sys
 
 import pytest
 
+from llnl.util.executable import Executable
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.patch
@@ -19,7 +20,6 @@ import spack.util.compression
 import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import Executable
 from spack.util.path import is_windows
 
 # various sha256 sums (using variables for legibility)

@@ -11,6 +11,7 @@ import py.path
 import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util.executable import which
 
 import spack.build_systems.autotools
 import spack.build_systems.cmake
@@ -19,7 +20,6 @@ import spack.platforms
 import spack.repo
 from spack.build_environment import ChildError, setup_package
 from spack.spec import Spec
-from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, "data")
 

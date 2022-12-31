@@ -5,9 +5,10 @@
 
 import os
 
+from llnl.util.executable import which
+
 import spack.build_systems.cmake
 from spack.package import *
-from spack.util.executable import which
 
 
 class Mmg(CMakePackage):

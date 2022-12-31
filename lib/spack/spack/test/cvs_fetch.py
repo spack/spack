@@ -7,12 +7,12 @@ import os
 
 import pytest
 
+from llnl.util.executable import which
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
 from spack.fetch_strategy import CvsFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import which
 from spack.version import ver
 
 pytestmark = pytest.mark.skipif(not which("cvs"), reason="requires CVS to be installed")

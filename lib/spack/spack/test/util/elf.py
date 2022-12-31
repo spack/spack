@@ -9,11 +9,11 @@ from collections import OrderedDict
 
 import pytest
 
+import llnl.util.executable
 import llnl.util.filesystem as fs
 
 import spack.platforms
 import spack.util.elf as elf
-import spack.util.executable
 
 
 # note that our elf parser is platform independent... but I guess creating an elf file
@@ -35,7 +35,7 @@ def skip_unless_linux(f):
     ],
 )
 def test_elf_parsing_shared_linking(linker_flag, is_runpath, tmpdir):
-    gcc = spack.util.executable.which("gcc")
+    gcc = llnl.util.executable.which("gcc")
 
     with fs.working_dir(str(tmpdir)):
         # Create a library to link to so we can force a dynamic section in an ELF file

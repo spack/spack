@@ -10,11 +10,11 @@ import sys
 
 from archspec.cpu import UnsupportedMicroarchitecture
 
+import llnl.util.executable
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
 
 import spack.platforms
-import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
@@ -516,7 +516,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 match = version_regex.search(output)
                 if match:
                     return match.group(1)
-            except spack.util.executable.ProcessError:
+            except llnl.util.executable.ProcessError:
                 pass
             except Exception as e:
                 tty.debug(e)

@@ -12,12 +12,12 @@ import warnings
 
 import archspec.cpu
 
+import llnl.util.executable
 from llnl.util import tty
 
 import spack.build_environment
 import spack.environment
 import spack.tengine
-import spack.util.executable
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
@@ -120,7 +120,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         )
 
     def _install_with_depfile(self):
-        spackcmd = spack.util.executable.which("spack")
+        spackcmd = llnl.util.executable.which("spack")
         spackcmd(
             "-e",
             str(self.environment_root()),
@@ -129,7 +129,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "-o",
             str(self.environment_root().joinpath("Makefile")),
         )
-        make = spack.util.executable.which("make")
+        make = llnl.util.executable.which("make")
         kwargs = {}
         if not tty.is_debug():
             kwargs = {"output": os.devnull, "error": os.devnull}

@@ -53,6 +53,7 @@ from llnl.util.envmod import (
     system_dirs,
     validate,
 )
+from llnl.util.executable import Executable
 from llnl.util.lang import dedupe
 from llnl.util.string import plural
 from llnl.util.symlink import symlink
@@ -78,7 +79,6 @@ import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
-from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules
 
@@ -1303,7 +1303,7 @@ class ChildError(InstallError):
 
     # List of errors considered "build errors", for which we'll show log
     # context instead of Python context.
-    build_errors = [("spack.util.executable", "ProcessError")]
+    build_errors = [("llnl.util.executable", "ProcessError")]
 
     def __init__(self, msg, module, classname, traceback_string, log_name, log_type, context):
         super(ChildError, self).__init__(msg)

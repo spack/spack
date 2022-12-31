@@ -7,10 +7,10 @@ import sys
 
 import pytest
 
+import llnl.util.executable as exe
 import llnl.util.filesystem as fs
 
 import spack.paths
-import spack.util.executable as exe
 import spack.util.git
 from spack.main import get_version, main
 

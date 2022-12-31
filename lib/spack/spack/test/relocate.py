@@ -12,6 +12,7 @@ from collections import OrderedDict
 
 import pytest
 
+import llnl.util.executable
 import llnl.util.filesystem
 
 import spack.concretize
@@ -21,7 +22,6 @@ import spack.relocate
 import spack.spec
 import spack.store
 import spack.tengine
-import spack.util.executable
 from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
@@ -36,7 +36,7 @@ def skip_unless_linux(f):
 
 def rpaths_for(new_binary):
     """Return the RPATHs or RUNPATHs of a binary."""
-    patchelf = spack.util.executable.which("patchelf")
+    patchelf = llnl.util.executable.which("patchelf")
     output = patchelf("--print-rpath", str(new_binary), output=str)
     return output.strip()
 
@@ -90,7 +90,7 @@ def make_dylib(tmpdir_factory):
     - Writes the same rpath twice
     - Writes its install path as an absolute path
     """
-    cc = spack.util.executable.which("cc")
+    cc = llnl.util.executable.which("cc")
 
     def _factory(abs_install_name="abs", extra_rpaths=[]):
         assert all(extra_rpaths)
@@ -123,7 +123,7 @@ def make_dylib(tmpdir_factory):
 
 @pytest.fixture()
 def make_object_file(tmpdir):
-    cc = spack.util.executable.which("cc")
+    cc = llnl.util.executable.which("cc")
 
     def _factory():
         src = tmpdir.join("bar.c")
@@ -159,7 +159,7 @@ def copy_binary(prefix_like):
 @pytest.mark.requires_executables("/usr/bin/gcc", "patchelf", "strings", "file")
 @skip_unless_linux
 def test_ensure_binary_is_relocatable(source_file, is_relocatable):
-    compiler = spack.util.executable.Executable("/usr/bin/gcc")
+    compiler = llnl.util.executable.Executable("/usr/bin/gcc")
     executable = str(source_file).replace(".c", ".x")
     compiler_env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
     compiler(str(source_file), "-o", executable, env=compiler_env)

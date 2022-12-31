@@ -10,6 +10,7 @@ import re
 import urllib.parse
 
 import llnl.util.tty as tty
+from llnl.util.executable import ProcessError, which
 from llnl.util.filesystem import mkdirp
 
 import spack.repo
@@ -23,7 +24,6 @@ from spack.url import (
     parse_version,
 )
 from spack.util.editor import editor
-from spack.util.executable import ProcessError, which
 from spack.util.naming import (
     mod_to_class,
     simplify_name,

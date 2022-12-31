@@ -9,6 +9,7 @@ import sys
 import tempfile
 
 import llnl.util.envmod
+
 from spack.package import *
 
 

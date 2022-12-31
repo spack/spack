@@ -19,11 +19,10 @@ from contextlib import contextmanager
 from sys import platform as _platform
 
 from llnl.util import tty
+from llnl.util.executable import CommandNotFoundError, Executable, which
 from llnl.util.lang import dedupe, memoized
 from llnl.util.path import path_to_os_path, system_path_filter
 from llnl.util.symlink import islink, symlink
-
-from spack.util.executable import CommandNotFoundError, Executable, which
 
 is_windows = _platform == "win32"
 

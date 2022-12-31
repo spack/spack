@@ -35,6 +35,7 @@ from typing import List, Optional
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.executable import CommandNotFoundError, which
 from llnl.util.filesystem import (
     get_single_file,
     mkdirp,
@@ -55,7 +56,6 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
 from spack.util.compression import decompressor_for, extension_from_path
-from spack.util.executable import CommandNotFoundError, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []

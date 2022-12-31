@@ -5,8 +5,9 @@
 
 from collections import defaultdict
 
-from spack.package import *
 from llnl.util.envmod import is_system_path
+
+from spack.package import *
 
 
 class Cdo(AutotoolsPackage):

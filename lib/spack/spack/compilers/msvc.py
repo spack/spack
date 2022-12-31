@@ -10,10 +10,11 @@ import sys
 from distutils.version import StrictVersion
 from typing import Dict, List, Set
 
+import llnl.util.executable
+
 import spack.compiler
 import spack.operating_systems.windows_os
 import spack.platforms
-import spack.util.executable
 from spack.compiler import Compiler
 from spack.error import SpackError
 from spack.version import Version
@@ -170,7 +171,7 @@ class Msvc(Compiler):
                 sps = spack.operating_systems.windows_os.WindowsOs.compiler_search_paths
             except AttributeError:
                 raise SpackError("Windows compiler search paths not established")
-            clp = spack.util.executable.which_string("cl", path=sps)
+            clp = llnl.util.executable.which_string("cl", path=sps)
             ver = cls.default_version(clp)
         else:
             ver = fc_ver

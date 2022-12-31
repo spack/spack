@@ -6,11 +6,11 @@
 import os
 import re
 
+import llnl.util.executable
 from llnl.util.filesystem import ancestor
 
 import spack.compiler
 import spack.compilers.apple_clang as apple_clang
-import spack.util.executable
 from spack.version import ver
 
 
@@ -204,7 +204,7 @@ class Gcc(spack.compiler.Compiler):
     def prefix(self):
         # GCC reports its install prefix when running ``-print-search-dirs``
         # on the first line ``install: <prefix>``.
-        cc = spack.util.executable.Executable(self.cc)
+        cc = llnl.util.executable.Executable(self.cc)
         with self.compiler_environment():
             gcc_output = cc("-print-search-dirs", output=str, error=str)
 

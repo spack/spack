@@ -6,13 +6,13 @@ import os.path
 import re
 import shutil
 
+import llnl.util.executable
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.symlink import symlink
 
 import spack.compiler
 import spack.compilers.clang
-import spack.util.executable
 import spack.version
 
 
@@ -90,13 +90,13 @@ class AppleClang(spack.compilers.clang.Clang):
 
         # Use special XCode versions of compiler wrappers when using XCode
         # Overwrites build_environment's setting of SPACK_CC and SPACK_CXX
-        xcrun = spack.util.executable.Executable("xcrun")
+        xcrun = llnl.util.executable.Executable("xcrun")
         xcode_clang = xcrun("-f", "clang", output=str).strip()
         xcode_clangpp = xcrun("-f", "clang++", output=str).strip()
         env.set("SPACK_CC", xcode_clang, force=True)
         env.set("SPACK_CXX", xcode_clangpp, force=True)
 
-        xcode_select = spack.util.executable.Executable("xcode-select")
+        xcode_select = llnl.util.executable.Executable("xcode-select")
 
         # Get the path of the active developer directory
         real_root = xcode_select("--print-path", output=str).strip()

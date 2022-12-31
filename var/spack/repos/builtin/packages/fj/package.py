@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
+import llnl.util.executable
 import llnl.util.tty as tty
 
 import spack.compiler
-import spack.util.executable
 from spack.package import *
 
 
@@ -37,7 +37,7 @@ class Fj(Package):
             match = version_regex.search(output)
             if match:
                 return match.group(1)
-        except spack.util.executable.ProcessError:
+        except llnl.util.executable.ProcessError:
             pass
         except Exception as e:
             tty.debug(e)

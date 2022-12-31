@@ -45,10 +45,10 @@ import os
 import re
 
 import llnl.util.tty as tty
+from llnl.util.envmod import EnvironmentModifications
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
-from llnl.util.envmod import EnvironmentModifications
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [

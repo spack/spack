@@ -30,13 +30,13 @@ import re
 from bisect import bisect_left
 from functools import wraps
 
+import llnl.util.executable
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.caches
 import spack.error
 import spack.paths
-import spack.util.executable
 import spack.util.spack_json as sjson
 from spack.util.spack_yaml import syaml_dict
 
@@ -1346,7 +1346,7 @@ class CommitLookup(object):
                 self.fetcher.git(
                     "cat-file", "-e", "%s^{commit}" % ref, output=os.devnull, error=os.devnull
                 )
-            except spack.util.executable.ProcessError:
+            except llnl.util.executable.ProcessError:
                 raise VersionLookupError("%s is not a valid git ref for %s" % (ref, self.pkg_name))
 
             # List tags (refs) by date, so last reference of a tag is newest

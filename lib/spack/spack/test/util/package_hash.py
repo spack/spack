@@ -338,7 +338,7 @@ def test_remove_complex_package_logic_filtered():
     [
         ("amdfftw", "tivb752zddjgvfkogfs7cnnvp5olj6co"),
         ("grads", "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
-        ("llvm", "nufffum5dabmaf4l5tpfcblnbfjknvd3"),
+        ("llvm", "mtwcpa2flizhmu6mrzq3ttiya6bllhyp"),
         # has @when("@4.1.0") and raw unicode literals
         ("mfem", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
         ("mfem@4.0.0", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),

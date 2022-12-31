@@ -6,9 +6,10 @@
 
 import sys
 
+from llnl.util.envmod import is_system_path
+
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-from llnl.util.envmod import is_system_path
 
 
 class Root(CMakePackage):

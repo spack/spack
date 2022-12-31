@@ -6,6 +6,7 @@
 import os
 import sys
 
+import spack.compilers
 from spack.package import *
 
 

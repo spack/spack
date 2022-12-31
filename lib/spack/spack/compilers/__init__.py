@@ -680,7 +680,7 @@ def detect_version(detect_version_args):
                 return value, None
 
             error = "Couldn't get version for compiler {0}".format(path)
-        except spack.util.executable.ProcessError as e:
+        except llnl.util.executable.ProcessError as e:
             error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just

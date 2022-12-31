@@ -22,6 +22,7 @@ from urllib.request import HTTPSHandler, Request, build_opener
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.executable import CommandNotFoundError, which
 from llnl.util.filesystem import mkdirp, rename, working_dir
 from llnl.util.path import convert_to_posix_path
 
@@ -36,7 +37,6 @@ import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
-from spack.util.executable import CommandNotFoundError, which
 
 
 def _urlopen():
@@ -257,7 +257,7 @@ def fetch_url_text(url, curl=None, dest_dir="."):
 
     Arguments:
         url (str): URL whose contents are to be fetched
-        curl (spack.util.executable.Executable or None): (optional) curl
+        curl (llnl.util.executable.Executable or None): (optional) curl
             executable if curl is the configured fetch method
         dest_dir (str): (optional) destination directory for fetched text
             file
@@ -322,7 +322,7 @@ def url_exists(url, curl=None):
 
     Arguments:
         url (str): URL whose existence is being checked
-        curl (spack.util.executable.Executable or None): (optional) curl
+        curl (llnl.util.executable.Executable or None): (optional) curl
             executable if curl is the configured fetch method
 
     Returns (bool): True if it exists; False otherwise.

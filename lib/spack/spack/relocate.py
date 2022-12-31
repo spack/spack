@@ -12,6 +12,7 @@ from collections import OrderedDict
 import macholib.mach_o
 import macholib.MachO
 
+import llnl.util.executable as executable
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -24,7 +25,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.elf as elf
-import spack.util.executable as executable
 
 is_macos = str(spack.platforms.real_host()) == "darwin"
 

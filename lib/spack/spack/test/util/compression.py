@@ -8,11 +8,11 @@ import shutil
 
 import pytest
 
+from llnl.util.executable import CommandNotFoundError
 from llnl.util.filesystem import working_dir
 
 from spack.paths import spack_root
 from spack.util import compression as scomp
-from spack.util.executable import CommandNotFoundError
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data", "compression")
 
