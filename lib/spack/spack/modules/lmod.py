@@ -9,6 +9,7 @@ import os.path
 import posixpath
 from typing import Any, Dict
 
+import llnl.util.envmod
 import llnl.util.lang as lang
 
 import spack.compilers
@@ -17,7 +18,6 @@ import spack.error
 import spack.repo
 import spack.spec
 import spack.tengine as tengine
-import spack.util.environment
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
@@ -71,7 +71,7 @@ def guess_core_compilers(name, store=False):
             # A compiler is considered to be a core compiler if any of the
             # C, C++ or Fortran compilers reside in a system directory
             is_system_compiler = any(
-                os.path.dirname(x) in spack.util.environment.system_dirs
+                os.path.dirname(x) in llnl.util.envmod.system_dirs
                 for x in compiler["paths"].values()
                 if x is not None
             )

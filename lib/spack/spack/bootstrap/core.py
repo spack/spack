@@ -31,6 +31,7 @@ import sys
 import uuid
 from typing import Callable, List, Optional
 
+import llnl.util.envmod
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
 
@@ -46,7 +47,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment
-import spack.util.environment
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
@@ -439,7 +439,7 @@ def ensure_executables_in_path_or_raise(
                     current_bootstrapper.last_search["spec"],
                     current_bootstrapper.last_search["command"],
                 )
-                env_mods = spack.util.environment.EnvironmentModifications()
+                env_mods = llnl.util.envmod.EnvironmentModifications()
                 for dep in concrete_spec.traverse(
                     root=True, order="post", deptype=("link", "run")
                 ):

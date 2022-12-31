@@ -6,7 +6,7 @@ import copy
 import os
 import os.path
 
-import spack.util.environment
+import llnl.util.envmod
 from spack.package import *
 
 
@@ -730,7 +730,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         # Apparently the Makefile bases its paths on PWD
         # so we need to set PWD = self.build_directory
-        with spack.util.environment.set_env(PWD=self.build_directory):
+        with llnl.util.envmod.set_env(PWD=self.build_directory):
             super(Cp2k, self).build(spec, prefix)
 
             with working_dir(self.build_directory):
@@ -782,6 +782,6 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         # CP2K < 7 still uses $PWD to detect the current working dir
         # and Makefile is in a subdir, account for both facts here:
-        with spack.util.environment.set_env(CP2K_DATA_DIR=data_dir, PWD=self.build_directory):
+        with llnl.util.envmod.set_env(CP2K_DATA_DIR=data_dir, PWD=self.build_directory):
             with working_dir(self.build_directory):
                 make("test", *self.build_targets)

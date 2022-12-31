@@ -36,6 +36,7 @@ import os.path
 import re
 from typing import Optional
 
+import llnl.util.envmod
 import llnl.util.filesystem
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
@@ -51,7 +52,6 @@ import spack.repo
 import spack.schema.environment
 import spack.store
 import spack.tengine as tengine
-import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
@@ -732,8 +732,8 @@ class BaseContext(tengine.Context):
 
             spec.prefix = view.get_projection_for_spec(spec)
 
-        env = spack.util.environment.inspect_path(
-            spec.prefix, prefix_inspections, exclude=spack.util.environment.is_system_path
+        env = llnl.util.envmod.inspect_path(
+            spec.prefix, prefix_inspections, exclude=llnl.util.envmod.is_system_path
         )
 
         # Let the extendee/dependency modify their extensions/dependencies

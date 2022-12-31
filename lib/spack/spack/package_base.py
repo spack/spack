@@ -29,9 +29,10 @@ import types
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
+import llnl.util.envmod
 import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
 import llnl.util.path
+import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
@@ -52,7 +53,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.url
-import spack.util.environment
 import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
@@ -2102,7 +2102,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Sets up the run environment for a package.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.util.envmod.EnvironmentModifications): environment
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
@@ -2119,7 +2119,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         for dependencies.
 
         Args:
-            env (spack.util.environment.EnvironmentModifications): environment
+            env (llnl.util.envmod.EnvironmentModifications): environment
                 modifications to be applied when the dependent package is run.
                 Package authors can call methods on it to alter the build environment.
 

@@ -9,6 +9,7 @@ import shlex
 import subprocess
 import sys
 
+import llnl.util.envmod as envmod
 import llnl.util.tty as tty
 from llnl.util.path import Path, format_os_path, path_to_os_path, system_path_filter
 
@@ -27,9 +28,8 @@ class Executable(object):
         # filter back to platform dependent path
         self.exe = path_to_os_path(*self.exe)
         self.default_env = {}
-        from spack.util.environment import EnvironmentModifications  # no cycle
 
-        self.default_envmod = EnvironmentModifications()
+        self.default_envmod = envmod.EnvironmentModifications()
         self.returncode = None
 
         if not self.exe:
@@ -130,17 +130,15 @@ class Executable(object):
         self.default_envmod.apply_modifications(env)
         env.update(self.default_env)
 
-        from spack.util.environment import EnvironmentModifications  # no cycle
-
         # Apply env argument
-        if isinstance(env_arg, EnvironmentModifications):
+        if isinstance(env_arg, envmod.EnvironmentModifications):
             env_arg.apply_modifications(env)
         elif env_arg:
             env.update(env_arg)
 
         # Apply extra env
         extra_env = kwargs.get("extra_env", {})
-        if isinstance(extra_env, EnvironmentModifications):
+        if isinstance(extra_env, envmod.EnvironmentModifications):
             extra_env.apply_modifications(env)
         else:
             env.update(extra_env)

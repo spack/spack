@@ -166,7 +166,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
             pkg_config_path = "{0}/lib/pkgconfig".format(self.prefix)
-            with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
+            with llnl.util.envmod.set_env(PKG_CONFIG_PATH=pkg_config_path):
                 make("c")
                 self.run_test("./example_sparse", purpose="MAGMA smoke test - sparse solver")
                 self.run_test(

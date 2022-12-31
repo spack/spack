@@ -6,7 +6,7 @@
 from collections import defaultdict
 
 from spack.package import *
-from spack.util.environment import is_system_path
+from llnl.util.envmod import is_system_path
 
 
 class Cdo(AutotoolsPackage):

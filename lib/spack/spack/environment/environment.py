@@ -16,6 +16,7 @@ import urllib.request
 
 import ruamel.yaml as yaml
 
+import llnl.util.envmod
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
@@ -1535,7 +1536,7 @@ class Environment(object):
             )
 
     def _env_modifications_for_default_view(self, reverse=False):
-        all_mods = spack.util.environment.EnvironmentModifications()
+        all_mods = llnl.util.envmod.EnvironmentModifications()
 
         visited = set()
 
@@ -1576,7 +1577,7 @@ class Environment(object):
         default view. Removes duplicate paths.
 
         Args:
-            env_mod (spack.util.environment.EnvironmentModifications): the environment
+            env_mod (llnl.util.envmod.EnvironmentModifications): the environment
                 modifications object that is modified.
         """
         if default_view_name not in self.views:
@@ -1603,7 +1604,7 @@ class Environment(object):
         default view. Reverses the action of ``add_default_view_to_env``.
 
         Args:
-            env_mod (spack.util.environment.EnvironmentModifications): the environment
+            env_mod (llnl.util.envmod.EnvironmentModifications): the environment
                 modifications object that is modified.
         """
         if default_view_name not in self.views:

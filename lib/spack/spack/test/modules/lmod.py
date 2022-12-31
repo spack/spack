@@ -7,6 +7,8 @@ import sys
 
 import pytest
 
+import llnl.util.envmod
+
 import spack.environment as ev
 import spack.main
 import spack.modules.lmod
@@ -240,7 +242,7 @@ class TestLmod(object):
         module_configuration("missing_core_compilers")
 
         # Our mock paths must be detected as system paths
-        monkeypatch.setattr(spack.util.environment, "system_dirs", ["/path/to"])
+        monkeypatch.setattr(llnl.util.envmod, "system_dirs", ["/path/to"])
 
         # We don't want to really write into user configuration
         # when running tests

@@ -3,15 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.path as lup
+import os
+import sys
+
+import llnl.util.path
 
 
 def test_sanitze_file_path(tmpdir):
     """Test filtering illegal characters out of potential file paths"""
     # *nix illegal files characters are '/' and none others
     illegal_file_path = str(tmpdir) + "//" + "abcdefghi.txt"
-    if is_windows:
+    if sys.platform == "win32":
         # Windows has a larger set of illegal characters
         illegal_file_path = os.path.join(tmpdir, 'a<b>cd?e:f"g|h*i.txt')
-    real_path = lup.sanitize_file_path(illegal_file_path)
+    real_path = llnl.util.path.sanitize_file_path(illegal_file_path)
     assert real_path == os.path.join(str(tmpdir), "abcdefghi.txt")

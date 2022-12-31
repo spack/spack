@@ -13,7 +13,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.solver.asp as asp
-import spack.util.environment
 import spack.util.spack_json as sjson
 
 description = "compare two specs"

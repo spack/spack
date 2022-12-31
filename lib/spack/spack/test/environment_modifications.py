@@ -8,18 +8,9 @@ import sys
 
 import pytest
 
-import spack.util.environment as environment
+import llnl.util.envmod as envmod
+
 from spack.paths import spack_root
-from spack.util.environment import (
-    AppendPath,
-    EnvironmentModifications,
-    PrependPath,
-    RemovePath,
-    SetEnv,
-    UnsetEnv,
-    filter_system_paths,
-    is_system_path,
-)
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data")
 
@@ -43,7 +34,7 @@ def test_inspect_path(tmpdir):
     tmpdir.mkdir("lib")
     tmpdir.mkdir("include")
 
-    env = environment.inspect_path(str(tmpdir), inspections)
+    env = envmod.inspect_path(str(tmpdir), inspections)
     names = [item.name for item in env]
     assert "PATH" in names
     assert "LIBRARY_PATH" in names
@@ -58,7 +49,7 @@ def test_exclude_paths_from_inspection():
         "include": ["CPATH"],
     }
 
-    env = environment.inspect_path("/usr", inspections, exclude=is_system_path)
+    env = envmod.inspect_path("/usr", inspections, exclude=envmod.is_system_path)
 
     assert len(env) == 0
 
@@ -79,7 +70,7 @@ def prepare_environment_for_tests(working_env):
 @pytest.fixture
 def env(prepare_environment_for_tests):
     """Returns an empty EnvironmentModifications object."""
-    return EnvironmentModifications()
+    return envmod.EnvironmentModifications()
 
 
 @pytest.fixture
@@ -162,7 +153,7 @@ def test_unset(env):
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_filter_system_paths(miscellaneous_paths):
     """Tests that the filtering of system paths works as expected."""
-    filtered = filter_system_paths(miscellaneous_paths)
+    filtered = envmod.filter_system_paths(miscellaneous_paths)
     expected = [
         "/usr/local/Cellar/gcc/5.3.0/lib",
         "/usr/local/opt/some-package/lib",
@@ -246,7 +237,7 @@ def test_extend(env):
     """
     env.set("A", "dummy value")
     env.set("B", 3)
-    copy_construct = EnvironmentModifications(env)
+    copy_construct = envmod.EnvironmentModifications(env)
 
     assert len(copy_construct) == 2
 
@@ -260,12 +251,12 @@ def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
     the result of sourcing a file.
     """
-    env = EnvironmentModifications()
+    env = envmod.EnvironmentModifications()
     for filename in files_to_be_sourced:
         if filename.endswith("sourceme_parameters.sh"):
-            env.extend(EnvironmentModifications.from_sourcing_file(filename, "intel64"))
+            env.extend(envmod.EnvironmentModifications.from_sourcing_file(filename, "intel64"))
         else:
-            env.extend(EnvironmentModifications.from_sourcing_file(filename))
+            env.extend(envmod.EnvironmentModifications.from_sourcing_file(filename))
 
     modifications = env.group_by_name()
 
@@ -277,28 +268,28 @@ def test_source_files(files_to_be_sourced):
 
     # Set new variables
     assert len(modifications["NEW_VAR"]) == 1
-    assert isinstance(modifications["NEW_VAR"][0], SetEnv)
+    assert isinstance(modifications["NEW_VAR"][0], envmod.SetEnv)
     assert modifications["NEW_VAR"][0].value == "new"
 
     assert len(modifications["FOO"]) == 1
-    assert isinstance(modifications["FOO"][0], SetEnv)
+    assert isinstance(modifications["FOO"][0], envmod.SetEnv)
     assert modifications["FOO"][0].value == "intel64"
 
     # Unset variables
     assert len(modifications["EMPTY_PATH_LIST"]) == 1
-    assert isinstance(modifications["EMPTY_PATH_LIST"][0], UnsetEnv)
+    assert isinstance(modifications["EMPTY_PATH_LIST"][0], envmod.UnsetEnv)
 
     # Modified variables
     assert len(modifications["UNSET_ME"]) == 1
-    assert isinstance(modifications["UNSET_ME"][0], SetEnv)
+    assert isinstance(modifications["UNSET_ME"][0], envmod.SetEnv)
     assert modifications["UNSET_ME"][0].value == "overridden"
 
     assert len(modifications["PATH_LIST"]) == 3
-    assert isinstance(modifications["PATH_LIST"][0], RemovePath)
+    assert isinstance(modifications["PATH_LIST"][0], envmod.RemovePath)
     assert modifications["PATH_LIST"][0].value == "/path/third"
-    assert isinstance(modifications["PATH_LIST"][1], AppendPath)
+    assert isinstance(modifications["PATH_LIST"][1], envmod.AppendPath)
     assert modifications["PATH_LIST"][1].value == "/path/fourth"
-    assert isinstance(modifications["PATH_LIST"][2], PrependPath)
+    assert isinstance(modifications["PATH_LIST"][2], envmod.PrependPath)
     assert modifications["PATH_LIST"][2].value == "/path/first"
 
 
@@ -307,7 +298,7 @@ def test_preserve_environment(prepare_environment_for_tests):
     # UNSET_ME is defined, and will be unset in the context manager,
     # NOT_SET is not in the environment and will be set within the
     # context manager, PATH_LIST is set and will be changed.
-    with environment.preserve_environment("UNSET_ME", "NOT_SET", "PATH_LIST"):
+    with envmod.preserve_environment("UNSET_ME", "NOT_SET", "PATH_LIST"):
         os.environ["NOT_SET"] = "a"
         assert os.environ["NOT_SET"] == "a"
 
@@ -363,7 +354,7 @@ def test_preserve_environment(prepare_environment_for_tests):
 @pytest.mark.usefixtures("prepare_environment_for_tests")
 def test_environment_from_sourcing_files(files, expected, deleted):
 
-    env = environment.environment_after_sourcing_files(*files)
+    env = envmod.environment_after_sourcing_files(*files)
 
     # Test that variables that have been modified are still there and contain
     # the expected output
@@ -394,7 +385,7 @@ def test_clear(env):
 )
 def test_sanitize_literals(env, exclude, include):
 
-    after = environment.sanitize(env, exclude, include)
+    after = envmod.sanitize(env, exclude, include)
 
     # Check that all the included variables are there
     assert all(x in after for x in include)
@@ -431,7 +422,7 @@ def test_sanitize_literals(env, exclude, include):
 )
 def test_sanitize_regex(env, exclude, include, expected, deleted):
 
-    after = environment.sanitize(env, exclude, include)
+    after = envmod.sanitize(env, exclude, include)
 
     assert all(x in after for x in expected)
     assert all(x not in after for x in deleted)
@@ -442,39 +433,39 @@ def test_sanitize_regex(env, exclude, include, expected, deleted):
     "before,after,search_list",
     [
         # Set environment variables
-        ({}, {"FOO": "foo"}, [environment.SetEnv("FOO", "foo")]),
+        ({}, {"FOO": "foo"}, [envmod.SetEnv("FOO", "foo")]),
         # Unset environment variables
-        ({"FOO": "foo"}, {}, [environment.UnsetEnv("FOO")]),
+        ({"FOO": "foo"}, {}, [envmod.UnsetEnv("FOO")]),
         # Append paths to an environment variable
         (
             {"FOO_PATH": "/a/path"},
             {"FOO_PATH": "/a/path:/b/path"},
-            [environment.AppendPath("FOO_PATH", "/b/path")],
+            [envmod.AppendPath("FOO_PATH", "/b/path")],
         ),
         (
             {},
             {"FOO_PATH": "/a/path" + os.sep + "/b/path"},
-            [environment.AppendPath("FOO_PATH", "/a/path" + os.sep + "/b/path")],
+            [envmod.AppendPath("FOO_PATH", "/a/path" + os.sep + "/b/path")],
         ),
         (
             {"FOO_PATH": "/a/path:/b/path"},
             {"FOO_PATH": "/b/path"},
-            [environment.RemovePath("FOO_PATH", "/a/path")],
+            [envmod.RemovePath("FOO_PATH", "/a/path")],
         ),
         (
             {"FOO_PATH": "/a/path:/b/path"},
             {"FOO_PATH": "/a/path:/c/path"},
             [
-                environment.RemovePath("FOO_PATH", "/b/path"),
-                environment.AppendPath("FOO_PATH", "/c/path"),
+                envmod.RemovePath("FOO_PATH", "/b/path"),
+                envmod.AppendPath("FOO_PATH", "/c/path"),
             ],
         ),
         (
             {"FOO_PATH": "/a/path:/b/path"},
             {"FOO_PATH": "/c/path:/a/path"},
             [
-                environment.RemovePath("FOO_PATH", "/b/path"),
-                environment.PrependPath("FOO_PATH", "/c/path"),
+                envmod.RemovePath("FOO_PATH", "/b/path"),
+                envmod.PrependPath("FOO_PATH", "/c/path"),
             ],
         ),
         # Modify two variables in the same environment
@@ -482,15 +473,15 @@ def test_sanitize_regex(env, exclude, include, expected, deleted):
             {"FOO": "foo", "BAR": "bar"},
             {"FOO": "baz", "BAR": "baz"},
             [
-                environment.SetEnv("FOO", "baz"),
-                environment.SetEnv("BAR", "baz"),
+                envmod.SetEnv("FOO", "baz"),
+                envmod.SetEnv("BAR", "baz"),
             ],
         ),
     ],
 )
 def test_from_environment_diff(before, after, search_list):
 
-    mod = environment.EnvironmentModifications.from_environment_diff(before, after)
+    mod = envmod.EnvironmentModifications.from_environment_diff(before, after)
 
     for item in search_list:
         assert item in mod
@@ -501,7 +492,7 @@ def test_from_environment_diff(before, after, search_list):
 def test_exclude_lmod_variables():
     # Construct the list of environment modifications
     file = os.path.join(datadir, "sourceme_lmod.sh")
-    env = EnvironmentModifications.from_sourcing_file(file)
+    env = envmod.EnvironmentModifications.from_sourcing_file(file)
 
     # Check that variables related to lmod are not in there
     modifications = env.group_by_name()

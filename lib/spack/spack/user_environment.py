@@ -5,9 +5,10 @@
 import os
 import sys
 
+import llnl.util.envmod as envmod
+
 import spack.build_environment
 import spack.config
-import spack.util.environment as environment
 import spack.util.prefix as prefix
 
 #: Environment variable name Spack uses to track individually loaded packages
@@ -52,7 +53,7 @@ def unconditional_environment_modifications(view):
     """List of environment (shell) modifications to be processed for view.
 
     This list does not depend on the specs in this environment"""
-    env = environment.EnvironmentModifications()
+    env = envmod.EnvironmentModifications()
 
     for subdir, vars in prefix_inspections(sys.platform).items():
         full_subdir = os.path.join(view.root, subdir)
@@ -81,8 +82,8 @@ def environment_modifications_for_spec(spec, view=None, set_package_py_globals=T
 
     # generic environment modifications determined by inspecting the spec
     # prefix
-    env = environment.inspect_path(
-        spec.prefix, prefix_inspections(spec.platform), exclude=environment.is_system_path
+    env = envmod.inspect_path(
+        spec.prefix, prefix_inspections(spec.platform), exclude=envmod.is_system_path
     )
 
     # Let the extendee/dependency modify their extensions/dependents

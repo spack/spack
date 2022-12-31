@@ -12,10 +12,10 @@ import re
 import sys
 import warnings
 
+import llnl.util.envmod
 import llnl.util.filesystem
 import llnl.util.tty
 
-import spack.util.environment
 import spack.util.ld_so_conf
 
 from .common import (  # find_windows_compiler_bundled_packages,
@@ -83,9 +83,9 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
     """
     path_hints = (
         path_hints
-        or spack.util.environment.get_path("LD_LIBRARY_PATH")
-        + spack.util.environment.get_path("DYLD_LIBRARY_PATH")
-        + spack.util.environment.get_path("DYLD_FALLBACK_LIBRARY_PATH")
+        or llnl.util.envmod.get_path("LD_LIBRARY_PATH")
+        + llnl.util.envmod.get_path("DYLD_LIBRARY_PATH")
+        + llnl.util.envmod.get_path("DYLD_FALLBACK_LIBRARY_PATH")
         + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
     )
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
@@ -93,7 +93,7 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
 
 
 def libraries_in_windows_paths(path_hints):
-    path_hints.extend(spack.util.environment.get_path("PATH"))
+    path_hints.extend(llnl.util.envmod.get_path("PATH"))
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
     # at the search root. Add both of those options to the search scheme
@@ -236,7 +236,7 @@ def by_executable(packages_to_check, path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    path_hints = spack.util.environment.get_path("PATH") if path_hints is None else path_hints
+    path_hints = llnl.util.envmod.get_path("PATH") if path_hints is None else path_hints
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, "executables"):

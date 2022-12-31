@@ -8,7 +8,7 @@ import shutil
 import sys
 import tempfile
 
-import spack.util.environment
+import llnl.util.envmod
 from spack.package import *
 
 
@@ -141,7 +141,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         # Spack's build environment when running tests
         vars_to_unset = ["CC", "CXX", "F77", "FC"]
 
-        with spack.util.environment.preserve_environment(*vars_to_unset):
+        with llnl.util.envmod.preserve_environment(*vars_to_unset):
             # Delete temporarily the environment variables that point
             # to Spack compiler wrappers
             for v in vars_to_unset:

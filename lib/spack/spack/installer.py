@@ -40,6 +40,7 @@ from collections import defaultdict
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
+from llnl.util.envmod import EnvironmentModifications
 from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
@@ -56,7 +57,7 @@ import spack.store
 import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
-from spack.util.environment import EnvironmentModifications, dump_environment
+from spack.util.environment import dump_environment
 from spack.util.executable import which
 
 #: Counter to support unique spec sequencing that is used to ensure packages

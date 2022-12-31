@@ -6,7 +6,7 @@
 from os.path import split
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
+from llnl.util.envmod import EnvironmentModifications
 
 
 class Anaconda2(Package):

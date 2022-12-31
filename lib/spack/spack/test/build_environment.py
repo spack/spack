@@ -10,6 +10,7 @@ import sys
 
 import pytest
 
+from llnl.util.envmod import EnvironmentModifications
 from llnl.util.filesystem import HeaderList, LibraryList
 from llnl.util.path import Path, convert_to_platform_path
 
@@ -24,7 +25,6 @@ from spack.build_environment import (
     dso_suffix,
 )
 from spack.paths import build_env_path
-from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
 

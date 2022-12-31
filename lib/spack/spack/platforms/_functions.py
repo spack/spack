@@ -4,9 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
 
+import llnl.util.envmod
 import llnl.util.lang
-
-import spack.util.environment
 
 from .cray import Cray
 from .darwin import Darwin
@@ -64,7 +63,7 @@ def prevent_cray_detection():
     """Context manager that prevents the detection of the Cray platform"""
     reset()
     try:
-        with spack.util.environment.set_env(MODULEPATH=""):
+        with llnl.util.envmod.set_env(MODULEPATH=""):
             yield
     finally:
         reset()

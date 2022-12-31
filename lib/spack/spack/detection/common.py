@@ -347,7 +347,7 @@ def find_win32_additional_install_paths():
     windows_search_ext.extend(
         spack.config.get("config:additional_external_search_paths", default=[])
     )
-    windows_search_ext.extend(spack.util.environment.get_path("PATH"))
+    windows_search_ext.extend(llnl.util.envmod.get_path("PATH"))
     return windows_search_ext
 
 

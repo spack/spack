@@ -638,7 +638,7 @@ packages:
         e.install_all()
         e.write()
 
-        env_mod = spack.util.environment.EnvironmentModifications()
+        env_mod = llnl.util.envmod.EnvironmentModifications()
         e.add_default_view_to_env(env_mod)
         env_variables = {}
         env_mod.apply_modifications(env_variables)

@@ -42,7 +42,7 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.util.environment import EnvironmentModifications
+from llnl.util.envmod import EnvironmentModifications
 
 
 class FoamExtend(Package):

@@ -6,11 +6,12 @@
 import os
 import sys
 
+import llnl.util.envmod
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.error
 import spack.user_environment as uenv
-import spack.util.environment
 
 description = "remove package from the user environment"
 section = "user environment"
@@ -82,7 +83,7 @@ def unload(parser, args):
         )
         return 1
 
-    env_mod = spack.util.environment.EnvironmentModifications()
+    env_mod = llnl.util.envmod.EnvironmentModifications()
     for spec in specs:
         env_mod.extend(uenv.environment_modifications_for_spec(spec).reversed())
         env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())

@@ -14,7 +14,6 @@ import llnl.util.string
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
 
-
 if sys.platform != "win32":
     import fcntl
 

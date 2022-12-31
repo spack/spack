@@ -10,8 +10,8 @@ import re
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.envmod import get_path
 
-from spack.util.environment import get_path
 from spack.util.module_cmd import module
 
 from .linux_distro import LinuxDistro

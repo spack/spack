@@ -9,7 +9,7 @@ import sys
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
-from spack.util.environment import filter_system_paths
+from llnl.util.envmod import filter_system_paths
 
 
 class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):

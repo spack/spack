@@ -7,7 +7,7 @@ import platform
 from os.path import split
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
+from llnl.util.envmod import EnvironmentModifications
 
 _versions = {
     "4.10.3": {

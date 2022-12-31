@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
+from llnl.util.envmod import EnvironmentModifications
 
 
 class Conda4aarch64(Package):

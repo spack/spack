@@ -20,6 +20,7 @@ import spack.hash_types as ht
 import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
+from spack.util.environment import get_host_environment_metadata
 
 is_windows = sys.platform == "win32"
 # Note: Posixpath is used here as opposed to
@@ -120,8 +121,6 @@ class DirectoryLayout(object):
         versioning. We use it in the case that an analysis later needs to
         easily access this information.
         """
-        from spack.util.environment import get_host_environment_metadata
-
         env_file = self.env_metadata_path(spec)
         environ = get_host_environment_metadata()
         with open(env_file, "w") as fd:

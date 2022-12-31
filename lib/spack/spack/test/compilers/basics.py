@@ -10,12 +10,12 @@ from copy import copy
 
 import pytest
 
+import llnl.util.envmod
 import llnl.util.filesystem as fs
 
 import spack.compiler
 import spack.compilers as compilers
 import spack.spec
-import spack.util.environment
 from spack.compiler import Compiler
 from spack.util.executable import ProcessError
 
@@ -868,7 +868,7 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
         "x86_64",
         ["/usr/bin/clang", "/usr/bin/clang++", None, None],
     )
-    env = spack.util.environment.EnvironmentModifications()
+    env = llnl.util.envmod.EnvironmentModifications()
     # Check a package that doesn't use xcode and ensure we don't add changes
     # to the environment
     pkg = MockPackage()
@@ -955,7 +955,7 @@ def test_xcode_not_available(xcode_select_output, mock_executable, monkeypatch):
         "x86_64",
         ["/usr/bin/clang", "/usr/bin/clang++", None, None],
     )
-    env = spack.util.environment.EnvironmentModifications()
+    env = llnl.util.envmod.EnvironmentModifications()
 
     class MockPackage(object):
         use_xcode = True

@@ -13,9 +13,11 @@ import sys
 import tempfile
 from typing import List, Optional, Sequence
 
+import llnl.util.envmod as envmod
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
+from llnl.util.path import system_path_filter
 
 import spack.compilers
 import spack.error
@@ -23,8 +25,6 @@ import spack.spec
 import spack.util.executable
 import spack.util.module_cmd
 import spack.version
-from spack.util.environment import filter_system_paths
-from llnl.util.path import system_path_filter
 
 __all__ = ["Compiler"]
 
@@ -175,7 +175,7 @@ def _parse_non_system_link_dirs(string: str) -> List[str]:
     # system paths. Note that 'filter_system_paths' only checks for an
     # exact match, while 'in_system_subdirectory' checks if a path contains
     # a system directory as a subdirectory
-    link_dirs = filter_system_paths(link_dirs)
+    link_dirs = envmod.filter_system_paths(link_dirs)
     return list(p for p in link_dirs if not in_system_subdirectory(p))
 
 
@@ -658,7 +658,7 @@ class Compiler(object):
                 spack.util.module_cmd.load_module(module)
 
             # apply other compiler environment changes
-            env = spack.util.environment.EnvironmentModifications()
+            env = llnl.util.envmod.EnvironmentModifications()
             env.extend(spack.schema.environment.parse(self.environment))
             env.apply_modifications()
 

@@ -26,6 +26,7 @@ import warnings
 
 import archspec.cpu
 
+import llnl.util.envmod
 import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
@@ -44,7 +45,6 @@ import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.util.debug
-import spack.util.environment
 import spack.util.git
 from spack.error import SpackError
 
@@ -574,7 +574,7 @@ def setup_main_options(args):
     if args.debug:
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
-        spack.util.environment.tracing_enabled = True
+        llnl.util.envmod.tracing_enabled = True
 
     if args.timestamp:
         tty.set_timestamp(True)

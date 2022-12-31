@@ -59,10 +59,10 @@ import warnings
 
 import ruamel.yaml as yaml
 
-import llnl.util.string
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.path as pth
+import llnl.util.string
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 

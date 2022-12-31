@@ -5,12 +5,12 @@
 import os
 
 import llnl.util.tty as tty
+from llnl.util.envmod import EnvironmentModifications
 from llnl.util.tty.color import colorize
 
 import spack.environment as ev
 import spack.repo
 import spack.store
-from spack.util.environment import EnvironmentModifications
 
 
 def activate_header(env, shell, prompt=None):
@@ -111,7 +111,7 @@ def activate(env, use_env_repo=False, add_view=True):
         add_view (bool): generate commands to add view to path variables
 
     Returns:
-        spack.util.environment.EnvironmentModifications: Environment variables
+        llnl.util.envmod.EnvironmentModifications: Environment variables
         modifications to activate environment.
     """
     ev.activate(env, use_env_repo=use_env_repo)
@@ -150,7 +150,7 @@ def deactivate():
         after activation are not unloaded.
 
     Returns:
-        spack.util.environment.EnvironmentModifications: Environment variables
+        llnl.util.envmod.EnvironmentModifications: Environment variables
         modifications to activate environment.
     """
     env_mods = EnvironmentModifications()

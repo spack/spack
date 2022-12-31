@@ -40,9 +40,9 @@ def parse(config_obj):
         config_obj: a configuration dictionary conforming to the
             schema definition for environment modifications
     """
-    import spack.util.environment as ev
+    import llnl.util.envmod as envmod
 
-    env = ev.EnvironmentModifications()
+    env = envmod.EnvironmentModifications()
     for command, variable in config_obj.items():
         # Distinguish between commands that take only a name as argument
         # (e.g. unset) and commands that take a name and a value.

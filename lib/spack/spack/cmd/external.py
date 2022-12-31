@@ -18,7 +18,6 @@ import spack.cmd.common.arguments
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
-import spack.util.environment
 
 description = "manage external packages in Spack configuration"
 section = "config"

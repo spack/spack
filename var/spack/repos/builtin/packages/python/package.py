@@ -22,7 +22,7 @@ from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
-from spack.util.environment import is_system_path
+from llnl.util.envmod import is_system_path
 from spack.util.prefix import Prefix
 
 is_windows = sys.platform == "win32"

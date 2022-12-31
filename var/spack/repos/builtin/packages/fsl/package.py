@@ -7,7 +7,7 @@ import glob
 import os
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
+from llnl.util.envmod import EnvironmentModifications
 
 
 class Fsl(Package, CudaPackage):
@@ -180,7 +180,7 @@ class Fsl(Package, CudaPackage):
         # the post install script does not get confused.
         vars_to_unset = ["PYTHONPATH", "PYTHONHOME"]
 
-        with spack.util.environment.preserve_environment(*vars_to_unset):
+        with llnl.util.envmod.preserve_environment(*vars_to_unset):
             for v in vars_to_unset:
                 del os.environ[v]
 
