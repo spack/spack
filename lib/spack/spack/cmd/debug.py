@@ -17,6 +17,7 @@ from llnl.util.filesystem import working_dir
 import spack.config
 import spack.paths
 import spack.platforms
+import spack.util.git
 from spack.main import get_version
 from spack.util.executable import which
 
@@ -35,7 +36,7 @@ def _debug_tarball_suffix():
     now = datetime.now()
     suffix = now.strftime("%Y-%m-%d-%H%M%S")
 
-    git = which("git")
+    git = spack.util.git.git()
     if not git:
         return "nobranch-nogit-%s" % suffix
 

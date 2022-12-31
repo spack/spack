@@ -24,6 +24,8 @@ class Cernlib(CMakePackage):
     depends_on("motif")
     depends_on("libnsl")
     depends_on("libx11")
+    depends_on("libxaw")
+    depends_on("libxt")
     depends_on("libxcrypt")
 
     depends_on("openssl", when="os=linux")
