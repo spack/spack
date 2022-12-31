@@ -16,9 +16,10 @@ import sys
 import tempfile
 from datetime import date
 from urllib.parse import urlparse
+from typing import Callable, Dict
 
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
+import llnl.util.lang
 
 import spack.util.spack_yaml as syaml
 
@@ -27,6 +28,7 @@ is_windows = sys.platform == "win32"
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
 
+@llnl.util.lang.memoized
 def architecture():
     # break circular import
     import spack.platforms
@@ -51,27 +53,71 @@ def get_user():
         return getpass.getuser()
 
 
-# Substitutions to perform
-def replacements():
-    # break circular import from spack.util.executable
+#: dictionary of replacements for path substitutions
+Replacer = Callable[[str], str]
+_replacements: Dict[str, Replacer] = {}
+
+
+class replacer:
+    """Decorator to put replacer functions in ``_replacements`` dict."""
+
+    def __init__(self, *keys):
+        self.keys: List[str] = keys
+
+    def __call__(self, function: Replacer):
+        for key in self.keys:
+            _replacements[key] = function
+        return function
+
+
+@replacer("spack", "user_cache_path")
+def _replace_path_key(key):
     import spack.paths
 
-    arch = architecture()
+    return getattr(spack.paths, key)
 
-    return {
-        "spack": spack.paths.prefix,
-        "user": get_user(),
-        "tempdir": tempfile.gettempdir(),
-        "user_cache_path": spack.paths.user_cache_path,
-        "architecture": str(arch),
-        "arch": str(arch),
-        "platform": str(arch.platform),
-        "operating_system": str(arch.os),
-        "os": str(arch.os),
-        "target": str(arch.target),
-        "target_family": str(arch.target.microarchitecture.family),
-        "date": date.today().strftime("%Y-%m-%d"),
-    }
+
+@replacer("user")
+def _replace_user(key):
+    return get_user()
+
+
+@replacer("tempdir")
+def _replace_tempdir(key):
+    return tempfile.gettempdir()
+
+
+@replacer("arch", "architecture")
+def _replace_arch(key):
+    return str(architecture())
+
+
+@replacer("os", "operating_system")
+def _replace_os(key):
+    return str(architecture().os)
+
+
+@replacer("platform", "target")
+def _replace_arch_attr(key):
+    return str(getattr(architecture(), key))
+
+
+@replacer("target_family")
+def _replace_target_family(key):
+    return str(architecture().target.microarchitecture.family)
+
+
+@replacer("date")
+def _replace_date(key):
+    return date.today().strftime("%Y-%m-%d")
+
+
+@replacer("env")
+def _replace_env(key):
+    import spack.environment as ev
+
+    env = ev.active_environment()
+    return env.path if env else key
 
 
 # This is intended to be longer than the part of the install path
@@ -200,7 +246,7 @@ def system_path_filter(_func=None, arg_slice=None):
     return holder_func
 
 
-@memoized
+@llnl.util.lang.memoized
 def get_system_path_max():
     # Choose a conservative default
     sys_max_path_length = 256
@@ -293,20 +339,12 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    import spack.environment as ev  # break circular
-
-    _replacements = replacements()
-    env = ev.active_environment()
-    if env:
-        _replacements.update({"env": env.path})
-    else:
-        # If a previous invocation added env, remove it
-        _replacements.pop("env", None)
 
     # Look up replacements
     def repl(match):
-        m = match.group(0).strip("${}")
-        return _replacements.get(m.lower(), match.group(0))
+        m = match.group(0)
+        key = m.strip("${}").lower()
+        return _replacements.get(key, lambda key: m)(key)
 
     # Replace $var or ${var}.
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
