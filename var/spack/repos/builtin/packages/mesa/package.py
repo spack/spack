@@ -194,7 +194,6 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         args = [
             "-Dvulkan-drivers=",
             "-Dgallium-vdpau=disabled",
-            "-Dgallium-xvmc=disabled",
             "-Dgallium-omx=disabled",
             "-Dgallium-va=disabled",
             "-Dgallium-xa=disabled",
@@ -203,6 +202,8 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
             "-Dbuild-tests=false",
             "-Dglvnd=false",
         ]
+        if spec.satisfies("@:22.2"):
+            args.append("-Dgallium-xvmc=disabled")
         args_platforms = []
         args_gallium_drivers = ["swrast"]
         args_dri_drivers = []
