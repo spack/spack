@@ -118,6 +118,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cuda@9.0.0:", when="@:22.04 +cuda")
     depends_on("cuda@10.0.0:", when="@22.05: +cuda")
+    depends_on("cuda@11.0.0:", when="@22.12: +cuda")
     depends_on("python@2.7:", type="build", when="@:20.04")
     depends_on("cmake@3.5:", type="build", when="@:18.10")
     depends_on("cmake@3.13:", type="build", when="@18.11:19.03")
@@ -134,6 +135,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
     depends_on("cmake@3.22:", type="build", when="+sycl")
+    depends_on("intel-oneapi-compilers@2023.0.0:", type="build", when="@23.01: +sycl")
     depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
     # these versions of gcc have lambda function issues
