@@ -93,7 +93,7 @@ class AoclSparse(CMakePackage):
         args.extend(
             [
                 self.define_from_variant("BUILD_WITH_AVX512", "AVX"),
-                "-DUSE_AVX512:BOOL=%s" % ("ON" if self.run_tests else "OFF"),
+                self.define("USE_AVX512", self.run_tests),
             ]
         )
 
