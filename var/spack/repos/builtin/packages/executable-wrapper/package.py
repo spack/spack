@@ -19,4 +19,3 @@ class ExecutableWrapper(MakefilePackage):
 
     def install(self, spec, prefix):
         make("install", "prefix={}".format(prefix))
-
