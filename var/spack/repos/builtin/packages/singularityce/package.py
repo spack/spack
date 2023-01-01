@@ -80,7 +80,7 @@ class SingularityBase(MakefilePackage):
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             confstring = "./mconfig --prefix=%s" % prefix
-            confstring += " ".join(config_options)
+            confstring += " " + " ".join(self.config_options)
             if "~suid" in spec:
                 confstring += " --without-suid"
             if "~network" in spec:
