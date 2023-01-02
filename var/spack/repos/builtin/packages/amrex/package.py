@@ -14,7 +14,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url = "https://github.com/AMReX-Codes/amrex/releases/download/22.11/amrex-22.11.tar.gz"
+    url = "https://github.com/AMReX-Codes/amrex/releases/download/23.01/amrex-23.01.tar.gz"
     git = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True
@@ -24,6 +24,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["WeiqunZhang", "asalmgren", "etpalmer63"]
 
     version("develop", branch="development")
+    version("23.01", sha256="3b1770653a7c6d3e6167bc3cce98cbf838962102c510d1f872ab08f1115933b7")
+    version("22.12", sha256="7b11e547e70bdd6f4b36682708a755d173eaecd8738536306d4217df4dd1be3d")
     version("22.11", sha256="8be9d5c6934d73b98c71c9c67ca7113f18794268f257333591d9b2449d7410c4")
     version("22.10", sha256="458da410d7f43e428726bfc905123e85d05786080f892ebaa26f94c5f8e79b07")
     version("22.09", sha256="24601fbb9d554f7b66d7db89b14ff95dadb18d51db893af7ee6c70d4b7dd4be6")
@@ -116,6 +118,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cuda@9.0.0:", when="@:22.04 +cuda")
     depends_on("cuda@10.0.0:", when="@22.05: +cuda")
+    depends_on("cuda@11.0.0:", when="@22.12: +cuda")
     depends_on("python@2.7:", type="build", when="@:20.04")
     depends_on("cmake@3.5:", type="build", when="@:18.10")
     depends_on("cmake@3.13:", type="build", when="@18.11:19.03")
@@ -132,6 +135,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
     depends_on("cmake@3.22:", type="build", when="+sycl")
+    depends_on("intel-oneapi-compilers@2023.0.0:", type="build", when="@23.01: +sycl")
     depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
     # these versions of gcc have lambda function issues
