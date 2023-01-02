@@ -26,3 +26,4 @@
 #show error/7.
 
 % debug
+#show depth/2.
