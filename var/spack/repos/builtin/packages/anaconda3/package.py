@@ -23,6 +23,11 @@ class Anaconda3(Package):
     maintainers = ["ajkotobi"]
 
     version(
+        "2022.10",
+        sha256="e7ecbccbc197ebd7e1f211c59df2e37bc6959d081f2235d387e08c9026666acd",
+        expand=False,
+    )
+    version(
         "2022.05",
         sha256="a7c0afe862f6ea19a596801fc138bde0463abcbce1b753e8d5c474b506a2db2d",
         expand=False,
