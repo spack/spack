@@ -2192,6 +2192,7 @@ class Environment(object):
             view = dict((name, view.to_dict()) for name, view in self.views.items())
         else:
             view = False
+
         yaml_dict["view"] = view
 
         if self.dev_specs:

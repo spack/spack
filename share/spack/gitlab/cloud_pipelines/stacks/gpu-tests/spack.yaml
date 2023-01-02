@@ -1,19 +1,6 @@
 spack:
   view: false
 
-  concretizer:
-    reuse: false
-    unify: false
-
-  config:
-    build_jobs: 32
-    concretizer: clingo
-    install_tree:
-      root: /home/software/spack
-      padded_length: 512
-      projections:
-        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-
   packages:
     all:
       compiler: [gcc@11.1.0]
@@ -102,7 +89,7 @@ spack:
     mappings:
       - match:
         - kokkos +rocm amdgpu_target=gfx90a
-        runner-attributes:
+        build-job:
           tags: [ "rocm-5.4.0", "mi210" ]
           variables:
             CI_JOB_SIZE: large
@@ -110,7 +97,7 @@ spack:
       - match:
         - kokkos +cuda cuda_arch=80 ^cuda@12.0.0
         - raja +cuda cuda_arch=80 ^cuda@12.0.0
-        runner-attributes:
+        build-job:
           tags: [ "nvidia-525.85.12", "cuda-12.0", "a100" ]
           variables:
             CI_JOB_SIZE: large
