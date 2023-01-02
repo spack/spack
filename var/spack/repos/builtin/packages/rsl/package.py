@@ -18,3 +18,12 @@ class Rsl(AutotoolsPackage):
     depends_on("bzip2")
     depends_on("jpeg")
     depends_on("zlib")
+    depends_on("rpc")
+
+    def configure_args(self):
+        config_args = [
+            "LDFLAGS={0}".format(self.spec["rpc"].libs.ld_flags),
+            "CPPFLAGS={0}".format(self.spec["rpc"].headers.cpp_flags),
+        ]
+
+        return config_args
