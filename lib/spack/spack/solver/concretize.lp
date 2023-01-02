@@ -1164,16 +1164,17 @@ opt_criterion(73, "deprecated versions used").
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root package.
-opt_criterion(70, "version weight").
+opt_criterion(70, "ROOTS: version badness").
 #minimize{ 0@70+build_prio: #true }.
 #minimize{ 0@70: #true }.
 #minimize {
     Weight@70+Priority
-    : attr("root", Package), version_weight(Package, Weight),
+    : attr("root", Package),
+      version_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(65, "number of non-default variants (roots)").
+opt_criterion(65, "ROOTS: number of non-default variants").
 #minimize{ 0@65+build_prio: #true }.
 #minimize{ 0@65: #true }.
 #minimize {
@@ -1183,7 +1184,7 @@ opt_criterion(65, "number of non-default variants (roots)").
       build_priority(Package, Priority)
 }.
 
-opt_criterion(60, "preferred providers for roots").
+opt_criterion(60, "ROOTS: preferred providers").
 #minimize{ 0@60+build_prio: #true }.
 #minimize{ 0@60: #true }.
 #minimize{
@@ -1193,7 +1194,7 @@ opt_criterion(60, "preferred providers for roots").
       build_priority(Provider, Priority)
 }.
 
-opt_criterion(55, "default values of variants not being used (roots)").
+opt_criterion(55, "ROOTS: default values of variants not being used").
 #minimize{ 0@55+build_prio: #true }.
 #minimize{ 0@55: #true }.
 #minimize{
@@ -1204,7 +1205,7 @@ opt_criterion(55, "default values of variants not being used (roots)").
 }.
 
 % Try to use default variants or variants that have been set
-opt_criterion(50, "number of non-default variants (non-roots)").
+opt_criterion(50, "NON-ROOTS: number of non-default variants").
 #minimize{ 0@50+build_prio: #true }.
 #minimize{ 0@50: #true }.
 #minimize {
@@ -1216,12 +1217,13 @@ opt_criterion(50, "number of non-default variants (non-roots)").
 
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
-opt_criterion(45, "preferred providers (non-roots)").
+opt_criterion(45, "NON-ROOTS: preferred providers").
 #minimize{ 0@45+build_prio: #true }.
 #minimize{ 0@45: #true }.
 #minimize{
     Weight@45+Priority,Provider,Virtual
-    : provider_weight(Provider, Virtual, Weight), not attr("root", Provider),
+    : provider_weight(Provider, Virtual, Weight),
+      not attr("root", Provider),
       build_priority(Provider, Priority)
 }.
 
@@ -1264,17 +1266,18 @@ opt_criterion(30, "non-preferred OS's").
 }.
 
 % Choose more recent versions for nodes
-opt_criterion(25, "version badness").
+opt_criterion(25, "NON-ROOTS: version badness").
 #minimize{ 0@25+build_prio: #true }.
 #minimize{ 0@25: #true }.
 #minimize{
     Weight@25+Priority,Package
-    : version_weight(Package, Weight),
+    : not attr("root", Package),
+      version_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
 % Try to use all the default values of variants
-opt_criterion(20, "default values of variants not being used (non-roots)").
+opt_criterion(20, "NON-ROOTS: default values of variants not being used").
 #minimize{ 0@20+build_prio: #true }.
 #minimize{ 0@20: #true }.
 #minimize{

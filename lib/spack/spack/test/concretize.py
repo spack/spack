@@ -1780,7 +1780,7 @@ class TestConcretize(object):
 
             criteria = [
                 (None, num_specs - 1, "number of packages to build (vs. reuse)"),
-                (2, 0, "version badness"),
+                (2, 0, "NON-ROOTS: version badness"),
             ]
 
             for criterion in criteria:
