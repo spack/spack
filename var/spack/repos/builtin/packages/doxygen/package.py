@@ -15,24 +15,25 @@ class Doxygen(CMakePackage):
     Microsoft, and UNO/OpenOffice flavors), Fortran, VHDL, Tcl, and to some
     extent D.."""
 
-    homepage = "https://github.com/doxygen/doxygen/"
-    git = "https://github.com/doxygen/doxygen.git"
+    homepage = "https://www.doxygen.org"
+    url = "https://github.com/doxygen/doxygen/archive/refs/tags/Release_1_9_5.tar.gz"
 
-    # Doxygen versions on GitHub
-    version("1.9.4", commit="5d15657a55555e6181a7830a5c723af75e7577e2")
-    version("1.9.3", commit="6518ff3d24ad187b7072bee854d69e285cd366ea")
-    version("1.9.2", commit="caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8")
-    version("1.9.1", commit="ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b")
-    version("1.9.0", commit="71777ff3973331bd9453870593a762e184ba9f78")
-    version("1.8.20", commit="f246dd2f1c58eea39ea3f50c108019e4d4137bd5")
-    version("1.8.18", commit="a1b07ad0e92e4526c9ba1711d39f06b58c2a7459")
-    version("1.8.17", commit="b5fa3cd1c6e6240e20d3b80a70e3f04040b32021")
-    version("1.8.16", commit="cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255")
-    version("1.8.15", commit="dc89ac01407c24142698c1374610f2cee1fbf200")
-    version("1.8.14", commit="2f4139de014bf03898320a45fe52c92872c1e0f4")
-    version("1.8.12", commit="4951df8d0d0acf843b4147136f945504b96536e7")
-    version("1.8.11", commit="a6d4f4df45febe588c38de37641513fd576b998f")
-    version("1.8.10", commit="fdae7519a2e29f94e65c0e718513343f07302ddb")
+    version("1.9.6", sha256="2a3ee47f7276b759f74bac7614c05a1296a5b028d3f6a79a88e4c213db78e7dc")
+    version("1.9.5", sha256="1c5c9cd4445f694e43f089c17529caae6fe889b732fb0b145211025a1fcda1bb")
+    version("1.9.4", sha256="1b083d15b29817463129ae1ae73b930d883030eeec090ea7a99b3a04fdb51c76")
+    version("1.9.3", sha256="c29426222c9361dc33b762cf1c6447c78cfb0b9c213e5dcdbe31a10540c918c5")
+    version("1.9.2", sha256="40f429241027ea60f978f730229d22e971786172fdb4dc74db6406e7f6c034b3")
+    version("1.9.1", sha256="96db0b69cd62be1a06b0efe16b6408310e5bd4cd5cb5495b77f29c84c7ccf7d7")
+    version("1.9.0", sha256="91b81141b7eeb251ca8069c114efa45e15614bcb9d7121fac4f3e9da592c56ab")
+    version("1.8.20", sha256="3dbdf8814d6e68233d5149239cb1f0b40b4e7b32eef2fd53de8828fedd7aca15")
+    version("1.8.18", sha256="9c88f733396dca16139483045d5afa5bbf19d67be0b8f0ea43c4e813ecfb2aa2")
+    version("1.8.17", sha256="1b5d337e4b73ef1357a88cbd06fc4c301f08f279dac0adb99e876f4d72361f4f")
+    version("1.8.16", sha256="75b18117f88ca1930ab74c05f6712690a26dd4fdcfc9d7d5324be43160645fb4")
+    version("1.8.15", sha256="cc5492b3e2d1801ae823c88e0e7a38caee61a42303587e987142fe9b68a43078")
+    version("1.8.14", sha256="18bc3790b4d5f4d57cb8ee0a77dd63a52518f3f70d7fdff868a7ce7961a6edc3")
+    version("1.8.12", sha256="12142d0cb9dda839deb44a8aa16ff2f32fde23124a7c428c772150433c73f793")
+    version("1.8.11", sha256="86263cb4ce1caa41937465f73f644651bd73128d685d35f18dea3046c7c42c12")
+    version("1.8.10", sha256="0ac08900e5dc3ab5b65976991bf197623a7cc33ec3b32fe29360fb55d0c16b60")
 
     # graphviz appears to be a run-time optional dependency
     variant("graphviz", default=False, description="Build with dot command support from Graphviz.")
@@ -44,6 +45,10 @@ class Doxygen(CMakePackage):
     executables = ["doxygen"]
 
     maintainers = ["sethrj"]
+
+    def url_for_version(self, version):
+        url = "https://github.com/doxygen/doxygen/archive/refs/tags/Release_{0}.tar.gz"
+        return url.format(version.underscored)
 
     @classmethod
     def determine_version(cls, exe):
