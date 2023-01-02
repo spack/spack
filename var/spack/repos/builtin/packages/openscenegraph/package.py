@@ -40,6 +40,7 @@ class Openscenegraph(CMakePackage):
     depends_on("libtiff")
     depends_on("glib")
     depends_on("zlib")
+    depends_on("fontconfig")
 
     depends_on("ffmpeg+avresample", when="+ffmpeg")
     # https://github.com/openscenegraph/OpenSceneGraph/issues/167
