@@ -140,6 +140,7 @@ class Dd4hep(CMakePackage):
     depends_on("boost +system +filesystem", when="%gcc@:7")
     depends_on("root @6.08: +gdml +math +python")
     depends_on("root @6.08: +gdml +math +python +x +opengl", when="+ddeve")
+    depends_on("root @6.08: +gdml +math +python +x +opengl", when="+utilityapps")
 
     extends("python")
     depends_on("xerces-c", when="+xercesc")
