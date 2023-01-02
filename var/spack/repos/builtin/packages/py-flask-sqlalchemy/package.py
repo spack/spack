@@ -8,7 +8,7 @@ from spack.package import *
 
 class PyFlaskSqlalchemy(PythonPackage):
     """
-    Simple data dependent workflows in Python
+    Add SQLAlchemy support to your Flask application.
     """
 
     homepage = "https://github.com/pallets-eco/flask-sqlalchemy"

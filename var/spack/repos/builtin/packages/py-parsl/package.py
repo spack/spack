@@ -18,7 +18,11 @@ class PyParsl(PythonPackage):
 
     version("1.1.0", sha256="6a623d3550329f028775950d23a2cafcb0f82b199f15940180410604aa5d102c")
 
-    variant("monitoring", default=False, description="enable live monitoring <https://parsl.readthedocs.io/en/stable/userguide/monitoring.html>")
+    variant(
+        "monitoring",
+        default=False,
+        description="enable live monitoring <https://parsl.readthedocs.io/en/stable/userguide/monitoring.html>",
+    )
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
