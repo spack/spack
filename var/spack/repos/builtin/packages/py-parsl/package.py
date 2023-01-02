@@ -18,6 +18,8 @@ class PyParsl(PythonPackage):
 
     version("1.1.0", sha256="6a623d3550329f028775950d23a2cafcb0f82b199f15940180410604aa5d102c")
 
+    variant("monitoring", default=False, description="enable live monitoring <https://parsl.readthedocs.io/en/stable/userguide/monitoring.html>")
+
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pyzmq@17.1.2:", type=("build", "run"))
@@ -29,3 +31,13 @@ class PyParsl(PythonPackage):
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-paramiko", type=("build", "run"))
     depends_on("py-psutil@5.5.1:", type=("build", "run"))
+
+    with when("+monitoring"):
+        depends_on("py-sqlalchemy@1.3:", type=("build", "run"))
+        depends_on("py-pydot", type=("build", "run"))
+        depends_on("py-networkx@2.5", type=("build", "run"))
+        depends_on("py-flask@1.0.2:", type=("build", "run"))
+        depends_on("py-flask-sqlalchemy", type=("build", "run"))
+        depends_on("py-pandas@:1.3", type=("build", "run"))
+        depends_on("py-plotly", type=("build", "run"))
+        depends_on("py-python-daemon", type=("build", "run"))
