@@ -2067,6 +2067,33 @@ build_priority(PackageNode, 0)   :- concrete(PackageNode), attr("node", PackageN
 % This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
 #edge (A, B) : depends_on(A, B).
 
+%-----------------------------------------------------------------------------
+% Calculate min depth of nodes in the DAG
+% We use this to optimize nodes closer to roots with higher precedence.
+%-----------------------------------------------------------------------------
+#const max_depth = 10.
+
+% roots have depth 0
+depth(Package, 0) :- attr("root", Package).
+
+% possible optimization
+% adding this to the minimization below doesn't seem to help.
+%possible_dependency(Dependent, Package) :- dependency_condition(_, Dependent, Package).
+%possible_dependency(Dependent, Package) :-
+%    dependency_condition(_, Dependent, Virtual), possible_provider(Package, Virtual).
+
+% other nodes' depth is the minimum depth of any dependent plus one.
+depth(Package, N+1) :-
+    N = #min{
+        D: depends_on(Dependent, Package),
+           depth(Dependent, D),
+           0 <= D,
+           D < max_depth
+    },
+    0 <= N,
+    N <= max_depth,
+    attr("node", Package).
+
 %-----------------------------------------------------------------
 % Optimization to avoid errors
 %-----------------------------------------------------------------

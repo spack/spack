@@ -50,3 +50,4 @@
 #show variant_single_value/2.
 
 % debug
+#show depth/2.
