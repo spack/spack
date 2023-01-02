@@ -11,6 +11,7 @@ from copy import copy
 import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util import symlink
 
 import spack.compiler
 import spack.compilers as compilers
@@ -879,10 +880,10 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     xcrun = mock_executable(
         "xcrun",
         """
-if [[ "$2" == "clang" ]] ; then
+if [ "$2" = "clang" ] ; then
   echo "/Library/Developer/CommandLineTools/usr/bin/clang"
 fi
-if [[ "$2" == "clang++" ]] ; then
+if [ "$2" = "clang++" ] ; then
   echo "/Library/Developer/CommandLineTools/usr/bin/clang++"
 fi
 """,
@@ -909,7 +910,7 @@ echo "/Library/Developer"
     # Set a few operations to noop
     monkeypatch.setattr(shutil, "copytree", noop)
     monkeypatch.setattr(os, "unlink", noop)
-    monkeypatch.setattr(os, "symlink", noop)
+    monkeypatch.setattr(symlink, "symlink", noop)
     monkeypatch.setattr(os, "listdir", _listdir)
 
     # Qt is so far the only package that uses this code path, change

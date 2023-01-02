@@ -8,7 +8,6 @@ import glob
 import os
 import posixpath
 import re
-import shutil
 import sys
 from contextlib import contextmanager
 
@@ -344,16 +343,6 @@ class DirectoryLayout(object):
         path = self.path_for_spec(spec)
         assert path.startswith(self.root)
 
-        # Windows readonly files cannot be removed by Python
-        # directly, change permissions before attempting to remove
-        if is_windows:
-            kwargs = {
-                "ignore_errors": False,
-                "onerror": fs.readonly_file_handler(ignore_errors=False),
-            }
-        else:
-            kwargs = {}  # the default value for ignore_errors is false
-
         if deprecated:
             if os.path.exists(path):
                 try:
@@ -364,7 +353,7 @@ class DirectoryLayout(object):
                     raise RemoveFailedError(spec, path, e) from e
         elif os.path.exists(path):
             try:
-                shutil.rmtree(path, **kwargs)
+                fs.rmtree(path)
             except OSError as e:
                 raise RemoveFailedError(spec, path, e) from e
 

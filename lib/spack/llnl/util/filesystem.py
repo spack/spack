@@ -16,23 +16,13 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
-from sys import platform as _platform
 
-from llnl.util import tty
-from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import islink, symlink
-
-from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows = _platform == "win32"
-
-if not is_windows:
-    import grp
-    import pwd
-else:
-    import win32security
-
+from ..util import tty
+from .lang import dedupe, memoized
+from .symlink import islink, symlink
 
 __all__ = [
     "FileFilter",
@@ -84,26 +74,49 @@ __all__ = [
 ]
 
 
-def getuid():
-    if is_windows:
-        import ctypes
+if sys.platform == "win32":
+    from ._windows import group_ids  # noqa: F401
+    from ._windows import (
+        COMMON_LIBRARY_DIRECTORIES,
+        EMPTY_FILE_PERMISSIONS,
+        VALID_LIBRARY_EXTENSIONS,
+        chgrp,
+        file_command,
+        getuid,
+        is_directory,
+        library_suffixes,
+        rename,
+        rmtree,
+        uid_for_existing_path,
+    )
 
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
-        return 0
-    else:
-        return os.getuid()
+    rename = system_path_filter(rename)
+else:
+    from ._unix import group_ids  # noqa: F401
+    from ._unix import (
+        COMMON_LIBRARY_DIRECTORIES,
+        EMPTY_FILE_PERMISSIONS,
+        VALID_LIBRARY_EXTENSIONS,
+        chgrp,
+        library_suffixes,
+        uid_for_existing_path,
+    )
 
+    chgrp = system_path_filter(arg_slice=slice(1))(chgrp)
+    getuid = os.getuid
+    rename = system_path_filter(os.rename)
+    rmtree = shutil.rmtree
 
-@system_path_filter
-def rename(src, dst):
-    # On Windows, os.rename will fail if the destination file already exists
-    if is_windows:
-        # Windows path existence checks will sometimes fail on junctions/links/symlinks
-        # so check for that case
-        if os.path.exists(dst) or os.path.islink(dst):
-            os.remove(dst)
-    os.rename(src, dst)
+    @memoized
+    def file_command(*args):
+        """Creates entry point to `file` system command with provided arguments"""
+        file_cmd = which("file", required=True)
+        for arg in args:
+            file_cmd.add_default_arg(arg)
+        return file_cmd
+
+    def is_directory(f: os.DirEntry) -> bool:
+        return f.is_dir()
 
 
 @system_path_filter
@@ -111,21 +124,6 @@ def path_contains_subdirectory(path, root):
     norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
     norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
     return norm_path.startswith(norm_root)
-
-
-@memoized
-def file_command(*args):
-    """Creates entry point to `file` system command with provided arguments"""
-    try:
-        file_cmd = which("file", required=True)
-    except CommandNotFoundError as e:
-        if is_windows:
-            raise CommandNotFoundError("`file` utility is not available on Windows")
-        else:
-            raise e
-    for arg in args:
-        file_cmd.add_default_arg(arg)
-    return file_cmd
 
 
 @memoized
@@ -458,23 +456,12 @@ def get_owner_uid(path, err_msg=None):
         p_stat = os.stat(path)
         if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
             tty.error(
-                "Expected {0} to support mode {1}, but it is {2}".format(
-                    path, stat.S_IRWXU, p_stat.st_mode
-                )
+                f"Expected {path} to support mode {stat.S_IRWXU}, but it is {p_stat.st_mode}"
             )
 
             raise OSError(errno.EACCES, err_msg.format(path, path) if err_msg else "")
-    else:
-        p_stat = os.stat(path)
 
-    if _platform != "win32":
-        owner_uid = p_stat.st_uid
-    else:
-        sid = win32security.GetFileSecurity(
-            path, win32security.OWNER_SECURITY_INFORMATION
-        ).GetSecurityDescriptorOwner()
-        owner_uid = win32security.LookupAccountSid(None, sid)[0]
-    return owner_uid
+    return uid_for_existing_path(path)
 
 
 @system_path_filter
@@ -489,48 +476,6 @@ def set_install_permissions(path):
         os.chmod(path, 0o755)
     else:
         os.chmod(path, 0o644)
-
-
-def group_ids(uid=None):
-    """Get group ids that a uid is a member of.
-
-    Arguments:
-        uid (int): id of user, or None for current user
-
-    Returns:
-        (list of int): gids of groups the user is a member of
-    """
-    if is_windows:
-        tty.warn("Function is not supported on Windows")
-        return []
-
-    if uid is None:
-        uid = getuid()
-
-    pwd_entry = pwd.getpwuid(uid)
-    user = pwd_entry.pw_name
-
-    # user's primary group id may not be listed in grp (i.e. /etc/group)
-    # you have to check pwd for that, so start the list with that
-    gids = [pwd_entry.pw_gid]
-
-    return sorted(set(gids + [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]))
-
-
-@system_path_filter(arg_slice=slice(1))
-def chgrp(path, group, follow_symlinks=True):
-    """Implement the bash chgrp function on a single path"""
-    if is_windows:
-        raise OSError("Function 'chgrp' is not supported on Windows")
-
-    if isinstance(group, str):
-        gid = grp.getgrnam(group).gr_gid
-    else:
-        gid = group
-    if follow_symlinks:
-        os.chown(path, -1, gid)
-    else:
-        os.lchown(path, -1, gid)
 
 
 @system_path_filter(arg_slice=slice(1))
@@ -1030,13 +975,9 @@ def open_if_filename(str_or_file, mode="r"):
 @system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
-    if is_windows:
-        perms = os.O_WRONLY | os.O_CREAT
-    else:
-        perms = os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY
     fd = None
     try:
-        fd = os.open(path, perms)
+        fd = os.open(path, EMPTY_FILE_PERMISSIONS)
         os.utime(path, None)
     finally:
         if fd is not None:
@@ -1091,11 +1032,7 @@ def temp_cwd():
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
-        kwargs = {}
-        if is_windows:
-            kwargs["ignore_errors"] = False
-            kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
-        shutil.rmtree(tmp_dir, **kwargs)
+        rmtree(tmp_dir)
 
 
 @contextmanager
@@ -1315,29 +1252,7 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
     for f in dir_entries:
         rel_child = os.path.join(rel_path, f.name)
         islink = f.is_symlink()
-        # On Windows, symlinks to directories are distinct from
-        # symlinks to files, and it is possible to create a
-        # broken symlink to a directory (e.g. using os.symlink
-        # without `target_is_directory=True`), invoking `isdir`
-        # on a symlink on Windows that is broken in this manner
-        # will result in an error. In this case we can work around
-        # the issue by reading the target and resolving the
-        # directory ourselves
-        try:
-            isdir = f.is_dir()
-        except OSError as e:
-            if is_windows and hasattr(e, "winerror") and e.winerror == 5 and islink:
-                # if path is a symlink, determine destination and
-                # evaluate file vs directory
-                link_target = resolve_link_target_relative_to_the_link(f)
-                # link_target might be relative but
-                # resolve_link_target_relative_to_the_link
-                # will ensure that if so, that it is relative
-                # to the CWD and therefore
-                # makes sense
-                isdir = os.path.isdir(link_target)
-            else:
-                raise e
+        isdir = is_directory(f)
 
         if not isdir and not islink:
             # handle non-symlink files
@@ -1419,40 +1334,6 @@ def remove_if_dead_link(path):
         os.unlink(path)
 
 
-def readonly_file_handler(ignore_errors=False):
-    # TODO: generate stages etc. with write permissions wherever
-    # so this callback is no-longer required
-    """
-    Generate callback for shutil.rmtree to handle permissions errors on
-    Windows. Some files may unexpectedly lack write permissions even
-    though they were generated by Spack on behalf of the user (e.g. the
-    stage), so this callback will detect such cases and modify the
-    permissions if that is the issue. For other errors, the fallback
-    is either to raise (if ignore_errors is False) or ignore (if
-    ignore_errors is True). This is only intended for Windows systems
-    and will raise a separate error if it is ever invoked (by accident)
-    on a non-Windows system.
-    """
-
-    def error_remove_readonly(func, path, exc):
-        if not is_windows:
-            raise RuntimeError("This method should only be invoked on Windows")
-        excvalue = exc[1]
-        if (
-            is_windows
-            and func in (os.rmdir, os.remove, os.unlink)
-            and excvalue.errno == errno.EACCES
-        ):
-            # change the file to be readable,writable,executable: 0777
-            os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-            # retry
-            func(path)
-        elif not ignore_errors:
-            raise
-
-    return error_remove_readonly
-
-
 @system_path_filter
 def remove_linked_tree(path):
     """Removes a directory and its contents.
@@ -1467,18 +1348,15 @@ def remove_linked_tree(path):
     """
     kwargs = {"ignore_errors": True}
 
-    # Windows readonly files cannot be removed by Python
-    # directly.
-    if is_windows:
-        kwargs["ignore_errors"] = False
-        kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
+    if not os.path.exists(path):
+        return
 
-    if os.path.exists(path):
-        if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), **kwargs)
-            os.unlink(path)
-        else:
-            shutil.rmtree(path, **kwargs)
+    if os.path.islink(path):
+        rmtree(os.path.realpath(path), **kwargs)
+        os.unlink(path)
+        return
+
+    rmtree(path, **kwargs)
 
 
 @contextmanager
@@ -1980,12 +1858,7 @@ class LibraryList(FileList):
             if x.startswith("lib"):
                 name = x[3:]
 
-            # Valid extensions include: ['.dylib', '.so', '.a']
-            # on non Windows platform
-            # Windows valid library extensions are:
-            # ['.dll', '.lib']
-            valid_exts = [".dll", ".lib"] if is_windows else [".dylib", ".so", ".a"]
-            for ext in valid_exts:
+            for ext in VALID_LIBRARY_EXTENSIONS:
                 i = name.rfind(ext)
                 if i != -1:
                     names.append(name[:i])
@@ -2124,6 +1997,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     Returns:
         LibraryList: The libraries that have been found
     """
+    suffixes = library_suffixes(shared=shared, runtime=runtime)
     if isinstance(libraries, str):
         libraries = [libraries]
     elif not isinstance(libraries, collections.abc.Sequence):
@@ -2131,26 +2005,6 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         message += "first argument [got {1} instead]"
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
-
-    if is_windows:
-        static_ext = "lib"
-        # For linking (runtime=False) you need the .lib files regardless of
-        # whether you are doing a shared or static link
-        shared_ext = "dll" if runtime else "lib"
-    else:
-        # Used on both Linux and macOS
-        static_ext = "a"
-        shared_ext = "so"
-
-    # Construct the right suffix for the library
-    if shared:
-        # Used on both Linux and macOS
-        suffixes = [shared_ext]
-        if sys.platform == "darwin":
-            # Only used on macOS
-            suffixes.append("dylib")
-    else:
-        suffixes = [static_ext]
 
     # List of libraries we are searching with suffixes
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
@@ -2163,11 +2017,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     # perform first non-recursive search in root/lib then in root/lib64 and
     # finally search all of root recursively. The search stops when the first
     # match is found.
-    common_lib_dirs = ["lib", "lib64"]
-    if is_windows:
-        common_lib_dirs.extend(["bin", "Lib"])
-
-    for subdir in common_lib_dirs:
+    for subdir in COMMON_LIBRARY_DIRECTORIES:
         dirname = join_path(root, subdir)
         if not os.path.isdir(dirname):
             continue
