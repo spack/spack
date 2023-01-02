@@ -25,3 +25,4 @@ class RRhdf5lib(RPackage):
     depends_on("r@3.3.0:", type="build", when="@1.12.1:")
     depends_on("r@4.0.0:", type="build", when="@1.16.0:")
     depends_on("gmake", type="build")
+    depends_on("zlib")
