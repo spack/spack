@@ -478,6 +478,10 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
     legacy_methods: Tuple[str, ...] = ()
     legacy_attributes: Tuple[str, ...] = ()
 
+    # type hints for some of the legacy methods
+    build_time_test_callbacks: List[str]
+    install_time_test_callbacks: List[str]
+
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
