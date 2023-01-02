@@ -19,3 +19,7 @@ class Libxau(AutotoolsPackage, XorgPackage):
     depends_on("xproto")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
+
+    @property
+    def libs(self):
+        return find_libraries("libXau", self.prefix, shared=True, recursive=True)
