@@ -10,6 +10,12 @@ from spack.package import *
 from spack.util.environment import EnvironmentModifications
 
 _versions = {
+    "22.11.1": {
+        "Linux-x86_64": (
+            "00938c3534750a0e4069499baf8f4e6dc1c2e471c86a59caa0dd03f4a9269db6",
+            "https://repo.anaconda.com/miniconda/Miniconda3-py310_22.11.1-1-Linux-x86_64.sh",
+        )
+    },
     "4.10.3": {
         "Linux-x86_64": (
             "1ea2f885b4dbc3098662845560bc64271eb17085387a70c2ba3f29fff6f8d52f",
