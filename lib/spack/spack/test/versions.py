@@ -16,7 +16,6 @@ from llnl.util.filesystem import working_dir
 
 import spack.package_base
 import spack.spec
-from spack.util.executable import which
 from spack.version import (
     GitVersion,
     Version,
@@ -593,7 +592,7 @@ def test_invalid_versions(version_str):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
+def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_packages):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
@@ -607,7 +606,7 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
         ]
 
         with working_dir(repo_path):
-            which("git")("checkout", commit)
+            git("checkout", commit)
         with open(os.path.join(repo_path, filename), "r") as f:
             expected = f.read()
 
