@@ -21,7 +21,7 @@ spack:
         blas: [openblas]
         mpi: [mpich]
       target: [x86_64]
-      variants: +mpi amdgpu_target=gfx90a cuda_arch=80
+      variants: [+mpi, amdgpu_target=gfx90a, cuda_arch=80]
     tbb:
       require: "intel-tbb"
     binutils:
@@ -224,7 +224,7 @@ spack:
     +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
     +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos
     +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
-    +rocm
+    +rocm amdgpu_target=gfx90a
   - umpire +rocm
   - upcxx +rocm
 
