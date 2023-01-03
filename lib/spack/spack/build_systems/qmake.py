@@ -81,6 +81,6 @@ class QMakeBuilder(BaseBuilder):
     def check(self):
         """Search the Makefile for a ``check:`` target and runs it if found."""
         with working_dir(self.build_directory):
-            self._if_make_target_execute("check")
+            self.pkg._if_make_target_execute("check")
 
     spack.builder.run_after("build")(execute_build_time_tests)

@@ -13,6 +13,7 @@ import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
 import spack.paths
+import spack.util.git
 from spack.util.executable import which
 
 description = "runs source code style checks on spack"
@@ -46,6 +47,13 @@ tool_names = [
 
 #: tools we run in spack style
 tools = {}
+
+#: warnings to ignore in mypy
+mypy_ignores = [
+    # same as `disable_error_code = "annotation-unchecked"` in pyproject.toml, which
+    # doesn't exist in mypy 0.971 for Python 3.6
+    "[annotation-unchecked]",
+]
 
 
 def is_package(f):
@@ -81,7 +89,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if root is None:
         root = spack.paths.prefix
 
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
 
     # ensure base is in the repo
     base_sha = git(
@@ -209,6 +217,10 @@ def rewrite_and_print_output(
 
     for line in output.split("\n"):
         if not line:
+            continue
+        if any(ignore in line for ignore in mypy_ignores):
+            # some mypy annotations can't be disabled in older mypys (e.g. .971, which
+            # is the only mypy that supports python 3.6), so we filter them here.
             continue
         if not args.root_relative and re_obj:
             line = re_obj.sub(translate, line)
