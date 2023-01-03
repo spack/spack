@@ -20,7 +20,7 @@ class PyKbPython(PythonPackage):
 
     depends_on("py-anndata@0.6.22.post1:", type=("build", "run"))
     depends_on("py-h5py@2.10.0:", type=("build", "run"))
-    depends_on("py-jinja2@2.10.1:", type=("build", "run"))
+    depends_on("py-jinja2@2.10.2:", type=("build", "run"))
     depends_on("py-loompy@3.0.6:", type=("build", "run"))
     depends_on("py-nbconvert@5.6.0:", type=("build", "run"))
     depends_on("py-nbformat@4.4.0:", type=("build", "run"))
