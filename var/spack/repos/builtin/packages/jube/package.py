@@ -15,6 +15,16 @@ class Jube(PythonPackage):
     url = "https://apps.fz-juelich.de/jsc/jube/jube2/download.php?version=2.2.2"
 
     version(
+        "2.5.1",
+        sha256="4c9a754b0e6f2b5e8cd0f5bd643dcfd7863a96b05cd02141d5eb301f2b89f6a3",
+        extension="tar.gz",
+    )
+    version(
+        "2.5.0",
+        sha256="2f136f9c46069e62b7b818e102527bbe7adc84190dbbcb3eb153b7c5b23d7162",
+        extension="tar.gz",
+    )
+    version(
         "2.4.3",
         sha256="5ff37495a0c8ef4ec501866217b758d8ea474e985b678af757f7906cc56c6d7e",
         extension="tar.gz",
@@ -98,7 +108,9 @@ class Jube(PythonPackage):
         multi=False,
     )
 
+    depends_on("python@3.2:", type=("build", "run"), when="@2.5:")
     depends_on("py-setuptools", type="build")
+    depends_on("py-pyyaml", type=("build", "run"))
 
     def setup_run_environment(self, env):
         if not self.spec.variants["resource_manager"].value == "none":
