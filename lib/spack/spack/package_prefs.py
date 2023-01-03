@@ -158,8 +158,9 @@ class PackagePrefs(object):
             formatted_all = all.format("{variants}")
             formatted_pkg = pkg.format("{variants}")
             error_message = (
-                "Ambiguous config for package {}: the package specific variant preferences {} conflict "
-                "with the general preferences {}. Consider promoting the conflicting variant value to a requirement, for example: "
+                "Ambiguous config for package {}: the package specific variant "
+                "preferences {} conflict with the general preferences {}. Consider "
+                "promoting the conflicting variant value to a requirement, for example: "
                 "`packages:{}:require:{}`."
             ).format(pkg_name, formatted_pkg, formatted_all, pkg_name, formatted_pkg)
             raise spack.config.ConfigError(error_message) from e
