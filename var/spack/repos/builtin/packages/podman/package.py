@@ -10,9 +10,11 @@ class Podman(Package):
     """An optionally rootless and daemonless container engine: alias docker=podman"""
 
     homepage = "https://podman.io"
-    url = "https://github.com/containers/podman/archive/v3.4.2.tar.gz"
+    url = "https://github.com/containers/podman/archive/refs/tags/v4.3.1.tar.gz"
     maintainers = ["bernhardkaindl"]
 
+    version("4.3.1", sha256="455c29c4ee78cd6365e5d46e20dd31a5ce4e6e1752db6774253d76bd3ca78813")
+    version("3.4.7", sha256="4af6606dd072fe946960680611ba65201be435b43edbfc5cc635b2a01a899e6e")
     version("3.4.2", sha256="b0c4f9a11eb500b1d440d5e51a6c0c632aa4ac458e2dc0362f50f999eb7fbf31")
 
     depends_on("go", type="build")
