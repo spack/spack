@@ -236,6 +236,7 @@ class Llvm(CMakePackage, CudaPackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
+    depends_on("hwloc@2.0.1:", when="@9:")
     depends_on("elf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+cuda")  # libomptarget
 
