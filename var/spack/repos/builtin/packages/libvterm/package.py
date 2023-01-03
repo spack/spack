@@ -25,6 +25,9 @@ class Libvterm(MakefilePackage):
 
     depends_on("libtool", type="build")
 
+    def setup_build_environment(self, env):
+        env.set("LIBTOOL", self.spec["libtool"].prefix.bin.join("libtool"))
+
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
         makefile.filter("PREFIX=.*", "PREFIX=" + prefix)
