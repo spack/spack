@@ -21,7 +21,7 @@ spack:
         blas: [openblas]
         mpi: [mpich]
       target: [x86_64]
-      variants: [+mpi, amdgpu_target=gfx90a, cuda_arch=80]
+      variants: +mpi amdgpu_target=gfx90a cuda_arch=80
     tbb:
       require: "intel-tbb"
     binutils:
@@ -45,9 +45,9 @@ spack:
     python:
       version: [3.8.13]
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
-        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+      require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext
+        +ifpack +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
@@ -144,10 +144,7 @@ spack:
   - swig@4.0.2-fortran
   - tasmanian
   - tau +mpi +python
-  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
-    +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
-    +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
-    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - trilinos@13.0.1 +belos +ifpack2 +stokhos
   - turbine
   - umap
   - umpire
@@ -190,7 +187,7 @@ spack:
   - superlu-dist +cuda
   - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +cuda
+  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
   - umpire ~shared +cuda
 
   # ROCm
@@ -220,11 +217,7 @@ spack:
   - superlu-dist +rocm
   - tasmanian ~openmp +rocm
   - tau +mpi +rocm
-  - trilinos@13.4.0 +amesos +amesos2 +anasazi +aztec ~belos +boost +epetra +epetraext
-    +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos
-    +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
-    +rocm
+  - trilinos@13.4.0 ~belos ~ifpack2 ~stokhos +rocm
   - umpire +rocm
   - upcxx +rocm
 
