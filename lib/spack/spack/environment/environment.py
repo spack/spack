@@ -1399,7 +1399,9 @@ class Environment(object):
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        max_processes = min(len(arguments), 16)  # Number of specs  # Cap on 16 cores
+
+        # Number of processes, capped to config:build_jobs & # specs.
+        max_processes = min(len(arguments), spack.config.get("config:build_jobs", 16))
 
         # TODO: revisit this print as soon as darwin is parallel too
         msg = "Starting concretization"

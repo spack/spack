@@ -40,6 +40,7 @@ default:
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
+    - spack config add config:build_jobs:8 # concretize with 8 processes (+/- 1GB peak per process)
     - spack ci generate --check-index-only
       --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -51,7 +52,7 @@ default:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags: ["spack", "aws", "public", "medium", "x86_64"]
   variables:
-    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_CPU_REQUEST: 8000m
     KUBERNETES_MEMORY_REQUEST: 8G
   interruptible: true
   retry:
