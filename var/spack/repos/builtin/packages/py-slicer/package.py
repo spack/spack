@@ -14,5 +14,5 @@ class PySlicer(PythonPackage):
 
     version("0.0.7", sha256="f5d5f7b45f98d155b9c0ba6554fa9770c6b26d5793a3e77a1030fb56910ebeec")
 
-    depends_on("py-setuptools@41:", type="build")
+    depends_on("py-setuptools", type="build")
     depends_on("python@3.6:", type=("build", "run"))
