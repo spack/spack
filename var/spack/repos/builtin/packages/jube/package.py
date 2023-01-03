@@ -110,6 +110,7 @@ class Jube(PythonPackage):
 
     depends_on("python@3.2:", type=("build", "run"), when="@2.5:")
     depends_on("py-setuptools", type="build")
+    depends_on("py-pyyaml", type=("build", "run"))
 
     def setup_run_environment(self, env):
         if not self.spec.variants["resource_manager"].value == "none":
