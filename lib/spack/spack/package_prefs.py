@@ -5,8 +5,10 @@
 import stat
 import warnings
 
+import spack.config
 import spack.error
 import spack.repo
+import spack.spec
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import VersionList
@@ -135,22 +137,44 @@ class PackagePrefs(object):
         return bool(cls.order_for_package(pkg_name, "target"))
 
     @classmethod
+    def _preferred_variants_from_config(cls, pkg_name):
+        "Get effective preferred variants from config without checking for existence"
+        all_variants = spack.config.get("packages").get("all", {}).get("variants", "")
+        pkg_variants = spack.config.get("packages").get(pkg_name, {}).get("variants", "")
+
+        # can be a list of strings too
+        if not isinstance(all_variants, str):
+            all_variants = " ".join(all_variants)
+
+        if not isinstance(pkg_variants, str):
+            pkg_variants = " ".join(pkg_variants)
+
+        all = spack.spec.Spec(f"{pkg_name} {all_variants}")
+        pkg = spack.spec.Spec(f"{pkg_name} {pkg_variants}")
+
+        try:
+            all.constrain(pkg)
+        except spack.error.UnsatisfiableSpecError as e:
+            formatted_all = all.format("{variants}")
+            formatted_pkg = pkg.format("{variants}")
+            error_message = (
+                "Ambiguous config for package {}: the package specific variant preferences {} conflict "
+                "with the general preferences {}. Consider promoting the conflicting variant value to a requirement, for example: "
+                "`packages:{}:require:{}`."
+            ).format(pkg_name, formatted_pkg, formatted_all, pkg_name, formatted_pkg)
+            raise spack.config.ConfigError(error_message) from e
+
+        return all.variants
+
+    @classmethod
     def preferred_variants(cls, pkg_name):
         """Return a VariantMap of preferred variants/values for a spec."""
-        for pkg_cls in (pkg_name, "all"):
-            variants = spack.config.get("packages").get(pkg_cls, {}).get("variants", "")
-            if variants:
-                break
-
-        # allow variants to be list or string
-        if not isinstance(variants, str):
-            variants = " ".join(variants)
+        variants = cls._preferred_variants_from_config(pkg_name)
 
         # Only return variants that are actually supported by the package
         pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
-        spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict(
-            (name, variant) for name, variant in spec.variants.items() if name in pkg_cls.variants
+            (name, variant) for name, variant in variants.items() if name in pkg_cls.variants
         )
 
 

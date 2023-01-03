@@ -12,6 +12,7 @@ import spack.config
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
+import spack.variant
 from spack.config import ConfigError
 from spack.spec import Spec
 from spack.version import Version
@@ -488,3 +489,25 @@ mpich:
         with spack.config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = Spec("sticky-variant %gcc").concretized()
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
+
+
+def test_preferred_variants_all_and_pkg_intersection_success(mutable_config):
+    spack.config.set("packages", {"all": {"variants": "+a +x"}, "example": {"variants": "~b ~z"}})
+
+    result = list(
+        spack.package_prefs.PackagePrefs._preferred_variants_from_config("example").values()
+    )
+    assert len(result) == 4
+    assert spack.variant.BoolValuedVariant("a", True) in result
+    assert spack.variant.BoolValuedVariant("b", False) in result
+    assert spack.variant.BoolValuedVariant("x", True) in result
+    assert spack.variant.BoolValuedVariant("z", False) in result
+
+
+def test_preferred_variants_all_and_pkg_intersection_failure(mutable_config):
+    # if all has +x and pkg has ~x, this is somewhat ambiguous; it could mean any of
+    # "~x", "~x or +x", or "~x and +x".
+    spack.config.set("packages", {"all": {"variants": "+x"}, "example": {"variants": "~x"}})
+
+    with pytest.raises(spack.config.ConfigError):
+        spack.package_prefs.PackagePrefs._preferred_variants_from_config("example")
