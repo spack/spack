@@ -137,6 +137,11 @@ class Neovim(CMakePackage):
     with when("@0.8:"):
         depends_on("libvterm@0.3:", type="link")
 
+    # Support for `libvterm@0.2:` has been added in neovim@0.8.0
+    # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
+    # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
+    conflicts("libvterm@0.2:", when="@:0.7")
+
     @when("^lua")
     def cmake_args(self):
         return [self.define("PREFER_LUA", True)]
