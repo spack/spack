@@ -22,6 +22,8 @@ class Cernlib(CMakePackage):
 
     depends_on("motif")
     depends_on("libx11")
+    depends_on("libxaw")
+    depends_on("libxt")
 
     def cmake_args(self):
         args = ["-DCERNLIB_BUILD_SHARED:BOOL=ON"]

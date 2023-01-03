@@ -57,3 +57,5 @@ class RRtracklayer(RPackage):
     depends_on("r-genomicalignments@1.15.6:", type=("build", "run"), when="@1.40.6:")
     depends_on("r-biocio", type=("build", "run"), when="@1.54.0:")
     depends_on("r-restfulr@0.0.13:", type=("build", "run"), when="@1.54.0:")
+    depends_on("zlib")
+    depends_on("openssl")
