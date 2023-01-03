@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -22,7 +24,7 @@ class Steps(CMakePackage):
     variant("codechecks", default=False,
             description="Perform additional code checks like "
                         "code formatting or static analysis")
-    variant("native", default=True, description="Generate non-portable arch-specific code")
+    variant("native", default=False if sys.platform == 'darwin' else True, description="Generate non-portable arch-specific code")
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
     variant("distmesh", default=True, description="Add solvers based on distributed mesh")
     variant("petsc", default=True, description="Use PETSc library for parallel E-Field solver")
@@ -54,6 +56,7 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("pkg-config", type="build")
+    depends_on("py-build", type="build", when="@5:")
     depends_on("py-cython")
     depends_on("py-h5py", type=("build", "test"))
     depends_on("py-gcovr", when="+coverage", type="build")
