@@ -13,6 +13,8 @@ class Libpng(AutotoolsPackage):
     url = "https://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.xz"
     git = "https://github.com/glennrp/libpng.git"
 
+    maintainers = ["AlexanderRichert-NOAA"]
+
     version("1.6.37", sha256="505e70834d35383537b6491e7ae8641f1a4bed1876dbfe361201fc80868d88ca")
     # From http://www.libpng.org/pub/png/libpng.html (2019-04-15)
     #     libpng versions 1.6.36 and earlier have a use-after-free bug in the
@@ -26,6 +28,14 @@ class Libpng(AutotoolsPackage):
 
     depends_on("zlib@1.0.4:")  # 1.2.5 or later recommended
 
+    variant(
+        "libs",
+        default="shared,static",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
+
     def configure_args(self):
         args = [
             # not honored, see
@@ -34,6 +44,8 @@ class Libpng(AutotoolsPackage):
             f"CPPFLAGS={self.spec['zlib'].headers.include_flags}",
             f"LDFLAGS={self.spec['zlib'].libs.search_flags}",
         ]
+
+        args += self.enable_or_disable("libs")
         return args
 
     def check(self):
