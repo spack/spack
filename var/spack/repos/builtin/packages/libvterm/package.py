@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Libvterm(Package):
+class Libvterm(MakefilePackage):
     """An abstract library implementation of a terminal emulator"""
 
     homepage = "http://www.leonerd.org.uk/code/libvterm/"
@@ -25,6 +25,6 @@ class Libvterm(Package):
 
     depends_on("libtool", type="build")
 
-    def install(self, spec, prefix):
-        make()
-        make("install", "PREFIX=" + prefix)
+    def edit(self, spec, prefix):
+        makefile = FileFilter("Makefile")
+        makefile.filter("PREFIX=.*", "PREFIX=" + prefix)
