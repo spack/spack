@@ -15,6 +15,8 @@ class SpatialIndex(PythonPackage):
     submodules = True
 
     version('develop', branch='main')
+    version('1.2.1', tag="1.2.1")
+    version('1.2.0', tag="1.2.0")
     version('1.1.0', tag="1.1.0")
     version('1.0.0', tag="1.0.0")
     version('0.9.0', tag="0.9.0")
@@ -35,7 +37,12 @@ class SpatialIndex(PythonPackage):
     depends_on("boost@:1.70.0", when="@:0.5.1")
     depends_on("boost@1.79.0:", when="@0.5.2:")
     depends_on("py-docopt", type=("build", "run"))
+    # `py-libsonata@0.1.15` contains a regression that throws
+    # on empty selections. Therefore, SpatialIndex can't use
+    # that version of `py-libsonata`. See,
+    #  https://github.com/BlueBrain/libsonata/pull/232
     depends_on("py-libsonata", type=("build", "run"), when="@0.2.2:")
+    conflicts("py-libsonata@0.1.15")
     depends_on("py-morphio", type=("build", "run"))
     depends_on("py-morpho-kit", type=("build", "run"))
     depends_on("py-mvdtool~mpi", type=("build", "run"), when="@:0.8.3")
