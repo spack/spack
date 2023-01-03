@@ -36,7 +36,7 @@ class Rocwmma(CMakePackage):
     # releases
 
     amdgpu_targets = ("gfx908:xnack-", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+")
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
+    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant(
         "build_type",
         default="Release",

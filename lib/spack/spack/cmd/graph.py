@@ -2,17 +2,20 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
-
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.store
-from spack.graph import graph_ascii, graph_dot
+from spack.graph import (
+    DAGWithDependencyTypes,
+    SimpleDAG,
+    graph_ascii,
+    graph_dot,
+    static_graph_dot,
+)
 
 description = "generate graphs of package dependency relationships"
 section = "basic"
@@ -36,6 +39,12 @@ def setup_parser(subparser):
         action="store_true",
         help="graph static (possible) deps, don't concretize (implies --dot)",
     )
+    subparser.add_argument(
+        "-c",
+        "--color",
+        action="store_true",
+        help="use different colors for different dependency types",
+    )
 
     subparser.add_argument(
         "-i",
@@ -48,11 +57,14 @@ def setup_parser(subparser):
 
 
 def graph(parser, args):
-    if args.installed:
-        if args.specs:
-            tty.die("Can't specify specs with --installed")
-        args.dot = True
+    if args.installed and args.specs:
+        tty.die("cannot specify specs with --installed")
 
+    if args.color and not args.dot:
+        tty.die("the --color option can be used only with --dot")
+
+    if args.installed:
+        args.dot = True
         env = ev.active_environment()
         if env:
             specs = env.all_specs()
@@ -68,13 +80,19 @@ def graph(parser, args):
 
     if args.static:
         args.dot = True
+        static_graph_dot(specs, deptype=args.deptype)
+        return
 
     if args.dot:
-        graph_dot(specs, static=args.static, deptype=args.deptype)
+        builder = SimpleDAG()
+        if args.color:
+            builder = DAGWithDependencyTypes()
+        graph_dot(specs, builder=builder, deptype=args.deptype)
+        return
 
-    elif specs:  # ascii is default: user doesn't need to provide it explicitly
-        debug = spack.config.get("config:debug")
-        graph_ascii(specs[0], debug=debug, deptype=args.deptype)
-        for spec in specs[1:]:
-            print()  # extra line bt/w independent graphs
-            graph_ascii(spec, debug=debug)
+    # ascii is default: user doesn't need to provide it explicitly
+    debug = spack.config.get("config:debug")
+    graph_ascii(specs[0], debug=debug, deptype=args.deptype)
+    for spec in specs[1:]:
+        print()  # extra line bt/w independent graphs
+        graph_ascii(spec, debug=debug)

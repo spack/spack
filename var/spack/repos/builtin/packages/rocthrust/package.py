@@ -101,7 +101,7 @@ class Rocthrust(CMakePackage):
 
     # the rocthrust library itself is header-only, but the build_type and amdgpu_target
     # are relevant to the test client
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
+    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant(
         "build_type",
         default="Release",

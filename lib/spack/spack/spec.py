@@ -4868,7 +4868,7 @@ class Spec(object):
         return Spec.from_dict, (self.to_dict(hash=ht.process_hash),)
 
 
-def merge_abstract_anonymous_specs(*abstract_specs):
+def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     """Merge the abstracts specs passed as input and return the result.
 
     The root specs must be anonymous, and it's duty of the caller to ensure that.
@@ -4877,7 +4877,7 @@ def merge_abstract_anonymous_specs(*abstract_specs):
     it doesn't try to resolve virtual dependencies.
 
     Args:
-        *abstract_specs (list of Specs): abstract specs to be merged
+        *abstract_specs: abstract specs to be merged
     """
     merged_spec = spack.spec.Spec()
     for current_spec_constraint in abstract_specs:
