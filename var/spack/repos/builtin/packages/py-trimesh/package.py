@@ -12,13 +12,20 @@ class PyTrimesh(PythonPackage):
     homepage = "https://github.com/mikedh/trimesh"
     pypi = "trimesh/trimesh-2.38.10.tar.gz"
 
-    version("3.17.1", sha256="025bb2fa3a2e87bdd6873f11db45a7ca19216f2f8b6aed29140fca57e32c298e",)
-    version("2.38.10", sha256="866e73ea35641ff2af73867c891d7f9b90c75ccb8a3c1e8e06e16ff9af1f8c64",)
+    version(
+        "3.17.1",
+        sha256="025bb2fa3a2e87bdd6873f11db45a7ca19216f2f8b6aed29140fca57e32c298e",
+    )
+    version(
+        "2.38.10",
+        sha256="866e73ea35641ff2af73867c891d7f9b90c75ccb8a3c1e8e06e16ff9af1f8c64",
+    )
 
     variant(
         "easy",
         default=False,
-        description="Install soft dependencies and unlock extra functionality")
+        description="Install soft dependencies and unlock extra functionality",
+    )
 
     depends_on("py-setuptools@40.8:", type="build")
 
