@@ -19,5 +19,5 @@ class PyShortuuid(PythonPackage):
 
     depends_on("python@2.5:", type=("build", "run"), when="@:1.0.0")
     depends_on("python@3.5:", type=("build", "run"), when="@1.0.1:")
-    depends_on("py-setuptools", type="build", when="@:1.0.1")
-    depends_on("py-poetry-core", type="build", when="@1.0.3:")
+    depends_on("py-setuptools", type="build", when="@:1.0.8")
+    depends_on("py-poetry-core", type="build", when="@1.0.9:")
