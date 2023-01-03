@@ -124,7 +124,12 @@ def _create(pkg):
             wrapper_cls = type(self)
             bases = (package_cls, wrapper_cls)
             new_cls_name = package_cls.__name__ + "Wrapper"
-            new_cls = type(new_cls_name, bases, {})
+            # Forward attributes that might be monkey patched later
+            new_cls = type(
+                new_cls_name,
+                bases,
+                {"run_tests": property(lambda x: x.wrapped_package_object.run_tests)},
+            )
             new_cls.__module__ = package_cls.__module__
             self.__class__ = new_cls
             self.__dict__.update(wrapped_pkg_object.__dict__)
@@ -472,6 +477,10 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
 
     legacy_methods: Tuple[str, ...] = ()
     legacy_attributes: Tuple[str, ...] = ()
+
+    # type hints for some of the legacy methods
+    build_time_test_callbacks: List[str]
+    install_time_test_callbacks: List[str]
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.

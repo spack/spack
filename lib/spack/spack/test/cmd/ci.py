@@ -31,7 +31,6 @@ from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
-from spack.util.executable import which
 from spack.util.pattern import Bunch
 
 ci_cmd = spack.main.SpackCommand("ci")
@@ -54,14 +53,13 @@ def ci_base_environment(working_env, tmpdir):
 
 
 @pytest.fixture(scope="function")
-def mock_git_repo(tmpdir):
+def mock_git_repo(git, tmpdir):
     """Create a mock git repo with two commits, the last one creating
     a .gitlab-ci.yml"""
 
     repo_path = tmpdir.join("mockspackrepo").strpath
     mkdirp(repo_path)
 
-    git = which("git", required=True)
     with working_dir(repo_path):
         git("init")
 
@@ -231,7 +229,7 @@ spack:
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys -d {0}".format(mirror_url)
+            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
 
             assert "variables" in yaml_contents
@@ -810,10 +808,10 @@ def create_rebuild_env(tmpdir, pkg_name, broken_tests=False):
     env_dir = working_dir.join("concrete_env")
 
     mirror_dir = working_dir.join("mirror")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
     broken_specs_path = os.path.join(working_dir.strpath, "naughty-list")
-    broken_specs_url = url_util.join("file://", broken_specs_path)
+    broken_specs_url = url_util.path_to_file_url(broken_specs_path)
     temp_storage_url = "file:///path/to/per/pipeline/storage"
 
     broken_tests_packages = [pkg_name] if broken_tests else []
