@@ -50,7 +50,7 @@ class Amdlibm(SConsPackage):
     conflicts("%clang@9:", msg="Minimum supported Clang version is 9.0.0")
     conflicts("%aocc@3.2.0", msg="dependency on python@3.6.2")
 
-    def build_args(self, *args, **kwargs):
+    def build_args(self, spec, prefix):
         """Setting build arguments for amdlibm"""
         args = ["--prefix={0}".format(prefix)]
 
