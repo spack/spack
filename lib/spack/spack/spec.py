@@ -56,6 +56,7 @@ import os
 import re
 import sys
 import warnings
+from typing import Tuple
 
 import ruamel.yaml as yaml
 
@@ -653,7 +654,7 @@ class CompilerSpec(object):
 
 
 @lang.lazy_lexicographic_ordering
-class DependencySpec(object):
+class DependencySpec:
     """DependencySpecs connect two nodes in the DAG, and contain deptypes.
 
     Dependencies can be one (or more) of several types:
@@ -670,12 +671,12 @@ class DependencySpec(object):
 
     __slots__ = "parent", "spec", "deptypes"
 
-    def __init__(self, parent, spec, deptypes):
+    def __init__(self, parent: "Spec", spec: "Spec", deptypes: dp.DependencyArgument):
         self.parent = parent
         self.spec = spec
         self.deptypes = dp.canonical_deptype(deptypes)
 
-    def update_deptypes(self, deptypes):
+    def update_deptypes(self, deptypes: dp.DependencyArgument) -> bool:
         deptypes = set(deptypes)
         deptypes.update(self.deptypes)
         deptypes = tuple(sorted(deptypes))
@@ -684,10 +685,10 @@ class DependencySpec(object):
         self.deptypes = deptypes
         return changed
 
-    def copy(self):
+    def copy(self) -> "DependencySpec":
         return DependencySpec(self.parent, self.spec, self.deptypes)
 
-    def add_type(self, type):
+    def add_type(self, type: dp.DependencyArgument):
         self.deptypes = dp.canonical_deptype(self.deptypes + dp.canonical_deptype(type))
 
     def _cmp_iter(self):
@@ -695,17 +696,17 @@ class DependencySpec(object):
         yield self.spec.name if self.spec else None
         yield self.deptypes
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s %s--> %s" % (
             self.parent.name if self.parent else None,
             self.deptypes,
             self.spec.name if self.spec else None,
         )
 
-    def canonical(self):
+    def canonical(self) -> Tuple[str, str, Tuple[str, ...]]:
         return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
 
-    def flip(self):
+    def flip(self) -> "DependencySpec":
         return DependencySpec(parent=self.spec, spec=self.parent, deptypes=self.deptypes)
 
 
