@@ -17,7 +17,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from sys import platform as _platform
-from typing import Callable, Optional, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
@@ -831,13 +831,16 @@ def chgrp_if_not_world_writable(path, group):
         chgrp(path, group)
 
 
-def mkdirp(*paths, **kwargs):
+def mkdirp(
+    *paths: str,
+    mode: Optional[int] = None,
+    group: Optional[Union[str, int]] = None,
+    default_perms: Optional[str] = None,
+):
     """Creates a directory, as well as parent directories if needed.
 
     Arguments:
-        paths (str): paths to create with mkdirp
-
-    Keyword Aguments:
+        paths: paths to create with mkdirp
         mode (permission bits or None): optional permissions to set
             on the created directory -- use OS default if not provided
         group (group name or None): optional group for permissions of
@@ -850,26 +853,12 @@ def mkdirp(*paths, **kwargs):
             intermediate get the same permissions specified in the arguments to
             mkdirp -- default value is 'args'
     """
-    mode = kwargs.get("mode", None)
-    group = kwargs.get("group", None)
-    default_perms = kwargs.get("default_perms", "args")
+    default_perms = default_perms or "args"
     paths = path_to_os_path(*paths)
     for path in paths:
         if not os.path.exists(path):
             try:
-                # detect missing intermediate folders
-                intermediate_folders = []
-                last_parent = ""
-
-                intermediate_path = os.path.dirname(path)
-
-                while intermediate_path:
-                    if os.path.exists(intermediate_path):
-                        last_parent = intermediate_path
-                        break
-
-                    intermediate_folders.append(intermediate_path)
-                    intermediate_path = os.path.dirname(intermediate_path)
+                last_parent, intermediate_folders = longest_existing_parent(path)
 
                 # create folders
                 os.makedirs(path)
@@ -903,13 +892,37 @@ def mkdirp(*paths, **kwargs):
                         os.chmod(intermediate_path, intermediate_mode)
                     if intermediate_group is not None:
                         chgrp_if_not_world_writable(intermediate_path, intermediate_group)
-                        os.chmod(intermediate_path, intermediate_mode)  # reset sticky bit after
+                        if intermediate_mode is not None:
+                            os.chmod(
+                                intermediate_path, intermediate_mode
+                            )  # reset sticky bit after
 
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
         elif not os.path.isdir(path):
             raise OSError(errno.EEXIST, "File already exists", path)
+
+
+def longest_existing_parent(path: str) -> Tuple[str, List[str]]:
+    """Return the last existing parent and a list of all intermediate directories
+    to be created for the directory passed as input.
+
+    Args:
+        path: directory to be created
+    """
+    # detect missing intermediate folders
+    intermediate_folders = []
+    last_parent = ""
+    intermediate_path = os.path.dirname(path)
+    while intermediate_path:
+        if os.path.exists(intermediate_path):
+            last_parent = intermediate_path
+            break
+
+        intermediate_folders.append(intermediate_path)
+        intermediate_path = os.path.dirname(intermediate_path)
+    return last_parent, intermediate_folders
 
 
 @system_path_filter
@@ -925,8 +938,8 @@ def force_remove(*paths):
 
 @contextmanager
 @system_path_filter
-def working_dir(dirname, **kwargs):
-    if kwargs.get("create", False):
+def working_dir(dirname: str, *, create: bool = False):
+    if create:
         mkdirp(dirname)
 
     orig_dir = os.getcwd()
