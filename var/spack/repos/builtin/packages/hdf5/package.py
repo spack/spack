@@ -212,6 +212,7 @@ class Hdf5(CMakePackage):
     for plat in ["cray", "darwin", "linux"]:
         depends_on("pkgconfig", when="platform=%s" % plat, type="run")
 
+    conflicts('+mpi', '^mpich@4.0:4.0.3')
     conflicts("api=v116", when="@1.6:1.14", msg="v116 is not compatible with this release")
     conflicts(
         "api=v116",
