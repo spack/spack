@@ -16,6 +16,7 @@ class PyPythran(PythonPackage):
     homepage = "https://github.com/serge-sans-paille/pythran"
     pypi = "pythran/pythran-0.9.11.tar.gz"
 
+    version("0.12.0", sha256="eff3dd0d3eebe57372f0d14f82985525e9bcdfb5b1d1010e1932cf9207060f9f")
     version("0.11.0", sha256="0b2cba712e09f7630879dff69f268460bfe34a6d6000451b47d598558a92a875")
     version("0.10.0", sha256="9dac8e1d50f33d4676003e350b1f0c878ce113e6f907920e92dc103352cac5bf")
     version("0.9.12", sha256="5d50dc74dca1d3f902941865acbae981fc24cceeb9d54673d68d6b5c8c1b0001")
@@ -29,26 +30,26 @@ class PyPythran(PythonPackage):
     version("0.9.4", sha256="ec9c91f5331454263b064027292556a184a9f55a50f8615e09b08f57a4909855")
     version("0.9.3", sha256="217427a8225a331fdc8f3efe57871aed775cdf2c6e847a0a83df0aaae4b02493")
 
-    depends_on("python@3:", when="@0.9.6:", type=("build", "run"))
-    depends_on("python@2.7:", when="@:0.9.5", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", type="build", when="@:0.9")
     depends_on("py-ply@3.4:", type=("build", "run"))
-    depends_on("py-networkx@2:", when="@:0.9.11", type=("build", "run"))
-    depends_on("py-decorator", when="@:0.9.11", type=("build", "run"))
-    depends_on("py-gast@0.5.0:0.5", when="@0.9.12:", type=("build", "run"))
-    depends_on("py-gast@0.4.0:0.4", when="@0.9.7:0.9.11", type=("build", "run"))
+    depends_on("py-gast@0.5", when="@0.9.12:", type=("build", "run"))
+    depends_on("py-gast@0.4", when="@0.9.7:0.9.11", type=("build", "run"))
     depends_on("py-gast@0.3.3:0.3", when="@0.9.6", type=("build", "run"))
-    depends_on("py-gast@0.3.0:", when="@0.9.4:0.9.5", type=("build", "run"))
+    depends_on("py-gast@0.3:", when="@0.9.4:0.9.5", type=("build", "run"))
     depends_on("py-gast", when="@:0.9.3", type=("build", "run"))
-    depends_on("py-six", when="@:0.9.11", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-beniget@0.4.0:0.4", when="@0.9.12:", type=("build", "run"))
-    depends_on("py-beniget@0.3.0:0.3", when="@0.9.7:0.9.11", type=("build", "run"))
+    depends_on("py-beniget@0.4", when="@0.9.12:", type=("build", "run"))
+    depends_on("py-beniget@0.3", when="@0.9.7:0.9.11", type=("build", "run"))
     depends_on("py-beniget@0.2.1:0.2", when="@0.9.6", type=("build", "run"))
-    depends_on("py-beniget@0.2.0:", when="@0.9.4:0.9.5", type=("build", "run"))
+    depends_on("py-beniget@0.2:", when="@0.9.4:0.9.5", type=("build", "run"))
     depends_on("py-beniget", when="@:0.9.3", type=("build", "run"))
     depends_on("llvm-openmp", when="%apple-clang", type=("build", "run"))
+
+    # Historical dependencies
+    depends_on("py-pytest-runner", type="build", when="@:0.9")
+    depends_on("py-networkx@2:", when="@:0.9.11", type=("build", "run"))
+    depends_on("py-decorator", when="@:0.9.11", type=("build", "run"))
+    depends_on("py-six", when="@:0.9.11", type=("build", "run"))
 
     # https://github.com/serge-sans-paille/pythran/pull/1856
     patch("omp.patch", when="@0.9.10:0.9.12")
