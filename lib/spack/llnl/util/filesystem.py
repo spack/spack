@@ -847,16 +847,14 @@ def mkdirp(
 
     Arguments:
         paths: paths to create with mkdirp
-        mode (permission bits or None): optional permissions to set
-            on the created directory -- use OS default if not provided
-        group (group name or None): optional group for permissions of
-            final created directory -- use OS default if not provided. Only
-            used if world write permissions are not set
-        default_perms (str or None): one of 'parents' or 'args'. The default permissions
-            that are set for directories that are not themselves an argument
-            for mkdirp. 'parents' means intermediate directories get the
-            permissions of their direct parent directory, 'args' means
-            intermediate get the same permissions specified in the arguments to
+        mode: optional permissions to set on the created directory -- use OS default
+            if not provided
+        group: optional group for permissions of final created directory -- use OS
+            default if not provided. Only used if world write permissions are not set
+        default_perms: one of 'parents' or 'args'. The default permissions that are set for
+            directories that are not themselves an argument for mkdirp. 'parents' means
+            intermediate directories get the permissions of their direct parent directory,
+            'args' means intermediate get the same permissions specified in the arguments to
             mkdirp -- default value is 'args'
     """
     default_perms = default_perms or "args"
