@@ -39,7 +39,7 @@ class Gptune(CMakePackage):
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-scikit-optimize@master+gptune", type=("build", "run"))
+    depends_on("py-scikit-optimize", type=("build", "run"))
     depends_on("py-gpy", type=("build", "run"))
     depends_on("py-lhsmdu", type=("build", "run"))
     depends_on("py-hpbandster", type=("build", "run"))
