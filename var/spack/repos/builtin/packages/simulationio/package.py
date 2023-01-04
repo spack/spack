@@ -45,9 +45,14 @@ class Simulationio(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        options = []
-        if "+pic" in spec:
-            options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true")
+        from_variant = self.define_from_variant
+        options = [
+            from_variant("ENABLE_ASDF_CXX", "asdf"),
+            from_variant("ENABLE_HDF5", "hdf5"),
+            from_variant("ENABLE_RNPL", "rnpl"),
+            from_variant("ENABLE_SILO", "silo"),
+            from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+        ]
         return options
 
     def check(self):
