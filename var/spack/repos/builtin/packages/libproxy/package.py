@@ -41,4 +41,8 @@ class Libproxy(CMakePackage):
 
     def setup_run_environment(self, env):
         if "+python" in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+            libs = self.prefix.lib
+            if self.spec.satisfies("platform=darwin"):
+                env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", libs)
+            else:
+                env.prepend_path("LD_LIBRARY_PATH", libs)
