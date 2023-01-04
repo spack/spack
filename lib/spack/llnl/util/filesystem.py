@@ -729,7 +729,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             abs_src,
             abs_dest,
             order="pre",
-            follow_symlinks=not symlinks,
+            follow_links=not symlinks,
             ignore=ignore,
             follow_nonexisting=True,
         ):
@@ -1150,7 +1150,16 @@ def can_access(file_name):
 
 
 @system_path_filter
-def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
+def traverse_tree(
+    source_root: str,
+    dest_root: str,
+    rel_path: str = "",
+    *,
+    order: str = "pre",
+    ignore: Optional[Callable[[str], bool]] = None,
+    follow_nonexisting: bool = True,
+    follow_links: bool = False,
+):
     """Traverse two filesystem trees simultaneously.
 
     Walks the LinkTree directory in pre or post order.  Yields each
@@ -1182,16 +1191,11 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
     """
-    follow_nonexisting = kwargs.get("follow_nonexisting", True)
-    follow_links = kwargs.get("follow_link", False)
-
-    # Yield in pre or post order?
-    order = kwargs.get("order", "pre")
     if order not in ("pre", "post"):
         raise ValueError("Order must be 'pre' or 'post'.")
 
     # List of relative paths to ignore under the src root.
-    ignore = kwargs.get("ignore", None) or (lambda filename: False)
+    ignore = ignore or (lambda filename: False)
 
     # Don't descend into ignored directories
     if ignore(rel_path):
@@ -1218,7 +1222,15 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
+                tuples = traverse_tree(
+                    source_root,
+                    dest_root,
+                    rel_child,
+                    order=order,
+                    ignore=ignore,
+                    follow_nonexisting=follow_nonexisting,
+                    follow_links=follow_links,
+                )
                 for t in tuples:
                     yield t
 
