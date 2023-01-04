@@ -119,7 +119,7 @@ class RocmValidationSuite(CMakePackage):
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib", type="link")
     depends_on("yaml-cpp~shared")
-    depends_on("googletest~shared", when="@4.5.0:")
+    depends_on("googletest", when="@4.5.0:")
     depends_on("doxygen", type="build", when="@4.5.0:")
 
     def setup_build_environment(self, build_env):
