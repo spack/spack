@@ -671,7 +671,13 @@ def resolve_link_target_relative_to_the_link(link):
 
 
 @system_path_filter
-def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
+def copy_tree(
+    src: str,
+    dest: str,
+    symlinks: bool = True,
+    ignore: Optional[Callable[[str], bool]] = None,
+    _permissions: bool = False,
+):
     """Recursively copy an entire directory tree rooted at *src*.
 
     If the destination directory *dest* does not already exist, it will
@@ -2617,13 +2623,15 @@ def keep_modification_time(*filenames):
 
 
 @contextmanager
-def temporary_dir(*args, **kwargs):
+def temporary_dir(
+    suffix: Optional[str] = None, prefix: Optional[str] = None, dir: Optional[str] = None
+):
     """Create a temporary directory and cd's into it. Delete the directory
     on exit.
 
     Takes the same arguments as tempfile.mkdtemp()
     """
-    tmp_dir = tempfile.mkdtemp(*args, **kwargs)
+    tmp_dir = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
     try:
         with working_dir(tmp_dir):
             yield tmp_dir
