@@ -20,17 +20,29 @@ class Libproxy(CMakePackage):
     version("0.4.13", sha256="d610bc0ef81a18ba418d759c5f4f87bf7102229a9153fb397d7d490987330ffd")
 
     variant("perl", default=False, description="Enable Perl bindings")
-    variant("python", default=True, description="Enable Python bindings", when="@0.4.16:")
+    variant("python", default=False, description="Enable Python bindings", when="@0.4.16:")
 
     depends_on("zlib")
     depends_on("perl", type=("build", "run"), when="+perl")
-    depends_on("python", type=("build", "run"), when="+python")
+
+    extends("python@:3.8", when="+python")
 
     def cmake_args(self):
-        return [
+        args = [
             self.define_from_variant("WITH_PERL", "perl"),
             self.define_from_variant("WITH_PYTHON3", "python"),
             self.define("WITH_DOTNET", False),
             self.define("WITH_PYTHON2", False),
             self.define("WITH_VALA", False),
         ]
+        if "+python" in self.spec:
+            args.append(self.define("PYTHON3_SITEPKG_DIR", python_platlib))
+        return args
+
+    def setup_run_environment(self, env):
+        if "+python" in self.spec:
+            libs = self.spec["libproxy"].libs.directories[0]
+            if self.spec.satisfies("platform=darwin"):
+                env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", libs)
+            else:
+                env.prepend_path("LD_LIBRARY_PATH", libs)
