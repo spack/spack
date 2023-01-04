@@ -224,7 +224,7 @@ def filter_file(
     ignore_absent: bool = False,
     start_at: Optional[str] = None,
     stop_at: Optional[str] = None,
-):
+) -> None:
     r"""Like sed, but uses python regular expressions.
 
     Filters every line of each file through regex and replaces the file
@@ -344,8 +344,26 @@ class FileFilter(object):
     def __init__(self, *filenames):
         self.filenames = filenames
 
-    def filter(self, regex, repl, **kwargs):
-        return filter_file(regex, repl, *self.filenames, **kwargs)
+    def filter(
+        self,
+        regex: str,
+        repl: Union[str, Callable[[re.Match], str]],
+        string: bool = False,
+        backup: bool = False,
+        ignore_absent: bool = False,
+        start_at: Optional[str] = None,
+        stop_at: Optional[str] = None,
+    ) -> None:
+        return filter_file(
+            regex,
+            repl,
+            *self.filenames,
+            string=string,
+            backup=backup,
+            ignore_absent=ignore_absent,
+            start_at=start_at,
+            stop_at=stop_at,
+        )
 
 
 def change_sed_delimiter(old_delim, new_delim, *filenames):
