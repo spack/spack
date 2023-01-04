@@ -44,7 +44,6 @@ class Simulationio(CMakePackage):
     extends("python")
 
     def cmake_args(self):
-        spec = self.spec
         from_variant = self.define_from_variant
         options = [
             from_variant("ENABLE_ASDF_CXX", "asdf"),
