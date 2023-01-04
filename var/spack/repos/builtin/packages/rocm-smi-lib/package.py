@@ -116,7 +116,11 @@ class RocmSmiLib(CMakePackage):
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
 
     def cmake_args(self):
-        return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("CMAKE_INSTALL_LIBDIR", "lib"),
+        ]
+        return args
 
     @classmethod
     def determine_version(cls, lib):
