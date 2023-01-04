@@ -24,7 +24,7 @@ class Hdf5VolAsync(CMakePackage):
     version("1.0", tag="v1.0")
 
     depends_on("mpi")
-    depends_on("argobots@main")
+    depends_on("argobots@1.1:")
     depends_on("hdf5 +mpi +threadsafe")
     depends_on("hdf5@1.13.0:1.13.2", when="@:1.3")
     depends_on("hdf5@1.13.3:", when="@1.4:")
