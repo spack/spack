@@ -13,6 +13,10 @@ spack:
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
+  packages:
+    all:
+      require: "@:99999999" # avoid @main, @develop etc.
+
   definitions:
     - default_specs:
       - 'uncrustify build_system=autotools'

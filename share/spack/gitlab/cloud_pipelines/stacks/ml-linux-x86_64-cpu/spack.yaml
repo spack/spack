@@ -18,6 +18,7 @@ spack:
     all:
       target: [x86_64_v3]
       variants: ~cuda~rocm
+      require: "@:99999999" # avoid @main, @develop etc.
 
   definitions:
     - packages:

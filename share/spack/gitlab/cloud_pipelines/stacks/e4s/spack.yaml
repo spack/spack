@@ -22,6 +22,7 @@ spack:
         mpi: [mpich]
       target: [x86_64]
       variants: +mpi amdgpu_target=gfx90a cuda_arch=80
+      require: "@:99999999" # avoid @main, @develop etc.
     tbb:
       require: "intel-tbb"
     binutils:

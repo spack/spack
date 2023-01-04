@@ -63,7 +63,9 @@ spack:
     adios2:
       require: "%gcc"
     all:
-      require: "%oneapi"
+      require:
+      - "%oneapi"
+      - "@:99999999" # avoid @main, @develop etc.
       providers:
         blas: [openblas]
         mpi: [mpich]

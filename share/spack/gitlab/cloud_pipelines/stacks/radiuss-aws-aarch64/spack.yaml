@@ -16,6 +16,7 @@ spack:
 
   packages:
     all:
+      require: "@:99999999" # avoid @main, @develop etc.
       providers:
         blas:
           - openblas

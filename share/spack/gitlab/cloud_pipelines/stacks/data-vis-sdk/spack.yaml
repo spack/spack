@@ -24,6 +24,7 @@ spack:
       require: ^mesa +glx
     all:
       target: [x86_64]
+      require: "@:99999999" # avoid @main, @develop etc.
 
   definitions:
   - paraview_specs:

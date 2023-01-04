@@ -17,6 +17,7 @@ spack:
   packages:
     all:
       target: [x86_64]
+      require: "@:99999999" # avoid @main, @develop etc.
 
       providers:
         mpi: [mvapich2]

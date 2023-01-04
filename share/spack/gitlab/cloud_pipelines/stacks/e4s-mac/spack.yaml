@@ -17,6 +17,7 @@ spack:
     all:
       compiler: [apple-clang@13.1.6]
       target: [m1]
+      require: "@:99999999" # avoid @main, @develop etc.
 
   definitions:
   - easy_specs:

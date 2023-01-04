@@ -25,6 +25,7 @@ spack:
           - openmpi
           - mpich
       variants: +mpi
+      require: "@:99999999" # avoid @main, @develop etc.
     tbb:
       require: "intel-tbb"
     binutils:
