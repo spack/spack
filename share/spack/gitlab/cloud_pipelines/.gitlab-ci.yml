@@ -40,7 +40,7 @@ default:
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
-    - spack config add config:build_jobs:12 # concretize <= 12 processes
+    - spack config add "config:build_jobs:${SPACK_CONCRETIZATION_PROCS}"
     - spack ci generate --check-index-only
       --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -52,8 +52,11 @@ default:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags: ["spack", "aws", "public", "medium", "x86_64"]
   variables:
-    KUBERNETES_CPU_REQUEST: 12000m
-    KUBERNETES_MEMORY_REQUEST: 12G
+    # This should be overridden for environments with unify:false
+    # Observed peak RSS is ~1GB / process.
+    KUBERNETES_CPU_REQUEST: 1000m
+    KUBERNETES_MEMORY_REQUEST: 1G
+    SPACK_CONCRETIZATION_PROCS: 1
   interruptible: true
   retry:
     max: 2
@@ -277,10 +280,18 @@ protected-publish:
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
   image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+  variables:
+    KUBERNETES_CPU_REQUEST: 12000m
+    KUBERNETES_MEMORY_REQUEST: 12G
+    SPACK_CONCRETIZATION_PROCS: 12
 
 e4s-protected-generate:
   extends: [ ".e4s", ".protected-generate"]
   image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+  variables:
+    KUBERNETES_CPU_REQUEST: 12000m
+    KUBERNETES_MEMORY_REQUEST: 12G
+    SPACK_CONCRETIZATION_PROCS: 12
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -541,10 +552,18 @@ radiuss-aws-aarch64-protected-build:
 data-vis-sdk-pr-generate:
   extends: [ ".data-vis-sdk", ".pr-generate"]
   image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+  variables:
+    KUBERNETES_CPU_REQUEST: 6000m # only 6 root specs
+    KUBERNETES_MEMORY_REQUEST: 6G
+    SPACK_CONCRETIZATION_PROCS: 6
 
 data-vis-sdk-protected-generate:
   extends: [ ".data-vis-sdk", ".protected-generate"]
   image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+  variables:
+    KUBERNETES_CPU_REQUEST: 6000m # only 6 root specs
+    KUBERNETES_MEMORY_REQUEST: 6G
+    SPACK_CONCRETIZATION_PROCS: 6
 
 data-vis-sdk-pr-build:
   extends: [ ".data-vis-sdk", ".pr-build" ]
@@ -772,12 +791,16 @@ tutorial-protected-build:
   extends: .ml-linux-x86_64-cpu
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 12000m
+    KUBERNETES_MEMORY_REQUEST: 12G
+    SPACK_CONCRETIZATION_PROCS: 12
 
 ml-linux-x86_64-cpu-pr-generate:
-  extends: [ ".ml-linux-x86_64-cpu-generate", ".pr-generate"]
+  extends: [ ".pr-generate", ".ml-linux-x86_64-cpu-generate"]
 
 ml-linux-x86_64-cpu-protected-generate:
-  extends: [ ".ml-linux-x86_64-cpu-generate", ".protected-generate"]
+  extends: [ ".protected-generate", ".ml-linux-x86_64-cpu-generate"]
 
 ml-linux-x86_64-cpu-pr-build:
   extends: [ ".ml-linux-x86_64-cpu", ".pr-build" ]
@@ -812,12 +835,16 @@ ml-linux-x86_64-cpu-protected-build:
   extends: .ml-linux-x86_64-cuda
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 12000m
+    KUBERNETES_MEMORY_REQUEST: 12G
+    SPACK_CONCRETIZATION_PROCS: 12
 
 ml-linux-x86_64-cuda-pr-generate:
-  extends: [ ".ml-linux-x86_64-cuda-generate", ".pr-generate"]
+  extends: [ ".pr-generate", ".ml-linux-x86_64-cuda-generate"]
 
 ml-linux-x86_64-cuda-protected-generate:
-  extends: [ ".ml-linux-x86_64-cuda-generate", ".protected-generate"]
+  extends: [ ".protected-generate", ".ml-linux-x86_64-cuda-generate"]
 
 ml-linux-x86_64-cuda-pr-build:
   extends: [ ".ml-linux-x86_64-cuda", ".pr-build" ]
@@ -852,12 +879,16 @@ ml-linux-x86_64-cuda-protected-build:
   extends: .ml-linux-x86_64-rocm
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 12000m
+    KUBERNETES_MEMORY_REQUEST: 12G
+    SPACK_CONCRETIZATION_PROCS: 12
 
 ml-linux-x86_64-rocm-pr-generate:
-  extends: [ ".ml-linux-x86_64-rocm-generate", ".pr-generate"]
+  extends: [ ".pr-generate", ".ml-linux-x86_64-rocm-generate"]
 
 ml-linux-x86_64-rocm-protected-generate:
-  extends: [ ".ml-linux-x86_64-rocm-generate", ".protected-generate"]
+  extends: [ ".protected-generate", ".ml-linux-x86_64-rocm-generate"]
 
 ml-linux-x86_64-rocm-pr-build:
   extends: [ ".ml-linux-x86_64-rocm", ".pr-build" ]
