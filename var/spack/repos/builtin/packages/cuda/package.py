@@ -23,6 +23,7 @@ from spack.package import *
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 
+preferred_ver = "11.8.0"
 _versions = {
     "12.0.0": {
         "Linux-aarch64": (
@@ -455,7 +456,10 @@ class Cuda(Package):
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            version(ver, sha256=pkg[0], url=pkg[1], expand=False)
+            if ver == preferred_ver:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False, preferred=True)
+            else:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False)
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
