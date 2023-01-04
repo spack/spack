@@ -56,7 +56,7 @@ default:
     # This should be overridden for environments with unify:false
     # Observed peak RSS is ~1GB / process.
     KUBERNETES_CPU_REQUEST: 1000m
-    KUBERNETES_MEMORY_REQUEST: 1G
+    KUBERNETES_MEMORY_REQUEST: 2G
     SPACK_CONCRETIZATION_PROCS: 1
   interruptible: true
   retry:
