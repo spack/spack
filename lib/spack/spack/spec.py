@@ -655,7 +655,8 @@ class CompilerSpec(object):
 
 @lang.lazy_lexicographic_ordering
 class DependencySpec:
-    """DependencySpecs connect two nodes in the DAG, and contain deptypes.
+    """DependencySpecs represent an edge in the DAG, and contain dependency types
+    and information on the virtuals being provided.
 
     Dependencies can be one (or more) of several types:
 
@@ -663,15 +664,15 @@ class DependencySpec:
     - link: is linked to and added to compiler flags.
     - run: needs to be in the PATH for the package to run.
 
-    Fields:
-    - spec: Spec depended on by parent.
-    - parent: Spec that depends on `spec`.
-    - deptypes: list of strings, representing dependency relationships.
+    Args:
+        parent: starting node of the edge
+        spec: ending node of the edge.
+        deptypes: list of strings, representing dependency relationships.
     """
 
     __slots__ = "parent", "spec", "deptypes"
 
-    def __init__(self, parent: "Spec", spec: "Spec", deptypes: dp.DependencyArgument):
+    def __init__(self, parent: "Spec", spec: "Spec", *, deptypes: dp.DependencyArgument):
         self.parent = parent
         self.spec = spec
         self.deptypes = dp.canonical_deptype(deptypes)
@@ -686,7 +687,7 @@ class DependencySpec:
         return changed
 
     def copy(self) -> "DependencySpec":
-        return DependencySpec(self.parent, self.spec, self.deptypes)
+        return DependencySpec(self.parent, self.spec, deptypes=self.deptypes)
 
     def add_type(self, type: dp.DependencyArgument):
         self.deptypes = dp.canonical_deptype(self.deptypes + dp.canonical_deptype(type))
@@ -1576,7 +1577,7 @@ class Spec(object):
                 edge.add_type(deptype)
                 return
 
-        edge = DependencySpec(self, dependency_spec, deptype)
+        edge = DependencySpec(self, dependency_spec, deptypes=deptype)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
