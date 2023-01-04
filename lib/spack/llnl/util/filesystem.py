@@ -17,6 +17,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from sys import platform as _platform
+from typing import Callable, Optional, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
@@ -214,7 +215,16 @@ def same_path(path1, path2):
     return norm1 == norm2
 
 
-def filter_file(regex, repl, *filenames, **kwargs):
+def filter_file(
+    regex: str,
+    repl: Union[str, Callable[[re.Match], str]],
+    *filenames: str,
+    string: bool = False,
+    backup: bool = False,
+    ignore_absent: bool = False,
+    start_at: Optional[str] = None,
+    stop_at: Optional[str] = None,
+):
     r"""Like sed, but uses python regular expressions.
 
     Filters every line of each file through regex and replaces the file
@@ -226,12 +236,10 @@ def filter_file(regex, repl, *filenames, **kwargs):
     can contain ``\1``, ``\2``, etc. to represent back-substitution
     as sed would allow.
 
-    Parameters:
+    Args:
         regex (str): The regular expression to search for
         repl (str): The string to replace matches with
         *filenames: One or more files to search and replace
-
-    Keyword Arguments:
         string (bool): Treat regex as a plain string. Default it False
         backup (bool): Make backup file(s) suffixed with ``~``. Default is False
         ignore_absent (bool): Ignore any files that don't exist.
@@ -246,17 +254,11 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file is copied verbatim. Default is to filter until the end of the
             file.
     """
-    string = kwargs.get("string", False)
-    backup = kwargs.get("backup", False)
-    ignore_absent = kwargs.get("ignore_absent", False)
-    start_at = kwargs.get("start_at", None)
-    stop_at = kwargs.get("stop_at", None)
-
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
         unescaped = repl.replace(r"\\", "\\")
 
-        def replace_groups_with_groupid(m):
+        def replace_groups_with_groupid(m: re.Match) -> str:
             def groupid_to_group(x):
                 return m.group(int(x.group(1)))
 
@@ -290,15 +292,14 @@ def filter_file(regex, repl, *filenames, **kwargs):
         shutil.copy(filename, tmp_filename)
 
         try:
-            # To avoid translating line endings (\n to \r\n and vis versa)
+            # Open as a text file and filter until the end of the file is
+            # reached, or we found a marker in the line if it was specified
+            #
+            # To avoid translating line endings (\n to \r\n and vice-versa)
             # we force os.open to ignore translations and use the line endings
             # the file comes with
-            extra_kwargs = {"errors": "surrogateescape", "newline": ""}
-
-            # Open as a text file and filter until the end of the file is
-            # reached or we found a marker in the line if it was specified
-            with open(tmp_filename, mode="r", **extra_kwargs) as input_file:
-                with open(filename, mode="w", **extra_kwargs) as output_file:
+            with open(tmp_filename, mode="r", errors="surrogateescape", newline="") as input_file:
+                with open(filename, mode="w", errors="surrogateescape", newline="") as output_file:
                     do_filtering = start_at is None
                     # Using iter and readline is a workaround needed not to
                     # disable input_file.tell(), which will happen if we call
@@ -321,10 +322,10 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # If we stopped filtering at some point, reopen the file in
             # binary mode and copy verbatim the remaining part
             if current_position and stop_at:
-                with open(tmp_filename, mode="rb") as input_file:
-                    input_file.seek(current_position)
-                    with open(filename, mode="ab") as output_file:
-                        output_file.writelines(input_file.readlines())
+                with open(tmp_filename, mode="rb") as input_binary_buffer:
+                    input_binary_buffer.seek(current_position)
+                    with open(filename, mode="ab") as output_binary_buffer:
+                        output_binary_buffer.writelines(input_binary_buffer.readlines())
 
         except BaseException:
             # clean up the original file on failure.
