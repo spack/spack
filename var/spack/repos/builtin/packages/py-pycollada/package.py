@@ -15,6 +15,6 @@ class PyPycollada(PythonPackage):
 
     version("0.7.2", "70a2630ed499bdab718c0e61a3e6ae3698130d7e4654e89cdecde51bfdaea56f")
 
-    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-python-dateutil@2.2:", type=("build", "run"))
