@@ -33,7 +33,7 @@ class Neuron(CMakePackage):
     version("develop", branch="master")
     version("9.0.a2", commit="89f7dab")
     version("9.0.a1", commit="b3c4b4f")
-    version("8.2.2a", commit="eb19ae0")
+    version("8.2.2", tag="8.2.2")
     version("8.2.1", tag="8.2.1")
     version("8.2.0", tag="8.2.0")
     version("8.1.0", tag="8.1.0")
