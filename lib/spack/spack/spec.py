@@ -4939,13 +4939,6 @@ class LazySpecCache(collections.defaultdict):
         return value
 
 
-#: These are possible token types in the spec grammar.
-HASH, DEP, VER, COLON, COMMA, ON, D_ON, OFF, D_OFF, PCT, EQ, D_EQ, ID, VAL, FILE = range(15)
-
-#: Regex for fully qualified spec names. (e.g., builtin.hdf5)
-spec_id_re = r"\w[\w.-]*"
-
-
 def save_dependency_specfiles(
     root_spec_info, output_directory, dependencies=None, spec_format="json"
 ):
