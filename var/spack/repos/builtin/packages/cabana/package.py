@@ -44,7 +44,7 @@ class Cabana(CMakePackage):
     depends_on("cmake@3.9:", type="build", when="@:0.4.0")
     depends_on("cmake@3.16:", type="build", when="@0.5.0:")
     depends_on("googletest", type="build", when="testing")
-    _versions = {":0.2.0": "-legacy", "0.3.0": "@3.1:", "0.4.0": "@3.2:", "0.5.0": "@3.2:"}
+    _versions = {":0.2": "-legacy", "0.3:": "@3.1:", "0.4:": "@3.2:"}
     for _version in _versions:
         _kk_version = _versions[_version]
         for _backend in _kokkos_backends:
