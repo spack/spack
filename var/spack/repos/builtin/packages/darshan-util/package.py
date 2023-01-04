@@ -22,9 +22,16 @@ class DarshanUtil(AutotoolsPackage):
 
     version("main", branch="main", submodules="True")
     version(
+        "3.4.2",
+        sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b",
+    )
+    version(
+        "3.4.1",
+        sha256="77c0a4675d94a0f9df5710e5b8658cc9ef0f0981a6dafb114d0389b1af64774c",
+    )
+    version(
         "3.4.0",
         sha256="7cc88b7c130ec3b574f6b73c63c3c05deec67b1350245de6d39ca91d4cff0842",
-        preferred=True,
     )
     version(
         "3.4.0-pre1", sha256="57d0fd40329b9f8a51bdc9d7635b646692b341d80339115ab203357321706c09"

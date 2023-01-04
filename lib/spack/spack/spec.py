@@ -1289,7 +1289,7 @@ class Spec(object):
         # have package.py files for.
         self._normal = normal
         self._concrete = concrete
-        self.external_path = external_path
+        self._external_path = external_path
         self.external_modules = Spec._format_module_list(external_modules)
 
         # This attribute is used to store custom information for
@@ -1325,6 +1325,14 @@ class Spec(object):
         if modules:
             modules = list(modules)
         return modules
+
+    @property
+    def external_path(self):
+        return pth.path_to_os_path(self._external_path)[0]
+
+    @external_path.setter
+    def external_path(self, ext_path):
+        self._external_path = ext_path
 
     @property
     def external(self):
@@ -4860,7 +4868,7 @@ class Spec(object):
         return Spec.from_dict, (self.to_dict(hash=ht.process_hash),)
 
 
-def merge_abstract_anonymous_specs(*abstract_specs):
+def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     """Merge the abstracts specs passed as input and return the result.
 
     The root specs must be anonymous, and it's duty of the caller to ensure that.
@@ -4869,7 +4877,7 @@ def merge_abstract_anonymous_specs(*abstract_specs):
     it doesn't try to resolve virtual dependencies.
 
     Args:
-        *abstract_specs (list of Specs): abstract specs to be merged
+        *abstract_specs: abstract specs to be merged
     """
     merged_spec = spack.spec.Spec()
     for current_spec_constraint in abstract_specs:
