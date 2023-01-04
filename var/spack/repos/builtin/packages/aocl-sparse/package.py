@@ -42,8 +42,10 @@ class AoclSparse(CMakePackage):
     )
     variant("shared", default=True, description="Build shared library")
     variant("ilp64", default=False, description="Build with ILP64 support")
+    variant("examples", default=False, description="Build sparse examples")
+    variant("unit_tests", default=False, description="Build sparse unit tests")
     variant(
-        "AVX",
+        "avx",
         default=False,
         when="target=zen4:",
         description="Build with AVX512 support",
@@ -83,22 +85,13 @@ class AoclSparse(CMakePackage):
         else:
             args.append("-DCMAKE_BUILD_TYPE=Release")
 
-        args.extend(
-            [
-                self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-                "-DBUILD_CLIENTS_BENCHMARKS:BOOL=%s" % ("ON" if self.run_tests else "OFF"),
-            ]
-        )
-
-        args.extend(
-            [
-                self.define_from_variant("BUILD_WITH_AVX512", "AVX"),
-                self.define("USE_AVX512", self.run_tests),
-            ]
-        )
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define_from_variant("BUILD_CLIENTS_SAMPLES", "examples"))
+        args.append(self.define_from_variant("BUILD_CLIENTS_TESTS", "unit_tests"))
+        args.append(self.define_from_variant("USE_AVX512", "avx"))
 
         if spec.satisfies("@3.0:"):
-            args.extend([self.define_from_variant("BUILD_ILP64", "ilp64")])
+            args.append(self.define_from_variant("BUILD_ILP64", "ilp64"))
 
         return args
 
