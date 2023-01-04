@@ -44,6 +44,7 @@ class AoclSparse(CMakePackage):
     variant("ilp64", default=False, description="Build with ILP64 support")
     variant("examples", default=False, description="Build sparse examples")
     variant("unit_tests", default=False, description="Build sparse unit tests")
+    variant("benchmarks", default=False, description="Build Build benchmarks")
     variant(
         "avx",
         default=False,
@@ -51,6 +52,7 @@ class AoclSparse(CMakePackage):
         description="Build with AVX512 support",
     )
 
+    depends_on("boost", when="+benchmarks")
     depends_on("boost", when="@2.2")
     depends_on("cmake@3.5:", type="build")
 
@@ -88,6 +90,7 @@ class AoclSparse(CMakePackage):
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         args.append(self.define_from_variant("BUILD_CLIENTS_SAMPLES", "examples"))
         args.append(self.define_from_variant("BUILD_CLIENTS_TESTS", "unit_tests"))
+        args.append(self.define_from_variant("BUILD_CLIENTS_BENCHMARKS", "benchmarks"))
         args.append(self.define_from_variant("USE_AVX512", "avx"))
 
         if spec.satisfies("@3.0:"):
