@@ -2151,3 +2151,11 @@ class TestConcretize(object):
         spack.config.set("compilers", compiler_configuration)
         s = spack.spec.Spec("a %gcc@foo").concretized()
         assert s.compiler.version == ver("foo")
+
+    def test_virtuals_are_annotated_on_edges(self, default_mock_concretization):
+        spec = default_mock_concretization("mpileaks ^mpich")
+
+        edges = spec.edges_to_dependencies(name="mpich")
+        assert len(edges) == 1 and edges[0].virtuals == ("mpi",)
+        edges = spec.edges_to_dependencies(name="callpath")
+        assert len(edges) == 1 and edges[0].virtuals == ()

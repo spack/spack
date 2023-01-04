@@ -268,7 +268,7 @@ class PythonPackage(PythonExtension):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
+            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
 
     def get_external_python_for_prefix(self):
         """

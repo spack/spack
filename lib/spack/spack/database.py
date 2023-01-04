@@ -60,7 +60,7 @@ _db_dirname = ".spack-db"
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
 # Versions before 5 were not integers.
-_db_version = Version("6")
+_db_version = Version("7")
 
 # For any version combinations here, skip reindex when upgrading.
 # Reindexing can take considerable time and is not always necessary.
@@ -72,6 +72,7 @@ _skip_reindex = [
     # version is saved to disk the first time the DB is written.
     (Version("0.9.3"), Version("5")),
     (Version("5"), Version("6")),
+    (Version("6"), Version("7")),
 ]
 
 # Default timeout for spack database locks in seconds or None (no timeout).
@@ -105,7 +106,11 @@ default_install_record_fields = [
 
 
 def reader(version):
-    reader_cls = {Version("5"): spack.spec.SpecfileV1, Version("6"): spack.spec.SpecfileV3}
+    reader_cls = {
+        Version("5"): spack.spec.SpecfileV1,
+        Version("6"): spack.spec.SpecfileV3,
+        Version("7"): spack.spec.SpecfileV4,
+    }
     return reader_cls[version]
 
 
@@ -744,7 +749,9 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
+                yaml_deps
+            ):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -767,7 +774,7 @@ class Database(object):
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, deptypes=dtypes)
+                spec._add_dependency(child, deptypes=dtypes, virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -1170,7 +1177,7 @@ class Database(object):
             for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
+                new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 

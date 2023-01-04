@@ -121,7 +121,7 @@ spack:
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 4
+lockfile_format_version = 5
 
 
 READER_CLS = {
@@ -129,6 +129,7 @@ READER_CLS = {
     2: spack.spec.SpecfileV1,
     3: spack.spec.SpecfileV2,
     4: spack.spec.SpecfileV3,
+    5: spack.spec.SpecfileV4,
 }
 
 
@@ -1479,7 +1480,7 @@ class Environment(object):
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptypes="test"
+                            test_dependency.copy(), deptypes="test", virtuals=()
                         )
 
         results = [
@@ -2052,9 +2053,9 @@ class Environment(object):
         # and add them to the spec
         for lockfile_key, node_dict in json_specs_by_hash.items():
             name, data = reader.name_and_data(node_dict)
-            for _, dep_hash, deptypes, _ in reader.dependencies_from_node_dict(data):
+            for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
                 specs_by_hash[lockfile_key]._add_dependency(
-                    specs_by_hash[dep_hash], deptypes=deptypes
+                    specs_by_hash[dep_hash], deptypes=deptypes, virtuals=virtuals
                 )
 
         # Traverse the root specs one at a time in the order they appear.
