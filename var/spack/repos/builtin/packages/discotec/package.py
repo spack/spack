@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Discotec(SConsPackage):
+class Discotec(CMakePackage):
     """This project contains DisCoTec, a code for the distributed sparse
     grid combination technique with MPI parallelization."""
 
@@ -26,45 +26,29 @@ class Discotec(SConsPackage):
     variant("test", default=True, description="Build Boost tests")
     variant("openmp", default=False, description="Parallelize with OpenMP")
     variant("hdf5", default=True, description="Interpolation output with HDF5")
-    variant("debug", default=False, description="Build with assertions and debug symbols")
+    variant("vtk", default=False, description="Build with VTK support",when="third-level-advection")
+    variant("lto", default=True, description="Build with link-time optimization")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("scons", type=("build"))
+    depends_on("cmake@3.24.2:", type=("build"))
     depends_on("mpi", type=("build", "run"))
-    depends_on("boost +test +serialization", type=("build", "run"))
+    depends_on("boost +test +serialization +filesystem +system +program_options", type=("build", "run"))
     depends_on("highfive+mpi", when="+hdf5")
+    depends_on("vtk", when="+vtk")
+    depends_on("hdf5", when="+hdf5")
 
-    def build_args(self, spec, prefix):
-        # Testing parameters
-        if "+test" in spec:
-            self.args = ["COMPILE_BOOST_TESTS=1", "RUN_BOOST_TESTS=0"]
-        else:
-            self.args = ["COMPILE_BOOST_TESTS=0", "RUN_BOOST_TESTS=0"]
-        # I apologize for quite a lot of not-useful flags
-        self.args.append("VERBOSE=1")
-        self.args.append("UNIFORMDECOMPOSITION=1")
-        self.args.append("DEBUG_OUTPUT=0")
-        self.args.append("DOC=0")
-        self.args.append("RUN_CPPLINT=0")
-        self.args.append("BUILD_STATICLIB=0")
-        self.args.append("CPPFLAGS=")
-        self.args.append("LINKFLAGS=")
+    def cmake_args(self):
+        args = [
+            "-DDISCOTEC_BUILD_MISSING_DEPS=OFF",
+            "-DDISCOTEC_ENABLEFT={0}".format("ON" if "+enableft" in self.spec else "OFF"),
+            "-DDISCOTEC_GENE={0}".format("ON" if "+gene" in self.spec else "OFF"),
+            "-DDISCOTEC_TIMING={0}".format("ON" if "+timing" in self.spec else "OFF"),
+            "-DDISCOTEC_TEST={0}".format("ON" if "+test" in self.spec else "OFF"),
+            "-DDISCOTEC_OPENMP={0}".format("ON" if "+openmp" in self.spec else "OFF"),
+            "-DDISCOTEC_HDF5={0}".format("ON" if "+hdf5" in self.spec else "OFF"),
+            "-DDISCOTEC_USE_LTO={0}".format("ON" if "+lto" in self.spec else "OFF"),
+        ]
+        if self.spec.satisfies("@third-level-advection") :
+            args += "-DDISCOTEC_VTK={0}".format("ON" if "+vtk" in self.spec else "OFF"),
 
-        self.args.append("TIMING={0}".format("1" if "+test" in spec else "0"))
-        self.args.append("OPT={0}".format("0" if "+debug" in spec else "1"))
-        self.args.append("ENABLEFT={0}".format("1" if "+enableft" in spec else "0"))
-        self.args.append("USE_HDF5={0}".format("1" if "+hdf5" in spec else "0"))
-
-        # Get the mpicxx compiler from the Spack spec
-        # (makes certain we use the one from spack):
-        self.args.append("CXX={0}".format(self.spec["mpi"].mpicxx))
-        self.args.append("CC={0}".format(self.spec["mpi"].mpicc))
-        self.args.append("FC=")
-
-        if "+openmp" in spec:
-            self.args.append("CPPFLAGS={0}".format(self.spec["mpi"].mpicxx.openmp_flag))
-        return self.args
-
-    def install(self, pkg, spec):
-        """does nothing"""
-        pass
+        return args
