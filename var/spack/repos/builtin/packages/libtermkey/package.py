@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Libtermkey(Package):
+class Libtermkey(MakefilePackage):
     """Easy keyboard entry processing for terminal programs"""
 
     homepage = "http://www.leonerd.org.uk/code/libtermkey/"
@@ -20,9 +20,15 @@ class Libtermkey(Package):
     version("0.14", sha256="3d114d4509499b80a583ea39cd35f18268aacf4a7bbf56c142cd032632005c79")
 
     depends_on("libtool", type="build")
+
     depends_on("unibilium")
     depends_on("pkgconfig")
 
+    def setup_build_environment(self, env):
+        env.set("LIBTOOL", self.spec["libtool"].prefix.bin.join("libtool"))
+
+    def build(self, spec, prefix):
+        make("PREFIX=" + prefix)
+
     def install(self, spec, prefix):
-        make()
         make("install", "PREFIX=" + prefix)
