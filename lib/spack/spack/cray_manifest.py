@@ -164,7 +164,8 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
+                # TODO: Check this with Peter
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes, virtuals=())
 
     return spec_dict
 
