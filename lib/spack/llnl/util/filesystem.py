@@ -17,7 +17,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from sys import platform as _platform
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
@@ -217,7 +217,7 @@ def same_path(path1, path2):
 
 def filter_file(
     regex: str,
-    repl: Union[str, Callable[[re.Match], str]],
+    repl: Union[str, Callable[[Match], str]],
     *filenames: str,
     string: bool = False,
     backup: bool = False,
@@ -258,7 +258,7 @@ def filter_file(
     if not callable(repl):
         unescaped = repl.replace(r"\\", "\\")
 
-        def replace_groups_with_groupid(m: re.Match) -> str:
+        def replace_groups_with_groupid(m: Match) -> str:
             def groupid_to_group(x):
                 return m.group(int(x.group(1)))
 
@@ -347,7 +347,7 @@ class FileFilter(object):
     def filter(
         self,
         regex: str,
-        repl: Union[str, Callable[[re.Match], str]],
+        repl: Union[str, Callable[[Match], str]],
         string: bool = False,
         backup: bool = False,
         ignore_absent: bool = False,
