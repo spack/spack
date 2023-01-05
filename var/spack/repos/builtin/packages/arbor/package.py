@@ -17,7 +17,7 @@ class Arbor(CMakePackage, CudaPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "0.8",
+        "0.8.1",
         sha256="caebf96676ace6a9c50436541c420ca4bb53f0639dcab825de6fa370aacf6baa",
         url="https://github.com/arbor-sim/arbor/releases/download/v0.8.1/arbor-v0.8.1-full.tar.gz",
     )
