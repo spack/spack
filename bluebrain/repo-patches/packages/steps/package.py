@@ -65,7 +65,6 @@ class Steps(CMakePackage):
     depends_on("py-nose", when="@3:", type=("build", "test"))
     depends_on("py-numpy", type=("build", "test"))
     depends_on("py-scipy", type=("build", "test"))
-    depends_on("py-unittest2", type=("build", "test"))
     depends_on("python")
     depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("gmsh", when="+distmesh")
