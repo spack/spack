@@ -215,6 +215,8 @@ class Openblas(CMakePackage, MakefilePackage):
 
     depends_on("perl", type="build")
     depends_on("cmake", when="platform=windows")
+    
+    build_system("cmake", "makefile", default="cmake")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -514,5 +516,15 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
         cmake_defs = []
-        cmake_defs.extend(["-DUSE_THREAD:BOOL=FALSE", "-DTARGET:STRING=GENERIC"])
+        cmake_defs += ["-DTARGET:STRING=GENERIC"]
+        if "+shared" in self.spec:
+            cmake_defs += ["-DBUILD_SHARED_LIBS:BOOL=TRUE"]
+
+        if self.spec.satisfies("threads=openmp"):
+            cmake_defs += ["-DUSE_OPENMP:BOOL=TRUE", "-DUSE_THREAD:BOOL=TRUE"]
+        elif self.spec.satisfies("threads=pthreads"):
+            cmake_defs += ["-DUSE_OPENMP:BOOL=FALSE", "-DUSE_THREAD:BOOL=TRUE"]
+        else:
+            cmake_defs += ["-DUSE_OPENMP:BOOL=FALSE", "-DUSE_THREAD:BOOL=FALSE"]
+
         return cmake_defs
