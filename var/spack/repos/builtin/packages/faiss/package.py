@@ -22,7 +22,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     homepage = "https://github.com/facebookresearch/faiss"
     url = "https://github.com/facebookresearch/faiss/archive/v1.6.3.tar.gz"
 
-    maintainers = ["bhatiaharsh", "rblake-llnl"]
+    maintainers = ["bhatiaharsh", "rblake-llnl", "lpottier"]
 
     build_system(
         conditional("cmake", when="@1.7:"), conditional("autotools", when="@:1.6"), default="cmake"
@@ -75,7 +75,12 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     def setup_run_environment(self, env):
         if "+python" in self.spec:
             env.prepend_path("PYTHONPATH", python_platlib)
-            env.append_path("LD_LIBRARY_PATH", os.path.join(python_platlib, "faiss"))
+            if self.spec.satisfies("platform=darwin"):
+                env.append_path(
+                    "DYLD_FALLBACK_LIBRARY_PATH", os.path.join(python_platlib, "faiss")
+                )
+            else:
+                env.append_path("LD_LIBRARY_PATH", os.path.join(python_platlib, "faiss"))
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
