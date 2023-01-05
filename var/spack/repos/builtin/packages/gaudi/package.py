@@ -17,6 +17,8 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("36.9", sha256="b4e080094771f111bd0bcdf744bcab7b028c7e2af7c5dfaa4a977ebbf0160a8f")
+    version("36.8", sha256="64b4300a57335af7c1f74c736d7610041a1ef0c1f976e3342a22385b60519afc")
     version("36.7", sha256="8dca43185ba11e1b33f5535d2e384542d84500407b0d1f8cb920be00f05c9716")
     version("36.6", sha256="8fc7be0ce32f99cc6b0be4ebbb246f4bb5008ffbf0c012cb39c0aff813dce6af")
     version("36.5", sha256="593e0316118411a5c5fde5d4d87cbfc3d2bb748a8c72a66f4025498fcbdb0f7e")
@@ -79,6 +81,7 @@ class Gaudi(CMakePackage):
     # Testing dependencies
     # Note: gaudi only builds examples when testing enabled
     for pv in (
+        ["catch2", "@36.8:"],
         ["py-nose", "@35:"],
         ["py-pytest", "@36.2:"],
         ["py-qmtest", "@35:"],
