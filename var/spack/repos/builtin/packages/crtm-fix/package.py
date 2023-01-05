@@ -9,10 +9,10 @@ from spack.package import *
 
 
 class CrtmFix(Package):
-    """CRTM coeffecient files"""
+    """CRTM coefficient files"""
 
     homepage = "https://github.com/NOAA-EMC/crtm"
-    url = "ftp://ftp.ucar.edu/pub/cpaess/bjohns/fix_REL-2.3.0_emc.tgz"
+    url = "ftp://ftp.ssec.wisc.edu/pub/s4/CRTM/fix_REL-2.3.0_emc.tgz"
 
     maintainers = [
         "BenjaminTJohnson",
@@ -23,7 +23,7 @@ class CrtmFix(Package):
     ]
 
     version("2.4.0_emc", sha256="88d659ae5bc4434f7fafa232ff65b4c48442d2d1a25f8fc96078094fa572ac1a")
-    version("2.3.0_emc", sha256="fde73bb41c3c00666ab0eb8c40895e02d36fa8d7b0896c276375214a1ddaab8f")
+    version("2.3.0_emc", sha256="1452af2d1d11d57ef3c57b6b861646541e7042a9b0f3c230f9a82854d7e90924")
 
     variant("big_endian", default=True, description="Install big_endian fix files")
     variant("little_endian", default=False, description="Install little endian fix files")
@@ -32,7 +32,7 @@ class CrtmFix(Package):
     conflicts("+big_endian", when="+little_endian", msg="big_endian and little_endian conflict")
 
     def url_for_version(self, version):
-        url = "ftp://ftp.ucar.edu/pub/cpaess/bjohns/fix_REL-{}.tgz"
+        url = "ftp://ftp.ssec.wisc.edu/pub/s4/CRTM/fix_REL-{}.tgz"
         return url.format(version)
 
     def install(self, spec, prefix):
