@@ -27,6 +27,7 @@ import uuid
 from typing import Dict, Union
 
 import ruamel.yaml as yaml
+import tqdm
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
@@ -633,7 +634,13 @@ class RepoIndex(object):
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
-                for pkg_name in needs_update:
+                for pkg_name in tqdm.tqdm(
+                    needs_update,
+                    desc=f'UPDATE: "{name}" index',
+                    colour="blue",
+                    unit="packages",
+                    leave=False,
+                ):
                     namespaced_name = "%s.%s" % (self.namespace, pkg_name)
                     indexer.update(namespaced_name)
 
