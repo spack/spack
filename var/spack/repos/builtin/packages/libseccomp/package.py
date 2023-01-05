@@ -12,6 +12,7 @@ class Libseccomp(AutotoolsPackage):
     homepage = "https://github.com/seccomp/libseccomp"
     url = "https://github.com/seccomp/libseccomp/releases/download/v2.5.3/libseccomp-2.5.3.tar.gz"
 
+    version("2.5.4", sha256="d82902400405cf0068574ef3dc1fe5f5926207543ba1ae6f8e7a1576351dcbdb")
     version("2.5.3", sha256="59065c8733364725e9721ba48c3a99bbc52af921daf48df4b1e012fbc7b10a76")
     version("2.3.3", sha256="7fc28f4294cc72e61c529bedf97e705c3acf9c479a8f1a3028d4cd2ca9f3b155")
 
