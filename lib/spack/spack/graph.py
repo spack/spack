@@ -569,7 +569,7 @@ def static_graph_dot(
 def graph_dot(
     specs: List[spack.spec.Spec],
     builder: Optional[DotGraphBuilder] = None,
-    deptype: Optional[Union[str, Tuple[str, ...]]] = "all",
+    deptype: spack.dependency.DependencyArgument = "all",
     out: Optional[TextIO] = None,
 ):
     """DOT graph of the concrete specs passed as input.
