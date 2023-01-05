@@ -920,7 +920,7 @@ def longest_existing_parent(path: str) -> Tuple[str, List[str]]:
     last_parent = ""
     intermediate_path = os.path.dirname(path)
     while intermediate_path:
-        if os.path.exists(intermediate_path):
+        if os.path.lexists(intermediate_path):
             last_parent = intermediate_path
             break
 
