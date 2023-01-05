@@ -12,6 +12,7 @@ class GoMd2man(Package):
     homepage = "https://github.com/cpuguy83/go-md2man"
     url = "https://github.com/cpuguy83/go-md2man/archive/v1.0.10.tar.gz"
 
+    version("2.0.2", sha256="2f52e37101ea2734b02f2b54a53c74305b95b3a9a27792fdac962b5354aa3e4a")
     version("1.0.10", sha256="76aa56849123b99b95fcea2b15502fd886dead9a5c35be7f78bdc2bad6be8d99")
 
     depends_on("go")
