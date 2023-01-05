@@ -28,7 +28,7 @@ class Discotec(CMakePackage):
     variant("hdf5", default=True, description="Interpolation output with HDF5")
     variant("vtk", default=False, description="Build with VTK support",when="third-level-advection")
     variant("lto", default=True, description="Build with link-time optimization")
-    variant("build_type", default="Release", values=("Release","RelWithDebInfo", "Debug"), "Build type for DisCoTec")
+    variant("build_type", default="Release", values=("Release","RelWithDebInfo", "Debug"), description="Build type for DisCoTec")
 
 
     depends_on("python@3.7:", type=("build", "run"))
