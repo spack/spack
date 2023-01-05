@@ -15,6 +15,7 @@ import urllib.parse
 import urllib.request
 
 import ruamel.yaml as yaml
+import tqdm.contrib.concurrent
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -1402,15 +1403,16 @@ class Environment(object):
         max_processes = min(len(arguments), 16)  # Number of specs  # Cap on 16 cores
 
         # TODO: revisit this print as soon as darwin is parallel too
-        msg = "Starting concretization"
         if sys.platform != "darwin":
             pool_size = spack.util.parallel.num_processes(max_processes=max_processes)
-            if pool_size > 1:
-                msg = msg + " pool with {0} processes".format(pool_size)
-        tty.msg(msg)
 
-        concretized_root_specs = spack.util.parallel.parallel_map(
-            _concretize_task, arguments, max_processes=max_processes, debug=tty.is_debug()
+        concretized_root_specs = tqdm.contrib.concurrent.process_map(
+            _concretize_task,
+            arguments,
+            max_workers=pool_size,
+            desc="Concretization",
+            unit="specs",
+            colour="blue",
         )
 
         finish = time.time()
