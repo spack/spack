@@ -90,6 +90,8 @@ class Esmf(MakefilePackage):
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("shared", default=True, description="Build shared library")
+    variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
+    variant("esmf_os", default="auto", description="Override for ESMF_OS variable")
 
     # Required dependencies
     depends_on("zlib")
@@ -251,6 +253,11 @@ class Esmf(MakefilePackage):
         if self.compiler.name == "cce" or "^cray-mpich" in self.spec:
             os.environ["ESMF_OS"] = "Unicos"
 
+        # Allow override of ESMF_OS:
+        os_variant = spec.variants["esmf_os"].value
+        if os_variant != "auto":
+            os.environ["ESMF_OS"] = os_variant
+
         #######
         # MPI #
         #######
@@ -283,6 +290,11 @@ class Esmf(MakefilePackage):
         else:
             # Force use of the single-processor MPI-bypass library.
             os.environ["ESMF_COMM"] = "mpiuni"
+
+        # Allow override of ESMF_COMM:
+        comm_variant = spec.variants["esmf_comm"].value
+        if comm_variant != "auto":
+            os.environ["ESMF_COMM"] = comm_variant
 
         ##########
         # LAPACK #
