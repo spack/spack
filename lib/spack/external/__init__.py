@@ -113,4 +113,10 @@ six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.16.0
 
+tqdm
+----
+* Homepage: https://tqdm.github.io/
+* Usage: Progress bars
+* Version: 4.64.1
+
 """
