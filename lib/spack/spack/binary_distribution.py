@@ -5,6 +5,7 @@
 
 import codecs
 import collections
+import gzip
 import hashlib
 import io
 import json
@@ -614,6 +615,28 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
+def transparently_decompress_bytes(binary_stream):
+    """Wrap stream in a decompress wrapper if gzip compressed"""
+    # Get magic bytes
+    if isinstance(binary_stream, io.BytesIO):
+        # Not peekable... Alternatively io.BufferedReader(io.BytesIO(...))
+        # but to add yet another wrapper just to read two bytes that are
+        # already in memory... sigh.
+        magic = binary_stream.read(2)
+        binary_stream.seek(0)
+    else:
+        magic = binary_stream.peek(2)
+
+    # Verify magic
+    if magic.startswith(b"\x1f\x8b"):
+        return gzip.GzipFile(fileobj=binary_stream)
+    return binary_stream
+
+
+def transparently_decompress_bytes_to_string(binary_stream, encoding="utf-8"):
+    return codecs.getreader(encoding)(transparently_decompress_bytes(binary_stream))
+
+
 class BuildManifestVisitor(BaseDirectoryVisitor):
     """Visitor that collects a list of files and symlinks
     that can be checked for need of relocation. It knows how
@@ -966,8 +989,8 @@ def _specs_from_cache_aws_cli(cache_prefix):
     aws = which("aws")
 
     def file_read_method(file_path):
-        with open(file_path) as fd:
-            return fd.read()
+        with open(file_path, "rb") as f:
+            return transparently_decompress_bytes_to_string(f).read()
 
     tmpspecsdir = tempfile.mkdtemp()
     sync_command_args = [
@@ -1014,7 +1037,7 @@ def _specs_from_cache_fallback(cache_prefix):
         contents = None
         try:
             _, _, spec_file = web_util.read_from_url(url)
-            contents = codecs.getreader("utf-8")(spec_file).read()
+            contents = transparently_decompress_bytes_to_string(spec_file).read()
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error("Error reading specfile: {0}".format(url))
             tty.error(url_err)
@@ -1412,7 +1435,7 @@ def try_verify(specfile_path):
     return True
 
 
-def try_fetch(url_to_fetch):
+def try_fetch(url_to_fetch, try_decompress=False):
     """Utility function to try and fetch a file from a url, stage it
     locally, and return the path to the staged file.
 
@@ -1430,6 +1453,21 @@ def try_fetch(url_to_fetch):
     except web_util.FetchError:
         stage.destroy()
         return None
+
+    if not try_decompress:
+        return stage
+
+    # Stage has some logic for automatically expanding
+    # archives, but it is based on file extensions. So instead,
+    # we more or less repeat the logic.
+    try:
+        tmp = stage.save_filename + ".tmp"
+        with gzip.open(stage.save_filename, "rb") as compressed:
+            with open(tmp, "wb") as decompressed:
+                shutil.copyfileobj(compressed, decompressed)
+        os.rename(tmp, stage.save_filename)
+    except OSError:
+        pass
 
     return stage
 
@@ -1506,7 +1544,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
             # Try to download the specfile. For any legacy version of Spack's buildcache
             # we definitely require this file.
             specfile_url = "{0}.{1}".format(mirror["specfile"], ext)
-            specfile_stage = try_fetch(specfile_url)
+            specfile_stage = try_fetch(specfile_url, try_decompress=True)
             if not specfile_stage:
                 continue
 
@@ -2002,7 +2040,7 @@ def try_direct_fetch(spec, mirrors=None):
             # read the spec from the build cache file. All specs in build caches
             # are concrete (as they are built) so we need to mark this spec
             # concrete on read-in.
-            stream = codecs.getreader("utf-8")(fs)
+            stream = transparently_decompress_bytes_to_string(fs)
             fetched_spec = Spec.from_dict(load_possibly_clearsigned_json(stream))
             fetched_spec._mark_concrete()
 
@@ -2091,7 +2129,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
 
         try:
             _, _, json_file = web_util.read_from_url(keys_index)
-            json_index = sjson.load(codecs.getreader("utf-8")(json_file))
+            json_index = sjson.load(transparently_decompress_bytes_to_string(json_file))
         except (URLError, web_util.SpackWebError) as url_err:
             if web_util.url_exists(keys_index):
                 err_msg = [
@@ -2416,11 +2454,15 @@ class DefaultIndexFetcher:
             raise FetchIndexError("Could not fetch index from {}".format(url_index), e)
 
         try:
-            result = codecs.getreader("utf-8")(response).read()
+            binary_result = response.read()
         except ValueError as e:
             return FetchCacheError("Remote index {} is invalid".format(url_index), e)
 
-        computed_hash = compute_hash(result)
+        # The hash is computed on the raw bytes
+        computed_hash = compute_hash(binary_result)
+
+        # Only then decode as string, possibly decompress
+        result = transparently_decompress_bytes_to_string(io.BytesIO(binary_result)).read()
 
         # We don't handle computed_hash != remote_hash here, which can happen
         # when remote index.json and index.json.hash are out of sync, or if
@@ -2474,15 +2516,21 @@ class EtagIndexFetcher:
             raise FetchIndexError("Could not fetch index {}".format(url), e) from e
 
         try:
-            result = codecs.getreader("utf-8")(response).read()
+            binary_result = response.read()
         except ValueError as e:
             raise FetchIndexError("Remote index {} is invalid".format(url), e) from e
+
+        # The hash is computed on the raw bytes
+        computed_hash = compute_hash(binary_result)
+
+        # Only then decode as string, possibly decompress
+        result = transparently_decompress_bytes_to_string(io.BytesIO(binary_result)).read()
 
         headers = response.headers
         etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
-            hash=compute_hash(result),
+            hash=computed_hash,
             data=result,
             fresh=False,
         )

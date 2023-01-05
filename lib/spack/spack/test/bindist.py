@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
+import gzip
 import io
 import json
 import os
@@ -983,3 +984,13 @@ Hash: SHA512
     )
     with pytest.raises(ValueError, match="Could not find PGP signature"):
         bindist.load_possibly_clearsigned_json(input)
+
+
+def test_transparent_decompression():
+    """Test a roundtrip of string -> gzip -> string."""
+    text = "this is utf8 that should be compressed"
+    gzipped = io.BytesIO()
+    with gzip.GzipFile(fileobj=gzipped, mode="w", compresslevel=1, mtime=0) as f:
+        f.write(text.encode("utf-8"))
+    gzipped.seek(0)
+    assert bindist.transparently_decompress_bytes_to_string(gzipped).read() == text
