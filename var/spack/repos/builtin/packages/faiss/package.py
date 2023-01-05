@@ -75,7 +75,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     def setup_run_environment(self, env):
         if "+python" in self.spec:
             env.prepend_path("PYTHONPATH", python_platlib)
-            env.append_path("LD_LIBRARY_PATH", os.path.join(python_platlib, "faiss/"))
+            env.append_path("LD_LIBRARY_PATH", os.path.join(python_platlib, "faiss"))
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
