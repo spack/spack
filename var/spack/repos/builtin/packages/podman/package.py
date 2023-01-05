@@ -13,7 +13,10 @@ class Podman(Package):
     url = "https://github.com/containers/podman/archive/v3.4.2.tar.gz"
     maintainers = ["bernhardkaindl"]
 
+    version("4.3.1", sha256="455c29c4ee78cd6365e5d46e20dd31a5ce4e6e1752db6774253d76bd3ca78813")
     version("3.4.2", sha256="b0c4f9a11eb500b1d440d5e51a6c0c632aa4ac458e2dc0362f50f999eb7fbf31")
+
+    patch("markdown-utf8.diff", when="@4:")
 
     depends_on("go", type="build")
     depends_on("go-md2man", type="build")
