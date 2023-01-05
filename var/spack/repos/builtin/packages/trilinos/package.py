@@ -396,7 +396,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Go through CMake for Hypre on Windows
     for plat in ["cray", "darwin", "linux"]:
         depends_on("hypre~internal-superlu~int64", when="+hypre platform=%s" % plat)
-    depends_on("hypre-cmake~internal-superlu~int64", when="+hypre platform=windows")
+    depends_on("hypre-cmake~int64", when="+hypre platform=windows")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
     depends_on("lapack")
     # depends_on('perl', type=('build',)) # TriBITS finds but doesn't use...

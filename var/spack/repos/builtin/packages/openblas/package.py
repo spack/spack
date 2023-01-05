@@ -215,7 +215,7 @@ class Openblas(CMakePackage, MakefilePackage):
 
     depends_on("perl", type="build")
     depends_on("cmake", when="platform=windows")
-    
+
     build_system("cmake", "makefile", default="cmake")
 
     def flag_handler(self, name, flags):
