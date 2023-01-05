@@ -90,6 +90,9 @@ class Esmf(MakefilePackage):
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("shared", default=True, description="Build shared library")
+    # 'esmf_comm' and 'esmf_os' variants allow override values for their corresponding
+    # build environment variables. Documentation, including valid values, can be found at
+    # https://earthsystemmodeling.org/docs/release/latest/ESMF_usrdoc/node10.html#SECTION000105000000000000000
     variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
     variant("esmf_os", default="auto", description="Override for ESMF_OS variable")
 
