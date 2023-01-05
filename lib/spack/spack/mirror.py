@@ -37,6 +37,15 @@ import spack.util.url as url_util
 from spack.util.spack_yaml import syaml_dict
 from spack.version import VersionList
 
+#: What schemes do we support
+supported_url_schemes = ("file", "http", "https", "ftp", "s3", "gs")
+
+
+def ensure_valid_url(url: str):
+    scheme = urllib.parse.urlparse(url).scheme
+    if scheme not in supported_url_schemes:
+        raise ValueError("Unsupported URL scheme `{}` for mirror url {}".format(scheme, url))
+
 
 def _is_string(url):
     return isinstance(url, str)
@@ -529,6 +538,8 @@ def add(name, url, scope, args={}):
 
     if name in mirrors:
         tty.die("Mirror with name %s already exists." % name)
+
+    ensure_valid_url(url)
 
     items = [(n, u) for n, u in mirrors.items()]
     mirror_data = url

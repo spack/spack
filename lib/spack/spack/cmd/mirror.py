@@ -96,7 +96,13 @@ def setup_parser(subparser):
     # Add
     add_parser = sp.add_parser("add", help=mirror_add.__doc__)
     add_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
-    add_parser.add_argument("url", help="url of mirror directory from 'spack mirror create'")
+
+    dir_or_url = add_parser.add_mutually_exclusive_group(required=True)
+    dir_or_url.add_argument("--directory", type=str, help="local path to a directory")
+    dir_or_url.add_argument("--url", type=str, dest="new_url_flag", help="remote mirror URL")
+    # old interface: does not distinguish between urls and paths
+    dir_or_url.add_argument("url", nargs="?", help="deprecated: use --url or --path instead")
+
     add_parser.add_argument(
         "--scope",
         choices=scopes,
@@ -148,17 +154,21 @@ def promote_deprecated_path_to_url(path_or_url):
     # but the commands really expect URLs.
     if not url_util.is_path_instead_of_url(path_or_url):
         return path_or_url
-
-    url = url_util.path_to_file_url(path_or_url)
-
-    tty.warn("Converted path to URL: {}.".format(url))
-
-    return path_or_url
+    return url_util.path_to_file_url(path_or_url)
 
 
 def mirror_add(args):
     """Add a mirror to Spack."""
-    url = url_util.format(promote_deprecated_path_to_url(args.url))
+    if args.url:
+        tty.warn(
+            "Providing the URL as a positional argument is deprecated, use "
+            "`spack mirror add --url ... name` instead"
+        )
+        url = promote_deprecated_path_to_url(args.url)
+    elif args.directory:
+        url = url_util.path_to_file_url(args.directory)
+    else:  # elif args.new_url_flag:
+        url = args.new_url_flag
     spack.mirror.add(args.name, url, args.scope, args)
 
 
