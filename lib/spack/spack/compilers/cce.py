@@ -39,7 +39,7 @@ class Cce(Compiler):
 
     @property
     def link_paths(self):
-        if self.PrgEnv in self.modules:
+        if any(self.PrgEnv in m for m in self.modules):
             # Old module-based interface to cray compilers
             return {
                 "cc": os.path.join("cce", "cc"),
