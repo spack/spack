@@ -111,8 +111,16 @@ class PyScipy(PythonPackage):
     # and setup_build_environment() from numpy in the scipy spec.
     depends_on("blas")
     depends_on("lapack")
-    # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
+
+    # https://docs.scipy.org/doc/scipy/dev/toolchain.html#other-libraries
+    depends_on("lapack@3.7.1:", when="@1.9:")
     depends_on("lapack@3.4.1:", when="@1.2:")
+
+    # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
+    conflicts("%gcc@:7", when="@1.10:")
+    conflicts("%gcc@:4.7", when="@:1.9")
+    conflicts("%apple-clang@:9", when="@1.10:")
+    conflicts("%msvc@:18", when="@1.10:")
 
     # https://github.com/scipy/scipy/pull/11324
     conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
