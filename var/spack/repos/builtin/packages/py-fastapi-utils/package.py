@@ -17,3 +17,7 @@ class PyFastapiUtils(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-poetry@0.12:", type="build")
+
+    depends_on("py-fastapi", type=("build", "run"))
+    depends_on("py-pydantic@1.0:", type=("build", "run"))
+    depends_on("py-sqlalchemy@1.3.12:", type=("build", "run"))
