@@ -14,9 +14,9 @@ class PyLagom(PythonPackage):
     """
 
     homepage = "https://lagom-di.readthedocs.io"
-    url = "https://github.com/meadsteve/lagom/archive/refs/tags/2.0.0.tar.gz"
+    url = "https://github.com/meadsteve/lagom/archive/refs/tags/2.2.0.tar.gz"
     git = "https://github.com/meadsteve/lagom.git"
 
-    version("2.2.0", sha256="ab7fc2b63ef65e3f8cbaec67d165d8992f8addc23d42f2bc395f1db5eef1a5aa")
+    version("2.2.0", sha256="69f701a2f81d9ca0ea7c93a5b15f7420bbe03d14175ec128959ad82e2b67460b")
 
     depends_on("py-setuptools", type="build")
