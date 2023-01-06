@@ -24,7 +24,7 @@ class PyStrawberryfields(PythonPackage):
     depends_on("py-numba", type=("build", "run"))
     depends_on("py-numpy@1.17.4:", type=("build", "run"))
     depends_on("py-python-dateutil@2.8.0:", type=("build", "run"))
-    #depends_on("py-quantum-blackbird@0.4.0:", type=("build", "run"))
+    #depends_on("py-quantum-blackbird@0.3.0:", type=("build", "run"))
     depends_on("py-requests@2.22.0:", type=("build", "run"))
     depends_on("py-scipy@1.0.0:", type=("build", "run"))
     depends_on("py-sympy@1.5:", type=("build", "run"))
