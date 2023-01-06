@@ -11,9 +11,11 @@ class PyPennylaneLightning(PythonPackage):
     """PennyLane-Lightning plugin"""
 
     homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
-    pypi = "PennyLane-Lightning/PennyLane-Lightning-0.28.0.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.0.tar.gz"
+    # using github for now, because pypi tarball is missing the CMakeLists.txt file
+    # pypi = "PennyLane-Lightning/PennyLane-Lightning-0.28.0.tar.gz"
 
-    version("0.28.0", sha256="30661c16f4bf008e2b817dc793731d5bfe8648e4e1d44f7d76435c60162857af")
+    version("0.28.0", sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
