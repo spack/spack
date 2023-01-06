@@ -120,7 +120,7 @@ class PyScipy(PythonPackage):
     conflicts("%gcc@:7", when="@1.10:")
     conflicts("%gcc@:4.7", when="@:1.9")
     conflicts("%apple-clang@:9", when="@1.10:")
-    conflicts("%msvc@:18", when="@1.10:")
+    conflicts("%msvc@:19.19", when="@1.10:")
 
     # https://github.com/scipy/scipy/pull/11324
     conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
