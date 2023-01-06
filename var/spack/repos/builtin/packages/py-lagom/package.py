@@ -17,4 +17,5 @@ class PyLagom(PythonPackage):
 
     version("2.2.0", sha256="69f701a2f81d9ca0ea7c93a5b15f7420bbe03d14175ec128959ad82e2b67460b")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@59.6:", type="build")
+    depends_on("py-mypy@0.971", type="build")

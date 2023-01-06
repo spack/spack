@@ -16,4 +16,4 @@ class PySupervisor(PythonPackage):
     version("4.2.4", sha256="40dc582ce1eec631c3df79420b187a6da276bbd68a4ec0a8f1f123ea616b97a2")
 
     depends_on("python@3.4:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))
