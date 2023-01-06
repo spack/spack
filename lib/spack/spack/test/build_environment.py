@@ -37,7 +37,7 @@ def os_pathsep_join(path, *pths):
 
 
 def prep_and_join(path, *pths):
-    return os.path.sep + PurePath(path, *pths)
+    return PurePath(os.path.sep).joinpath(PurePath(path, *pths))
 
 
 @pytest.fixture

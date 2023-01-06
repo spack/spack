@@ -310,7 +310,7 @@ def substitute_config_variables(path):
         return _replacements.get(m.lower(), match.group(0))
 
     # Replace $var or ${var}.
-    return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
+    return Path(re.sub(r"(\$\w+\b|\$\{\w+\})", repl, str(path)))
 
 
 def substitute_path_variables(path):

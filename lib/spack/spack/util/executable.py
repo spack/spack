@@ -23,9 +23,10 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
+        if not isinstance(name, PurePath):
+            name = PurePath(name)
         # necesary here for the shlex call to succeed
-        name = format_os_path(name, mode=Path.unix)
-        self.exe = shlex.split(str(name))
+        self.exe = shlex.split(name.as_posix())
         # filter back to platform dependent path
         self.exe = path_to_os_path(*self.exe)
         self.default_env = {}
