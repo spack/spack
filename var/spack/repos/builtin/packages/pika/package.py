@@ -107,7 +107,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
+        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
