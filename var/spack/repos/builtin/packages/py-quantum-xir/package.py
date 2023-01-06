@@ -8,11 +8,10 @@ from spack.package import *
 
 
 class PyQuantumXir(PythonPackage):
-    """
-    """
+    """XIR is an intermediate representation language for quantum circuits."""
 
     homepage = ""
-    pypi = ""
+    pypi = "quantum-xir/"
 
     version("", sha256="")
 

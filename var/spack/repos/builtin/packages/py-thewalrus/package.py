@@ -8,11 +8,12 @@ from spack.package import *
 
 
 class PyThewalrus(PythonPackage):
-    """
+    """A library for the calculation of hafnians, Hermite polynomials and
+    Gaussian boson sampling.
     """
 
     homepage = ""
-    pypi = ""
+    pypi = "thewalrus/"
 
     version("", sha256="")
 

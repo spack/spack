@@ -8,11 +8,10 @@ from spack.package import *
 
 
 class PyXanaduCloudClient(PythonPackage):
-    """
-    """
+    """The Xanadu Cloud Client (XCC) is a Python API and CLI for the Xanadu Cloud."""
 
     homepage = ""
-    pypi = ""
+    pypi = "xanadu-cloud-client/"
 
     version("", sha256="")
 

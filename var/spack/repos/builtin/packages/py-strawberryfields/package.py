@@ -11,7 +11,7 @@ class PyStrawberryfields(PythonPackage):
     """Open source library for continuous-variable quantum computation"""
 
     homepage = "https://github.com/XanaduAI/StrawberryFields"
-    pypi = "strawberryfields/StrawberryFields-0.23.0.tar.gz"
+    pypi = "StrawberryFields/StrawberryFields-0.23.0.tar.gz"
 
     maintainers = ["marcodelapierre"]
 
