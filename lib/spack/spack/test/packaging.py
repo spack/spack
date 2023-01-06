@@ -13,7 +13,7 @@ import shutil
 import stat
 import sys
 from collections import OrderedDict
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 

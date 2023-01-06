@@ -7,6 +7,7 @@ import hashlib
 import os
 import re
 import shutil
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

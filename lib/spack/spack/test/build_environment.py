@@ -7,6 +7,7 @@ import os
 import platform
 import posixpath
 import sys
+from pathlib import PurePath
 
 import pytest
 

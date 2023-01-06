@@ -14,7 +14,7 @@ import re
 import sys
 import urllib.parse
 import urllib.request
-from pathlib import Path
+from pathlib import Path, PurePath
 
 from spack.util.path import convert_to_posix_path
 

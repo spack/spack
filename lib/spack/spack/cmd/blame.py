@@ -6,6 +6,7 @@
 import os
 import re
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir

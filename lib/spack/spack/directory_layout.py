@@ -6,12 +6,12 @@
 import errno
 import glob
 import os
-from pathlib import Path, PurePath
 import posixpath
 import re
 import shutil
 import sys
 from contextlib import contextmanager
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

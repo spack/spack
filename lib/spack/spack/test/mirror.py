@@ -6,6 +6,7 @@
 import filecmp
 import os
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 

@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import time
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -181,9 +182,7 @@ def test_install_with_source(mock_packages, mock_archive, mock_fetch, config, in
     install("--source", "--keep-stage", "trivial-install-test-package")
     spec = Spec("trivial-install-test-package").concretized()
     src = PurePath(spec.prefix.share, "trivial-install-test-package", "src")
-    assert filecmp.cmp(
-        PurePath(mock_archive.path, "configure"), os.path.join(src, "configure")
-    )
+    assert filecmp.cmp(PurePath(mock_archive.path, "configure"), os.path.join(src, "configure"))
 
 
 def test_install_env_variables(mock_packages, mock_archive, mock_fetch, config, install_mockery):

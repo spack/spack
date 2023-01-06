@@ -5,6 +5,7 @@
 
 import os.path
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 

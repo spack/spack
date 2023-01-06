@@ -9,6 +9,7 @@ import re
 import sys
 import sysconfig
 import warnings
+from pathlib import Path
 
 import archspec.cpu
 

@@ -7,6 +7,7 @@ import os
 import os.path
 import platform
 import sys
+from pathlib import Path
 
 import pytest
 

@@ -8,6 +8,7 @@ import argparse
 import errno
 import os
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify

@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
 import os
-from pathlib import PurePath
 import shutil
 import sys
 from copy import copy
+from pathlib import Path, PurePath
 
 import pytest
 

@@ -242,9 +242,7 @@ def test_shebang_handling(script_dir, sbang_line):
         assert f.readline() == last_line
 
     assert filecmp.cmp(script_dir.lua_textbang, PurePath(script_dir.tempdir, "lua_in_text"))
-    assert filecmp.cmp(
-        script_dir.luajit_textbang, PurePath(script_dir.tempdir, "luajit_in_text")
-    )
+    assert filecmp.cmp(script_dir.luajit_textbang, PurePath(script_dir.tempdir, "luajit_in_text"))
     assert filecmp.cmp(script_dir.node_textbang, PurePath(script_dir.tempdir, "node_in_text"))
     assert filecmp.cmp(script_dir.php_textbang, PurePath(script_dir.tempdir, "php_in_text"))
 

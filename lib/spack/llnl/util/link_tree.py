@@ -130,7 +130,7 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
             # Only follow symlinked dirs when pointing deeper
             src = PurePath(root, rel_path)
             real_parent = os.path.realpath(PurePath(src).parent)
-            real_child = Pure(src).resolve()
+            real_child = Path(src).resolve()
             handle_as_dir = real_child.startswith(real_parent)
 
         if handle_as_dir:

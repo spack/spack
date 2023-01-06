@@ -8,10 +8,10 @@ and running executables.
 import collections
 import os
 import os.path
-from pathlib import PurePath
 import re
 import sys
 import warnings
+from pathlib import PurePath
 
 import llnl.util.filesystem
 import llnl.util.tty

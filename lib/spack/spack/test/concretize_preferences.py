@@ -5,6 +5,7 @@
 
 import os
 import stat
+from pathlib import PurePath
 
 import pytest
 

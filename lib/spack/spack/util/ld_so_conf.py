@@ -5,9 +5,9 @@
 
 import glob
 import os
-from pathlib import PurePath
 import re
 import sys
+from pathlib import Path, PurePath
 
 from llnl.util.lang import dedupe
 

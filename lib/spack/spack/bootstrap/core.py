@@ -27,9 +27,9 @@ import functools
 import json
 import os
 import os.path
-from pathlib import PurePath
 import sys
 import uuid
+from pathlib import PurePath
 from typing import Callable, List, Optional
 
 from llnl.util import tty

@@ -6,6 +6,7 @@
 """Tests various features of :py:class:`spack.util.prefix.Prefix`"""
 
 import os
+from pathlib import PurePath
 
 from spack.util.prefix import Prefix
 

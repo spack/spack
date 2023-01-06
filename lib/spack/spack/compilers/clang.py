@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from pathlib import PurePath
 import re
 import sys
+from pathlib import PurePath
 
 import llnl.util.lang
 

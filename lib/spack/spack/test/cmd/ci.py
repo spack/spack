@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import sys
+from pathlib import Path, PurePath
 
 import jsonschema
 import pytest

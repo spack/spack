@@ -4,12 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import json
-import os
-from pathlib import PurePath
 import shutil
 import sys
 import tempfile
 import urllib.parse
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 

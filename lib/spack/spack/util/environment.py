@@ -15,6 +15,7 @@ import re
 import shlex
 import socket
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe

@@ -5,7 +5,7 @@
 import os
 import posixpath
 import sys
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import spack.paths
 import spack.util.executable

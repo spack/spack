@@ -13,7 +13,7 @@ import shutil
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 

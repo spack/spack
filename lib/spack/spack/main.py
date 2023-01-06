@@ -16,7 +16,6 @@ import io
 import operator
 import os
 import os.path
-from pathlib import Path
 import pstats
 import re
 import signal

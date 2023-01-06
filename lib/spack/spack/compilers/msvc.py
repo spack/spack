@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 from distutils.version import StrictVersion
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Dict, List, Set
 
 import spack.compiler

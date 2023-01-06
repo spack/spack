@@ -20,6 +20,7 @@ import os
 import os.path
 import re
 import sys
+from pathlib import Path
 
 import llnl.util.tty
 

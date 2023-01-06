@@ -11,6 +11,7 @@ import io
 import os.path
 import re
 import sys
+from pathlib import PurePath
 
 try:
     import pytest

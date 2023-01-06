@@ -33,8 +33,8 @@ import copy
 import datetime
 import inspect
 import os.path
-from pathlib import Path, PurePath
 import re
+from pathlib import Path, PurePath
 from typing import Optional
 
 import llnl.util.filesystem

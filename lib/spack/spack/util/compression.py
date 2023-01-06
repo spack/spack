@@ -10,6 +10,7 @@ import re
 import shutil
 import sys
 from itertools import product
+from pathlib import Path, PurePath
 
 from llnl.util import tty
 
@@ -81,7 +82,7 @@ def _untar(archive_file):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    outfile = os.path.basename(strip_extension(archive_file, "tar"))
+    outfile = Path(strip_extension(archive_file, "tar")).name
 
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
@@ -97,7 +98,7 @@ def _bunzip2(archive_file):
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
     compressed_file_name = PurePath(archive_file).name
-    decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
+    decompressed_file = Path(strip_extension(archive_file, "bz2")).name
     working_dir = Path.cwd()
     archive_out = PurePath(working_dir, decompressed_file)
     copy_path = PurePath(working_dir, compressed_file_name)

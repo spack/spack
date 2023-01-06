@@ -11,7 +11,7 @@ import re
 import shutil
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import List, Optional, Sequence
 
 import llnl.util.lang

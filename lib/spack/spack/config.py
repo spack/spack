@@ -36,8 +36,8 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import Dict, List, Optional
 from pathlib import Path, PurePath
+from typing import Dict, List, Optional
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -1344,7 +1344,7 @@ def collect_urls(base_url: str) -> list:
     return [link for link in links if link.endswith(extension)]
 
 
-def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) -> str:
+def fetch_remote_configs(url: str, dest_dir: Path, skip_existing: bool = True) -> str:
     """Retrieve configuration file(s) at the specified URL.
 
     Arguments:
@@ -1372,7 +1372,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
     # Return the local path to the cached configuration file OR to the
     # directory containing the cached configuration files.
     config_links = collect_urls(url)
-    existing_files = list(Path(dest_dir).iterdir()) if Path(dest_dir).is_dir() else []
+    existing_files = list(dest_dir.iterdir()) if dest_dir.is_dir() else []
 
     paths = []
     for config_url in config_links:

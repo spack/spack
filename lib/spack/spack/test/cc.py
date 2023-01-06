@@ -8,8 +8,8 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
-from pathlib import PurePath
 import sys
+from pathlib import PurePath
 
 import pytest
 

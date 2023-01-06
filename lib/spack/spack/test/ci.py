@@ -6,6 +6,7 @@
 import itertools as it
 import os
 import sys
+from pathlib import PurePath
 
 import pytest
 

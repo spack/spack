@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+from pathlib import PurePath
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver

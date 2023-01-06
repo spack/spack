@@ -134,7 +134,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
                 continue
 
             # Ignore files in the exclude locations
-            if any(Path(f).resolve().startswith(e) for e in excludes):
+            if any(str(Path(f).resolve()).startswith(e) for e in excludes):
                 continue
 
             changed.add(f)

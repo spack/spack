@@ -15,7 +15,6 @@ import inspect
 import itertools
 import os
 import os.path
-from pathlib import Path, PurePath
 import random
 import re
 import shutil
@@ -25,6 +24,7 @@ import sys
 import traceback
 import types
 import uuid
+from pathlib import Path, PurePath
 from typing import Dict, Union
 
 import ruamel.yaml as yaml
@@ -319,8 +319,7 @@ def is_package_file(filename):
         0
     ]
     return (
-        filename_noext != packagebase_filename_noext
-        and PurePath(filename_noext).name == "package"
+        filename_noext != packagebase_filename_noext and PurePath(filename_noext).name == "package"
     )
 
 
@@ -385,9 +384,9 @@ class FastPackageChecker(collections.abc.Mapping):
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
         cache: Dict[str, os.stat_result] = {}
-        for pkg_name in Path(self.packages_path).iterdir():
+        for pkg_dir in Path(self.packages_path).iterdir():
             # Skip non-directories in the package root.
-            pkg_dir = os.path.join(self.packages_path, pkg_name)
+            pkg_name = pkg_dir.name
 
             # Warn about invalid names that look like packages.
             if not nm.valid_module_name(pkg_name):
@@ -399,11 +398,11 @@ class FastPackageChecker(collections.abc.Mapping):
                 continue
 
             # Construct the file name from the directory
-            pkg_file = os.path.join(self.packages_path, pkg_name, package_file_name)
+            pkg_file = pkg_dir.joinpath(package_file_name)
 
             # Use stat here to avoid lots of calls to the filesystem.
             try:
-                sinfo = os.stat(pkg_file)
+                sinfo = pkg_file.stat()
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     # No package.py file here.

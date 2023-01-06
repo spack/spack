@@ -10,12 +10,12 @@ TODO: this is really part of spack.config. Consolidate it.
 import contextlib
 import getpass
 import os
-from pathlib import PurePath
 import re
 import subprocess
 import sys
 import tempfile
 from datetime import date
+from pathlib import PurePath
 from urllib.parse import urlparse
 
 import llnl.util.tty as tty

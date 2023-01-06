@@ -17,7 +17,7 @@ import stat
 import sys
 import tempfile
 import xml.etree.ElementTree
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import py
 import pytest

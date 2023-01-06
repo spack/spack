@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import PurePath
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver

@@ -8,6 +8,7 @@ based on its URL.
 """
 
 import os
+from pathlib import Path
 
 import pytest
 

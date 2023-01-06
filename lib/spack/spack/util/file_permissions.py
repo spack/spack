@@ -5,6 +5,7 @@
 
 import os
 import stat as st
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 

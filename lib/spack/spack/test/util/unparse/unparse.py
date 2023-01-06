@@ -7,6 +7,7 @@ import codecs
 import os
 import sys
 import tokenize
+from pathlib import Path
 
 import pytest
 

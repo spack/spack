@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 
@@ -116,7 +117,7 @@ def repo_remove(args):
     for repo_path in repos:
         repo_canon_path = spack.util.path.canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
-            repPath(repo_path).unlink()
+            Path(repo_path).unlink()
             spack.config.set("repos", repos, args.scope)
             tty.msg("Removed repository %s" % repo_path)
             return
@@ -126,7 +127,7 @@ def repo_remove(args):
         try:
             repo = spack.repo.Repo(path)
             if repo.namespace == namespace_or_path:
-                repPath(path).unlink()
+                Path(path).unlink()
                 spack.config.set("repos", repos, args.scope)
                 tty.msg("Removed repository %s with namespace '%s'." % (repo.root, repo.namespace))
                 return

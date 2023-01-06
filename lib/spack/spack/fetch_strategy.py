@@ -30,7 +30,7 @@ import re
 import shutil
 import sys
 import urllib.parse
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import List, Optional
 
 import llnl.util

@@ -5,11 +5,11 @@
 
 import errno
 import os
-from pathlib import PurePath
 import socket
 import sys
 import time
 from datetime import datetime
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds

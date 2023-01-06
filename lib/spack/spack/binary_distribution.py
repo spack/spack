@@ -10,7 +10,6 @@ import json
 import multiprocessing.pool
 import os
 import re
-from pathlib import PurePath
 import shutil
 import sys
 import tarfile
@@ -22,6 +21,7 @@ import urllib.parse
 import urllib.request
 import warnings
 from contextlib import closing
+from pathlib import Path, PurePath
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -1182,7 +1182,7 @@ def _build_tarball(
     signed_specfile_path = "{0}.sig".format(specfile_path)
 
     remote_specfile_path = url_util.join(
-        out_url, os.path.relpath(specfile_path, Pure(tmpdir).resolve())
+        out_url, os.path.relpath(specfile_path, PurePath(tmpdir).resolve())
     )
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 

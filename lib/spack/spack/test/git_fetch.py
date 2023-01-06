@@ -6,6 +6,7 @@
 import copy
 import os
 import shutil
+from pathlib import Path, PurePath
 
 import pytest
 

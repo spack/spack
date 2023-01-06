@@ -8,6 +8,7 @@ import re
 import shutil
 import tempfile
 from collections import OrderedDict
+from pathlib import Path
 
 from llnl.util.symlink import symlink
 

@@ -5,10 +5,10 @@
 import collections
 import multiprocessing.pool
 import os
-from pathlib import PurePath
 import re
 import shutil
 from collections import OrderedDict
+from pathlib import Path, PurePath
 
 import macholib.mach_o
 import macholib.MachO

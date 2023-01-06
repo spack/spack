@@ -18,6 +18,7 @@ import os.path
 import sys
 import traceback
 import urllib.parse
+from pathlib import Path
 
 import ruamel.yaml.error as yaml_error
 

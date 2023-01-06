@@ -10,6 +10,7 @@ parsing environment modules.
 import os
 import re
 import subprocess
+from pathlib import Path
 
 import llnl.util.tty as tty
 

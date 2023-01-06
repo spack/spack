@@ -5,9 +5,9 @@
 from __future__ import print_function
 
 import os.path
-from pathlib import Path, PurePath
 import shutil
 import tempfile
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem
 import llnl.util.tty

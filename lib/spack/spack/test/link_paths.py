@@ -5,6 +5,7 @@
 import os
 import re
 import sys
+from pathlib import PurePath
 
 import pytest
 
@@ -14,7 +15,7 @@ from spack.compiler import _parse_non_system_link_dirs
 is_windows = sys.platform == "win32"
 drive = ""
 if is_windows:
-    match = re.search(r"[A-Za-z]:", spack.paths.test_path)
+    match = re.search(r"[A-Za-z]:", str(spack.paths.test_path))
     if match:
         drive = match.group()
 root = drive + os.sep

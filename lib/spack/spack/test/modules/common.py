@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from pathlib import Path, PurePath
 import stat
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 

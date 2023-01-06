@@ -5,6 +5,7 @@
 
 import os
 import re
+from pathlib import PurePath
 
 from llnl.util.filesystem import ancestor
 

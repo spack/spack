@@ -5,6 +5,7 @@
 
 import os
 import re
+from pathlib import PurePath
 
 import spack.compiler
 

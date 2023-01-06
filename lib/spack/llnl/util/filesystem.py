@@ -1102,7 +1102,7 @@ def temp_cwd():
 @contextmanager
 @system_path_filter
 def temp_rename(orig_path, temp_path):
-    same_path = Pure(orig_path).resolve() == Pure(temp_path).resolve()
+    same_path = Path(orig_path).resolve() == Path(temp_path).resolve()
     if not same_path:
         shutil.move(orig_path, temp_path)
     try:
@@ -1476,7 +1476,7 @@ def remove_linked_tree(path):
 
     if Path(path).exists():
         if Path(path).is_symlink():
-            shutil.rmtree(Pure(path).resolve(), **kwargs)
+            shutil.rmtree(Path(path).resolve(), **kwargs)
             Path(path).unlink()
         else:
             shutil.rmtree(path, **kwargs)

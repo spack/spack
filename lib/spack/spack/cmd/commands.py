@@ -10,6 +10,7 @@ import copy
 import os
 import re
 import sys
+from pathlib import Path
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

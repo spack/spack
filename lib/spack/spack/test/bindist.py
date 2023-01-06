@@ -10,6 +10,7 @@ import sys
 import urllib.error
 import urllib.request
 import urllib.response
+from pathlib import Path
 
 import py
 import pytest

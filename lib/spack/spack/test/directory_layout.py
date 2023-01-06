@@ -8,6 +8,7 @@ This test verifies that the Spack directory layout works properly.
 """
 import os
 import os.path
+from pathlib import Path
 
 import pytest
 

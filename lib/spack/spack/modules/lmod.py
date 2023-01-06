@@ -6,8 +6,8 @@
 import collections
 import itertools
 import os.path
-from pathlib import PurePath
 import posixpath
+from pathlib import PurePath
 from typing import Any, Dict
 
 import llnl.util.lang as lang

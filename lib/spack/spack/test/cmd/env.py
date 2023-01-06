@@ -1215,9 +1215,7 @@ def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, 
     with ev.read("test"):
         add("view-dir-file")
         add("view-dir-dir")
-        with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=PurePath("bin", "x")
-        ):
+        with pytest.raises(llnl.util.link_tree.MergeConflictSummary, match=PurePath("bin", "x")):
             install()
 
 

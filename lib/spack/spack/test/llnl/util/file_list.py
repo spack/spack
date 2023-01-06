@@ -6,6 +6,7 @@
 import fnmatch
 import os.path
 import sys
+from pathlib import PurePath
 
 import pytest
 

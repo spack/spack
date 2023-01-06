@@ -5,10 +5,9 @@
 
 from __future__ import print_function
 
-import os
-from pathlib import Path, PurePath
 import re
 import urllib.parse
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp

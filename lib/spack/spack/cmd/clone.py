@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir

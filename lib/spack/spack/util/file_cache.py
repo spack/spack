@@ -5,8 +5,8 @@
 
 import errno
 import os
-from pathlib import PurePath
 import shutil
+from pathlib import Path, PurePath
 
 from llnl.util.filesystem import mkdirp, rename
 

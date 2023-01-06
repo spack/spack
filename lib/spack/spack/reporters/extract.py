@@ -6,6 +6,7 @@ import os
 import re
 import xml.sax.saxutils
 from datetime import datetime
+from pathlib import PurePath
 
 import llnl.util.tty as tty
 

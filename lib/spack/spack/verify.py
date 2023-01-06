@@ -5,7 +5,7 @@
 import base64
 import hashlib
 import os
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 

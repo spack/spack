@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 from os.path import exists, join
-from pathlib import Path
+from pathlib import Path, PurePath
 from sys import platform as _platform
 
 from llnl.util import lang

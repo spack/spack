@@ -12,6 +12,7 @@ import re
 import socket
 import time
 import xml.sax.saxutils
+from pathlib import Path
 from typing import Dict
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener

@@ -9,11 +9,11 @@ import collections.abc
 import copy
 import itertools
 import os
-from pathlib import PurePath
 import pprint
 import re
 import types
 import warnings
+from pathlib import PurePath
 
 import archspec.cpu
 

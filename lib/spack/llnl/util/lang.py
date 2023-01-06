@@ -10,11 +10,11 @@ import contextlib
 import functools
 import inspect
 import itertools
-from pathlib import Path, PurePath
 import re
 import sys
 import traceback
 from datetime import datetime, timedelta
+from pathlib import Path, PurePath
 from typing import Any, Callable, Iterable, List, Tuple
 
 # Ignore emacs backups when listing modules

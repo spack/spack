@@ -8,11 +8,11 @@ from __future__ import print_function
 import argparse
 import fnmatch
 import os
-from pathlib import Path
 import re
 import shutil
 import sys
 import textwrap
+from pathlib import Path
 
 from llnl.util import lang, tty
 from llnl.util.tty import colify

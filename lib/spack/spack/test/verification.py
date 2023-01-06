@@ -7,7 +7,7 @@
 import os
 import shutil
 import sys
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 

@@ -6,8 +6,8 @@ from __future__ import print_function
 
 import collections
 import os
-from pathlib import PurePath
 import shutil
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

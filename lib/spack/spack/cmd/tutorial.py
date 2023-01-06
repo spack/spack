@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os.path
 import shutil
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir

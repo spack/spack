@@ -5,9 +5,9 @@
 
 import glob
 import os
-from pathlib import PurePath
 import shutil
 import sys
+from pathlib import Path, PurePath
 
 import py
 import pytest

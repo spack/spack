@@ -6,6 +6,7 @@
 """Tests Spack's ability to substitute a different version into a URL."""
 
 import os
+from pathlib import Path
 
 import pytest
 

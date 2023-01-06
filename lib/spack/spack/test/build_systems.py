@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
-import os
 import sys
+from pathlib import Path, PurePath
 
 import py.path
 import pytest
@@ -48,7 +48,7 @@ def test_dir(tmpdir):
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 class TestTargets(object):
     @pytest.mark.parametrize(
-        "input_dir", glob.iglob(PurePath(DATA_PATH, "make", "affirmative", "*"))
+        "input_dir", glob.iglob(str(PurePath(DATA_PATH, "make", "affirmative", "*")))
     )
     def test_affirmative_make_check(self, input_dir, test_dir, concretize_and_setup):
         """Tests that Spack correctly detects targets in a Makefile."""
@@ -58,7 +58,7 @@ class TestTargets(object):
             s.package._if_make_target_execute("check")
 
     @pytest.mark.parametrize(
-        "input_dir", glob.iglob(PurePath(DATA_PATH, "make", "negative", "*"))
+        "input_dir", glob.iglob(str(PurePath(DATA_PATH, "make", "negative", "*")))
     )
     @pytest.mark.regression("9067")
     def test_negative_make_check(self, input_dir, test_dir, concretize_and_setup):
@@ -70,7 +70,7 @@ class TestTargets(object):
 
     @pytest.mark.skipif(not which("ninja"), reason="ninja is not installed")
     @pytest.mark.parametrize(
-        "input_dir", glob.iglob(PurePath(DATA_PATH, "ninja", "affirmative", "*"))
+        "input_dir", glob.iglob(str(PurePath(DATA_PATH, "ninja", "affirmative", "*")))
     )
     def test_affirmative_ninja_check(self, input_dir, test_dir, concretize_and_setup):
         """Tests that Spack correctly detects targets in a Ninja build script."""
@@ -81,7 +81,7 @@ class TestTargets(object):
 
     @pytest.mark.skipif(not which("ninja"), reason="ninja is not installed")
     @pytest.mark.parametrize(
-        "input_dir", glob.iglob(PurePath(DATA_PATH, "ninja", "negative", "*"))
+        "input_dir", glob.iglob(str(PurePath(DATA_PATH, "ninja", "negative", "*")))
     )
     def test_negative_ninja_check(self, input_dir, test_dir, concretize_and_setup):
         """Tests that Spack correctly ignores false positives in a Ninja

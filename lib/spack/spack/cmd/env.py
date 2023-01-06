@@ -9,7 +9,7 @@ import os
 import shutil
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

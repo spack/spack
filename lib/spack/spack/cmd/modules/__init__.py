@@ -9,6 +9,7 @@ import collections
 import os.path
 import shutil
 import sys
+from pathlib import Path
 
 from llnl.util import filesystem, tty
 

@@ -5,6 +5,7 @@
 
 import os
 from os.path import dirname
+from pathlib import PurePath
 
 from spack.compiler import Compiler
 

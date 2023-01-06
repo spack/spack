@@ -10,7 +10,6 @@ import errno
 import multiprocessing.pool
 import os
 import os.path
-from pathlib import PurePath
 import re
 import shutil
 import ssl
@@ -18,6 +17,7 @@ import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
+from pathlib import Path, PurePath
 from urllib.error import URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 

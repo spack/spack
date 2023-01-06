@@ -10,11 +10,11 @@ import getpass
 import glob
 import hashlib
 import os
-from pathlib import Path, PurePath
 import shutil
 import stat
 import sys
 import tempfile
+from pathlib import Path, PurePath
 from typing import Dict
 
 import llnl.util.lang

@@ -10,6 +10,7 @@ Utility module for dealing with Windows Registry.
 import os
 import sys
 from contextlib import contextmanager
+from pathlib import PurePath
 
 from llnl.util import tty
 
@@ -35,7 +36,7 @@ class RegistryKey(object):
     """
 
     def __init__(self, name, handle):
-        self.path = name
+        self.path = str(name)
         self.name = os.path.split(name)[-1]
         self._handle = handle
         self._keys = []

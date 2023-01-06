@@ -10,7 +10,7 @@ import os
 import sys
 import tempfile
 from datetime import date
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -388,9 +388,9 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
 
     host_target = spack.platforms.host().target("default_target")
     host_target_family = str(host_target.microarchitecture.family)
-    assert spack_path.canonicalize_path(
-        PurePath("foo", "$target_family", "bar")
-    ) == Path.resolve(PurePath("foo", host_target_family, "bar"))
+    assert spack_path.canonicalize_path(PurePath("foo", "$target_family", "bar")) == Path.resolve(
+        PurePath("foo", host_target_family, "bar")
+    )
 
 
 packages_merge_low = {"packages": {"foo": {"variants": ["+v1"]}, "bar": {"variants": ["+v2"]}}}
@@ -456,7 +456,7 @@ PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
 MAX_PATH_LEN = spack.util.path.get_system_path_max()
 MAX_PADDED_LEN = MAX_PATH_LEN - spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
-full_padded_string = PurePath(os.sep + "path", os.sep.join(reps))[:MAX_PADDED_LEN]
+full_padded_string = str(PurePath(os.sep + "path", os.sep.join(reps)))[:MAX_PADDED_LEN]
 
 
 @pytest.mark.parametrize(

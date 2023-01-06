@@ -8,7 +8,8 @@ import re
 import shlex
 import subprocess
 import sys
-from pathlib import Path as pth, PurePath
+from pathlib import Path as pth
+from pathlib import PurePath
 
 import llnl.util.tty as tty
 

@@ -36,11 +36,11 @@ import inspect
 import io
 import multiprocessing
 import os
-from pathlib import PurePath
 import re
 import sys
 import traceback
 import types
+from pathlib import Path, PurePath
 from typing import List, Tuple
 
 import llnl.util.tty as tty

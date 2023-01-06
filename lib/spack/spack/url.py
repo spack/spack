@@ -26,9 +26,8 @@ spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
 import io
-import os
-from pathlib import PurePath
 import re
+from pathlib import PurePath
 from urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty

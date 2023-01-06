@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
-from pathlib import Path, PurePath
 import re
 import shutil
+from pathlib import Path, PurePath
 
 import llnl.util.lang
 import llnl.util.tty as tty
