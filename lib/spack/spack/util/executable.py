@@ -8,13 +8,11 @@ import re
 import shlex
 import subprocess
 import sys
-from pathlib import Path as pth
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 
 import spack.error
-from spack.util.path import Path, format_os_path, path_to_os_path, system_path_filter
 
 __all__ = ["Executable", "which", "ProcessError"]
 
@@ -24,11 +22,11 @@ class Executable(object):
 
     def __init__(self, name):
         if not isinstance(name, PurePath):
-            name = PurePath(name)
+            name = Path(name)
         # necesary here for the shlex call to succeed
         self.exe = shlex.split(name.as_posix())
         # filter back to platform dependent path
-        self.exe = path_to_os_path(*self.exe)
+        self.exe = Path(*self.exe)
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
 
@@ -38,12 +36,10 @@ class Executable(object):
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
-    @system_path_filter
     def add_default_arg(self, arg):
         """Add a default argument to the command."""
         self.exe.append(arg)
 
-    @system_path_filter
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
 
@@ -277,7 +273,6 @@ class Executable(object):
         return " ".join(self.exe)
 
 
-@system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
     path = kwargs.get("path", os.environ.get("PATH", ""))
@@ -301,14 +296,13 @@ def which_string(*args, **kwargs):
 
         for candidate_name in candidate_names:
             if os.path.sep in candidate_name:
-                exe = pth.resolve(candidate_name)
-                if pth(exe).is_file() and os.access(exe, os.X_OK):
+                exe = Path(candidate_name).resolve()
+                if Path(exe).is_file() and os.access(exe, os.X_OK):
                     return exe
             else:
                 for directory in path:
-                    directory = path_to_os_path(directory).pop()
                     exe = os.path.join(directory, candidate_name)
-                    if pth(exe).is_file() and os.access(exe, os.X_OK):
+                    if Path(exe).is_file() and os.access(str(exe), os.X_OK):
                         return exe
 
     if required:

@@ -16,8 +16,6 @@ import urllib.parse
 import urllib.request
 from pathlib import Path, PurePath
 
-from spack.util.path import convert_to_posix_path
-
 
 def validate_scheme(scheme):
     """Returns true if the URL scheme is generally known to Spack. This function
@@ -36,13 +34,13 @@ def _split_all(path):
     of '/'.
     """
     result = []
-    a = path
+    a = str(path)
     old_a = None
     while a != old_a:
         (old_a, (a, b)) = a, posixpath.split(a)
 
         if a or b:
-            result.insert(0, b or "/")
+            result.insert(0, Path(b) or Path("/"))
 
     return result
 
@@ -129,13 +127,13 @@ def join(base_url, path, *extra, **kwargs):
         (x) if isinstance(x, str) else x.geturl() for x in itertools.chain((base_url, path), extra)
     ]
 
-    paths = [convert_to_posix_path(x) for x in paths]
+    paths = [Path(x) for x in paths]
     n = len(paths)
     last_abs_component = None
     scheme = ""
     for i in range(n - 1, -1, -1):
         obj = urllib.parse.urlparse(
-            paths[i],
+            str(paths[i]),
             scheme="",
             allow_fragments=False,
         )
@@ -149,7 +147,7 @@ def join(base_url, path, *extra, **kwargs):
                 # next-last component that specifies a scheme.
                 for j in range(i - 1, -1, -1):
                     obj = urllib.parse.urlparse(
-                        paths[j],
+                        str(paths[j]),
                         scheme="",
                         allow_fragments=False,
                     )
@@ -158,7 +156,7 @@ def join(base_url, path, *extra, **kwargs):
                         paths[i] = "{SM}://{NL}{PATH}".format(
                             SM=obj.scheme,
                             NL=((obj.netloc + "/") if obj.scheme != "s3" else ""),
-                            PATH=paths[i][1:],
+                            PATH=str(paths[i])[1:],
                         )
                         break
 
@@ -169,7 +167,7 @@ def join(base_url, path, *extra, **kwargs):
         paths = paths[last_abs_component:]
         if len(paths) == 1:
             result = urllib.parse.urlparse(
-                paths[0],
+                str(paths[0]),
                 scheme="file",
                 allow_fragments=False,
             )
@@ -193,7 +191,7 @@ def join(base_url, path, *extra, **kwargs):
 
 
 def _join(base_url, path, *extra, **kwargs):
-    base_url = urllib.parse.urlparse(base_url)
+    base_url = urllib.parse.urlparse(str(base_url))
     resolve_href = kwargs.get("resolve_href", False)
 
     (scheme, netloc, base_path, params, query, _) = base_url
@@ -205,7 +203,7 @@ def _join(base_url, path, *extra, **kwargs):
             _split_all(path),
             itertools.chain.from_iterable(_split_all(extra_path) for extra_path in extra),
         )
-        if part and part != "/"
+        if part and str(part) != "/"
     ]
 
     base_path_args = ["/fake-root"]
@@ -219,27 +217,27 @@ def _join(base_url, path, *extra, **kwargs):
     base_path_args.append(base_path)
 
     if resolve_href:
-        new_base_path, _ = posixpath.split(posixpath.join(*base_path_args))
+        new_base_path, _ = Path(posixpath.split(str(Path(*base_path_args))))
         base_path_args = [new_base_path]
 
     base_path_args.extend(path_tokens)
-    base_path = posixpath.relpath(posixpath.join(*base_path_args), "/fake-root")
+    base_path = PurePath(*base_path_args).relative_to("/fake-root")
 
     if scheme == "s3":
-        path_tokens = [part for part in _split_all(base_path) if part and part != "/"]
+        path_tokens = [part for part in _split_all(base_path) if part and str(part) != "/"]
 
         if path_tokens:
             netloc = path_tokens.pop(0)
-            base_path = posixpath.join("", *path_tokens)
+            base_path = Path(*path_tokens).as_posix()
 
     if sys.platform == "win32":
-        base_path = convert_to_posix_path(base_path)
+        base_path = base_path.as_posix()
 
     return format(
         urllib.parse.ParseResult(
             scheme=scheme,
             netloc=netloc,
-            path=base_path,
+            path=str(base_path),
             params=params,
             query=query,
             fragment=None,

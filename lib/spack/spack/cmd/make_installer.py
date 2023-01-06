@@ -10,7 +10,6 @@ from pathlib import Path, PurePath
 import spack.paths
 import spack.util.executable
 from spack.spec import Spec
-from spack.util.path import convert_to_posix_path
 
 description = "generate Windows installer"
 section = "admin"
@@ -71,25 +70,25 @@ def make_installer(parser, args):
         cmake_spec.concretize()
         cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
         cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
-        spack_source = args.spack_source
+        spack_source = Path(args.spack_source)
         git_verbosity = ""
         if args.git_verbosity:
             git_verbosity = "/" + args.git_verbosity
 
         if spack_source:
-            if not Path(spack_source).exists():
+            if not spack_source.exists():
                 print("%s does not exist" % spack_source)
                 return
             else:
-                if not PurePath(spack_source).is_absolute():
-                    spack_source = posixpath.abspath(spack_source)
-                spack_source = convert_to_posix_path(spack_source)
+                if not spack_source.is_absolute():
+                    spack_source = spack_source.absolute()
+                spack_source = spack_source.as_posix()
 
         spack_version = args.spack_version
 
         here = os.path.dirname(Path(__file__).resolve())
         source_dir = os.path.join(here, "installer")
-        posix_root = convert_to_posix_path(spack.paths.spack_root)
+        posix_root = spack.paths.spack_root.as_posix()
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")
         rtf_spack_license = txt_to_rtf(spack_license)
         spack_license = posixpath.join(source_dir, "LICENSE.rtf")
