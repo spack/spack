@@ -13,11 +13,12 @@ class Slirp4netns(AutotoolsPackage):
     url = "https://github.com/rootless-containers/slirp4netns/archive/v1.1.12.tar.gz"
     maintainers = ["bernhardkaindl"]
 
+    version("1.2.0", sha256="b584edde686d3cfbac210cbdb93c4b0ba5d8cc0a6a4d92b9dfc3c5baec99c727")
     version("1.1.12", sha256="279dfe58a61b9d769f620b6c0552edd93daba75d7761f7c3742ec4d26aaa2962")
 
-    depends_on("autoconf", type="build", when="@1.1.12")
-    depends_on("automake", type="build", when="@1.1.12")
-    depends_on("libtool", type="build", when="@1.1.12")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("glib")
     depends_on("libcap")
