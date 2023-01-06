@@ -10,6 +10,7 @@ def getpywin():
     try:
         import win32con  # noqa: F401
     except ImportError:
+        print("pyWin32 not installed but is required...\nInstalling via pip:")
         subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "--upgrade", "pip"])
         subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "pywin32"])
 
