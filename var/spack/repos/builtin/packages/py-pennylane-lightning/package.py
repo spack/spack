@@ -11,13 +11,13 @@ class PyPennylaneLightning(PythonPackage):
     """PennyLane-Lightning plugin"""
 
     homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
-    pypi = "pennylane-lightning/PennyLane-Lightning-0.27.0.tar.gz"
+    pypi = "PennyLane-Lightning/PennyLane-Lightning-0.28.0.tar.gz"
 
-    version("0.27.0", sha256="f11e7501ea955b8b38e728083955f144e90ed75a43418b3b31fde31252466d0d")
+    version("0.28.0", sha256="30661c16f4bf008e2b817dc793731d5bfe8648e4e1d44f7d76435c60162857af")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-ninja", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    #depends_on("py-pennylane@0.19:", type=("build", "run"))  # circular dep
+    # depends_on("py-pennylane@0.19:", type=("build", "run"))  # circular dependency
