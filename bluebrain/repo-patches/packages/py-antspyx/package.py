@@ -38,7 +38,7 @@ class PyAntspyx(PythonPackage):
     patch('fix-itk-gtest.diff')
     patch('submodule-imposter.diff', when='@0.2.4')
 
-    patch('https://github.com/ANTsX/ANTsPy/commit/e0bec4569540f740640876d8195eb63a61ce6504.patch',
+    patch('https://github.com/ANTsX/ANTsPy/commit/e0bec4569540f740640876d8195eb63a61ce6504.patch?full_index=1',
           sha256='535e1ea5463994f7d34f9df3ea137c59cfe8f10e44321bba7f386d9fb9c56b6e',
           when='@0.2.4')
 

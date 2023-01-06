@@ -43,9 +43,10 @@ class Brion(CMakePackage):
     depends_on('mvdtool')
     depends_on('glm@:0.9.9.5')
 
-    patch('https://patch-diff.githubusercontent.com/raw/BlueBrain/Brion/pull/334.patch',
-          sha256='a1100b4581d424e3717bac1f5bf5682bd04b9e778213fb51014276b5b0d19bf9',
-          when='@3.3.4 ^python@3.9:')
+    patch(
+        'https://patch-diff.githubusercontent.com/raw/BlueBrain/Brion/pull/334.patch?full_index=1',
+        sha256='a1100b4581d424e3717bac1f5bf5682bd04b9e778213fb51014276b5b0d19bf9',
+        when='@3.3.4 ^python@3.9:')
 
     def patch(self):
         filter_file(

@@ -130,7 +130,7 @@ class Mxnet(CMakePackage, CudaPackage):
 
     # Patching this via inheritance does not work, probably due to class
     # modifications
-    patch('https://patch-diff.githubusercontent.com/raw/apache/incubator-mxnet/pull/20216.patch',
+    patch('https://patch-diff.githubusercontent.com/raw/apache/incubator-mxnet/pull/20216.patch?full_index=1',
           sha256='508fb1ea6f10afda92a58f41edf02e255f09e348ec381fab650fe4689c98cbde',
           when='@1.8.0:1.8')
 
