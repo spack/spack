@@ -84,7 +84,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependencies
     depends_on("boost@1.71:")
-    depends_on("fmt@0.9:", when="@0.11:")
+    depends_on("fmt@9:", when="@0.11:")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
