@@ -13,14 +13,14 @@ class PyQuantumBlackbird(PythonPackage):
     hardware and Strawberry Fields simulator.
     """
 
-    homepage = ""
-    pypi = "quantum-blackbird/"
+    homepage = "https://github.com/XanaduAI/blackbird"
+    pypi = "quantum-blackbird/quantum-blackbird-0.5.0.tar.gz"
 
-    version("", sha256="")
+    version("0.5.0", sha256="065c73bf5263ce8f9b72dcd2b434f3bfbb471f0a6907c97a617ec0c8bde01db3")
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("", type=("build", "run"))
-
-    depends_on("", type="run")
+    depends_on("py-numpy@1.16:", type=("build", "run"))
+    depends_on("py-sympy", type=("build", "run"))
+    depends_on("py-antlr4-python3-runtime@4.9.2", type=("build", "run"))
+    depends_on("py-networkx", type=("build", "run"))

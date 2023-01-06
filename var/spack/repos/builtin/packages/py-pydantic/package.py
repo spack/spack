@@ -16,8 +16,12 @@ class PyPydantic(PythonPackage):
     version("1.9.2", sha256="8cb0bc509bfb71305d7a59d00163d5f9fc4530f0881ea32c74ff4f74c85f3d3d")
     version("1.8.2", sha256="26464e57ccaafe72b7ad156fdaa4e9b9ef051f69e175dbbb463283000c05ab7b")
 
+    variant("dotenv", default=False, description="Install requirements for pydantic.dotenv")
+
     depends_on("python@3.7:", when="@1.10.2:", type=("build", "run"))
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-typing-extensions@4.1.0:", when="@1.10.2:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.3:", type=("build", "run"))
+
+    depends_on("py-python-dotenv@0.10.4:", when="+dotenv", type=("build", "run"))

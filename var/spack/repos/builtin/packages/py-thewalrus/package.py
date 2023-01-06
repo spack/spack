@@ -12,14 +12,16 @@ class PyThewalrus(PythonPackage):
     Gaussian boson sampling.
     """
 
-    homepage = ""
-    pypi = "thewalrus/"
+    homepage = "https://github.com/XanaduAI/thewalrus"
+    pypi = "thewalrus/thewalrus-0.19.0.tar.gz"
 
-    version("", sha256="")
+    version("0.19.0", sha256="06ff07a14cd8cd4650d9c82b8bb8301ef9a58dcdd4bafb14841768ccf80c98b9")
 
-    depends_on("python", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("", type=("build", "run"))
-
-    depends_on("", type="run")
+    depends_on("py-dask+delayed", type=("build", "run"))
+    depends_on("py-numba@0.49.1:", type=("build", "run"))
+    depends_on("py-scipy@1.2.1:", type=("build", "run"))
+    depends_on("py-sympy@1.5.1:", type=("build", "run"))
+    depends_on("py-numpy@1.19.2:", type=("build", "run"))
