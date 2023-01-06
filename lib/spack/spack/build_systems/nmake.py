@@ -68,8 +68,10 @@ class NMakeBuilder(BaseBuilder):
 
     @property
     def ignore_quotes(self):
-        """Returns boolean representing whether arguments to nmake
-        should have quotes ignored. Default False"""
+        """Control whether or not Spack warns about quoted arguments passed to
+        build utilities. If this is True, spack will not warn about quotes.
+        This is useful in cases with a space in the path or when build scripts
+        require quoted arugments."""
         return False
 
     @property
