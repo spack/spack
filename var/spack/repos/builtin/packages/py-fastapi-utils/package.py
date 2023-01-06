@@ -15,7 +15,7 @@ class PyFastapiUtils(PythonPackage):
 
     version("0.2.1", sha256="0e6c7fc1870b80e681494957abf65d4f4f42f4c7f70005918e9181b22f1bd759")
 
-    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.6:3", type=("build", "run"))
     depends_on("py-poetry@0.12:", type="build")
 
     depends_on("py-fastapi", type=("build", "run"))
