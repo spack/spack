@@ -14,6 +14,7 @@ class PyDocstringToMarkdown(PythonPackage):
 
     maintainers = ["alecbcs"]
 
+    version("0.11", sha256="5b1da2c89d9d0d09b955dec0ee111284ceadd302a938a03ed93f66e09134f9b5")
     version("0.10", sha256="12f75b0c7b7572defea2d9e24b57ef7ac38c3e26e91c0e5547cfc02b1c168bf6")
 
     depends_on("python@3.6:", type=("build", "run"))

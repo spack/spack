@@ -17,14 +17,14 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
-
+    version("5.3.0", sha256="b51dbedbe73390e0be748b92158839c82d7fa0e514fede60aa7696dc498facf0")
     version("5.2.3", sha256="978de85d3455207bb82bef2254a4624e9116b1258a8c164d7a7e21a644eff12f")
     version("5.2.1", sha256="448a7409bdc6618332a42b9503122996f26b91768140b710ba99bff8a8c03dd9")
     version("5.2.0", sha256="529e49693dd9f6459586dd0a26f14dd77dbdf8c0b45fb54830b294eba7babd27")
@@ -111,6 +111,7 @@ class HsaRocrDev(CMakePackage):
     variant("image", default=True, description="build with or without image support")
 
     depends_on("cmake@3:", type="build")
+    depends_on("pkgconfig", type="build", when="@5.3.0:")
 
     # Note, technically only necessary when='@3.7: +image', but added to all
     # to work around https://github.com/spack/spack/issues/23951
@@ -137,6 +138,7 @@ class HsaRocrDev(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)

@@ -24,7 +24,7 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Dict
+from typing import Dict, Union
 
 import ruamel.yaml as yaml
 
@@ -41,9 +41,9 @@ import spack.provider_index
 import spack.spec
 import spack.tag
 import spack.util.file_cache
+import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
-from spack.util.executable import which
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
@@ -198,27 +198,16 @@ class GitExe:
     #
     # Not using -C as that is not supported for git < 1.8.5.
     def __init__(self):
-        self._git_cmd = which("git", required=True)
+        self._git_cmd = spack.util.git.git(required=True)
 
     def __call__(self, *args, **kwargs):
         with working_dir(packages_path()):
             return self._git_cmd(*args, **kwargs)
 
 
-_git = None
-
-
-def get_git():
-    """Get a git executable that runs *within* the packages path."""
-    global _git
-    if _git is None:
-        _git = GitExe()
-    return _git
-
-
 def list_packages(rev):
     """List all packages associated with the given revision"""
-    git = get_git()
+    git = GitExe()
 
     # git ls-tree does not support ... merge-base syntax, so do it manually
     if rev.endswith("..."):
@@ -270,7 +259,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
 
     removed, added = diff_packages(rev1, rev2)
 
-    git = get_git()
+    git = GitExe()
     out = git("diff", "--relative", "--name-only", rev1, rev2, output=str).strip()
 
     lines = [] if not out else re.split(r"\s+", out)
@@ -293,7 +282,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
 
 def add_package_to_git_stage(packages):
     """add a package to the git stage with `git add`"""
-    git = get_git()
+    git = GitExe()
 
     for pkg_name in packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
@@ -1295,6 +1284,9 @@ class Repo(object):
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
+
+
+RepoType = Union[Repo, RepoPath]
 
 
 def create_repo(root, namespace=None):
