@@ -20,4 +20,4 @@ class PyStarlette(PythonPackage):
     depends_on("py-hatchling", type="build")
 
     depends_on("py-anyio@3.4:4", type=("build", "run"))
-    depends_on("py-typing-extensions@3.10.0:", when="^python@:3.9.999999", type=("build", "run"))
+    depends_on("py-typing-extensions@3.10.0:", when="^python@:3.9", type=("build", "run"))
