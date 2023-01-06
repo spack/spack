@@ -19,7 +19,7 @@ class PyPennylaneLightning(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("cmake", type="build")
+    depends_on("cmake@3.16:", type="build")
 
     depends_on("py-ninja", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
