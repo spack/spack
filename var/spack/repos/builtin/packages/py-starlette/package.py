@@ -17,8 +17,7 @@ class PyStarlette(PythonPackage):
     version("0.22.0", sha256="b092cbc365bea34dd6840b42861bdabb2f507f8671e642e8272d2442e08ea4ff")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     depends_on("py-hatchling", type="build")
 
-    depends_on("py-anyio@3.4.0:4.999999", type=("build", "run"))
-    depends_on("py-typing-extensions@3.10.0:", when="^python@:3.9.999999", type=("build", "run"))
+    depends_on("py-anyio@3.4:4", type=("build", "run"))
+    depends_on("py-typing-extensions@3.10.0:", when="^python@:3.9", type=("build", "run"))

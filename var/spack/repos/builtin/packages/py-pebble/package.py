@@ -11,7 +11,7 @@ class PyPebble(PythonPackage):
     """Threading and multiprocessing eye-candy."""
 
     homepage = "https://github.com/noxdafox/pebble"
-    pypi = "pebble/Pebble-5.0.3.tar.gz"
+    pypi = "Pebble/Pebble-5.0.3.tar.gz"
 
     version("5.0.3", sha256="bdcfd9ea7e0aedb895b204177c19e6d6543d9962f4e3402ebab2175004863da8")
 
