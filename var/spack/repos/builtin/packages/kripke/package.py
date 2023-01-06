@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
     transport proxy/mini app.
@@ -40,44 +41,49 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         args = []
 
-        args.extend(["-DCAMP_DIR=%s" % self.spec['camp'].prefix,
-        "-DBLT_SOURCE_DIR=%s" % self.spec['blt'].prefix,
-        "-Dumpire_DIR=%s" % self.spec['umpire'].prefix,
-        "-DRAJA_DIR=%s" % self.spec['raja'].prefix,
-        "-Dchai_DIR=%s" % self.spec['chai'].prefix, "-DENABLE_CHAI=ON"])
+        args.extend(
+            [
+                "-DCAMP_DIR=%s" % self.spec["camp"].prefix,
+                "-DBLT_SOURCE_DIR=%s" % self.spec["blt"].prefix,
+                "-Dumpire_DIR=%s" % self.spec["umpire"].prefix,
+                "-DRAJA_DIR=%s" % self.spec["raja"].prefix,
+                "-Dchai_DIR=%s" % self.spec["chai"].prefix,
+                "-DENABLE_CHAI=ON",
+            ]
+        )
 
-        if '+caliper' in spec:
-           args.append('-DENABLE_CALIPER=ON')
+        if "+caliper" in spec:
+            args.append("-DENABLE_CALIPER=ON")
 
-        if '+mpi' in spec:
-           args.append('-DENABLE_MPI=ON')
-           args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
+        if "+mpi" in spec:
+            args.append("-DENABLE_MPI=ON")
+            args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
 
-        if '+rocm' in spec:
+        if "+rocm" in spec:
             # Set up the hip macros needed by the build
-            args.append(
-                '-DENABLE_HIP=ON')
-            args.append('-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
-            rocm_archs = spec.variants['amdgpu_target'].value
-            if 'none' not in rocm_archs:
-                args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                            .format(",".join(rocm_archs)))
-                args.append('-DCMAKE_HIP_ARCHITECTURES={0}'.format(rocm_archs))
+            args.append("-DENABLE_HIP=ON")
+            args.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
+            rocm_archs = spec.variants["amdgpu_target"].value
+            if "none" not in rocm_archs:
+                args.append("-DHIP_HIPCC_FLAGS=--amdgpu-target={0}".format(",".join(rocm_archs)))
+                args.append("-DCMAKE_HIP_ARCHITECTURES={0}".format(rocm_archs))
         else:
             # Ensure build with hip is disabled
-            args.append('-DENABLE_HIP=OFF')
+            args.append("-DENABLE_HIP=OFF")
 
         if "+cuda" in spec:
-            args.append('-DENABLE_CUDA=ON')
+            args.append("-DENABLE_CUDA=ON")
             args.append(self.define("CMAKE_CUDA_HOST_COMPILER", self.spec["mpi"].mpicxx))
             if not spec.satisfies("cuda_arch=none"):
                 cuda_arch = spec.variants["cuda_arch"].value
-                args.append('-DCUDA_ARCH={0}'.format(cuda_arch[0]))
-                args.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch[0]))
-                args.append("-DCMAKE_CUDA_FLAGS=--expt-extended-lambda -I%s -I=%s" % (self.spec['cub'].prefix.include, self.spec["mpi"].prefix.include))
+                args.append("-DCUDA_ARCH={0}".format(cuda_arch[0]))
+                args.append("-DCMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch[0]))
+                args.append(
+                    "-DCMAKE_CUDA_FLAGS=--expt-extended-lambda -I%s -I=%s"
+                    % (self.spec["cub"].prefix.include, self.spec["mpi"].prefix.include)
+                )
         else:
-            args.append('-DENABLE_CUDA=OFF')
-
+            args.append("-DENABLE_CUDA=OFF")
 
         return args
 
