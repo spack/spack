@@ -74,6 +74,7 @@ class Charliecloud(AutotoolsPackage):
         sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5",
     )
     variant("docs", default=False, description="Build man pages and html docs")
+    variant("squash", default=True, description="Support internal SquashFUSE mounting")
 
     # Autoconf.
     depends_on("m4", type="build")
@@ -98,6 +99,10 @@ class Charliecloud(AutotoolsPackage):
     # Require pip and wheel for git checkout builds (master).
     depends_on("py-pip@21.1.2:", type="build", when="@master")
     depends_on("py-wheel", type="build", when="@master")
+
+    # squashfs & squashfuse required to build with internal SquashFUSE mounting
+    depends_on("squashfs", when="+squash")
+    depends_on("squashfuse@0.1.105:", when="+squash")
 
     # See https://github.com/spack/spack/pull/16049.
     conflicts("platform=darwin", msg="This package does not build on macOS")
