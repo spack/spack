@@ -1,0 +1,15 @@
+diff --git a/lib/spack/external/_vendoring/jsonschema/__init__.py b/lib/spack/external/_vendoring/jsonschema/__init__.py
+index 6b630cdfbb..1791fe7fbf 100644
+--- a/lib/spack/external/_vendoring/jsonschema/__init__.py
++++ b/lib/spack/external/_vendoring/jsonschema/__init__.py
+@@ -27,8 +27,5 @@
+     RefResolver,
+     validate,
+ )
+-try:
+-    from importlib import metadata
+-except ImportError: # for Python<3.8
+-    import importlib_metadata as metadata
+-__version__ = metadata.version("jsonschema")
++
++__version__ = "3.2.0"

@@ -79,6 +79,7 @@ class Mumax(MakefilePackage, CudaPackage):
     def setup_build_environment(self, env):
         env.prepend_path("GOPATH", self.gopath)
         env.set("CUDA_CC", self.cuda_arch)
+        env.set("NVCC_CCBIN", spack_cc)
 
     def install(self, spec, prefix):
         make()
