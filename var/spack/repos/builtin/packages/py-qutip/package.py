@@ -19,6 +19,6 @@ class PyQutip(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type=("build", "run"))
 
-    depends_on("py-cython@0.29.20:", type=("build", "run"))
+    depends_on("py-cython@0.29.20:", type="build")
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
     depends_on("py-scipy@1.0:", type=("build", "run"))
