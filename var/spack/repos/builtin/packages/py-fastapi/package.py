@@ -20,4 +20,4 @@ class PyFastapi(PythonPackage):
     depends_on("py-hatchling", type="build")
 
     depends_on("py-starlette@0.22.0", type=("build", "run"))
-    depends_on("py-pydantic@1.6.2,1.7.4,1.8.2:1.9.999999", type=("build", "run"))
+    depends_on("py-pydantic@1.6.2:1.6,1.7.4:1.7,1.8.2:1", type=("build", "run"))
