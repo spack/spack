@@ -11,7 +11,7 @@ class PyParsley(PythonPackage):
     """Parsing and pattern matching made easy."""
 
     homepage = "https://launchpad.net/parsley"
-    pypi = "parsley/Parsley-1.3.tar.gz"
+    pypi = "Parsley/Parsley-1.3.tar.gz"
 
     version("1.3", sha256="9444278d47161d5f2be76a767809a3cbe6db4db822f46a4fd7481d4057208d41")
 

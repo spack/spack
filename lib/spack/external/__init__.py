@@ -11,7 +11,7 @@ altgraph
 
 * Homepage: https://altgraph.readthedocs.io/en/latest/index.html
 * Usage: dependency of macholib
-* Version: 0.17.2
+* Version: 0.17.3
 
 archspec
 --------
@@ -19,17 +19,6 @@ archspec
 * Homepage: https://pypi.python.org/pypi/archspec
 * Usage: Labeling, comparison and detection of microarchitectures
 * Version: 0.2.0 (commit e44bad9c7b6defac73696f64078b2fe634719b62)
-
-argparse
---------
-
-* Homepage: https://pypi.python.org/pypi/argparse
-* Usage: We include our own version to be Python 3.X compatible.
-* Version: 1.4.0
-* Note: This package has been slightly modified to improve
-  error message formatting. See the following commit if the
-  vendored copy ever needs to be updated again:
-  https://github.com/spack/spack/pull/6786/commits/dfcef577b77249106ea4e4c69a6cd9e64fa6c418
 
 astunparse
 ----------------
@@ -52,7 +41,7 @@ attrs
 
 * Homepage: https://github.com/python-attrs/attrs
 * Usage: Needed by jsonschema.
-* Version: 21.2.0 (83d3cd70f90a3f4d19ee8b508e58d1c58821c0ad)
+* Version: 22.1.0
 
 ctest_log_parser
 ----------------
@@ -67,21 +56,14 @@ distro
 
 * Homepage: https://pypi.python.org/pypi/distro
 * Usage: Provides a more stable linux distribution detection.
-* Version: 1.6.0 (64946a1e2a9ff529047070657728600e006c99ff)
-* Note: Last version supporting Python 2.7
-
-functools32
------------
-* Homepage: https://github.com/MiCHiLU/python-functools32
-* Usage: Needed by jsonschema when using Python 2.7.
-* Version: 3.2.3-2
+* Version: 1.8.0
 
 jinja2
 ------
 
 * Homepage: https://pypi.python.org/pypi/Jinja2
 * Usage: A modern and designer-friendly templating language for Python.
-* Version: 2.11.3 (last version supporting Python 2.7)
+* Version: 3.0.3 (last version supporting Python 3.6)
 
 jsonschema
 ----------
@@ -96,44 +78,21 @@ macholib
 
 * Homepage: https://macholib.readthedocs.io/en/latest/index.html#
 * Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
-* Version: 1.15.2
+* Version: 1.16.2
 
 markupsafe
 ----------
 
 * Homepage: https://pypi.python.org/pypi/MarkupSafe
 * Usage: Implements a XML/HTML/XHTML Markup safe string for Python.
-* Version: 1.1.1 (last version supporting Python 2.7)
-
-py
---
-
-* Homepage: https://pypi.python.org/pypi/py
-* Usage: Needed by pytest. Library with cross-python path,
-  ini-parsing, io, code, and log facilities.
-* Version: 1.4.34 (last version supporting Python 2.6)
-* Note: This packages has been modified:
-  * https://github.com/pytest-dev/py/pull/186 was backported
+* Version: 2.0.1 (last version supporting Python 3.6)
 
 pyrsistent
 ----------
 
 * Homepage: http://github.com/tobgu/pyrsistent/
 * Usage: Needed by `jsonschema`
-* Version: 0.16.1 (last version supporting Python 2.7)
-* Note: We only include the parts needed for `jsonschema`.
-
-pytest
-------
-
-* Homepage: https://pypi.python.org/pypi/pytest
-* Usage: Testing framework used by Spack.
-* Version: 3.2.5 (last version supporting Python 2.6)
-* Note: This package has been slightly modified:
-  * We improve Python 2.6 compatibility. See:
-    https://github.com/spack/spack/pull/6801.
-  * We have patched pytest not to depend on setuptools. See:
-    https://github.com/spack/spack/pull/15612
+* Version: 0.18.0
 
 ruamel.yaml
 ------

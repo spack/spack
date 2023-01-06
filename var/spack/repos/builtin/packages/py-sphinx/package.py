@@ -14,6 +14,8 @@ class PySphinx(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("6.0.0", sha256="58c140ecd9aa0abbc8ff6da48a266648eac9e5bfc8e49576efd2979bf46f5961")
+
     version("5.3.0", sha256="51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5")
     version("5.2.3", sha256="5b10cb1022dac8c035f75767799c39217a05fc0fe2d6fe5597560d38e44f0363")
     version("5.2.2", sha256="7225c104dc06169eb73b061582c4bc84a9594042acae6c1582564de274b7df2f")
@@ -63,16 +65,12 @@ class PySphinx(PythonPackage):
     depends_on("py-setuptools", when="@4.4:5.1", type="build")
     depends_on("py-setuptools", when="@:4.3", type=("build", "run"))
 
-    depends_on("python@3.7:", when="@6:", type=("build", "run"))
-    depends_on("python@3.6:", when="@4.3:5", type=("build", "run"))
-    depends_on("python@3.6:3.9", when="@4:4.2", type=("build", "run"))
-    depends_on("python@3.5:3.9", when="@2:3", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:3.9", when="@:1", type=("build", "run"))
+    depends_on("python@3.8:", when="@6:", type=("build", "run"))
 
     depends_on("py-sphinxcontrib-applehelp", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-devhelp", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-jsmath", when="@2:", type=("build", "run"))
-    depends_on("py-sphinxcontrib-htmlhelp@2.0.0:", when="@4.1.1:", type=("build", "run"))
+    depends_on("py-sphinxcontrib-htmlhelp@2:", when="@4.1.1:", type=("build", "run"))
     depends_on("py-sphinxcontrib-htmlhelp", when="@2:", type=("build", "run"))
     depends_on("py-sphinxcontrib-serializinghtml@1.1.5:", when="@4.1.1:", type=("build", "run"))
     depends_on("py-sphinxcontrib-serializinghtml", when="@2:", type=("build", "run"))
@@ -82,7 +80,8 @@ class PySphinx(PythonPackage):
     depends_on("py-jinja2@2.3:", type=("build", "run"))
     depends_on("py-pygments@2.12:", when="@5.2:", type=("build", "run"))
     depends_on("py-pygments@2:", type=("build", "run"))
-    depends_on("py-docutils@0.14:0.19", when="@5.1:", type=("build", "run"))
+    depends_on("py-docutils@0.18:0.19", when="@6:", type=("build", "run"))
+    depends_on("py-docutils@0.14:0.19", when="@5.1:5", type=("build", "run"))
     depends_on("py-docutils@0.14:0.18", when="@5.0", type=("build", "run"))
     depends_on("py-docutils@0.14:0.17", when="@4", type=("build", "run"))
     depends_on("py-docutils@0.12:0.16", when="@:3", type=("build", "run"))
@@ -93,7 +92,9 @@ class PySphinx(PythonPackage):
     depends_on("py-alabaster@0.7", type=("build", "run"))
     depends_on("py-imagesize@1.3:", when="@5.2:", type=("build", "run"))
     depends_on("py-imagesize", when="@1.4:", type=("build", "run"))
-    depends_on("py-requests@2.5.0:", type=("build", "run"))
+    depends_on("py-requests@2.25:", when="@6:", type=("build", "run"))
+    depends_on("py-requests@2.5:", when="@2:", type=("build", "run"))
+    depends_on("py-requests@2.4:", when="@1.5.2:", type=("build", "run"))
     depends_on("py-packaging@21:", when="@5.2:", type=("build", "run"))
     depends_on("py-packaging", when="@1.7:", type=("build", "run"))
     depends_on("py-importlib-metadata@4.8:", when="@5.2: ^python@:3.9", type=("build", "run"))
