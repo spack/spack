@@ -13,14 +13,10 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.paths
-from spack.util.executable import which
 
 description = "list and check license headers on files in spack"
 section = "developer"
 level = "long"
-
-#: need the git command to check new files
-git = which("git")
 
 #: SPDX license id must appear in the first <license_lines> lines of a file
 license_lines = 7
@@ -238,9 +234,6 @@ def setup_parser(subparser):
 
 
 def license(parser, args):
-    if not git:
-        tty.die("spack license requires git in your environment")
-
     licensed_files[:] = [re.compile(regex) for regex in licensed_files]
 
     commands = {
