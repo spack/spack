@@ -15,6 +15,6 @@ class PyAutoray(PythonPackage):
 
     version("0.5.3", sha256="ecbecbc1ab65dd704234b3307fa7c7a511a36f6b9339a0ffcdaa4e5a7aab826b")
 
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@45:", type="build")
     depends_on("py-setuptools-scm@6.2:+toml", type="build")
