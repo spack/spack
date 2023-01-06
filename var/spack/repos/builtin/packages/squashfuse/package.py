@@ -10,14 +10,18 @@ class Squashfuse(AutotoolsPackage):
     """squashfuse - Mount SquashFS archives using FUSE"""
 
     homepage = "https://github.com/vasi/squashfuse"
-    url = "https://github.com/vasi/squashfuse/releases/download/0.1.104/squashfuse-0.1.104.tar.gz"
+    url = "https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz"
     git = "https://github.com/vasi/squashfuse.git"
 
     maintainers = ["haampie"]
 
     version("master", branch="master")
-    version("0.1.104", sha256="aa52460559e0d0b1753f6b1af5c68cfb777ca5a13913285e93f4f9b7aa894b3a")
-    version("0.1.103", sha256="42d4dfd17ed186745117cfd427023eb81effff3832bab09067823492b6b982e7")
+    version("0.1.105", sha256="3f776892ab2044ecca417be348e482fee2839db75e35d165b53737cb8153ab1e")
+    version("0.1.104", sha256="9e6f4fb65bb3e5de60c8714bb7f5cbb08b5534f7915d6a4aeea008e1c669bd35")
+    version("0.1.103", sha256="bba530fe435d8f9195a32c295147677c58b060e2c63d2d4204ed8a6c9621d0dd")
+    version("0.1.102", sha256="c2a878b8acceb8e5195af1cf35c869f9dddd6debf24fa9630de1304380108b31")
+    version("0.1.101", sha256="4275e1b74ded21de911e73cc3b77bd9f98f2f3c4406030d7f510b6715490a121")
+    version("0.1.100", sha256="dda02875735570d24d682cf35846f0165199e0d4ce38e0703e5aabe0318292e6")
 
     variant("shared", default=True, description="Enable shared libraries")
     variant("static", default=True, description="Enable static libraries")
@@ -47,9 +51,9 @@ class Squashfuse(AutotoolsPackage):
     depends_on("zstd", when="+zstd")
 
     depends_on("m4", type="build", when="@master")
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+min_size" in self.spec:
