@@ -17,4 +17,4 @@ class PyDnspython(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@44:", type="build")
-    depends_on("py-poetry", type="build")
+    depends_on("py-poetry-core", type="build")
