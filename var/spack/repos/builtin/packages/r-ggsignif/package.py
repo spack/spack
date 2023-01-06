@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGgsignif(RPackage):
@@ -19,8 +19,9 @@ class RGgsignif(RPackage):
 
     cran = "ggsignif"
 
-    version('0.6.3', sha256='ca8545b25590e531512a90a18449a2cbab945f7434a1d60188c41f7d1839a7a9')
-    version('0.6.0', sha256='6fe13efda31386483e64d466ba2f5a53a2a235ae04f5c17bba3ccc63d283499e')
+    version("0.6.4", sha256="112051af425a0c0f2998ce187dacad066bc16f55af01e3e7b76d62ff6954b20a")
+    version("0.6.3", sha256="ca8545b25590e531512a90a18449a2cbab945f7434a1d60188c41f7d1839a7a9")
+    version("0.6.0", sha256="6fe13efda31386483e64d466ba2f5a53a2a235ae04f5c17bba3ccc63d283499e")
 
-    depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
-    depends_on('r-ggplot2@3.3.5:', type=('build', 'run'), when='@0.6.3:')
+    depends_on("r-ggplot2@2.0.0:", type=("build", "run"))
+    depends_on("r-ggplot2@3.3.5:", type=("build", "run"), when="@0.6.3:")

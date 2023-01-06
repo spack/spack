@@ -1,0 +1,14 @@
+diff -Nur spack-src/deps/c-ares/configure spack-src.patched/deps/c-ares/configure
+--- spack-src/deps/c-ares/configure	2022-07-01 14:04:01.014254504 +0000
++++ spack-src.patched/deps/c-ares/configure	2022-07-01 14:02:33.518090648 +0000
+@@ -20480,8 +20480,8 @@
+       INTEL_UNIX_C)
+         #
+                         tmp_CFLAGS="$tmp_CFLAGS -std=gnu89"
+-                                                tmp_CPPFLAGS="$tmp_CPPFLAGS -we 140,147,165,266"
+-                                        tmp_CPPFLAGS="$tmp_CPPFLAGS -wd 279,981,1469"
++                                                tmp_CPPFLAGS="$tmp_CPPFLAGS -diag-error 140,147,165,266"
++                                        tmp_CPPFLAGS="$tmp_CPPFLAGS -diag-disable 279,981,1469"
+         ;;
+         #
+       INTEL_WINDOWS_C)

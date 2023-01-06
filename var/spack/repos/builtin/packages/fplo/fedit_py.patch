@@ -1,0 +1,12 @@
+--- a/FPLO22.00-62/PYTHON/fedit.py	2022-09-03 13:05:21.631163009 -0500
++++ b/FPLO22.00-62/PYTHON/fedit.py	2022-09-03 13:06:37.636210691 -0500
+@@ -20,8 +20,8 @@
+ Checkout the examples delivered with **fplo**.
+ '''
+ import sys,os
+-import pyfplo.fploio as fploio
+ import pyfplo.common
++import pyfplo.fploio as fploio
+ version=pyfplo.common.Version()
+ Version=pyfplo.common.Version
+ 

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class LuaMpack(LuaPackage):
@@ -33,4 +33,4 @@ class LuaMpack(LuaPackage):
     )
 
     def luarocks_args(self):
-        return ["CFLAGS='-Wno-error=implicit-function-declaration'"]
+        return ["CFLAGS=-fPIC -Wno-error=implicit-function-declaration"]

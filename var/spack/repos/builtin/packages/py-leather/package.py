@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyLeather(PythonPackage):
@@ -13,7 +13,7 @@ class PyLeather(PythonPackage):
     homepage = "https://leather.readthedocs.io/en/stable/"
     pypi = "leather/leather-0.3.3.tar.gz"
 
-    version('0.3.3', sha256='076d1603b5281488285718ce1a5ce78cf1027fe1e76adf9c548caf83c519b988')
+    version("0.3.3", sha256="076d1603b5281488285718ce1a5ce78cf1027fe1e76adf9c548caf83c519b988")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.6.1:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-six@1.6.1:", type=("build", "run"))

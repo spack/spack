@@ -3,18 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyEdffile(PythonPackage):
     """Generic class for Edf files manipulation."""
 
     homepage = "https://github.com/vasole/pymca/blob/master/PyMca5/PyMcaIO/EdfFile.py"
-    git      = "https://github.com/conda-forge/edffile-feedstock.git"
+    git = "https://github.com/conda-forge/edffile-feedstock.git"
 
-    version('5.0.0', commit='be5ab4199db9f8209c59e31874934b8536b52301')
+    version("5.0.0", commit="be5ab4199db9f8209c59e31874934b8536b52301")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
 
-    build_directory = 'recipe/src'
+    build_directory = "recipe/src"

@@ -8,7 +8,6 @@ import functools
 import os
 import re
 
-import spack.bootstrap
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -47,6 +46,8 @@ def init(gnupghome=None, force=False):
             global objects are set already
     """
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
+    import spack.bootstrap
+
     if force:
         clear()
 
@@ -55,18 +56,16 @@ def init(gnupghome=None, force=False):
         return
 
     # Set the value of GNUPGHOME to be used in this module
-    GNUPGHOME = (gnupghome or
-                 os.getenv('SPACK_GNUPGHOME') or
-                 spack.paths.gpg_path)
+    GNUPGHOME = gnupghome or os.getenv("SPACK_GNUPGHOME") or spack.paths.gpg_path
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        spack.bootstrap.ensure_core_dependencies()
         GPG, GPGCONF = _gpg(), _gpgconf()
 
-    GPG.add_default_env('GNUPGHOME', GNUPGHOME)
+    GPG.add_default_env("GNUPGHOME", GNUPGHOME)
     if GPGCONF:
-        GPGCONF.add_default_env('GNUPGHOME', GNUPGHOME)
+        GPGCONF.add_default_env("GNUPGHOME", GNUPGHOME)
         # Set the socket dir if not using GnuPG defaults
         SOCKET_DIR = _socket_dir(GPGCONF)
 
@@ -80,7 +79,7 @@ def init(gnupghome=None, force=False):
         raise SpackGPGError(msg)
 
     if SOCKET_DIR is not None:
-        GPGCONF('--create-socketdir')
+        GPGCONF("--create-socketdir")
 
 
 def _autoinit(func):
@@ -90,10 +89,12 @@ def _autoinit(func):
     Args:
         func (callable): decorated function
     """
+
     @functools.wraps(func)
     def _wrapped(*args, **kwargs):
         init()
         return func(*args, **kwargs)
+
     return _wrapped
 
 
@@ -124,14 +125,14 @@ def gnupghome_override(dir):
 def _parse_secret_keys_output(output):
     keys = []
     found_sec = False
-    for line in output.split('\n'):
+    for line in output.split("\n"):
         if found_sec:
-            if line.startswith('fpr'):
-                keys.append(line.split(':')[9])
+            if line.startswith("fpr"):
+                keys.append(line.split(":")[9])
                 found_sec = False
-            elif line.startswith('ssb'):
+            elif line.startswith("ssb"):
                 found_sec = False
-        elif line.startswith('sec'):
+        elif line.startswith("sec"):
             found_sec = True
     return keys
 
@@ -142,25 +143,25 @@ def _parse_public_keys_output(output):
     """
     keys = []
     found_pub = False
-    current_pub_key = ''
-    for line in output.split('\n'):
+    current_pub_key = ""
+    for line in output.split("\n"):
         if found_pub:
-            if line.startswith('fpr'):
-                keys.append((current_pub_key, line.split(':')[9]))
+            if line.startswith("fpr"):
+                keys.append((current_pub_key, line.split(":")[9]))
                 found_pub = False
-            elif line.startswith('ssb'):
+            elif line.startswith("ssb"):
                 found_pub = False
-        elif line.startswith('pub'):
-            current_pub_key = line.split(':')[4]
+        elif line.startswith("pub"):
+            current_pub_key = line.split(":")[4]
             found_pub = True
     return keys
 
 
 def _get_unimported_public_keys(output):
     keys = []
-    for line in output.split('\n'):
-        if line.startswith('pub'):
-            keys.append(line.split(':')[4])
+    for line in output.split("\n"):
+        if line.startswith("pub"):
+            keys.append(line.split(":")[4])
     return keys
 
 
@@ -172,9 +173,10 @@ class SpackGPGError(spack.error.SpackError):
 def create(**kwargs):
     """Create a new key pair."""
     r, w = os.pipe()
-    with contextlib.closing(os.fdopen(r, 'r')) as r:
-        with contextlib.closing(os.fdopen(w, 'w')) as w:
-            w.write('''
+    with contextlib.closing(os.fdopen(r, "r")) as r:
+        with contextlib.closing(os.fdopen(w, "w")) as w:
+            w.write(
+                """
 Key-Type: rsa
 Key-Length: 4096
 Key-Usage: sign
@@ -184,27 +186,23 @@ Name-Comment: %(comment)s
 Expire-Date: %(expires)s
 %%no-protection
 %%commit
-''' % kwargs)
-        GPG('--gen-key', '--batch', input=r)
+"""
+                % kwargs
+            )
+        GPG("--gen-key", "--batch", input=r)
 
 
 @_autoinit
 def signing_keys(*args):
     """Return the keys that can be used to sign binaries."""
-    output = GPG(
-        '--list-secret-keys', '--with-colons', '--fingerprint',
-        *args, output=str
-    )
+    output = GPG("--list-secret-keys", "--with-colons", "--fingerprint", *args, output=str)
     return _parse_secret_keys_output(output)
 
 
 @_autoinit
 def public_keys_to_fingerprint(*args):
     """Return the keys that can be used to verify binaries."""
-    output = GPG(
-        '--list-public-keys', '--with-colons', '--fingerprint',
-        *args, output=str
-    )
+    output = GPG("--list-public-keys", "--with-colons", "--fingerprint", *args, output=str)
     return _parse_public_keys_output(output)
 
 
@@ -238,11 +236,11 @@ def trust(keyfile):
         keyfile (str): file with the public key
     """
     # Get the public keys we are about to import
-    output = GPG('--with-colons', keyfile, output=str, error=str)
+    output = GPG("--with-colons", keyfile, output=str, error=str)
     keys = _get_unimported_public_keys(output)
 
     # Import them
-    GPG('--import', keyfile)
+    GPG("--batch", "--import", keyfile)
 
     # Set trust to ultimate
     key_to_fpr = dict(public_keys_to_fingerprint())
@@ -253,10 +251,10 @@ def trust(keyfile):
 
         fpr = key_to_fpr[key]
         r, w = os.pipe()
-        with contextlib.closing(os.fdopen(r, 'r')) as r:
-            with contextlib.closing(os.fdopen(w, 'w')) as w:
+        with contextlib.closing(os.fdopen(r, "r")) as r:
+            with contextlib.closing(os.fdopen(w, "w")) as w:
                 w.write("{0}:6:\n".format(fpr))
-            GPG('--import-ownertrust', input=r)
+            GPG("--import-ownertrust", input=r)
 
 
 @_autoinit
@@ -269,10 +267,10 @@ def untrust(signing, *keys):
     """
     if signing:
         skeys = signing_keys(*keys)
-        GPG('--batch', '--yes', '--delete-secret-keys', *skeys)
+        GPG("--batch", "--yes", "--delete-secret-keys", *skeys)
 
     pkeys = public_keys(*keys)
-    GPG('--batch', '--yes', '--delete-keys', *pkeys)
+    GPG("--batch", "--yes", "--delete-keys", *pkeys)
 
 
 @_autoinit
@@ -287,22 +285,26 @@ def sign(key, file, output, clearsign=False):
         clearsign (bool): if True wraps the document in an ASCII-armored
             signature, if False creates a detached signature
     """
-    signopt = '--clearsign' if clearsign else '--detach-sign'
-    GPG(signopt, '--armor', '--default-key', key, '--output', output, file)
+    signopt = "--clearsign" if clearsign else "--detach-sign"
+    GPG(signopt, "--armor", "--local-user", key, "--output", output, file)
 
 
 @_autoinit
-def verify(signature, file, suppress_warnings=False):
+def verify(signature, file=None, suppress_warnings=False):
     """Verify the signature on a file.
 
     Args:
-        signature (str): signature of the file
-        file (str): file to be verified
+        signature (str): signature of the file (or clearsigned file)
+        file (str): file to be verified.  If None, then signature is
+            assumed to be a clearsigned file.
         suppress_warnings (bool): whether or not to suppress warnings
             from GnuPG
     """
-    kwargs = {'error': str} if suppress_warnings else {}
-    GPG('--verify', signature, file, **kwargs)
+    args = [signature]
+    if file:
+        args.append(file)
+    kwargs = {"error": str} if suppress_warnings else {}
+    GPG("--verify", *args, **kwargs)
 
 
 @_autoinit
@@ -314,41 +316,39 @@ def list(trusted, signing):
         signing (bool): if True list private keys
     """
     if trusted:
-        GPG('--list-public-keys')
+        GPG("--list-public-keys")
 
     if signing:
-        GPG('--list-secret-keys')
+        GPG("--list-secret-keys")
 
 
 def _verify_exe_or_raise(exe):
     msg = (
-        'Spack requires gpgconf version >= 2\n'
-        '  To install a suitable version using Spack, run\n'
-        '    spack install gnupg@2:\n'
-        '  and load it by running\n'
-        '    spack load gnupg@2:'
+        "Spack requires gpgconf version >= 2\n"
+        "  To install a suitable version using Spack, run\n"
+        "    spack install gnupg@2:\n"
+        "  and load it by running\n"
+        "    spack load gnupg@2:"
     )
     if not exe:
         raise SpackGPGError(msg)
 
-    output = exe('--version', output=str)
+    output = exe("--version", output=str)
     match = re.search(r"^gpg(conf)? \(GnuPG\) (.*)$", output, re.M)
     if not match:
-        raise SpackGPGError(
-            'Could not determine "{0}" version'.format(exe.name)
-        )
+        raise SpackGPGError('Could not determine "{0}" version'.format(exe.name))
 
-    if spack.version.Version(match.group(2)) < spack.version.Version('2'):
+    if spack.version.Version(match.group(2)) < spack.version.Version("2"):
         raise SpackGPGError(msg)
 
 
 def _gpgconf():
-    exe = spack.util.executable.which('gpgconf', 'gpg2conf', 'gpgconf2')
+    exe = spack.util.executable.which("gpgconf", "gpg2conf", "gpgconf2")
     _verify_exe_or_raise(exe)
 
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
     try:
-        exe('--dry-run', '--create-socketdir', output=os.devnull, error=os.devnull)
+        exe("--dry-run", "--create-socketdir", output=os.devnull, error=os.devnull)
     except spack.util.executable.ProcessError:
         # no dice
         exe = None
@@ -357,7 +357,7 @@ def _gpgconf():
 
 
 def _gpg():
-    exe = spack.util.executable.which('gpg2', 'gpg')
+    exe = spack.util.executable.which("gpg2", "gpg")
     _verify_exe_or_raise(exe)
     return exe
 
@@ -375,11 +375,11 @@ def _socket_dir(gpgconf):
         return None
 
     result = None
-    for var_run in ('/run', '/var/run'):
+    for var_run in ("/run", "/var/run"):
         if not os.path.exists(var_run):
             continue
 
-        var_run_user = os.path.join(var_run, 'user')
+        var_run_user = os.path.join(var_run, "user")
         try:
             if not os.path.exists(var_run_user):
                 os.mkdir(var_run_user)

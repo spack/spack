@@ -10,6 +10,7 @@ import pytest
 
 import spack.directives
 import spack.paths
+import spack.repo
 import spack.util.package_hash as ph
 from spack.spec import Spec
 from spack.util.unparse import unparse
@@ -19,9 +20,9 @@ datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 def compare_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
+    content1 = content1.replace(spack.repo.path.get_pkg_class(spec1.name).__name__, "TestPackage")
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
+    content2 = content2.replace(spack.repo.path.get_pkg_class(spec2.name).__name__, "TestPackage")
     if eq:
         assert content1 == content2
     else:
@@ -30,12 +31,14 @@ def compare_sans_name(eq, spec1, spec2):
 
 def compare_hash_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
-    hash1 = spec1.package.content_hash(content=content1)
+    pkg_cls1 = spack.repo.path.get_pkg_class(spec1.name)
+    content1 = content1.replace(pkg_cls1.__name__, "TestPackage")
+    hash1 = pkg_cls1(spec1).content_hash(content=content1)
 
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
-    hash2 = spec2.package.content_hash(content=content2)
+    pkg_cls2 = spack.repo.path.get_pkg_class(spec2.name)
+    content2 = content2.replace(pkg_cls2.__name__, "TestPackage")
+    hash2 = pkg_cls2(spec2).content_hash(content=content2)
 
     if eq:
         assert hash1 == hash2
@@ -44,7 +47,7 @@ def compare_hash_sans_name(eq, spec1, spec2):
 
 
 def test_hash(mock_packages, config):
-    ph.package_hash("hash-test1@1.2")
+    ph.package_hash(Spec("hash-test1@1.2"))
 
 
 def test_different_variants(mock_packages, config):
@@ -124,13 +127,13 @@ def test_content_hash_different_variants(mock_packages, config):
 
 def test_content_hash_cannot_get_details_from_ast(mock_packages, config):
     """Packages hash-test1 and hash-test3 would be considered the same
-       except that hash-test3 conditionally executes a phase based on
-       a "when" directive that Spack cannot evaluate by examining the
-       AST. This test ensures that Spack can compute a content hash
-       for hash-test3. If Spack cannot determine when a phase applies,
-       it adds it by default, so the test also ensures that the hashes
-       differ where Spack includes a phase on account of AST-examination
-       failure.
+    except that hash-test3 conditionally executes a phase based on
+    a "when" directive that Spack cannot evaluate by examining the
+    AST. This test ensures that Spack can compute a content hash
+    for hash-test3. If Spack cannot determine when a phase applies,
+    it adds it by default, so the test also ensures that the hashes
+    differ where Spack includes a phase on account of AST-examination
+    failure.
     """
     spec3 = Spec("hash-test1@1.7").concretized()
     spec4 = Spec("hash-test3@1.7").concretized()
@@ -210,9 +213,9 @@ class HasManyDirectives:
         pass
 
 {directives}
-""".format(directives="\n".join(
-    "    %s()" % name for name in spack.directives.directive_names
-))
+""".format(
+    directives="\n".join("    %s()" % name for name in spack.directives.directive_names)
+)
 
 
 def test_remove_all_directives():
@@ -330,23 +333,26 @@ def test_remove_complex_package_logic_filtered():
     assert unparsed == complex_package_logic_filtered
 
 
-@pytest.mark.parametrize("package_spec,expected_hash", [
-    ("amdfftw",      "tivb752zddjgvfkogfs7cnnvp5olj6co"),
-    ("grads",        "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
-    ("llvm",         "g3hoqf4rhprd3da7byp5nzco6tcwliiy"),
-    # has @when("@4.1.0") and raw unicode literals
-    ("mfem",         "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
-    ("mfem@4.0.0",   "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
-    ("mfem@4.1.0",   "gxastq64to74qt4he4knpyjfdhh5auel"),
-    # has @when("@1.5.0:")
-    ("py-torch",     "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
-    ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
-    ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
-    # has a print with multiple arguments
-    ("legion",       "zdpawm4avw3fllxcutvmqb5c3bj5twqt"),
-    # has nested `with when()` blocks and loops
-    ("trilinos",     "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
-])
+@pytest.mark.parametrize(
+    "package_spec,expected_hash",
+    [
+        ("amdfftw", "tivb752zddjgvfkogfs7cnnvp5olj6co"),
+        ("grads", "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
+        ("llvm", "nufffum5dabmaf4l5tpfcblnbfjknvd3"),
+        # has @when("@4.1.0") and raw unicode literals
+        ("mfem", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
+        ("mfem@4.0.0", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
+        ("mfem@4.1.0", "gxastq64to74qt4he4knpyjfdhh5auel"),
+        # has @when("@1.5.0:")
+        ("py-torch", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
+        ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
+        ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
+        # has a print with multiple arguments
+        ("legion", "zdpawm4avw3fllxcutvmqb5c3bj5twqt"),
+        # has nested `with when()` blocks and loops
+        ("trilinos", "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
+    ],
+)
 def test_package_hash_consistency(package_spec, expected_hash):
     """Ensure that that package hash is consistent python version to version.
 
@@ -392,40 +398,6 @@ class Pkg:
 """
 
 
-def test_multimethod_resolution():
-    # all are false but the default
-    filtered = ph.canonical_source("pkg@4.0", source=many_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know first @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@1.0", source=many_multimethods)
-    assert "ONE" not in filtered
-    assert "TWO" in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know last @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@3.0", source=many_multimethods)
-    assert "ONE" not in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" in filtered
-    assert "FIVE" in filtered
-
-    # we don't know if default or THREE will win, include both
-    filtered = ph.canonical_source("pkg@2.0", source=many_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-
 more_dynamic_multimethods = """\
 class Pkg:
     @when(sys.platform == "darwin")
@@ -454,36 +426,31 @@ class Pkg:
 """
 
 
-def test_more_dynamic_multimethod_resolution():
-    # we know the first one is the only one that can win.
-    filtered = ph.canonical_source("pkg@4.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # now we have to include ONE and TWO because ONE may win dynamically.
-    filtered = ph.canonical_source("pkg@1.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know FOUR is true and TWO and THREE are false, but ONE may
-    # still win dynamically.
-    filtered = ph.canonical_source("pkg@3.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" in filtered
-    assert "FIVE" in filtered
-
-    # TWO and FOUR can't be satisfied, but ONE or THREE could win
-    filtered = ph.canonical_source("pkg@2.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
+@pytest.mark.parametrize(
+    "spec_str,source,expected,not_expected",
+    [
+        # all are false but the default
+        ("pkg@4.0", many_multimethods, ["ONE", "FIVE"], ["TWO", "THREE", "FOUR"]),
+        # we know first @when overrides default and others are false
+        ("pkg@1.0", many_multimethods, ["TWO", "FIVE"], ["ONE", "THREE", "FOUR"]),
+        # we know last @when overrides default and others are false
+        ("pkg@3.0", many_multimethods, ["FOUR", "FIVE"], ["ONE", "TWO", "THREE"]),
+        # we don't know if default or THREE will win, include both
+        ("pkg@2.0", many_multimethods, ["ONE", "THREE", "FIVE"], ["TWO", "FOUR"]),
+        # we know the first one is the only one that can win.
+        ("pkg@4.0", more_dynamic_multimethods, ["ONE", "FIVE"], ["TWO", "THREE", "FOUR"]),
+        # now we have to include ONE and TWO because ONE may win dynamically.
+        ("pkg@1.0", more_dynamic_multimethods, ["ONE", "TWO", "FIVE"], ["THREE", "FOUR"]),
+        # we know FOUR is true and TWO and THREE are false, but ONE may
+        # still win dynamically.
+        ("pkg@3.0", more_dynamic_multimethods, ["ONE", "FOUR", "FIVE"], ["TWO", "THREE"]),
+        # TWO and FOUR can't be satisfied, but ONE or THREE could win
+        ("pkg@2.0", more_dynamic_multimethods, ["ONE", "THREE", "FIVE"], ["TWO", "FOUR"]),
+    ],
+)
+def test_multimethod_resolution(spec_str, source, expected, not_expected):
+    filtered = ph.canonical_source(Spec(spec_str), source=source)
+    for item in expected:
+        assert item in filtered
+    for item in not_expected:
+        assert item not in filtered

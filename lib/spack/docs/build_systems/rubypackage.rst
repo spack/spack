@@ -5,9 +5,9 @@
 
 .. _rubypackage:
 
------------
-RubyPackage
------------
+----
+Ruby
+----
 
 Like Perl, Python, and R, Ruby has its own build system for
 installing Ruby gems.
@@ -16,7 +16,7 @@ installing Ruby gems.
 Phases
 ^^^^^^
 
-The ``RubyPackage`` base class provides the following phases that
+The ``RubyBuilder`` and ``RubyPackage`` base classes provide the following phases that
 can be overridden:
 
 #. ``build`` - build everything needed to install

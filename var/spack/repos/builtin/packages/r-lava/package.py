@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RLava(RPackage):
@@ -21,15 +21,16 @@ class RLava(RPackage):
 
     cran = "lava"
 
-    version('1.6.10', sha256='7a88f8a885872e2abb3011c446e9e1c4884cd4dbe6ab4cfe9207538e5560232e')
-    version('1.6.8.1', sha256='6d243fc86c67c78ff4763502d84ff2f0889c2e55d1a59afefb7a762887473ffa')
-    version('1.6.6', sha256='7abc84dd99cce450a45ac4f232812cde3a322e432da3472f43b057fb5c59ca59')
-    version('1.6.4', sha256='41c6eeb96eaef9e1bfb04b31f7203e250a5ea7e7860be4d95f7f96f2a8644718')
-    version('1.4.7', sha256='d5cbd4835a94855478efb93051eece965db116ead203f4dd4e09d9a12d52f4bf')
+    version("1.7.0", sha256="3078da69f3828812bcd093acc2d1cd2c8cbc8480d81da222ae49a55bcb2e5e24")
+    version("1.6.10", sha256="7a88f8a885872e2abb3011c446e9e1c4884cd4dbe6ab4cfe9207538e5560232e")
+    version("1.6.8.1", sha256="6d243fc86c67c78ff4763502d84ff2f0889c2e55d1a59afefb7a762887473ffa")
+    version("1.6.6", sha256="7abc84dd99cce450a45ac4f232812cde3a322e432da3472f43b057fb5c59ca59")
+    version("1.6.4", sha256="41c6eeb96eaef9e1bfb04b31f7203e250a5ea7e7860be4d95f7f96f2a8644718")
+    version("1.4.7", sha256="d5cbd4835a94855478efb93051eece965db116ead203f4dd4e09d9a12d52f4bf")
 
-    depends_on('r@3.0:', type=('build', 'run'))
-    depends_on('r-future-apply', type=('build', 'run'), when='@1.6.10:')
-    depends_on('r-progressr', type=('build', 'run'), when='@1.6.10:')
-    depends_on('r-numderiv', type=('build', 'run'))
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-squarem', type=('build', 'run'), when='@1.6.0:')
+    depends_on("r@3.0:", type=("build", "run"))
+    depends_on("r-future-apply", type=("build", "run"), when="@1.6.10:")
+    depends_on("r-progressr", type=("build", "run"), when="@1.6.10:")
+    depends_on("r-numderiv", type=("build", "run"))
+    depends_on("r-survival", type=("build", "run"))
+    depends_on("r-squarem", type=("build", "run"), when="@1.6.0:")

@@ -26,7 +26,10 @@ schema = {
                 "cpe-version": {"type": "string", "minLength": 1},
                 "system-type": {"type": "string", "minLength": 1},
                 "schema-version": {"type": "string", "minLength": 1},
-            }
+                # Older schemas use did not have "cpe-version", just the
+                # schema version; in that case it was just called "version"
+                "version": {"type": "string", "minLength": 1},
+            },
         },
         "compilers": {
             "type": "array",
@@ -43,8 +46,8 @@ schema = {
                         "properties": {
                             "cc": {"type": "string", "minLength": 1},
                             "cxx": {"type": "string", "minLength": 1},
-                            "fc": {"type": "string", "minLength": 1}
-                        }
+                            "fc": {"type": "string", "minLength": 1},
+                        },
                     },
                     "arch": {
                         "type": "object",
@@ -52,23 +55,17 @@ schema = {
                         "additionalProperties": False,
                         "properties": {
                             "os": {"type": "string", "minLength": 1},
-                            "target": {"type": "string", "minLength": 1}
-                        }
-                    }
-                }
-            }
+                            "target": {"type": "string", "minLength": 1},
+                        },
+                    },
+                },
+            },
         },
         "specs": {
             "type": "array",
             "items": {
                 "type": "object",
-                "required": [
-                    "name",
-                    "version",
-                    "arch",
-                    "compiler",
-                    "prefix",
-                    "hash"],
+                "required": ["name", "version", "arch", "compiler", "prefix", "hash"],
                 "additionalProperties": False,
                 "properties": {
                     "name": {"type": "string", "minLength": 1},
@@ -84,11 +81,9 @@ schema = {
                                 "type": "object",
                                 "additionalProperties": False,
                                 "required": ["name"],
-                                "properties": {
-                                    "name": {"type": "string", "minLength": 1}
-                                }
-                            }
-                        }
+                                "properties": {"name": {"type": "string", "minLength": 1}},
+                            },
+                        },
                     },
                     "compiler": {
                         "type": "object",
@@ -96,8 +91,8 @@ schema = {
                         "additionalProperties": False,
                         "properties": {
                             "name": {"type": "string", "minLength": 1},
-                            "version": {"type": "string", "minLength": 1}
-                        }
+                            "version": {"type": "string", "minLength": 1},
+                        },
                     },
                     "dependencies": {
                         "type": "object",
@@ -110,22 +105,20 @@ schema = {
                                     "hash": {"type": "string", "minLength": 1},
                                     "type": {
                                         "type": "array",
-                                        "items": {
-                                            "type": "string", "minLength": 1}
-                                    }
-                                }
+                                        "items": {"type": "string", "minLength": 1},
+                                    },
+                                },
                             }
-                        }
+                        },
                     },
-                    "prefix": {
-                        "type": "string", "minLength": 1},
+                    "prefix": {"type": "string", "minLength": 1},
                     "rpm": {"type": "string", "minLength": 1},
                     "hash": {"type": "string", "minLength": 1},
                     "parameters": {
                         "type": "object",
-                    }
-                }
-            }
-        }
-    }
+                    },
+                },
+            },
+        },
+    },
 }

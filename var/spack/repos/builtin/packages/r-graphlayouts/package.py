@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGraphlayouts(RPackage):
@@ -17,11 +17,13 @@ class RGraphlayouts(RPackage):
 
     cran = "graphlayouts"
 
-    version('0.8.0', sha256='d724266778e4d97ca7a762253c293ffa3d09e2627cb1c3c7a654c690819defd0')
-    version('0.7.1', sha256='380f8ccb0b08735694e83f661fd56a0d592a78448ae91b89c290ba8582d66717')
-    version('0.5.0', sha256='83f61ce07580c5a64c7044c12b20d98ccf138c7e78ff12855cdfc206e1fab10d')
+    version("0.8.3", sha256="f9e4e5d794b4d1c6eba962490b3220d09b73e10893f5fa3be210240bfc654421")
+    version("0.8.2", sha256="0fa2777a2c159f3ef1209cd96838d2651d144c9c971abfef1d22bc6376f47bec")
+    version("0.8.0", sha256="d724266778e4d97ca7a762253c293ffa3d09e2627cb1c3c7a654c690819defd0")
+    version("0.7.1", sha256="380f8ccb0b08735694e83f661fd56a0d592a78448ae91b89c290ba8582d66717")
+    version("0.5.0", sha256="83f61ce07580c5a64c7044c12b20d98ccf138c7e78ff12855cdfc206e1fab10d")
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-igraph', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rcpparmadillo', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-igraph", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-rcpparmadillo", type=("build", "run"))

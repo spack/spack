@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGsalib(RPackage):
@@ -15,4 +15,5 @@ class RGsalib(RPackage):
 
     cran = "gsalib"
 
-    version('2.1', sha256='e1b23b986c18b89a94c58d9db45e552d1bce484300461803740dacdf7c937fcc')
+    version("2.2.1", sha256="3da3a4b959142a0d694a843e39143bfce82a6de197c6cc92650a28ac05f3bf90")
+    version("2.1", sha256="e1b23b986c18b89a94c58d9db45e552d1bce484300461803740dacdf7c937fcc")

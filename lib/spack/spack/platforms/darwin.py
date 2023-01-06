@@ -9,17 +9,18 @@ import archspec.cpu
 
 import spack.target
 from spack.operating_systems.mac_os import MacOs
+from spack.version import Version
 
 from ._platform import Platform
 
 
 class Darwin(Platform):
-    priority    = 89
+    priority = 89
 
-    binary_formats = ['macho']
+    binary_formats = ["macho"]
 
     def __init__(self):
-        super(Darwin, self).__init__('darwin')
+        super(Darwin, self).__init__("darwin")
 
         for name in archspec.cpu.TARGETS:
             self.add_target(name, spack.target.Target(name))
@@ -31,14 +32,14 @@ class Darwin(Platform):
         mac_os = MacOs()
 
         self.default_os = str(mac_os)
-        self.front_os   = str(mac_os)
-        self.back_os    = str(mac_os)
+        self.front_os = str(mac_os)
+        self.back_os = str(mac_os)
 
         self.add_operating_system(str(mac_os), mac_os)
 
     @classmethod
     def detect(cls):
-        return 'darwin' in py_platform.system().lower()
+        return "darwin" in py_platform.system().lower()
 
     def setup_platform_environment(self, pkg, env):
         """Specify deployment target based on target OS version.
@@ -60,7 +61,7 @@ class Darwin(Platform):
         """
 
         os = self.operating_sys[pkg.spec.os]
-        version = os.version
+        version = Version(os.version)
         if len(version) == 1:
             # Version has only one component: add a minor version to prevent
             # potential errors with `ld`,
@@ -68,5 +69,5 @@ class Darwin(Platform):
             # but succeeds with `-macosx_version_min 11.0`.
             # Most compilers seem to perform this translation automatically,
             # but older GCC does not.
-            version = str(version) + '.0'
-        env.set('MACOSX_DEPLOYMENT_TARGET', str(version))
+            version = str(version) + ".0"
+        env.set("MACOSX_DEPLOYMENT_TARGET", str(version))

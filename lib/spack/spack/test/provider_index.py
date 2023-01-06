@@ -18,7 +18,7 @@ Tests assume that mock packages provide this::
                     mpi@:10.0: set([zmpi])},
     'stuff': {stuff: set([externalvirtual])}}
 """
-from six import StringIO
+import io
 
 import spack.repo
 from spack.provider_index import ProviderIndex
@@ -26,50 +26,50 @@ from spack.spec import Spec
 
 
 def test_provider_index_round_trip(mock_packages):
-    p = ProviderIndex(spack.repo.all_package_names())
+    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.path)
 
-    ostream = StringIO()
+    ostream = io.StringIO()
     p.to_json(ostream)
 
-    istream = StringIO(ostream.getvalue())
-    q = ProviderIndex.from_json(istream)
+    istream = io.StringIO(ostream.getvalue())
+    q = ProviderIndex.from_json(istream, repository=spack.repo.path)
 
     assert p == q
 
 
 def test_providers_for_simple(mock_packages):
-    p = ProviderIndex(spack.repo.all_package_names())
+    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.path)
 
-    blas_providers = p.providers_for('blas')
-    assert Spec('netlib-blas') in blas_providers
-    assert Spec('openblas') in blas_providers
-    assert Spec('openblas-with-lapack') in blas_providers
+    blas_providers = p.providers_for("blas")
+    assert Spec("netlib-blas") in blas_providers
+    assert Spec("openblas") in blas_providers
+    assert Spec("openblas-with-lapack") in blas_providers
 
-    lapack_providers = p.providers_for('lapack')
-    assert Spec('netlib-lapack') in lapack_providers
-    assert Spec('openblas-with-lapack') in lapack_providers
+    lapack_providers = p.providers_for("lapack")
+    assert Spec("netlib-lapack") in lapack_providers
+    assert Spec("openblas-with-lapack") in lapack_providers
 
 
 def test_mpi_providers(mock_packages):
-    p = ProviderIndex(spack.repo.all_package_names())
+    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.path)
 
-    mpi_2_providers = p.providers_for('mpi@2')
-    assert Spec('mpich2') in mpi_2_providers
-    assert Spec('mpich@3:') in mpi_2_providers
+    mpi_2_providers = p.providers_for("mpi@2")
+    assert Spec("mpich2") in mpi_2_providers
+    assert Spec("mpich@3:") in mpi_2_providers
 
-    mpi_3_providers = p.providers_for('mpi@3')
-    assert Spec('mpich2') not in mpi_3_providers
-    assert Spec('mpich@3:') in mpi_3_providers
-    assert Spec('zmpi') in mpi_3_providers
+    mpi_3_providers = p.providers_for("mpi@3")
+    assert Spec("mpich2") not in mpi_3_providers
+    assert Spec("mpich@3:") in mpi_3_providers
+    assert Spec("zmpi") in mpi_3_providers
 
 
 def test_equal(mock_packages):
-    p = ProviderIndex(spack.repo.all_package_names())
-    q = ProviderIndex(spack.repo.all_package_names())
+    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.path)
+    q = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.path)
     assert p == q
 
 
 def test_copy(mock_packages):
-    p = ProviderIndex(spack.repo.all_package_names())
+    p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.path)
     q = p.copy()
     assert p == q

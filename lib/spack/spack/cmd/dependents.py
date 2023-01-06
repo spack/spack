@@ -21,27 +21,35 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-i', '--installed', action='store_true', default=False,
+        "-i",
+        "--installed",
+        action="store_true",
+        default=False,
         help="List installed dependents of an installed spec, "
-        "instead of possible dependents of a package.")
+        "instead of possible dependents of a package.",
+    )
     subparser.add_argument(
-        '-t', '--transitive', action='store_true', default=False,
-        help="Show all transitive dependents.")
-    arguments.add_common_arguments(subparser, ['spec'])
+        "-t",
+        "--transitive",
+        action="store_true",
+        default=False,
+        help="Show all transitive dependents.",
+    )
+    arguments.add_common_arguments(subparser, ["spec"])
 
 
 def inverted_dependencies():
     """Iterate through all packages and return a dictionary mapping package
-       names to possible dependencies.
+    names to possible dependencies.
 
-       Virtual packages are included as sources, so that you can query
-       dependents of, e.g., `mpi`, but virtuals are not included as
-       actual dependents.
+    Virtual packages are included as sources, so that you can query
+    dependents of, e.g., `mpi`, but virtuals are not included as
+    actual dependents.
     """
     dag = {}
-    for pkg in spack.repo.path.all_packages():
-        dag.setdefault(pkg.name, set())
-        for dep in pkg.dependencies:
+    for pkg_cls in spack.repo.path.all_package_classes():
+        dag.setdefault(pkg_cls.name, set())
+        for dep in pkg_cls.dependencies:
             deps = [dep]
 
             # expand virtuals if necessary
@@ -49,7 +57,7 @@ def inverted_dependencies():
                 deps += [s.name for s in spack.repo.path.providers_for(dep)]
 
             for d in deps:
-                dag.setdefault(d, set()).add(pkg.name)
+                dag.setdefault(d, set()).add(pkg_cls.name)
     return dag
 
 
@@ -85,11 +93,10 @@ def dependents(parser, args):
         env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
-        format_string = '{name}{@version}{%compiler}{/hash:7}'
+        format_string = "{name}{@version}{%compiler}{/hash:7}"
         if sys.stdout.isatty():
             tty.msg("Dependents of %s" % spec.cformat(format_string))
-        deps = spack.store.db.installed_relatives(
-            spec, 'parents', args.transitive)
+        deps = spack.store.db.installed_relatives(spec, "parents", args.transitive)
         if deps:
             spack.cmd.display_specs(deps, long=True)
         else:

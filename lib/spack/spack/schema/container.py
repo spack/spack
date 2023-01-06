@@ -5,103 +5,90 @@
 """Schema for the 'container' subsection of Spack environments."""
 
 _stages_from_dockerhub = {
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': {
-        'os': {'type': 'string'},
-        'spack': {'anyOf': [
-            {'type': 'string'},
-            {'type': 'object',
-             'additional_properties': False,
-             'properties': {
-                 'url': {'type': 'string'},
-                 'ref': {'type': 'string'},
-                 'resolve_sha': {'type': 'boolean', 'default': False},
-                 'verify': {'type': 'boolean', 'default': False}
-             }}
-        ]},
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "os": {"type": "string"},
+        "spack": {
+            "anyOf": [
+                {"type": "string"},
+                {
+                    "type": "object",
+                    "additional_properties": False,
+                    "properties": {
+                        "url": {"type": "string"},
+                        "ref": {"type": "string"},
+                        "resolve_sha": {"type": "boolean", "default": False},
+                        "verify": {"type": "boolean", "default": False},
+                    },
+                },
+            ]
+        },
     },
-    'required': ['os', 'spack']
+    "required": ["os", "spack"],
 }
 
 _custom_stages = {
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': {
-        'build': {'type': 'string'},
-        'final': {'type': 'string'}
-    },
-    'required': ['build', 'final']
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"build": {"type": "string"}, "final": {"type": "string"}},
+    "required": ["build", "final"],
 }
 
 #: List of packages for the schema below
-_list_of_packages = {
-    'type': 'array',
-    'items': {
-        'type': 'string'
-    }
-}
+_list_of_packages = {"type": "array", "items": {"type": "string"}}
 
 #: Schema for the container attribute included in Spack environments
 container_schema = {
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
         # The recipe formats that are currently supported by the command
-        'format': {
-            'type': 'string',
-            'enum': ['docker', 'singularity']
-        },
+        "format": {"type": "string", "enum": ["docker", "singularity"]},
         # Describes the base image to start from and the version
         # of Spack to be used
-        'images': {'anyOf': [_stages_from_dockerhub, _custom_stages]},
+        "images": {"anyOf": [_stages_from_dockerhub, _custom_stages]},
         # Whether or not to strip installed binaries
-        'strip': {
-            'type': 'boolean',
-            'default': True
-        },
+        "strip": {"type": "boolean", "default": True},
         # Additional system packages that are needed at runtime
-        'os_packages': {
-            'type': 'object',
-            'properties': {
-                'command': {'type': 'string', 'enum': ['apt', 'yum']},
-                'update': {'type': 'boolean'},
-                'build': _list_of_packages,
-                'final': _list_of_packages
+        "os_packages": {
+            "type": "object",
+            "properties": {
+                "command": {"type": "string", "enum": ["apt", "yum"]},
+                "update": {"type": "boolean"},
+                "build": _list_of_packages,
+                "final": _list_of_packages,
             },
-            'additionalProperties': False
+            "additionalProperties": False,
         },
         # Add labels to the image
-        'labels': {
-            'type': 'object',
+        "labels": {
+            "type": "object",
         },
         # Add a custom extra section at the bottom of a stage
-        'extra_instructions': {
-            'type': 'object',
-            'additionalProperties': False,
-            'properties': {
-                'build': {'type': 'string'},
-                'final': {'type': 'string'}
-            }
+        "extra_instructions": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {"build": {"type": "string"}, "final": {"type": "string"}},
         },
         # Reserved for properties that are specific to each format
-        'singularity': {
-            'type': 'object',
-            'additionalProperties': False,
-            'default': {},
-            'properties': {
-                'runscript': {'type': 'string'},
-                'startscript': {'type': 'string'},
-                'test': {'type': 'string'},
-                'help': {'type': 'string'}
-            }
+        "singularity": {
+            "type": "object",
+            "additionalProperties": False,
+            "default": {},
+            "properties": {
+                "runscript": {"type": "string"},
+                "startscript": {"type": "string"},
+                "test": {"type": "string"},
+                "help": {"type": "string"},
+            },
         },
-        'docker': {
-            'type': 'object',
-            'additionalProperties': False,
-            'default': {},
-        }
-    }
+        "docker": {
+            "type": "object",
+            "additionalProperties": False,
+            "default": {},
+        },
+    },
 }
 
-properties = {'container': container_schema}
+properties = {"container": container_schema}

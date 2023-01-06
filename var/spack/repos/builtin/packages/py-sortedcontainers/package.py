@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PySortedcontainers(PythonPackage):
@@ -13,6 +13,6 @@ class PySortedcontainers(PythonPackage):
     homepage = "http://www.grantjenks.com/docs/sortedcontainers/"
     pypi = "sortedcontainers/sortedcontainers-2.1.0.tar.gz"
 
-    version('2.1.0', sha256='974e9a32f56b17c1bac2aebd9dcf197f3eb9cd30553c5852a3187ad162e1a03a')
+    version("2.1.0", sha256="974e9a32f56b17c1bac2aebd9dcf197f3eb9cd30553c5852a3187ad162e1a03a")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

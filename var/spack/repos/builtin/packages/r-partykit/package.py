@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class RPartykit(RPackage):
@@ -23,17 +23,18 @@ class RPartykit(RPackage):
 
     cran = "partykit"
 
-    version('1.2-15', sha256='b2e9454b2f4b9a39c9581c5871462f00acef4eeee5696ce3e32cfa1468d1e3ac')
-    version('1.2-11', sha256='3a83332d782a235cfb5ba60cc8f1c51d46ca5477b22979a614f514d1c951c602')
-    version('1.2-5', sha256='f48e30790f93fa5d03e68e8ce71ce33d009d107d46d45d85da2016b38b27629c')
-    version('1.2-3', sha256='56749b246e283f94ac2ad2cdcfc0a477e05cd44b5e8f6e462c26f4dff818da35')
-    version('1.1-1', sha256='d9f4762690cd85ee4e3dc44f5a14069d10a1900afdfbcdc284d2a94b4a8e8332')
+    version("1.2-16", sha256="e643d4e29c1894497e3dd5fe274783319d0044dec50282ed807cebc21736ddb2")
+    version("1.2-15", sha256="b2e9454b2f4b9a39c9581c5871462f00acef4eeee5696ce3e32cfa1468d1e3ac")
+    version("1.2-11", sha256="3a83332d782a235cfb5ba60cc8f1c51d46ca5477b22979a614f514d1c951c602")
+    version("1.2-5", sha256="f48e30790f93fa5d03e68e8ce71ce33d009d107d46d45d85da2016b38b27629c")
+    version("1.2-3", sha256="56749b246e283f94ac2ad2cdcfc0a477e05cd44b5e8f6e462c26f4dff818da35")
+    version("1.1-1", sha256="d9f4762690cd85ee4e3dc44f5a14069d10a1900afdfbcdc284d2a94b4a8e8332")
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.2-11:')
-    depends_on('r-libcoin@1.0-0:', type=('build', 'run'), when='@1.2-0:')
-    depends_on('r-mvtnorm', type=('build', 'run'), when='@1.2-0:')
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-formula@1.2-1:', type=('build', 'run'))
-    depends_on('r-inum@1.0-0:', type=('build', 'run'), when='@1.2-0:')
-    depends_on('r-rpart@4.1-11:', type=('build', 'run'), when='@1.2-0:')
+    depends_on("r@3.1.0:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@1.2-11:")
+    depends_on("r-libcoin@1.0-0:", type=("build", "run"), when="@1.2-0:")
+    depends_on("r-mvtnorm", type=("build", "run"), when="@1.2-0:")
+    depends_on("r-survival", type=("build", "run"))
+    depends_on("r-formula@1.2-1:", type=("build", "run"))
+    depends_on("r-inum@1.0-0:", type=("build", "run"), when="@1.2-0:")
+    depends_on("r-rpart@4.1-11:", type=("build", "run"), when="@1.2-0:")

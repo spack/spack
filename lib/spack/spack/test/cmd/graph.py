@@ -9,49 +9,48 @@ import pytest
 
 from spack.main import SpackCommand, SpackCommandError
 
-graph = SpackCommand('graph')
+graph = SpackCommand("graph")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('mock_packages', 'database')
+@pytest.mark.usefixtures("mock_packages", "database")
 def test_graph_ascii():
     """Tests spack graph --ascii"""
-    graph('--ascii', 'dt-diamond')
+    graph("--ascii", "dt-diamond")
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('mock_packages', 'database')
+@pytest.mark.usefixtures("mock_packages", "database")
 def test_graph_dot():
     """Tests spack graph --dot"""
-    graph('--dot', 'dt-diamond')
+    graph("--dot", "dt-diamond")
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('mock_packages', 'database')
+@pytest.mark.usefixtures("mock_packages", "database")
 def test_graph_static():
     """Tests spack graph --static"""
-    graph('--static', 'dt-diamond')
+    graph("--static", "dt-diamond")
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('mock_packages', 'database')
+@pytest.mark.usefixtures("mock_packages", "database")
 def test_graph_installed():
     """Tests spack graph --installed"""
 
-    graph('--installed')
+    graph("--installed")
 
     with pytest.raises(SpackCommandError):
-        graph('--installed', 'dt-diamond')
+        graph("--installed", "dt-diamond")
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('mock_packages', 'database')
+@pytest.mark.usefixtures("mock_packages", "database")
 def test_graph_deptype():
     """Tests spack graph --deptype"""
-    graph('--deptype', 'all', 'dt-diamond')
+    graph("--deptype", "all", "dt-diamond")
 
 
 def test_graph_no_specs():

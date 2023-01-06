@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PySetupmeta(PythonPackage):
@@ -12,7 +12,8 @@ class PySetupmeta(PythonPackage):
     homepage = "https://github.com/codrsquad/setupmeta"
     pypi = "setupmeta/setupmeta-3.3.0.tar.gz"
 
-    version('3.3.0', sha256='32914af4eeffb8bf1bd45057254d9dff4d16cb7ae857141e07698f7ac19dc960')
+    version("3.3.2", sha256="221463a64d2528ba558f14b087410e05a7ef0dab17d19004f124a262d6e007f5")
+    version("3.3.0", sha256="32914af4eeffb8bf1bd45057254d9dff4d16cb7ae857141e07698f7ac19dc960")
 
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("python@2.7:", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))

@@ -4,13 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import textwrap
-from typing import List  # novm
-
-import six
+from typing import List
 
 import llnl.util.lang
 
 import spack.config
+import spack.extensions
 from spack.util.path import canonicalize_path
 
 
@@ -18,9 +17,10 @@ class ContextMeta(type):
     """Meta class for Context. It helps reducing the boilerplate in
     client code.
     """
+
     #: Keeps track of the context properties that have been added
     #: by the class that is being defined
-    _new_context_properties = []  # type: List[str]
+    _new_context_properties: List[str] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Merge all the context properties that are coming from base classes
@@ -37,7 +37,7 @@ class ContextMeta(type):
         cls._new_context_properties = []
 
         # Attach the list to the class being created
-        attr_dict['context_properties'] = context_properties
+        attr_dict["context_properties"] = context_properties
 
         return super(ContextMeta, cls).__new__(cls, name, bases, attr_dict)
 
@@ -55,7 +55,7 @@ class ContextMeta(type):
 context_property = ContextMeta.context_property
 
 
-class Context(six.with_metaclass(ContextMeta, object)):
+class Context(metaclass=ContextMeta):
     """Base class for context classes that are used with the template
     engine.
     """
@@ -70,11 +70,9 @@ def make_environment(dirs=None):
     """Returns an configured environment for template rendering."""
     if dirs is None:
         # Default directories where to search for templates
-        builtins = spack.config.get('config:template_dirs',
-                                    ['$spack/share/spack/templates'])
+        builtins = spack.config.get("config:template_dirs", ["$spack/share/spack/templates"])
         extensions = spack.extensions.get_template_dirs()
-        dirs = [canonicalize_path(d)
-                for d in itertools.chain(builtins, extensions)]
+        dirs = [canonicalize_path(d) for d in itertools.chain(builtins, extensions)]
 
     # avoid importing this at the top level as it's used infrequently and
     # slows down startup a bit.
@@ -83,15 +81,14 @@ def make_environment(dirs=None):
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
     # Environment of the template engine
-    env = jinja2.Environment(
-        loader=loader, trim_blocks=True, lstrip_blocks=True
-    )
+    env = jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
     # Custom filters
     _set_filters(env)
     return env
 
 
 # Extra filters for template engine environment
+
 
 def prepend_to_line(text, token):
     """Prepends a token to each line in text"""
@@ -105,7 +102,7 @@ def quote(text):
 
 def _set_filters(env):
     """Sets custom filters to the template engine environment"""
-    env.filters['textwrap'] = textwrap.wrap
-    env.filters['prepend_to_line'] = prepend_to_line
-    env.filters['join'] = '\n'.join
-    env.filters['quote'] = quote
+    env.filters["textwrap"] = textwrap.wrap
+    env.filters["prepend_to_line"] = prepend_to_line
+    env.filters["join"] = "\n".join
+    env.filters["quote"] = quote

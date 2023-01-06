@@ -12,6 +12,7 @@ from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
 import spack.repo
+import spack.spec
 from spack.version import infinity_versions, ver
 
 description = "list available versions of a package"
@@ -21,25 +22,33 @@ level = "long"
 
 def setup_parser(subparser):
     output = subparser.add_mutually_exclusive_group()
-    output.add_argument('-s', '--safe', action='store_true',
-                        help='only list safe versions of the package')
-    output.add_argument('--safe-only', action='store_true',
-                        help='[deprecated] only list safe versions '
-                        'of the package')
-    output.add_argument('-r', '--remote', action='store_true',
-                        help='only list remote versions of the package')
-    output.add_argument('-n', '--new', action='store_true',
-                        help='only list remote versions newer than '
-                        'the latest checksummed version')
-    subparser.add_argument(
-        '-c', '--concurrency', default=32, type=int,
-        help='number of concurrent requests'
+    output.add_argument(
+        "-s", "--safe", action="store_true", help="only list safe versions of the package"
     )
-    arguments.add_common_arguments(subparser, ['package'])
+    output.add_argument(
+        "--safe-only",
+        action="store_true",
+        help="[deprecated] only list safe versions " "of the package",
+    )
+    output.add_argument(
+        "-r", "--remote", action="store_true", help="only list remote versions of the package"
+    )
+    output.add_argument(
+        "-n",
+        "--new",
+        action="store_true",
+        help="only list remote versions newer than " "the latest checksummed version",
+    )
+    subparser.add_argument(
+        "-c", "--concurrency", default=32, type=int, help="number of concurrent requests"
+    )
+    arguments.add_common_arguments(subparser, ["package"])
 
 
 def versions(parser, args):
-    pkg = spack.repo.get(args.package)
+    spec = spack.spec.Spec(args.package)
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
 
     safe_versions = pkg.versions
 
@@ -49,12 +58,12 @@ def versions(parser, args):
 
     if not (args.remote or args.new):
         if sys.stdout.isatty():
-            tty.msg('Safe versions (already checksummed):')
+            tty.msg("Safe versions (already checksummed):")
 
         if not safe_versions:
             if sys.stdout.isatty():
-                tty.warn('Found no versions for {0}'.format(pkg.name))
-                tty.debug('Manually add versions to the package.')
+                tty.warn("Found no versions for {0}".format(pkg.name))
+                tty.debug("Manually add versions to the package.")
         else:
             colify(sorted(safe_versions, reverse=True), indent=2)
 
@@ -65,26 +74,26 @@ def versions(parser, args):
 
     if args.new:
         if sys.stdout.isatty():
-            tty.msg('New remote versions (not yet checksummed):')
-        numeric_safe_versions = list(filter(
-            lambda v: str(v) not in infinity_versions,
-            safe_versions))
+            tty.msg("New remote versions (not yet checksummed):")
+        numeric_safe_versions = list(
+            filter(lambda v: str(v) not in infinity_versions, safe_versions)
+        )
         highest_safe_version = max(numeric_safe_versions)
-        remote_versions  = set([ver(v) for v in set(fetched_versions)
-                                if v > highest_safe_version])
+        remote_versions = set([ver(v) for v in set(fetched_versions) if v > highest_safe_version])
     else:
         if sys.stdout.isatty():
-            tty.msg('Remote versions (not yet checksummed):')
+            tty.msg("Remote versions (not yet checksummed):")
         remote_versions = set(fetched_versions).difference(safe_versions)
 
     if not remote_versions:
         if sys.stdout.isatty():
             if not fetched_versions:
-                tty.warn('Found no versions for {0}'.format(pkg.name))
-                tty.debug('Check the list_url and list_depth attributes of '
-                          'the package to help Spack find versions.')
+                tty.warn("Found no versions for {0}".format(pkg.name))
+                tty.debug(
+                    "Check the list_url and list_depth attributes of "
+                    "the package to help Spack find versions."
+                )
             else:
-                tty.warn('Found no unchecksummed versions for {0}'.format(
-                    pkg.name))
+                tty.warn("Found no unchecksummed versions for {0}".format(pkg.name))
     else:
         colify(sorted(remote_versions, reverse=True), indent=2)

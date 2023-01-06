@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Unifdef(MakefilePackage):
@@ -14,12 +14,12 @@ class Unifdef(MakefilePackage):
     alone."""
 
     homepage = "https://dotat.at/prog/unifdef/"
-    url      = "https://dotat.at/prog/unifdef/unifdef-2.11.tar.xz"
+    url = "https://dotat.at/prog/unifdef/unifdef-2.11.tar.xz"
 
-    maintainers = ['matthiasdiener']
+    maintainers = ["matthiasdiener"]
 
-    version('2.11', sha256='828ffc270ac262b88fe011136acef2780c05b0dc3c5435d005651740788d4537')
+    version("2.11", sha256="828ffc270ac262b88fe011136acef2780c05b0dc3c5435d005651740788d4537")
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter(r'\$\{HOME\}', prefix)
+        makefile = FileFilter("Makefile")
+        makefile.filter(r"\$\{HOME\}", prefix)

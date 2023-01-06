@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRnexml(RPackage):
@@ -16,18 +16,23 @@ class RRnexml(RPackage):
 
     cran = "RNeXML"
 
-    version('2.4.5', sha256='2b667ecb6400e4c0c125ca73a98cde81330cde3a85b764261f77159e702754f3')
+    version("2.4.8", sha256="26d429f95afe2e24d79eb7b0d3eeec4068e7d33b715abb8f48f380e0ccbbb850")
+    version("2.4.7", sha256="cb311d6dda33a95521a6df360a2d2f4e6d6bc6b330ac5e19ea721ca665bce6fe")
+    version("2.4.5", sha256="2b667ecb6400e4c0c125ca73a98cde81330cde3a85b764261f77159e702754f3")
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-ape@3.1:', type=('build', 'run'))
-    depends_on('r-xml@3.95:', type=('build', 'run'))
-    depends_on('r-plyr@1.8:', type=('build', 'run'))
-    depends_on('r-reshape2@1.2.2:', type=('build', 'run'))
-    depends_on('r-httr@0.3:', type=('build', 'run'))
-    depends_on('r-uuid@0.1-1:', type=('build', 'run'))
-    depends_on('r-dplyr@0.5.0:', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.0:', type=('build', 'run'))
-    depends_on('r-tidyr@0.3.1:', type=('build', 'run'))
-    depends_on('r-stringr@1.0:', type=('build', 'run'))
-    depends_on('r-stringi', type=('build', 'run'))
-    depends_on('r-xml2', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-ape@3.1:", type=("build", "run"))
+    depends_on("r-xml@3.95:", type=("build", "run"))
+    depends_on("r-plyr@1.8:", type=("build", "run"))
+    depends_on("r-reshape2@1.2.2:", type=("build", "run"))
+    depends_on("r-httr@0.3:", type=("build", "run"))
+    depends_on("r-uuid@0.1-1:", type=("build", "run"))
+    depends_on("r-dplyr@0.5.0:", type=("build", "run"))
+    depends_on("r-dplyr@0.7.0:", type=("build", "run"), when="@2.4.8:")
+    depends_on("r-tidyr@0.3.1:", type=("build", "run"))
+    depends_on("r-stringr@1.0:", type=("build", "run"))
+    depends_on("r-stringi", type=("build", "run"))
+    depends_on("r-xml2", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"), when="@2.4.7:")
+    depends_on("r-lazyeval@0.1.0:", type=("build", "run"))
+    depends_on("r-lazyeval", when="@:2.4.7")

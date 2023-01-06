@@ -6,124 +6,121 @@
 import sys
 
 import spack.util.web
-from spack import *
+from spack.package import *
 
 
-class Protobuf(Package):
+class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
+    url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
 
-    version('3.18.0', sha256='14e8042b5da37652c92ef6a2759e7d2979d295f60afd7767825e3de68c856c54')
-    version('3.17.3', sha256='c6003e1d2e7fefa78a3039f19f383b4f3a61e81be8c19356f85b6461998ad3db')
-    version('3.17.0', sha256='eaba1dd133ac5167e8b08bc3268b2d33c6e9f2dcb14ec0f97f3d3eed9b395863')
-    version('3.16.0', sha256='7892a35d979304a404400a101c46ce90e85ec9e2a766a86041bb361f626247f5')
-    version('3.15.7', sha256='efdd6b932a2c0a88a90c4c80f88e4b2e1bf031e7514dbb5a5db5d0bf4f295504')
-    version('3.15.5', sha256='bc3dbf1f09dba1b2eb3f2f70352ee97b9049066c9040ce0c9b67fb3294e91e4b')
-    version('3.15.4', sha256='07f8a02afc14a657f727ed89a8ec5627b9ecc47116d60acaabaa1da233bd2e8f')
-    version('3.15.2', sha256='3c85fdac243dab1f6cd725eb58e361cdbb3ec4480052ac90b1ab55c608112cd0')
-    version('3.15.1', sha256='f18a40816260a9a3190a94efb0fc26270b244a2436681602f0a944739095d632')
-    version('3.15.0', sha256='6aff9834fd7c540875e1836967c8d14c6897e3785a2efac629f69860fb7834ff')
-    version('3.14.0', sha256='d0f5f605d0d656007ce6c8b5a82df3037e1d8fe8b121ed42e536f569dec16113')
-    version('3.13.0', sha256='9b4ee22c250fe31b16f1a24d61467e40780a3fbb9b91c3b65be2a376ed913a1a')
-    version('3.12.3', sha256='71030a04aedf9f612d2991c1c552317038c3c5a2b578ac4745267a45e7037c29')
-    version('3.12.2', sha256='bb8ce9ba11eb7bccf080599fe7cad9cc461751c8dd1ba61701c0070d58cde973')
-    version('3.12.1', sha256='cb9b3f9d625b5739a358268eb3421de11cacd90025f5f7672c3930553eca810e')
-    version('3.12.0', sha256='946ba5371e423e1220d2cbefc1f65e69a1e81ca5bab62a03d66894172983cfcd')
-    version('3.11.4', sha256='a79d19dcdf9139fa4b81206e318e33d245c4c9da1ffed21c87288ed4380426f9')
-    version('3.11.3', sha256='cf754718b0aa945b00550ed7962ddc167167bd922b842199eeb6505e6f344852')
-    version('3.11.2', sha256='e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67')
-    version('3.11.1', sha256='4f8e805825c53bbc3c9f6b6abc009b5b5679e4702bccfca1121c42ff5ec801c7')
-    version('3.11.0', sha256='6d356a6279cc76d2d5c4dfa6541641264b59eae0bc96b852381361e3400d1f1c')
-    version('3.10.1', sha256='6adf73fd7f90409e479d6ac86529ade2d45f50494c5c10f539226693cb8fe4f7')
-    version('3.10.0', sha256='758249b537abba2f21ebc2d02555bf080917f0f2f88f4cbe2903e0e28c4187ed')
-    version('3.9.2', sha256='1fbf1c2962af287607232b2eddeaec9b4f4a7a6f5934e1a9276e9af76952f7e0')
-    version('3.9.1', sha256='98e615d592d237f94db8bf033fba78cd404d979b0b70351a9e5aaff725398357')
-    version('3.7.1', sha256='f1748989842b46fa208b2a6e4e2785133cfcc3e4d43c17fecb023733f0f5443f')
-    version('3.7.0', sha256='a19dcfe9d156ae45d209b15e0faed5c7b5f109b6117bfc1974b6a7b98a850320')
-    version('3.6.1', sha256='3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b')
-    version('3.5.2', sha256='4ffd420f39f226e96aebc3554f9c66a912f6cad6261f39f194f16af8a1f6dab2')
-    version('3.5.1.1', sha256='56b5d9e1ab2bf4f5736c4cfba9f4981fbc6976246721e7ded5602fbaee6d6869')
-    version('3.5.1', sha256='826425182ee43990731217b917c5c3ea7190cfda141af4869e6d4ad9085a740f')
-    version('3.5.0.1', sha256='86be71e61c76575c60839452a4f265449a6ea51570d7983cb929f06ad294b5f5')
-    version('3.5.0', sha256='0cc6607e2daa675101e9b7398a436f09167dffb8ca0489b0307ff7260498c13c')
-    version('3.4.1', sha256='8e0236242106e680b4f9f576cc44b8cd711e948b20a9fc07769b0a20ceab9cc4')
-    version('3.4.0', sha256='f6600abeee3babfa18591961a0ff21e7db6a6d9ef82418a261ec4fee44ee6d44')
-    version('3.3.0', sha256='9a36bc1265fa83b8e818714c0d4f08b8cec97a1910de0754a321b11e66eb76de')
-    version('3.2.0', sha256='a839d3f1519ff9d68ab908de5a0f269650ef1fc501c10f6eefd4cae51d29b86f')
-    version('3.1.0', sha256='fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d')
-    version('3.0.2', sha256='a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e')
-    version('2.5.0', sha256='c2665a7aa2ac1a206e61b28e014486e3de59009ea2be2bde9182e0847f38b62f', deprecated=True)
+    version("3.21.7", sha256="ce2fbea3c78147a41b2a922485d283137845303e5e1b6cbd7ece94b96ade7031")
+    version("3.21.5", sha256="d7d204a59fd0d2d2387bd362c2155289d5060f32122c4d1d922041b61191d522")
+    version("3.21.4", sha256="85d42d4485f36f8cec3e475a3b9e841d7d78523cd775de3a86dba77081f4ca25")
+    version("3.21.3", sha256="c29d8b4b79389463c546f98b15aa4391d4ed7ec459340c47bffe15db63eb9126")
+    version("3.21.2", sha256="66e1156ac78290db81335c79d1fc5a54123ebb62a43eb2e5b42a44ca23087517")
+    version("3.21.1", sha256="a295dd3b9551d3e2749a9969583dea110c6cdcc39d02088f7c7bb1100077e081")
+    version("3.20.1", sha256="8b28fdd45bab62d15db232ec404248901842e5340299a57765e48abe8a80d930")
+    version("3.20.0", sha256="b07772d38ab07e55eca4d50f4b53da2d998bb221575c60a4f81100242d4b4889")
+    version("3.19.4", sha256="3bd7828aa5af4b13b99c191e8b1e884ebfa9ad371b0ce264605d347f135d2568")
+    version("3.19.3", sha256="390191a0d7884b3e52bb812c440ad1497b9d484241f37bb8e2ccc8c2b72d6c36")
+    version("3.19.2", sha256="4dd35e788944b7686aac898f77df4e9a54da0ca694b8801bd6b2a9ffc1b3085e")
+    version("3.18.2", sha256="579cd41bf322adb2b1161a46e076e39d3d01d1e8c50b8b61ce444211dae4e632")
+    version("3.18.0", sha256="14e8042b5da37652c92ef6a2759e7d2979d295f60afd7767825e3de68c856c54")
+    version("3.17.3", sha256="c6003e1d2e7fefa78a3039f19f383b4f3a61e81be8c19356f85b6461998ad3db")
+    version("3.17.0", sha256="eaba1dd133ac5167e8b08bc3268b2d33c6e9f2dcb14ec0f97f3d3eed9b395863")
+    version("3.16.0", sha256="7892a35d979304a404400a101c46ce90e85ec9e2a766a86041bb361f626247f5")
+    version("3.15.7", sha256="efdd6b932a2c0a88a90c4c80f88e4b2e1bf031e7514dbb5a5db5d0bf4f295504")
+    version("3.15.5", sha256="bc3dbf1f09dba1b2eb3f2f70352ee97b9049066c9040ce0c9b67fb3294e91e4b")
+    version("3.15.4", sha256="07f8a02afc14a657f727ed89a8ec5627b9ecc47116d60acaabaa1da233bd2e8f")
+    version("3.15.2", sha256="3c85fdac243dab1f6cd725eb58e361cdbb3ec4480052ac90b1ab55c608112cd0")
+    version("3.15.1", sha256="f18a40816260a9a3190a94efb0fc26270b244a2436681602f0a944739095d632")
+    version("3.15.0", sha256="6aff9834fd7c540875e1836967c8d14c6897e3785a2efac629f69860fb7834ff")
+    version("3.14.0", sha256="d0f5f605d0d656007ce6c8b5a82df3037e1d8fe8b121ed42e536f569dec16113")
+    version("3.13.0", sha256="9b4ee22c250fe31b16f1a24d61467e40780a3fbb9b91c3b65be2a376ed913a1a")
+    version("3.12.3", sha256="71030a04aedf9f612d2991c1c552317038c3c5a2b578ac4745267a45e7037c29")
+    version("3.12.2", sha256="bb8ce9ba11eb7bccf080599fe7cad9cc461751c8dd1ba61701c0070d58cde973")
+    version("3.12.1", sha256="cb9b3f9d625b5739a358268eb3421de11cacd90025f5f7672c3930553eca810e")
+    version("3.12.0", sha256="946ba5371e423e1220d2cbefc1f65e69a1e81ca5bab62a03d66894172983cfcd")
+    version("3.11.4", sha256="a79d19dcdf9139fa4b81206e318e33d245c4c9da1ffed21c87288ed4380426f9")
+    version("3.11.3", sha256="cf754718b0aa945b00550ed7962ddc167167bd922b842199eeb6505e6f344852")
+    version("3.11.2", sha256="e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67")
+    version("3.11.1", sha256="4f8e805825c53bbc3c9f6b6abc009b5b5679e4702bccfca1121c42ff5ec801c7")
+    version("3.11.0", sha256="6d356a6279cc76d2d5c4dfa6541641264b59eae0bc96b852381361e3400d1f1c")
+    version("3.10.1", sha256="6adf73fd7f90409e479d6ac86529ade2d45f50494c5c10f539226693cb8fe4f7")
+    version("3.10.0", sha256="758249b537abba2f21ebc2d02555bf080917f0f2f88f4cbe2903e0e28c4187ed")
+    version("3.9.2", sha256="1fbf1c2962af287607232b2eddeaec9b4f4a7a6f5934e1a9276e9af76952f7e0")
+    version("3.9.1", sha256="98e615d592d237f94db8bf033fba78cd404d979b0b70351a9e5aaff725398357")
+    version("3.7.1", sha256="f1748989842b46fa208b2a6e4e2785133cfcc3e4d43c17fecb023733f0f5443f")
+    version("3.7.0", sha256="a19dcfe9d156ae45d209b15e0faed5c7b5f109b6117bfc1974b6a7b98a850320")
+    version("3.6.1", sha256="3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b")
+    version("3.5.2", sha256="4ffd420f39f226e96aebc3554f9c66a912f6cad6261f39f194f16af8a1f6dab2")
+    version("3.5.1.1", sha256="56b5d9e1ab2bf4f5736c4cfba9f4981fbc6976246721e7ded5602fbaee6d6869")
+    version("3.5.1", sha256="826425182ee43990731217b917c5c3ea7190cfda141af4869e6d4ad9085a740f")
+    version("3.5.0.1", sha256="86be71e61c76575c60839452a4f265449a6ea51570d7983cb929f06ad294b5f5")
+    version("3.5.0", sha256="0cc6607e2daa675101e9b7398a436f09167dffb8ca0489b0307ff7260498c13c")
+    version("3.4.1", sha256="8e0236242106e680b4f9f576cc44b8cd711e948b20a9fc07769b0a20ceab9cc4")
+    version("3.4.0", sha256="f6600abeee3babfa18591961a0ff21e7db6a6d9ef82418a261ec4fee44ee6d44")
+    version("3.3.0", sha256="9a36bc1265fa83b8e818714c0d4f08b8cec97a1910de0754a321b11e66eb76de")
+    version("3.2.0", sha256="a839d3f1519ff9d68ab908de5a0f269650ef1fc501c10f6eefd4cae51d29b86f")
+    version("3.1.0", sha256="fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d")
+    version("3.0.2", sha256="a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e")
 
-    variant('shared', default=True,
-            description='Enables the build of shared libraries')
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release', 'RelWithDebInfo'))
+    variant("shared", default=True, description="Enables the build of shared libraries")
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Debug", "Release", "RelWithDebInfo"),
+    )
 
-    depends_on('cmake', when='@3.0.2:', type='build')
-    depends_on('zlib')
-    depends_on('autoconf', type='build', when='@2.5.0')
-    depends_on('automake', type='build', when='@2.5.0')
-    depends_on('libtool',  type='build', when='@2.5.0')
-    depends_on('m4',       type='build', when='@2.5.0')
+    depends_on("zlib")
 
-    conflicts('%gcc@:4.6', when='@3.6.0:')  # Requires c++11
-    conflicts('%gcc@:4.6', when='@3.2.0:3.3.0')  # Breaks
+    conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
+    conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
-    patch('pkgconfig.patch', when='@3.0.2:3.3.2')
+    patch("pkgconfig.patch", when="@3.0.2:3.3.2")
 
-    patch('intel-v1.patch', when='@3.2:3.6 %intel')
+    patch("intel-v1.patch", when="@3.2:3.6 %intel")
 
     # See https://github.com/protocolbuffers/protobuf/pull/7197
-    patch('intel-v2.patch', when='@3.7:3.11.4 %intel')
+    patch("intel-v2.patch", when="@3.7:3.11.4 %intel")
 
-    patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
+    # See https://github.com/protocolbuffers/protobuf/issues/9916
+    patch(
+        "https://github.com/protocolbuffers/protobuf/pull/9936.patch?full_index=1",
+        when="@3.20 %gcc@12.1.0",
+        sha256="fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8",
+    )
 
-    def fetch_remote_versions(self):
+    def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,
-           only keep known versions
-           fix for https://github.com/spack/spack/issues/5356"""
-        return dict(map(
-            lambda u: (u, self.url_for_version(u)),
-            spack.util.web.find_versions_of_archive(
-                self.all_urls, self.list_url, self.list_depth)
-        ))
+        only keep known versions
+        fix for https://github.com/spack/spack/issues/5356"""
+        return dict(
+            map(
+                lambda u: (u, self.url_for_version(u)),
+                spack.util.web.find_versions_of_archive(
+                    self.all_urls, self.list_url, self.list_depth
+                ),
+            )
+        )
 
     def cmake_args(self):
         args = [
-            '-DBUILD_SHARED_LIBS=%s' % int('+shared' in self.spec),
-            '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
-            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'
+            "-DBUILD_SHARED_LIBS=%s" % int("+shared" in self.spec),
+            "-Dprotobuf_BUILD_TESTS:BOOL=OFF",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
         ]
-        if sys.platform == 'darwin':
-            args.extend(['-DCMAKE_MACOSX_RPATH=ON'])
+        if sys.platform == "darwin":
+            args.extend(["-DCMAKE_MACOSX_RPATH=ON"])
         return args
 
-    @when('@3.0.2:')
-    def install(self, spec, prefix):
-        args = self.cmake_args()
-        args.extend(std_cmake_args)
-
-        source_directory = join_path(self.stage.source_path, 'cmake')
-        build_directory = join_path(source_directory, 'build')
-
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *args)
-            make()
-            make('install')
-
-    def configure_args(self):
-        args = []
-        args.append('--prefix=%s' % self.prefix)
-        return args
-
-    @when('@2.5.0')
-    def install(self, spec, prefix):
-        args = self.configure_args()
-        autoreconf('-ifv')
-        configure(*args)
-        make()
-        make('install')
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies("@:3.20"):
+            return join_path(self.stage.source_path, "cmake")
+        else:
+            return self.stage.source_path

@@ -1,0 +1,11 @@
+--- a/FPLO22.00-62/PYTHON/setuphelper.py	2022-08-28 19:19:42.693913426 -0500
++++ b/FPLO22.00-62/PYTHON/setuphelper.py	2022-08-28 19:20:54.902954741 -0500
+@@ -233,7 +233,7 @@
+         self.ccompiler\
+             =CompilerConfig.find(ccompilerconfigs,'gcc')
+ 
+-        self.lapackconfig=LapackConfig.find(lapackconfigs,'our own copy')
++        self.lapackconfig=LapackConfig.find(lapackconfigs,'mkl 64bit integer 32bit')
+         
+         if "--lapackgeneric" in sys.argv:
+             sys.argv.remove("--lapackgeneric")

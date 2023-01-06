@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Jsonnet(MakefilePackage):
@@ -17,8 +17,8 @@ class Jsonnet(MakefilePackage):
     maintainers = ["jcpunk"]
 
     version("master", branch="master")
-    version("0.18.0", sha256sum="85c240c4740f0c788c4d49f9c9c0942f5a2d1c2ae58b2c71068107bc80a3ced4")
-    version("0.17.0", sha256sum="076b52edf888c01097010ad4299e3b2e7a72b60a41abbc65af364af1ed3c8dbe")
+    version("0.18.0", sha256="85c240c4740f0c788c4d49f9c9c0942f5a2d1c2ae58b2c71068107bc80a3ced4")
+    version("0.17.0", sha256="076b52edf888c01097010ad4299e3b2e7a72b60a41abbc65af364af1ed3c8dbe")
 
     conflicts("%gcc@:5.4.99", when="@0.18.0:")
 

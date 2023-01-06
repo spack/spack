@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSpatialreg(RPackage):
@@ -33,19 +33,22 @@ class RSpatialreg(RPackage):
 
     cran = "spatialreg"
 
-    version('1.2-1', sha256='4c40b6b331aa8818254633cfb80d4b9a03b2b6fac2c0104b3b99201d447ba081')
-    version('1.1-5', sha256='ddbf0773bad2e99b306116ae99a57bf29eecf723d1735820935a6fb7f331b27d')
-    version('1.1-3', sha256='7609cdfcdfe427d2643a0db6b5360be3f6d60ede8229436ab52092d1c9cf0480')
+    version("1.2-6", sha256="9b384117a31ab5fe830325b3eacbec5eb9d40bf0e9ca3c75ea15ca6b78fbd41d")
+    version("1.2-3", sha256="09e0e65f043975d5c1d4be99ef9f29cf0790e962dcde9b7e45a7027d268fce22")
+    version("1.2-1", sha256="4c40b6b331aa8818254633cfb80d4b9a03b2b6fac2c0104b3b99201d447ba081")
+    version("1.1-5", sha256="ddbf0773bad2e99b306116ae99a57bf29eecf723d1735820935a6fb7f331b27d")
+    version("1.1-3", sha256="7609cdfcdfe427d2643a0db6b5360be3f6d60ede8229436ab52092d1c9cf0480")
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-spdata', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-sf', type=('build', 'run'), when='@1.2-1:')
-    depends_on('r-spdep', type=('build', 'run'))
-    depends_on('r-expm', type=('build', 'run'))
-    depends_on('r-coda', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-boot', type=('build', 'run'))
-    depends_on('r-learnbayes', type=('build', 'run'))
-    depends_on('r-nlme', type=('build', 'run'))
-    depends_on('r-gmodels', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-spdata", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))
+    depends_on("r-sf", type=("build", "run"), when="@1.2-1:")
+    depends_on("r-spdep", type=("build", "run"))
+    depends_on("r-expm", type=("build", "run"))
+    depends_on("r-coda", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-boot", type=("build", "run"))
+    depends_on("r-learnbayes", type=("build", "run"))
+    depends_on("r-nlme", type=("build", "run"))
+    depends_on("r-gmodels", type=("build", "run"))
+    depends_on("r-gmodels", when="@:1.2-3")

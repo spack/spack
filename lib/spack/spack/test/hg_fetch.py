@@ -20,22 +20,15 @@ from spack.version import ver
 
 # Test functionality covered is supported on Windows, but currently failing
 # and expected to be fixed
-pytestmark = [pytest.mark.skipif(
-    not which('hg'), reason='requires mercurial to be installed'),
-    pytest.mark.skipif(
-    sys.platform == 'win32', reason="Failing on Win")]
+pytestmark = [
+    pytest.mark.skipif(not which("hg"), reason="requires mercurial to be installed"),
+    pytest.mark.skipif(sys.platform == "win32", reason="Failing on Win"),
+]
 
 
-@pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
+@pytest.mark.parametrize("type_of_test", ["default", "rev0"])
 @pytest.mark.parametrize("secure", [True, False])
-def test_fetch(
-        type_of_test,
-        secure,
-        mock_hg_repository,
-        config,
-        mutable_mock_repo,
-        monkeypatch
-):
+def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_repo, monkeypatch):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
@@ -50,33 +43,31 @@ def test_fetch(
     h = mock_hg_repository.hash
 
     # Construct the package under test
-    spec = Spec('hg-test')
-    spec.concretize()
-    pkg = spack.repo.get(spec)
-    monkeypatch.setitem(pkg.versions, ver('hg'), t.args)
+    s = Spec("hg-test").concretized()
+    monkeypatch.setitem(s.package.versions, ver("hg"), t.args)
 
     # Enter the stage directory and check some properties
-    with pkg.stage:
-        with spack.config.override('config:verify_ssl', secure):
-            pkg.do_stage()
+    with s.package.stage:
+        with spack.config.override("config:verify_ssl", secure):
+            s.package.do_stage()
 
-        with working_dir(pkg.stage.source_path):
+        with working_dir(s.package.stage.source_path):
             assert h() == t.revision
 
-            file_path = os.path.join(pkg.stage.source_path, t.file)
-            assert os.path.isdir(pkg.stage.source_path)
+            file_path = os.path.join(s.package.stage.source_path, t.file)
+            assert os.path.isdir(s.package.stage.source_path)
             assert os.path.isfile(file_path)
 
             os.unlink(file_path)
             assert not os.path.isfile(file_path)
 
-            untracked_file = 'foobarbaz'
+            untracked_file = "foobarbaz"
             touch(untracked_file)
             assert os.path.isfile(untracked_file)
-            pkg.do_restage()
+            s.package.do_restage()
             assert not os.path.isfile(untracked_file)
 
-            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isdir(s.package.stage.source_path)
             assert os.path.isfile(file_path)
 
             assert h() == t.revision
@@ -86,7 +77,7 @@ def test_hg_extra_fetch(tmpdir):
     """Ensure a fetch after expanding is effectively a no-op."""
     testpath = str(tmpdir)
 
-    fetcher = HgFetchStrategy(hg='file:///not-a-real-hg-repo')
+    fetcher = HgFetchStrategy(hg="file:///not-a-real-hg-repo")
     with Stage(fetcher, path=testpath) as stage:
         source_path = stage.source_path
         mkdirp(source_path)

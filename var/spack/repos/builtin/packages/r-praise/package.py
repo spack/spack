@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPraise(RPackage):
@@ -14,4 +14,4 @@ class RPraise(RPackage):
 
     cran = "praise"
 
-    version('1.0.0', sha256='5c035e74fd05dfa59b03afe0d5f4c53fbf34144e175e90c53d09c6baedf5debd')
+    version("1.0.0", sha256="5c035e74fd05dfa59b03afe0d5f4c53fbf34144e175e90c53d09c6baedf5debd")

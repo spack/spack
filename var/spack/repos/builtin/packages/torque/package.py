@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Torque(Package):
@@ -14,12 +14,12 @@ class Torque(Package):
     homepage = "https://github.com/abarbu/torque"
     has_code = False
 
-    maintainers = ['sethrj']
+    maintainers = ["sethrj"]
 
-    version('3.0.4')
-    version('3.0.2')
+    version("3.0.4")
+    version("3.0.2")
 
-    provides('pbs')
+    provides("pbs")
 
     # TORQUE needs to be added as an external package to SPACK. For this, the
     # config file packages.yaml needs to be adjusted:
@@ -33,5 +33,8 @@ class Torque(Package):
 
     def install(self, spec, prefix):
         raise InstallError(
-            self.spec.format('{name} is not installable, you need to specify '
-                             'it as an external package in packages.yaml'))
+            self.spec.format(
+                "{name} is not installable, you need to specify "
+                "it as an external package in packages.yaml"
+            )
+        )

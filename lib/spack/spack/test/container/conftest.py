@@ -10,19 +10,12 @@ import spack.util.spack_yaml as syaml
 @pytest.fixture()
 def minimal_configuration():
     return {
-        'spack': {
-            'specs': [
-                'gromacs',
-                'mpich',
-                'fftw precision=float'
-            ],
-            'container': {
-                'format': 'docker',
-                'images': {
-                    'os': 'ubuntu:18.04',
-                    'spack': 'develop'
-                }
-            }
+        "spack": {
+            "specs": ["gromacs", "mpich", "fftw precision=float"],
+            "container": {
+                "format": "docker",
+                "images": {"os": "ubuntu:18.04", "spack": "develop"},
+            },
         }
     }
 
@@ -30,11 +23,13 @@ def minimal_configuration():
 @pytest.fixture()
 def config_dumper(tmpdir):
     """Function that dumps an environment config in a temporary folder."""
+
     def dumper(configuration):
         content = syaml.dump(configuration, default_flow_style=False)
-        config_file = tmpdir / 'spack.yaml'
+        config_file = tmpdir / "spack.yaml"
         config_file.write(content)
         return str(tmpdir)
+
     return dumper
 
 

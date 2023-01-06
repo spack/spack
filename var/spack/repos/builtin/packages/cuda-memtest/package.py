@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class CudaMemtest(CMakePackage):
@@ -16,12 +16,12 @@ class CudaMemtest(CMakePackage):
     """
 
     homepage = "https://github.com/ComputationalRadiationPhysics/cuda_memtest"
-    git      = "https://github.com/ComputationalRadiationPhysics/cuda_memtest.git"
+    git = "https://github.com/ComputationalRadiationPhysics/cuda_memtest.git"
 
-    maintainers = ['ax3l']
+    maintainers = ["ax3l"]
 
-    version('master', branch='dev')
+    version("master", branch="dev")
 
-    depends_on('cmake@2.8.5:', type='build')
+    depends_on("cmake@2.8.5:", type="build")
     # depends_on('nvml', when='+nvml')
-    depends_on('cuda@5.0:')
+    depends_on("cuda@5.0:")
