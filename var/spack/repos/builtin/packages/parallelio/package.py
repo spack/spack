@@ -18,19 +18,24 @@ class Parallelio(CMakePackage):
     maintainers = ["jedwards4b"]
 
     version("2.5.9", sha256="e5dbc153d8637111de3a51a9655660bf15367d55842de78240dcfc024380553d")
-    version("2_5_8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")
-    version("2_5_7", sha256="af8af04e41af17f98f2c90b996ef0d8bcd980377e0b35e57b38938c7fdc87cbd")
-    version("2_5_4", sha256="e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65")
-    version("2_5_2", sha256="935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c")
+    version("2.5.8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")
+    version("2.5.7", sha256="af8af04e41af17f98f2c90b996ef0d8bcd980377e0b35e57b38938c7fdc87cbd")
+    version("2.5.4", sha256="e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65")
+    version("2.5.3", sha256="205a0a128fd5262700efc230b3380dc5ab10e74bc5d273ae05db76c9d95487ca")
+    version("2.5.2", sha256="935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c")
 
     variant("pnetcdf", default=False, description="enable pnetcdf")
     variant("timing", default=False, description="enable GPTL timing")
+    variant("shared", default=True, description="Build shared libraries")
     variant("logging", default=False, description="enable verbose logging")
     variant(
         "fortran", default=True, description="enable fortran interface (requires netcdf fortran)"
     )
     variant("mpi", default=True, description="Use mpi to build, otherwise use mpi-serial")
 
+    patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
+
+    depends_on("cmake@3.7:")
     depends_on("mpi", when="+mpi")
     depends_on("mpi-serial", when="~mpi")
     depends_on("netcdf-c +mpi", type="link", when="+mpi")
@@ -38,10 +43,16 @@ class Parallelio(CMakePackage):
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
+    resource(name="genf90",
+             git="https://github.com/PARALLELIO/genf90.git",
+             tag="genf90_200608")
+
+    def url_for_version(self, version):
+        url = 'https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz'
+        return url.format(version.underscored)
+
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
     patch("gfortran.patch", when="@:2.5.8 +fortran %gcc@10:")
-
-    resource(name="genf90", git="https://github.com/PARALLELIO/genf90.git", tag="genf90_200608")
 
     def cmake_args(self):
         define = self.define
@@ -51,9 +62,10 @@ class Parallelio(CMakePackage):
 
         args = [
             define("NetCDF_C_PATH", spec["netcdf-c"].prefix),
-            define("USER_CMAKE_MODULE_PATH", join_path(src, "cmake")),
+            define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix),
+            define("USER_CMAKE_MODULE_PATH", join_path(src, "CMake_Fortran_utils")),
             define("GENF90_PATH", join_path(src, "genf90")),
-            define("BUILD_SHARED_LIBS", True),
+            define_from_variant("BUILD_SHARED_LIBS", "shared"),
             define("PIO_ENABLE_EXAMPLES", False),
         ]
         if spec.satisfies("+pnetcdf"):
