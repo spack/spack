@@ -16,7 +16,6 @@ class PyFastapi(PythonPackage):
     version("0.88.0", sha256="915bf304180a0e7c5605ec81097b7d4cd8826ff87a02bb198e336fb9f3b5ff02")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     depends_on("py-hatchling", type="build")
 
     depends_on("py-starlette@0.22.0", type=("build", "run"))
