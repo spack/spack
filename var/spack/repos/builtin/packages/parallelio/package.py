@@ -33,7 +33,7 @@ class Parallelio(CMakePackage):
     )
     variant("mpi", default=True, description="Use mpi to build, otherwise use mpi-serial")
 
-    patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
+    patch("remove_redefinition_of_mpi_offset.patch", when="@:2.5.6")
 
     depends_on("cmake@3.7:")
     depends_on("mpi", when="+mpi")
@@ -43,13 +43,7 @@ class Parallelio(CMakePackage):
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
-    resource(name="genf90",
-             git="https://github.com/PARALLELIO/genf90.git",
-             tag="genf90_200608")
-
-    def url_for_version(self, version):
-        url = 'https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz'
-        return url.format(version.underscored)
+    resource(name="genf90", git="https://github.com/PARALLELIO/genf90.git", tag="genf90_200608")
 
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
     patch("gfortran.patch", when="@:2.5.8 +fortran %gcc@10:")
