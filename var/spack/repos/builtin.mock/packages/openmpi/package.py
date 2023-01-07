@@ -12,4 +12,6 @@ class Openmpi(Package):
     variant("internal-hwloc", default=False)
     variant("fabrics", values=any_combination_of("psm", "mxm"))
 
+    provides("mpi")
+
     depends_on("hwloc", when="~internal-hwloc")

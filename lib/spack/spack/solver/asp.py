@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import Tuple
+from typing import Tuple, Union
 
 import archspec.cpu
 
@@ -240,7 +240,11 @@ def _id(thing):
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
-        self.args = () if args is None else tuple(args)
+
+        def simplify(arg):
+            return arg if isinstance(arg, (str, bool, int)) else str(arg)
+
+        self.args = () if args is None else tuple(simplify(arg) for arg in args)
 
     def _cmp_key(self):
         return (self.name, self.args)
@@ -275,7 +279,7 @@ class AspFunction(AspObject):
             elif isinstance(arg, int):
                 return clingo.Number(arg)
             else:
-                return clingo.String(str(arg))
+                return clingo.String(arg)
 
         return clingo.Function(self.name, [argify(arg) for arg in self.args], positive=positive)
 
@@ -502,7 +506,8 @@ class Result(object):
         self._concrete_specs, self._unsolved_specs = [], []
         self._concrete_specs_by_input = {}
         best = min(self.answers)
-        opt, _, answer = best
+
+        opt, _, answer, _ = best
         for input_spec in self.abstract_specs:
             key = input_spec.name
             if input_spec.virtual:
@@ -773,7 +778,7 @@ class PyclingoDriver(object):
             answers = builder.build_specs(spec_attrs)
 
             # add best spec to the results
-            result.answers.append((list(min_cost), 0, answers))
+            result.answers.append((list(min_cost), 0, answers, spec_attrs))
 
             # get optimization criteria
             criteria = extract_functions(best_model, "opt_criterion")
@@ -1417,23 +1422,23 @@ class SpackSolverSetup(object):
     def _spec_clauses(
         self,
         spec,
-        body=False,
-        transitive=True,
-        expand_hashes=False,
-        concrete_build_deps=False,
+        body: bool = False,
+        transitive: bool = True,
+        expand_hashes: bool = False,
+        concrete_build_deps: bool = False,
+        deptype: Union[str, Tuple[str, ...]] = "all",
     ):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
-            spec (spack.spec.Spec): the spec to analyze
-            body (bool): if True, generate clauses to be used in rule bodies
+            spec: the spec to analyze
+            body: if True, generate clauses to be used in rule bodies
                 (final values) instead of rule heads (setters).
-            transitive (bool): if False, don't generate clauses from
-                dependencies (default True)
-            expand_hashes (bool): if True, descend into hashes of concrete specs
-                (default False)
-            concrete_build_deps (bool): if False, do not include pure build deps
+            transitive: if False, don't generate clauses from dependencies.
+            expand_hashes: If transitive and True, descend into hashes of concrete specs.
+            concrete_build_deps: if False, do not include pure build deps
                 of concrete specs (as they have no effect on runtime constraints)
+            deptype: dependency types to follow when transitive (default "all").
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -1561,7 +1566,7 @@ class SpackSolverSetup(object):
         # add all clauses from dependencies
         if transitive:
             # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
-            for dspec in spec.edges_to_dependencies():
+            for dspec in spec.edges_to_dependencies(deptype=deptype):
                 dep = dspec.spec
 
                 if spec.concrete:
@@ -1593,6 +1598,7 @@ class SpackSolverSetup(object):
                             body=body,
                             expand_hashes=expand_hashes,
                             concrete_build_deps=concrete_build_deps,
+                            deptype=deptype,
                         )
                     )
 

@@ -2928,7 +2928,7 @@ class Spec(object):
         result.raise_if_unsat()
 
         # take the best answer
-        opt, i, answer = min(result.answers)
+        opt, i, answer, _ = min(result.answers)
         name = self.name
         # TODO: Consolidate this code with similar code in solve.py
         if self.virtual:
