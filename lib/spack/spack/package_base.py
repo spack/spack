@@ -912,7 +912,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return self._implement_all_urls_for_version(version)[0]
 
-    def update_external_dependencies(self):
+    def update_external_dependencies(self, extendee_spec=None):
         """
         Method to override in package classes to handle external dependencies
         """
