@@ -1324,7 +1324,9 @@ spack:
                 if file_name.endswith(".spec.json.sig"):
                     spec_json_path = os.path.join(buildcache_path, file_name)
                     with open(spec_json_path) as json_fd:
-                        json_object = Spec.extract_json_from_clearsig(json_fd.read())
+                        json_object = spack.binary_distribution.load_possibly_clearsigned_json(
+                            json_fd
+                        )
                         jsonschema.validate(json_object, specfile_schema)
 
             logs_dir = working_dir.join("logs_dir")
