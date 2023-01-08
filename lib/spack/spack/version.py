@@ -29,6 +29,7 @@ import os
 import re
 from bisect import bisect_left
 from functools import wraps
+from typing import Tuple, Union  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
@@ -64,7 +65,11 @@ infinity_versions = ["develop", "main", "master", "head", "trunk", "stable"]
 iv_min_len = min(len(s) for s in infinity_versions)
 
 
+_AllVersionTypes = Union["VersionBase", "GitVersion", "VersionRange", "VersionList"]
+
+
 def coerce_versions(a, b):
+    # type: (_AllVersionTypes, _AllVersionTypes) -> Tuple[_AllVersionTypes, _AllVersionTypes]
     """
     Convert both a and b to the 'greatest' type between them, in this order:
            VersionBase < GitVersion < VersionRange < VersionList
@@ -76,27 +81,36 @@ def coerce_versions(a, b):
 
     def check_type(t):
         if t not in order:
-            raise TypeError("coerce_versions cannot be called on %s" % t)
+            raise TypeError(
+                "coerce_versions cannot be called on {0}: need one of {1}".format(t, order)
+            )
 
     check_type(ta)
     check_type(tb)
 
+    # Implicitly, this also checks whether order.index(ta) == order.index(tb).
     if ta == tb:
         return (a, b)
-    elif order.index(ta) > order.index(tb):
-        if ta == GitVersion:
-            return (a, GitVersion(b))
-        elif ta == VersionRange:
-            return (a, VersionRange(b, b))
-        else:
-            return (a, VersionList([b]))
+
+    # We do the same promotions regardless of which position has higher rank. We can avoid writing
+    # out the promotion logic twice if we flip the inputs and outputs.
+    flip_ordering = order.index(ta) < order.index(tb)
+
+    if flip_ordering:
+        tb, ta = ta, tb
+        b, a = a, b
+
+    if ta == GitVersion:
+        a, b = (a, GitVersion(b))
+    elif ta == VersionRange:
+        a, b = (a, VersionRange(b, b))
     else:
-        if tb == GitVersion:
-            return (GitVersion(a), b)
-        elif tb == VersionRange:
-            return (VersionRange(a, a), b)
-        else:
-            return (VersionList([a]), b)
+        a, b = (a, VersionList([b]))
+
+    if flip_ordering:
+        b, a = a, b
+
+    return (a, b)
 
 
 def coerced(method):

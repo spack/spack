@@ -8,6 +8,7 @@ We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
 import os
+import re
 import sys
 
 import pytest
@@ -22,8 +23,20 @@ from spack.version import (
     VersionBase,
     VersionList,
     VersionRange,
+    coerce_versions,
     ver,
 )
+
+
+def test_invalid_coerce_target():
+    # type: () -> None
+    with pytest.raises(
+        TypeError,
+        match=re.escape("cannot be called on <class 'int'>: need one of"),
+    ):
+        # Our newly added type annotations to coerce_versions() will disallow this, but we still
+        # need to test it.
+        coerce_versions(3, VersionBase(""))  # type: ignore[arg-type]
 
 
 def assert_ver_lt(a, b):
