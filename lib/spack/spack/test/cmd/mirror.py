@@ -56,7 +56,7 @@ def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
 
 @pytest.mark.regression("12345")
 def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config, mutable_mock_env_path):
-    mirror_dir = str(tmpdir)
+    mirror_dir = str(tmpdir.join("mirror_dir"))
     env_name = "test"
 
     env("create", env_name)
