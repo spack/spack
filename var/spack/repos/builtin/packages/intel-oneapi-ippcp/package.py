@@ -29,6 +29,12 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2021.6.3",
+        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19108/l_ippcp_oneapi_p_2021.6.3.25343_offline.sh",
+        sha256="82e7f577a73af8c168a28029019f85136617ac762438e77d21647a70dec74baf",
+        expand=False,
+    )
+    version(
         "2021.6.2",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18999/l_ippcp_oneapi_p_2021.6.2.15006_offline.sh",
         sha256="3c285c12da98a4d16e9a5ba237c8c51780475af54b1d1162185480ac891f16ee",

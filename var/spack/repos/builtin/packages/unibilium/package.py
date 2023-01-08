@@ -16,6 +16,8 @@ class Unibilium(Package):
     version("1.2.0", sha256="623af1099515e673abfd3cae5f2fa808a09ca55dda1c65a7b5c9424eb304ead8")
 
     depends_on("libtool", type="build")
+    depends_on("perl", type="build")
+    depends_on("gzip", type="build")
 
     def install(self, spec, prefix):
         make("PREFIX=" + prefix)

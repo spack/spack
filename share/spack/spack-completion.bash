@@ -1140,7 +1140,7 @@ _spack_gpg_publish() {
 _spack_graph() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --ascii -d --dot -s --static -i --installed --deptype"
+        SPACK_COMPREPLY="-h --help -a --ascii -d --dot -s --static -c --color -i --installed --deptype"
     else
         _all_packages
     fi

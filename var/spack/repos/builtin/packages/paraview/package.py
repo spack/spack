@@ -255,6 +255,9 @@ class Paraview(CMakePackage, CudaPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
     patch("xlc-compilation-pv590.patch", when="@5.9.0%xl_r")
 
+    # intel oneapi doesn't compile some code in catalyst
+    patch("catalyst-etc_oneapi_fix.patch", when="@5.10.0:5.10.1%oneapi")
+
     @property
     def generator(self):
         # https://gitlab.kitware.com/paraview/paraview/-/issues/21223

@@ -101,7 +101,7 @@ class Rocblas(CMakePackage):
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
+    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
     variant("tensile", default=True, description="Use Tensile as a backend")
     variant(
         "build_type",

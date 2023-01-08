@@ -156,16 +156,6 @@ default_format = "{name}{@version}"
 default_format += "{%compiler.name}{@compiler.version}{compiler_flags}"
 default_format += "{variants}{arch=architecture}"
 
-#: Regular expression to pull spec contents out of clearsigned signature
-#: file.
-CLEARSIGN_FILE_REGEX = re.compile(
-    (
-        r"^-----BEGIN PGP SIGNED MESSAGE-----"
-        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
-    ),
-    re.MULTILINE | re.DOTALL,
-)
-
 #: specfile format version. Must increase monotonically
 specfile_format_version = 3
 
@@ -2452,27 +2442,6 @@ class Spec(object):
             return Spec.from_dict(data)
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e)) from e
-
-    @staticmethod
-    def extract_json_from_clearsig(data):
-        m = CLEARSIGN_FILE_REGEX.search(data)
-        if m:
-            return sjson.load(m.group(1))
-        return sjson.load(data)
-
-    @staticmethod
-    def from_signed_json(stream):
-        """Construct a spec from clearsigned json spec file.
-
-        Args:
-            stream: string or file object to read from.
-        """
-        data = stream
-        if hasattr(stream, "read"):
-            data = stream.read()
-
-        extracted_json = Spec.extract_json_from_clearsig(data)
-        return Spec.from_dict(extracted_json)
 
     @staticmethod
     def from_detection(spec_str, extra_attributes=None):
@@ -4868,7 +4837,7 @@ class Spec(object):
         return Spec.from_dict, (self.to_dict(hash=ht.process_hash),)
 
 
-def merge_abstract_anonymous_specs(*abstract_specs):
+def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     """Merge the abstracts specs passed as input and return the result.
 
     The root specs must be anonymous, and it's duty of the caller to ensure that.
@@ -4877,7 +4846,7 @@ def merge_abstract_anonymous_specs(*abstract_specs):
     it doesn't try to resolve virtual dependencies.
 
     Args:
-        *abstract_specs (list of Specs): abstract specs to be merged
+        *abstract_specs: abstract specs to be merged
     """
     merged_spec = spack.spec.Spec()
     for current_spec_constraint in abstract_specs:
@@ -4937,13 +4906,6 @@ class LazySpecCache(collections.defaultdict):
         value = self.default_factory(key)
         self[key] = value
         return value
-
-
-#: These are possible token types in the spec grammar.
-HASH, DEP, VER, COLON, COMMA, ON, D_ON, OFF, D_OFF, PCT, EQ, D_EQ, ID, VAL, FILE = range(15)
-
-#: Regex for fully qualified spec names. (e.g., builtin.hdf5)
-spec_id_re = r"\w[\w.-]*"
 
 
 def save_dependency_specfiles(

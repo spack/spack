@@ -10,7 +10,7 @@ import sys
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.util.executable as executable
+import spack.util.git
 
 #: Global variable used to cache in memory the content of images.json
 _data = None
@@ -97,7 +97,7 @@ def _verify_ref(url, ref, enforce_sha):
     # Do a checkout in a temporary directory
     msg = 'Cloning "{0}" to verify ref "{1}"'.format(url, ref)
     tty.info(msg, stream=sys.stderr)
-    git = executable.which("git", required=True)
+    git = spack.util.git.git(required=True)
     with fs.temporary_dir():
         git("clone", "-q", url, ".")
         sha = git(
