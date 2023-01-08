@@ -114,6 +114,7 @@ class Hip(CMakePackage):
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
     depends_on("gl@4.5:")
+    depends_on("glx")
 
     for ver in [
         "3.5.0",
