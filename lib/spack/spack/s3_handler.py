@@ -7,39 +7,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import urllib.response
-from io import BufferedReader, BytesIO, IOBase
+from io import BufferedReader, BytesIO
 
 import spack.util.s3 as s3_util
-
-
-# NOTE(opadron): Workaround issue in boto where its StreamingBody
-# implementation is missing several APIs expected from IOBase.  These missing
-# APIs prevent the streams returned by boto from being passed as-are along to
-# urllib.
-#
-# https://github.com/boto/botocore/issues/879
-# https://github.com/python/cpython/pull/3249
-class WrapStream(BufferedReader):
-    def __init__(self, raw):
-        # In botocore >=1.23.47, StreamingBody inherits from IOBase, so we
-        # only add missing attributes in older versions.
-        # https://github.com/boto/botocore/commit/a624815eabac50442ed7404f3c4f2664cd0aa784
-        if not isinstance(raw, IOBase):
-            raw.readable = lambda: True
-            raw.writable = lambda: False
-            raw.seekable = lambda: False
-            raw.closed = False
-            raw.flush = lambda: None
-        super(WrapStream, self).__init__(raw)
-
-    def detach(self):
-        self.raw = None
-
-    def read(self, *args, **kwargs):
-        return self.raw.read(*args, **kwargs)
-
-    def __getattr__(self, key):
-        return getattr(self.raw, key)
 
 
 def _s3_open(url, method="GET"):
@@ -60,8 +30,24 @@ def _s3_open(url, method="GET"):
     try:
         if method == "GET":
             obj = s3.get_object(Bucket=bucket, Key=key)
-            # NOTE(opadron): Apply workaround here (see above)
-            stream = WrapStream(obj["Body"])
+            # Note: botocore composes StreamingBody(raw_stream), which for old
+            # versions does not inherit anything, making it cumbersome to use
+            # as a stream. The wrapper does the following:
+            # 1. Allow users to set a timeout on read()
+            # 2. Throw when content-length is incorrect.
+            # Right now the benefits of using this class and having and adapter
+            # for old versions etc does not outweigh the benefits.  Instead, we
+            # can use raw_stream directly, which is a
+            # urllib3.response.HTTPResponse object. Unlike
+            # http.client.HTTPResponse it does *not* support peek() out of the
+            # box, so we wrap it in BufferedReader. There's again a caveat, namely
+            # https://github.com/urllib3/urllib3/commit/f0d9ebc41e51c4c4c9990b1eed02d297fd1b20d8
+            # is required for this wrapper to work. Thefore we end up needing
+            # urllib3 v1.25.4, which is required from botocore >= 1.19,
+            # or py-boto3 >= 1.16, and a *possible dependency* from botocore >= 1.12,
+            # or py-boto3 >= 1.9.
+            stream = obj["Body"]._raw_stream
+            stream.auto_close = False
         elif method == "HEAD":
             obj = s3.head_object(Bucket=bucket, Key=key)
             stream = BytesIO()
@@ -70,7 +56,8 @@ def _s3_open(url, method="GET"):
 
     headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
-    return url, headers, stream
+    # Wrap in BufferedReader to make it peekable like http.client.HTTPResponse.
+    return url, headers, BufferedReader(stream)
 
 
 class UrllibS3Handler(urllib.request.BaseHandler):

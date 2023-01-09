@@ -78,6 +78,7 @@ class Spack(Package):
     depends_on("patchelf", type="run", when="platform=linux")
     depends_on("patchelf", type="run", when="platform=cray")
     depends_on("py-boto3", type="run")
+    depends_on("py-boto3@1.9: ^py-urllib3@1.25:", type="run", when="@0.20:")
 
     # See https://github.com/spack/spack/pull/24686
     # and #25595, #25726, #25853, #25923, #25924 upstream in python/cpython

@@ -8,9 +8,41 @@ from typing import Any, Dict, Tuple
 
 import spack
 import spack.config
+import spack.version
 
 #: Map (mirror name, method) tuples to s3 client instances.
 s3_client_cache: Dict[Tuple[str, str], Any] = dict()
+
+#: We require boto3 with urllib 1.25.4 because it can wrap streams
+#: in BufferedReader. See for reference:
+#: https://github.com/urllib3/urllib3/commit/f0d9ebc41e51c4c4c9990b1eed02d297fd1b20d8
+#: We cannot impose a lowerbound on boto3.
+urllib3_compatible = None
+
+
+def ensure_compatible_urllib3():
+    global urllib3_compatible
+    if urllib3_compatible:
+        return
+    from urllib3 import __version__ as urllib3_version
+
+    required = spack.version.Version("1.25.4")
+    try:
+        found = spack.version.ver(urllib3_version)
+        urllib3_compatible = found >= required
+    except ValueError:
+        # parse error, assume it's some develop version
+        urllib3_compatible = True
+
+    if urllib3_compatible:
+        return
+    raise ImportError(
+        (
+            "urllib3 version {} is too old, version {} is required for "
+            "using s3:// urls for mirrors and buildcaches. "
+            "It's recommended to update boto3 to version 1.16 or higher."
+        ).format(found, required)
+    )
 
 
 def get_s3_session(url, method="fetch"):
@@ -20,6 +52,8 @@ def get_s3_session(url, method="fetch"):
     from botocore import UNSIGNED
     from botocore.client import Config
     from botocore.exceptions import ClientError
+
+    ensure_compatible_urllib3()
 
     # Circular dependency
     from spack.mirror import MirrorCollection
