@@ -106,7 +106,7 @@ class MSBuildBuilder(BaseBuilder):
         """Run "msbuild" on the build targets specified by the builder."""
         with fs.working_dir(self.build_directory):
             inspect.getmodule(self.pkg).msbuild(
-                *self.msbuild_args(), self.define_targets(*self.build_targets)
+                *self.std_msbuild_args, *self.msbuild_args(), self.define_targets(*self.build_targets)
             )
 
     def install(self, pkg, spec, prefix):

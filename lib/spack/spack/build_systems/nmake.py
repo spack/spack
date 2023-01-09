@@ -30,7 +30,7 @@ class NMakePackage(spack.package_base.PackageBase):
 @spack.builder.builder("nmake")
 class NMakeBuilder(BaseBuilder):
     """The NMake builder encodes the most common way of building software with
-    Mircosoft's MSBuild tool. It has two phases that can be overridden, if need be:
+    Mircosoft's NMake tool. It has two phases that can be overridden, if need be:
 
             1. :py:meth:`~.NMakeBuilder.build`
             2. :py:meth:`~.NMakeBuilder.install`
