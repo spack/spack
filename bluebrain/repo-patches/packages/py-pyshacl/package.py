@@ -19,3 +19,4 @@ class PyPyshacl(PythonPackage):
     depends_on('py-rdflib@6.0.0:6.999', type=('build', 'run'))
     depends_on('py-owlrl@5.2.3:6.999', type=('build', 'run'))
     depends_on('py-prettytable@2.2.1:2', type=('build', 'run'))
+    depends_on('py-poetry', type=('build', 'run'))
