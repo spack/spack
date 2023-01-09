@@ -532,18 +532,18 @@ class ViewDescriptor(object):
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
-        specs = []
+        dag_hash = lambda spec: spec.dag_hash()
 
-        for s in concretized_root_specs:
-            if self.link == "all":
-                specs.extend(s.traverse(deptype=("link", "run")))
-            elif self.link == "run":
-                specs.extend(s.traverse(deptype=("run")))
-            else:
-                specs.append(s)
-
-        # De-dupe by dag hash
-        specs = dedupe(specs, key=lambda s: s.dag_hash())
+        # With deps, requires traversal
+        if self.link == "all" or self.link == "run":
+            deptype = ("run") if self.link == "run" else ("link", "run")
+            specs = list(
+                spack.traverse.traverse_nodes(
+                    concretized_root_specs, deptype=deptype, key=dag_hash
+                )
+            )
+        else:
+            specs = list(dedupe(concretized_root_specs, key=dag_hash))
 
         # Filter selected, installed specs
         with spack.store.db.read_transaction():

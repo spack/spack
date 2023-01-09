@@ -17,7 +17,8 @@ class Veloc(CMakePackage):
 
     tags = ["e4s"]
 
-    version("master", branch="master")
+    version("main", branch="main")
+    version("1.6", sha256="451b46ad13e360270044c0dba09d8e4fbd64149f8e8d71310fdb520424c5eeaa")
     version("1.5", sha256="892f3623c73254d40fbbb8cbc3056219a31510e37aae2ede4100c04743701a5c")
     version("1.4", sha256="d5d12aedb9e97f079c4428aaa486bfa4e31fe1db547e103c52e76c8ec906d0a8")
     version("1.3", sha256="3817ea57045443c1a9a819560911db1175dbe4153e317adaa1492437f3f13f3b")
@@ -32,10 +33,17 @@ class Veloc(CMakePackage):
     depends_on("libpthread-stubs")
     depends_on("mpi")
     depends_on("er")
-    depends_on("axl@:0.3.0")
+    depends_on("axl@:0.3.0", when="@:1.5")
     depends_on("openssl")  # Relies on the OpenSSL crypto library for checksums
     depends_on("pdsh", when="@master")
     depends_on("cmake@3.9:", type="build")
+
+    with when("@1.6:"):
+        depends_on("axl@0.5.0:")
+        depends_on("redset")
+        depends_on("rankstr")
+        depends_on("shuffile")
+        depends_on("kvtree")
 
     conflicts("%gcc@:4.9.3")
 
