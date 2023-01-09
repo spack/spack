@@ -402,7 +402,7 @@ def _matching_specs(specs, spec_file):
         return spack.store.find(constraints, hashes=hashes)
 
     if env:
-        return [env.specs_by_hash[h] for h in env.concretized_order]
+        return [concrete for _, concrete in env.concretized_specs()]
 
     tty.die(
         "build cache file creation requires at least one"
@@ -461,10 +461,6 @@ def create_fn(args):
 
     msg = "Pushing binary packages to {0}/build_cache".format(url)
     tty.msg(msg)
-    specs_kwargs = {
-        "include_root": "package" in args.things_to_install,
-        "include_dependencies": "dependencies" in args.things_to_install,
-    }
     kwargs = {
         "key": args.key,
         "force": args.force,
@@ -473,7 +469,13 @@ def create_fn(args):
         "allow_root": args.allow_root,
         "regenerate_index": args.rebuild_index,
     }
-    bindist.push(matches, url, specs_kwargs, **kwargs)
+    bindist.push(
+        matches,
+        url,
+        include_root="package" in args.things_to_install,
+        include_dependencies="dependencies" in args.things_to_install,
+        **kwargs,
+    )
 
 
 def install_fn(args):
