@@ -124,5 +124,5 @@ class Touchdetector(CMakePackage):
         # CMake glue, set it ourselves.
         #
         # This conditional needs to be removed in 2023 with a new deployment.
-        if hasattr(self.spec["tbb"].package, "component_prefix"):
+        if 'tbb' in self.spec and hasattr(self.spec["tbb"].package, "component_prefix"):
             env.prepend_path("CMAKE_PREFIX_PATH", self.spec["tbb"].package.component_prefix)

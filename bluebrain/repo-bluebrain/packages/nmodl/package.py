@@ -39,8 +39,8 @@ class Nmodl(CMakePackage):
     # library
     depends_on("fmt", when="~python")
     depends_on("fmt+pic", when="+python")
-    depends_on("fmt@:8", when="@:0.4 ~python")
-    depends_on("fmt+pic@:8", when="@:0.4 +python")
+    depends_on("fmt@8.0:8", when="@:0.4 ~python")
+    depends_on("fmt+pic@8.0:8", when="@:0.4 +python")
     depends_on("fmt@8:", when="@0.5: ~python")
     depends_on("fmt+pic@8:", when="@0.5: +python")
     depends_on("nlohmann-json")

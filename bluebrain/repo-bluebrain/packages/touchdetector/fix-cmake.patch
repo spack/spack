@@ -20,18 +20,6 @@ index da913bf..c858c35 100644
  
  add_subdirectory(touchdetector)
  
-diff --git a/deps/cli11 b/deps/cli11
---- a/deps/cli11
-+++ b/deps/cli11
-@@ -1 +1 @@
--Subproject commit 5cb3efabce007c3a0230e4cc2e27da491c646b6c
-+Subproject commit 5cb3efabce007c3a0230e4cc2e27da491c646b6c-dirty
-diff --git a/deps/hpc-coding-conventions b/deps/hpc-coding-conventions
---- a/deps/hpc-coding-conventions
-+++ b/deps/hpc-coding-conventions
-@@ -1 +1 @@
--Subproject commit f14440f23f6286266bc5feaf12cbc8084151d4c9
-+Subproject commit f14440f23f6286266bc5feaf12cbc8084151d4c9-dirty
 diff --git a/touchdetector/CMakeLists.txt b/touchdetector/CMakeLists.txt
 index 0592380..03e146f 100644
 --- a/touchdetector/CMakeLists.txt
