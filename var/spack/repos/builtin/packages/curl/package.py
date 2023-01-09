@@ -107,8 +107,6 @@ class Curl(NMakePackage, AutotoolsPackage):
             # curl queries pkgconfig for openssl compilation flags
             depends_on("pkgconfig", type="build")
 
-    variant("shared", default=False, description="enable building shared libraries")
-
     conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
 
