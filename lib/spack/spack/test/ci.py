@@ -421,7 +421,6 @@ def test_ci_workarounds():
 def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
     """Test that given an active environment and list of touched pkgs,
     we get the right list of possibly-changed env specs"""
-    spack.config.set("config:environments_root", str(tmpdir.join("local_envs")))
     e1 = ev.create("test")
     e1.add("mpileaks")
     e1.add("hypre")
