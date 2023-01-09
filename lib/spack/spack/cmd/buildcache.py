@@ -493,7 +493,7 @@ def push_fn(args):
                     unsigned=args.unsigned,
                     allow_root=args.allow_root,
                     key=args.key,
-                    regenerate_index=args.rebuild_index,
+                    regenerate_index=args.update_index,
                 ),
             )
 
