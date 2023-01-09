@@ -217,6 +217,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # ###################### Conflicts ##########################
 
+    conflicts("~hdf5", when="+exodus")
     # Epetra stack
     with when("~epetra"):
         conflicts("+amesos")
