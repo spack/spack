@@ -12,7 +12,7 @@ Spack Package Signing
 The goal of package signing in Spack is to provide data integrity
 assurances around official packages produced by the automated Spack CI
 pipelines. These assurances directly address the security of Spack’s
-software supply security by explaining why a security-conscious user can
+software supply chain by explaining why a security-conscious user can
 be reasonably justified in the belief that packages installed via Spack
 have an uninterrupted auditable trail back to change management
 decisions judged to be appropriate by the Spack maintainers. This is
@@ -73,19 +73,20 @@ pipelines.
    untrusted users so signing of these pipelines is not implemented.
    Jobs in these pipelines are executed via normal GitLab runners both
    within the AWS GitLab infrastructure and at affiliated institutions.
--  Develop and Release pipelines **sign** the packages they produce and
-   carry strong integrity assurances that trace back to auditable change
-   management decisions. These pipelines only run after members from a
-   trusted group of reviewers verify that the proposed changes in a pull
-   request are appropriate. Once the PR is merged, or a release is cut,
-   a pipeline is run on protected GitLab runners which provide access to
-   the required signing keys within the job. An intermediary key is used
-   to sign packages in each stage of the pipeline as they are built and
-   a final job officially signs each package external to any specific
-   packages’ build environment. The runners that execute these pipelines
-   exclusively accept jobs from protected branches meaning the
-   intermediate keys are never exposed to unreviewed code and the
-   official keys are never exposed to any specific build environment.
+-  Develop and Release pipelines **sign** the packages they produce and carry
+   strong integrity assurances that trace back to auditable change management
+   decisions. These pipelines only run after members from a trusted group of
+   reviewers verify that the proposed changes in a pull request are appropriate.
+   Once the PR is merged, or a release is cut, a pipeline is run on protected
+   GitLab runners which provide access to the required signing keys within the
+   job. Intermediary keys are used to sign packages in each stage of the
+   pipeline as they are built and a final job officially signs each package
+   external to any specific packages’ build environment. An intermediate key
+   exists in the AWS infrastructure and for each affiliated instritution that
+   maintains protected runners. The runners that execute these pipelines
+   exclusively accept jobs from protected branches meaning the intermediate keys
+   are never exposed to unreviewed code and the official keys are never exposed
+   to any specific build environment.
 
 .. _key_architecture:
 
@@ -93,26 +94,27 @@ pipelines.
 Key Architecture
 ----------------
 
-Spack’s CI process uses public-key infrastructure (PKI) based on GNU
-Privacy Guard (gpg) keypairs to sign public releases of spack package
-metadata, also called specs. Two GPG keys are involved in the process to
-reduce the impact of an individual private key compromise, these keys
-are the *Intermediate CI Key* and *Reputational Key*. Each of these keys
-has signing sub-keys that are used exclusively for signing packages.
-This can be confusing so for the purpose of this explanation we’ll refer
-to Root and Signing keys. Each key has a private and a public component
-as well as one or more identities and zero or more signatures.
+Spack’s CI process uses public-key infrastructure (PKI) based on GNU Privacy
+Guard (gpg) keypairs to sign public releases of spack package metadata, also
+called specs. Two classes of GPG keys are involved in the process to reduce the
+impact of an individual private key compromise, these key classes are the
+*Intermediate CI Key* and *Reputational Key*. Each of these keys has signing
+sub-keys that are used exclusively for signing packages. This can be confusing
+so for the purpose of this explanation we’ll refer to Root and Signing keys.
+Each key has a private and a public component as well as one or more identities
+and zero or more signatures.
 
 -------------------
 Intermediate CI Key
 -------------------
 
-The Intermediate key is used to sign and verify packages between stages
-within a develop or release pipeline. It is made available to the GitLab
-execution environment building the package so that the package’s
-dependencies may be verified by the Signing Intermediate CI Public Key
-and the final package may be signed by the Signing Intermediate CI
-Private Key.
+The Intermediate key class is used to sign and verify packages between stages
+within a develop or release pipeline. An intermediate key exists for the AWS
+infrastructure as well as each affiliated institution that maintains protected
+runners. These intermediate keys are made available to the GitLab execution
+environment building the package so that the package’s dependencies may be
+verified by the Signing Intermediate CI Public Key and the final package may be
+signed by the Signing Intermediate CI Private Key.
 
 
 +---------------------------------------------------------------------------------------------------------+
@@ -140,17 +142,17 @@ Reputational Key
 ----------------
 
 The Reputational Key is the public facing key used to sign complete groups of
-development and release packages. In contrast to the Intermediate CI Key the
-Reputational Key *should* be used to verify package integrity. At the end of
-develop and release pipeline a final pipeline job pulls down all signed package
-metadata built by the pipeline, verifies they were signed with the Intermediate
-CI Key, then strips the Intermediate CI Key signature from the package and
-re-signs them with the Signing Reputational Private Key. The officially signed
-packages are then uploaded back to the AWS S3 mirror. Please note that
-separating use of the reputational key into this final job is done to prevent
-leakage of the key in a spack package. Because the Signing Reputational Private
-Key is never exposed to a build job it cannot accidentally end up in any built
-package.
+development and release packages. Only one key pair exsits in this class of
+keys. In contrast to the Intermediate CI Key the Reputational Key *should* be
+used to verify package integrity. At the end of develop and release pipeline a
+final pipeline job pulls down all signed package metadata built by the pipeline,
+verifies they were signed with an Intermediate CI Key, then strips the
+Intermediate CI Key signature from the package and re-signs them with the
+Signing Reputational Private Key. The officially signed packages are then
+uploaded back to the AWS S3 mirror. Please note that separating use of the
+reputational key into this final job is done to prevent leakage of the key in a
+spack package. Because the Signing Reputational Private Key is never exposed to
+a build job it cannot accidentally end up in any built package.
 
 
 +---------------------------------------------------------------------------------------------------------+
@@ -274,13 +276,13 @@ containing the install tree.
 Internal Implementation
 -----------------------
 
-The technical implementation of the pipeline signing process includes
-components defined in Amazon Web Services, the Kubernetes cluster, and
-the GitLab/GitLab Runner deployment. Here we present this in two
-interdependent sections. The first addresses how secrets are managed
-through the lifecycle of a develop or release pipeline. The second
-section describes how Gitlab Runner and pipelines are configured and
-managed to support secure automated signing.
+The technical implementation of the pipeline signing process includes components
+defined in Amazon Web Services, the Kubernetes cluster, at affilicated
+institutions, and the GitLab/GitLab Runner deployment. We present the techincal
+implementation in two interdependent sections. The first addresses how secrets
+are managed through the lifecycle of a develop or release pipeline. The second
+section describes how Gitlab Runner and pipelines are configured and managed to
+support secure automated signing.
 
 Secrets Management
 ^^^^^^^^^^^^^^^^^^
@@ -298,14 +300,19 @@ infrastructure.
 **Intermediate CI Key**
 -----------------------
 
-The rest of the Intermediate CI Key (including the Signing Intermediate
-CI Private Key is exported as an ASCII armored file and stored in a
-Kubernetes secret called ``spack-intermediate-ci-signing-key``. For
-convenience sake, this same secret contains an ASCII-armored export of
-just the *public* components of the Reputational Key. These are
-potentially needed to verify dependent packages which may have been
-found in the public mirror and not built in an earlier stage of the
-pipeline.
+Multiple intermediate CI signing keys exist, one Intermediate CI Key for jobs
+run in AWS, and one key for each affiliated institution (e.g. Univerity of
+Oregon). Here we describe how the Intermediate CI Key is managed in AWS:
+
+The Intermediate CI Key (including the Signing Intermediate CI Private Key is
+exported as an ASCII armored file and stored in a Kubernetes secret called
+``spack-intermediate-ci-signing-key``. For convenience sake, this same secret
+contains an ASCII-armored export of just the *public* components of the
+Reputational Key. This secret also contains the *public* components of each of
+the affiliated institutions' Intermediate CI Key. These are potentially needed
+to verify dependent packages which may have been found in the public mirror or
+built by a protected job running on an affiliated institution's infrastrcuture
+in an earlier stage of the pipeline.
 
 Procedurally the ``spack-intermediate-ci-signing-key`` secret is used in
 the following way:
@@ -316,10 +323,10 @@ the following way:
 2. Based on its configuration, the runner creates a job Pod in the
    pipeline namespace and mounts the spack-intermediate-ci-signing-key
    Kubernetes secret into the build container
-3. The Intermediate CI Key and the Reputational Public Key are imported
-   into a keyring by the ``spack gpg …`` sub-command. This is initiated
-   by the job’s build script which is created by the generate job at the
-   beginning of the pipeline.
+3. The Intermediate CI Key, affiliated institutions' public key and the
+   Reputational Public Key are imported into a keyring by the ``spack gpg …``
+   sub-command. This is initiated by the job’s build script which is created by
+   the generate job at the beginning of the pipeline.
 4. Assuming the package has dependencies those specs are verified using
    the keyring.
 5. The package is built and the spec.json is generated
@@ -331,7 +338,7 @@ the following way:
 
 Because of the increased impact to end users in the case of a private
 key breach, the Reputational Key is managed separately from the
-Intermediate CI Key and has additional controls. First, the Reputational
+Intermediate CI Keys and has additional controls. First, the Reputational
 Key was generated outside of Spack’s infrastructure and has been signed
 by the core development team. The Reputational Key (along with the
 Signing Reputational Private Key) was then ASCII armor exported to a
@@ -341,23 +348,22 @@ itself*\ is encrypted and stored in Kubernetes as the
 ``spack-signing-key-encrypted`` secret in the pipeline namespace.
 
 The encryption of the exported Reputational Key (including the Signing
-Reputational Private Key) is handled by `AWS Key Management Store (KMS)
-data
-keys <https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#data-keys>`__.
-The private key material is decrypted and imported at the time of
-signing into a memory mounted temporary directory holding the keychain.
-The signing job uses the `AWS Encryption
-SDK <https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/crypto-cli.html>`__
-(i.e. ``aws-encryption-cli``) to decrypt the Reputational Key. Permission
-to decrypt the key is granted to the job Pod through a Kubernetes
-service account specifically used for this, and only this, function.
-Finally, for convenience sake, this same secret contains an
-ASCII-armored export of the *public* components of the Intermediate CI
-Key and the Reputational Key. This allows the signing script to verify
-that packages were built by the pipeline, or signed previously as a part
-of a different pipeline, *before* importing decrypting and importing the
-Signing Reputational Private Key material and officially signing the
-packages.
+Reputational Private Key) is handled by `AWS Key Management Store (KMS) data
+keys
+<https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#data-keys>`__.
+The private key material is decrypted and imported at the time of signing into a
+memory mounted temporary directory holding the keychain. The signing job uses
+the `AWS Encryption SDK
+<https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/crypto-cli.html>`__
+(i.e. ``aws-encryption-cli``) to decrypt the Reputational Key. Permission to
+decrypt the key is granted to the job Pod through a Kubernetes service account
+specifically used for this, and only this, function. Finally, for convenience
+sake, this same secret contains an ASCII-armored export of the *public*
+components of the Intermediate CI Keys and the Reputational Key. This allows the
+signing script to verify that packages were built by the pipeline (both on AWS
+or at affiliated institutions), or signed previously as a part of a different
+pipeline. This is is done *before* importing decrypting and importing the
+Signing Reputational Private Key material and officially signing the packages.
 
 Procedurally the ``spack-singing-key-encrypted`` secret is used in the
 following way:
@@ -370,8 +376,8 @@ following way:
     image ``ghcr.io/spack/notary:latest`` Docker image. The runner is
     configured to only allow running jobs with this image.
 3.  The runner also mounts the ``spack-signing-key-encrypted`` secret to
-    a path on disk. Note that this becomes three files on disk, the
-    public components of the Intermediate CI Key, the public components
+    a path on disk. Note that this becomes several files on disk, the
+    public components of the Intermediate CI Keys, the public components
     of the Reputational CI, and an AWS KMS encrypted file containing the
     Singing Reputational Private Key.
 4.  In addition to the secret, the runner creates a tmpfs memory mounted
@@ -390,7 +396,7 @@ following way:
     re-signed with the Reputational Key.
 9.  The private components of the Reputational Key are decrypted to
     standard out using ``aws-encryption-cli`` directly into a ``gpg
-    –import …`` standard in statement which imports the key into the
+    –import …`` statement which imports the key into the
     keyring mounted in-memory.
 10. The private key is then used to sign each of the json specs and the
     keyring is removed from disk.
@@ -418,15 +424,16 @@ shared runners that operate across projects in gitlab.spack.io. These
 runners pick up jobs primarily from the spack/spack project and execute
 them in PR pipelines.
 
-A small number of runners operating exclusively in the AWS cloud are registered
-as specific *protected* runners on the spack/spack project. In addition to
-protected runners there are protected branches on the spack/spack project. These
-are the ``develop`` branch any release branch (i.e. managed with the
-``releases/v*`` wildcard) and any tag branch (managed with the ``v*`` wildcard)
-Finally Spack’s pipeline generation code reserves certain tags to make sure jobs
-are routed to the correct runners, these tags are ``public``, ``protected``, and
-``notary``. Understanding how all this works together to protect secrets and
-provide integrity assurances can be a little confusing so lets break these down:
+A small number of runners operating on AWS and at affiliated institutions are
+registered as specific *protected* runners on the spack/spack project. In
+addition to protected runners there are protected branches on the spack/spack
+project. These are the ``develop`` branch, any release branch (i.e. managed with
+the ``releases/v*`` wildcard) and any tag branch (managed with the ``v*``
+wildcard) Finally Spack’s pipeline generation code reserves certain tags to make
+sure jobs are routed to the correct runners, these tags are ``public``,
+``protected``, and ``notary``. Understanding how all this works together to
+protect secrets and provide integrity assurances can be a little confusing so
+lets break these down:
 
 -  **Protected Branches**- Protected branches in Spack prevent anyone
    other than Maintainers in GitLab from pushing code. In the case of
@@ -456,16 +463,15 @@ provide integrity assurances can be a little confusing so lets break these down:
    it is running on a pipeline that is part of a protected branch then it sets
    the ``notary`` tag.
 
-Protected Runners are configured to only run jobs from protected
-branches. Only jobs running in pipelines on protected branches are
-tagged with ``protected`` or ``notary`` tags. This tightly couples jobs
-on protected branches to protected runners that provide access to the
-secrets required to sign the built packages. The secrets are
-**only**\ available to jobs executed in the AWS Kubernetes deployment
-which means they can only be accessed via:
+Protected Runners are configured to only run jobs from protected branches. Only
+jobs running in pipelines on protected branches are tagged with ``protected`` or
+``notary`` tags. This tightly couples jobs on protected branches to protected
+runners that provide access to the secrets required to sign the built packages.
+The secrets are can **only** be accessed via:
 
 1. Runners under direct control of the core development team.
-2. By code running the automated pipeline that has been reviewed by the
+2. Runners under direct control of trusted maintainers at affiliated institutions.
+3. By code running the automated pipeline that has been reviewed by the
    Spack maintainers and judged to be appropriate.
 
 Other attempts (either through malicious intent or incompetence) can at
