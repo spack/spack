@@ -34,7 +34,15 @@ class SimpleDftd3(MesonPackage):
     def meson_args(self):
 
         return [
-            "--wrap-mode=nodownload",
             "-Dopenmp={0}".format(str("+openmp" in self.spec).lower()),
             "-Dpython={0}".format(str("+python" in self.spec).lower()),
         ]
+
+    def setup_run_environment(self, env):
+        if "+python" in self.spec:
+            pydir = join_path(
+                self.prefix.lib,
+                "python" + str(self.spec["python"].version.up_to(2)),
+                "site-packages",
+            )
+            env.prepend_path("PYTHONPATH", pydir)
