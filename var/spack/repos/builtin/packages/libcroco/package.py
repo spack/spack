@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 from spack.package import *
 
@@ -49,7 +48,7 @@ class Libcroco(AutotoolsPackage):
 
         # macOS ld does not support this flag
         # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/libcroco.rb
-        if sys.platform == "darwin":
+        if self.spec.satisfies("platform=darwin"):
             config_args.append("--disable-Bsymbolic")
 
         return config_args
