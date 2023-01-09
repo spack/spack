@@ -155,6 +155,7 @@ class RocmDbgapi(CMakePackage):
             r"\1 {0}/include".format(self.spec["hsa-rocr-dev"].prefix),
             "CMakeLists.txt",
         )
+
     def cmake_args(self):
         args = []
         if self.spec.satisfies("@5.3.0:"):
