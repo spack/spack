@@ -64,10 +64,10 @@ class Pgplot(MakefilePackage):
                 "@CCOMPL@": spack_cc,
                 "@CFLAGC@": "-Wall -fPIC -DPG_PPU -O -std=c89 "
                 + "-Wno-error=implicit-function-declaration",
-                "@CFLAGD@": "-O2",
+                "@CFLAGD@": "-O2 -fPIC",
                 "@FCOMPL@": spack_fc,
                 "@FFLAGC@": "-Wall -fPIC -O -ffixed-line-length-none" + fib,
-                "@FFLAGD@": libs + " -fno-backslash",
+                "@FFLAGD@": "-fPIC " + libs + " -fno-backslash",
                 "@LIBS@": libs + " -lgfortran",
                 "@SHARED_LD@": spack_cc + " -shared -o $SHARED_LIB",
                 "@SHARED_LIB_LIBS@": libs + " -lgfortran",
@@ -167,7 +167,11 @@ class Pgplot(MakefilePackage):
     @property
     def libs(self):
         shared = "+shared" in self.spec
-        return find_libraries("lib*pgplot", root=self.prefix, shared=shared, recursive=True)
+        if shared:
+            libnames = ["libpgplot"]
+        else:
+            libnames = ["libcpgplot", "libpgplot"]
+        return find_libraries(libnames, root=self.prefix, shared=shared, recursive=True)
 
     def setup_run_environment(self, env):
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
