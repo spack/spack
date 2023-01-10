@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -42,13 +43,13 @@ def link_tree(stage):
 
 
 def check_file_link(filename, expected_target):
-    assert os.path.isfile(filename)
+    assert Path(filename).is_file()
     assert islink(filename)
-    assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
+    assert Path.resolve(Path(filename).resolve()) == os.path.abspath(expected_target)
 
 
 def check_dir(filename):
-    assert os.path.isdir(filename)
+    assert Path(filename).is_dir()
 
 
 def test_merge_to_new_directory(stage, link_tree):
@@ -73,7 +74,7 @@ def test_merge_to_new_directory(stage, link_tree):
 
         link_tree.unmerge("dest")
 
-        assert not os.path.exists("dest")
+        assert not Path("dest").exists()
 
 
 def test_merge_to_new_directory_relative(stage, link_tree):
@@ -98,7 +99,7 @@ def test_merge_to_new_directory_relative(stage, link_tree):
 
         link_tree.unmerge("dest")
 
-        assert not os.path.exists("dest")
+        assert not Path("dest").exists()
 
 
 def test_merge_to_existing_directory(stage, link_tree):
@@ -117,21 +118,21 @@ def test_merge_to_existing_directory(stage, link_tree):
         check_file_link("dest/c/d/6", "source/c/d/6")
         check_file_link("dest/c/d/e/7", "source/c/d/e/7")
 
-        assert os.path.isfile("dest/x")
-        assert os.path.isfile("dest/a/b/y")
+        assert Path("dest/x").is_file()
+        assert Path("dest/a/b/y").is_file()
 
         link_tree.unmerge("dest")
 
-        assert os.path.isfile("dest/x")
-        assert os.path.isfile("dest/a/b/y")
+        assert Path("dest/x").is_file()
+        assert Path("dest/a/b/y").is_file()
 
-        assert not os.path.isfile("dest/1")
-        assert not os.path.isfile("dest/a/b/2")
-        assert not os.path.isfile("dest/a/b/3")
-        assert not os.path.isfile("dest/c/4")
-        assert not os.path.isfile("dest/c/d/5")
-        assert not os.path.isfile("dest/c/d/6")
-        assert not os.path.isfile("dest/c/d/e/7")
+        assert not Path("dest/1").is_file()
+        assert not Path("dest/a/b/2").is_file()
+        assert not Path("dest/a/b/3").is_file()
+        assert not Path("dest/c/4").is_file()
+        assert not Path("dest/c/d/5").is_file()
+        assert not Path("dest/c/d/6").is_file()
+        assert not Path("dest/c/d/e/7").is_file()
 
 
 def test_merge_with_empty_directories(stage, link_tree):
@@ -142,16 +143,16 @@ def test_merge_with_empty_directories(stage, link_tree):
         link_tree.merge("dest")
         link_tree.unmerge("dest")
 
-        assert not os.path.exists("dest/1")
-        assert not os.path.exists("dest/a/b/2")
-        assert not os.path.exists("dest/a/b/3")
-        assert not os.path.exists("dest/c/4")
-        assert not os.path.exists("dest/c/d/5")
-        assert not os.path.exists("dest/c/d/6")
-        assert not os.path.exists("dest/c/d/e/7")
+        assert not Path("dest/1").exists()
+        assert not Path("dest/a/b/2").exists()
+        assert not Path("dest/a/b/3").exists()
+        assert not Path("dest/c/4").exists()
+        assert not Path("dest/c/d/5").exists()
+        assert not Path("dest/c/d/6").exists()
+        assert not Path("dest/c/d/e/7").exists()
 
-        assert os.path.isdir("dest/a/b/h")
-        assert os.path.isdir("dest/f/g")
+        assert Path("dest/a/b/h").is_dir()
+        assert Path("dest/f/g").is_dir()
 
 
 def test_ignore(stage, link_tree):
@@ -162,12 +163,12 @@ def test_ignore(stage, link_tree):
         link_tree.merge("dest", ignore=lambda x: x == ".spec")
         link_tree.unmerge("dest", ignore=lambda x: x == ".spec")
 
-        assert not os.path.exists("dest/1")
-        assert not os.path.exists("dest/a")
-        assert not os.path.exists("dest/c")
+        assert not Path("dest/1").exists()
+        assert not Path("dest/a").exists()
+        assert not Path("dest/c").exists()
 
-        assert os.path.isfile("source/.spec")
-        assert os.path.isfile("dest/.spec")
+        assert Path("source/.spec").is_file()
+        assert Path("dest/.spec").is_file()
 
 
 def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
@@ -189,13 +190,13 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
     """
     j = os.path.join
     with tmpdir.as_cwd():
-        os.mkdir(j("a"))
-        os.mkdir(j("a", "b"))
-        os.mkdir(j("a", "b", "c"))
-        os.mkdir(j("a", "b", "c", "d"))
-        os.symlink(j("b"), j("a", "symlink_b"))
-        os.symlink(j("c"), j("a", "b", "symlink_c"))
-        os.symlink(j("d"), j("a", "b", "c", "symlink_d"))
+        Path(j("a")).mkdir()
+        Path(j("a", "b")).mkdir()
+        Path(j("a", "b", "c")).mkdir()
+        Path(j("a", "b", "c", "d")).mkdir()
+        Path(j("a", "symlink_b")).link_to(j("b"))
+        Path(j("a", "b", "symlink_c")).link_to(j("c"))
+        Path(j("a", "b", "c", "symlink_d")).link_to(j("d"))
         with open(j("a", "b", "c", "d", "file"), "wb"):
             pass
 
@@ -236,11 +237,11 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
     """
     j = os.path.join
     with tmpdir.as_cwd():
-        os.mkdir(j("a"))
-        os.symlink(j("..", "b"), j("a", "symlink_b"))
-        os.symlink(j("symlink_b"), j("a", "symlink_b_b"))
-        os.mkdir(j("b"))
-        os.symlink(j("..", "a"), j("b", "symlink_a"))
+        Path(j("a")).mkdir()
+        Path(j("a", "symlink_b")).link_to(j("..", "b"))
+        Path(j("a", "symlink_b_b")).link_to(j("symlink_b"))
+        Path(j("b")).mkdir()
+        Path(j("b", "symlink_a")).link_to(j("..", "a"))
 
     visitor = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir), visitor)
@@ -260,17 +261,17 @@ def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmpdir):
 
     # Here example_a and example_b are symlinks.
     with tmpdir.mkdir("dst").as_cwd():
-        os.mkdir("a")
-        os.symlink("a", "example_a")
-        os.symlink("a", "example_b")
+        Path("a").mkdir()
+        Path("example_a").link_to("a")
+        Path("example_b").link_to("a")
 
     # Here example_a is a directory, and example_b is a (non-expanded) symlinked
     # directory.
     with tmpdir.mkdir("src").as_cwd():
-        os.mkdir("example_a")
+        Path("example_a").mkdir()
         with open(j("example_a", "file"), "wb"):
             pass
-        os.symlink("..", "example_b")
+        Path("example_b").link_to("..")
 
     visitor = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir.join("src")), visitor)
@@ -286,7 +287,7 @@ def test_destination_merge_visitor_file_dir_clashes(tmpdir):
     """Tests whether non-symlink file-dir and dir-file clashes as registered as fatal
     errors"""
     with tmpdir.mkdir("a").as_cwd():
-        os.mkdir("example")
+        Path("example").mkdir()
 
     with tmpdir.mkdir("b").as_cwd():
         with open("example", "wb"):

@@ -24,6 +24,7 @@ import sys
 import traceback
 import types
 import uuid
+from pathlib import Path, PurePath
 from typing import Dict, Union
 
 import ruamel.yaml as yaml
@@ -286,7 +287,7 @@ def add_package_to_git_stage(packages):
 
     for pkg_name in packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
-        if not os.path.isfile(filename):
+        if not Path(filename).is_file():
             tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 
         git("add", filename)
@@ -318,8 +319,7 @@ def is_package_file(filename):
         0
     ]
     return (
-        filename_noext != packagebase_filename_noext
-        and os.path.basename(filename_noext) == "package"
+        filename_noext != packagebase_filename_noext and PurePath(filename_noext).name == "package"
     )
 
 
@@ -384,9 +384,9 @@ class FastPackageChecker(collections.abc.Mapping):
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
         cache: Dict[str, os.stat_result] = {}
-        for pkg_name in os.listdir(self.packages_path):
+        for pkg_dir in Path(self.packages_path).iterdir():
             # Skip non-directories in the package root.
-            pkg_dir = os.path.join(self.packages_path, pkg_name)
+            pkg_name = pkg_dir.name
 
             # Warn about invalid names that look like packages.
             if not nm.valid_module_name(pkg_name):
@@ -398,11 +398,11 @@ class FastPackageChecker(collections.abc.Mapping):
                 continue
 
             # Construct the file name from the directory
-            pkg_file = os.path.join(self.packages_path, pkg_name, package_file_name)
+            pkg_file = pkg_dir.joinpath(package_file_name)
 
             # Use stat here to avoid lots of calls to the filesystem.
             try:
-                sinfo = os.stat(pkg_file)
+                sinfo = pkg_file.stat()
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     # No package.py file here.
@@ -934,11 +934,11 @@ class Repo(object):
 
         # Validate repository layout.
         self.config_file = os.path.join(self.root, repo_config_name)
-        check(os.path.isfile(self.config_file), "No %s found in '%s'" % (repo_config_name, root))
+        check(Path(self.config_file).is_file(), "No %s found in '%s'" % (repo_config_name, root))
 
         self.packages_path = os.path.join(self.root, packages_dir_name)
         check(
-            os.path.isdir(self.packages_path),
+            Path(self.packages_path).is_dir(),
             "No directory '%s' found in '%s'" % (packages_dir_name, root),
         )
 
@@ -1068,7 +1068,7 @@ class Repo(object):
         for patch in itertools.chain.from_iterable(spec.package.patches.values()):
 
             if patch.path:
-                if os.path.exists(patch.path):
+                if Path(patch.path).exists():
                     fs.install(patch.path, path)
                 else:
                     tty.warn("Patch file did not exist: %s" % patch.path)
@@ -1187,7 +1187,7 @@ class Repo(object):
 
         # if not, check for the package.py file
         path = self.filename_for_package_name(pkg_name)
-        return os.path.exists(path)
+        return Path(path).exists()
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -1297,24 +1297,24 @@ def create_repo(root, namespace=None):
     """
     root = spack.util.path.canonicalize_path(root)
     if not namespace:
-        namespace = os.path.basename(root)
+        namespace = PurePath(root).name
 
     if not re.match(r"\w[\.\w-]*", namespace):
         raise InvalidNamespaceError("'%s' is not a valid namespace." % namespace)
 
     existed = False
-    if os.path.exists(root):
-        if os.path.isfile(root):
+    if Path(root).exists():
+        if Path(root).is_file():
             raise BadRepoError("File %s already exists and is not a directory" % root)
-        elif os.path.isdir(root):
+        elif Path(root).is_dir():
             if not os.access(root, os.R_OK | os.W_OK):
                 raise BadRepoError("Cannot create new repo in %s: cannot access directory." % root)
-            if os.listdir(root):
+            if list(Path(root).iterdir()):
                 raise BadRepoError("Cannot create new repo in %s: directory is not empty." % root)
         existed = True
 
-    full_path = os.path.realpath(root)
-    parent = os.path.dirname(full_path)
+    full_path = Path(root).resolve()
+    parent = PurePath(full_path).parent
     if not os.access(parent, os.R_OK | os.W_OK):
         raise BadRepoError("Cannot create repository in %s: can't access parent!" % root)
 
@@ -1344,7 +1344,7 @@ def create_repo(root, namespace=None):
 
 def create_or_construct(path, namespace=None):
     """Create a repository, or just return a Repo if it already exists."""
-    if not os.path.exists(path):
+    if not Path(path).exists():
         fs.mkdirp(path)
         create_repo(path, namespace)
     return Repo(path)
@@ -1431,13 +1431,13 @@ class MockRepositoryBuilder(object):
         template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
         text = template.render(context)
         package_py = self.recipe_filename(name)
-        fs.mkdirp(os.path.dirname(package_py))
+        fs.mkdirp(PurePath(package_py).parent)
         with open(package_py, "w") as f:
             f.write(text)
 
     def remove(self, name):
         package_py = self.recipe_filename(name)
-        shutil.rmtree(os.path.dirname(package_py))
+        shutil.rmtree(PurePath(package_py).parent)
 
     def recipe_filename(self, name):
         return os.path.join(self.root, "packages", name, "package.py")

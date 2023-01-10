@@ -23,6 +23,7 @@ import subprocess as sp
 import sys
 import traceback
 import warnings
+from pathlib import Path
 
 import archspec.cpu
 
@@ -114,7 +115,7 @@ def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
     global spack_working_dir
     try:
-        spack_working_dir = os.getcwd()
+        spack_working_dir = Path.cwd()
     except OSError:
         os.chdir(spack.paths.prefix)
         spack_working_dir = spack.paths.prefix
@@ -135,7 +136,7 @@ def get_version():
     """
     version = spack.spack_version
     git_path = os.path.join(spack.paths.prefix, ".git")
-    if os.path.exists(git_path):
+    if Path(git_path).exists():
         git = spack.util.git.git()
         if not git:
             return version

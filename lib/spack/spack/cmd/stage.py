@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+from pathlib import Path
 
 import llnl.util.tty as tty
 
@@ -49,7 +49,7 @@ def stage(parser, args):
 
     # We temporarily modify the working directory when setting up a stage, so we need to
     # convert this to an absolute path here in order for it to remain valid later.
-    custom_path = os.path.abspath(args.path) if args.path else None
+    custom_path = Path(args.path).resolve() if args.path else None
 
     # prevent multiple specs from extracting in the same folder
     if len(specs) > 1 and custom_path:

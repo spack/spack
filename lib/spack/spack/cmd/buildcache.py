@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import json
-import os
 import shutil
 import sys
 import tempfile
 import urllib.parse
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 
@@ -562,10 +562,10 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
 
     if not local_path:
         tmpdir = tempfile.mkdtemp()
-        local_path = os.path.join(tmpdir, os.path.basename(src_url))
+        local_path = PurePath(tmpdir, PurePath(src_url).name)
 
     try:
-        temp_stage = Stage(src_url, path=os.path.dirname(local_path))
+        temp_stage = Stage(src_url, path=PurePath(local_path).parent)
         try:
             temp_stage.create()
             temp_stage.fetch()
@@ -577,7 +577,7 @@ def copy_buildcache_file(src_url, dest_url, local_path=None):
         finally:
             temp_stage.destroy()
     finally:
-        if tmpdir and os.path.exists(tmpdir):
+        if tmpdir and Path(tmpdir).exists():
             shutil.rmtree(tmpdir)
 
 
@@ -657,10 +657,10 @@ def sync_fn(args):
 
         buildcache_rel_paths.extend(
             [
-                os.path.join(build_cache_dir, bindist.tarball_path_name(s, ".spack")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json.sig")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
+                PurePath(build_cache_dir, bindist.tarball_path_name(s, ".spack")),
+                PurePath(build_cache_dir, bindist.tarball_name(s, ".spec.json.sig")),
+                PurePath(build_cache_dir, bindist.tarball_name(s, ".spec.json")),
+                PurePath(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
             ]
         )
 
@@ -669,7 +669,7 @@ def sync_fn(args):
     try:
         for rel_path in buildcache_rel_paths:
             src_url = url_util.join(src_mirror_url, rel_path)
-            local_path = os.path.join(tmpdir, rel_path)
+            local_path = PurePath(tmpdir, rel_path)
             dest_url = url_util.join(dest_mirror_url, rel_path)
 
             tty.debug("Copying {0} to {1} via {2}".format(src_url, dest_url, local_path))

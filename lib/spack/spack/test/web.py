@@ -5,6 +5,7 @@
 import collections
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -201,7 +202,7 @@ def test_list_url(tmpdir):
     testpath = str(tmpdir)
     testpath_url = url_util.path_to_file_url(testpath)
 
-    os.mkdir(os.path.join(testpath, "dir"))
+    Path(os.path.join(testpath, "dir")).mkdir()
 
     with open(os.path.join(testpath, "file-0.txt"), "w"):
         pass

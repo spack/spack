@@ -29,6 +29,7 @@ import os
 import re
 from bisect import bisect_left
 from functools import wraps
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
@@ -1284,7 +1285,7 @@ class CommitLookup(object):
             return os.path.join(*components)
         except ValueError:
             # If it's not a git url, it's a local path
-            return os.path.abspath(self.pkg.git)
+            return Path(self.pkg.git).resolve()
 
     def save(self):
         """
@@ -1297,7 +1298,7 @@ class CommitLookup(object):
         """
         Load data if the path already exists.
         """
-        if os.path.isfile(self.cache_path):
+        if Path(self.cache_path).is_file():
             with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
                 self.data = sjson.load(cache_file)
 
@@ -1324,12 +1325,12 @@ class CommitLookup(object):
             dest = dest[:-4]
 
         # prepare a cache for the repository
-        dest_parent = os.path.dirname(dest)
-        if not os.path.exists(dest_parent):
+        dest_parent = PurePath(dest).parent
+        if not Path(dest_parent).exists():
             mkdirp(dest_parent)
 
         # Only clone if we don't have it!
-        if not os.path.exists(dest):
+        if not Path(dest).exists():
             self.fetcher.clone(dest, bare=True)
 
         # Lookup commit info

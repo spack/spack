@@ -12,6 +12,7 @@ import re
 import shutil
 import sys
 import textwrap
+from pathlib import Path
 
 from llnl.util import lang, tty
 from llnl.util.tty import colify
@@ -247,7 +248,7 @@ def create_reporter(args, specs_to_test, test_suite):
             if os.path.isabs(args.log_file):
                 log_file = args.log_file
             else:
-                log_dir = os.getcwd()
+                log_dir = Path.cwd()
                 log_file = os.path.join(log_dir, args.log_file)
         else:
             log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)
@@ -317,7 +318,7 @@ def test_find(args):  # TODO: merge with status (noargs)
         test_suites = [
             t
             for t in test_suites
-            if any(match(t.alias, f) for f in filters) and os.path.isdir(t.stage)
+            if any(match(t.alias, f) for f in filters) and Path(t.stage).is_dir()
         ]
 
     names = [t.name for t in test_suites]
@@ -376,7 +377,7 @@ def _report_suite_results(test_suite, args, constraints):
     if not test_specs:
         return
 
-    if os.path.exists(test_suite.results_file):
+    if Path(test_suite.results_file).exists():
         results_desc = "Failing results" if args.failed else "Results"
         matching = ", spec matching '{0}'".format(" ".join(constraints)) if constraints else ""
         tty.msg("{0} for test suite '{1}'{2}:".format(results_desc, test_suite.name, matching))
@@ -407,7 +408,7 @@ def _report_suite_results(test_suite, args, constraints):
                 if args.logs:
                     spec = test_specs[pkg_id]
                     log_file = test_suite.log_file_for_spec(spec)
-                    if os.path.isfile(log_file):
+                    if Path(log_file).is_file():
                         with open(log_file, "r") as f:
                             msg += "\n{0}".format("".join(f.readlines()))
                 tty.msg(msg)

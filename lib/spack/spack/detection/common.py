@@ -20,6 +20,7 @@ import os
 import os.path
 import re
 import sys
+from pathlib import Path
 
 import llnl.util.tty
 
@@ -113,7 +114,7 @@ def path_to_dict(search_paths):
     # Reverse order of search directories so that a lib in the first
     # entry overrides later entries
     for search_path in reversed(search_paths):
-        for lib in os.listdir(search_path):
+        for lib in Path(search_path).iterdir():
             lib_path = os.path.join(search_path, lib)
             if llnl.util.filesystem.is_readable_file(lib_path):
                 path_to_lib[lib_path] = lib
@@ -122,7 +123,7 @@ def path_to_dict(search_paths):
 
 def is_executable(file_path):
     """Return True if the path passed as argument is that of an executable"""
-    return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
+    return Path(file_path).is_file() and os.access(file_path, os.X_OK)
 
 
 def _convert_to_iterable(single_val_or_multiple):
@@ -152,7 +153,7 @@ def executable_prefix(executable_dir):
     # Given a prefix where an executable is found, assuming that prefix
     # contains /bin/, strip off the 'bin' directory to get a Spack-compatible
     # prefix
-    assert os.path.isdir(executable_dir)
+    assert Path(executable_dir).is_dir()
 
     components = executable_dir.split(os.sep)
     # convert to lower to match Bin, BIN, bin
@@ -173,7 +174,7 @@ def library_prefix(library_dir):
     # Given a prefix where an library is found, assuming that prefix
     # contains /lib/ or /lib64/, strip off the 'lib' or 'lib64' directory
     # to get a Spack-compatible prefix
-    assert os.path.isdir(library_dir)
+    assert Path(library_dir).is_dir()
 
     components = library_dir.split(os.sep)
     # covert to lowercase to match lib, LIB, Lib, etc.

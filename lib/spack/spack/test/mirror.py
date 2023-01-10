@@ -6,6 +6,7 @@
 import filecmp
 import os
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -53,7 +54,7 @@ def set_up_package(name, repository, url_attr):
 
 def check_mirror():
     with Stage("spack-mirror-test") as stage:
-        mirror_root = os.path.join(stage.path, "test-mirror")
+        mirror_root = PurePath(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
         with spack.config.override("mirrors", mirrors):
@@ -62,14 +63,14 @@ def check_mirror():
                 spack.mirror.create(mirror_root, specs)
 
             # Stage directory exists
-            assert os.path.isdir(mirror_root)
+            assert Path(mirror_root).is_dir()
 
             for spec in specs:
                 fetcher = spec.package.fetcher[0]
                 per_package_ref = os.path.join(spec.name, "-".join([spec.name, str(spec.version)]))
                 mirror_paths = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
                 expected_path = os.path.join(mirror_root, mirror_paths.storage_path)
-                assert os.path.exists(expected_path)
+                assert Path(expected_path).exists()
 
             # Now try to fetch each package.
             for name, mock_repo in repos.items():
@@ -221,7 +222,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     files_cached_in_mirror = set()
 
     def record_store(_class, fetcher, relative_dst, cosmetic_path=None):
-        files_cached_in_mirror.add(os.path.basename(relative_dst))
+        files_cached_in_mirror.add(PurePath(relative_dst).name)
 
     def successful_fetch(_class):
         with open(_class.stage.save_filename, "w"):
@@ -229,7 +230,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
 
     def successful_expand(_class):
         expanded_path = os.path.join(_class.stage.path, spack.stage._source_path_subdir)
-        os.mkdir(expanded_path)
+        Path(expanded_path).mkdir()
         with open(os.path.join(expanded_path, "test.patch"), "w"):
             pass
 
@@ -285,7 +286,7 @@ def test_mirror_cache_symlinks(tmpdir):
     link_target = resolve_link_target_relative_to_the_link(
         os.path.join(cache.root, reference.cosmetic_path)
     )
-    assert os.path.exists(link_target)
+    assert Path(link_target).exists()
     assert os.path.normpath(link_target) == os.path.join(cache.root, reference.storage_path)
 
 

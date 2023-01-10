@@ -6,6 +6,7 @@
 import os.path
 import re
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -24,7 +25,7 @@ def test_list_files():
     files = license("list-files").strip().split("\n")
     assert all(f.startswith(spack.paths.prefix) for f in files)
     assert os.path.join(spack.paths.bin_path, "spack") in files
-    assert os.path.abspath(__file__) in files
+    assert Path(__file__).resolve() in files
 
 
 def test_verify(tmpdir):

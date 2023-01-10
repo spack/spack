@@ -7,6 +7,7 @@ import glob
 import os
 import shutil
 import sys
+from pathlib import Path, PurePath
 
 import py
 import pytest
@@ -433,7 +434,7 @@ def test_fake_install(install_mockery):
 
     pkg = spec.package
     inst._do_fake_install(pkg)
-    assert os.path.isdir(pkg.prefix.lib)
+    assert Path(pkg.prefix.lib).is_dir()
 
 
 def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
@@ -507,7 +508,7 @@ def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
 
     repo = mock_packages.repos[0]
     dest_pkg = repo.filename_for_package_name(spec_name)
-    assert os.path.isfile(dest_pkg)
+    assert Path(dest_pkg).is_file()
 
 
 def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
@@ -566,18 +567,18 @@ def test_clear_failures_success(install_mockery):
     spack.store.db._prefix_failures["test"] = lock
 
     # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.db._failure_dir, "test"))
+    fs.touch(PurePath(spack.store.db._failure_dir, "test"))
 
     # Now clear failure tracking
     inst.clear_failures()
 
     # Ensure there are no cached failure locks or failure marks
     assert len(spack.store.db._prefix_failures) == 0
-    assert len(os.listdir(spack.store.db._failure_dir)) == 0
+    assert len(list(Path(spack.store.db._failure_dir).iterdir())) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.db._failure_dir)
-    assert os.path.isfile(spack.store.db.prefix_fail_path)
+    assert Path(spack.store.db._failure_dir).is_dir()
+    assert Path(spack.store.db.prefix_fail_path).is_file()
 
 
 def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
@@ -589,7 +590,7 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
         raise OSError(err_msg)
 
     # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.db._failure_dir, "test"))
+    fs.touch(PurePath(spack.store.db._failure_dir, "test"))
 
     monkeypatch.setattr(os, "remove", _raise_except)
 
@@ -615,13 +616,13 @@ def test_combine_phase_logs(tmpdir):
 
     # Create and write to dummy phase log files
     for log_file in log_files:
-        phase_log_file = os.path.join(str(tmpdir), log_file)
+        phase_log_file = PurePath(str(tmpdir), log_file)
         with open(phase_log_file, "w") as plf:
             plf.write("Output from %s\n" % log_file)
         phase_log_files.append(phase_log_file)
 
     # This is the output log we will combine them into
-    combined_log = os.path.join(str(tmpdir), "combined-out.txt")
+    combined_log = PurePath(str(tmpdir), "combined-out.txt")
     inst.combine_phase_logs(phase_log_files, combined_log)
     with open(combined_log, "r") as log_file:
         out = log_file.read()
@@ -1244,7 +1245,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     task = installer._pop_task()
 
     # Make sure the install prefix exists with some trivial file
-    installed_file = os.path.join(task.pkg.prefix, "some_file")
+    installed_file = PurePath(task.pkg.prefix, "some_file")
     fs.touchp(installed_file)
 
     class InstallerThatWipesThePrefixDir:
@@ -1271,7 +1272,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     # Make sure the package is not marked uninstalled and the original dir
     # is back.
     assert not fake_db.called
-    assert os.path.exists(installed_file)
+    assert Path(installed_file).exists()
 
 
 def test_overwrite_install_backup_failure(temporary_store, config, mock_packages, tmpdir):
@@ -1305,7 +1306,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     task = installer._pop_task()
 
     # Make sure the install prefix exists
-    installed_file = os.path.join(task.pkg.prefix, "some_file")
+    installed_file = PurePath(task.pkg.prefix, "some_file")
     fs.touchp(installed_file)
 
     fake_installer = InstallerThatAccidentallyDeletesTheBackupDir()

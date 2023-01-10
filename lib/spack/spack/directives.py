@@ -32,6 +32,7 @@ import collections.abc
 import functools
 import os.path
 import re
+from pathlib import PurePath
 from typing import List, Set
 
 import llnl.util.lang
@@ -727,7 +728,7 @@ def resource(**kwargs):
         placement = kwargs.get("placement", None)
 
         # Check if the path is relative
-        if os.path.isabs(destination):
+        if PurePath(destination).is_absolute():
             message = (
                 "The destination keyword of a resource directive " "can't be an absolute path.\n"
             )
@@ -737,7 +738,7 @@ def resource(**kwargs):
         # Check if the path falls within the main package stage area
         test_path = "stage_folder_root"
         normalized_destination = os.path.normpath(
-            os.path.join(test_path, destination)
+            PurePath(test_path, destination)
         )  # Normalized absolute path
 
         if test_path not in normalized_destination:

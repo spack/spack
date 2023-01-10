@@ -40,6 +40,7 @@ import re
 import sys
 import traceback
 import types
+from pathlib import Path, PurePath
 from typing import List, Tuple
 
 import llnl.util.tty as tty
@@ -321,16 +322,16 @@ def set_compiler_environment_variables(pkg, env):
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
         env.set("SPACK_CC", compiler.cc)
-        env.set("CC", os.path.join(link_dir, compiler.link_paths["cc"]))
+        env.set("CC", PurePath(link_dir, compiler.link_paths["cc"]))
     if compiler.cxx:
         env.set("SPACK_CXX", compiler.cxx)
-        env.set("CXX", os.path.join(link_dir, compiler.link_paths["cxx"]))
+        env.set("CXX", PurePath(link_dir, compiler.link_paths["cxx"]))
     if compiler.f77:
         env.set("SPACK_F77", compiler.f77)
-        env.set("F77", os.path.join(link_dir, compiler.link_paths["f77"]))
+        env.set("F77", PurePath(link_dir, compiler.link_paths["f77"]))
     if compiler.fc:
         env.set("SPACK_FC", compiler.fc)
-        env.set("FC", os.path.join(link_dir, compiler.link_paths["fc"]))
+        env.set("FC", PurePath(link_dir, compiler.link_paths["fc"]))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
@@ -439,12 +440,12 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths["cc"])
+        spack.paths.build_env_path, PurePath(pkg.compiler.link_paths["cc"]).parent
     )
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
-        ci = os.path.join(item, "case-insensitive")
-        if os.path.isdir(ci):
+        ci = PurePath(item, "case-insensitive")
+        if Path(ci).is_dir():
             env_paths.append(ci)
 
     tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
@@ -490,8 +491,8 @@ def set_wrapper_variables(pkg, env):
                 tty.debug("No libraries found for {0}".format(dep.name))
 
             for default_lib_dir in ["lib", "lib64"]:
-                default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-                if os.path.isdir(default_lib_prefix):
+                default_lib_prefix = PurePath(dep.prefix, default_lib_dir)
+                if Path(default_lib_prefix).is_dir():
                     dep_link_dirs.append(default_lib_prefix)
 
             _prepend_all(link_dirs, dep_link_dirs)
@@ -518,7 +519,7 @@ def set_wrapper_variables(pkg, env):
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
     # not be created for the install).
     for libdir in ["lib64", "lib"]:
-        lib_path = os.path.join(pkg.prefix, libdir)
+        lib_path = PurePath(pkg.prefix, libdir)
         rpath_dirs.insert(0, lib_path)
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
@@ -599,10 +600,10 @@ def set_module_variables_for_package(pkg):
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    m.spack_cc = PurePath(link_dir, pkg.compiler.link_paths["cc"])
+    m.spack_cxx = PurePath(link_dir, pkg.compiler.link_paths["cxx"])
+    m.spack_f77 = PurePath(link_dir, pkg.compiler.link_paths["f77"])
+    m.spack_fc = PurePath(link_dir, pkg.compiler.link_paths["fc"])
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
@@ -658,7 +659,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
     if "linux" in arch or "cray" in arch:
-        soname = os.path.basename(shared_lib)
+        soname = PurePath(shared_lib).name
 
         if compat_version:
             soname += ".{0}".format(compat_version)
@@ -702,7 +703,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     compiler_args.extend(["-o", shared_lib])
 
     # Create symlinks for version and compat_version
-    shared_lib_link = os.path.basename(shared_lib)
+    shared_lib_link = PurePath(shared_lib).name
 
     if version or compat_version:
         symlink(shared_lib_link, shared_lib_base)
@@ -725,8 +726,8 @@ def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
     deps = get_rpath_deps(pkg)
-    rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+    rpaths.extend(d.prefix.lib for d in deps if Path(d.prefix.lib).is_dir())
+    rpaths.extend(d.prefix.lib64 for d in deps if Path(d.prefix.lib64).is_dir())
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
@@ -836,8 +837,8 @@ def _make_runnable(pkg, env):
     prefix = pkg.prefix
 
     for dirname in ["bin", "bin64"]:
-        bin_dir = os.path.join(prefix, dirname)
-        if os.path.isdir(bin_dir):
+        bin_dir = PurePath(prefix, dirname)
+        if Path(bin_dir).is_dir():
             env.prepend_path("PATH", bin_dir)
 
 
@@ -930,8 +931,8 @@ def modifications_from_dependencies(
             env.prepend_path("CMAKE_PREFIX_PATH", prefix)
 
             for directory in ("lib", "lib64", "share"):
-                pcdir = os.path.join(prefix, directory, "pkgconfig")
-                if os.path.isdir(pcdir):
+                pcdir = PurePath(prefix, directory, "pkgconfig")
+                if Path(pcdir).is_dir():
                     env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
         if dep in exe_deps and not is_system_path(dep.prefix):
@@ -1320,7 +1321,7 @@ class ChildError(InstallError):
         out = io.StringIO()
         out.write(self._long_message if self._long_message else "")
 
-        have_log = self.log_name and os.path.exists(self.log_name)
+        have_log = self.log_name and Path(self.log_name).exists()
 
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 from typing import List
 
 import spack.compiler
@@ -27,8 +28,8 @@ class Nag(spack.compiler.Compiler):
     link_paths = {
         "cc": "cc",
         "cxx": "c++",
-        "f77": os.path.join("nag", "nagfor"),
-        "fc": os.path.join("nag", "nagfor"),
+        "f77": PurePath("nag", "nagfor"),
+        "fc": PurePath("nag", "nagfor"),
     }
 
     version_argument = "-V"

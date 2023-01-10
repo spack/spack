@@ -10,6 +10,7 @@ import os
 import re
 import shlex
 import sys
+from pathlib import Path
 from textwrap import dedent
 from typing import List, Match, Tuple
 
@@ -89,7 +90,9 @@ def all_commands():
         command_paths = [spack.paths.command_path]  # Built-in commands
         command_paths += spack.extensions.get_command_paths()  # Extensions
         for path in command_paths:
-            for file in os.listdir(path):
+            for file in Path(path).iterdir():
+                # cast Path object to string so we can use it for regexs
+                file = str(file.name)
                 if file.endswith(".py") and not re.search(ignore_files, file):
                     cmd = re.sub(r".py$", "", file)
                     _all_commands.append(cmd_name(cmd))
@@ -533,10 +536,10 @@ def spack_is_git_repo():
 
 def is_git_repo(path):
     dotgit_path = join_path(path, ".git")
-    if os.path.isdir(dotgit_path):
+    if Path(dotgit_path).is_dir():
         # we are in a regular git repo
         return True
-    if os.path.isfile(dotgit_path):
+    if Path(dotgit_path).is_file():
         # we might be in a git worktree
         try:
             with open(dotgit_path, "rb") as f:
@@ -572,7 +575,7 @@ def extant_file(f):
     """
     Argparse type for files that exist.
     """
-    if not os.path.isfile(f):
+    if not Path(f).is_file():
         raise argparse.ArgumentTypeError("%s does not exist" % f)
     return f
 

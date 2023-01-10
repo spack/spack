@@ -18,6 +18,7 @@ import os.path
 import sys
 import traceback
 import urllib.parse
+from pathlib import Path
 
 import ruamel.yaml.error as yaml_error
 
@@ -511,7 +512,7 @@ def mirror_cache_and_stats(path, skip_unstable_versions=False):
             ``fetch_strategy.stable_target``)
     """
     # Get the absolute path of the root before we start jumping around.
-    if not os.path.isdir(path):
+    if not Path(path).is_dir():
         try:
             mkdirp(path)
         except OSError as e:

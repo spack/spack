@@ -10,6 +10,7 @@ import sys
 import urllib.error
 import urllib.request
 import urllib.response
+from pathlib import Path
 
 import py
 import pytest
@@ -445,7 +446,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
 
     # Remove dependency from cache
     libelf_files = glob.glob(os.path.join(mirror_dir.join("build_cache").strpath, "*libelf*"))
-    os.remove(*libelf_files)
+    Path(*libelf_files).unlink()
 
     # Update index
     buildcache_cmd("update-index", "-d", mirror_dir.strpath)
@@ -624,25 +625,25 @@ def test_build_manifest_visitor(tmpdir):
 
     with tmpdir.as_cwd():
         # Create a file inside a directory
-        os.mkdir(dir)
+        Path(dir).mkdir()
         with open(file, "wb") as f:
             f.write(b"example file")
 
         # Symlink the dir
-        os.symlink(dir, "symlink_to_directory")
+        Path("symlink_to_directory").link_to(dir)
 
         # Symlink the file
-        os.symlink(file, "symlink_to_file")
+        Path("symlink_to_file").link_to(file)
 
         # Hardlink the file
-        os.link(file, "hardlink_of_file")
+        Path(file).link_to("hardlink_of_file")
 
         # Hardlinked symlinks: seems like this is only a thing on Linux,
         # on Darwin the symlink *target* is hardlinked, on Linux the
         # symlink *itself* is hardlinked.
         if sys.platform.startswith("linux"):
-            os.link("symlink_to_file", "hardlink_of_symlink_to_file")
-            os.link("symlink_to_directory", "hardlink_of_symlink_to_directory")
+            Path("symlink_to_file").link_to("hardlink_of_symlink_to_file")
+            Path("symlink_to_directory").link_to("hardlink_of_symlink_to_directory")
 
     visitor = bindist.BuildManifestVisitor()
     visit_directory_tree(str(tmpdir), visitor)
@@ -658,8 +659,8 @@ def test_build_manifest_visitor(tmpdir):
         assert len(visitor.symlinks) == 2
 
     with tmpdir.as_cwd():
-        assert not any(os.path.islink(f) or os.path.isdir(f) for f in visitor.files)
-        assert all(os.path.islink(f) for f in visitor.symlinks)
+        assert not any(Path(f).is_symlink() or Path(f).is_dir() for f in visitor.files)
+        assert all(Path(f).is_symlink() for f in visitor.symlinks)
 
 
 def test_text_relocate_if_needed(install_mockery, mock_fetch, monkeypatch, capfd):

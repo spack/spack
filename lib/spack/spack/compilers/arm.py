@@ -5,6 +5,7 @@
 
 import os
 import re
+from pathlib import PurePath
 
 import spack.compiler
 
@@ -24,10 +25,10 @@ class Arm(spack.compiler.Compiler):
 
     # Named wrapper links within lib/spack/env
     link_paths = {
-        "cc": os.path.join("arm", "armclang"),
-        "cxx": os.path.join("arm", "armclang++"),
-        "f77": os.path.join("arm", "armflang"),
-        "fc": os.path.join("arm", "armflang"),
+        "cc": PurePath("arm", "armclang"),
+        "cxx": PurePath("arm", "armclang++"),
+        "f77": PurePath("arm", "armflang"),
+        "fc": PurePath("arm", "armflang"),
     }
 
     # The ``--version`` option seems to be the most consistent one for

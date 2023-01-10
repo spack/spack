@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -54,21 +55,21 @@ def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_re
         with working_dir(s.package.stage.source_path):
             assert h() == t.revision
 
-            file_path = os.path.join(s.package.stage.source_path, t.file)
-            assert os.path.isdir(s.package.stage.source_path)
-            assert os.path.isfile(file_path)
+            file_path = PurePath(s.package.stage.source_path, t.file)
+            assert Path(s.package.stage.source_path).is_dir()
+            assert Path(file_path).is_file()
 
-            os.unlink(file_path)
-            assert not os.path.isfile(file_path)
+            Path(file_path).unlink()
+            assert not Path(file_path).is_file()
 
             untracked_file = "foobarbaz"
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert Path(untracked_file).is_file()
             s.package.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not Path(untracked_file).is_file()
 
-            assert os.path.isdir(s.package.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert Path(s.package.stage.source_path).is_dir()
+            assert Path(file_path).is_file()
 
             assert h() == t.revision
 

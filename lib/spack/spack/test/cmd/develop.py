@@ -5,6 +5,7 @@
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -139,7 +140,7 @@ class TestDevelop(object):
             develop("--no-clone", "-p", path, "mpich@1.0")
 
             # Remove path to ensure develop with no args runs staging code
-            os.rmdir(abspath)
+            Path(abspath).rmdir()
 
             develop()
             self.check_develop(e, spack.spec.Spec("mpich@1.0"), path)

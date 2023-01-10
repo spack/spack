@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
@@ -50,11 +51,11 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
 
     def visit_file(self, root, rel_path, depth):
         # Check if excluded
-        basename = os.path.basename(rel_path)
+        basename = PurePath(rel_path).name
         if basename in self.exclude_list:
             return
 
-        filepath = os.path.join(root, rel_path)
+        filepath = PurePath(root, rel_path)
         s = os.lstat(filepath)
         identifier = (s.st_ino, s.st_dev)
 
@@ -72,12 +73,12 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         # should be excluded based on the filename of the symlink. E.g. when excluding
         # libf.so, which is a symlink to libf.so.1.2.3, we keep track of the stat data
         # of the latter.
-        basename = os.path.basename(rel_path)
+        basename = PurePath(rel_path).name
         if basename not in self.exclude_list:
             return
 
         # Register the (ino, dev) pair as ignored (if the symlink is not dangling)
-        filepath = os.path.join(root, rel_path)
+        filepath = PurePath(root, rel_path)
         try:
             s = os.stat(filepath)
         except OSError:
@@ -87,7 +88,7 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
     def before_visit_dir(self, root, rel_path, depth):
         # Allow skipping over directories. E.g. `<prefix>/lib/stubs` can be skipped by
         # adding `"stubs"` to the exclude list.
-        return os.path.basename(rel_path) not in self.exclude_list
+        return PurePath(rel_path).name not in self.exclude_list
 
     def before_visit_symlinked_dir(self, root, rel_path, depth):
         # Never enter symlinked dirs, since we don't want to leave the prefix, and
@@ -109,7 +110,7 @@ def patch_sonames(patchelf, root, rel_paths):
     given shared libraries."""
     fixed = []
     for rel_path in rel_paths:
-        filepath = os.path.join(root, rel_path)
+        filepath = PurePath(root, rel_path)
         normalized = os.path.normpath(filepath)
         args = ["--set-soname", normalized, normalized]
         output = patchelf(*args, output=str, error=str, fail_on_error=False)

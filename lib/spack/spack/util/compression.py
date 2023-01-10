@@ -10,6 +10,7 @@ import re
 import shutil
 import sys
 from itertools import product
+from pathlib import Path, PurePath
 
 from llnl.util import tty
 
@@ -81,7 +82,7 @@ def _untar(archive_file):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    outfile = os.path.basename(strip_extension(archive_file, "tar"))
+    outfile = Path(strip_extension(archive_file, "tar")).name
 
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
@@ -96,11 +97,11 @@ def _bunzip2(archive_file):
     Args:
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
-    compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
-    working_dir = os.getcwd()
-    archive_out = os.path.join(working_dir, decompressed_file)
-    copy_path = os.path.join(working_dir, compressed_file_name)
+    compressed_file_name = PurePath(archive_file).name
+    decompressed_file = Path(strip_extension(archive_file, "bz2")).name
+    working_dir = Path.cwd()
+    archive_out = PurePath(working_dir, decompressed_file)
+    copy_path = PurePath(working_dir, compressed_file_name)
     if is_bz2_supported():
         f_bz = bz2.BZ2File(archive_file, mode="rb")
         with open(archive_out, "wb") as ar:
@@ -124,8 +125,8 @@ def _gunzip(archive_file):
         archive_file (str): absolute path of the file to be decompressed
     """
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
+    working_dir = Path.cwd()
+    destination_abspath = PurePath(working_dir, decompressed_file)
     if is_gzip_supported():
         f_in = gzip.open(archive_file, "rb")
         with open(destination_abspath, "wb") as f_out:
@@ -138,10 +139,10 @@ def _gunzip(archive_file):
 
 def _system_gunzip(archive_file):
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
-    copy_path = os.path.join(working_dir, compressed_file)
+    working_dir = Path.cwd()
+    destination_abspath = PurePath(working_dir, decompressed_file)
+    compressed_file = PurePath(archive_file).name
+    copy_path = PurePath(working_dir, compressed_file)
     shutil.copy(archive_file, copy_path)
     gzip = which("gzip")
     gzip.add_default_arg("-d")
@@ -184,7 +185,7 @@ def _lzma_decomp(archive_file):
     on Unix and 7z on Windows"""
     if is_lzma_supported():
         decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
-        archive_out = os.path.join(os.getcwd(), decompressed_file)
+        archive_out = PurePath(Path.cwd(), decompressed_file)
         with open(archive_out, "wb") as ar:
             with lzma.open(archive_file) as lar:
                 shutil.copyfileobj(lar, ar)
@@ -218,7 +219,7 @@ def _win_compressed_tarball_handler(archive_file):
         outfile = _untar(decomped_tarball)
         # clean intermediate archive to mimic end result
         # produced by one shot decomp/extraction
-        os.remove(decomped_tarball)
+        Path(decomped_tarball).unlink()
         return outfile
     return decomped_tarball
 
@@ -230,10 +231,10 @@ def _xz(archive_file):
     if is_windows:
         raise RuntimeError("XZ tool unavailable on Windows")
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
-    copy_path = os.path.join(working_dir, compressed_file)
+    working_dir = Path.cwd()
+    destination_abspath = PurePath(working_dir, decompressed_file)
+    compressed_file = PurePath(archive_file).name
+    copy_path = PurePath(working_dir, compressed_file)
     shutil.copy(archive_file, copy_path)
     xz = which("xz", required=True)
     xz.add_default_arg("-d")
@@ -571,7 +572,7 @@ def extension_from_file(file, decompress=False):
          file name. If file is not on system or is of an type not recognized by Spack as
          an archive or compression type, None is returned.
     """
-    if os.path.exists(file):
+    if Path(file).exists():
         with open(file, "rb") as f:
             ext = extension_from_stream(f, decompress)
             # based on magic number, file is compressed

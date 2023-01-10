@@ -5,6 +5,7 @@
 
 """Caches used by Spack to store data"""
 import os
+from pathlib import Path, PurePath
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
@@ -57,7 +58,7 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root, skip_unstable_versions):
-        self.root = os.path.abspath(root)
+        self.root = Path(root).resolve()
         self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):
@@ -65,25 +66,25 @@ class MirrorCache(object):
 
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
-        dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
+        dst = PurePath(self.root, relative_dest)
+        mkdirp(PurePath(dst).parent)
         fetcher.archive(dst)
 
     def symlink(self, mirror_ref):
         """Symlink a human readible path in our mirror to the actual
         storage location."""
 
-        cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
-        storage_path = os.path.join(self.root, mirror_ref.storage_path)
-        relative_dst = os.path.relpath(storage_path, start=os.path.dirname(cosmetic_path))
+        cosmetic_path = PurePath(self.root, mirror_ref.cosmetic_path)
+        storage_path = PurePath(self.root, mirror_ref.storage_path)
+        relative_dst = os.path.relpath(storage_path, start=PurePath(cosmetic_path).parent)
 
-        if not os.path.exists(cosmetic_path):
+        if not Path(cosmetic_path).exists():
             if os.path.lexists(cosmetic_path):
                 # In this case the link itself exists but it is broken: remove
                 # it and recreate it (in order to fix any symlinks broken prior
                 # to https://github.com/spack/spack/pull/13908)
-                os.unlink(cosmetic_path)
-            mkdirp(os.path.dirname(cosmetic_path))
+                Path(cosmetic_path).unlink()
+            mkdirp(PurePath(cosmetic_path).parent)
             symlink(relative_dst, cosmetic_path)
 
 

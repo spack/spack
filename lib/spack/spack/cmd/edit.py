@@ -5,6 +5,7 @@
 
 import glob
 import os
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 
@@ -37,8 +38,8 @@ def edit_package(name, repo_path, namespace):
     path = repo.filename_for_package_name(name)
 
     spec = Spec(name)
-    if os.path.exists(path):
-        if not os.path.isfile(path):
+    if Path(path).exists():
+        if not Path(path).is_file():
             tty.die("Something is wrong. '{0}' is not a file!".format(path))
         if not os.access(path, os.R_OK):
             tty.die("Insufficient permissions on '%s'!" % path)
@@ -119,7 +120,7 @@ def edit(parser, args):
                 name = spack.cmd.python_name(name)
 
             path = os.path.join(path, name)
-            if not os.path.exists(path):
+            if not Path(path).exists():
                 files = glob.glob(path + "*")
                 exclude_list = [".pyc", "~"]  # exclude binaries and backups
                 files = list(filter(lambda x: all(s not in x for s in exclude_list), files))
@@ -127,7 +128,7 @@ def edit(parser, args):
                     m = "Multiple files exist with the name {0}.".format(name)
                     m += " Please specify a suffix. Files are:\n\n"
                     for f in files:
-                        m += "        " + os.path.basename(f) + "\n"
+                        m += "        " + PurePath(f).name + "\n"
                     tty.die(m)
                 if not files:
                     tty.die("No file for '{0}' was found in {1}".format(name, path))

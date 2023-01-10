@@ -6,6 +6,7 @@ import inspect
 import os
 import re
 import shutil
+from pathlib import Path
 from typing import Optional
 
 import llnl.util.filesystem as fs
@@ -95,7 +96,7 @@ class PythonExtension(spack.package_base.PackageBase):
         Specifically, this does not report errors for duplicate
         __init__.py files for packages in the same namespace.
         """
-        conflicts = list(dst for src, dst in merge_map.items() if os.path.exists(dst))
+        conflicts = list(dst for src, dst in merge_map.items() if Path(dst).exists())
 
         if conflicts and self.py_namespace:
             ext_map = view.extensions_layout.extension_map(self.extendee_spec)
@@ -113,22 +114,22 @@ class PythonExtension(spack.package_base.PackageBase):
         python_is_external = self.extendee_spec.external
         global_view = fs.same_path(python_prefix, view.get_projection_for_spec(self.spec))
         for src, dst in merge_map.items():
-            if os.path.exists(dst):
+            if Path(dst).exists():
                 continue
             elif global_view or not fs.path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
-            elif not os.path.islink(src):
+            elif not Path(src).is_symlink():
                 shutil.copy2(src, dst)
                 is_script = fs.is_nonsymlink_exe_with_shebang(src)
                 if is_script and not python_is_external:
                     fs.filter_file(
                         python_prefix,
-                        os.path.abspath(view.get_projection_for_spec(self.spec)),
+                        Path.resolve(view.get_projection_for_spec(self.spec)),
                         dst,
                     )
             else:
-                orig_link_target = os.path.realpath(src)
-                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                orig_link_target = Path(src).resolve()
+                new_link_target = Path(merge_map[orig_link_target]).resolve()
                 view.link(new_link_target, dst)
 
     def remove_files_from_view(self, view, merge_map):
@@ -155,7 +156,7 @@ class PythonExtension(spack.package_base.PackageBase):
             if global_view or not fs.path_contains_subdirectory(src, bin_dir):
                 to_remove.append(dst)
             else:
-                os.remove(dst)
+                Path(dst).unlink()
 
         view.remove_files(to_remove)
 

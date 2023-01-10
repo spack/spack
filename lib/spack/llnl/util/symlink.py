@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 from os.path import exists, join
+from pathlib import Path, PurePath
 from sys import platform as _platform
 
 from llnl.util import lang
@@ -24,10 +25,10 @@ def symlink(real_path, link_path):
     On Windows, use junctions if os.symlink fails.
     """
     if not is_windows:
-        os.symlink(real_path, link_path)
+        Path(link_path).link_to(real_path)
     elif _win32_can_symlink():
         # Windows requires target_is_directory=True when the target is a dir.
-        os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
+        Path(link_path).link_to(real_path, target_is_directory=Path(real_path).is_dir())
     else:
         try:
             # Try to use junctions
@@ -38,24 +39,24 @@ def symlink(real_path, link_path):
 
 
 def islink(path):
-    return os.path.islink(path) or _win32_is_junction(path)
+    return Path(path).is_symlink() or _win32_is_junction(path)
 
 
 # '_win32' functions based on
 # https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
 def _win32_junction(path, link):
     # junctions require absolute paths
-    if not os.path.isabs(link):
-        link = os.path.abspath(link)
+    if not PurePath(link).is_absolute():
+        link = Path(link).resolve()
 
     # os.symlink will fail if link exists, emulate the behavior here
     if exists(link):
         raise OSError(errno.EEXIST, "File  exists: %s -> %s" % (link, path))
 
-    if not os.path.isabs(path):
-        parent = os.path.join(link, os.pardir)
-        path = os.path.join(parent, path)
-        path = os.path.abspath(path)
+    if not PurePath(path).is_absolute():
+        parent = PurePath(link, os.pardir)
+        path = PurePath(parent, path)
+        path = Path(path).resolve()
 
     CreateHardLink(link, path)
 
@@ -75,14 +76,14 @@ def _win32_can_symlink():
     fs.touchp(fpath)
 
     try:
-        os.symlink(dpath, dlink)
-        can_symlink_directories = os.path.islink(dlink)
+        Path(dlink).link_to(dpath)
+        can_symlink_directories = Path(dlink).is_symlink()
     except OSError:
         can_symlink_directories = False
 
     try:
-        os.symlink(fpath, flink)
-        can_symlink_files = os.path.islink(flink)
+        Path(flink).link_to(fpath)
+        can_symlink_files = Path(flink).is_symlink()
     except OSError:
         can_symlink_files = False
 
@@ -96,7 +97,7 @@ def _win32_is_junction(path):
     """
     Determines if a path is a win32 junction
     """
-    if os.path.islink(path):
+    if Path(path).is_symlink():
         return False
 
     if is_windows:

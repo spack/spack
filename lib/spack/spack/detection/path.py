@@ -11,6 +11,7 @@ import os.path
 import re
 import sys
 import warnings
+from pathlib import PurePath
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -111,7 +112,7 @@ def libraries_in_windows_paths(path_hints):
 def _group_by_prefix(paths):
     groups = collections.defaultdict(set)
     for p in paths:
-        groups[os.path.dirname(p)].add(p)
+        groups[PurePath(p).parent].add(p)
     return groups.items()
 
 

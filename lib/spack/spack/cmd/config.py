@@ -7,6 +7,7 @@ from __future__ import print_function
 import collections
 import os
 import shutil
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -151,7 +152,7 @@ def config_get(args):
 
     elif scope and scope.startswith("env:"):
         config_file = spack.config.config.get_config_filename(scope, section)
-        if os.path.exists(config_file):
+        if Path(config_file).exists():
             with open(config_file) as f:
                 print(f.read())
         else:
@@ -331,7 +332,7 @@ def config_update(args):
 
 def _can_revert_update(scope_dir, cfg_file, bkp_file):
     dir_ok = fs.can_write_to_dir(scope_dir)
-    cfg_ok = not os.path.exists(cfg_file) or fs.can_access(cfg_file)
+    cfg_ok = not Path(cfg_file).exists() or fs.can_access(cfg_file)
     bkp_ok = fs.can_access(bkp_file)
     return dir_ok and cfg_ok and bkp_ok
 
@@ -347,13 +348,13 @@ def config_revert(args):
         bkp_file = cfg_file + ".bkp"
 
         # If the backup files doesn't exist move to the next scope
-        if not os.path.exists(bkp_file):
+        if not Path(bkp_file).exists():
             continue
 
         # If it exists and we don't have write access in this scope
         # keep track of it and report a comprehensive error later
         entry = Entry(scope, cfg_file, bkp_file)
-        scope_dir = os.path.dirname(bkp_file)
+        scope_dir = PurePath(bkp_file).parent
         can_be_reverted = _can_revert_update(scope_dir, cfg_file, bkp_file)
         if not can_be_reverted:
             cannot_overwrite.append(entry)
@@ -386,7 +387,7 @@ def config_revert(args):
 
     for _, cfg_file, bkp_file in to_be_restored:
         shutil.copy(bkp_file, cfg_file)
-        os.unlink(bkp_file)
+        Path(bkp_file).unlink()
         msg = 'File "{0}" reverted to old state'
         tty.msg(msg.format(cfg_file))
 

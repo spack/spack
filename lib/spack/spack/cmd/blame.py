@@ -6,6 +6,7 @@
 import os
 import re
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -120,8 +121,8 @@ def blame(parser, args):
 
     # Get name of file to blame
     blame_file = None
-    if os.path.isfile(args.package_or_file):
-        path = os.path.realpath(args.package_or_file)
+    if Path(args.package_or_file).is_file():
+        path = Path(args.package_or_file).resolve()
         if path.startswith(spack.paths.prefix):
             blame_file = path
 

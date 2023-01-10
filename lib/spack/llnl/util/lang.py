@@ -10,11 +10,11 @@ import contextlib
 import functools
 import inspect
 import itertools
-import os
 import re
 import sys
 import traceback
 from datetime import datetime, timedelta
+from pathlib import Path, PurePath
 from typing import Any, Callable, Iterable, List, Tuple
 
 # Ignore emacs backups when listing modules
@@ -210,14 +210,14 @@ def list_modules(directory, **kwargs):
     order."""
     list_directories = kwargs.setdefault("directories", True)
 
-    for name in os.listdir(directory):
+    for name in Path(directory).iterdir():
         if name == "__init__.py":
             continue
 
-        path = os.path.join(directory, name)
-        if list_directories and os.path.isdir(path):
-            init_py = os.path.join(path, "__init__.py")
-            if os.path.isfile(init_py):
+        path = PurePath(directory, name)
+        if list_directories and Path(path).is_dir():
+            init_py = PurePath(path, "__init__.py")
+            if Path(init_py).is_file():
                 yield name
 
         elif name.endswith(".py"):

@@ -10,6 +10,7 @@ import platform
 import re
 from datetime import datetime
 from glob import glob
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -41,7 +42,7 @@ def _debug_tarball_suffix():
         return "nobranch-nogit-%s" % suffix
 
     with working_dir(spack.paths.prefix):
-        if not os.path.isdir(".git"):
+        if not Path(".git").is_dir():
             return "nobranch.nogit.%s" % suffix
 
         # Get symbolic branch name and strip any special chars (mainly '/')
@@ -60,7 +61,7 @@ def _debug_tarball_suffix():
 def create_db_tarball(args):
     tar = which("tar")
     tarball_name = "spack-db.%s.tar.gz" % _debug_tarball_suffix()
-    tarball_path = os.path.abspath(tarball_name)
+    tarball_path = Path(tarball_name).resolve()
 
     base = os.path.basename(str(spack.store.root))
     transform_args = []

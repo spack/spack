@@ -6,6 +6,7 @@
 import argparse
 import os
 import shutil
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
@@ -78,12 +79,12 @@ def remove_python_cache():
         for root, dirs, files in os.walk(directory):
             for f in files:
                 if f.endswith(".pyc") or f.endswith(".pyo"):
-                    fname = os.path.join(root, f)
+                    fname = PurePath(root, f)
                     tty.debug("Removing {0}".format(fname))
-                    os.remove(fname)
+                    Path(fname).unlink()
             for d in dirs:
                 if d == "__pycache__":
-                    dname = os.path.join(root, d)
+                    dname = PurePath(root, d)
                     tty.debug("Removing {0}".format(dname))
                     shutil.rmtree(dname)
 
@@ -115,8 +116,8 @@ def clean(parser, args):
         tty.msg("Removing all temporary build stages")
         spack.stage.purge()
         # Temp directory where buildcaches are extracted
-        extract_tmp = os.path.join(spack.store.layout.root, ".tmp")
-        if os.path.exists(extract_tmp):
+        extract_tmp = PurePath(spack.store.layout.root, ".tmp")
+        if Path(extract_tmp).exists():
             tty.debug("Removing {0}".format(extract_tmp))
             shutil.rmtree(extract_tmp)
     if args.downloads:

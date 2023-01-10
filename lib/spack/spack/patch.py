@@ -8,6 +8,7 @@ import inspect
 import os
 import os.path
 import sys
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -89,7 +90,7 @@ class Patch(object):
         """
         assert self.path, "Path for patch not set in apply: %s" % self.path_or_url
 
-        if not os.path.isfile(self.path):
+        if not Path(self.path).is_file():
             raise NoSuchPatchError("No such patch: %s" % self.path)
 
         apply_patch(stage, self.path, self.level, self.working_dir)
@@ -141,9 +142,9 @@ class FilePatch(Patch):
 
             # Cannot use pkg.package_dir because it's a property and we have
             # classes, not instances.
-            pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
-            path = os.path.join(pkg_dir, self.relative_path)
-            if os.path.exists(path):
+            pkg_dir = Path.resolve(PurePath(cls.module.__file__).parent)
+            path = PurePath(pkg_dir, self.relative_path)
+            if Path(path).exists():
                 abs_path = path
                 break
 
@@ -214,16 +215,16 @@ class UrlPatch(Patch):
             self.stage.expand_archive()
             root = self.stage.source_path
 
-        files = os.listdir(root)
+        files = list(Path(root).iterdir())
         if not files:
             if self.archive_sha256:
                 raise NoSuchPatchError("Archive was empty: %s" % self.url)
             else:
                 raise NoSuchPatchError("Patch failed to download: %s" % self.url)
 
-        self.path = os.path.join(root, files.pop())
+        self.path = PurePath(root, files.pop())
 
-        if not os.path.isfile(self.path):
+        if not Path(self.path).is_file():
             raise NoSuchPatchError("Archive %s contains no patch file!" % self.url)
 
         # for a compressed archive, Need to check the patch sha256 again
@@ -250,9 +251,9 @@ class UrlPatch(Patch):
 
         # The same package can have multiple patches with the same name but
         # with different contents, therefore apply a subset of the hash.
-        name = "{0}-{1}".format(os.path.basename(self.url), fetch_digest[:7])
+        name = "{0}-{1}".format(PurePath(self.url).name, fetch_digest[:7])
 
-        per_package_ref = os.path.join(self.owner.split(".")[-1], name)
+        per_package_ref = PurePath(self.owner.split(".")[-1], name)
         # Reference starting with "spack." is required to avoid cyclic imports
         mirror_ref = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
 

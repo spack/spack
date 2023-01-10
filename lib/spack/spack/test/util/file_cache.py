@@ -6,6 +6,7 @@
 """Test Spack's FileCache."""
 import os
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -72,17 +73,17 @@ def test_cache_init_entry_fails(file_cache):
 
     # Ensure directory causes exception
     with pytest.raises(CacheError, match="not a file"):
-        file_cache.init_entry(os.path.dirname(relpath))
+        file_cache.init_entry(PurePath(relpath).parent)
 
     # Ensure non-readable file causes exception
-    os.chmod(cachefile, 0o200)
+    Path(cachefile).chmod(0o200)
     with pytest.raises(CacheError, match="Cannot access cache file"):
         file_cache.init_entry(relpath)
 
     # Ensure read-only parent causes exception
     relpath = fs.join_path("test-dir", "another-file.txxt")
     cachefile = file_cache.cache_path(relpath)
-    os.chmod(os.path.dirname(cachefile), 0o400)
+    os.chmod(PurePath(cachefile).parent, 0o400)
     with pytest.raises(CacheError, match="Cannot access cache dir"):
         file_cache.init_entry(relpath)
 
@@ -92,7 +93,7 @@ def test_cache_write_readonly_cache_fails(file_cache):
     filename = "read-only-file.txt"
     path = file_cache.cache_path(filename)
     fs.touch(path)
-    os.chmod(path, 0o400)
+    Path(path).chmod(0o400)
 
     with pytest.raises(CacheError, match="Insufficient permissions to write"):
         file_cache.write_transaction(filename)

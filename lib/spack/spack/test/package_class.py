@@ -12,6 +12,7 @@ static DSL metadata for packages.
 
 import os
 import shutil
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -172,11 +173,11 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     emsg_dir = "Expected {0} to be a directory"
     emsg_file = "Expected {0} to be a file"
     for src in srcs:
-        assert os.path.exists(src), "Expected {0} to exist".format(src)
+        assert Path(src).exists(), "Expected {0} to exist".format(src)
         if os.path.splitext(src)[1]:
-            assert os.path.isfile(src), emsg_file.format(src)
+            assert Path(src).is_file(), emsg_file.format(src)
         else:
-            assert os.path.isdir(src), emsg_dir.format(src)
+            assert Path(src).is_dir(), emsg_dir.format(src)
 
     s.package.cache_extra_test_sources(extras)
 
@@ -187,13 +188,13 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     msg = "Expected {0} to{1} exist"
     for pd in poss_dests:
         if pd in exp_dests:
-            assert os.path.exists(pd), msg.format(pd, "")
+            assert Path(pd).exists(), msg.format(pd, "")
             if os.path.splitext(pd)[1]:
-                assert os.path.isfile(pd), emsg_file.format(pd)
+                assert Path(pd).is_file(), emsg_file.format(pd)
             else:
-                assert os.path.isdir(pd), emsg_dir.format(pd)
+                assert Path(pd).is_dir(), emsg_dir.format(pd)
         else:
-            assert not os.path.exists(pd), msg.format(pd, " not")
+            assert not Path(pd).exists(), msg.format(pd, " not")
 
     # Perform a little cleanup
-    shutil.rmtree(os.path.dirname(source_path))
+    shutil.rmtree(PurePath(source_path).parent)

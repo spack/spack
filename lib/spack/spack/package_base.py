@@ -27,6 +27,7 @@ import time
 import traceback
 import types
 import warnings
+from pathlib import Path, PurePath
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import llnl.util.filesystem as fsys
@@ -438,7 +439,7 @@ def test_log_pathname(test_stage, spec):
     Returns:
         (str): the pathname of the test log file
     """
-    return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
+    return PurePath(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
 
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
@@ -788,7 +789,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(cls.module.__file__))
+        return Path.resolve(PurePath(cls.module.__file__).parent)
 
     @classproperty
     def module(cls):
@@ -847,7 +848,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if not self.license_files:
             return
         return os.path.join(
-            self.global_license_dir, self.name, os.path.basename(self.license_files[0])
+            self.global_license_dir, self.name, PurePath(self.license_files[0]).name
         )
 
     @property
@@ -1002,7 +1003,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (resource.name, self.version))
+            fetcher, PurePath(self.name, "%s-%s" % (resource.name, self.version))
         )
         stage = ResourceStage(
             resource.fetcher,
@@ -1021,7 +1022,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher, os.path.join(self.name, "%s-%s" % (self.name, self.version)), self.spec
+            fetcher, PurePath(self.name, "%s-%s" % (self.name, self.version)), self.spec
         )
         # Construct a path where the stage should build..
         s = self.spec
@@ -1083,11 +1084,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the build environment file path associated with staging."""
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.stage.path, "spack-build.env")
-        if os.path.exists(old_filename):
+        old_filename = PurePath(self.stage.path, "spack-build.env")
+        if Path(old_filename).exists():
             return old_filename
         else:
-            return os.path.join(self.stage.path, _spack_build_envfile)
+            return PurePath(self.stage.path, _spack_build_envfile)
 
     @property
     def env_mods_path(self):
@@ -1095,7 +1096,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Return the build environment modifications file path associated with
         staging.
         """
-        return os.path.join(self.stage.path, _spack_build_envmodsfile)
+        return PurePath(self.stage.path, _spack_build_envmodsfile)
 
     @property
     def metadata_dir(self):
@@ -1109,28 +1110,28 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.metadata_dir, "build.env")
-        if os.path.exists(old_filename):
+        old_filename = PurePath(self.metadata_dir, "build.env")
+        if Path(old_filename).exists():
             return old_filename
         else:
-            return os.path.join(self.metadata_dir, _spack_build_envfile)
+            return PurePath(self.metadata_dir, _spack_build_envfile)
 
     @property
     def log_path(self):
         """Return the build log file path associated with staging."""
         # Backward compatibility: Return the name of an existing log path.
         for filename in ["spack-build.out", "spack-build.txt"]:
-            old_log = os.path.join(self.stage.path, filename)
-            if os.path.exists(old_log):
+            old_log = PurePath(self.stage.path, filename)
+            if Path(old_log).exists():
                 return old_log
 
         # Otherwise, return the current log path name.
-        return os.path.join(self.stage.path, _spack_build_logfile)
+        return PurePath(self.stage.path, _spack_build_logfile)
 
     @property
     def phase_log_files(self):
         """Find sorted phase log files written to the staging directory"""
-        logs_dir = os.path.join(self.stage.path, "spack-build-*-out.txt")
+        logs_dir = PurePath(self.stage.path, "spack-build-*-out.txt")
         log_files = glob.glob(logs_dir)
         log_files.sort()
         return log_files
@@ -1140,17 +1141,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the build log file path on successful installation."""
         # Backward compatibility: Return the name of an existing install log.
         for filename in ["build.out", "build.txt"]:
-            old_log = os.path.join(self.metadata_dir, filename)
-            if os.path.exists(old_log):
+            old_log = PurePath(self.metadata_dir, filename)
+            if Path(old_log).exists():
                 return old_log
 
         # Otherwise, return the current install log path name.
-        return os.path.join(self.metadata_dir, _spack_build_logfile)
+        return PurePath(self.metadata_dir, _spack_build_logfile)
 
     @property
     def configure_args_path(self):
         """Return the configure args file path associated with staging."""
-        return os.path.join(self.stage.path, _spack_configure_argsfile)
+        return PurePath(self.stage.path, _spack_configure_argsfile)
 
     @property
     def test_install_log_path(self):
@@ -1165,17 +1166,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def times_log_path(self):
         """Return the times log json file."""
-        return os.path.join(self.metadata_dir, _spack_times_log)
+        return PurePath(self.metadata_dir, _spack_times_log)
 
     @property
     def install_configure_args_path(self):
         """Return the configure args file path on successful installation."""
-        return os.path.join(self.metadata_dir, _spack_configure_argsfile)
+        return PurePath(self.metadata_dir, _spack_configure_argsfile)
 
     @property
     def install_test_root(self):
         """Return the install test root directory."""
-        return os.path.join(self.metadata_dir, "test")
+        return PurePath(self.metadata_dir, "test")
 
     @property
     def installed(self):
@@ -1470,7 +1471,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
 
-            if not os.listdir(self.stage.path):
+            if not list(Path(self.stage.path).iterdir()):
                 raise FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
@@ -1498,13 +1499,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.source_path
-        good_file = os.path.join(archive_dir, ".spack_patched")
-        no_patches_file = os.path.join(archive_dir, ".spack_no_patches")
-        bad_file = os.path.join(archive_dir, ".spack_patch_failed")
+        good_file = PurePath(archive_dir, ".spack_patched")
+        no_patches_file = PurePath(archive_dir, ".spack_no_patches")
+        bad_file = PurePath(archive_dir, ".spack_patch_failed")
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
-        if os.path.isfile(bad_file):
+        if Path(bad_file).is_file():
             if self.stage.managed_by_spack:
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
@@ -1519,10 +1520,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 return
 
         # If this file exists, then we already applied all the patches.
-        if os.path.isfile(good_file):
+        if Path(good_file).is_file():
             tty.msg("Already patched {0}".format(self.name))
             return
-        elif os.path.isfile(no_patches_file):
+        elif Path(no_patches_file).is_file():
             tty.msg("No patches needed for {0}".format(self.name))
             return
 
@@ -1568,8 +1569,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Get rid of any old failed file -- patches have either succeeded
         # or are not needed.  This is mostly defensive -- it's needed
         # if the restage() method doesn't clean *everything* (e.g., for a repo)
-        if os.path.isfile(bad_file):
-            os.remove(bad_file)
+        if Path(bad_file).is_file():
+            Path(bad_file).unlink()
 
         # touch good or no patches file so that we skip next time.
         if patched:
@@ -1679,7 +1680,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # Check if we have a Makefile
         for makefile in ["GNUmakefile", "Makefile", "makefile"]:
-            if os.path.exists(makefile):
+            if Path(makefile).exists():
                 break
         else:
             tty.debug("No Makefile found in the build directory")
@@ -1740,7 +1741,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         ninja = inspect.getmodule(self).ninja
 
         # Check if we have a Ninja build script
-        if not os.path.exists("build.ninja"):
+        if not Path("build.ninja").exists():
             tty.debug("No Ninja build script found in the build directory")
             return False
 
@@ -1867,12 +1868,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         paths = [srcs] if isinstance(srcs, str) else srcs
 
         for path in paths:
-            src_path = os.path.join(self.stage.source_path, path)
-            dest_path = os.path.join(self.install_test_root, path)
-            if os.path.isdir(src_path):
+            src_path = PurePath(self.stage.source_path, path)
+            dest_path = PurePath(self.install_test_root, path)
+            if Path(src_path).is_dir():
                 fsys.install_tree(src_path, dest_path)
             else:
-                fsys.mkdirp(os.path.dirname(dest_path))
+                fsys.mkdirp(PurePath(dest_path).parent)
                 fsys.copy(src_path, dest_path)
 
     @contextlib.contextmanager
@@ -2198,7 +2199,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @staticmethod
     def uninstall_by_spec(spec, force=False, deprecator=None):
-        if not os.path.isdir(spec.prefix):
+        if not Path(spec.prefix).is_dir():
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
             specs = spack.store.db.query(spec, installed=True)
@@ -2310,7 +2311,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # copy spec metadata to "deprecated" dir of deprecator
         depr_yaml = spack.store.layout.deprecated_file_path(spec, deprecator)
-        fsys.mkdirp(os.path.dirname(depr_yaml))
+        fsys.mkdirp(PurePath(depr_yaml).parent)
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in
@@ -2412,11 +2413,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # stored in the bin directory
         if is_windows:
             rpaths = [self.prefix.bin]
-            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+            rpaths.extend(d.prefix.bin for d in deps if Path(d.prefix.bin).is_dir())
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
-            rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-            rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+            rpaths.extend(d.prefix.lib for d in deps if Path(d.prefix.lib).is_dir())
+            rpaths.extend(d.prefix.lib64 for d in deps if Path(d.prefix.lib64).is_dir())
         return rpaths
 
     @property
@@ -2531,13 +2532,13 @@ def test_process(pkg, kwargs):
                     if spec.concrete:
                         cache_source = spec_pkg.install_test_root
                         cache_dir = pkg.test_suite.current_test_cache_dir
-                        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
+                        if Path(cache_source).is_dir() and not Path(cache_dir).exists():
                             fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test
                     data_dir = pkg.test_suite.current_test_data_dir
-                    if os.path.isdir(data_source) and not os.path.exists(data_dir):
+                    if Path(data_source).is_dir() and not Path(data_dir).exists():
                         # We assume data dir is used read-only
                         # maybe enforce this later
                         shutil.copytree(data_source, data_dir)
@@ -2613,7 +2614,7 @@ def flatten_dependencies(spec, flat_dir):
         dep_path = spack.store.layout.path_for_spec(dep)
         dep_files = LinkTree(dep_path)
 
-        os.mkdir(flat_dir + "/" + name)
+        Path(flat_dir + "/" + name).mkdir()
 
         conflict = dep_files.find_conflict(flat_dir + "/" + name)
         if conflict:

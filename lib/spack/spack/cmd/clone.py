@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
@@ -58,7 +59,7 @@ def clone(parser, args):
 
     tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
 
-    if os.path.isfile(prefix):
+    if Path(prefix).is_file():
         tty.die("There is already a file at %s" % prefix)
 
     mkdirp(prefix)
@@ -66,7 +67,7 @@ def clone(parser, args):
     if os.path.exists(os.path.join(prefix, ".git")):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
-    files_in_the_way = os.listdir(prefix)
+    files_in_the_way = list(Path(prefix).iterdir())
     if files_in_the_way:
         tty.die(
             "There are already files there! " "Delete these files before boostrapping spack.",

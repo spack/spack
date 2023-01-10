@@ -6,6 +6,7 @@
 import json
 import os
 import shutil
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -175,7 +176,7 @@ through the SPACK_CONCRETE_ENVIRONMENT_PATH variable.""",
     reproduce.add_argument(
         "--working-dir",
         help="Where to unpack artifacts",
-        default=os.path.join(os.getcwd(), "ci_reproduction"),
+        default=PurePath(Path.cwd(), "ci_reproduction"),
     )
 
     reproduce.set_defaults(func=ci_reproduce)
@@ -200,11 +201,11 @@ def ci_generate(args):
     buildcache_destination = args.buildcache_destination
 
     if not output_file:
-        output_file = os.path.abspath(".gitlab-ci.yml")
+        output_file = Path(".gitlab-ci.yml").resolve()
     else:
-        output_file_path = os.path.abspath(output_file)
-        gen_ci_dir = os.path.dirname(output_file_path)
-        if not os.path.exists(gen_ci_dir):
+        output_file_path = Path(output_file).resolve()
+        gen_ci_dir = PurePath(output_file_path).parent
+        if not Path(gen_ci_dir).exists():
             os.makedirs(gen_ci_dir)
 
     # Generate the jobs
@@ -221,8 +222,8 @@ def ci_generate(args):
     )
 
     if copy_yaml_to:
-        copy_to_dir = os.path.dirname(copy_yaml_to)
-        if not os.path.exists(copy_to_dir):
+        copy_to_dir = PurePath(copy_yaml_to).parent
+        if not Path(copy_to_dir).exists():
             os.makedirs(copy_to_dir)
         shutil.copyfile(output_file, copy_yaml_to)
 
@@ -289,12 +290,12 @@ def ci_rebuild(args):
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = get_env_var("CI_PROJECT_DIR")
-    pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
-    job_log_dir = os.path.join(ci_project_dir, job_log_dir)
-    job_test_dir = os.path.join(ci_project_dir, job_test_dir)
-    repro_dir = os.path.join(ci_project_dir, repro_dir)
-    local_mirror_dir = os.path.join(ci_project_dir, local_mirror_dir)
-    concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
+    pipeline_artifacts_dir = PurePath(ci_project_dir, pipeline_artifacts_dir)
+    job_log_dir = PurePath(ci_project_dir, job_log_dir)
+    job_test_dir = PurePath(ci_project_dir, job_test_dir)
+    repro_dir = PurePath(ci_project_dir, repro_dir)
+    local_mirror_dir = PurePath(ci_project_dir, local_mirror_dir)
+    concrete_env_dir = PurePath(ci_project_dir, concrete_env_dir)
 
     # Debug print some of the key environment variables we should have received
     tty.debug("pipeline_artifacts_dir = {0}".format(pipeline_artifacts_dir))
@@ -367,24 +368,24 @@ def ci_rebuild(args):
         tty.die("Could not find environment spec with hash {0}".format(job_spec_dag_hash))
 
     job_spec_json_file = "{0}.json".format(job_spec_pkg_name)
-    job_spec_json_path = os.path.join(repro_dir, job_spec_json_file)
+    job_spec_json_path = PurePath(repro_dir, job_spec_json_file)
 
     # To provide logs, cdash reports, etc for developer download/perusal,
     # these things have to be put into artifacts.  This means downstream
     # jobs that "need" this job will get those artifacts too.  So here we
     # need to clean out the artifacts we may have got from upstream jobs.
 
-    cdash_report_dir = os.path.join(pipeline_artifacts_dir, "cdash_report")
-    if os.path.exists(cdash_report_dir):
+    cdash_report_dir = PurePath(pipeline_artifacts_dir, "cdash_report")
+    if Path(cdash_report_dir).exists():
         shutil.rmtree(cdash_report_dir)
 
-    if os.path.exists(job_log_dir):
+    if Path(job_log_dir).exists():
         shutil.rmtree(job_log_dir)
 
-    if os.path.exists(job_test_dir):
+    if Path(job_test_dir).exists():
         shutil.rmtree(job_test_dir)
 
-    if os.path.exists(repro_dir):
+    if Path(repro_dir).exists():
         shutil.rmtree(repro_dir)
 
     # Now that we removed them if they existed, create the directories we
@@ -403,10 +404,10 @@ def ci_rebuild(args):
     target_dirs = [concrete_env_dir, pipeline_artifacts_dir]
 
     for dir_to_list in target_dirs:
-        for file_name in os.listdir(dir_to_list):
-            src_file = os.path.join(dir_to_list, file_name)
-            if os.path.isfile(src_file):
-                dst_file = os.path.join(repro_dir, file_name)
+        for file_name in Path(dir_to_list).iterdir():
+            src_file = PurePath(dir_to_list, file_name)
+            if Path(src_file).is_file():
+                dst_file = PurePath(repro_dir, file_name)
                 shutil.copyfile(src_file, dst_file)
 
     # If signing key was provided via "SPACK_SIGNING_KEY", then try to
@@ -429,7 +430,7 @@ def ci_rebuild(args):
         fd.write(job_spec.to_json(hash=ht.dag_hash))
 
     # Write some other details to aid in reproduction into an artifact
-    repro_file = os.path.join(repro_dir, "repro.json")
+    repro_file = PurePath(repro_dir, "repro.json")
     repro_details = {
         "job_name": ci_job_name,
         "job_spec_json": job_spec_json_file,
@@ -440,7 +441,7 @@ def ci_rebuild(args):
 
     # Write information about spack into an artifact in the repro dir
     spack_info = spack_ci.get_spack_info()
-    spack_info_file = os.path.join(repro_dir, "spack_info.txt")
+    spack_info_file = PurePath(repro_dir, "spack_info.txt")
     with open(spack_info_file, "wb") as fd:
         fd.write(b"\n")
         fd.write(spack_info.encode("utf8"))
@@ -496,7 +497,7 @@ def ci_rebuild(args):
             tty.msg("    {0}".format(match["mirror_url"]))
         if enable_artifacts_mirror:
             matching_mirror = matches[0]["mirror_url"]
-            build_cache_dir = os.path.join(local_mirror_dir, "build_cache")
+            build_cache_dir = PurePath(local_mirror_dir, "build_cache")
             tty.debug("Getting {0} buildcache from {1}".format(job_spec_pkg_name, matching_mirror))
             tty.debug("Downloading to {0}".format(build_cache_dir))
             bindist.download_single_spec(job_spec, build_cache_dir, mirror_url=matching_mirror)
@@ -627,7 +628,7 @@ def ci_rebuild(args):
         "broken-tests-packages" in gitlab_ci
         and job_spec.name in gitlab_ci["broken-tests-packages"]
     )
-    reports_dir = fs.join_path(os.getcwd(), "cdash_report")
+    reports_dir = fs.join_path(Path.cwd(), "cdash_report")
     if args.tests and broken_tests:
         tty.warn(
             "Unable to run stand-alone tests since listed in "

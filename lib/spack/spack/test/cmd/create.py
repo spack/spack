@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -128,7 +129,7 @@ def test_create_template(mock_test_repo, args, name, expected):
     create("--skip-editor", *args)
 
     filename = repo.filename_for_package_name(name)
-    assert os.path.exists(filename)
+    assert Path(filename).exists()
 
     with open(filename, "r") as package_file:
         content = package_file.read()

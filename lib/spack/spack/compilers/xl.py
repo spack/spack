@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
@@ -24,10 +25,10 @@ class Xl(Compiler):
 
     # Named wrapper links within build_env_path
     link_paths = {
-        "cc": os.path.join("xl", "xlc"),
-        "cxx": os.path.join("xl", "xlc++"),
-        "f77": os.path.join("xl", "xlf"),
-        "fc": os.path.join("xl", "xlf90"),
+        "cc": PurePath("xl", "xlc"),
+        "cxx": PurePath("xl", "xlc++"),
+        "f77": PurePath("xl", "xlf"),
+        "fc": PurePath("xl", "xlf90"),
     }
 
     version_argument = "-qversion"

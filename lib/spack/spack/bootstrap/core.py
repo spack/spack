@@ -29,6 +29,7 @@ import os
 import os.path
 import sys
 import uuid
+from pathlib import PurePath
 from typing import Callable, List, Optional
 
 from llnl.util import tty
@@ -101,7 +102,7 @@ class Bootstrapper:
     def mirror_url(self):
         """Mirror url associated with this bootstrapper"""
         # Absolute paths
-        if os.path.isabs(self.url):
+        if PurePath(self.url).is_absolute():
             return spack.util.url.format(self.url)
 
         # Check for :// and assume it's an url if we find it

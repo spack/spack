@@ -21,6 +21,7 @@ import urllib.parse
 import urllib.request
 import warnings
 from contextlib import closing
+from pathlib import Path, PurePath
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -141,7 +142,7 @@ class BinaryCacheIndex(object):
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
-            if os.path.isfile(cache_path):
+            if Path(cache_path).is_file():
                 with self._index_file_cache.read_transaction(cache_key) as cache_file:
                     self._local_index_cache = json.load(cache_file)
 
@@ -185,7 +186,7 @@ class BinaryCacheIndex(object):
         tmpdir = tempfile.mkdtemp()
 
         try:
-            db_root_dir = os.path.join(tmpdir, "db_root")
+            db_root_dir = PurePath(tmpdir, "db_root")
             db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
 
             self._index_file_cache.init_entry(cache_key)
@@ -381,7 +382,7 @@ class BinaryCacheIndex(object):
                 items_to_remove.append(
                     {
                         "url": cached_mirror_url,
-                        "cache_key": os.path.join(self._index_cache_root, cached_index_path),
+                        "cache_key": PurePath(self._index_cache_root, cached_index_path),
                     }
                 )
                 if cached_mirror_url in self._last_fetch_times:
@@ -491,7 +492,7 @@ class BinaryCacheIndex(object):
 
 def binary_index_location():
     """Set up a BinaryCacheIndex for remote buildcache dbs in the user's homedir."""
-    cache_root = os.path.join(misc_cache_location(), "indices")
+    cache_root = PurePath(misc_cache_location(), "indices")
     return spack.util.path.canonicalize_path(cache_root)
 
 
@@ -591,14 +592,14 @@ def build_cache_keys_relative_path():
 
 
 def build_cache_prefix(prefix):
-    return os.path.join(prefix, build_cache_relative_path())
+    return PurePath(prefix, build_cache_relative_path())
 
 
 def buildinfo_file_name(prefix):
     """
     Filename of the binary package meta-data file
     """
-    name = os.path.join(prefix, ".spack/binary_distribution")
+    name = PurePath(prefix, ".spack/binary_distribution")
     return name
 
 
@@ -629,7 +630,7 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
         self.symlinks = []
 
     def seen_before(self, root, rel_path):
-        stat_result = os.lstat(os.path.join(root, rel_path))
+        stat_result = os.lstat(PurePath(root, rel_path))
         identifier = (stat_result.st_dev, stat_result.st_ino)
         if identifier in self.visited:
             return True
@@ -649,7 +650,7 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
         self.symlinks.append(rel_path)
 
     def before_visit_dir(self, root, rel_path, depth):
-        return os.path.basename(rel_path) not in (".spack", "man")
+        return PurePath(rel_path).name not in (".spack", "man")
 
     def before_visit_symlinked_dir(self, root, rel_path, depth):
         # Treat symlinked directories simply as symlinks.
@@ -704,14 +705,14 @@ def get_buildfile_manifest(spec):
     #   1. relative links are not relocated.
     #   2. paths are used as strings.
     for rel_path in visitor.symlinks:
-        abs_path = os.path.join(root, rel_path)
+        abs_path = PurePath(root, rel_path)
         link = os.readlink(abs_path)
-        if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+        if PurePath(link).is_absolute() and link.startswith(spack.store.layout.root):
             data["link_to_relocate"].append(rel_path)
 
     # Non-symlinks.
     for rel_path in visitor.files:
-        abs_path = os.path.join(root, rel_path)
+        abs_path = PurePath(root, rel_path)
         m_type, m_subtype = fsys.mime_type(abs_path)
 
         if relocate.needs_binary_relocation(m_type, m_subtype):
@@ -800,7 +801,7 @@ def tarball_path_name(spec, ext):
     Return the full path+name for a given spec according to the convention
     <tarball_directory_name>/<tarball_name>
     """
-    return os.path.join(tarball_directory_name(spec), tarball_name(spec, ext))
+    return PurePath(tarball_directory_name(spec), tarball_name(spec, ext))
 
 
 def checksum_tarball(file):
@@ -835,9 +836,9 @@ def select_signing_key(key=None):
 
 def sign_specfile(key, force, specfile_path):
     signed_specfile_path = "%s.sig" % specfile_path
-    if os.path.exists(signed_specfile_path):
+    if Path(signed_specfile_path).exists():
         if force:
-            os.remove(signed_specfile_path)
+            Path(signed_specfile_path).unlink()
         else:
             raise NoOverwriteException(signed_specfile_path)
 
@@ -888,7 +889,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
 
     # Now generate the index, compute its hash, and push the two files to
     # the mirror.
-    index_json_path = os.path.join(temp_dir, "index.json")
+    index_json_path = PurePath(temp_dir, "index.json")
     with open(index_json_path, "w") as f:
         db._write_to_file(f)
 
@@ -898,7 +899,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         index_hash = compute_hash(index_string)
 
     # Write the hash out to a local file
-    index_hash_path = os.path.join(temp_dir, "index.json.hash")
+    index_hash_path = PurePath(temp_dir, "index.json.hash")
     with open(index_hash_path, "w") as f:
         f.write(index_hash)
 
@@ -1056,7 +1057,7 @@ def generate_package_index(cache_prefix, concurrency=32):
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
     tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, "db_root")
+    db_root_dir = PurePath(tmpdir, "db_root")
     db = spack_db.Database(
         None,
         db_dir=db_root_dir,
@@ -1110,12 +1111,12 @@ def generate_key_index(key_prefix, tmpdir=None):
 
     keys_local = url_util.local_file_path(key_prefix)
     if keys_local:
-        target = os.path.join(keys_local, "index.json")
+        target = PurePath(keys_local, "index.json")
     else:
         if not tmpdir:
             tmpdir = tempfile.mkdtemp()
             remove_tmpdir = True
-        target = os.path.join(tmpdir, "index.json")
+        target = PurePath(tmpdir, "index.json")
 
     index = {"keys": dict((fingerprint, {}) for fingerprint in sorted(set(fingerprints)))}
     with open(target, "w") as f:
@@ -1159,9 +1160,9 @@ def _build_tarball(
     cache_prefix = build_cache_prefix(tmpdir)
 
     tarfile_name = tarball_name(spec, ".spack")
-    tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
-    tarfile_path = os.path.join(tarfile_dir, tarfile_name)
-    spackfile_path = os.path.join(cache_prefix, tarball_path_name(spec, ".spack"))
+    tarfile_dir = PurePath(cache_prefix, tarball_directory_name(spec))
+    tarfile_path = PurePath(tarfile_dir, tarfile_name)
+    spackfile_path = PurePath(cache_prefix, tarball_path_name(spec, ".spack"))
     remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
@@ -1177,11 +1178,11 @@ def _build_tarball(
 
     spec_file = spack.store.layout.spec_file_path(spec)
     specfile_name = tarball_name(spec, ".spec.json")
-    specfile_path = os.path.realpath(os.path.join(cache_prefix, specfile_name))
+    specfile_path = os.path.realpath(PurePath(cache_prefix, specfile_name))
     signed_specfile_path = "{0}.sig".format(specfile_path)
 
     remote_specfile_path = url_util.join(
-        out_url, os.path.relpath(specfile_path, os.path.realpath(tmpdir))
+        out_url, os.path.relpath(specfile_path, PurePath(tmpdir).resolve())
     )
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 
@@ -1197,17 +1198,17 @@ def _build_tarball(
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     # make a copy of the install directory to work with
-    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    workdir = PurePath(tmpdir, PurePath(spec.prefix).name)
     # install_tree copies hardlinks
     # create a temporary tarfile from prefix and exract it to workdir
     # tarfile preserves hardlinks
     temp_tarfile_name = tarball_name(spec, ".tar")
-    temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
+    temp_tarfile_path = PurePath(tarfile_dir, temp_tarfile_name)
     with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
         tar.add(name="%s" % spec.prefix, arcname=".")
     with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
         tar.extractall(workdir)
-    os.remove(temp_tarfile_path)
+    Path(temp_tarfile_path).unlink()
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
@@ -1237,7 +1238,7 @@ def _build_tarball(
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
     # So we follow gzip.
     with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
-        tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
+        tar.add(name="%s" % workdir, arcname="%s" % PurePath(spec.prefix).name)
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -1546,8 +1547,8 @@ def make_package_relative(workdir, spec, allow_root):
     orig_path_names = list()
     cur_path_names = list()
     for filename in buildinfo["relocate_binaries"]:
-        orig_path_names.append(os.path.join(prefix, filename))
-        cur_path_names.append(os.path.join(workdir, filename))
+        orig_path_names.append(PurePath(prefix, filename))
+        cur_path_names.append(PurePath(workdir, filename))
 
     platform = spack.platforms.by_name(spec.platform)
     if "macho" in platform.binary_formats:
@@ -1560,8 +1561,8 @@ def make_package_relative(workdir, spec, allow_root):
     orig_path_names = list()
     cur_path_names = list()
     for linkname in buildinfo.get("relocate_links", []):
-        orig_path_names.append(os.path.join(prefix, linkname))
-        cur_path_names.append(os.path.join(workdir, linkname))
+        orig_path_names.append(PurePath(prefix, linkname))
+        cur_path_names.append(PurePath(workdir, linkname))
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
@@ -1573,7 +1574,7 @@ def check_package_relocatable(workdir, spec, allow_root):
     buildinfo = read_buildinfo_file(workdir)
     cur_path_names = list()
     for filename in buildinfo["relocate_binaries"]:
-        cur_path_names.append(os.path.join(workdir, filename))
+        cur_path_names.append(PurePath(workdir, filename))
     allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
 
 
@@ -1600,7 +1601,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
             continue
         new_list = []
         for rel_path in buildinfo[key]:
-            stat_result = os.lstat(os.path.join(root, rel_path))
+            stat_result = os.lstat(PurePath(root, rel_path))
             identifier = (stat_result.st_dev, stat_result.st_ino)
             if identifier in visited:
                 continue
@@ -1626,7 +1627,7 @@ def relocate_package(spec, allow_root):
     old_layout_root = str(buildinfo["buildpath"])
     old_spack_prefix = str(buildinfo.get("spackprefix"))
     old_rel_prefix = buildinfo.get("relative_prefix")
-    old_prefix = os.path.join(old_layout_root, old_rel_prefix)
+    old_prefix = PurePath(old_layout_root, old_rel_prefix)
     rel = buildinfo.get("relative_rpaths")
     prefix_to_hash = buildinfo.get("prefix_to_hash", None)
     if old_rel_prefix != new_rel_prefix and not prefix_to_hash:
@@ -1686,7 +1687,7 @@ def relocate_package(spec, allow_root):
     # Text files containing the prefix text
     text_names = list()
     for filename in buildinfo["relocate_textfiles"]:
-        text_name = os.path.join(workdir, filename)
+        text_name = PurePath(workdir, filename)
         # Don't add backup files generated by filter_file during install step.
         if not is_backup_file(text_name):
             text_names.append(text_name)
@@ -1694,7 +1695,7 @@ def relocate_package(spec, allow_root):
     # If we are not installing back to the same install tree do the relocation
     if old_prefix != new_prefix:
         files_to_relocate = [
-            os.path.join(workdir, filename) for filename in buildinfo.get("relocate_binaries")
+            PurePath(workdir, filename) for filename in buildinfo.get("relocate_binaries")
         ]
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
@@ -1725,7 +1726,7 @@ def relocate_package(spec, allow_root):
             )
 
         # Relocate links to the new install prefix
-        links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
+        links = [PurePath(workdir, f) for f in buildinfo.get("relocate_links", [])]
         relocate.relocate_links(links, prefix_to_prefix_bin)
 
         # For all buildcaches
@@ -1743,27 +1744,27 @@ def relocate_package(spec, allow_root):
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
-    stagepath = os.path.dirname(filename)
+    stagepath = PurePath(filename).parent
     spackfile_name = tarball_name(spec, ".spack")
-    spackfile_path = os.path.join(stagepath, spackfile_name)
+    spackfile_path = PurePath(stagepath, spackfile_name)
     tarfile_name = tarball_name(spec, ".tar.gz")
-    tarfile_path = os.path.join(extract_to, tarfile_name)
+    tarfile_path = PurePath(extract_to, tarfile_name)
     json_name = tarball_name(spec, ".spec.json")
-    json_path = os.path.join(extract_to, json_name)
+    json_path = PurePath(extract_to, json_name)
     with closing(tarfile.open(spackfile_path, "r")) as tar:
         tar.extractall(extract_to)
     # some buildcache tarfiles use bzip2 compression
-    if not os.path.exists(tarfile_path):
+    if not Path(tarfile_path).exists():
         tarfile_name = tarball_name(spec, ".tar.bz2")
-        tarfile_path = os.path.join(extract_to, tarfile_name)
+        tarfile_path = PurePath(extract_to, tarfile_name)
 
-    if os.path.exists(json_path):
+    if Path(json_path).exists():
         specfile_path = json_path
     else:
         raise ValueError("Cannot find spec file for {0}.".format(extract_to))
 
     if not unsigned:
-        if os.path.exists("%s.asc" % specfile_path):
+        if Path("%s.asc" % specfile_path).exists():
             suppress = config.get("config:suppress_gpg_warnings", False)
             try:
                 spack.util.gpg.verify("%s.asc" % specfile_path, specfile_path, suppress)
@@ -1793,7 +1794,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     """
     extract binary tarball for given package into install area
     """
-    if os.path.exists(spec.prefix):
+    if Path(spec.prefix).exists():
         if force:
             shutil.rmtree(spec.prefix)
         else:
@@ -1862,9 +1863,9 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     # The directory created is the base directory name of the old prefix.
     # Moving the old prefix name to the new prefix location should preserve
     # hard links and symbolic links.
-    extract_tmp = os.path.join(spack.store.layout.root, ".tmp")
+    extract_tmp = PurePath(spack.store.layout.root, ".tmp")
     mkdirp(extract_tmp)
-    extracted_dir = os.path.join(extract_tmp, old_relative_prefix.split(os.path.sep)[-1])
+    extracted_dir = PurePath(extract_tmp, old_relative_prefix.split(os.path.sep)[-1])
 
     with closing(tarfile.open(tarfile_path, "r")) as tar:
         try:
@@ -1879,8 +1880,8 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         _delete_staged_downloads(download_result)
         shutil.rmtree(extracted_dir)
         raise e
-    os.remove(tarfile_path)
-    os.remove(specfile_path)
+    Path(tarfile_path).unlink()
+    Path(specfile_path).unlink()
 
     try:
         relocate_package(spec, allow_root)
@@ -1891,14 +1892,14 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         manifest_file = os.path.join(
             spec.prefix, spack.store.layout.metadata_dir, spack.store.layout.manifest_file_name
         )
-        if not os.path.exists(manifest_file):
+        if not Path(manifest_file).exists():
             spec_id = spec.format("{name}/{hash:7}")
             tty.warn("No manifest file in tarball for spec %s" % spec_id)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
-        if os.path.exists(filename):
-            os.remove(filename)
+        if Path(filename).exists():
+            Path(filename).unlink()
         _delete_staged_downloads(download_result)
 
 
@@ -2116,12 +2117,12 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
             continue
 
         for fingerprint, key_attributes in json_index["keys"].items():
-            link = os.path.join(keys_url, fingerprint + ".pub")
+            link = PurePath(keys_url, fingerprint + ".pub")
 
             with Stage(link, name="build_cache", keep=True) as stage:
-                if os.path.exists(stage.save_filename) and force:
-                    os.remove(stage.save_filename)
-                if not os.path.exists(stage.save_filename):
+                if Path(stage.save_filename).exists() and force:
+                    Path(stage.save_filename).unlink()
+                if not Path(stage.save_filename).exists():
                     try:
                         stage.fetch()
                     except web_util.FetchError:
@@ -2177,7 +2178,7 @@ def push_keys(*mirrors, **kwargs):
                 tty.debug("    " + fingerprint)
                 filename = fingerprint + ".pub"
 
-                export_target = os.path.join(prefix, filename)
+                export_target = PurePath(prefix, filename)
 
                 # Export public keys (private is set to False)
                 spack.util.gpg.export_keys(export_target, [fingerprint])
@@ -2218,7 +2219,7 @@ def needs_rebuild(spec, mirror_url):
     # needs to be rebuilt.
     cache_prefix = build_cache_prefix(mirror_url)
     specfile_name = tarball_name(spec, ".spec.json")
-    specfile_path = os.path.join(cache_prefix, specfile_name)
+    specfile_path = PurePath(cache_prefix, specfile_name)
 
     # Only check for the presence of the json version of the spec.  If the
     # mirror only has the json version, or doesn't have the spec at all, we
@@ -2271,7 +2272,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
         mkdirp(path)
         fail_if_missing = description["required"]
         for url in description["url"]:
-            description_url = os.path.join(mirror_root, url)
+            description_url = PurePath(mirror_root, url)
             stage = Stage(description_url, name="build_cache", path=path, keep=True)
             try:
                 stage.fetch()
@@ -2292,11 +2293,11 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
         )
 
     if mirror_url:
-        mirror_root = os.path.join(mirror_url, _build_cache_relative_path)
+        mirror_root = PurePath(mirror_url, _build_cache_relative_path)
         return _download_buildcache_entry(mirror_root, file_descriptions)
 
     for mirror in spack.mirror.MirrorCollection().values():
-        mirror_root = os.path.join(mirror.fetch_url, _build_cache_relative_path)
+        mirror_root = PurePath(mirror.fetch_url, _build_cache_relative_path)
 
         if _download_buildcache_entry(mirror_root, file_descriptions):
             return True
@@ -2316,8 +2317,8 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     """
     tarfile_name = tarball_name(concrete_spec, ".spack")
     tarball_dir_name = tarball_directory_name(concrete_spec)
-    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
-    local_tarball_path = os.path.join(destination, tarball_dir_name)
+    tarball_path_name = PurePath(tarball_dir_name, tarfile_name)
+    local_tarball_path = PurePath(destination, tarball_dir_name)
 
     files_to_fetch = [
         {

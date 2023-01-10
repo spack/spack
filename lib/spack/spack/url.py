@@ -26,8 +26,8 @@ spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
 import io
-import os
 import re
+from pathlib import PurePath
 from urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
@@ -119,7 +119,7 @@ def find_list_urls(url):
         ),
     ]
 
-    list_urls = set([os.path.dirname(url)])
+    list_urls = set([PurePath(url).parent])
 
     for pattern, fun in url_types:
         match = re.search(pattern, url)
@@ -429,7 +429,7 @@ def parse_version_offset(path):
     path, ext, suffix = split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
-    original_stem = os.path.basename(path)
+    original_stem = PurePath(path).name
 
     # Try to strip off anything after the version number
     stem = strip_version_suffixes(original_stem)
@@ -623,7 +623,7 @@ def parse_name_offset(path, v=None):
     path, ext, suffix = split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
-    original_stem = os.path.basename(path)
+    original_stem = PurePath(path).name
 
     # Try to strip off anything after the package name
     stem = strip_name_suffixes(original_stem, v)

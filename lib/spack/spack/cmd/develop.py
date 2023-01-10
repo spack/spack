@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
+from pathlib import Path
 
 import llnl.util.tty as tty
 
@@ -55,7 +56,7 @@ def develop(parser, args):
             path = entry.get("path", name)
             abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
 
-            if os.path.exists(abspath):
+            if Path(abspath).exists():
                 msg = "Skipping developer download of %s" % entry["spec"]
                 msg += " because its path already exists."
                 tty.msg(msg)
@@ -85,12 +86,12 @@ def develop(parser, args):
     # clone default: only if the path doesn't exist
     clone = args.clone
     if clone is None:
-        clone = not os.path.exists(abspath)
+        clone = not Path(abspath).exists()
 
-    if not clone and not os.path.exists(abspath):
+    if not clone and not Path(abspath).exists():
         raise SpackError("Provided path %s does not exist" % abspath)
 
-    if clone and os.path.exists(abspath):
+    if clone and Path(abspath).exists():
         if args.force:
             shutil.rmtree(abspath)
         else:

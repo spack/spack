@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 
@@ -115,8 +116,8 @@ def dev_build(self, args):
 
     source_path = args.source_path
     if source_path is None:
-        source_path = os.getcwd()
-    source_path = os.path.abspath(source_path)
+        source_path = Path.cwd()
+    source_path = Path(source_path).resolve()
 
     # Forces the build to run out of the source directory.
     spec.constrain("dev_path=%s" % source_path)

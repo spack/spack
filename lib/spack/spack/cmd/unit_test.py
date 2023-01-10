@@ -11,6 +11,7 @@ import io
 import os.path
 import re
 import sys
+from pathlib import PurePath
 
 try:
     import pytest
@@ -146,7 +147,7 @@ def do_list(args, extra_args):
             name = name[: name.index("[")]
 
         len_indent = len(indent)
-        if os.path.isabs(name):
+        if PurePath(name).is_absolute():
             name = os.path.relpath(name, start=spack.paths.spack_root)
 
         item = (len_indent, name, nodetype)

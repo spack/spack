@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import PurePath
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
@@ -25,10 +26,10 @@ class Intel(Compiler):
 
     # Named wrapper links within build_env_path
     link_paths = {
-        "cc": os.path.join("intel", "icc"),
-        "cxx": os.path.join("intel", "icpc"),
-        "f77": os.path.join("intel", "ifort"),
-        "fc": os.path.join("intel", "ifort"),
+        "cc": PurePath("intel", "icc"),
+        "cxx": PurePath("intel", "icpc"),
+        "f77": PurePath("intel", "ifort"),
+        "fc": PurePath("intel", "ifort"),
     }
 
     PrgEnv = "PrgEnv-intel"

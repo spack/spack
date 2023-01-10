@@ -5,6 +5,7 @@
 
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -57,9 +58,9 @@ def test_shared_libraries_visitor(tmpdir):
         gcc("hello.c", "-o", "soname.so", "--shared", "-Wl,-soname,example.so")
         gcc("hello.c", "-pie", "-o", "executable.so")
         gcc("hello.c", "-o", "libskipme.so", "-Wl,-soname,libskipme.so")
-        os.mkdir("my_dir")
-        os.symlink("..", os.path.join("my_dir", "parent_dir"))
-        os.symlink(os.path.join("..", "libskipme.so"), os.path.join("my_dir", "skip_symlink"))
+        Path("my_dir").mkdir()
+        Path(os.path.join("my_dir", "parent_dir")).link_to("..")
+        Path(os.path.join("my_dir", "skip_symlink")).link_to(os.path.join("..", "libskipme.so"))
 
     # Visit the whole prefix, but exclude `skip_symlink`
     visitor = SharedLibrariesVisitor(exclude_list=["skip_symlink"])

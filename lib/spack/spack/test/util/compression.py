@@ -5,6 +5,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -53,9 +54,9 @@ def test_native_unpacking(tmpdir_factory, archive_file):
     util = scomp.decompressor_for(archive_file)
     tmpdir = tmpdir_factory.mktemp("comp_test")
     with working_dir(str(tmpdir)):
-        assert not os.listdir(os.getcwd())
+        assert not os.listdir(Path.cwd())
         util(archive_file)
-        files = os.listdir(os.getcwd())
+        files = os.listdir(Path.cwd())
         assert len(files) == 1
         with open(files[0], "r") as f:
             contents = f.read()
@@ -68,9 +69,9 @@ def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
     util = scomp.decompressor_for(archive_file)
     tmpdir = tmpdir_factory.mktemp("system_comp_test")
     with working_dir(str(tmpdir)):
-        assert not os.listdir(os.getcwd())
+        assert not os.listdir(Path.cwd())
         util(archive_file)
-        files = os.listdir(os.getcwd())
+        files = os.listdir(Path.cwd())
         assert len(files) == 1
         with open(files[0], "r") as f:
             contents = f.read()

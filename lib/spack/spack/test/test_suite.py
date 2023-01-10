@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -19,7 +20,7 @@ def _true(*args, **kwargs):
 
 
 def ensure_results(filename, expected):
-    assert os.path.exists(filename)
+    assert Path(filename).exists()
     with open(filename, "r") as fd:
         lines = fd.readlines()
         have = False
@@ -52,7 +53,7 @@ def test_test_ensure_stage(mock_test_stage, mock_packages):
     test_suite = spack.install_test.TestSuite([spec], test_name)
     test_suite.ensure_stage()
 
-    assert os.path.isdir(test_suite.stage)
+    assert Path(test_suite.stage).is_dir()
     assert mock_test_stage in test_suite.stage
 
 

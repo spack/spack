@@ -6,6 +6,7 @@
 import errno
 import os
 import shutil
+from pathlib import Path, PurePath
 
 from llnl.util.filesystem import mkdirp, rename
 
@@ -37,7 +38,7 @@ class FileCache(object):
                 before assuming that there is a deadlock.
         """
         self.root = root.rstrip(os.path.sep)
-        if not os.path.exists(self.root):
+        if not Path(self.root).exists():
             mkdirp(self.root)
 
         self._locks = {}
@@ -45,12 +46,12 @@ class FileCache(object):
 
     def destroy(self):
         """Remove all files under the cache root."""
-        for f in os.listdir(self.root):
+        for f in Path(self.root).iterdir():
             path = os.path.join(self.root, f)
-            if os.path.isdir(path):
+            if Path(path).is_dir():
                 shutil.rmtree(path, True)
             else:
-                os.remove(path)
+                Path(path).unlink()
 
     def cache_path(self, key):
         """Path to the file in the cache for a particular key."""
@@ -58,8 +59,8 @@ class FileCache(object):
 
     def _lock_path(self, key):
         """Path to the file in the cache for a particular key."""
-        keyfile = os.path.basename(key)
-        keydir = os.path.dirname(key)
+        keyfile = PurePath(key).name
+        keydir = PurePath(key).parent
 
         return os.path.join(self.root, keydir, "." + keyfile + ".lock")
 
@@ -76,16 +77,16 @@ class FileCache(object):
         """
         cache_path = self.cache_path(key)
 
-        exists = os.path.exists(cache_path)
+        exists = Path(cache_path).exists()
         if exists:
-            if not os.path.isfile(cache_path):
+            if not Path(cache_path).is_file():
                 raise CacheError("Cache file is not a file: %s" % cache_path)
 
             if not os.access(cache_path, os.R_OK):
                 raise CacheError("Cannot access cache file: %s" % cache_path)
         else:
             # if the file is hierarchical, make parent directories
-            parent = os.path.dirname(cache_path)
+            parent = PurePath(cache_path).parent
             if parent.rstrip(os.path.sep) != self.root:
                 mkdirp(parent)
 
@@ -117,7 +118,7 @@ class FileCache(object):
 
         """
         filename = self.cache_path(key)
-        if os.path.exists(filename) and not os.access(filename, os.W_OK):
+        if Path(filename).exists() and not os.access(filename, os.W_OK):
             raise CacheError(
                 "Insufficient permissions to write to file cache at {0}".format(filename)
             )
@@ -130,7 +131,7 @@ class FileCache(object):
             def __enter__(cm):
                 cm.orig_filename = self.cache_path(key)
                 cm.orig_file = None
-                if os.path.exists(cm.orig_filename):
+                if Path(cm.orig_filename).exists():
                     cm.orig_file = open(cm.orig_filename, "r")
 
                 cm.tmp_filename = self.cache_path(key) + ".tmp"
@@ -170,7 +171,7 @@ class FileCache(object):
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-            os.unlink(file)
+            Path(file).unlink()
         except OSError as e:
             # File not found is OK, so remove is idempotent.
             if e.errno != errno.ENOENT:

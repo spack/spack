@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -33,7 +34,7 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
 
         dev_build("dev-build-test-install@0.0.0")
 
-    assert spec.package.filename in os.listdir(spec.prefix)
+    assert spec.package.filename in list(Path(spec.prefix).iterdir())
     with open(os.path.join(spec.prefix, spec.package.filename), "r") as f:
         assert f.read() == spec.package.replacement_string
 
@@ -50,11 +51,11 @@ def test_dev_build_before(tmpdir, mock_packages, install_mockery):
 
         dev_build("-b", "edit", "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())
+        assert spec.package.filename in os.listdir(Path.cwd())
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.original_string
 
-    assert not os.path.exists(spec.prefix)
+    assert not Path(spec.prefix).exists()
 
 
 def test_dev_build_until(tmpdir, mock_packages, install_mockery):
@@ -67,11 +68,11 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
 
         dev_build("-u", "edit", "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())
+        assert spec.package.filename in os.listdir(Path.cwd())
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.replacement_string
 
-    assert not os.path.exists(spec.prefix)
+    assert not Path(spec.prefix).exists()
     assert not spack.store.db.query(spec, installed=True)
 
 
@@ -86,11 +87,11 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
 
         dev_build("-u", "install", "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())
+        assert spec.package.filename in os.listdir(Path.cwd())
         with open(spec.package.filename, "r") as f:
             assert f.read() == spec.package.replacement_string
 
-    assert os.path.exists(spec.prefix)
+    assert Path(spec.prefix).exists()
     assert spack.store.db.query(spec, installed=True)
     assert os.path.exists(str(tmpdir))
 
@@ -209,7 +210,7 @@ env:
         with ev.read("test"):
             install()
 
-    assert spec.package.filename in os.listdir(spec.prefix)
+    assert spec.package.filename in list(Path(spec.prefix).iterdir())
     with open(os.path.join(spec.prefix, spec.package.filename), "r") as f:
         assert f.read() == spec.package.replacement_string
 
@@ -312,7 +313,7 @@ env:
             install()
 
     for spec in (leaf_spec, root_spec):
-        assert spec.package.filename in os.listdir(spec.prefix)
+        assert spec.package.filename in list(Path(spec.prefix).iterdir())
         with open(os.path.join(spec.prefix, spec.package.filename), "r") as f:
             assert f.read() == spec.package.replacement_string
 
@@ -361,8 +362,8 @@ env:
             install()
 
     # Ensure that both specs installed properly
-    assert dep_spec.package.filename in os.listdir(dep_spec.prefix)
-    assert os.path.exists(spec.prefix)
+    assert dep_spec.package.filename in list(Path(dep_spec.prefix).iterdir())
+    assert Path(spec.prefix).exists()
 
     # Ensure variants set properly; ensure build_dir is absolute and normalized
     for dep in (dep_spec, spec["dev-build-test-install"]):

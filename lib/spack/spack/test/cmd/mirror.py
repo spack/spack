@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -68,7 +69,7 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config, mutable_mock
             mirror("create", "-d", mirror_dir, "--all")
 
     e = ev.read(env_name)
-    assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
+    assert set(Path(mirror_dir).iterdir()) == set([s.name for s in e.user_specs])
     for spec in e.specs_by_hash.values():
         mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
@@ -78,7 +79,7 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config, mutable_mock
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmpdir):
     s = spack.spec.Spec("trivial-pkg-with-valid-hash").concretized()
-    local_url_basename = os.path.basename(s.package.url)
+    local_url_basename = PurePath(s.package.url).name
     local_path = os.path.join(str(tmpdir), local_url_basename)
     with open(local_path, "w") as f:
         f.write(s.package.hashed_content)
@@ -92,7 +93,7 @@ def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config, source_for_
     specs = [spack.spec.Spec(x).concretized() for x in ["git-test", "trivial-pkg-with-valid-hash"]]
     spack.mirror.create(mirror_dir, specs, skip_unstable_versions=True)
 
-    assert set(os.listdir(mirror_dir)) - set(["_source-cache"]) == set(
+    assert set(Path(mirror_dir).iterdir()) - set(["_source-cache"]) == set(
         ["trivial-pkg-with-valid-hash"]
     )
 
@@ -268,23 +269,23 @@ def test_mirror_destroy(
     install("--no-cache", spec_name)
     buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, spec_name)
 
-    contents = os.listdir(mirror_dir.strpath)
+    contents = list(Path(mirror_dir.strpath).iterdir())
     assert "build_cache" in contents
 
     # Destroy mirror by name
     mirror("destroy", "-m", "atest")
 
-    assert not os.path.exists(mirror_dir.strpath)
+    assert not Path(mirror_dir.strpath).exists()
 
     buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, spec_name)
 
-    contents = os.listdir(mirror_dir.strpath)
+    contents = list(Path(mirror_dir.strpath).iterdir())
     assert "build_cache" in contents
 
     # Destroy mirror by url
     mirror("destroy", "--mirror-url", mirror_url)
 
-    assert not os.path.exists(mirror_dir.strpath)
+    assert not Path(mirror_dir.strpath).exists()
 
     uninstall("-y", spec_name)
     mirror("remove", "atest")

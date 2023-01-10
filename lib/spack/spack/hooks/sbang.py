@@ -10,6 +10,7 @@ import shutil
 import stat
 import sys
 import tempfile
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -120,7 +121,7 @@ def filter_shebang(path):
 
         # Change non-writable files to be writable if needed.
         if not os.access(path, os.W_OK):
-            os.chmod(path, saved_mode | stat.S_IWUSR)
+            Path(path).chmod(saved_mode | stat.S_IWUSR)
 
         # No need to delete since we'll move it and overwrite the original.
         patched = tempfile.NamedTemporaryFile("wb", delete=False)
@@ -152,13 +153,13 @@ def filter_shebang(path):
 
     # Overwrite original file with patched file, and keep the original mode
     shutil.move(patched.name, path)
-    os.chmod(path, saved_mode)
+    Path(path).chmod(saved_mode)
     return True
 
 
 def filter_shebangs_in_directory(directory, filenames=None):
     if filenames is None:
-        filenames = os.listdir(directory)
+        filenames = Path(directory).iterdir()
 
     is_exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 
@@ -188,11 +189,11 @@ def install_sbang():
     """
     # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
-    if os.path.exists(sbang_path) and filecmp.cmp(spack.paths.sbang_script, sbang_path):
+    if Path(sbang_path).exists() and filecmp.cmp(spack.paths.sbang_script, sbang_path):
         return
 
     # make $install_tree/bin
-    sbang_bin_dir = os.path.dirname(sbang_path)
+    sbang_bin_dir = PurePath(sbang_path).parent
     fs.mkdirp(sbang_bin_dir)
 
     # get permissions for bin dir from configuration files
@@ -200,7 +201,7 @@ def install_sbang():
     config_mode = spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all"))
 
     if group_name:
-        os.chmod(sbang_bin_dir, config_mode)  # Use package directory permissions
+        Path(sbang_bin_dir).chmod(config_mode)  # Use package directory permissions
     else:
         fs.set_install_permissions(sbang_bin_dir)
 
@@ -212,18 +213,18 @@ def install_sbang():
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path),
-        ".%s.tmp" % os.path.basename(sbang_path),
+        PurePath(sbang_path).parent,
+        ".%s.tmp" % PurePath(sbang_path).name,
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
     # set permissions on `sbang` (including group if set in configuration)
-    os.chmod(sbang_tmp_path, config_mode)
+    Path(sbang_tmp_path).chmod(config_mode)
     if group_name:
         os.chown(sbang_tmp_path, os.stat(sbang_tmp_path).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # Finally, move the new `sbang` into place atomically
-    os.rename(sbang_tmp_path, sbang_path)
+    Path(sbang_tmp_path).rename(Path(sbang_path))
 
 
 def post_install(spec):

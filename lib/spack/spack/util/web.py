@@ -17,6 +17,7 @@ import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
+from pathlib import Path, PurePath
 from urllib.error import URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -36,7 +37,6 @@ import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 from spack.util.executable import CommandNotFoundError, which
-from spack.util.path import convert_to_posix_path
 
 
 def _urlopen():
@@ -119,7 +119,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
     remote_url = urllib.parse.urlparse(remote_path)
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
-        mkdirp(os.path.dirname(remote_file_path))
+        mkdirp(PurePath(remote_file_path).parent)
         if keep_original:
             shutil.copy(local_file_path, remote_file_path)
         else:
@@ -132,7 +132,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
                     # metadata), and then delete the original.  This operation
                     # needs to be done in separate steps.
                     shutil.copy2(local_file_path, remote_file_path)
-                    os.remove(local_file_path)
+                    Path(local_file_path).unlink()
                 else:
                     raise
 
@@ -148,13 +148,13 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
-            os.remove(local_file_path)
+            Path(local_file_path).unlink()
 
     elif remote_url.scheme == "gs":
         gcs = gcs_util.GCSBlob(remote_url)
         gcs.upload_to_blob(local_file_path)
         if not keep_original:
-            os.remove(local_file_path)
+            Path(local_file_path).unlink()
 
     else:
         raise NotImplementedError(
@@ -271,8 +271,8 @@ def fetch_url_text(url, curl=None, dest_dir="."):
 
     tty.debug("Fetching text at {0}".format(url))
 
-    filename = os.path.basename(url)
-    path = os.path.join(dest_dir, filename)
+    filename = PurePath(url).name
+    path = PurePath(dest_dir, filename)
 
     fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
@@ -376,7 +376,7 @@ def remove_url(url, recursive=False):
         if recursive:
             shutil.rmtree(local_path)
         else:
-            os.remove(local_path)
+            Path(local_path).unlink()
         return
 
     if url.scheme == "s3":
@@ -474,7 +474,7 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 def _iter_local_prefix(path):
     for root, _, files in os.walk(path):
         for f in files:
-            yield os.path.relpath(os.path.join(root, f), path)
+            yield os.path.relpath(PurePath(root, f), path)
 
 
 def list_url(url, recursive=False):
@@ -486,8 +486,8 @@ def list_url(url, recursive=False):
             return list(_iter_local_prefix(local_path))
         return [
             subpath
-            for subpath in os.listdir(local_path)
-            if os.path.isfile(os.path.join(local_path, subpath))
+            for subpath in Path(local_path).iterdir()
+            if os.path.isfile(PurePath(local_path, subpath))
         ]
 
     if url.scheme == "s3":
@@ -694,7 +694,7 @@ def find_versions_of_archive(
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
-        url_regex = os.path.basename(url_regex)
+        url_regex = PurePath(url_regex).name
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:
@@ -724,7 +724,7 @@ def find_versions_of_archive(
     versions = {}
     matched = set()
     for url in sorted(links):
-        url = convert_to_posix_path(url)
+        url = Path(url).as_posix()
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
@@ -745,7 +745,7 @@ def find_versions_of_archive(
                 continue
 
     for url in archive_urls:
-        url = convert_to_posix_path(url)
+        url = Path(url).as_posix()
         ver = spack.url.parse_version(url)
         if ver not in versions:
             versions[ver] = url

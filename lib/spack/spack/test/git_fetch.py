@@ -6,6 +6,7 @@
 import copy
 import os
 import shutil
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -117,21 +118,21 @@ def test_fetch(
         with working_dir(s.package.stage.source_path):
             assert h("HEAD") == h(t.revision)
 
-            file_path = os.path.join(s.package.stage.source_path, t.file)
-            assert os.path.isdir(s.package.stage.source_path)
-            assert os.path.isfile(file_path)
+            file_path = PurePath(s.package.stage.source_path, t.file)
+            assert Path(s.package.stage.source_path).is_dir()
+            assert Path(file_path).is_file()
 
-            os.unlink(file_path)
-            assert not os.path.isfile(file_path)
+            Path(file_path).unlink()
+            assert not Path(file_path).is_file()
 
             untracked_file = "foobarbaz"
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert Path(untracked_file).is_file()
             s.package.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not Path(untracked_file).is_file()
 
-            assert os.path.isdir(s.package.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert Path(s.package.stage.source_path).is_dir()
+            assert Path(file_path).is_file()
 
             assert h("HEAD") == h(t.revision)
 
@@ -210,7 +211,7 @@ def test_debug_fetch(
     with s.package.stage:
         with spack.config.override("config:debug", True):
             s.package.do_fetch()
-            assert os.path.isdir(s.package.stage.source_path)
+            assert Path(s.package.stage.source_path).is_dir()
 
 
 def test_git_extra_fetch(git, tmpdir):
@@ -309,9 +310,9 @@ def test_gitsubmodule(
                 "third_party/submodule{0}/r0_file_{0}".format(submodule_count),
             )
             if submodules:
-                assert os.path.isfile(file_path)
+                assert Path(file_path).is_file()
             else:
-                assert not os.path.isfile(file_path)
+                assert not Path(file_path).is_file()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -336,10 +337,10 @@ def test_gitsubmodules_callable(
     monkeypatch.setitem(s.package.versions, ver("git"), args)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
-        file_path = os.path.join(s.package.stage.source_path, "third_party/submodule0/r0_file_0")
-        assert os.path.isfile(file_path)
-        file_path = os.path.join(s.package.stage.source_path, "third_party/submodule1/r0_file_1")
-        assert not os.path.isfile(file_path)
+        file_path = PurePath(s.package.stage.source_path, "third_party/submodule0/r0_file_0")
+        assert Path(file_path).is_file()
+        file_path = PurePath(s.package.stage.source_path, "third_party/submodule1/r0_file_1")
+        assert not Path(file_path).is_file()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -360,7 +361,7 @@ def test_gitsubmodules_delete(
     monkeypatch.setitem(s.package.versions, ver("git"), args)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
-        file_path = os.path.join(s.package.stage.source_path, "third_party/submodule0")
-        assert not os.path.isdir(file_path)
-        file_path = os.path.join(s.package.stage.source_path, "third_party/submodule1")
-        assert not os.path.isdir(file_path)
+        file_path = PurePath(s.package.stage.source_path, "third_party/submodule0")
+        assert not Path(file_path).is_dir()
+        file_path = PurePath(s.package.stage.source_path, "third_party/submodule1")
+        assert not Path(file_path).is_dir()

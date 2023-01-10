@@ -12,6 +12,7 @@ import re
 import socket
 import time
 import xml.sax.saxutils
+from pathlib import Path
 from typing import Dict
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -439,8 +440,8 @@ class CDash(Reporter):
         self.finalize_report()
 
     def initialize_report(self, directory_name):
-        if not os.path.exists(directory_name):
-            os.mkdir(directory_name)
+        if not Path(directory_name).exists():
+            Path(directory_name).mkdir()
         report_data = {}
         report_data["buildname"] = self.buildname
         report_data["buildstamp"] = self.buildstamp

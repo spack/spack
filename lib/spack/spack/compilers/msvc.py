@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 from distutils.version import StrictVersion
+from pathlib import Path, PurePath
 from typing import Dict, List, Set
 
 import spack.compiler
@@ -80,7 +81,7 @@ class Msvc(Compiler):
         super(Msvc, self).__init__(*args, **kwargs)
         if os.getenv("ONEAPI_ROOT"):
             # If this found, it sets all the vars
-            self.setvarsfile = os.path.join(os.getenv("ONEAPI_ROOT"), "setvars.bat")
+            self.setvarsfile = PurePath(os.getenv("ONEAPI_ROOT"), "setvars.bat")
         else:
             # To use the MSVC compilers, VCVARS must be invoked
             # VCVARS is located at a fixed location, referencable
@@ -89,8 +90,8 @@ class Msvc(Compiler):
             # Spack first finds the compilers via VSWHERE
             # and stores their path, but their respective VCVARS
             # file must be invoked before useage.
-            self.setvarsfile = os.path.abspath(os.path.join(self.cc, "../../../../../../.."))
-            self.setvarsfile = os.path.join(self.setvarsfile, "Auxiliary", "Build", "vcvars64.bat")
+            self.setvarsfile = Path.resolve(PurePath(self.cc, "../../../../../../.."))
+            self.setvarsfile = PurePath(self.setvarsfile, "Auxiliary", "Build", "vcvars64.bat")
 
     @property
     def msvc_version(self):

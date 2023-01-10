@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 
 import spack.compiler
 
@@ -23,10 +24,10 @@ class Fj(spack.compiler.Compiler):
 
     # Named wrapper links within build_env_path
     link_paths = {
-        "cc": os.path.join("fj", "fcc"),
-        "cxx": os.path.join("fj", "case-insensitive", "FCC"),
-        "f77": os.path.join("fj", "frt"),
-        "fc": os.path.join("fj", "frt"),
+        "cc": PurePath("fj", "fcc"),
+        "cxx": PurePath("fj", "case-insensitive", "FCC"),
+        "f77": PurePath("fj", "frt"),
+        "fc": PurePath("fj", "frt"),
     }
 
     version_argument = "--version"

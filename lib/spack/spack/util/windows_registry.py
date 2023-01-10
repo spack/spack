@@ -10,6 +10,7 @@ Utility module for dealing with Windows Registry.
 import os
 import sys
 from contextlib import contextmanager
+from pathlib import PurePath
 
 from llnl.util import tty
 
@@ -35,7 +36,7 @@ class RegistryKey(object):
     """
 
     def __init__(self, name, handle):
-        self.path = name
+        self.path = str(name)
         self.name = os.path.split(name)[-1]
         self._handle = handle
         self._keys = []
@@ -70,7 +71,7 @@ class RegistryKey(object):
         for i in range(sub_keys):
             sub_name = winreg.EnumKey(self.hkey, i)
             sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
-            self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
+            self._keys.append(RegistryKey(PurePath(self.path, sub_name), sub_handle))
 
     def _gather_value_info(self):
         """Compose all values for this key into a dict of form value name: RegistryValue Object"""
@@ -84,7 +85,7 @@ class RegistryKey(object):
     def get_subkey(self, sub_key):
         """Returns subkey of name sub_key in a RegistryKey objects"""
         return RegistryKey(
-            os.path.join(self.path, sub_key),
+            PurePath(self.path, sub_key),
             winreg.OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ),
         )
 
@@ -178,7 +179,7 @@ class WindowsRegistryView(object):
     def _load_key(self):
         try:
             self._reg = RegistryKey(
-                os.path.join(str(self.root), self.key),
+                PurePath(str(self.root), self.key),
                 winreg.OpenKeyEx(self.root.hkey, self.key, access=winreg.KEY_READ),
             )
         except FileNotFoundError as e:

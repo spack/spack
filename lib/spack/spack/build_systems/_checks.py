@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+from pathlib import Path
 from typing import List
 
 import llnl.util.lang
@@ -40,7 +41,7 @@ def sanity_check_prefix(builder: spack.builder.Builder):
     check_paths(pkg.sanity_check_is_dir, "directory", os.path.isdir)
 
     ignore_file = llnl.util.lang.match_predicate(spack.store.layout.hidden_file_regexes)
-    if all(map(ignore_file, os.listdir(pkg.prefix))):
+    if all(map(ignore_file, list(Path(pkg.prefix).iterdir()))):
         msg = "Install failed for {0}.  Nothing was installed!"
         raise spack.installer.InstallError(msg.format(pkg.name))
 

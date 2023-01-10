@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 from argparse import Namespace
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -306,15 +307,15 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     e = ev.read("test")
     e.add("mpileaks")
 
-    os.rename(e.manifest_path, filepath)
-    os.symlink(filepath, filepath_mid)
-    os.symlink(filepath_mid, e.manifest_path)
+    Path(e.manifest_path).rename(Path(filepath))
+    Path(filepath_mid).link_to(filepath)
+    Path(e.manifest_path).link_to(filepath_mid)
 
     e.concretize()
     e.write()
 
-    assert os.path.islink(e.manifest_path)
-    assert os.path.islink(filepath_mid)
+    assert Path(e.manifest_path).is_symlink()
+    assert Path(filepath_mid).is_symlink()
 
 
 def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir, capsys):
@@ -429,7 +430,7 @@ def test_environment_status(capsys, tmpdir):
 
         with ev.Environment("local_dir"):
             with capsys.disabled():
-                assert os.path.join(os.getcwd(), "local_dir") in env("status")
+                assert PurePath(Path.cwd(), "local_dir") in env("status")
 
             e = ev.Environment("myproject")
             e.write()
@@ -709,7 +710,7 @@ spack:
     err = str(exc)
     assert "missing include" in err
     assert "/no/such/directory" in err
-    assert os.path.join("no", "such", "file.yaml") in err
+    assert PurePath("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -726,8 +727,8 @@ def test_env_with_include_config_files_same_basename():
     _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
-    fs.mkdirp(os.path.join(e.path, "path", "to"))
-    with open(os.path.join(e.path, "./path/to/included-config.yaml"), "w") as f:
+    fs.mkdirp(PurePath(e.path, "path", "to"))
+    with open(PurePath(e.path, "./path/to/included-config.yaml"), "w") as f:
         f.write(
             """\
         packages:
@@ -736,8 +737,8 @@ def test_env_with_include_config_files_same_basename():
         """
         )
 
-    fs.mkdirp(os.path.join(e.path, "second", "path", "to"))
-    with open(os.path.join(e.path, "./second/path/to/include-config.yaml"), "w") as f:
+    fs.mkdirp(PurePath(e.path, "second", "path", "to"))
+    with open(PurePath(e.path, "./second/path/to/include-config.yaml"), "w") as f:
         f.write(
             """\
         packages:
@@ -786,12 +787,12 @@ def test_env_with_included_config_file(packages_file):
     """Test inclusion of a relative packages configuration file added to an
     existing environment."""
     include_filename = "included-config.yaml"
-    test_config = mpileaks_env_config(os.path.join(".", include_filename))
+    test_config = mpileaks_env_config(PurePath(".", include_filename))
 
     _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
-    included_path = os.path.join(e.path, include_filename)
+    included_path = PurePath(e.path, include_filename)
     shutil.move(packages_file.strpath, included_path)
 
     with e:
@@ -835,7 +836,7 @@ def test_env_with_included_config_scope(tmpdir, packages_file):
     """Test inclusion of a package file from the environment's configuration
     stage directory. This test is intended to represent a case where a remote
     file has already been staged."""
-    config_scope_path = os.path.join(ev.root("test"), "config")
+    config_scope_path = PurePath(ev.root("test"), "config")
 
     # Configure the environment to include file(s) from the environment's
     # remote configuration stage directory.
@@ -850,8 +851,8 @@ def test_env_with_included_config_scope(tmpdir, packages_file):
     # directory so it is picked up during concretization. (Using
     # copy instead of rename in case the fixture scope changes.)
     fs.mkdirp(config_scope_path)
-    include_filename = os.path.basename(packages_file.strpath)
-    included_path = os.path.join(config_scope_path, include_filename)
+    include_filename = PurePath(packages_file.strpath).name
+    included_path = PurePath(config_scope_path, include_filename)
     fs.copy(packages_file.strpath, included_path)
 
     # Ensure the concretized environment reflects contents of the
@@ -865,16 +866,16 @@ def test_env_with_included_config_scope(tmpdir, packages_file):
 def test_env_with_included_config_var_path(packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
-    config_var_path = os.path.join("$tempdir", "included-config.yaml")
+    config_var_path = PurePath("$tempdir", "included-config.yaml")
     test_config = mpileaks_env_config(config_var_path)
 
     _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     config_real_path = substitute_path_variables(config_var_path)
-    fs.mkdirp(os.path.dirname(config_real_path))
+    fs.mkdirp(PurePath(config_real_path).parent)
     shutil.move(packages_file.strpath, config_real_path)
-    assert os.path.exists(config_real_path)
+    assert Path(config_real_path).exists()
 
     with e:
         e.concretize()
@@ -896,7 +897,7 @@ env:
     _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
-    with open(os.path.join(e.path, "included-config.yaml"), "w") as f:
+    with open(PurePath(e.path, "included-config.yaml"), "w") as f:
         f.write(
             """\
 packages:
@@ -929,7 +930,7 @@ env:
     _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
-    with open(os.path.join(e.path, "high-config.yaml"), "w") as f:
+    with open(PurePath(e.path, "high-config.yaml"), "w") as f:
         f.write(
             """\
 packages:
@@ -938,7 +939,7 @@ packages:
 """
         )
 
-    with open(os.path.join(e.path, "low-config.yaml"), "w") as f:
+    with open(PurePath(e.path, "low-config.yaml"), "w") as f:
         f.write(
             """\
 packages:
@@ -988,8 +989,8 @@ def test_env_loads(install_mockery, mock_fetch):
 
     e = ev.read("test")
 
-    loads_file = os.path.join(e.path, "loads")
-    assert os.path.exists(loads_file)
+    loads_file = PurePath(e.path, "loads")
+    assert Path(loads_file).exists()
 
     with open(loads_file) as f:
         contents = f.read()
@@ -1013,7 +1014,7 @@ def test_stage(mock_stage, mock_fetch, install_mockery):
             stage_name = "{0}{1}-{2}-{3}".format(
                 stage_prefix, dep.name, dep.version, dep.dag_hash()
             )
-            assert os.path.isdir(os.path.join(root, stage_name))
+            assert os.path.isdir(PurePath(root, stage_name))
 
     check_stage("mpileaks")
     check_stage("zmpi")
@@ -1214,9 +1215,7 @@ def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, 
     with ev.read("test"):
         add("view-dir-file")
         add("view-dir-dir")
-        with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
-        ):
+        with pytest.raises(llnl.util.link_tree.MergeConflictSummary, match=PurePath("bin", "x")):
             install()
 
 
@@ -1230,9 +1229,9 @@ def test_env_view_succeeds_symlinked_dir_file(
         add("view-dir-symlinked-dir")
         add("view-dir-dir")
         install()
-        x_dir = os.path.join(str(view_dir), "bin", "x")
-        assert os.path.exists(os.path.join(x_dir, "file_in_dir"))
-        assert os.path.exists(os.path.join(x_dir, "file_in_symlinked_dir"))
+        x_dir = PurePath(str(view_dir), "bin", "x")
+        assert os.path.exists(PurePath(x_dir, "file_in_dir"))
+        assert os.path.exists(PurePath(x_dir, "file_in_symlinked_dir"))
 
 
 def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -1271,7 +1270,7 @@ env:
     e = ev.read("test")
 
     # Check that metadata folder for this spec exists
-    assert os.path.isdir(os.path.join(e.default_view.view()._root, ".spack", "mpileaks"))
+    assert os.path.isdir(PurePath(e.default_view.view()._root, ".spack", "mpileaks"))
 
 
 def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -1921,7 +1920,7 @@ env:
         test = ev.read("test")
         for spec in test._get_environment_specs():
             assert os.path.exists(
-                os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
             )
 
 
@@ -1957,11 +1956,11 @@ env:
         for spec in test._get_environment_specs():
             if spec.satisfies("%gcc"):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
 
 
@@ -1997,11 +1996,11 @@ env:
         for spec in test._get_environment_specs():
             if not spec.satisfies("callpath"):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
 
 
@@ -2040,11 +2039,11 @@ env:
         for spec in test._get_environment_specs():
             if spec.satisfies("%gcc") and not spec.satisfies("callpath"):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
 
 
@@ -2084,11 +2083,11 @@ env:
                 spec.satisfies("%gcc") and not spec.satisfies("callpath")
             ):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
 
 
@@ -2117,7 +2116,7 @@ spack:
 
     # make sure transitive run type deps are in the view
     for pkg in ("dtrun1", "dtrun3"):
-        assert os.path.exists(os.path.join(viewdir, pkg))
+        assert os.path.exists(PurePath(viewdir, pkg))
 
     # and non-run-type deps are not.
     for pkg in (
@@ -2129,7 +2128,7 @@ spack:
         "dtbuild2",
         "dtbuild3",
     ):
-        assert not os.path.exists(os.path.join(viewdir, pkg))
+        assert not os.path.exists(PurePath(viewdir, pkg))
 
 
 @pytest.mark.parametrize("link_type", ["hardlink", "copy", "symlink"])
@@ -2159,9 +2158,9 @@ env:
 
         for spec in test.roots():
             file_path = test.default_view.view()._root
-            file_to_test = os.path.join(file_path, spec.name)
-            assert os.path.isfile(file_to_test)
-            assert os.path.islink(file_to_test) == (link_type == "symlink")
+            file_to_test = PurePath(file_path, spec.name)
+            assert Path(file_to_test).is_file()
+            assert Path(file_to_test).is_symlink() == (link_type == "symlink")
 
 
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):
@@ -2198,11 +2197,11 @@ env:
         for spec in test._get_environment_specs():
             if spec.satisfies("%gcc") and not spec.satisfies("callpath"):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
+                    PurePath(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
 
 
@@ -2237,7 +2236,7 @@ env:
         shell = env("activate", "--sh", "test")
 
         assert "PATH" in shell
-        assert os.path.join(viewdir, "bin") in shell
+        assert PurePath(viewdir, "bin") in shell
         assert "FOOBAR=mpileaks" in shell
 
 
@@ -2310,7 +2309,7 @@ env:
 
         shell = env("activate", "--sh", "test")
         assert "PATH" in shell
-        assert os.path.join(default_viewdir, "bin") in shell
+        assert PurePath(default_viewdir, "bin") in shell
 
         test = ev.read("test")
         for spec in test._get_environment_specs():
@@ -2372,7 +2371,7 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
         viewdir = e.default_view.root
 
     out = env("activate", "--sh", "test")
-    viewdir_bin = os.path.join(viewdir, "bin")
+    viewdir_bin = PurePath(viewdir, "bin")
 
     assert (
         "export PATH={0}".format(viewdir_bin) in out
@@ -2603,7 +2602,7 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
     env("create", "-d", str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs["mypkg1"]["path"] == str(build_folder)
-        assert e.dev_specs["mypkg2"]["path"] == sep + os.path.join("some", "other", "path")
+        assert e.dev_specs["mypkg2"]["path"] == sep + PurePath("some", "other", "path")
 
 
 def test_rewrite_rel_dev_path_named_env(tmpdir):
@@ -2613,7 +2612,7 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
     env("create", "named_env", str(spack_yaml))
     with ev.read("named_env") as e:
         assert e.dev_specs["mypkg1"]["path"] == str(build_folder)
-        assert e.dev_specs["mypkg2"]["path"] == sep + os.path.join("some", "other", "path")
+        assert e.dev_specs["mypkg2"]["path"] == sep + PurePath("some", "other", "path")
 
 
 def test_rewrite_rel_dev_path_original_dir(tmpdir):
@@ -2817,11 +2816,11 @@ def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock
     view = str(tmpdir.join("view"))
     # Put a symlink to an actual directory in view
     non_view_dir = str(tmpdir.mkdir("dont-delete-me"))
-    os.symlink(non_view_dir, view)
+    Path(view).link_to(non_view_dir)
     with ev.create("env", with_view=view):
         add("libelf")
         install("--fake")
-    assert os.path.isdir(non_view_dir)
+    assert Path(non_view_dir).is_dir()
 
 
 def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -2832,9 +2831,9 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
         install("--fake")
 
     # Save the current view directory.
-    resolved_view = os.path.realpath(view)
-    all_views = os.path.dirname(resolved_view)
-    views_before = os.listdir(all_views)
+    resolved_view = Path(view).resolve()
+    all_views = PurePath(resolved_view).parent
+    views_before = list(Path(all_views).iterdir())
 
     # Add a spec that results in MergeConflictError's when creating a view
     with ev.read("env"):
@@ -2844,9 +2843,9 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
 
     # Make sure there is no broken view in the views directory, and the current
     # view is the original view from before the failed regenerate attempt.
-    views_after = os.listdir(all_views)
+    views_after = list(Path(all_views).iterdir())
     assert views_before == views_after
-    assert os.path.samefile(resolved_view, view)
+    assert Path(resolved_view).samefile(view)
 
 
 def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -2862,16 +2861,16 @@ def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, 
         install("--fake")
 
     # Empty the underlying view
-    real_view = os.path.realpath(view)
-    assert os.listdir(real_view)  # make sure it had *some* contents
+    real_view = Path(view).resolve()
+    assert list(Path(real_view).iterdir())  # make sure it had *some* contents
     shutil.rmtree(real_view)
 
     # Replace it with something new.
-    os.mkdir(real_view)
-    fs.touch(os.path.join(real_view, "file"))
+    Path(real_view).mkdir()
+    fs.touch(PurePath(real_view, "file"))
 
     # Remove the symlink so Spack can't know about the "previous root"
-    os.unlink(view)
+    Path(view).unlink()
 
     # Regenerate the view, which should realize it can't write into the same dir.
     msg = "Failed to generate environment view"
@@ -2881,7 +2880,7 @@ def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, 
 
     # Make sure the dir was left untouched.
     assert not os.path.lexists(view)
-    assert os.listdir(real_view) == ["file"]
+    assert list(Path(real_view).iterdir()) == ["file"]
 
 
 def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
@@ -2917,7 +2916,7 @@ def test_read_old_lock_and_write_new(config, tmpdir, lockfile):
     # the environment, anyway.
     #
     # This test ensures the behavior described above.
-    lockfile_path = os.path.join(spack.paths.test_path, "data", "legacy_env", "%s.lock" % lockfile)
+    lockfile_path = PurePath(spack.paths.test_path, "data", "legacy_env", "%s.lock" % lockfile)
 
     # read in the JSON from a legacy lockfile
     with open(lockfile_path) as f:
@@ -2969,14 +2968,14 @@ def test_read_v1_lock_creates_backup(config, tmpdir):
     is created.
     """
     # read in the JSON from a legacy v1 lockfile
-    v1_lockfile_path = os.path.join(spack.paths.test_path, "data", "legacy_env", "v1.lock")
+    v1_lockfile_path = PurePath(spack.paths.test_path, "data", "legacy_env", "v1.lock")
 
     # make an env out of the old lockfile
     test_lockfile_path = str(tmpdir.join(ev.lockfile_name))
     shutil.copy(v1_lockfile_path, test_lockfile_path)
 
     e = ev.Environment(str(tmpdir))
-    assert os.path.exists(e._lock_backup_v1_path)
+    assert Path(e._lock_backup_v1_path).exists()
     assert filecmp.cmp(e._lock_backup_v1_path, v1_lockfile_path)
 
 
@@ -3171,7 +3170,7 @@ def test_env_include_packages_url(
     spack_yaml = tmpdir.join("spack.yaml")
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(default_packages))
-    assert os.path.isfile(spack_yaml.strpath)
+    assert Path(spack_yaml.strpath).is_file()
 
     with spack.config.override("config:url_fetch_method", "curl"):
         env = ev.Environment(tmpdir.strpath)

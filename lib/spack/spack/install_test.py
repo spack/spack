@@ -7,6 +7,7 @@ import hashlib
 import os
 import re
 import shutil
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -59,16 +60,16 @@ def get_all_test_suites():
         list: a list of TestSuite objects, which may be empty if there are none
     """
     stage_root = get_test_stage_dir()
-    if not os.path.isdir(stage_root):
+    if not Path(stage_root).is_dir():
         return []
 
     def valid_stage(d):
         dirpath = os.path.join(stage_root, d)
-        return os.path.isdir(dirpath) and test_suite_filename in os.listdir(dirpath)
+        return Path(dirpath).is_dir() and test_suite_filename in list(Path(dirpath).iterdir())
 
     candidates = [
         os.path.join(stage_root, d, test_suite_filename)
-        for d in os.listdir(stage_root)
+        for d in Path(stage_root).iterdir()
         if valid_stage(d)
     ]
 
@@ -189,7 +190,7 @@ class TestSuite(object):
 
                 # setup per-test directory in the stage dir
                 test_dir = self.test_dir_for_spec(spec)
-                if os.path.exists(test_dir):
+                if Path(test_dir).exists():
                     shutil.rmtree(test_dir)
                 fs.mkdirp(test_dir)
 
@@ -242,7 +243,7 @@ class TestSuite(object):
 
     def ensure_stage(self):
         """Ensure the test suite stage directory exists."""
-        if not os.path.exists(self.stage):
+        if not Path(self.stage).exists():
             fs.mkdirp(self.stage)
 
     @property
@@ -376,7 +377,7 @@ class TestSuite(object):
             spack.repo.path.dump_provenance(spec, repo_cache_path)
             for vspec in spec.package.virtuals_provided:
                 repo_cache_path = self.stage.repo.join(vspec.name)
-                if not os.path.exists(repo_cache_path):
+                if not Path(repo_cache_path).exists():
                     try:
                         spack.repo.path.dump_provenance(vspec, repo_cache_path)
                     except spack.repo.UnknownPackageError:
@@ -428,7 +429,7 @@ class TestSuite(object):
             with open(filename, "r") as f:
                 data = sjson.load(f)
                 test_suite = TestSuite.from_dict(data)
-                content_hash = os.path.basename(os.path.dirname(filename))
+                content_hash = os.path.basename(PurePath(filename).parent)
                 test_suite._hash = content_hash
                 return test_suite
         except Exception as e:

@@ -7,6 +7,7 @@ import collections
 import filecmp
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -241,7 +242,7 @@ def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
 
 
 def trigger_bad_patch(pkg):
-    if not os.path.isdir(pkg.stage.source_path):
+    if not Path(pkg.stage.source_path).is_dir():
         os.makedirs(pkg.stage.source_path)
     bad_file = os.path.join(pkg.stage.source_path, ".spack_patch_failed")
     touch(bad_file)
@@ -263,7 +264,7 @@ def test_patch_failure_develop_spec_exits_gracefully(
     pkg = libelf.package
     with pkg.stage:
         bad_patch_indicator = trigger_bad_patch(pkg)
-        assert os.path.isfile(bad_patch_indicator)
+        assert Path(bad_patch_indicator).is_file()
         pkg.do_patch()
     # success if no exceptions raised
 
@@ -278,9 +279,9 @@ def test_patch_failure_restages(mock_packages, config, install_mockery, mock_fet
     pkg = spec["libelf"].package
     with pkg.stage:
         bad_patch_indicator = trigger_bad_patch(pkg)
-        assert os.path.isfile(bad_patch_indicator)
+        assert Path(bad_patch_indicator).is_file()
         pkg.do_patch()
-        assert not os.path.isfile(bad_patch_indicator)
+        assert not Path(bad_patch_indicator).is_file()
 
 
 def test_multiple_patched_dependencies(mock_packages, config):

@@ -5,9 +5,9 @@
 
 from __future__ import print_function
 
-import os
 import re
 import urllib.parse
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -959,13 +959,13 @@ def create(parser, args):
     # Create a directory for the new package
     repo = get_repository(args, name)
     pkg_path = repo.filename_for_package_name(package.name)
-    if os.path.exists(pkg_path) and not args.force:
+    if Path(pkg_path).exists() and not args.force:
         tty.die(
             "{0} already exists.".format(pkg_path),
             "  Try running `spack create --force` to overwrite it.",
         )
     else:
-        mkdirp(os.path.dirname(pkg_path))
+        mkdirp(PurePath(pkg_path).parent)
 
     # Write the new package file
     package.write(pkg_path)

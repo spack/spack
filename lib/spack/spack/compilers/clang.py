@@ -6,6 +6,7 @@
 import os
 import re
 import sys
+from pathlib import PurePath
 
 import llnl.util.lang
 
@@ -14,20 +15,20 @@ from spack.version import ver
 
 #: compiler symlink mappings for mixed f77 compilers
 f77_mapping = [
-    ("gfortran", os.path.join("clang", "gfortran")),
-    ("xlf_r", os.path.join("xl_r", "xlf_r")),
-    ("xlf", os.path.join("xl", "xlf")),
-    ("pgfortran", os.path.join("pgi", "pgfortran")),
-    ("ifort", os.path.join("intel", "ifort")),
+    ("gfortran", PurePath("clang", "gfortran")),
+    ("xlf_r", PurePath("xl_r", "xlf_r")),
+    ("xlf", PurePath("xl", "xlf")),
+    ("pgfortran", PurePath("pgi", "pgfortran")),
+    ("ifort", PurePath("intel", "ifort")),
 ]
 
 #: compiler symlink mappings for mixed f90/fc compilers
 fc_mapping = [
-    ("gfortran", os.path.join("clang", "gfortran")),
-    ("xlf90_r", os.path.join("xl_r", "xlf90_r")),
-    ("xlf90", os.path.join("xl", "xlf90")),
-    ("pgfortran", os.path.join("pgi", "pgfortran")),
-    ("ifort", os.path.join("intel", "ifort")),
+    ("gfortran", PurePath("clang", "gfortran")),
+    ("xlf90_r", PurePath("xl_r", "xlf90_r")),
+    ("xlf90", PurePath("xl", "xlf90")),
+    ("pgfortran", PurePath("pgi", "pgfortran")),
+    ("ifort", PurePath("intel", "ifort")),
 ]
 
 
@@ -70,8 +71,8 @@ class Clang(Compiler):
     def link_paths(self):
         # clang links are always the same
         link_paths = {
-            "cc": os.path.join("clang", "clang"),
-            "cxx": os.path.join("clang", "clang++"),
+            "cc": PurePath("clang", "clang"),
+            "cxx": PurePath("clang", "clang++"),
         }
 
         # fortran links need to look at the actual compiler names from
@@ -81,14 +82,14 @@ class Clang(Compiler):
                 link_paths["f77"] = link_path
                 break
         else:
-            link_paths["f77"] = os.path.join("clang", "flang")
+            link_paths["f77"] = PurePath("clang", "flang")
 
         for compiler_name, link_path in fc_mapping:
             if self.fc and compiler_name in self.fc:
                 link_paths["fc"] = link_path
                 break
         else:
-            link_paths["fc"] = os.path.join("clang", "flang")
+            link_paths["fc"] = PurePath("clang", "flang")
 
         return link_paths
 

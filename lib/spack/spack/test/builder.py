@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 import sys
+from pathlib import PurePath
 
 import pytest
 
@@ -12,7 +13,7 @@ import spack.paths
 
 @pytest.fixture()
 def builder_test_repository():
-    builder_test_path = os.path.join(spack.paths.repos_path, "builder.test")
+    builder_test_path = PurePath(spack.paths.repos_path, "builder.test")
     with spack.repo.use_repositories(builder_test_path) as mock_repo:
         yield mock_repo
 

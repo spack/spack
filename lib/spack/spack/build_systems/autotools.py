@@ -7,6 +7,7 @@ import os
 import os.path
 import stat
 import subprocess
+from pathlib import Path, PurePath
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -182,7 +183,7 @@ class AutotoolsBuilder(BaseBuilder):
     def _removed_la_files_log(self):
         """File containing the list of removed libtool archives"""
         build_dir = self.build_directory
-        if not os.path.isabs(self.build_directory):
+        if not PurePath(self.build_directory).is_absolute():
             build_dir = os.path.join(self.pkg.stage.path, build_dir)
         return os.path.join(build_dir, "removed_la_files.txt")
 
@@ -220,7 +221,7 @@ class AutotoolsBuilder(BaseBuilder):
         def runs_ok(script_abs_path):
             # Construct the list of arguments for the call
             additional_args = {"config.sub": [config_arch]}
-            script_name = os.path.basename(script_abs_path)
+            script_name = PurePath(script_abs_path).name
             args = [script_abs_path] + additional_args.get(script_name, [])
 
             try:
@@ -245,7 +246,7 @@ class AutotoolsBuilder(BaseBuilder):
         )
 
         # Get the config files we need to patch (config.sub / config.guess).
-        to_be_found = list(set(os.path.basename(f) for f in to_be_patched))
+        to_be_found = list(set(PurePath(f).name for f in to_be_patched))
         gnuconfig = self.pkg.spec["gnuconfig"]
         gnuconfig_dir = gnuconfig.prefix
 
@@ -277,7 +278,7 @@ class AutotoolsBuilder(BaseBuilder):
         candidates = [f for f in candidates if runs_ok(f)]
         substitutes = {}
         for candidate in candidates:
-            config_file = os.path.basename(candidate)
+            config_file = PurePath(candidate).name
             substitutes[config_file] = candidate
             to_be_found.remove(config_file)
 
@@ -302,11 +303,11 @@ To resolve this problem, please try the following:
 
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:
-            name = os.path.basename(abs_path)
+            name = PurePath(abs_path).name
             mode = os.stat(abs_path).st_mode
-            os.chmod(abs_path, stat.S_IWUSR)
+            Path(abs_path).chmod(stat.S_IWUSR)
             fs.copy(substitutes[name], abs_path)
-            os.chmod(abs_path, mode)
+            Path(abs_path).chmod(mode)
 
     @spack.builder.run_before("configure")
     def _patch_usr_bin_file(self):
@@ -523,7 +524,7 @@ To resolve this problem, please try the following:
     @property
     def configure_abs_path(self):
         # Absolute path to configure
-        configure_abs_path = os.path.join(os.path.abspath(self.configure_directory), "configure")
+        configure_abs_path = os.path.join(Path(self.configure_directory).resolve(), "configure")
         return configure_abs_path
 
     @property
@@ -540,7 +541,7 @@ To resolve this problem, please try the following:
         """Not needed usually, configure should be already there"""
 
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if Path(self.configure_abs_path).exists():
             return
 
         # Else try to regenerate it, which reuquires a few build dependencies
@@ -581,7 +582,7 @@ To resolve this problem, please try the following:
              RuntimeError: if the "configure" script is not found
         """
         # Check if the "configure" script is there. If not raise a RuntimeError.
-        if not os.path.exists(self.configure_abs_path):
+        if not Path(self.configure_abs_path).exists():
             msg = "configure script not found in {0}"
             raise RuntimeError(msg.format(self.configure_directory))
 
@@ -820,7 +821,7 @@ To resolve this problem, please try the following:
         # Remove the files and create a log of what was removed
         libtool_files = fs.find(str(self.pkg.prefix), "*.la", recursive=True)
         with fs.safe_remove(*libtool_files):
-            fs.mkdirp(os.path.dirname(self._removed_la_files_log))
+            fs.mkdirp(PurePath(self._removed_la_files_log).parent)
             with open(self._removed_la_files_log, mode="w") as f:
                 f.write("\n".join(libtool_files))
 

@@ -13,6 +13,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from pathlib import Path, PurePath
 
 import ruamel.yaml as yaml
 
@@ -65,7 +66,7 @@ _active_environment = None
 
 
 #: path where environments are stored in the spack tree
-env_path = os.path.join(spack.paths.var_path, "environments")
+env_path = PurePath(spack.paths.var_path, "environments")
 
 
 #: Name of the input yaml file for an environment
@@ -207,7 +208,7 @@ def active_environment():
 
 def _root(name):
     """Non-validating version of root(), to be used internally."""
-    return os.path.join(env_path, name)
+    return PurePath(env_path, name)
 
 
 def root(name):
@@ -230,7 +231,7 @@ def active(name):
 
 def is_env_dir(path):
     """Whether a directory contains a spack environment."""
-    return os.path.isdir(path) and os.path.exists(os.path.join(path, manifest_name))
+    return Path(path).is_dir() and os.path.exists(PurePath(path, manifest_name))
 
 
 def read(name):
@@ -259,14 +260,14 @@ def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
-    if not os.path.exists(env_path):
+    if not Path(env_path).exists():
         return []
 
-    candidates = sorted(os.listdir(env_path))
+    candidates = sorted(list(Path(env_path).iterdir()))
     names = []
     for candidate in candidates:
-        yaml_path = os.path.join(_root(candidate), manifest_name)
-        if valid_env_name(candidate) and os.path.exists(yaml_path):
+        yaml_path = PurePath(_root(candidate), manifest_name)
+        if valid_env_name(candidate) and Path(yaml_path).exists():
             names.append(candidate)
     return names
 
@@ -361,7 +362,7 @@ def _error_on_nonempty_view_dir(new_root):
         return
 
     # Empty directories are fine
-    if stat.S_ISDIR(st.st_mode) and len(os.listdir(new_root)) == 0:
+    if stat.S_ISDIR(st.st_mode) and len(list(Path(new_root).iterdir())) == 0:
         return
 
     # Anything else is an error
@@ -442,21 +443,21 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
-        if not os.path.islink(self.root):
+        if not Path(self.root).is_symlink():
             return None
 
         root = os.readlink(self.root)
-        if os.path.isabs(root):
+        if PurePath(root).is_absolute():
             return root
 
-        root_dir = os.path.dirname(self.root)
-        return os.path.join(root_dir, root)
+        root_dir = PurePath(self.root).parent
+        return PurePath(root_dir, root)
 
     def _next_root(self, specs):
         content_hash = self.content_hash(specs)
-        root_dir = os.path.dirname(self.root)
-        root_name = os.path.basename(self.root)
-        return os.path.join(root_dir, "._%s" % root_name, content_hash)
+        root_dir = PurePath(self.root).parent
+        root_name = PurePath(self.root).name
+        return PurePath(root_dir, "._%s" % root_name, content_hash)
 
     def content_hash(self, specs):
         d = syaml.syaml_dict(
@@ -478,7 +479,7 @@ class ViewDescriptor(object):
         view = self.view()
         view_path = view.get_projection_for_spec(spec)
         rel_path = os.path.relpath(view_path, self._current_root)
-        return os.path.join(self.root, rel_path)
+        return PurePath(self.root, rel_path)
 
     def view(self, new=None):
         """
@@ -580,8 +581,8 @@ class ViewDescriptor(object):
 
         view = self.view(new=new_root)
 
-        root_dirname = os.path.dirname(self.root)
-        tmp_symlink_name = os.path.join(root_dirname, "._view_link")
+        root_dirname = PurePath(self.root).parent
+        tmp_symlink_name = PurePath(root_dirname, "._view_link")
 
         # Create a new view
         try:
@@ -589,8 +590,8 @@ class ViewDescriptor(object):
             view.add_specs(*specs, with_dependencies=False)
 
             # create symlink from tmp_symlink_name to new_root
-            if os.path.exists(tmp_symlink_name):
-                os.unlink(tmp_symlink_name)
+            if Path(tmp_symlink_name).exists():
+                Path(tmp_symlink_name).unlink()
             symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
@@ -599,7 +600,7 @@ class ViewDescriptor(object):
             # Clean up new view and temporary symlink on any failure.
             try:
                 shutil.rmtree(new_root, ignore_errors=True)
-                os.unlink(tmp_symlink_name)
+                Path(tmp_symlink_name).unlink()
             except (IOError, OSError):
                 pass
             raise e
@@ -609,8 +610,8 @@ class ViewDescriptor(object):
         # was not created by the environment, but by the user.
         if (
             old_root
-            and os.path.exists(old_root)
-            and os.path.samefile(os.path.dirname(new_root), os.path.dirname(old_root))
+            and Path(old_root).exists()
+            and Path(PurePath(new_root).parent).samefile(PurePath(old_root).parent)
         ):
             try:
                 shutil.rmtree(old_root)
@@ -643,7 +644,7 @@ class Environment(object):
                 when the environment path is different from init_file's
                 directory.
         """
-        self.path = os.path.abspath(path)
+        self.path = Path(path).resolve()
         self.init_file = init_file
         self.with_view = with_view
         self.keep_relative = keep_relative
@@ -670,7 +671,7 @@ class Environment(object):
                 # Rewrite relative develop paths when initializing a new
                 # environment in a different location from the spack.yaml file.
                 if not keep_relative and hasattr(f, "name") and f.name.endswith(".yaml"):
-                    init_file_dir = os.path.abspath(os.path.dirname(f.name))
+                    init_file_dir = Path.resolve(PurePath(f.name).parent)
                     self._rewrite_relative_paths_on_relocation(init_file_dir)
         else:
             with lk.ReadTransaction(self.txlock):
@@ -697,7 +698,7 @@ class Environment(object):
 
         for name, entry in self.dev_specs.items():
             dev_path = entry["path"]
-            expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
+            expanded_path = os.path.normpath(PurePath(init_file_dir, entry["path"]))
 
             # Skip if the expanded path is the same (e.g. when absolute)
             if dev_path == expanded_path:
@@ -711,14 +712,14 @@ class Environment(object):
         """Reinitialize the environment object if it has been written (this
         may not be true if the environment was just created in this running
         instance of Spack)."""
-        if not os.path.exists(self.manifest_path):
+        if not Path(self.manifest_path).exists():
             return
 
         self.clear(re_read=True)
         self._read()
 
     def _read(self):
-        default_manifest = not os.path.exists(self.manifest_path)
+        default_manifest = not Path(self.manifest_path).exists()
         if default_manifest:
             # No manifest, use default yaml
             self._read_manifest(default_manifest_yaml())
@@ -726,7 +727,7 @@ class Environment(object):
             with open(self.manifest_path) as f:
                 self._read_manifest(f)
 
-        if os.path.exists(self.lock_path):
+        if Path(self.lock_path).exists():
             with open(self.lock_path) as f:
                 read_lock_version = self._read_lockfile(f)
             if default_manifest:
@@ -849,7 +850,7 @@ class Environment(object):
         for named environments.
         """
         if self.internal:
-            return os.path.basename(self.path)
+            return PurePath(self.path).name
         else:
             return self.path
 
@@ -861,19 +862,19 @@ class Environment(object):
     @property
     def manifest_path(self):
         """Path to spack.yaml file in this environment."""
-        return os.path.join(self.path, manifest_name)
+        return PurePath(self.path, manifest_name)
 
     @property
     def _transaction_lock_path(self):
         """The location of the lock file used to synchronize multiple
         processes updating the same environment.
         """
-        return os.path.join(self.env_subdir_path, "transaction_lock")
+        return PurePath(self.env_subdir_path, "transaction_lock")
 
     @property
     def lock_path(self):
         """Path to spack.lock file in this environment."""
-        return os.path.join(self.path, lockfile_name)
+        return PurePath(self.path, lockfile_name)
 
     @property
     def _lock_backup_v1_path(self):
@@ -883,25 +884,25 @@ class Environment(object):
     @property
     def env_subdir_path(self):
         """Path to directory where the env stores repos, logs, views."""
-        return os.path.join(self.path, env_subdir_name)
+        return PurePath(self.path, env_subdir_name)
 
     @property
     def repos_path(self):
-        return os.path.join(self.path, env_subdir_name, "repos")
+        return PurePath(self.path, env_subdir_name, "repos")
 
     @property
     def log_path(self):
-        return os.path.join(self.path, env_subdir_name, "logs")
+        return PurePath(self.path, env_subdir_name, "logs")
 
     @property
     def config_stage_dir(self):
         """Directory for any staged configuration file(s)."""
-        return os.path.join(self.env_subdir_path, "config")
+        return PurePath(self.env_subdir_path, "config")
 
     @property
     def view_path_default(self):
         # default path for environment views
-        return os.path.join(self.env_subdir_path, "view")
+        return PurePath(self.env_subdir_path, "view")
 
     @property
     def repo(self):
@@ -939,12 +940,12 @@ class Environment(object):
             elif include_url.scheme in ("http", "https", "ftp"):
                 # Stage any remote configuration file(s)
                 staged_configs = (
-                    os.listdir(self.config_stage_dir)
-                    if os.path.exists(self.config_stage_dir)
+                    list(Path(self.config_stage_dir).iterdir())
+                    if Path(self.config_stage_dir).exists()
                     else []
                 )
                 remote_path = urllib.request.url2pathname(include_url.path)
-                basename = os.path.basename(remote_path)
+                basename = PurePath(remote_path).name
                 if basename in staged_configs:
                     # Do NOT re-stage configuration files over existing
                     # ones with the same name since there is a risk of
@@ -960,7 +961,7 @@ class Environment(object):
                     # configuration file.
                     config_path = self.config_stage_dir
                     if basename.endswith(".yaml"):
-                        config_path = os.path.join(config_path, basename)
+                        config_path = PurePath(config_path, basename)
                 else:
                     staged_path = spack.config.fetch_remote_configs(
                         config_path,
@@ -979,16 +980,16 @@ class Environment(object):
                 )
 
             # treat relative paths as relative to the environment
-            if not os.path.isabs(config_path):
-                config_path = os.path.join(self.path, config_path)
-                config_path = os.path.normpath(os.path.realpath(config_path))
+            if not PurePath(config_path).is_absolute():
+                config_path = PurePath(self.path, config_path)
+                config_path = os.path.normpath(Path(config_path).resolve())
 
-            if os.path.isdir(config_path):
+            if Path(config_path).is_dir():
                 # directories are treated as regular ConfigScopes
-                config_name = "env:%s:%s" % (self.name, os.path.basename(config_path))
+                config_name = "env:%s:%s" % (self.name, PurePath(config_path).name)
                 tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
-            elif os.path.exists(config_path):
+            elif Path(config_path).exists():
                 # files are assumed to be SingleFileScopes
                 config_name = "env:%s:%s" % (self.name, config_path)
                 tty.debug(
@@ -1668,7 +1669,7 @@ class Environment(object):
                     log_path, "%s-%s.log" % (spec.name, spec.dag_hash(7))
                 )
                 if os.path.lexists(build_log_link):
-                    os.remove(build_log_link)
+                    Path(build_log_link).unlink()
                 symlink(spec.package.build_log_path, build_log_link)
 
     def _partition_roots_by_install_status(self):
@@ -2046,7 +2047,7 @@ class Environment(object):
                 if not spec.concrete:
                     raise ValueError("specs passed to environment.write() " "must be concrete!")
 
-                root = os.path.join(self.repos_path, spec.namespace)
+                root = PurePath(self.repos_path, spec.namespace)
                 repo = spack.repo.create_or_construct(root, spec.namespace)
                 pkg_dir = repo.dirname_for_package_name(spec.name)
 
@@ -2166,10 +2167,10 @@ class Environment(object):
         # which would not show up in even a string comparison between the two
         # keys).
         changed = not yaml_equivalent(self.yaml, self.raw_yaml)
-        written = os.path.exists(self.manifest_path)
+        written = Path(self.manifest_path).exists()
         if changed or not written:
             self.raw_yaml = copy.deepcopy(self.yaml)
-            with fs.write_tmp_and_move(os.path.realpath(self.manifest_path)) as f:
+            with fs.write_tmp_and_move(Path(self.manifest_path).resolve()) as f:
                 _write_yaml(self.yaml, f)
 
     def __enter__(self):
@@ -2284,11 +2285,11 @@ def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
     path = spack.repo.RepoPath()
 
-    if os.path.isdir(root):
-        for repo_root in os.listdir(root):
-            repo_root = os.path.join(root, repo_root)
+    if Path(root).is_dir():
+        for repo_root in Path(root).iterdir():
+            repo_root = PurePath(root, repo_root)
 
-            if not os.path.isdir(repo_root):
+            if not Path(repo_root).is_dir():
                 continue
 
             repo = spack.repo.Repo(repo_root)
@@ -2322,12 +2323,12 @@ def manifest_file(env_name_or_dir):
     """
     env_dir = None
     if is_env_dir(env_name_or_dir):
-        env_dir = os.path.abspath(env_name_or_dir)
+        env_dir = Path(env_name_or_dir).resolve()
     elif exists(env_name_or_dir):
-        env_dir = os.path.abspath(root(env_name_or_dir))
+        env_dir = Path.resolve(root(env_name_or_dir))
 
     assert env_dir, "environment not found [env={0}]".format(env_name_or_dir)
-    return os.path.join(env_dir, manifest_name)
+    return PurePath(env_dir, manifest_name)
 
 
 def update_yaml(manifest, backup_file):
@@ -2359,7 +2360,7 @@ def update_yaml(manifest, backup_file):
         'backup file "{0}" already exists on disk. Check its content '
         "and remove it before trying to update again."
     )
-    assert not os.path.exists(backup_file), msg.format(backup_file)
+    assert not Path(backup_file).exists(), msg.format(backup_file)
 
     shutil.copy(manifest, backup_file)
     with open(manifest, "w") as f:

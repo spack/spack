@@ -6,6 +6,7 @@
 import itertools as it
 import os
 import sys
+from pathlib import PurePath
 
 import pytest
 
@@ -50,7 +51,7 @@ def test_urlencode_string():
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
-    signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
+    signing_key_path = PurePath(signing_key_dir, "package-signing-key")
     with open(signing_key_path) as fd:
         signing_key = fd.read()
 
@@ -122,7 +123,7 @@ def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
     )
 
     url = "https://www.nosuchurlexists.itsfake/artifacts.zip"
-    working_dir = os.path.join(tmpdir.strpath, "repro")
+    working_dir = PurePath(tmpdir.strpath, "repro")
     test_artifacts_path = os.path.join(
         spack_paths.test_path, "data", "ci", "gitlab", "artifacts.zip"
     )
@@ -173,8 +174,8 @@ def test_ci_copy_test_logs_to_artifacts_fail(tmpdir, capfd):
 
 def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypatch):
     c1, c2 = last_two_git_commits
-    repro_dir = os.path.join(tmpdir.strpath, "repro")
-    spack_dir = os.path.join(repro_dir, "spack")
+    repro_dir = PurePath(tmpdir.strpath, "repro")
+    spack_dir = PurePath(repro_dir, "spack")
     os.makedirs(spack_dir)
 
     prefix_save = spack.paths.prefix

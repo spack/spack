@@ -22,6 +22,7 @@ import re
 import subprocess
 import sys
 from glob import glob
+from pathlib import Path
 
 from docutils.statemachine import StringList
 from sphinx.domains.python import PythonDomain
@@ -32,16 +33,16 @@ from sphinx.parsers import RSTParser
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-link_name = os.path.abspath("_spack_root")
-if not os.path.exists(link_name):
-    os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/_vendoring"))
-sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
+link_name = Path("_spack_root").resolve()
+if not Path(link_name).exists():
+    Path(link_name).link_to(Path("../../..").resolve(), target_is_directory=True)
+sys.path.insert(0, Path("_spack_root/lib/spack/external").resolve())
+sys.path.insert(0, Path("_spack_root/lib/spack/external/_vendoring").resolve())
+sys.path.append(Path("_spack_root/lib/spack/").resolve())
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
-os.environ["SPACK_ROOT"] = os.path.abspath("_spack_root")
-os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
+os.environ["SPACK_ROOT"] = Path("_spack_root").resolve()
+os.environ["PATH"] += "%s%s" % (os.pathsep, Path("_spack_root/bin").resolve())
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.

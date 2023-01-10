@@ -34,6 +34,7 @@ import datetime
 import inspect
 import os.path
 import re
+from pathlib import Path, PurePath
 from typing import Optional
 
 import llnl.util.filesystem
@@ -259,13 +260,13 @@ def root_path(name, module_set_name):
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)
 
-    path = roots.get(name, os.path.join(spack.paths.share_path, name))
+    path = roots.get(name, PurePath(spack.paths.share_path, name))
     return spack.util.path.canonicalize_path(path)
 
 
 def generate_module_index(root, modules, overwrite=False):
-    index_path = os.path.join(root, "module-index.yaml")
-    if overwrite or not os.path.exists(index_path):
+    index_path = PurePath(root, "module-index.yaml")
+    if overwrite or not Path(index_path).exists():
         entries = syaml.syaml_dict()
     else:
         with open(index_path) as index_file:
@@ -294,8 +295,8 @@ ModuleIndexEntry = collections.namedtuple("ModuleIndexEntry", ["path", "use_name
 
 
 def read_module_index(root):
-    index_path = os.path.join(root, "module-index.yaml")
-    if not os.path.exists(index_path):
+    index_path = PurePath(root, "module-index.yaml")
+    if not Path(index_path).exists():
         return {}
     with open(index_path, "r") as index_file:
         return _read_module_index(index_file)
@@ -401,7 +402,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             return module.use_name
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
-        if not os.path.isfile(writer.layout.filename):
+        if not Path(writer.layout.filename).is_file():
             if not writer.conf.excluded:
                 err_msg = "No module available for package {0} at {1}".format(
                     spec, writer.layout.filename
@@ -616,7 +617,7 @@ class BaseFileLayout(object):
         name = self.spec.format(projection)
         # Not everybody is working on linux...
         parts = name.split("/")
-        name = os.path.join(*parts)
+        name = PurePath(*parts)
         # Add optional suffixes based on constraints
         path_elements = [name] + self.conf.suffixes
         return "-".join(path_elements)
@@ -633,9 +634,9 @@ class BaseFileLayout(object):
         if arch_folder_conf:
             # include an arch specific folder between root and filename
             arch_folder = str(self.spec.architecture)
-            filename = os.path.join(arch_folder, filename)
+            filename = PurePath(arch_folder, filename)
         # Return the absolute path
-        return os.path.join(self.dirname(), filename)
+        return PurePath(self.dirname(), filename)
 
 
 class BaseContext(tengine.Context):
@@ -694,7 +695,7 @@ class BaseContext(tengine.Context):
             msg = "unknown, software installed outside of Spack"
             return msg
 
-        if os.path.exists(pkg.install_configure_args_path):
+        if Path(pkg.install_configure_args_path).exists():
             with open(pkg.install_configure_args_path, "r") as args_file:
                 return args_file.read()
 
@@ -851,7 +852,7 @@ class BaseModuleFileWriter(object):
 
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.layout.filename):
+        if not overwrite and Path(self.layout.filename).exists():
             message = "Module file {0.filename} exists and will not be overwritten"
             tty.warn(message.format(self.layout))
             return
@@ -862,8 +863,8 @@ class BaseModuleFileWriter(object):
 
         # If the directory where the module should reside does not exist
         # create it
-        module_dir = os.path.dirname(self.layout.filename)
-        if not os.path.exists(module_dir):
+        module_dir = PurePath(self.layout.filename).parent
+        if not Path(module_dir).exists():
             llnl.util.filesystem.mkdirp(module_dir)
 
         # Get the template for the module
@@ -905,7 +906,7 @@ class BaseModuleFileWriter(object):
             f.write(text)
 
         # Set the file permissions of the module to match that of the package
-        if os.path.exists(self.layout.filename):
+        if Path(self.layout.filename).exists():
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
         # Symlink defaults if needed
@@ -916,19 +917,19 @@ class BaseModuleFileWriter(object):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing
             # symlinks do not cause an error.
-            default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
-            default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
-            os.symlink(self.layout.filename, default_tmp)
-            os.rename(default_tmp, default_path)
+            default_path = PurePath(PurePath(self.layout.filename).parent, "default")
+            default_tmp = PurePath(PurePath(self.layout.filename).parent, ".tmp_spack_default")
+            Path(default_tmp).link_to(self.layout.filename)
+            Path(default_tmp).rename(Path(default_path))
 
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
-        if os.path.exists(mod_file):
+        if Path(mod_file).exists():
             try:
-                os.remove(mod_file)  # Remove the module file
+                Path(mod_file).unlink()  # Remove the module file
                 os.removedirs(
-                    os.path.dirname(mod_file)
+                    PurePath(mod_file).parent
                 )  # Remove all the empty directories from the leaf up
             except OSError:
                 # removedirs throws OSError on first non-empty directory found

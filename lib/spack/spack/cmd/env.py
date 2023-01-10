@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import tempfile
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -162,8 +163,8 @@ def env_activate(args):
     # Temporary environment
     if args.temp:
         env = create_temp_env_directory()
-        env_path = os.path.abspath(env)
-        short_name = os.path.basename(env_path)
+        env_path = Path(env).resolve()
+        short_name = PurePath(env_path).name
         ev.Environment(env).write(regenerate=False)
 
     # Named environment
@@ -173,8 +174,8 @@ def env_activate(args):
 
     # Environment directory
     elif ev.is_env_dir(env_name_or_dir):
-        env_path = os.path.abspath(env_name_or_dir)
-        short_name = os.path.basename(env_path)
+        env_path = Path(env_name_or_dir).resolve()
+        short_name = PurePath(env_path).name
 
     else:
         tty.die("No such environment: '%s'" % env_name_or_dir)
@@ -456,7 +457,7 @@ def env_status_setup_parser(subparser):
 def env_status(args):
     env = ev.active_environment()
     if env:
-        if env.path == os.getcwd():
+        if env.path == Path.cwd():
             tty.msg("Using %s in current directory: %s" % (ev.manifest_name, env.path))
         else:
             tty.msg("In environment %s" % env.name)
@@ -560,10 +561,10 @@ def env_revert(args):
 
     # Check that both the spack.yaml and the backup exist, the inform user
     # on what is going to happen and ask for confirmation
-    if not os.path.exists(manifest_file):
+    if not Path(manifest_file).exists():
         msg = "cannot fine the manifest file of the environment [file={0}]"
         tty.die(msg.format(manifest_file))
-    if not os.path.exists(backup_file):
+    if not Path(backup_file).exists():
         msg = "cannot find the old manifest file to be restored [file={0}]"
         tty.die(msg.format(backup_file))
 
@@ -580,7 +581,7 @@ def env_revert(args):
         tty.die("Operation aborted.")
 
     shutil.copy(backup_file, manifest_file)
-    os.remove(backup_file)
+    Path(backup_file).unlink()
     msg = 'Environment "{0}" reverted to old state'
     tty.msg(msg.format(manifest_file))
 
@@ -696,7 +697,7 @@ def env_depfile(args):
     # Special make targets are useful when including a makefile in another, and you
     # need to "namespace" the targets to avoid conflicts.
     if args.make_target_prefix is None:
-        target_prefix = os.path.join(env.env_subdir_path, "makedeps")
+        target_prefix = PurePath(env.env_subdir_path, "makedeps")
     else:
         target_prefix = args.make_target_prefix
 
@@ -705,16 +706,16 @@ def env_depfile(args):
         # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
         # sense to have a prefix like `env/all`, `env/clean` when they are
         # supposed to be included
-        if name in ("all", "clean") and os.path.isabs(target_prefix):
+        if name in ("all", "clean") and PurePath(target_prefix).is_absolute():
             return name
         else:
-            return os.path.join(target_prefix, name)
+            return PurePath(target_prefix, name)
 
     def get_install_target(name):
-        return os.path.join(target_prefix, "install", name)
+        return PurePath(target_prefix, "install", name)
 
     def get_install_deps_target(name):
-        return os.path.join(target_prefix, "install-deps", name)
+        return PurePath(target_prefix, "install-deps", name)
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
@@ -747,12 +748,12 @@ def env_depfile(args):
         all_install_related_targets.append(get_install_target(tgt))
         all_install_related_targets.append(get_install_deps_target(tgt))
         if args.make_target_prefix is None:
-            phony_convenience_targets.append(os.path.join("install", tgt))
-            phony_convenience_targets.append(os.path.join("install-deps", tgt))
+            phony_convenience_targets.append(PurePath("install", tgt))
+            phony_convenience_targets.append(PurePath("install-deps", tgt))
 
     buf = io.StringIO()
 
-    template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
+    template = spack.tengine.make_environment().get_template(PurePath("depfile", "Makefile"))
 
     rendered = template.render(
         {

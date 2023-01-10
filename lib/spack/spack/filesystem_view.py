@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import sys
+from pathlib import Path, PurePath
 
 from llnl.util import tty
 from llnl.util.filesystem import (
@@ -53,7 +54,7 @@ def view_symlink(src, dst, **kwargs):
 def view_hardlink(src, dst, **kwargs):
     # keyword arguments are irrelevant
     # here to fit required call signature
-    os.link(src, dst)
+    Path(src).link_to(dst)
 
 
 def view_copy(src, dst, view, spec=None):
@@ -262,7 +263,7 @@ class YamlFilesystemView(FilesystemView):
         if not self.projections:
             # Read projections file from view
             self.projections = self.read_projections()
-        elif not os.path.exists(self.projections_path):
+        elif not Path(self.projections_path).exists():
             # Write projections file to new view
             self.write_projections()
         else:
@@ -277,12 +278,12 @@ class YamlFilesystemView(FilesystemView):
 
     def write_projections(self):
         if self.projections:
-            mkdirp(os.path.dirname(self.projections_path))
+            mkdirp(PurePath(self.projections_path).parent)
             with open(self.projections_path, "w") as f:
                 f.write(s_yaml.dump_config({"projections": self.projections}))
 
     def read_projections(self):
-        if os.path.exists(self.projections_path):
+        if Path(self.projections_path).exists():
             with open(self.projections_path, "r") as f:
                 projections_data = s_yaml.load(f)
                 spack.config.validate(projections_data, spack.schema.projections.schema)
@@ -404,7 +405,7 @@ class YamlFilesystemView(FilesystemView):
             # metadata directory.
             if len([s for s in specs if needs_file(s, file)]) <= 1:
                 tty.debug("Removing file " + file)
-                os.remove(file)
+                Path(file).unlink()
 
     def check_added(self, spec):
         assert spec.concrete
@@ -510,8 +511,8 @@ class YamlFilesystemView(FilesystemView):
 
         specs = []
         for md_dir in md_dirs:
-            if os.path.exists(md_dir):
-                for name_dir in os.listdir(md_dir):
+            if Path(md_dir).exists():
+                for name_dir in Path(md_dir).iterdir():
                     filename = os.path.join(md_dir, name_dir, spack.store.layout.spec_file_name)
                     spec = get_spec_from_file(filename)
                     if spec:
@@ -626,7 +627,7 @@ class YamlFilesystemView(FilesystemView):
 
     def unlink_meta_folder(self, spec):
         path = self.get_path_meta_folder(spec)
-        assert os.path.exists(path)
+        assert Path(path).exists()
         shutil.rmtree(path)
 
 
@@ -654,7 +655,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Ignore spack meta data folder.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.layout.metadata_dir
+            return PurePath(file).name == spack.store.layout.metadata_dir
 
         visitor = SourceMergeVisitor(ignore=skip_list)
 
@@ -684,7 +685,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Make the directory structure
         for dst in visitor.directories:
-            os.mkdir(os.path.join(self._root, dst))
+            Path(os.path.join(self._root, dst)).mkdir()
 
         # Then group the files to be linked by spec...
         # For compatibility, we have to create a merge_map dict mapping
@@ -727,7 +728,7 @@ class SimpleFilesystemView(FilesystemView):
             raise MergeConflictSummary(metadata_visitor.file_conflicts)
 
         for dst in metadata_visitor.directories:
-            os.mkdir(os.path.join(self._root, dst))
+            Path(os.path.join(self._root, dst)).mkdir()
 
         for dst_relpath, (src_root, src_relpath) in metadata_visitor.files.items():
             self.link(os.path.join(src_root, src_relpath), os.path.join(self._root, dst_relpath))

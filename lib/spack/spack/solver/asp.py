@@ -13,6 +13,7 @@ import pprint
 import re
 import types
 import warnings
+from pathlib import PurePath
 
 import archspec.cpu
 
@@ -690,7 +691,7 @@ class PyclingoDriver(object):
         timer.start("load")
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
-        parent_dir = os.path.dirname(__file__)
+        parent_dir = PurePath(__file__).parent
 
         # extract error messages from concretize.lp by inspecting its AST
         with self.backend:

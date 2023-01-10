@@ -7,6 +7,7 @@ import os
 import platform
 import posixpath
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -25,25 +26,26 @@ from spack.build_environment import (
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-from spack.util.path import Path, convert_to_platform_path
 
 
-def os_pathsep_join(path, *pths):
-    out_pth = path
-    for pth in pths:
-        out_pth = os.pathsep.join([out_pth, pth])
-    return out_pth
+is_windows = sys.platform == "win32"
+
+
+def os_pathsep_join(*pths):
+    """Helper method to compose paths to cross platform path and cast to string"""
+    return str(Path(*pths))
 
 
 def prep_and_join(path, *pths):
-    return os.path.sep + os.path.join(path, *pths)
+    "Same as `os_pathsep_join` but prepends path with platform pathsep"
+    return str(Path(os.path.sep).joinpath(Path(path, *pths)))
 
 
 @pytest.fixture
 def build_environment(working_env):
-    cc = Executable(os.path.join(build_env_path, "cc"))
-    cxx = Executable(os.path.join(build_env_path, "c++"))
-    fc = Executable(os.path.join(build_env_path, "fc"))
+    cc = Executable(Path(build_env_path, "cc"))
+    cxx = Executable(Path(build_env_path, "c++"))
+    fc = Executable(Path(build_env_path, "fc"))
 
     realcc = "/bin/mycc"
     prefix = "/spack-test-prefix"
@@ -153,7 +155,7 @@ def test_static_to_shared_library(build_environment):
                 shared_lib = "{0}.{1}".format(os.path.splitext(static_lib)[0], dso_suffix)
 
             assert set(output.split()) == set(
-                expected[arch].format(static_lib, shared_lib, os.path.basename(shared_lib)).split()
+                expected[arch].format(static_lib, shared_lib, Path(shared_lib).name).split()
             )
 
 
@@ -269,10 +271,10 @@ def test_compiler_config_modifications(
     ensure_env_variables(initial)
 
     def platform_pathsep(pathlist):
-        if Path.platform_path == Path.windows:
+        if is_windows:
             pathlist = pathlist.replace(":", ";")
 
-        return convert_to_platform_path(pathlist)
+        return Path(pathlist)
 
     # Monkeypatch a pkg.compiler.environment with the required modifications
     pkg = spack.spec.Spec("cmake").concretized().package
@@ -295,7 +297,7 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, wor
     s.concretize()
     pkg = s.package
 
-    module_path = os.path.join("path", "to", "module")
+    module_path = Path("path", "to", "module")
 
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
@@ -305,7 +307,7 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, wor
 
     spack.build_environment.setup_package(pkg, False)
 
-    spack_path = os.path.join(spack.paths.prefix, os.path.join("lib", "spack", "env"))
+    spack_path = Path(spack.paths.prefix, os.path.join("lib", "spack", "env"))
 
     paths = os.environ["PATH"].split(os.pathsep)
 
@@ -389,10 +391,10 @@ def test_wrapper_variables(
         prefix = str(installation_dir_with_headers)
         include_dirs = normpaths(header_dir_var.split(os.pathsep))
 
-        assert os.path.join(prefix, "include") in include_dirs
-        assert os.path.join(prefix, "include", "boost") not in include_dirs
-        assert os.path.join(prefix, "path", "to") not in include_dirs
-        assert os.path.join(prefix, "path", "to", "subdir") not in include_dirs
+        assert Path(prefix, "include") in include_dirs
+        assert Path(prefix, "include", "boost") not in include_dirs
+        assert Path(prefix, "path", "to") not in include_dirs
+        assert Path(prefix, "path", "to", "subdir") not in include_dirs
 
     finally:
         delattr(dep_pkg, "libs")

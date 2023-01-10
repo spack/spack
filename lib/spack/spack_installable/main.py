@@ -2,24 +2,24 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import sys
 from os.path import dirname as dn
+from pathlib import Path, PurePath
 
 
 def main(argv=None):
     # Find spack's location and its prefix.
-    this_file = os.path.realpath(os.path.expanduser(__file__))
+    this_file = Path(Path(__file__).expanduser()).resolve()
     spack_prefix = dn(dn(dn(dn(this_file))))
 
     # Allow spack libs to be imported in our scripts
-    spack_lib_path = os.path.join(spack_prefix, "lib", "spack")
-    sys.path.insert(0, spack_lib_path)
+    spack_lib_path = PurePath(spack_prefix, "lib", "spack")
+    sys.path.insert(0, str(spack_lib_path))
 
     # Add external libs
-    spack_external_libs = os.path.join(spack_lib_path, "external")
-    sys.path.insert(0, os.path.join(spack_external_libs, "_vendoring"))
-    sys.path.insert(0, spack_external_libs)
+    spack_external_libs = PurePath(spack_lib_path, "external")
+    sys.path.insert(0, str(PurePath(spack_external_libs, "_vendoring")))
+    sys.path.insert(0, str(spack_external_libs))
     # Here we delete ruamel.yaml in case it has been already imported from site
     # (see #9206 for a broader description of the issue).
     #

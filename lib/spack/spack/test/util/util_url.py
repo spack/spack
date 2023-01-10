@@ -7,6 +7,7 @@
 import os
 import os.path
 import urllib.parse
+from pathlib import Path
 
 import pytest
 
@@ -23,11 +24,11 @@ def test_url_local_file_path(tmpdir):
     roundtrip = url_util.local_file_path(url_util.path_to_file_url(path))
 
     # Verify it's the same file.
-    assert os.path.samefile(roundtrip, path)
+    assert Path(roundtrip).samefile(path)
 
     # Test if it accepts urlparse objects
     parsed = urllib.parse.urlparse(url_util.path_to_file_url(path))
-    assert os.path.samefile(url_util.local_file_path(parsed), path)
+    assert Path(url_util.local_file_path(parsed)).samefile(path)
 
 
 def test_url_local_file_path_no_file_scheme():
@@ -43,7 +44,7 @@ def test_relative_path_to_file_url(tmpdir):
 
     with tmpdir.as_cwd():
         roundtrip = url_util.local_file_path(url_util.path_to_file_url("hello.txt"))
-        assert os.path.samefile(roundtrip, path)
+        assert Path(roundtrip).samefile(path)
 
 
 def test_url_join_local_paths():

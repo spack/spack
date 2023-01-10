@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from itertools import zip_longest
+from pathlib import Path
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -133,7 +134,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
                 continue
 
             # Ignore files in the exclude locations
-            if any(os.path.realpath(f).startswith(e) for e in excludes):
+            if any(str(Path(f).resolve()).startswith(e) for e in excludes):
                 continue
 
             changed.add(f)
@@ -400,7 +401,7 @@ def _bootstrap_dev_dependencies():
 
 def style(parser, args):
     # save initial working directory for relativizing paths later
-    args.initial_working_dir = os.getcwd()
+    args.initial_working_dir = Path.cwd()
 
     # ensure that the config files we need actually exist in the spack prefix.
     # assertions b/c users should not ever see these errors -- they're checked in CI.
@@ -408,16 +409,16 @@ def style(parser, args):
     assert os.path.isfile(os.path.join(spack.paths.prefix, ".flake8"))
 
     # validate spack root if the user provided one
-    args.root = os.path.realpath(args.root) if args.root else spack.paths.prefix
+    args.root = Path(args.root).resolve() if args.root else spack.paths.prefix
     spack_script = os.path.join(args.root, "bin", "spack")
-    if not os.path.exists(spack_script):
+    if not Path(spack_script).exists():
         tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
 
     file_list = args.files
     if file_list:
 
         def prefix_relative(path):
-            return os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root)
+            return os.path.relpath(Path.resolve(Path(path).resolve()), args.root)
 
         file_list = [prefix_relative(p) for p in file_list]
 

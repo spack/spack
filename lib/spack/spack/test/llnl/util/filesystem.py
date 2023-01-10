@@ -9,6 +9,7 @@ import os
 import shutil
 import stat
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -38,7 +39,7 @@ def stage(tmpdir_factory):
         fs.touchp("source/g/i/j/10")
 
         # Create symlinks
-        symlink(os.path.abspath("source/1"), "source/2")
+        symlink(Path("source/1").resolve(), "source/2")
         symlink("b/2", "source/a/b2")
         symlink("a/b", "source/f")
 
@@ -57,7 +58,7 @@ class TestCopy:
         with fs.working_dir(str(stage)):
             fs.copy("source/1", "dest/1")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
 
     def test_dir_dest(self, stage):
         """Test using a directory as the destination."""
@@ -65,7 +66,7 @@ class TestCopy:
         with fs.working_dir(str(stage)):
             fs.copy("source/1", "dest")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -73,8 +74,8 @@ class TestCopy:
         with fs.working_dir(str(stage)):
             fs.copy("source/a/*/*", "dest")
 
-            assert os.path.exists("dest/2")
-            assert os.path.exists("dest/3")
+            assert Path("dest/2").exists()
+            assert Path("dest/3").exists()
 
     def test_non_existing_src(self, stage):
         """Test using a non-existing source."""
@@ -110,7 +111,7 @@ class TestInstall:
         with fs.working_dir(str(stage)):
             fs.install("source/1", "dest/1")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
             check_added_exe_permissions("source/1", "dest/1")
 
     def test_dir_dest(self, stage):
@@ -119,7 +120,7 @@ class TestInstall:
         with fs.working_dir(str(stage)):
             fs.install("source/1", "dest")
 
-            assert os.path.exists("dest/1")
+            assert Path("dest/1").exists()
             check_added_exe_permissions("source/1", "dest/1")
 
     def test_glob_src(self, stage):
@@ -128,8 +129,8 @@ class TestInstall:
         with fs.working_dir(str(stage)):
             fs.install("source/a/*/*", "dest")
 
-            assert os.path.exists("dest/2")
-            assert os.path.exists("dest/3")
+            assert Path("dest/2").exists()
+            assert Path("dest/3").exists()
             check_added_exe_permissions("source/a/b/2", "dest/2")
             check_added_exe_permissions("source/a/b/3", "dest/3")
 
@@ -160,7 +161,7 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest")
 
-            assert os.path.exists("dest/a/b/2")
+            assert Path("dest/a/b/2").exists()
 
     def test_non_existing_dir(self, stage):
         """Test copying to a non-existing directory."""
@@ -168,7 +169,7 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest/sub/directory")
 
-            assert os.path.exists("dest/sub/directory/a/b/2")
+            assert Path("dest/sub/directory/a/b/2").exists()
 
     def test_symlinks_true(self, stage):
         """Test copying with symlink preservation."""
@@ -176,24 +177,24 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest", symlinks=True)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             assert islink("dest/2")
 
-            assert os.path.exists("dest/a/b2")
+            assert Path("dest/a/b2").exists()
             with fs.working_dir("dest/a"):
                 assert os.path.exists(os.readlink("b2"))
 
-            assert os.path.realpath("dest/f/2") == os.path.abspath("dest/a/b/2")
-            assert os.path.realpath("dest/2") == os.path.abspath("dest/1")
+            assert Path("dest/f/2").resolve() == Path("dest/a/b/2").resolve()
+            assert Path("dest/2").resolve() == Path("dest/1").resolve()
 
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
         with fs.working_dir(str(stage)):
             ignore = lambda p: p in ["c/d/e", "a"]
             fs.copy_tree("source", "dest", symlinks=True, ignore=ignore)
-            assert not os.path.exists("dest/a")
-            assert os.path.exists("dest/c/d")
-            assert not os.path.exists("dest/c/d/e")
+            assert not Path("dest/a").exists()
+            assert Path("dest/c/d").exists()
+            assert not Path("dest/c/d/e").exists()
 
     def test_symlinks_false(self, stage):
         """Test copying without symlink preservation."""
@@ -201,9 +202,9 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source", "dest", symlinks=False)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             if sys.platform != "win32":
-                assert not os.path.islink("dest/2")
+                assert not Path("dest/2").is_symlink()
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -211,9 +212,9 @@ class TestCopyTree:
         with fs.working_dir(str(stage)):
             fs.copy_tree("source/g/*", "dest")
 
-            assert os.path.exists("dest/i/8")
-            assert os.path.exists("dest/i/9")
-            assert os.path.exists("dest/j/10")
+            assert Path("dest/i/8").exists()
+            assert Path("dest/i/9").exists()
+            assert Path("dest/j/10").exists()
 
     def test_non_existing_src(self, stage):
         """Test using a non-existing source."""
@@ -241,7 +242,7 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest")
 
-            assert os.path.exists("dest/a/b/2")
+            assert Path("dest/a/b/2").exists()
             check_added_exe_permissions("source/a/b/2", "dest/a/b/2")
 
     def test_non_existing_dir(self, stage):
@@ -250,7 +251,7 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest/sub/directory")
 
-            assert os.path.exists("dest/sub/directory/a/b/2")
+            assert Path("dest/sub/directory/a/b/2").exists()
             check_added_exe_permissions("source/a/b/2", "dest/sub/directory/a/b/2")
 
     def test_symlinks_true(self, stage):
@@ -259,9 +260,9 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest", symlinks=True)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             if sys.platform != "win32":
-                assert os.path.islink("dest/2")
+                assert Path("dest/2").is_symlink()
             check_added_exe_permissions("source/2", "dest/2")
 
     def test_symlinks_false(self, stage):
@@ -270,9 +271,9 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source", "dest", symlinks=False)
 
-            assert os.path.exists("dest/2")
+            assert Path("dest/2").exists()
             if sys.platform != "win32":
-                assert not os.path.islink("dest/2")
+                assert not Path("dest/2").is_symlink()
             check_added_exe_permissions("source/2", "dest/2")
 
     def test_glob_src(self, stage):
@@ -281,9 +282,9 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             fs.install_tree("source/g/*", "dest")
 
-            assert os.path.exists("dest/i/8")
-            assert os.path.exists("dest/i/9")
-            assert os.path.exists("dest/j/10")
+            assert Path("dest/i/8").exists()
+            assert Path("dest/i/9").exists()
+            assert Path("dest/j/10").exists()
             check_added_exe_permissions("source/g/h/i/8", "dest/i/8")
             check_added_exe_permissions("source/g/h/i/9", "dest/i/9")
             check_added_exe_permissions("source/g/i/j/10", "dest/j/10")
@@ -320,7 +321,7 @@ def test_move_transaction_commit(tmpdir):
     fake_library.write("Just some fake content.")
 
     with fs.replace_directory_transaction(str(tmpdir.join("lib"))) as backup:
-        assert os.path.isdir(backup)
+        assert Path(backup).is_dir()
         fake_library = tmpdir.mkdir("lib").join("libfoo.so")
         fake_library.write("Other content.")
 
@@ -336,7 +337,7 @@ def test_move_transaction_rollback(tmpdir):
 
     try:
         with fs.replace_directory_transaction(str(tmpdir.join("lib"))) as backup:
-            assert os.path.isdir(backup)
+            assert Path(backup).is_dir()
             fake_library = tmpdir.mkdir("lib").join("libfoo.so")
             fake_library.write("New content.")
             raise RuntimeError("")
@@ -363,16 +364,16 @@ def test_recursive_search_of_headers_from_prefix(installation_dir_with_headers):
         include_dirs = [dir.replace("/", "\\") for dir in include_dirs]
 
     # Check that the header files we expect are all listed
-    assert os.path.join(prefix, "include", "ex3.h") in header_list
-    assert os.path.join(prefix, "include", "boost", "ex3.h") in header_list
-    assert os.path.join(prefix, "path", "to", "ex1.h") in header_list
-    assert os.path.join(prefix, "path", "to", "subdir", "ex2.h") in header_list
+    assert PurePath(prefix, "include", "ex3.h") in header_list
+    assert PurePath(prefix, "include", "boost", "ex3.h") in header_list
+    assert PurePath(prefix, "path", "to", "ex1.h") in header_list
+    assert PurePath(prefix, "path", "to", "subdir", "ex2.h") in header_list
 
     # Check that when computing directories we exclude <prefix>/include/boost
-    assert os.path.join(prefix, "include") in include_dirs
-    assert os.path.join(prefix, "include", "boost") not in include_dirs
-    assert os.path.join(prefix, "path", "to") in include_dirs
-    assert os.path.join(prefix, "path", "to", "subdir") in include_dirs
+    assert PurePath(prefix, "include") in include_dirs
+    assert PurePath(prefix, "include", "boost") not in include_dirs
+    assert PurePath(prefix, "path", "to") in include_dirs
+    assert PurePath(prefix, "path", "to", "subdir") in include_dirs
 
 
 if sys.platform == "win32":
@@ -492,8 +493,8 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
-    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", filename)
-    target_file = os.path.join(str(tmpdir), filename)
+    original_file = PurePath(spack.paths.test_path, "data", "filter_file", filename)
+    target_file = PurePath(str(tmpdir), filename)
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(regex, replacement, target_file, **keyword_args)
@@ -508,8 +509,8 @@ def test_filter_files_multiple(tmpdir):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
-    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "x86_cpuid_info.c")
-    target_file = os.path.join(str(tmpdir), "x86_cpuid_info.c")
+    original_file = PurePath(spack.paths.test_path, "data", "filter_file", "x86_cpuid_info.c")
+    target_file = PurePath(str(tmpdir), "x86_cpuid_info.c")
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(r"\<malloc.h\>", "<unistd.h>", target_file)
@@ -525,8 +526,8 @@ def test_filter_files_multiple(tmpdir):
 
 
 def test_filter_files_start_stop(tmpdir):
-    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "start_stop.txt")
-    target_file = os.path.join(str(tmpdir), "start_stop.txt")
+    original_file = PurePath(spack.paths.test_path, "data", "filter_file", "start_stop.txt")
+    target_file = PurePath(str(tmpdir), "start_stop.txt")
     shutil.copy(original_file, target_file)
     # None of the following should happen:
     #   - filtering starts after A is found in the file:
@@ -637,12 +638,12 @@ def test_safe_remove(files_or_dirs, tmpdir):
     with pytest.raises(RuntimeError):
         with fs.safe_remove(*to_be_removed):
             for entry in to_be_removed:
-                assert not os.path.exists(entry)
+                assert not Path(entry).exists()
             raise RuntimeError("Mock a failure")
 
     # Assert that files are restored
     for entry in to_be_checked:
-        assert os.path.exists(entry)
+        assert Path(entry).exists()
 
 
 @pytest.mark.regression("18441")
@@ -684,10 +685,10 @@ def test_keep_modification_time(tmpdir):
 
 
 def test_temporary_dir_context_manager():
-    previous_dir = os.path.realpath(os.getcwd())
+    previous_dir = os.path.realpath(Path.cwd())
     with fs.temporary_dir() as tmp_dir:
-        assert previous_dir != os.path.realpath(os.getcwd())
-        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+        assert previous_dir != os.path.realpath(Path.cwd())
+        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(Path.cwd())
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="No shebang on Windows")
@@ -696,17 +697,17 @@ def test_is_nonsymlink_exe_with_shebang(tmpdir):
         # Create an executable with shebang.
         with open("executable_script", "wb") as f:
             f.write(b"#!/interpreter")
-        os.chmod("executable_script", 0o100775)
+        Path("executable_script").chmod(0o100775)
 
         with open("executable_but_not_script", "wb") as f:
             f.write(b"#/not-a-shebang")
-        os.chmod("executable_but_not_script", 0o100775)
+        Path("executable_but_not_script").chmod(0o100775)
 
         with open("not_executable_with_shebang", "wb") as f:
             f.write(b"#!/interpreter")
-        os.chmod("not_executable_with_shebang", 0o100664)
+        Path("not_executable_with_shebang").chmod(0o100664)
 
-        os.symlink("executable_script", "symlink_to_executable_script")
+        Path("symlink_to_executable_script").link_to("executable_script")
 
         assert fs.is_nonsymlink_exe_with_shebang("executable_script")
         assert not fs.is_nonsymlink_exe_with_shebang("executable_but_not_script")
@@ -718,26 +719,26 @@ def test_lexists_islink_isdir(tmpdir):
     root = str(tmpdir)
 
     # Create a directory and a file, an a bunch of symlinks.
-    dir = os.path.join(root, "dir")
-    file = os.path.join(root, "file")
-    nonexistent = os.path.join(root, "does_not_exist")
-    symlink_to_dir = os.path.join(root, "symlink_to_dir")
-    symlink_to_file = os.path.join(root, "symlink_to_file")
-    dangling_symlink = os.path.join(root, "dangling_symlink")
-    symlink_to_dangling_symlink = os.path.join(root, "symlink_to_dangling_symlink")
-    symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
-    symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
+    dir = PurePath(root, "dir")
+    file = PurePath(root, "file")
+    nonexistent = PurePath(root, "does_not_exist")
+    symlink_to_dir = PurePath(root, "symlink_to_dir")
+    symlink_to_file = PurePath(root, "symlink_to_file")
+    dangling_symlink = PurePath(root, "dangling_symlink")
+    symlink_to_dangling_symlink = PurePath(root, "symlink_to_dangling_symlink")
+    symlink_to_symlink_to_dir = PurePath(root, "symlink_to_symlink_to_dir")
+    symlink_to_symlink_to_file = PurePath(root, "symlink_to_symlink_to_file")
 
-    os.mkdir(dir)
+    Path(dir).mkdir()
     with open(file, "wb") as f:
         f.write(b"file")
 
-    os.symlink("dir", symlink_to_dir)
-    os.symlink("file", symlink_to_file)
-    os.symlink("does_not_exist", dangling_symlink)
-    os.symlink("dangling_symlink", symlink_to_dangling_symlink)
-    os.symlink("symlink_to_dir", symlink_to_symlink_to_dir)
-    os.symlink("symlink_to_file", symlink_to_symlink_to_file)
+    Path(symlink_to_dir).link_to("dir")
+    Path(symlink_to_file).link_to("file")
+    Path(dangling_symlink).link_to("does_not_exist")
+    Path(symlink_to_dangling_symlink).link_to("dangling_symlink")
+    Path(symlink_to_symlink_to_dir).link_to("symlink_to_dir")
+    Path(symlink_to_symlink_to_file).link_to("symlink_to_file")
 
     assert fs.lexists_islink_isdir(dir) == (True, False, True)
     assert fs.lexists_islink_isdir(file) == (True, False, False)

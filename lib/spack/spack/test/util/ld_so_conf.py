@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import Path
 
 import spack.util.ld_so_conf as ld_so_conf
 
 
 def test_ld_so_conf_parsing(tmpdir):
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     tmpdir.ensure("subdir", dir=True)
 
     # Entrypoint config file
@@ -45,7 +46,7 @@ def test_ld_so_conf_parsing(tmpdir):
     assert "/second.conf/lib" in paths
 
     # Make sure globbing didn't change the working dir
-    assert os.getcwd() == cwd
+    assert Path.cwd() == cwd
 
 
 def test_host_dynamic_linker_search_paths():

@@ -6,6 +6,7 @@
 import os.path
 import re
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -77,15 +78,15 @@ def test_remove_and_add(database, module_type):
     rm_cli_args = ["rm", "-y", "mpileaks"]
     module_files = _module_files(module_type, "mpileaks")
     for item in module_files:
-        assert os.path.exists(item)
+        assert Path(item).exists()
 
     module(module_type, *rm_cli_args)
     for item in module_files:
-        assert not os.path.exists(item)
+        assert not Path(item).exists()
 
     module(module_type, "refresh", "-y", "mpileaks")
     for item in module_files:
-        assert os.path.exists(item)
+        assert Path(item).exists()
 
 
 @pytest.mark.db
@@ -198,25 +199,25 @@ def test_setdefault_command(mutable_database, mutable_config):
     module("lmod", "refresh", "-y", "--delete-tree", preferred, other_spec)
 
     # Assert initial directory state: no link and all module files present
-    link_name = os.path.join(os.path.dirname(writers[preferred].layout.filename), "default")
+    link_name = os.path.join(PurePath(writers[preferred].layout.filename).parent, "default")
     for k in preferred, other_spec:
-        assert os.path.exists(writers[k].layout.filename)
-    assert not os.path.exists(link_name)
+        assert Path(writers[k].layout.filename).exists()
+    assert not Path(link_name).exists()
 
     # Set the default to be the other spec
     module("lmod", "setdefault", other_spec)
 
     # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
-        assert os.path.exists(writers[k].layout.filename)
-    assert os.path.exists(link_name) and os.path.islink(link_name)
-    assert os.path.realpath(link_name) == os.path.realpath(writers[other_spec].layout.filename)
+        assert Path(writers[k].layout.filename).exists()
+    assert Path(link_name).exists() and Path(link_name).is_symlink()
+    assert Path(link_name).resolve() == Path(writers[other_spec].layout.filename).resolve()
 
     # Reset the default to be the preferred spec
     module("lmod", "setdefault", preferred)
 
     # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
-        assert os.path.exists(writers[k].layout.filename)
-    assert os.path.exists(link_name) and os.path.islink(link_name)
-    assert os.path.realpath(link_name) == os.path.realpath(writers[preferred].layout.filename)
+        assert Path(writers[k].layout.filename).exists()
+    assert Path(link_name).exists() and Path(link_name).is_symlink()
+    assert Path(link_name).resolve() == Path(writers[preferred].layout.filename).resolve()

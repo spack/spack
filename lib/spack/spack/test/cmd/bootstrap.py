@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -13,7 +14,6 @@ import spack.config
 import spack.environment as ev
 import spack.main
 import spack.mirror
-from spack.util.path import convert_to_posix_path
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
 
@@ -40,7 +40,7 @@ def test_root_get_and_set(mutable_config, scope):
     _bootstrap("root", path, *scope_args)
     out = _bootstrap("root", *scope_args, output=str)
     if sys.platform == "win32":
-        out = convert_to_posix_path(out)
+        out = Path(out).as_posix()
     assert out.strip() == path
 
 
@@ -52,12 +52,12 @@ def test_reset_in_file_scopes(mutable_config, scopes):
         _bootstrap("disable", "--scope={0}".format(s))
         scope_path = spack.config.config.scopes[s].path
         bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
-        assert os.path.exists(bootstrap_yaml)
+        assert Path(bootstrap_yaml).exists()
         bootstrap_yaml_files.append(bootstrap_yaml)
 
     _bootstrap("reset", "-y")
     for bootstrap_yaml in bootstrap_yaml_files:
-        assert not os.path.exists(bootstrap_yaml)
+        assert not Path(bootstrap_yaml).exists()
 
 
 def test_reset_in_environment(mutable_mock_env_path, mutable_config):
@@ -74,7 +74,7 @@ def test_reset_in_environment(mutable_mock_env_path, mutable_config):
 
     # Check that reset didn't delete the entire file
     spack_yaml = os.path.join(current_environment.path, "spack.yaml")
-    assert os.path.exists(spack_yaml)
+    assert Path(spack_yaml).exists()
 
 
 def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
@@ -82,21 +82,21 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     _bootstrap("disable", "--scope=site")
     scope_path = spack.config.config.scopes["site"].path
     bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
-    assert os.path.exists(bootstrap_yaml)
+    assert Path(bootstrap_yaml).exists()
 
     # Reset the bootstrap configuration
     _bootstrap("reset", "-y")
     backup_file = bootstrap_yaml + ".bkp"
-    assert not os.path.exists(bootstrap_yaml)
-    assert os.path.exists(backup_file)
+    assert not Path(bootstrap_yaml).exists()
+    assert Path(backup_file).exists()
 
     # Iterate another time
     _bootstrap("disable", "--scope=site")
-    assert os.path.exists(bootstrap_yaml)
-    assert os.path.exists(backup_file)
+    assert Path(bootstrap_yaml).exists()
+    assert Path(backup_file).exists()
     _bootstrap("reset", "-y")
-    assert not os.path.exists(bootstrap_yaml)
-    assert os.path.exists(backup_file)
+    assert not Path(bootstrap_yaml).exists()
+    assert Path(backup_file).exists()
 
 
 def test_list_sources(capsys):

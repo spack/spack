@@ -8,6 +8,7 @@ import argparse
 import errno
 import os
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
@@ -187,7 +188,7 @@ def _collect_and_consume_cray_manifest_files(
     if manifest_directory:
         manifest_dirs.append(manifest_directory)
 
-    if os.path.isdir(cray_manifest.default_path):
+    if Path(cray_manifest.default_path).is_dir():
         tty.debug(
             "Cray manifest path {0} exists: collecting all files to read.".format(
                 cray_manifest.default_path
@@ -202,7 +203,7 @@ def _collect_and_consume_cray_manifest_files(
         )
 
     for directory in manifest_dirs:
-        for fname in os.listdir(directory):
+        for fname in Path(directory).iterdir():
             if fname.endswith(".json"):
                 fpath = os.path.join(directory, fname)
                 tty.debug("Adding manifest file: {0}".format(fpath))

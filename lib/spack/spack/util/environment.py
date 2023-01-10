@@ -15,6 +15,7 @@ import re
 import shlex
 import socket
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
@@ -23,7 +24,6 @@ import spack.config
 import spack.platforms
 import spack.spec
 import spack.util.executable as executable
-from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = sys.platform == "win32"
 
@@ -132,7 +132,7 @@ def env_var_to_source_line(var, val):
     return source_line
 
 
-@system_path_filter(arg_slice=slice(1))
+# @system_path_filter(arg_slice=slice(1))
 def dump_environment(path, environment=None):
     """Dump an environment dictionary to a source-able file."""
     use_env = environment or os.environ
@@ -148,7 +148,7 @@ def dump_environment(path, environment=None):
             )
 
 
-@system_path_filter(arg_slice=slice(1))
+# @system_path_filter(arg_slice=slice(1))
 def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
     pickle.dump(dict(environment if environment else os.environ), open(path, "wb"), protocol=2)
@@ -301,7 +301,7 @@ class AppendPath(NameValueModifier):
         tty.debug("AppendPath: {0}+{1}".format(self.name, str(self.value)), level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
+        directories.append(str(Path(os.path.normpath(self.value))))
         env[self.name] = self.separator.join(directories)
 
 
@@ -310,7 +310,7 @@ class PrependPath(NameValueModifier):
         tty.debug("PrependPath: {0}+{1}".format(self.name, str(self.value)), level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = [path_to_os_path(os.path.normpath(self.value)).pop()] + directories
+        directories = [str(Path(os.path.normpath(self.value)))] + directories
         env[self.name] = self.separator.join(directories)
 
 
@@ -320,9 +320,9 @@ class RemovePath(NameValueModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = [
-            path_to_os_path(os.path.normpath(x)).pop()
+            str(Path((os.path.normpath(x))))
             for x in directories
-            if x != path_to_os_path(os.path.normpath(self.value)).pop()
+            if x != str(Path(os.path.normpath(self.value)))
         ]
         env[self.name] = self.separator.join(directories)
 
@@ -333,7 +333,7 @@ class DeprioritizeSystemPaths(NameModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = deprioritize_system_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+            [str(Path(os.path.normpath(x))) for x in directories]
         )
         env[self.name] = self.separator.join(directories)
 
@@ -344,7 +344,7 @@ class PruneDuplicatePaths(NameModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = prune_duplicate_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+            [str(Path(os.path.normpath(x))) for x in directories]
         )
         env[self.name] = self.separator.join(directories)
 
@@ -657,7 +657,7 @@ class EnvironmentModifications(object):
         """
         tty.debug("EnvironmentModifications.from_sourcing_file: {0}".format(filename))
         # Check if the file actually exists
-        if not os.path.isfile(filename):
+        if not Path(filename).is_file():
             msg = "Trying to source non-existing file: {0}".format(filename)
             raise RuntimeError(msg)
 
@@ -914,7 +914,7 @@ def inspect_path(root, inspections, exclude=None):
     for relative_path, variables in inspections.items():
         expected = os.path.join(root, relative_path)
 
-        if os.path.isdir(expected) and not exclude(expected):
+        if Path(expected).is_dir() and not exclude(expected):
             for variable in variables:
                 env.prepend_path(variable, expected)
 

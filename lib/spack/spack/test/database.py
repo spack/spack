@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -423,7 +424,7 @@ def test_default_queries(database):
     command = spec["zmpi"].command
     assert isinstance(command, Executable)
     assert command.name == "zmpi"
-    assert os.path.exists(command.path)
+    assert Path(command.path).exists()
 
     # Testing a package whose name *does* start with 'lib'
     # to ensure the library doesn't have a double 'lib' prefix
@@ -442,7 +443,7 @@ def test_default_queries(database):
     command = spec["libelf"].command
     assert isinstance(command, Executable)
     assert command.name == "libelf"
-    assert os.path.exists(command.path)
+    assert Path(command.path).exists()
 
 
 def test_005_db_exists(database):
@@ -944,7 +945,7 @@ def test_database_works_with_empty_dir(tmpdir):
     with db.read_transaction():
         db.query()
     # Check that reading an empty directory didn't create a new index.json
-    assert not os.path.exists(db._index_path)
+    assert not Path(db._index_path).exists()
 
 
 @pytest.mark.parametrize(

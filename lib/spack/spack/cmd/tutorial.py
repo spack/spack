@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os.path
 import shutil
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -66,7 +67,7 @@ def tutorial(parser, args):
     rm_cmds = ["rm -f %s" % f for f in rm_configs]
     tty.msg("Reverting compiler and repository configuration", *rm_cmds)
     for path in rm_configs:
-        if os.path.exists(path):
+        if Path(path).exists():
             shutil.rmtree(path, ignore_errors=True)
 
     tty.msg(

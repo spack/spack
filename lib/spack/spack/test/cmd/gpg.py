@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -198,14 +199,14 @@ def test_gpg(tmpdir, tmp_scope, mock_gnupghome):
     test_path = tmpdir.join("dir_cache")
     os.makedirs("%s" % test_path)
     gpg("publish", "--rebuild-index", "-d", str(test_path))
-    assert os.path.exists("%s/build_cache/_pgp/index.json" % test_path)
+    assert Path("%s/build_cache/_pgp/index.json" % test_path).exists()
 
     # Publish the keys using a mirror url
     test_path = tmpdir.join("url_cache")
     os.makedirs("%s" % test_path)
     test_url = "file://%s" % test_path
     gpg("publish", "--rebuild-index", "--mirror-url", test_url)
-    assert os.path.exists("%s/build_cache/_pgp/index.json" % test_path)
+    assert Path("%s/build_cache/_pgp/index.json" % test_path).exists()
 
     # Publish the keys using a mirror name
     test_path = tmpdir.join("named_cache")
@@ -213,4 +214,4 @@ def test_gpg(tmpdir, tmp_scope, mock_gnupghome):
     mirror_url = "file://%s" % test_path
     mirror("add", "--scope", tmp_scope, "gpg", mirror_url)
     gpg("publish", "--rebuild-index", "-m", "gpg")
-    assert os.path.exists("%s/build_cache/_pgp/index.json" % test_path)
+    assert Path("%s/build_cache/_pgp/index.json" % test_path).exists()

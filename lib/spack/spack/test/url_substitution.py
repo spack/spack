@@ -6,6 +6,7 @@
 """Tests Spack's ability to substitute a different version into a URL."""
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -49,9 +50,9 @@ import spack.url
         ),
         # No separator between the name and version of the package
         (
-            "file://{0}/turbolinux702.tar.gz".format(os.getcwd()),
+            "file://{0}/turbolinux702.tar.gz".format(Path.cwd()),
             "703",
-            "file://{0}/turbolinux703.tar.gz".format(os.getcwd()),
+            "file://{0}/turbolinux703.tar.gz".format(Path.cwd()),
         ),
         (
             "https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true",

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 
 from llnl.util.lang import memoized
 
@@ -65,7 +66,7 @@ class ABI(object):
         libpath = os.path.realpath(output.strip())
         if not libpath:
             return None
-        return os.path.basename(libpath)
+        return PurePath(libpath).name
 
     @memoized
     def _gcc_compiler_compare(self, pversion, cversion):

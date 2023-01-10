@@ -11,6 +11,7 @@ import os
 import platform
 import runpy
 import sys
+from pathlib import Path
 
 import llnl.util.tty as tty
 
@@ -95,7 +96,7 @@ def ipython_interpreter(args):
 
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
-        if os.path.isfile(startup_file):
+        if Path(startup_file).is_file():
             with open(startup_file) as startup:
                 exec(startup.read())
 
@@ -122,7 +123,7 @@ def python_interpreter(args):
     console = code.InteractiveConsole({"__name__": "__main__", "spack": spack})
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
-        if os.path.isfile(startup_file):
+        if Path(startup_file).is_file():
             with open(startup_file) as startup:
                 console.runsource(startup.read(), startup_file, "exec")
 

@@ -9,6 +9,7 @@ arguments correctly.
 """
 import os
 import sys
+from pathlib import PurePath
 
 import pytest
 
@@ -114,11 +115,11 @@ test_args_without_paths = [
 pkg_prefix = "/spack-test-prefix"
 
 # Compilers to use during tests
-cc = Executable(os.path.join(build_env_path, "cc"))
-ld = Executable(os.path.join(build_env_path, "ld"))
-cpp = Executable(os.path.join(build_env_path, "cpp"))
-cxx = Executable(os.path.join(build_env_path, "c++"))
-fc = Executable(os.path.join(build_env_path, "fc"))
+cc = Executable(PurePath(build_env_path, "cc"))
+ld = Executable(PurePath(build_env_path, "ld"))
+cpp = Executable(PurePath(build_env_path, "cpp"))
+cxx = Executable(PurePath(build_env_path, "c++"))
+fc = Executable(PurePath(build_env_path, "fc"))
 
 #: the "real" compiler the wrapper is expected to invoke
 real_cc = "/bin/mycc"
@@ -376,7 +377,7 @@ def test_system_path_cleanup(wrapper_environment):
     Thus, ensure that PATH cleanup works even with trailing /.
     """
     system_path = "/bin:/usr/bin:/usr/local/bin"
-    cc_dir = os.path.dirname(cc.path)
+    cc_dir = PurePath(cc.path).parent
     with set_env(SPACK_ENV_PATH=cc_dir, SPACK_CC="true"):
         with set_env(PATH=cc_dir + ":" + system_path):
             check_env_var(cc, "PATH", system_path)

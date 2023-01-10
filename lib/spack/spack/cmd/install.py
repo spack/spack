@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import textwrap
+from pathlib import Path
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -274,7 +275,7 @@ def install_specs(specs, install_kwargs, cli_args):
         if cli_args.show_log_on_error:
             e.print_context()
             assert e.pkg, "Expected InstallError to include the associated package"
-            if not os.path.exists(e.pkg.build_log_path):
+            if not Path(e.pkg.build_log_path).exists():
                 tty.error("'spack install' created no log.")
             else:
                 sys.stderr.write("Full build log:\n")
@@ -378,7 +379,7 @@ def install_all_specs_from_active_environment(
     env = ev.active_environment()
     if not env:
         msg = "install requires a package argument or active environment"
-        if "spack.yaml" in os.listdir(os.getcwd()):
+        if "spack.yaml" in os.listdir(Path.cwd()):
             # There's a spack.yaml file in the working dir, the user may
             # have intended to use that
             msg += "\n\n"

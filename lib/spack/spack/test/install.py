@@ -6,6 +6,7 @@
 import os
 import shutil
 import sys
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -153,7 +154,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
         s.package.remove_prefix = mock_remove_prefix
         with pytest.raises(MockInstallError):
             s.package.do_install()
-        assert os.path.isdir(s.package.prefix)
+        assert Path(s.package.prefix).is_dir()
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
         s.package.remove_prefix = rm_prefix_checker.remove_prefix
 
@@ -193,7 +194,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
         s.package.do_install(**kwargs)
 
     assert s.package.spec.installed
-    assert os.path.exists(s.prefix)
+    assert Path(s.prefix).exists()
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch, monkeypatch):
@@ -233,8 +234,8 @@ def test_install_dependency_symlinks_pkg(install_mockery, mock_fetch, mutable_mo
     pkg.do_install()
 
     # Ensure dependency directory exists after the installation.
-    dependency_dir = os.path.join(pkg.prefix, "dependency-install")
-    assert os.path.isdir(dependency_dir)
+    dependency_dir = PurePath(pkg.prefix, "dependency-install")
+    assert Path(dependency_dir).is_dir()
 
 
 def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
@@ -243,8 +244,8 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
     spec.package.do_install()
 
     # Ensure dependency directory exists after the installation.
-    install_times = os.path.join(spec.package.prefix, ".spack", "install_times.json")
-    assert os.path.isfile(install_times)
+    install_times = PurePath(spec.package.prefix, ".spack", "install_times.json")
+    assert Path(install_times).is_file()
 
     # Ensure the phases are included
     with open(install_times, "r") as timefile:
@@ -268,13 +269,13 @@ def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):
     # Demonstrate that the directory does not appear under the spec
     # prior to the flatten operation.
     dependency_name = "dependency-install"
-    assert dependency_name not in os.listdir(pkg.prefix)
+    assert dependency_name not in list(Path(pkg.prefix).iterdir())
 
     # Flatten the dependencies and ensure the dependency directory is there.
     spack.package_base.flatten_dependencies(spec, pkg.prefix)
 
-    dependency_dir = os.path.join(pkg.prefix, dependency_name)
-    assert os.path.isdir(dependency_dir)
+    dependency_dir = PurePath(pkg.prefix, dependency_name)
+    assert Path(dependency_dir).is_dir()
 
 
 @pytest.fixture()
@@ -313,12 +314,12 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
 
         new_dependency = dependent["externaltool"]
         assert new_dependency.external
-        assert new_dependency.prefix == os.path.sep + os.path.join("path", "to", "external_tool")
+        assert new_dependency.prefix == os.path.sep + PurePath("path", "to", "external_tool")
 
         dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
+        assert not Path(new_dependency.prefix).exists()
+        assert Path(dependent.prefix).exists()
 
 
 def test_installed_upstream(install_upstream, mock_fetch):
@@ -336,8 +337,8 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
         dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
+        assert not Path(new_dependency.prefix).exists()
+        assert Path(dependent.prefix).exists()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -348,7 +349,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     monkeypatch.setattr(spack.package_base.PackageBase, "remove_prefix", mock_remove_prefix)
     with pytest.raises(spack.build_environment.ChildError):
         s.package.do_install(keep_prefix=True)
-    assert os.path.exists(s.package.prefix)
+    assert Path(s.package.prefix).exists()
 
     # must clear failure markings for the package before re-installing it
     spack.store.db.clear_failure(s, True)
@@ -465,12 +466,12 @@ def test_nosource_pkg_install_post_install(install_mockery, mock_fetch, mock_pac
     pkg.do_install()
 
     # Ensure the file created in the package's `install` method exists.
-    install_txt = os.path.join(spec.prefix, "install.txt")
-    assert os.path.isfile(install_txt)
+    install_txt = PurePath(spec.prefix, "install.txt")
+    assert Path(install_txt).is_file()
 
     # Ensure the file created in the package's `post-install` method exists.
-    post_install_txt = os.path.join(spec.prefix, "post-install.txt")
-    assert os.path.isfile(post_install_txt)
+    post_install_txt = PurePath(spec.prefix, "post-install.txt")
+    assert Path(post_install_txt).is_file()
 
 
 def test_pkg_build_paths(install_mockery):
@@ -484,7 +485,7 @@ def test_pkg_build_paths(install_mockery):
     assert env_path.endswith(_spack_build_envfile)
 
     # Backward compatibility checks
-    log_dir = os.path.dirname(log_path)
+    log_dir = PurePath(log_path).parent
     fs.mkdirp(log_dir)
     with fs.working_dir(log_dir):
         # Start with the older of the previous log filenames
@@ -510,17 +511,17 @@ def test_pkg_install_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec("trivial-install-test-package").concretized()
 
-    log_path = os.path.join(spec.prefix, ".spack", _spack_build_logfile)
+    log_path = PurePath(spec.prefix, ".spack", _spack_build_logfile)
     assert spec.package.install_log_path == log_path
 
-    env_path = os.path.join(spec.prefix, ".spack", _spack_build_envfile)
+    env_path = PurePath(spec.prefix, ".spack", _spack_build_envfile)
     assert spec.package.install_env_path == env_path
 
-    args_path = os.path.join(spec.prefix, ".spack", _spack_configure_argsfile)
+    args_path = PurePath(spec.prefix, ".spack", _spack_configure_argsfile)
     assert spec.package.install_configure_args_path == args_path
 
     # Backward compatibility checks
-    log_dir = os.path.dirname(log_path)
+    log_dir = PurePath(log_path).parent
     fs.mkdirp(log_dir)
     with fs.working_dir(log_dir):
         # Start with the older of the previous install log filenames
@@ -571,7 +572,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 
     # Set up mock build files and try again to include archive failure
     log_path = spec.package.log_path
-    log_dir = os.path.dirname(log_path)
+    log_dir = PurePath(log_path).parent
     fs.mkdirp(log_dir)
     with fs.working_dir(log_dir):
         fs.touch(log_path)
@@ -579,11 +580,11 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
         fs.touch(spec.package.env_mods_path)
         fs.touch(spec.package.configure_args_path)
 
-    install_path = os.path.dirname(spec.package.install_log_path)
+    install_path = PurePath(spec.package.install_log_path).parent
     fs.mkdirp(install_path)
 
     source = spec.package.stage.source_path
-    config = os.path.join(source, "config.log")
+    config = PurePath(source, "config.log")
     fs.touchp(config)
     monkeypatch.setattr(
         type(spec.package), "archive_files", ["missing", "..", config], raising=False
@@ -591,16 +592,16 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 
     spack.installer.log(spec.package)
 
-    assert os.path.exists(spec.package.install_log_path)
-    assert os.path.exists(spec.package.install_env_path)
-    assert os.path.exists(spec.package.install_configure_args_path)
+    assert Path(spec.package.install_log_path).exists()
+    assert Path(spec.package.install_env_path).exists()
+    assert Path(spec.package.install_configure_args_path).exists()
 
-    archive_dir = os.path.join(install_path, "archived-files")
-    source_dir = os.path.dirname(source)
+    archive_dir = PurePath(install_path, "archived-files")
+    source_dir = PurePath(source).parent
     rel_config = os.path.relpath(config, source_dir)
 
-    assert os.path.exists(os.path.join(archive_dir, rel_config))
-    assert not os.path.exists(os.path.join(archive_dir, "missing"))
+    assert os.path.exists(PurePath(archive_dir, rel_config))
+    assert not os.path.exists(PurePath(archive_dir, "missing"))
 
     expected_errs = ["OUTSIDE SOURCE PATH", "FAILED TO ARCHIVE"]  # for '..'  # for rel_config
     with open(os.path.join(archive_dir, "errors.txt"), "r") as fd:

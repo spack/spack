@@ -8,6 +8,7 @@ based on its URL.
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -404,7 +405,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
         # 3rd Pass: No separator characters are used
         # Assume name contains no digits
         # namever
-        ("turbolinux", "702", "file://{0}/turbolinux702.tar.gz".format(os.getcwd())),
+        ("turbolinux", "702", "file://{0}/turbolinux702.tar.gz".format(Path.cwd())),
         ("nauty", "26r7", "http://pallini.di.uniroma1.it/nauty26r7.tar.gz"),
         # 4th Pass: A single separator character is used
         # Assume name contains no digits
@@ -527,7 +528,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
         (
             "STAR-CCM+",
             "11.06.010_02",
-            "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(os.getcwd()),
+            "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(Path.cwd()),
         ),
         # name-name_name-ver.ver
         (

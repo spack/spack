@@ -9,6 +9,7 @@ import re
 import sys
 import sysconfig
 import warnings
+from pathlib import Path
 
 import archspec.cpu
 
@@ -139,9 +140,9 @@ def _fix_ext_suffix(candidate_spec):
     standard_extensions = fs.find(candidate_spec.prefix, expected["glob"])
     link_names = [re.sub(expected["re"], ext_suffix, s) for s in standard_extensions]
     for file_name, link_name in zip(standard_extensions, link_names):
-        if os.path.exists(link_name):
+        if Path(link_name).exists():
             continue
-        os.symlink(file_name, link_name)
+        Path(link_name).link_to(file_name)
 
     # Check if this interpreter installed something and we have to create
     # links for a standard CPython interpreter
@@ -155,9 +156,9 @@ def _fix_ext_suffix(candidate_spec):
                 module=module, major=sys.version_info[0], minor=sys.version_info[1]
             ),
         )
-        if os.path.exists(link_name):
+        if Path(link_name).exists():
             continue
-        os.symlink(abs_path, link_name)
+        Path(link_name).link_to(abs_path)
 
 
 def _executables_in_store(executables, query_spec, query_info=None):
@@ -184,8 +185,8 @@ def _executables_in_store(executables, query_spec, query_info=None):
             # IF we have a "bin" directory and it contains
             # the executables we are looking for
             if (
-                os.path.exists(bin_dir)
-                and os.path.isdir(bin_dir)
+                Path(bin_dir).exists()
+                and Path(bin_dir).is_dir()
                 and spack.util.executable.which_string(*executables, path=bin_dir)
             ):
                 spack.util.environment.path_put_first("PATH", [bin_dir])

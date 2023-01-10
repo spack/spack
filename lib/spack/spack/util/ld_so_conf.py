@@ -7,6 +7,7 @@ import glob
 import os
 import re
 import sys
+from pathlib import Path, PurePath
 
 from llnl.util.lang import dedupe
 
@@ -29,7 +30,7 @@ def parse_ld_so_conf(conf_file="/etc/ld.so.conf"):
         conf_file = conf_file.encode("utf-8")
 
     # For globbing in Python2 we need to chdir.
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     try:
         paths = _process_ld_so_conf_queue([conf_file])
     finally:
@@ -66,7 +67,7 @@ def _process_ld_so_conf_queue(queue):
             # If not an include, it's a literal path (no globbing here).
             if not is_include:
                 # We only allow absolute search paths.
-                if os.path.isabs(line):
+                if PurePath(line).is_absolute():
                     paths.append(line)
                 continue
 
@@ -75,9 +76,9 @@ def _process_ld_so_conf_queue(queue):
             if not include_path:
                 continue
 
-            cwd = os.path.dirname(p)
+            cwd = PurePath(p).parent
             os.chdir(cwd)
-            queue.extend(os.path.join(cwd, p) for p in glob.glob(include_path))
+            queue.extend(PurePath(cwd, p) for p in glob.glob(include_path))
 
     return dedupe(paths)
 
@@ -121,17 +122,17 @@ def host_dynamic_linker_search_paths():
         # to its prefix.
         if elf.has_pt_interp:
             dynamic_linker = elf.pt_interp_str.decode("utf-8")
-            dynamic_linker_name = os.path.basename(dynamic_linker)
+            dynamic_linker_name = PurePath(dynamic_linker).name
             conf_name = get_conf_file_from_dynamic_linker(dynamic_linker_name)
 
             # Typically it is /lib/ld.so, but on Gentoo Prefix it is something
             # like <long glibc prefix>/lib/ld.so. And on Debian /lib64 is actually
             # a symlink to /usr/lib64. So, best effort attempt is to just strip
             # two path components and join with etc/ld.so.conf.
-            possible_prefix = os.path.dirname(os.path.dirname(dynamic_linker))
-            possible_conf = os.path.join(possible_prefix, "etc", conf_name)
+            possible_prefix = os.path.dirname(PurePath(dynamic_linker).parent)
+            possible_conf = PurePath(possible_prefix, "etc", conf_name)
 
-            if os.path.exists(possible_conf):
+            if Path(possible_conf).exists():
                 conf_file = possible_conf
     except (IOError, OSError, elf_utils.ElfParsingError):
         pass

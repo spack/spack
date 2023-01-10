@@ -55,6 +55,7 @@ import tempfile
 import traceback
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
+from pathlib import Path
 
 import pytest
 
@@ -128,19 +129,19 @@ def make_readable(*paths):
     # bits are ignored."
     for path in paths:
         if not is_windows:
-            mode = 0o555 if os.path.isdir(path) else 0o444
+            mode = 0o555 if Path(path).is_dir() else 0o444
         else:
             mode = stat.S_IREAD
-        os.chmod(path, mode)
+        Path(path).chmod(mode)
 
 
 def make_writable(*paths):
     for path in paths:
         if not is_windows:
-            mode = 0o755 if os.path.isdir(path) else 0o744
+            mode = 0o755 if Path(path).is_dir() else 0o744
         else:
             mode = stat.S_IWRITE
-        os.chmod(path, mode)
+        Path(path).chmod(mode)
 
 
 @contextmanager
@@ -151,7 +152,7 @@ def read_only(*paths):
     yield
 
     for path, mode in zip(paths, modes):
-        os.chmod(path, mode)
+        Path(path).chmod(mode)
 
 
 @pytest.fixture(scope="session", params=locations)
@@ -166,7 +167,7 @@ def lock_test_directory(request):
 @pytest.fixture(scope="session")
 def lock_dir(lock_test_directory):
     parent = next(
-        (p for p in glob.glob(lock_test_directory) if os.path.exists(p) and os.access(p, os.W_OK)),
+        (p for p in glob.glob(lock_test_directory) if Path(p).exists() and os.access(p, os.W_OK)),
         None,
     )
     if not parent:
@@ -208,9 +209,9 @@ def private_lock_path(lock_dir):
 
     yield lock_file
 
-    if os.path.exists(lock_file):
+    if Path(lock_file).exists():
         make_writable(lock_dir, lock_file)
-        os.unlink(lock_file)
+        Path(lock_file).unlink()
 
 
 @pytest.fixture
@@ -220,9 +221,9 @@ def lock_path(lock_dir):
 
     yield lock_file
 
-    if os.path.exists(lock_file):
+    if Path(lock_file).exists():
         make_writable(lock_dir, lock_file)
-        os.unlink(lock_file)
+        Path(lock_file).unlink()
 
 
 def test_poll_interval_generator():

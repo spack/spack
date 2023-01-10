@@ -36,6 +36,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from pathlib import Path, PurePath
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
@@ -498,7 +499,7 @@ def dump_packages(spec, path):
             # (currently) use Spack metadata to associate repos with externals
             # built by other Spack instances.
             # Spack can always get something current from the builtin repo.
-            if node.external or not os.path.isdir(source_repo_root):
+            if node.external or not Path(source_repo_root).is_dir():
                 continue
 
             # Create a source repo and get the pkg directory out of it.
@@ -512,7 +513,7 @@ def dump_packages(spec, path):
 
         # Create a destination repository
         dest_repo_root = os.path.join(path, node.namespace)
-        if not os.path.exists(dest_repo_root):
+        if not Path(dest_repo_root).exists():
             spack.repo.create_repo(dest_repo_root)
         repo = spack.repo.Repo(dest_repo_root)
 
@@ -574,18 +575,18 @@ def log(pkg):
 
     # Archive all phase log paths
     for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
-        log_file = os.path.join(os.path.dirname(packages_dir), log_file)
+        log_file = PurePath(phase_log).name
+        log_file = os.path.join(PurePath(packages_dir).parent, log_file)
         fs.install(phase_log, log_file)
 
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
 
     # Archive the install-phase test log, if present
-    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
+    if pkg.test_install_log_path and Path(pkg.test_install_log_path).exists():
         fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
 
-    if os.path.exists(pkg.configure_args_path):
+    if Path(pkg.configure_args_path).exists():
         # Archive the args used for the build
         fs.install(pkg.configure_args_path, pkg.install_configure_args_path)
 
@@ -597,13 +598,13 @@ def log(pkg):
         for glob_expr in pkg.builder.archive_files:
             # Check that we are trying to copy things that are
             # in the stage tree (not arbitrary files)
-            abs_expr = os.path.realpath(glob_expr)
-            if os.path.realpath(pkg.stage.path) not in abs_expr:
+            abs_expr = Path(glob_expr).resolve()
+            if Path(pkg.stage.path).resolve() not in abs_expr:
                 errors.write("[OUTSIDE SOURCE PATH]: {0}\n".format(glob_expr))
                 continue
             # Now that we are sure that the path is within the correct
             # folder, make it relative and check for matches
-            if os.path.isabs(glob_expr):
+            if PurePath(glob_expr).is_absolute():
                 glob_expr = os.path.relpath(glob_expr, pkg.stage.path)
             files = glob.glob(glob_expr)
             for f in files:
@@ -611,7 +612,7 @@ def log(pkg):
                     target = os.path.join(target_dir, f)
                     # We must ensure that the directory exists before
                     # copying a file in
-                    fs.mkdirp(os.path.dirname(target))
+                    fs.mkdirp(PurePath(target).parent)
                     fs.install(f, target)
                 except Exception as e:
                     tty.debug(e)
@@ -953,7 +954,7 @@ class PackageInstaller(object):
 
             # Make sure the installation directory is in the desired state
             # for uninstalled specs.
-            if os.path.isdir(task.pkg.spec.prefix):
+            if Path(task.pkg.spec.prefix).is_dir():
                 if not keep_prefix:
                     task.pkg.remove_prefix()
                 else:
@@ -1432,7 +1433,7 @@ class PackageInstaller(object):
         Args:
             pkg (spack.package_base.PackageBase): the package to be built and installed
         """
-        if not os.path.exists(pkg.spec.prefix):
+        if not Path(pkg.spec.prefix).exists():
             path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
             tty.debug("Creating the installation directory {0}".format(path))
             spack.store.layout.create_install_directory(pkg.spec)
@@ -1448,7 +1449,7 @@ class PackageInstaller(object):
             mode = os.stat(pkg.spec.prefix).st_mode
             perms = prefs.get_package_dir_permissions(pkg.spec)
             if mode != perms:
-                os.chmod(pkg.spec.prefix, perms)
+                Path(pkg.spec.prefix).chmod(perms)
 
             # Ensure the metadata path exists as well
             fs.mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
@@ -1578,7 +1579,7 @@ class PackageInstaller(object):
 
         # If the install prefix is missing, warn about it, and proceed with
         # normal install.
-        if not os.path.exists(task.pkg.prefix):
+        if not Path(task.pkg.prefix).exists():
             tty.debug("Missing installation to overwrite")
             return InstallAction.INSTALL
 
@@ -1974,7 +1975,7 @@ class BuildProcessInstaller(object):
     def _install_source(self):
         """Install source code from stage into share/pkg/src if necessary."""
         pkg = self.pkg
-        if not os.path.isdir(pkg.stage.source_path):
+        if not Path(pkg.stage.source_path).is_dir():
             return
 
         src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")
@@ -2018,7 +2019,7 @@ class BuildProcessInstaller(object):
             builder = spack.builder.create(pkg)
             for i, phase_fn in enumerate(builder):
                 # Keep a log file for each phase
-                log_dir = os.path.dirname(pkg.log_path)
+                log_dir = PurePath(pkg.log_path).parent
                 log_file = "spack-build-%02d-%s-out.txt" % (i + 1, phase_fn.name.lower())
                 log_file = os.path.join(log_dir, log_file)
 

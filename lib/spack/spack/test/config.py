@@ -10,6 +10,7 @@ import os
 import sys
 import tempfile
 from datetime import date
+from pathlib import Path, PurePath
 
 import pytest
 
@@ -326,70 +327,70 @@ class MockEnv(object):
 def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     prefix = spack.paths.prefix.lstrip("/")
     assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix
+        os.sep + PurePath("foo", "bar", "baz"), prefix
     ) == spack_path.canonicalize_path("/foo/bar/baz/$spack")
 
     assert cross_plat_join(
-        spack.paths.prefix, os.path.join("foo", "bar", "baz")
+        spack.paths.prefix, PurePath("foo", "bar", "baz")
     ) == spack_path.canonicalize_path("$spack/foo/bar/baz/")
 
     assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
+        os.sep + PurePath("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
     ) == spack_path.canonicalize_path("/foo/bar/baz/$spack/foo/bar/baz/")
 
     assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix
+        os.sep + PurePath("foo", "bar", "baz"), prefix
     ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}")
 
     assert cross_plat_join(
-        spack.paths.prefix, os.path.join("foo", "bar", "baz")
+        spack.paths.prefix, PurePath("foo", "bar", "baz")
     ) == spack_path.canonicalize_path("${spack}/foo/bar/baz/")
 
     assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
+        os.sep + PurePath("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
     ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}/foo/bar/baz/")
 
     assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
+        os.sep + PurePath("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
     ) != spack_path.canonicalize_path("/foo/bar/baz/${spack/foo/bar/baz/")
 
     # $env replacement is a no-op when no environment is active
     assert spack_path.canonicalize_path(
-        os.sep + os.path.join("foo", "bar", "baz", "$env")
-    ) == os.sep + os.path.join("foo", "bar", "baz", "$env")
+        os.sep + PurePath("foo", "bar", "baz", "$env")
+    ) == os.sep + PurePath("foo", "bar", "baz", "$env")
 
     # Fake an active environment and $env is replaced properly
-    fake_env_path = os.sep + os.path.join("quux", "quuux")
+    fake_env_path = os.sep + PurePath("quux", "quuux")
     monkeypatch.setattr(ev, "active_environment", lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path("$env/foo/bar/baz") == os.path.join(
-        fake_env_path, os.path.join("foo", "bar", "baz")
+        fake_env_path, PurePath("foo", "bar", "baz")
     )
 
     # relative paths without source information are relative to cwd
-    assert spack_path.canonicalize_path(os.path.join("foo", "bar", "baz")) == os.path.abspath(
-        os.path.join("foo", "bar", "baz")
+    assert spack_path.canonicalize_path(PurePath("foo", "bar", "baz")) == os.path.abspath(
+        PurePath("foo", "bar", "baz")
     )
 
     # relative paths with source information are relative to the file
     spack.config.set(
-        "modules:default", {"roots": {"lmod": os.path.join("foo", "bar", "baz")}}, scope="low"
+        "modules:default", {"roots": {"lmod": PurePath("foo", "bar", "baz")}}, scope="low"
     )
     spack.config.config.clear_caches()
     path = spack.config.get("modules:default:roots:lmod")
     assert spack_path.canonicalize_path(path) == os.path.normpath(
-        os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
+        PurePath(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
     )
 
     # test architecture information is in replacements
-    assert spack_path.canonicalize_path(
-        os.path.join("foo", "$platform", "bar")
-    ) == os.path.abspath(os.path.join("foo", "test", "bar"))
+    assert spack_path.canonicalize_path(PurePath("foo", "$platform", "bar")) == Path.resolve(
+        PurePath("foo", "test", "bar")
+    )
 
     host_target = spack.platforms.host().target("default_target")
     host_target_family = str(host_target.microarchitecture.family)
-    assert spack_path.canonicalize_path(
-        os.path.join("foo", "$target_family", "bar")
-    ) == os.path.abspath(os.path.join("foo", host_target_family, "bar"))
+    assert spack_path.canonicalize_path(PurePath("foo", "$target_family", "bar")) == Path.resolve(
+        PurePath("foo", host_target_family, "bar")
+    )
 
 
 packages_merge_low = {"packages": {"foo": {"variants": ["+v1"]}, "bar": {"variants": ["+v2"]}}}
@@ -425,27 +426,27 @@ def test_substitute_user(mock_low_high_config):
     assert os.sep + os.path.join(
         "foo", "bar"
     ) + os.sep + user + os.sep + "baz" == spack_path.canonicalize_path(
-        os.sep + os.path.join("foo", "bar", "$user", "baz")
+        os.sep + PurePath("foo", "bar", "$user", "baz")
     )
 
 
 def test_substitute_user_cache(mock_low_high_config):
     user_cache_path = spack.paths.user_cache_path
     assert user_cache_path + os.sep + "baz" == spack_path.canonicalize_path(
-        os.path.join("$user_cache_path", "baz")
+        PurePath("$user_cache_path", "baz")
     )
 
 
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack_path.canonicalize_path("$tempdir")
-    assert tempdir + os.sep + os.path.join("foo", "bar", "baz") == spack_path.canonicalize_path(
-        os.path.join("$tempdir", "foo", "bar", "baz")
+    assert tempdir + os.sep + PurePath("foo", "bar", "baz") == spack_path.canonicalize_path(
+        PurePath("$tempdir", "foo", "bar", "baz")
     )
 
 
 def test_substitute_date(mock_low_high_config):
-    test_path = os.path.join("hello", "world", "on", "$date")
+    test_path = PurePath("hello", "world", "on", "$date")
     new_path = spack_path.canonicalize_path(test_path)
     assert "$date" in test_path
     assert date.today().strftime("%Y-%m-%d") in new_path
@@ -455,7 +456,7 @@ PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
 MAX_PATH_LEN = spack.util.path.get_system_path_max()
 MAX_PADDED_LEN = MAX_PATH_LEN - spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
-full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDED_LEN]
+full_padded_string = str(PurePath(os.sep + "path", os.sep.join(reps)))[:MAX_PADDED_LEN]
 
 
 @pytest.mark.parametrize(
@@ -498,15 +499,15 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
                 ["config:install_tree:root", os.sep + "path"],
                 ["config:install_tree:padded_length", 11],
             ],
-            [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
+            [PurePath(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
         ),
         (
             [["config:install_tree:root", "/path/$padding:11"]],
-            [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
+            [PurePath(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
         ),
         (
             [["config:install_tree", "/path/${padding:11}"]],
-            [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
+            [PurePath(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
         ),
         ([["config:install_tree:padded_length", False]], [None, None, None]),
         (
@@ -758,7 +759,7 @@ def test_keys_are_ordered():
     )
 
     config_scope = spack.config.ConfigScope(
-        "modules", os.path.join(spack.paths.test_path, "data", "config")
+        "modules", PurePath(spack.paths.test_path, "data", "config")
     )
 
     data = config_scope.get_section("modules")
@@ -865,10 +866,10 @@ def test_bad_command_line_scopes(tmpdir, config):
         mkdirp("unreadable_dir")
         with pytest.raises(spack.config.ConfigError):
             try:
-                os.chmod("unreadable_dir", 0)
+                Path("unreadable_dir").chmod(0)
                 spack.config._add_command_line_scopes(cfg, ["unreadable_dir"])
             finally:
-                os.chmod("unreadable_dir", 0o700)  # so tmpdir can be removed
+                Path("unreadable_dir").chmod(0o700)  # so tmpdir can be removed
 
 
 def test_add_command_line_scopes(tmpdir, mutable_config):
@@ -1193,7 +1194,7 @@ def test_license_dir_config(mutable_config, mock_packages):
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
     assert spack.repo.path.get_pkg_class("a").global_license_dir == expected_dir
 
-    rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
+    rel_path = PurePath(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
     assert spack.package_base.PackageBase.global_license_dir == rel_path
@@ -1240,7 +1241,7 @@ def test_system_config_path_is_overridable(working_env):
 
 def test_system_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
-    assert os.sep + os.path.join("etc", "spack") == spack.paths._get_system_config_path()
+    assert os.sep + PurePath("etc", "spack") == spack.paths._get_system_config_path()
 
 
 def test_user_config_path_is_overridable(working_env):
@@ -1251,7 +1252,7 @@ def test_user_config_path_is_overridable(working_env):
 
 def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
+    assert Path("~%s.spack" % os.sep).expanduser() == spack.paths._get_user_config_path()
 
 
 def test_default_install_tree(monkeypatch):
@@ -1292,7 +1293,7 @@ def test_user_cache_path_is_overridable(working_env):
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
+    assert Path("~%s.spack" % os.sep).expanduser() == spack.paths._get_user_cache_path()
 
 
 github_url = "https://github.com/fake/fake/{0}/develop"
@@ -1346,7 +1347,7 @@ def test_config_fetch_remote_configs(
         # The first element of all configuration files for this test happen to
         # be the basename of the file so this check leverages that feature. If
         # that changes, then this check will need to change accordingly.
-        element = "{0}:".format(os.path.splitext(os.path.basename(filename))[0])
+        element = "{0}:".format(os.path.splitext(PurePath(filename).name)[0])
         with open(filename, "r") as fd:
             for line in fd:
                 if element in line:
@@ -1363,14 +1364,14 @@ def test_config_fetch_remote_configs(
     else:
         with spack.config.override("config:url_fetch_method", "curl"):
             path = spack.config.fetch_remote_configs(url, dest_dir)
-            assert os.path.exists(path)
+            assert Path(path).exists()
             if isfile:
                 # Ensure correct file is "fetched"
-                assert os.path.basename(path) == os.path.basename(url)
+                assert PurePath(path).name == PurePath(url).name
                 # Ensure contents of the file has expected config element
                 assert _has_content(path)
             else:
-                for filename in os.listdir(path):
+                for filename in Path(path).iterdir():
                     assert _has_content(join_path(path, filename))
 
 
@@ -1443,7 +1444,7 @@ def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
     ConfigFileError is raised."""
     filename = join_path(tmpdir.strpath, "test.yaml")
     touch(filename)
-    os.chmod(filename, 0o200)
+    Path(filename).chmod(0o200)
 
     with pytest.raises(spack.config.ConfigFileError, match="not readable"):
         spack.config.read_config_file(filename)

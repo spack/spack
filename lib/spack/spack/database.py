@@ -26,6 +26,7 @@ import os
 import socket
 import sys
 import time
+from pathlib import Path, PurePath
 from typing import Dict
 
 try:
@@ -345,29 +346,29 @@ class Database(object):
         self.root = root
 
         # If the db_dir is not provided, default to within the db root.
-        self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
+        self._db_dir = db_dir or PurePath(self.root, _db_dirname)
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self._db_dir, "index.json")
-        self._verifier_path = os.path.join(self._db_dir, "index_verifier")
-        self._lock_path = os.path.join(self._db_dir, "lock")
+        self._index_path = PurePath(self._db_dir, "index.json")
+        self._verifier_path = PurePath(self._db_dir, "index_verifier")
+        self._lock_path = PurePath(self._db_dir, "lock")
 
         # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = os.path.join(self._db_dir, "prefix_lock")
+        self.prefix_lock_path = PurePath(self._db_dir, "prefix_lock")
 
         # Ensure a persistent location for dealing with parallel installation
         # failures (e.g., across near-concurrent processes).
-        self._failure_dir = os.path.join(self._db_dir, "failures")
+        self._failure_dir = PurePath(self._db_dir, "failures")
 
         # Support special locks for handling parallel installation failures
         # of a spec.
-        self.prefix_fail_path = os.path.join(self._db_dir, "prefix_failures")
+        self.prefix_fail_path = PurePath(self._db_dir, "prefix_failures")
 
         # Create needed directories and files
-        if not is_upstream and not os.path.exists(self._db_dir):
+        if not is_upstream and not Path(self._db_dir).exists():
             fs.mkdirp(self._db_dir)
 
-        if not is_upstream and not os.path.exists(self._failure_dir):
+        if not is_upstream and not Path(self._failure_dir).exists():
             fs.mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
@@ -439,7 +440,7 @@ class Database(object):
         if not spec.concrete:
             raise ValueError("Concrete spec required for failure path for {0}".format(spec.name))
 
-        return os.path.join(self._failure_dir, "{0}-{1}".format(spec.name, spec.dag_hash()))
+        return PurePath(self._failure_dir, "{0}-{1}".format(spec.name, spec.dag_hash()))
 
     def clear_all_failures(self):
         """Force remove install failure tracking files."""
@@ -451,9 +452,9 @@ class Database(object):
 
         # Remove all failure markings (aka files)
         tty.debug("Removing prefix failure tracking files")
-        for fail_mark in os.listdir(self._failure_dir):
+        for fail_mark in Path(self._failure_dir).iterdir():
             try:
-                os.remove(os.path.join(self._failure_dir, fail_mark))
+                Path(PurePath(self._failure_dir, fail_mark)).unlink()
             except OSError as exc:
                 tty.warn(
                     "Unable to remove failure marking file {0}: {1}".format(fail_mark, str(exc))
@@ -489,7 +490,7 @@ class Database(object):
             try:
                 path = self._failed_spec_path(spec)
                 tty.debug("Removing failure marking for {0}".format(spec.name))
-                os.remove(path)
+                Path(path).unlink()
             except OSError as err:
                 tty.warn(
                     "Unable to remove failure marking for {0} ({1}): {2}".format(
@@ -877,7 +878,7 @@ class Database(object):
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if os.path.isfile(self._index_path):
+                if Path(self._index_path).is_file():
                     self._read_from_file(self._index_path)
             except CorruptDatabaseError as e:
                 self._error = e
@@ -1044,13 +1045,13 @@ class Database(object):
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
+            if Path(temp_file).exists():
+                Path(temp_file).unlink()
             raise
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if os.path.isfile(self._index_path):
+        if Path(self._index_path).is_file():
             current_verifier = ""
             if _use_uuid:
                 try:

@@ -6,6 +6,7 @@ import os
 import re
 import xml.sax.saxutils
 from datetime import datetime
+from pathlib import PurePath
 
 import llnl.util.tty as tty
 
@@ -66,7 +67,7 @@ def part_name(source):
     # TODO: Should be passed the package prefix and only remove it
     elements = []
     for e in source.replace("'", "").split(" "):
-        elements.append(os.path.basename(e) if os.sep in e else e)
+        elements.append(PurePath(e).name if os.sep in e else e)
     return "_".join(elements)
 
 

@@ -9,6 +9,7 @@ import socket
 import sys
 import time
 from datetime import datetime
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
@@ -110,7 +111,7 @@ class OpenFileTracker(object):
                 raise
 
             # path does not exist -- fail if we won't be able to create it
-            parent = os.path.dirname(path) or "."
+            parent = PurePath(path).parent or "."
             if not os.access(parent, os.W_OK):
                 raise CantCreateLockError(path)
 
@@ -378,7 +379,7 @@ class Lock(object):
         return False
 
     def _ensure_parent_directory(self):
-        parent = os.path.dirname(self.path)
+        parent = PurePath(self.path).parent
 
         # relative paths to lockfiles in the current directory have no parent
         if not parent:
@@ -392,7 +393,7 @@ class Lock(object):
             # are fine if we ensure that the directory exists.
             # Python 3 allows an exist_ok parameter and ignores any OSError as long as
             # the directory exists.
-            if not (e.errno == errno.EISDIR or os.path.isdir(parent)):
+            if not (e.errno == errno.EISDIR or Path(parent).is_dir()):
                 raise
         return parent
 
@@ -625,7 +626,7 @@ class Lock(object):
 
     def cleanup(self):
         if self._reads == 0 and self._writes == 0:
-            os.unlink(self.path)
+            Path(self.path).unlink()
         else:
             raise LockError("Attempting to cleanup active lock.")
 
