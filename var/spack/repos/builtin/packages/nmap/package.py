@@ -44,6 +44,25 @@ class Nmap(AutotoolsPackage):
     depends_on("openssl@1.1:", when="@7.50:7.92")
     depends_on("openssl@:1.0.9", when="@:7.49")
 
+    # nmap includes vendors a few libraries, but we should build against spack's
+    # versions where appropriate. see their build guide at
+    # https://nmap.org/book/inst-source.html#inst-configure. Also see:
+    # https://github.com/nmap/nmap/issues/1602
+    #
+    # Any that are included "for convinience" we should provide.
+    #
+    # The recursive builds to build the vendored dependencies is also broken on
+    # darwin (something races); using our own deps works around that issue.
+    #
+    # Specifically, something is touching libpcre/configure during the build,
+    # which causes the recursive `make`'s configure.status --recheck pass to
+    # attempt to rerun configure. Rerunning configure fails due and asks to run
+    # `make distclean`.
+
+    depends_on("libssh2@1.10")
+    depends_on("pcre@8")
+    depends_on("zlib@1.2")
+
     def configure_args(self):
         args = []
 
