@@ -27,7 +27,6 @@ from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
-
 is_windows = sys.platform == "win32"
 
 

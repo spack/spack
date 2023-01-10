@@ -562,8 +562,6 @@ class RepoIndex(object):
     def __init__(self, package_checker, namespace, cache):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
-        if sys.platform == "win32":
-            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers = {}
@@ -933,20 +931,20 @@ class Repo(object):
                 raise BadRepoError(msg)
 
         # Validate repository layout.
-        self.config_file = os.path.join(self.root, repo_config_name)
-        check(Path(self.config_file).is_file(), "No %s found in '%s'" % (repo_config_name, root))
+        self.config_file = self.root.joinpath(repo_config_name)
+        check(self.config_file.is_file(), "No %s found in '%s'" % (str(repo_config_name), str(root)))
 
-        self.packages_path = os.path.join(self.root, packages_dir_name)
+        self.packages_path = self.root.joinpath(packages_dir_name)
         check(
-            Path(self.packages_path).is_dir(),
-            "No directory '%s' found in '%s'" % (packages_dir_name, root),
+            self.packages_path.is_dir(),
+            "No directory '%s' found in '%s'" % (str(packages_dir_name), str(root)),
         )
 
         # Read configuration and validate namespace
         config = self._read_config()
         check(
             "namespace" in config,
-            "%s must define a namespace." % os.path.join(root, repo_config_name),
+            "%s must define a namespace." % root.joinpath(repo_config_name),
         )
 
         self.namespace = config["namespace"]

@@ -25,7 +25,6 @@ from llnl.util.symlink import islink, symlink
 
 from spack.util.executable import CommandNotFoundError, Executable, which
 
-
 is_windows = _platform == "win32"
 
 if not is_windows:

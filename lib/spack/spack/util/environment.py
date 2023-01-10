@@ -343,9 +343,7 @@ class PruneDuplicatePaths(NameModifier):
         tty.debug("PruneDuplicatePaths: {0}".format(self.name), level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = prune_duplicate_paths(
-            [str(Path(os.path.normpath(x))) for x in directories]
-        )
+        directories = prune_duplicate_paths([str(Path(os.path.normpath(x))) for x in directories])
         env[self.name] = self.separator.join(directories)
 
 

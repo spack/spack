@@ -209,20 +209,21 @@ def list_modules(directory, **kwargs):
     particular directory.  Listed packages have no particular
     order."""
     list_directories = kwargs.setdefault("directories", True)
-
-    for name in Path(directory).iterdir():
+    if not isinstance(directory, PurePath):
+        directory = Path(directory)
+    for name in directory.iterdir():
         if name == "__init__.py":
             continue
 
-        path = PurePath(directory, name)
-        if list_directories and Path(path).is_dir():
-            init_py = PurePath(path, "__init__.py")
-            if Path(init_py).is_file():
+        path = directory.joinpath(name)
+        if list_directories and path.is_dir():
+            init_py = path.joinpath("__init__.py")
+            if init_py.is_file():
                 yield name
 
-        elif name.endswith(".py"):
-            if not any(re.search(pattern, name) for pattern in ignore_modules):
-                yield re.sub(".py$", "", name)
+        elif name.suffix == ".py":
+            if not any(re.search(pattern, str(name)) for pattern in ignore_modules):
+                yield re.sub(".py$", "", str(name))
 
 
 def decorator_with_or_without_args(decorator):

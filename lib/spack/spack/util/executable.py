@@ -9,6 +9,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path, PurePath
+from typing import Optional
 
 import llnl.util.tty as tty
 
@@ -26,7 +27,7 @@ class Executable(object):
         # necesary here for the shlex call to succeed
         self.exe = shlex.split(name.as_posix())
         # filter back to platform dependent path
-        self.exe = Path(*self.exe)
+        self.exe = [str(Path(*self.exe))]
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
 
@@ -69,7 +70,7 @@ class Executable(object):
         Returns:
             str: The basename of the executable
         """
-        return PurePath(self.path).name
+        return self.path.name
 
     @property
     def path(self):
@@ -78,7 +79,7 @@ class Executable(object):
         Returns:
             str: The path to the executable
         """
-        return self.exe[0]
+        return Path(self.exe[0])
 
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
@@ -273,13 +274,13 @@ class Executable(object):
         return " ".join(self.exe)
 
 
-def which_string(*args, **kwargs):
+def which_string(*args, **kwargs) -> Optional[Path]:
     """Like ``which()``, but return a string instead of an ``Executable``."""
     path = kwargs.get("path", os.environ.get("PATH", ""))
     required = kwargs.get("required", False)
 
     if isinstance(path, str):
-        path = path.split(os.pathsep)
+        path = [Path(x) for x in path.split(os.pathsep)]
 
     for name in args:
         win_candidates = []
@@ -290,19 +291,19 @@ def which_string(*args, **kwargs):
         if sys.platform == "win32":
             new_path = path[:]
             for p in path:
-                if PurePath(p).name == "bin":
-                    new_path.append(PurePath(p).parent)
+                if p.name == "bin":
+                    new_path.append(p.parent)
             path = new_path
 
         for candidate_name in candidate_names:
             if os.path.sep in candidate_name:
                 exe = Path(candidate_name).resolve()
-                if Path(exe).is_file() and os.access(exe, os.X_OK):
+                if exe.is_file() and os.access(str(exe), os.X_OK):
                     return exe
             else:
                 for directory in path:
-                    exe = os.path.join(directory, candidate_name)
-                    if Path(exe).is_file() and os.access(str(exe), os.X_OK):
+                    exe = directory.joinpath(candidate_name)
+                    if exe.is_file() and os.access(str(exe), os.X_OK):
                         return exe
 
     if required:
@@ -311,7 +312,7 @@ def which_string(*args, **kwargs):
     return None
 
 
-def which(*args, **kwargs):
+def which(*args, **kwargs) -> Optional[Executable]:
     """Finds an executable in the path like command-line which.
 
     If given multiple executables, returns the first one that is found.
@@ -328,7 +329,7 @@ def which(*args, **kwargs):
         Executable: The first executable that is found in the path
     """
     exe = which_string(*args, **kwargs)
-    return Executable(shlex.quote(exe)) if exe else None
+    return Executable(shlex.quote(str(exe))) if exe else None
 
 
 class ProcessError(spack.error.SpackError):

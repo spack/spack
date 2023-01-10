@@ -96,7 +96,7 @@ def parse_install_tree(config_dict):
             )
 
     # Handle backwards compatibility for padding
-    old_pad = re.search(r"\$padding(:\d+)?|\${padding(:\d+)?}", unpadded_root)
+    old_pad = re.search(r"\$padding(:\d+)?|\${padding(:\d+)?}", str(unpadded_root))
     if old_pad:
         if padded_length:
             msg = "Ignoring deprecated padding option in install_tree root "

@@ -374,7 +374,7 @@ def canonicalize_path(path, default_wd=None):
     # relative to that path.
     filename = None
     if isinstance(path, syaml.syaml_str):
-        filename = PurePath(path._start_mark.name).parent
+        filename = Path(path._start_mark.name).parent
         assert path._start_mark.name == path._end_mark.name
 
     path = substitute_path_variables(path)
@@ -386,7 +386,7 @@ def canonicalize_path(path, default_wd=None):
             path = PurePath(base, path)
             tty.debug("Using working directory %s as base for abspath" % base)
 
-    return os.path.normpath(path)
+    return Path(os.path.normpath(path))
 
 
 def longest_prefix_re(string, capture=True):
