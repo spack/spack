@@ -163,13 +163,12 @@ def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
         site="fake-site",
         buildstamp=None,
         track="fake-track",
-        ctest_parsing=False,
     )
     monkeypatch.setattr(tty, "_debug", 1)
 
     reporter = MockCDash(configuration=configuration)
     pkg_data = {"name": "fake-package"}
-    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0, False)
+    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0)
     err = capfd.readouterr()[1]
     assert "Skipping report for" in err
     assert "No generated output" in err

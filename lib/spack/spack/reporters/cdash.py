@@ -48,7 +48,7 @@ CDASH_PHASES.add("update")
 
 CDashConfiguration = collections.namedtuple(
     "CDashConfiguration",
-    ["upload_url", "packages", "build", "site", "buildstamp", "track", "ctest_parsing"],
+    ["upload_url", "packages", "build", "site", "buildstamp", "track"],
 )
 
 
@@ -106,7 +106,6 @@ class CDash(Reporter):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.main.get_version())
         self.multiple_packages = False
-        self.ctest_parsing = configuration.ctest_parsing
 
     def report_build_name(self, pkg_name):
         return (
@@ -361,7 +360,7 @@ class CDash(Reporter):
             tty.debug("Preparing to upload {0}".format(phase_report))
             self.upload(phase_report)
 
-    def test_report_for_package(self, directory_name, package, duration, ctest_parsing=False):
+    def test_report_for_package(self, directory_name, package, duration):
         if "stdout" not in package:
             # Skip reporting on packages that did not generate any output.
             tty.debug("Skipping report for {0}: No generated output".format(package["name"]))
@@ -377,12 +376,8 @@ class CDash(Reporter):
 
         report_data = self.initialize_report(directory_name)
         report_data["hostname"] = socket.gethostname()
-        if ctest_parsing:
-            phases = ["test", "update"]
-            self.extract_ctest_test_data(package, phases, report_data)
-        else:
-            phases = ["testing"]
-            self.extract_standalone_test_data(package, phases, report_data)
+        phases = ["testing"]
+        self.extract_standalone_test_data(package, phases, report_data)
 
         self.report_test_data(directory_name, package, phases, report_data)
 
@@ -394,12 +389,7 @@ class CDash(Reporter):
             if "time" in spec:
                 duration = int(spec["time"])
             for package in spec["packages"]:
-                self.test_report_for_package(
-                    directory_name,
-                    package,
-                    duration,
-                    self.ctest_parsing,
-                )
+                self.test_report_for_package(directory_name, package, duration)
 
         self.finalize_report()
 
@@ -414,7 +404,7 @@ class CDash(Reporter):
             "result": "skipped",
             "stdout": output,
         }
-        self.test_report_for_package(directory_name, package, duration=0.0, ctest_parsing=False)
+        self.test_report_for_package(directory_name, package, duration=0.0)
 
     def concretization_report(self, directory_name, msg):
         self.buildname = self.base_buildname
