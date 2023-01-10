@@ -48,8 +48,8 @@ class AoclSparse(CMakePackage):
     variant(
         "avx",
         default=False,
-        when="target=zen4:",
-        description="Build with AVX512 support",
+        when="@4.0: target=zen4:",
+        description="Enable experimental AVX512 support",
     )
 
     depends_on("boost", when="+benchmarks")
