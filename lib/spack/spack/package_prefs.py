@@ -11,7 +11,7 @@ from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import VersionList
 
-_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": VersionList}
+_lesser_spec_types = {"compiler": spack.spec.CompilerSpec.maybe_literal, "version": VersionList}
 
 
 def _spec_type(component):

@@ -1664,7 +1664,7 @@ def test_ci_generate_bootstrap_prune_dag(
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@12.2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc", "12.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror_cmd("add", "test-mirror", mirror_url)

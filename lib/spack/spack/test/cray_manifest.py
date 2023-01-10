@@ -368,7 +368,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 
         compilers = spack.compilers.all_compilers()
         filtered = list(
-            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@10.2.0.cray")
+            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc", "10.2.0.cray")
         )
         assert len(filtered) == 1
 
