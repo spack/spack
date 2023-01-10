@@ -605,6 +605,10 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
+    # On Windows10 console handling for ASCI/VT100 sequences is not
+    # on by default. Turn on before we try to write to console
+    # with color
+    color.try_enable_terminal_color_on_windows()
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
 

@@ -232,7 +232,7 @@ Spack Subcommands
 Unit tests
 ^^^^^^^^^^
 
-:mod:`spack.test`
+``spack.test``
   Implements Spack's test suite.  Add a module and put its name in
   the test suite in ``__init__.py`` to add more unit tests.
 
