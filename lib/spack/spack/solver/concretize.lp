@@ -24,11 +24,13 @@ literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
 1 { literal_solved(ID) : literal(ID) }.
 
 % priority ranges for optimization criteria
+% note that clingo's weight_t is int32_t, so the max priority we can use is 2,147,483,647
 #const error_prio = 10000000.
 #const solve_prio = 1000000.
-#const build_prio = 100000.
+#const build_prio = 100000.  % n_nodes x depth_offset x max levels needs to be less than this
+#const depth_offset = 100.   % depth_offset-1 is the max id for leveled criteria
 
-opt_criterion(solve_prio, "number of input specs not concretized").
+opt_criterion(solve_prio, "fixed", "number of input specs not concretized").
 #minimize{ 0@solve_prio: #true }.
 #minimize{ 1@solve_prio,ID : literal_not_solved(ID) }.
 
@@ -1112,14 +1114,8 @@ build_priority(Package, 0)   :- attr("node", Package), not optimize_for_reuse().
 %-----------------------------------------------------------------------------
 #const max_depth = 10.
 
-% roots have depth 0
+% roots have depth 0.
 depth(Package, 0) :- attr("root", Package).
-
-% possible optimization
-% adding this to the minimization below doesn't seem to help.
-%possible_dependency(Dependent, Package) :- dependency_condition(_, Dependent, Package).
-%possible_dependency(Dependent, Package) :-
-%    dependency_condition(_, Dependent, Virtual), possible_provider(Package, Virtual).
 
 % other nodes' depth is the minimum depth of any dependent plus one.
 depth(Package, N+1) :-
@@ -1159,190 +1155,146 @@ depth(Package, N+1) :-
 %   2. a `#minimize{ 0@2 : #true }.` statement that ensures the criterion
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
+% Ensure that values are returned by clingo for every distinct optimization criterion.
+% Some criteria are "fixed" and have only one bucket. Others are summed into multiple
+% buckets -- per build priority and per depth in the graph.
+% If we don't do this, it's very hard to read the sums back. We use `0@...` because
+% it doesn't affect the sums -- it just ensure that clingo returns them.
+
+% "fixed" criteria have one bucket -- their priority.
+#minimize{ 0@N: opt_criterion(N, "fixed", _) }.
+
+% "leveled" criteria sum into a bucket per depth in the graph, per build priority
+%#minimize{
+%    @(((max_depth - D - 1) * depth_offset) + N + build_prio)
+%    : opt_criterion(N, "leveled", _), depth(_, D)
+%}.
+#minimize{
+    0@(((max_depth - D - 1) * depth_offset) + N)
+    : opt_criterion(N, "leveled", _), depth(_, D)
+}.
+
 % Try hard to reuse installed packages (i.e., minimize the number built)
-opt_criterion(build_prio, "number of packages to build (vs. reuse)").
-#minimize { 0@build_prio: #true }.
-#minimize { 1@build_prio,Package : build(Package), optimize_for_reuse() }.
+opt_criterion(build_prio, "fixed", "number of packages to build (vs. reuse)").
 #defined optimize_for_reuse/0.
+
 
 % A condition group specifies one or more specs that must be satisfied.
 % Specs declared first are preferred, so we assign increasing weights and
 % minimize the weights.
-opt_criterion(75, "requirement weight").
-#minimize{ 0@75+build_prio: #true }.
-#minimize{ 0@75: #true }.
-#minimize {
-    Weight@75+Priority
-    : requirement_weight(Package, Weight),
-      build_priority(Package, Priority)
-}.
+opt_criterion(65, "leveled", "requirement weight").
+%#minimize {
+%    Weight@(65 + ((max_depth - D - 1) * depth_offset) + Priority), Package
+%    : requirement_weight(Package, Weight),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
 % Minimize the number of deprecated versions being used
-opt_criterion(73, "deprecated versions used").
-#minimize{ 0@73+build_prio: #true }.
-#minimize{ 0@73: #true }.
-#minimize{
-    1@73+Priority,Package
-    : attr("deprecated", Package, _),
-      build_priority(Package, Priority)
-}.
+opt_criterion(60, "leveled", "deprecated versions used").
+%#minimize{
+%    1@(60 + ((max_depth - D - 1) * depth_offset) + Priority), Package
+%    : attr("deprecated", Package, _),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
 % Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root package.
-opt_criterion(70, "ROOTS: version badness").
-#minimize{ 0@70+build_prio: #true }.
-#minimize{ 0@70: #true }.
-#minimize {
-    Weight@70+Priority
-    : attr("root", Package),
-      version_weight(Package, Weight),
-      build_priority(Package, Priority)
-}.
+opt_criterion(55, "leveled", "version badness").
+%#minimize {
+%    Weight@(55 + ((max_depth - D - 1) * depth_offset) + Priority), Package
+%    : version_weight(Package, Weight),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
-opt_criterion(65, "ROOTS: number of non-default variants").
-#minimize{ 0@65+build_prio: #true }.
-#minimize{ 0@65: #true }.
-#minimize {
-    1@65+Priority,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value),
-      attr("root", Package),
-      build_priority(Package, Priority)
-}.
+opt_criterion(50, "leveled", "number of non-default variants").
+%#minimize {
+%    1@(50 + ((max_depth - D - 1) * depth_offset) + Priority), Package, Variant, Value
+%    : variant_not_default(Package, Variant, Value),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
-opt_criterion(60, "ROOTS: preferred providers").
-#minimize{ 0@60+build_prio: #true }.
-#minimize{ 0@60: #true }.
-#minimize{
-    Weight@60+Priority,Provider,Virtual
-    : provider_weight(Provider, Virtual, Weight),
-      attr("root", Provider),
-      build_priority(Provider, Priority)
-}.
+opt_criterion(45, "leveled", "preferred providers").
+%#minimize{
+%    Weight@(45 + ((max_depth - D - 1) * depth_offset) + Priority), Provider, Virtual
+%    : provider_weight(Provider, Virtual, Weight),
+%      build_priority(Provider, Priority),
+%      depth(Package, D)
+%}.
 
-opt_criterion(55, "ROOTS: default values of variants not being used").
-#minimize{ 0@55+build_prio: #true }.
-#minimize{ 0@55: #true }.
-#minimize{
-    1@55+Priority,Package,Variant,Value
-    : variant_default_not_used(Package, Variant, Value),
-      attr("root", Package),
-      build_priority(Package, Priority)
-}.
+opt_criterion(40, "leveled", "default values of variants not being used").
+%#minimize{
+%    1@(40 + ((max_depth - D - 1) * depth_offset) + Priority), Package, Variant, Value
+%    : variant_default_not_used(Package, Variant, Value),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
 % Try to use default variants or variants that have been set
-opt_criterion(50, "NON-ROOTS: number of non-default variants").
-#minimize{ 0@50+build_prio: #true }.
-#minimize{ 0@50: #true }.
-#minimize {
-    1@50+Priority,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value),
-      not attr("root", Package),
-      build_priority(Package, Priority)
-}.
+opt_criterion(35, "leveled", "compiler mismatches (not from CLI)").
+%#minimize{
+%    1@(35 + ((max_depth - D - 1) * depth_offset) + Priority), Dependent, Package
+%    : compiler_mismatch(Dependent, Package),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
-% Minimize the weights of the providers, i.e. use as much as
-% possible the most preferred providers
-opt_criterion(45, "NON-ROOTS: preferred providers").
-#minimize{ 0@45+build_prio: #true }.
-#minimize{ 0@45: #true }.
-#minimize{
-    Weight@45+Priority,Provider,Virtual
-    : provider_weight(Provider, Virtual, Weight),
-      not attr("root", Provider),
-      build_priority(Provider, Priority)
-}.
+opt_criterion(30, "leveled", "compiler mismatches (from CLI)").
+%#minimize{
+%    1@(30 + ((max_depth - D - 1) * depth_offset) + Priority), Dependent, Package
+%    : compiler_mismatch_required(Dependent, Package),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(40, "compiler mismatches that are not from CLI").
-#minimize{ 0@40+build_prio: #true }.
-#minimize{ 0@40: #true }.
-#minimize{
-    1@40+Priority,Package,Dependency
-    : compiler_mismatch(Package, Dependency),
-      build_priority(Package, Priority)
-}.
-
-opt_criterion(39, "compiler mismatches from CLI").
-#minimize{ 0@39+build_prio: #true }.
-#minimize{ 0@39: #true }.
-#minimize{
-    1@39+Priority,Package,Dependency
-    : compiler_mismatch_required(Package, Dependency),
-      build_priority(Package, Priority)
-}.
-
-% Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(35, "OS mismatches").
-#minimize{ 0@35+build_prio: #true }.
-#minimize{ 0@35: #true }.
-#minimize{
-    1@35+Priority,Package,Dependency
-    : node_os_mismatch(Package, Dependency),
-      build_priority(Package, Priority)
-}.
-
-opt_criterion(30, "non-preferred OS's").
-#minimize{ 0@30+build_prio: #true }.
-#minimize{ 0@30: #true }.
-#minimize{
-    Weight@30+Priority,Package
-    : node_os_weight(Package, Weight),
-      build_priority(Package, Priority)
-}.
-
-% Choose more recent versions for nodes
-opt_criterion(25, "NON-ROOTS: version badness").
-#minimize{ 0@25+build_prio: #true }.
-#minimize{ 0@25: #true }.
-#minimize{
-    Weight@25+Priority,Package
-    : not attr("root", Package),
-      version_weight(Package, Weight),
-      build_priority(Package, Priority)
-}.
-
-% Try to use all the default values of variants
-opt_criterion(20, "NON-ROOTS: default values of variants not being used").
-#minimize{ 0@20+build_prio: #true }.
-#minimize{ 0@20: #true }.
-#minimize{
-    1@20+Priority,Package,Variant,Value
-    : variant_default_not_used(Package, Variant, Value),
-      not attr("root", Package),
-      build_priority(Package, Priority)
-}.
+opt_criterion(25, "leveled", "OS mismatches").
+%#minimize{
+%    1@(25 + ((max_depth - D - 1) * depth_offset) + Priority), Dependent, Package
+%    : node_os_mismatch(Dependent, Package),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
 % Try to use preferred compilers
-opt_criterion(15, "non-preferred compilers").
-#minimize{ 0@15+build_prio: #true }.
-#minimize{ 0@15: #true }.
-#minimize{
-    Weight@15+Priority,Package
-    : compiler_weight(Package, Weight),
-      build_priority(Package, Priority)
-}.
+opt_criterion(20, "leveled", "non-preferred compilers").
+%#minimize{
+%    Weight@(20 + ((max_depth - D - 1) * depth_offset) + Priority), Package
+%    : compiler_weight(Package, Weight),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
+
+opt_criterion(15, "leveled", "non-preferred OS's").
+%#minimize{
+%    Weight@(15 + ((max_depth - D - 1) * depth_offset) + Priority), Package
+%    : node_os_weight(Package, Weight),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
 % Minimize the number of mismatches for targets in the DAG, try
 % to select the preferred target.
-opt_criterion(10, "target mismatches").
-#minimize{ 0@10+build_prio: #true }.
-#minimize{ 0@10: #true }.
-#minimize{
-    1@10+Priority,Package,Dependency
-    : node_target_mismatch(Package, Dependency),
-      build_priority(Package, Priority)
-}.
+opt_criterion(10, "leveled", "target mismatches").
+%#minimize{
+%    1@(10 + ((max_depth - D - 1) * depth_offset) + Priority), Dependent, Package
+%    : node_target_mismatch(Dependent, Package),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
-opt_criterion(5, "non-preferred targets").
-#minimize{ 0@5+build_prio: #true }.
-#minimize{ 0@5: #true }.
-#minimize{
-    Weight@5+Priority,Package
-    : node_target_weight(Package, Weight),
-      build_priority(Package, Priority)
-}.
+opt_criterion(5, "leveled", "non-preferred targets").
+%#minimize{
+%    Weight@(5 + ((max_depth - D - 1) * depth_offset) + Priority), Package
+%    : node_target_weight(Package, Weight),
+%      build_priority(Package, Priority),
+%      depth(Package, D)
+%}.
 
 %-----------------
 % Domain heuristic

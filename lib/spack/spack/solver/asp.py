@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import archspec.cpu
 
@@ -155,8 +155,14 @@ high_fixed_priority_offset = 10_000_000
 build_priority_offset = 100_000
 
 
-def build_criteria_names(costs, opt_criteria):
+def build_criteria_names(
+    costs: List[int], opt_criteria: List["AspFunction"], max_depth: int
+) -> Dict[str, Union[int, List[int]]]:
     """Construct an ordered mapping from criteria names to costs."""
+    print(costs)
+    print(len(costs))
+    print(max_depth)
+    print(opt_criteria)
 
     # ensure names of all criteria are unique
     names = {criterion.args[0] for criterion in opt_criteria}
@@ -171,18 +177,45 @@ def build_criteria_names(costs, opt_criteria):
     #  - N reuse criteria
     #    ...
 
+    # split opt criteria into two lists
+    fixed_criteria = [oc for oc in opt_criteria if oc.args[1] == "fixed"]
+    leveled_criteria = [oc for oc in opt_criteria if oc.args[1] == "leveled"]
+
+    print("FIXED:", len(fixed_criteria))
+    print("LEVELED:", len(leveled_criteria))
+
+    n_depths = max_depth + 1  # depths start at zero
+    total_criteria = len(fixed_criteria) + len(leveled_criteria) * 2 * n_depths
+    print(total_criteria)
+
     # opt_criteria has all the named criteria, which is all but the errors.
     # So we can figure out how many build criteria there are up front.
-    n_build_criteria = len(opt_criteria) - 2
+    # the -2 here accounts for:
+    # - number of specs not concretized
+    # - number of packages to build (vs. reuse)
+    n_leveled_criteria = len(opt_criteria) - 2
 
-    # number of criteria *not* including errors
-    n_named_criteria = len(opt_criteria) + n_build_criteria
+    n_leveled_criteria = n_build_criteria * 2 * n_depths
+    total_criteria = n_leveled_criteria + 2
 
-    # opt_criteria are in order, highest to lowest, as written in concretize.lp
-    # put costs in the same order as opt criteria
+    assert len(costs) == total_criteria
+
+    # For each level, opt_criteria are in order, highest to lowest, as written in
+    # concretize.lp put costs in the same order as opt criteria
     start = len(costs) - n_named_criteria
+
+    # build criteria count should be divisible by n_depths or we're doing something wrong.
+    assert n_build_criteria % n_depths == 0
+
+    criteria = {}
     ordered_costs = costs[start:]
     ordered_costs.insert(1, ordered_costs.pop(n_build_criteria + 1))
+
+    for i, (priority, type, name) in enumerate(c.args for c in opt_criteria):
+        if type == "fixed":
+            criteria[name] = ordered_costs[i]
+        else:
+            criteria[name] = ordered_costs[i::n_build_criteria]
 
     # list of build cost, reuse cost, and name of each criterion
     criteria: List[Tuple[int, int, str]] = []
@@ -694,11 +727,10 @@ class PyclingoDriver(object):
         self.control = control or default_clingo_control()
         # set up the problem -- this generates facts and rules
         self.assumptions = []
-        timer.start("setup")
-        with self.control.backend() as backend:
-            self.backend = backend
-            setup.setup(self, specs, reuse=reuse)
-        timer.stop("setup")
+        with timer.measure("setup"):
+            with self.control.backend() as backend:
+                self.backend = backend
+                setup.setup(self, specs, reuse=reuse)
 
         timer.start("load")
         # read in the main ASP program and display logic -- these are
@@ -775,14 +807,18 @@ class PyclingoDriver(object):
 
             # build specs from spec attributes in the model
             spec_attrs = extract_functions(best_model, "attr")
-            answers = builder.build_specs(spec_attrs)
+            with timer.measure("build_specs"):
+                answers = builder.build_specs(spec_attrs)
 
             # add best spec to the results
             result.answers.append((list(min_cost), 0, answers, spec_attrs))
 
             # get optimization criteria
             criteria = extract_functions(best_model, "opt_criterion")
-            result.criteria = build_criteria_names(min_cost, criteria)
+            depths = extract_functions(best_model, "depth")
+            print(depths)
+            max_depth = max(d.args[1] for d in depths)
+            result.criteria = build_criteria_names(min_cost, criteria, max_depth)
 
             # record the number of models the solver considered
             result.nmodels = len(models)

@@ -15,7 +15,7 @@
 #show attr/4.
 
 % names of optimization criteria
-#show opt_criterion/2.
+#show opt_criterion/3.
 
 % error types
 #show error/2.
@@ -27,3 +27,12 @@
 
 % debug
 #show depth/2.
+%#show depends_on/2.
+
+%node(Package) :- attr("node", Package).
+%#show node/1.
+
+%version(Package, Version) :- attr("version", Package, Version).
+%#show version/2.
+
+#show impose/1.
