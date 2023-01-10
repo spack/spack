@@ -41,6 +41,8 @@ class Nmodl(CMakePackage):
     depends_on("fmt+pic", when="+python")
     depends_on("fmt@:8", when="@:0.4 ~python")
     depends_on("fmt+pic@:8", when="@:0.4 +python")
+    depends_on("fmt@8:", when="@0.5: ~python")
+    depends_on("fmt+pic@8:", when="@0.5: +python")
     depends_on("nlohmann-json")
     depends_on("python@3.6.0:")
     depends_on("py-jinja2@2.10:")
