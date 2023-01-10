@@ -288,6 +288,9 @@ class PythonPackage(PythonExtension):
             return python_externals_installed[0]
 
         python_external_config = spack.config.get("packages:python:externals", [])
+        print(python_external_config)
+        print([spack.spec.Spec(item["spec"]) for item in python_external_config])
+        print(self.external_path)
         python_externals_configured = [
             spack.spec.Spec(item["spec"])
             for item in python_external_config
