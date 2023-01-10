@@ -1,3 +1,3 @@
 concretizer:
-  unify: when_possible
+  unify: false
   reuse: false
