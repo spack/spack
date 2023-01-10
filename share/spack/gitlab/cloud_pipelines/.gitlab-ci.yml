@@ -116,7 +116,13 @@ protected-publish:
 # First add a new spack.yml defining the pipeline to run in
 # share/spack/gitlab/cloud_pipelines/stacks/my-super-cool-stack/spack.yaml
 #
-# Then add the following entries at the bottom of this file:
+# Then add the following entries at the bottom of this file.
+#
+# Note that when extending other jobs, gitlab does not merge lists (nor
+# does it merge dictionary values in the case of key conflicts).  So lists
+# and duplicated dictionary keys are simply overridden.  For this reason,
+# you should inlclude your custom definitions at the end of the of the
+# extends list.
 #
 ########################################
 # My Super Cool Pipeline
@@ -124,28 +130,35 @@ protected-publish:
 # .my-super-cool-stack:
 #   variables:
 #     SPACK_CI_STACK_NAME: my-super-cool-stack
+#     tags: [ "all", "tags", "your", "job", "needs"]
 #
 # my-super-cool-stack-pr-generate:
-#   extends: [ ".my-super-cool-stack", ".pr-generate"]
+#   extends: [ ".pr-generate", ".my-super-cool-stack" ]
 #
 # my-super-cool-stack-protected-generate:
-#   extends: [ ".my-super-cool-stack", ".protected-generate"]
+#   extends: [ ".protected-generate", ".my-super-cool-stack" ]
 #
 # my-super-cool-stack-pr-build:
-#   extends: [ ".my-super-cool-stack", ".pr-build" ]
+#   extends: [ ".pr-build", ".my-super-cool-stack" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: my-super-cool-stack-pr-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: my-super-cool-stack-pr-generate
 #
 # my-super-cool-stack-protected-build:
-#   extends: [ ".my-super-cool-stack", ".protected-build" ]
+#   extends: [ ".protected-build", ".my-super-cool-stack" ]
 #   trigger:
 #     include:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: my-super-cool-stack-protected-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: my-super-cool-stack-protected-generate
 
 ########################################
 #          E4S Mac Stack
@@ -455,7 +468,10 @@ radiuss-protected-build:
 # RADIUSS for AWS
 ########################################
 
-# Call this AFTER .*-generate
+.tags-x86_64_v4:
+  tags: ["spack", "public", "aws", "medium", "x86_64_v4"]
+
+# Include this AFTER .*-generate in "extends" list
 .radiuss-aws-overrides:
   # This controls image for generate step; build step is controlled by spack.yaml
   # Note that generator emits OS info for build so these should be the same.
@@ -466,12 +482,10 @@ radiuss-protected-build:
     SPACK_CI_STACK_NAME: radiuss-aws
 
 radiuss-aws-pr-generate:
-  extends: [ ".radiuss-aws", ".pr-generate", ".radiuss-aws-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
+  extends: [ ".radiuss-aws", ".pr-generate", ".radiuss-aws-overrides", ".tags-x86_64_v4" ]
 
 radiuss-aws-protected-generate:
-  extends: [ ".radiuss-aws", ".protected-generate", ".radiuss-aws-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
+  extends: [ ".radiuss-aws", ".protected-generate", ".radiuss-aws-overrides", ".tags-x86_64_v4" ]
 
 radiuss-aws-pr-build:
   extends: [ ".radiuss-aws", ".pr-build" ]
@@ -571,7 +585,7 @@ data-vis-sdk-protected-build:
 # AWS AHUG Applications (x86_64)
 ########################################
 
-# Call this AFTER .*-generate
+# Include this AFTER .*-generate in "extends" lists
 .aws-ahug-overrides:
   # This controls image for generate step; build step is controlled by spack.yaml
   # Note that generator emits OS info for build so these should be the same.
@@ -582,12 +596,10 @@ data-vis-sdk-protected-build:
     SPACK_CI_STACK_NAME: aws-ahug
 
 aws-ahug-pr-generate:
-  extends: [ ".aws-ahug", ".pr-generate", ".aws-ahug-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
+  extends: [ ".aws-ahug", ".pr-generate", ".aws-ahug-overrides", ".tags-x86_64_v4" ]
 
 aws-ahug-protected-generate:
-  extends: [ ".aws-ahug", ".protected-generate", ".aws-ahug-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
+  extends: [ ".aws-ahug", ".protected-generate", ".aws-ahug-overrides", ".tags-x86_64_v4" ]
 
 aws-ahug-pr-build:
   extends: [ ".aws-ahug", ".pr-build" ]
@@ -660,12 +672,10 @@ aws-ahug-aarch64-protected-build:
     SPACK_CI_STACK_NAME: aws-isc
 
 aws-isc-pr-generate:
-  extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
+  extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides", ".tags-x86_64_v4" ]
 
 aws-isc-protected-generate:
-  extends: [ ".aws-isc", ".protected-generate", ".aws-isc-overrides" ]
-  tags: ["spack", "public", "medium", "x86_64_v4"]
+  extends: [ ".aws-isc", ".protected-generate", ".aws-isc-overrides", ".tags-x86_64_v4" ]
 
 aws-isc-pr-build:
   extends: [ ".aws-isc", ".pr-build" ]
@@ -768,18 +778,17 @@ tutorial-protected-build:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
 
 .ml-linux-x86_64-cpu-generate:
-  extends: .ml-linux-x86_64-cpu
+  extends: [ .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
-  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
 ml-linux-x86_64-cpu-pr-generate:
-  extends: [ ".ml-linux-x86_64-cpu-generate", ".pr-generate"]
+  extends: [ ".pr-generate", ".ml-linux-x86_64-cpu-generate" ]
 
 ml-linux-x86_64-cpu-protected-generate:
-  extends: [ ".ml-linux-x86_64-cpu-generate", ".protected-generate"]
+  extends: [ ".protected-generate", ".ml-linux-x86_64-cpu-generate" ]
 
 ml-linux-x86_64-cpu-pr-build:
-  extends: [ ".ml-linux-x86_64-cpu", ".pr-build" ]
+  extends: [ ".pr-build", ".ml-linux-x86_64-cpu" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -790,7 +799,7 @@ ml-linux-x86_64-cpu-pr-build:
       job: ml-linux-x86_64-cpu-pr-generate
 
 ml-linux-x86_64-cpu-protected-build:
-  extends: [ ".ml-linux-x86_64-cpu", ".protected-build" ]
+  extends: [ ".protected-build", ".ml-linux-x86_64-cpu" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -808,18 +817,17 @@ ml-linux-x86_64-cpu-protected-build:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cuda
 
 .ml-linux-x86_64-cuda-generate:
-  extends: .ml-linux-x86_64-cuda
+  extends: [ .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
-  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
 ml-linux-x86_64-cuda-pr-generate:
-  extends: [ ".ml-linux-x86_64-cuda-generate", ".pr-generate"]
+  extends: [ ".pr-generate", ".ml-linux-x86_64-cuda-generate" ]
 
 ml-linux-x86_64-cuda-protected-generate:
-  extends: [ ".ml-linux-x86_64-cuda-generate", ".protected-generate"]
+  extends: [ ".protected-generate", ".ml-linux-x86_64-cuda-generate" ]
 
 ml-linux-x86_64-cuda-pr-build:
-  extends: [ ".ml-linux-x86_64-cuda", ".pr-build" ]
+  extends: [ ".pr-build", ".ml-linux-x86_64-cuda" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -830,7 +838,7 @@ ml-linux-x86_64-cuda-pr-build:
       job: ml-linux-x86_64-cuda-pr-generate
 
 ml-linux-x86_64-cuda-protected-build:
-  extends: [ ".ml-linux-x86_64-cuda", ".protected-build" ]
+  extends: [ ".protected-build", ".ml-linux-x86_64-cuda"  ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -848,18 +856,17 @@ ml-linux-x86_64-cuda-protected-build:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
 
 .ml-linux-x86_64-rocm-generate:
-  extends: .ml-linux-x86_64-rocm
+  extends: [ .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
-  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
 ml-linux-x86_64-rocm-pr-generate:
-  extends: [ ".ml-linux-x86_64-rocm-generate", ".pr-generate"]
+  extends: [ ".pr-generate", ".ml-linux-x86_64-rocm-generate" ]
 
 ml-linux-x86_64-rocm-protected-generate:
-  extends: [ ".ml-linux-x86_64-rocm-generate", ".protected-generate"]
+  extends: [ ".protected-generate", ".ml-linux-x86_64-rocm-generate" ]
 
 ml-linux-x86_64-rocm-pr-build:
-  extends: [ ".ml-linux-x86_64-rocm", ".pr-build" ]
+  extends: [ ".pr-build", ".ml-linux-x86_64-rocm"  ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -870,7 +877,7 @@ ml-linux-x86_64-rocm-pr-build:
       job: ml-linux-x86_64-rocm-pr-generate
 
 ml-linux-x86_64-rocm-protected-build:
-  extends: [ ".ml-linux-x86_64-rocm", ".protected-build" ]
+  extends: [ ".protected-build", ".ml-linux-x86_64-rocm" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
