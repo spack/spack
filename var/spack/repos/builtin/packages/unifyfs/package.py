@@ -48,7 +48,12 @@ class Unifyfs(AutotoolsPackage):
     variant("fortran", default="True", description="Build with gfortran support")
     variant("pmi", default="False", description="Enable PMI2 build options")
     variant("pmix", default="False", description="Enable PMIx build options")
-    variant("preload", default="False", when="@1.0.1:", description="Enable support for LD_PRELOAD library")
+    variant(
+        "preload",
+        default="False",
+        when="@1.0.1:",
+        description="Enable support for LD_PRELOAD library",
+    )
     variant("spath", default="True", description="Use spath library to normalize relative paths")
 
     depends_on("autoconf", type="build")
