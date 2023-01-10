@@ -36,10 +36,12 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         description="Select an X toolkit (gtk, athena)",
     )
     variant("tls", default=False, description="Build Emacs with gnutls")
-    variant("native", default=False, description="enable native compilation of elisp")
-    variant("treesitter", default=False, description="Build with tree-sitter support")
+    variant("native", default=False, when="@28:", description="enable native compilation of elisp")
+    variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
+    variant("json", default=False, when="@27:", description="Build with json support")
 
     depends_on("pkgconfig", type="build")
+    depends_on("gzip", type="build")
 
     depends_on("ncurses")
     depends_on("pcre")
@@ -61,10 +63,9 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libtool", type="build", when="@master:")
     depends_on("texinfo", type="build", when="@master:")
     depends_on("gcc@11: +strip languages=jit", when="+native")
+    depends_on("jansson@2.7:", when="+json")
 
     conflicts("@:26.3", when="platform=darwin os=catalina")
-    conflicts("+native", when="@:27", msg="native compilation require @master")
-    conflicts("+treesitter", when="@:28", msg="tree-sitter support requires version 29")
 
     @when("platform=darwin")
     def setup_build_environment(self, env):
@@ -87,16 +88,10 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         if sys.platform == "darwin":
             args.append("--without-ns")
 
-        if "+native" in spec:
-            args.append("--with-native-compilation")
-
-        if "+tls" in spec:
-            args.append("--with-gnutls")
-        else:
-            args.append("--without-gnutls")
-
-        if "+treesitter" in spec:
-            args.append("--with-tree-sitter")
+        args += self.with_or_without("native-compilation", variant="native")
+        args += self.with_or_without("gnutls", variant="tls")
+        args += self.with_or_without("tree-sitter", variant="treesitter")
+        args += self.with_or_without("json")
 
         return args
 
