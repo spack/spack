@@ -18,6 +18,7 @@ def main(argv=None):
 
     # Add external libs
     spack_external_libs = os.path.join(spack_lib_path, "external")
+    sys.path.insert(0, os.path.join(spack_external_libs, "_vendoring"))
     sys.path.insert(0, spack_external_libs)
     # Here we delete ruamel.yaml in case it has been already imported from site
     # (see #9206 for a broader description of the issue).

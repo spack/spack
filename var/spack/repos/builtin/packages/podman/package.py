@@ -17,6 +17,10 @@ class Podman(Package):
     version("3.4.7", sha256="4af6606dd072fe946960680611ba65201be435b43edbfc5cc635b2a01a899e6e")
     version("3.4.2", sha256="b0c4f9a11eb500b1d440d5e51a6c0c632aa4ac458e2dc0362f50f999eb7fbf31")
 
+    # See <https://github.com/containers/podman/issues/16996> for the
+    # respective issue and the suggested patch
+    patch("markdown-utf8.diff", when="@4:")
+
     depends_on("go", type="build")
     depends_on("go-md2man", type="build")
     depends_on("pkgconfig", type="build")
