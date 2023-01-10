@@ -35,7 +35,7 @@ class Parallelio(CMakePackage):
 
     patch("remove_redefinition_of_mpi_offset.patch", when="@:2.5.6")
 
-    depends_on("cmake@3.7:")
+    depends_on("cmake@3.7:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("mpi-serial", when="~mpi")
     depends_on("netcdf-c +mpi", type="link", when="+mpi")
