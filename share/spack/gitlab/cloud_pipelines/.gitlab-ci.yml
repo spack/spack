@@ -275,11 +275,11 @@ protected-publish:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
 
 e4s-protected-generate:
   extends: [ ".e4s", ".protected-generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
