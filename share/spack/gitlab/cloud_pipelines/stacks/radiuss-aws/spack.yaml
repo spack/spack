@@ -24,23 +24,23 @@ spack:
         mpi:
           - openmpi
           - mpich
-      variants: +mpi
+      variants: +mpi cuda_arch=70
 
   definitions:
   - radiuss:
     - ascent
     - blt
     - caliper
-    - caliper +cuda cuda_arch=70
+    - caliper +cuda
     - camp
     - camp +cuda
     - chai
     - chai +cuda +raja
     - mfem
     - mfem +superlu-dist+petsc+sundials
-    - mfem +cuda cuda_arch=70 ^hypre+cuda
+    - mfem +cuda ^hypre+cuda
     - raja
-    - raja +cuda cuda_arch=70
+    - raja +cuda
     - umpire 
     - umpire +cuda
 
