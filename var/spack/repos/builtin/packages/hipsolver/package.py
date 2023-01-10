@@ -18,7 +18,7 @@ class Hipsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
@@ -27,6 +27,7 @@ class Hipsolver(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.3.0", sha256="6e920a59ddeefd52c9a6d164c33bc097726529e1ede3c417c711697956655b15")
     version("5.2.3", sha256="a57d883fdd09c6c7f9856fcfcabee6fa7ff9beed33d2f1a465bf28d38ea6f364")
     version("5.2.1", sha256="e000b08cf7bfb5f8f6d65d163ebeeb3274172b9f474228b810bde5e6f87f2b37")
     version("5.2.0", sha256="96927410e0a2cc0f50172604ef6437e15d2cf4b62d22b2035f13aae21f43dc82")
@@ -69,8 +70,18 @@ class Hipsolver(CMakePackage):
     for ver in ["master", "develop"]:
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)
-
-    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3"]:
+    for ver in [
+        "4.5.0",
+        "4.5.2",
+        "5.0.0",
+        "5.0.2",
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+    ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)
@@ -104,5 +115,7 @@ class Hipsolver(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append(self.define("CMAKE_INSTALL_LIBDIR", "lib"))
 
         return args

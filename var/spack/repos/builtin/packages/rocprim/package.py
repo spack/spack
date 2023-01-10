@@ -135,6 +135,9 @@ class Rocprim(CMakePackage):
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
+    # the patch is meant for 5.3.0 only.this is already in the 5.3.3+ releases
+    patch("fix-device-merge-mismatched-param-5.3.0.patch", when="@5.3.0")
+
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 
