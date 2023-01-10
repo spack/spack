@@ -93,11 +93,17 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on('superlu-dist', when='+superlu-dist+mpi')
 
-    conflicts('+cuda', when='+int64')
-    conflicts('+rocm', when='+int64')
-    conflicts('+rocm', when='@:2.20')
-    conflicts('+unified-memory', when='~cuda~rocm')
-    conflicts('+gptune', when='~mpi')
+    # Uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
+    depends_on("cuda@:11", when="+cuda")
+
+    # Conflicts
+    conflicts("+cuda", when="+int64")
+    conflicts("+rocm", when="+int64")
+    conflicts("+rocm", when="@:2.20")
+    conflicts("+unified-memory", when="~cuda~rocm")
+    conflicts("+gptune", when="~mpi")
+    # Umpire device allocator exports device code, which requires static libs
+    conflicts("+umpire", when="+shared+cuda")
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
