@@ -9,7 +9,6 @@ spack:
           - circuit-build
           - connectome-tools
           - emsim
-          - gene-expression-volume
           - placement-algorithm
           - psp-validation
           - py-archngv
@@ -49,7 +48,6 @@ spack:
     - circuit-build
     - connectome-tools
     - emsim
-    - gene-expression-volume
     - placement-algorithm
     - psp-validation
     - py-archngv

@@ -30,7 +30,7 @@ class PyAtlalign(PythonPackage):
     depends_on('py-scikit-learn@0.20.2:', type=('run'))
     depends_on('py-scipy', type=('run'))
     # Addons need to be in lockstep with TF
-    depends_on('py-tensorflow@2.4:', type=('run'))
+    depends_on('py-tensorflow', type=('run'))
     depends_on('py-tensorflow-addons', type=('run'))
 
     patch('lpips.patch', when='@0.6.0')
