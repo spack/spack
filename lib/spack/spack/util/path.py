@@ -305,7 +305,7 @@ def substitute_config_variables(path):
     def repl(match):
         m = match.group(0)
         key = m.strip("${}").lower()
-        repl = _replacements.get(key, m)()
+        repl = _replacements.get(key, lambda: m)()
         return m if repl is NOMATCH else str(repl)
 
     # Replace $var or ${var}.
