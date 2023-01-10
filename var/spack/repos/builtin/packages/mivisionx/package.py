@@ -26,6 +26,7 @@ class Mivisionx(CMakePackage):
         return url.format(version)
 
     version("5.3.3", sha256="378fafcb327e17e0e11fe1d1029d1740d84aaef0fd59614ed7376499b3d716f6")
+    version("5.3.0", sha256="58e68f1c78bbe5694e42bf61be177f9e94bfd3e0c113ec6284493c8684836c58")
     version("5.2.3", sha256="bbcdb5808d2bc880486dffa89f4111fb4b1d6dfe9b11fcd46fbd17939d057cf0")
     version("5.2.1", sha256="201996b31f59a8d5e4cc3f17d17a5b81158a34d2a1c833b65ccc3dceb21d176f")
     version("5.2.0", sha256="fee620a1edd3bce18b2cec9ef26ec2afe0a85d6da8a37ed713ab0d1342382503")
@@ -163,6 +164,19 @@ class Mivisionx(CMakePackage):
                 "amd_openvx_extensions/CMakeLists.txt",
                 string=True,
             )
+        if self.spec.satisfies("@5.3.0: + hip"):
+            filter_file(
+                "${ROCM_PATH}/llvm/bin/clang++",
+                "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                "amd_openvx/openvx/hipvx/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/llvm/bin/clang++",
+                "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
+                string=True,
+            )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("ffmpeg@:4", type="build")
@@ -172,6 +186,14 @@ class Mivisionx(CMakePackage):
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
         "+video+videoio+flann+photo+objdetect",
         type="build",
+        when="@:5.2",
+    )
+    depends_on(
+        "opencv@4.5:"
+        "+calib3d+features2d+highgui+imgcodecs+imgproc"
+        "+video+videoio+flann+photo+objdetect",
+        type="build",
+        when="@5.3:",
     )
     depends_on("rocm-opencl@3.5.0", when="@1.7+opencl")
     depends_on("rocm-cmake@3.5.0", type="build", when="@1.7")
@@ -207,6 +229,7 @@ class Mivisionx(CMakePackage):
             "5.2.0",
             "5.2.1",
             "5.2.3",
+            "5.3.0",
             "5.3.3",
         ]:
             depends_on("rocm-opencl@" + ver, when="@" + ver)
@@ -223,6 +246,7 @@ class Mivisionx(CMakePackage):
             "5.2.0",
             "5.2.1",
             "5.2.3",
+            "5.3.0",
             "5.3.3",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
@@ -249,4 +273,6 @@ class Mivisionx(CMakePackage):
             args.append(self.define("BACKEND", "HIP"))
             args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
+        if self.spec.satisfies("~hip~opencl"):
+            args.append(self.define("BACKEND", "CPU"))
         return args
