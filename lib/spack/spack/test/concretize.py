@@ -1961,10 +1961,10 @@ class TestConcretize(object):
         external_conf = {
             "py-extension1": {
                 "buildable": False,
-                "externals": [{"spec": "py-extension1@2.0", "prefix": "/fake"}],
+                "externals": [{"spec": "py-extension1@2.0", "prefix": os.path.sep + "fake"}],
             },
             "python": {
-                "externals": [{"spec": "python@configured", "prefix": "/fake"}],
+                "externals": [{"spec": "python@configured", "prefix": os.path.sep + "fake"}],
             },
         }
         spack.config.set("packages", external_conf)
