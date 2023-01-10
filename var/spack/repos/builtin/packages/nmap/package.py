@@ -15,7 +15,7 @@ class Nmap(AutotoolsPackage):
     url = "https://nmap.org/dist/nmap-7.70.tar.bz2"
     list_url = "https://nmap.org/dist-old/"
 
-    version("7.93", sha256="a5479f2f8a6b0b2516767d2f7189c386c1dc858d997167d7ec5cfc798c7571a1")
+    version("7.93", sha256="55bcfe4793e25acc96ba4274d8c4228db550b8e8efd72004b38ec55a2dd16651")
     version("7.92", sha256="a5479f2f8a6b0b2516767d2f7189c386c1dc858d997167d7ec5cfc798c7571a1")
     version("7.91", sha256="18cc4b5070511c51eb243cdd2b0b30ff9b2c4dc4544c6312f75ce3a67a593300")
     version("7.90", sha256="5557c3458275e8c43e1d0cfa5dad4e71dd39e091e2029a293891ad54098a40e8")
@@ -33,19 +33,11 @@ class Nmap(AutotoolsPackage):
 
     variant("liblua", default=True, description="Enable lua (required by all of NSE)")
     variant("ncat", default=True, description="Enable ncat")
-    variant("ndiff", default=False, description="Enable ndiff")
     variant("nping", default=True, description="Enable nping")
-    variant("zenmap", default=False, description="Enable zenmap")
     variant("nmap-update", default=False, description="Enable nmap-update")
 
     depends_on("openssl@1.1:", when="@7.50:")
     depends_on("openssl@:1.0.9", when="@:7.49")
-
-    # python2 is not packaged with spack so these features are disabled unless a
-    # user has an external python2 package configured.
-    # this will be fixed in the next release of nmap
-    depends_on("python@:2", when="+ndiff")
-    depends_on("python@:2", when="+zenmap")
 
     def configure_args(self):
         args = []
@@ -53,11 +45,16 @@ class Nmap(AutotoolsPackage):
         # https://github.com/nmap/nmap/issues/2144
         args.append("--disable-rdma")
 
+        # ndiff and zenmap both require python2, which is deprecated.
+        # The next nmap release will fix this, so, disable these features
+        # completely for now. We will add feature flags for these features again
+        # when they can be supported without a dependency on python2
+        args.append("--disable-ndiff")
+        args.append("--disable-zenmap")
+
         args += self.with_or_without("liblua")
         args += self.with_or_without("ncat")
-        args += self.with_or_without("ndiff")
         args += self.with_or_without("nping")
-        args += self.with_or_without("zenmap")
         args += self.with_or_without("nmap-update")
 
         return args
