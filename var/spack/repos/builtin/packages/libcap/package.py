@@ -22,11 +22,21 @@ class Libcap(MakefilePackage):
 
     patch("libcap-fix-the-libcap-native-building-failure-on-CentOS-6.7.patch", when="@2.25")
 
-    depends_on("go", type="build")
+    def makeflags(self, prefix):
+        return [
+            "RAISE_SETFCAP=no",
+            "GOLANG=no",
+            "USE_GPERF=no",
+            "SHARED=yes",
+            "lib=lib",
+            "prefix={}".format(prefix),
+        ]
+
+    def build(self, spec, prefix):
+        make(*self.makeflags(prefix))
 
     def install(self, spec, prefix):
-        make_args = ["RAISE_SETFCAP=no", "lib=lib", "prefix={0}".format(prefix), "install"]
-        make(*make_args)
+        make(*self.makeflags(prefix), "install")
 
-        chmod = which("chmod")
-        chmod("+x", join_path(prefix.lib, "libcap.so"))
+        # this is a shared library that prints some info when executed
+        set_executable(join_path(prefix.lib, "libcap.so"))
