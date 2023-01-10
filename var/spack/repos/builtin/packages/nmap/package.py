@@ -36,7 +36,12 @@ class Nmap(AutotoolsPackage):
     variant("nping", default=True, description="Enable nping")
     variant("nmap-update", default=False, description="Enable nmap-update")
 
-    depends_on("openssl@1.1:", when="@7.50:")
+    # Release notes for 7.3: "Ensure Nmap builds with OpenSSL 3.0 using no
+    # deprecated API functions."
+    depends_on("openssl@3.0.7:", when="@7.93:")
+
+    # previous verisons use a few deprecated openssl apis
+    depends_on("openssl@1.1:", when="@7.50:7.92")
     depends_on("openssl@:1.0.9", when="@:7.49")
 
     def configure_args(self):
@@ -45,7 +50,7 @@ class Nmap(AutotoolsPackage):
         # https://github.com/nmap/nmap/issues/2144
         args.append("--disable-rdma")
 
-        # ndiff and zenmap both require python2, which is deprecated.
+        # ndiff and zenmap both require python2, which is deprecated in spack.
         # The next nmap release will fix this, so, disable these features
         # completely for now. We will add feature flags for these features again
         # when they can be supported without a dependency on python2
