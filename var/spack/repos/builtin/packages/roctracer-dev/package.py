@@ -79,7 +79,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprofiler-dev@" + ver, when="@" + ver)
 
-    patch("0001-include-rocprofiler-dev-path.patch", when="@5.3.0")
+    patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:")
 
     @classmethod
     def determine_version(cls, lib):

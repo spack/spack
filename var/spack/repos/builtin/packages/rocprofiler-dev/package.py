@@ -137,7 +137,7 @@ class RocprofilerDev(CMakePackage):
 
     # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
     patch("fix-includes.patch")
-    patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3.0")
+    patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3:")
 
     def patch(self):
         filter_file(
