@@ -18,12 +18,22 @@ _versions = {
 
 
 class Shellcheck(Package):
-    """ShellCheck is a GPLv3 tool that gives warnings and suggestions for bash/sh shell scripts."""
+    """ShellCheck is a GPLv3 tool that gives warnings and suggestions for bash/sh shell scripts.
+
+    Note: Spack does not have a Haskell toolchain, so a ShellCheck binary is downloaded instead of
+    being compiled from source.
+    """
 
     homepage = "https://www.shellcheck.net"
     url = "https://github.com/koalaman/shellcheck/releases/download/v0.9.0/shellcheck-v0.9.0.linux.x86_64.tar.xz"
 
     maintainers = ["aphedges"]
+
+    # The following installs the binaries for shellcheck. The reason for
+    # installing binaries is that shellcheck is a Haskell package and the
+    # Haskell framework is not yet in Spack. See #1408 for a discussion of the
+    # challenges with Haskell, and see the pandoc package for a precedent of
+    # downloading a Haskell-derived binary.
 
     for ver, packages in _versions.items():
         system = platform.system().lower()
