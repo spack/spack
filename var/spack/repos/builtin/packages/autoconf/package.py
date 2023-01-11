@@ -83,7 +83,11 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
         # We save and restore the modification timestamp of the file to prevent
         # regeneration of the respective man page:
         with keep_modification_time(patched_file):
-            filter_file("^#! @PERL@ -w", "#! /usr/bin/env perl", patched_file)
+            if "@2.70:" in self.spec:
+                shebang_string = "^#! @PERL@"
+            else:
+                shebang_string = "^#! @PERL@ -w"
+            filter_file(shebang_string, "#! /usr/bin/env perl", patched_file)
         if self.version == Version("2.62"):
             # skip help2man for patched autoheader.in and autoscan.in
             touch("man/autoheader.1")
@@ -99,10 +103,15 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
         # target will try to rebuild the binaries (filter_file updates the
         # timestamps)
 
+        if "@2.70:" in self.spec:
+            shebang_string = "#! {0}"
+        else:
+            shebang_string = "#! {0} -w"
+
         # Revert sbang, so Spack's sbang hook can fix it up
         filter_file(
             "^#! /usr/bin/env perl",
-            "#! {0} -w".format(self.spec["perl"].command.path),
+            shebang_string.format(self.spec["perl"].command.path),
             self.prefix.bin.autom4te,
             backup=False,
         )

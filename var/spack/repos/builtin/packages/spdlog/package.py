@@ -12,6 +12,7 @@ class Spdlog(CMakePackage):
     homepage = "https://github.com/gabime/spdlog"
     url = "https://github.com/gabime/spdlog/archive/v0.9.0.tar.gz"
 
+    version("1.11.0", sha256="ca5cae8d6cac15dae0ec63b21d6ad3530070650f68076f3a4a862ca293a858bb")
     version("1.10.0", sha256="697f91700237dbae2326b90469be32b876b2b44888302afbc7aceb68bcfe8224")
     version("1.9.2", sha256="6fff9215f5cb81760be4cc16d033526d1080427d236e86d70bb02994f85e3d38")
     version("1.9.1", sha256="9a452cfa24408baccc9b2bc2d421d68172a7630c99e9504a14754be840d31a62")
@@ -57,6 +58,7 @@ class Spdlog(CMakePackage):
     depends_on("fmt@5.3:", when="+fmt_external")
     depends_on("fmt@7:", when="@1.7: +fmt_external")
     depends_on("fmt@8:", when="@1.9: +fmt_external")
+    depends_on("fmt@9:", when="@1.11: +fmt_external")
 
     def cmake_args(self):
         args = []
