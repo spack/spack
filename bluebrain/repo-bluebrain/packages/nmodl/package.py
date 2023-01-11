@@ -45,11 +45,11 @@ class Nmodl(CMakePackage):
     depends_on("fmt+pic@8:", when="@0.5: +python")
     depends_on("nlohmann-json")
     depends_on("python@3.6.0:")
-    depends_on("py-jinja2@2.10:")
-    depends_on("py-pybind11")
-    depends_on("py-pytest@4.0.0:")
-    depends_on("py-sympy@1.3:")
-    depends_on("py-pyyaml@3.13:")
+    depends_on("py-jinja2@2.10:", type=("build", "run"))
+    depends_on("py-pybind11", type=("build", "link", "run"))
+    depends_on("py-pytest@4.0.0:", type=("build", "run"))
+    depends_on("py-sympy@1.3:", type=("build", "run"))
+    depends_on("py-pyyaml@3.13:", type=("build", "run"))
     depends_on("spdlog")
 
     def cmake_args(self):
