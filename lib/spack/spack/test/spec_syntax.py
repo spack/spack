@@ -12,17 +12,25 @@ import pytest
 import spack.platforms.test
 import spack.spec
 import spack.variant
-from spack.parser import UNIX_FILENAME, WINDOWS_FILENAME, SpecParser, SpecTokenizationError, Token, TokenType
+from spack.parser import (
+    UNIX_FILENAME,
+    WINDOWS_FILENAME,
+    SpecParser,
+    SpecTokenizationError,
+    Token,
+    TokenType,
+)
 
 FAIL_ON_WINDOWS = pytest.mark.xfail(
     sys.platform == "win32",
-    raises=(SpecTokenizationError, spack.spec.NoSuchHashError), 
+    raises=(SpecTokenizationError, spack.spec.NoSuchHashError),
     reason="Unix style path on Windows",
 )
- 
+
 FAIL_ON_UNIX = pytest.mark.xfail(
     sys.platform != "win32", raises=SpecTokenizationError, reason="Windows style path on Unix"
 )
+
 
 def simple_package_name(name):
     """A simple package name in canonical form"""
