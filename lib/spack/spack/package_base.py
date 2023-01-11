@@ -651,9 +651,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: List of test failures encountered during a smoke/install test run.
     test_failures = None
 
-    #: TestSuite instance used to manage smoke/install tests for one or more
-    #: specs.
+    #: TestSuite instance used to manage smoke/install tests for one or more specs.
     test_suite = None
+
+    #: Path to the log file used for tests
+    test_log_file = None
 
     def __init__(self, spec):
         # this determines how the package should be built.
