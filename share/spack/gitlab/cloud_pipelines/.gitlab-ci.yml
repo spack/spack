@@ -289,10 +289,14 @@ protected-publish:
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
   image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  variables:
+    KUBERNETES_MEMORY_REQUEST: 16G
 
 e4s-protected-generate:
   extends: [ ".e4s", ".protected-generate"]
   image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
+  variables:
+    KUBERNETES_MEMORY_REQUEST: 16G
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -780,6 +784,8 @@ tutorial-protected-build:
 .ml-linux-x86_64-cpu-generate:
   extends: [ .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  variables:
+    KUBERNETES_MEMORY_REQUEST: 16G
 
 ml-linux-x86_64-cpu-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-cpu-generate" ]
@@ -819,6 +825,8 @@ ml-linux-x86_64-cpu-protected-build:
 .ml-linux-x86_64-cuda-generate:
   extends: [ .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  variables:
+    KUBERNETES_MEMORY_REQUEST: 16G
 
 ml-linux-x86_64-cuda-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-cuda-generate" ]
@@ -858,6 +866,8 @@ ml-linux-x86_64-cuda-protected-build:
 .ml-linux-x86_64-rocm-generate:
   extends: [ .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  variables:
+    KUBERNETES_MEMORY_REQUEST: 16G
 
 ml-linux-x86_64-rocm-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-rocm-generate" ]
