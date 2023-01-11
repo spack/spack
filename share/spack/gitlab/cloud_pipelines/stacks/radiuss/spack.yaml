@@ -88,7 +88,9 @@ spack:
       - match:
           - lbann
           - openblas
+          - qt
           - rust
+          - visit
         runner-attributes:
           tags: ["spack", "large", "x86_64"]
           variables:
@@ -109,6 +111,7 @@ spack:
           - samrai
           - vtk-h
           - vtk-m
+          - vtk
         runner-attributes:
           tags: ["spack", "medium", "x86_64"]
           variables:

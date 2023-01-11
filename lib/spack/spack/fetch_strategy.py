@@ -48,6 +48,7 @@ import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto as crypto
+import spack.util.git
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -314,17 +315,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def candidate_urls(self):
-        urls = []
-
-        for url in [self.url] + (self.mirrors or []):
-            # This must be skipped on Windows due to URL encoding
-            # of ':' characters on filepaths on Windows
-            if sys.platform != "win32" and url.startswith("file://"):
-                path = urllib.parse.quote(url[len("file://") :])
-                url = "file://" + path
-            urls.append(url)
-
-        return urls
+        return [self.url] + (self.mirrors or [])
 
     @_needs_stage
     def fetch(self):
@@ -496,7 +487,9 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        web_util.push_to_url(self.archive_file, destination, keep_original=True)
+        web_util.push_to_url(
+            self.archive_file, url_util.path_to_file_url(destination), keep_original=True
+        )
 
     @_needs_stage
     def check(self):
@@ -549,8 +542,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        reg_str = r"^file://"
-        path = re.sub(reg_str, "", self.url)
+        path = url_util.file_url_string_to_path(self.url)
 
         # check whether the cache file exists.
         if not os.path.isfile(path):
@@ -774,7 +766,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     @property
     def git(self):
         if not self._git:
-            self._git = which("git", required=True)
+            self._git = spack.util.git.git()
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
@@ -799,7 +791,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     def mirror_id(self):
         repo_ref = self.commit or self.tag or self.branch
         if repo_ref:
-            repo_path = url_util.parse(self.url).path
+            repo_path = urllib.parse.urlparse(self.url).path
             result = os.path.sep.join(["git", repo_path, repo_ref])
             return result
 
@@ -1145,7 +1137,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     def mirror_id(self):
         if self.revision:
-            repo_path = url_util.parse(self.url).path
+            repo_path = urllib.parse.urlparse(self.url).path
             result = os.path.sep.join(["svn", repo_path, self.revision])
             return result
 
@@ -1256,7 +1248,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     def mirror_id(self):
         if self.revision:
-            repo_path = url_util.parse(self.url).path
+            repo_path = urllib.parse.urlparse(self.url).path
             result = os.path.sep.join(["hg", repo_path, self.revision])
             return result
 
@@ -1328,7 +1320,7 @@ class S3FetchStrategy(URLFetchStrategy):
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
 
-        parsed_url = url_util.parse(self.url)
+        parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "s3":
             raise web_util.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
 
@@ -1375,7 +1367,7 @@ class GCSFetchStrategy(URLFetchStrategy):
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
 
-        parsed_url = url_util.parse(self.url)
+        parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "gs":
             raise web_util.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
 
@@ -1680,7 +1672,8 @@ class FsCache(object):
 
     def fetcher(self, target_path, digest, **kwargs):
         path = os.path.join(self.root, target_path)
-        return CacheURLFetchStrategy(path, digest, **kwargs)
+        url = url_util.path_to_file_url(path)
+        return CacheURLFetchStrategy(url, digest, **kwargs)
 
     def destroy(self):
         shutil.rmtree(self.root, ignore_errors=True)

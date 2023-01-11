@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import errno
 import os
 import platform
@@ -12,9 +13,11 @@ import sys
 import pytest
 
 import spack.binary_distribution
+import spack.cmd.buildcache
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.util.url
 from spack.spec import Spec
 
 buildcache = spack.main.SpackCommand("buildcache")
@@ -265,3 +268,13 @@ def test_buildcache_create_install(
     tarball = spack.binary_distribution.tarball_name(spec, ".spec.json")
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball_path))
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
+
+
+def test_deprecation_mirror_url_dir_flag(capfd):
+    # Test that passing `update-index -d <url>` gives a deprecation warning.
+    parser = argparse.ArgumentParser()
+    spack.cmd.buildcache.setup_parser(parser)
+    url = spack.util.url.path_to_file_url(os.getcwd())
+    args = parser.parse_args(["update-index", "-d", url])
+    spack.cmd.buildcache._mirror_url_from_args_deprecated_format(args)
+    assert "Passing a URL to `update-index -d <url>` is deprecated" in capfd.readouterr()[1]

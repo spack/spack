@@ -71,6 +71,12 @@ class Paraview(CMakePackage, CudaPackage):
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
+    variant(
+        "openpmd",
+        default=False,
+        description="Enable openPMD support (w/ ADIOS2/HDF5)",
+        when="@5.9: +python",
+    )
     variant("catalyst", default=False, description="Enable Catalyst 1", when="@5.7:")
     variant(
         "libcatalyst",
@@ -104,6 +110,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
+    conflicts("+openpmd", when="~adios2 ~hdf5", msg="openPMD needs ADIOS2 and/or HDF5")
     conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
     # Legacy rendering dropped in 5.5
@@ -152,6 +159,11 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on("py-matplotlib", when="+python", type="run")
     depends_on("py-pandas@0.21:", when="+python", type="run")
+
+    # openPMD is implemented as a Python module and provides ADIOS2 and HDF5 backends
+    depends_on("openpmd-api@0.14.5: +python", when="+python +openpmd", type=("build", "run"))
+    depends_on("openpmd-api +adios2", when="+openpmd +adios2", type=("build", "run"))
+    depends_on("openpmd-api +hdf5", when="+openpmd +hdf5", type=("build", "run"))
 
     depends_on("mpi", when="+mpi")
     depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
@@ -242,6 +254,9 @@ class Paraview(CMakePackage, CudaPackage):
     # Patch for paraview 5.9.0%xl_r
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
     patch("xlc-compilation-pv590.patch", when="@5.9.0%xl_r")
+
+    # intel oneapi doesn't compile some code in catalyst
+    patch("catalyst-etc_oneapi_fix.patch", when="@5.10.0:5.10.1%oneapi")
 
     @property
     def generator(self):

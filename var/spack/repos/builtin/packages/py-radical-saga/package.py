@@ -14,11 +14,14 @@ class PyRadicalSaga(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.saga.git"
-    pypi = "radical.saga/radical.saga-1.16.0.tar.gz"
+    pypi = "radical.saga/radical.saga-1.20.0.tar.gz"
 
     maintainers = ["andre-merzky"]
 
     version("develop", branch="devel")
+    version("1.20.0", sha256="d85f3ed564d9eaf3ead2aa349c854e944ca459492ebf88542404106fce4204ab")
+    version("1.18.0", sha256="544d4ffafc0b311151724db371ee11e27744103068748962866351ce31ccb810")
+    version("1.17.0", sha256="e48b42c232ac0ad53a410c1317746a5f15214fd3108fad773d098714fb4c40a0")
     version("1.16.0", sha256="d269e2e7043f05e8f1d45ca3d50be973857150d7928d53bedd6844f39b224786")
     version("1.14.0", sha256="337d8778bf392fd54845b1876de903c4c12f6fa938ef16220e1847561b66731a")
     version("1.13.0", sha256="90d8e875f48402deab87314ea5c08d591264fb576c461bd9663ac611fc2e547e")

@@ -8,7 +8,6 @@ from typing import Any, Dict, Tuple
 
 import spack
 import spack.config
-import spack.util.url as url_util
 
 #: Map (mirror name, method) tuples to s3 client instances.
 s3_client_cache: Dict[Tuple[str, str], Any] = dict()
@@ -27,10 +26,10 @@ def get_s3_session(url, method="fetch"):
 
     global s3_client_cache
 
-    # Get a (recycled) s3 session for a particular URL
-    url = url_util.parse(url)
-
-    url_str = url_util.format(url)
+    # Parse the URL if not already done.
+    if not isinstance(url, urllib.parse.ParseResult):
+        url = urllib.parse.urlparse(url)
+    url_str = url.geturl()
 
     def get_mirror_url(mirror):
         return mirror.fetch_url if method == "fetch" else mirror.push_url

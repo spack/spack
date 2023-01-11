@@ -159,6 +159,13 @@ class Hpctoolkit(AutotoolsPackage):
         when="@2019.08.01:2021.03 %gcc@11.0:",
     )
 
+    # Update configure for rocm 5.3.0
+    patch(
+        "https://gitlab.com/hpctoolkit/hpctoolkit/-/commit/411d62544717873432c49ef45c7cb99cc5de2fb8.patch",
+        sha256="484045891a665cdba3b0f141540c89f0d691ed32c5912ef62a93670d44c2786c",
+        when="@2022.04:2022.10 +rocm ^hip@5.3.0:",
+    )
+
     # Change python to python3 for some old revs that use a script
     # with /usr/bin/env python.
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")

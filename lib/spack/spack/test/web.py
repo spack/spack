@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
-import posixpath
 import sys
 
 import pytest
@@ -15,13 +14,14 @@ import spack.config
 import spack.mirror
 import spack.paths
 import spack.util.s3
+import spack.util.url as url_util
 import spack.util.web
 from spack.version import ver
 
 
 def _create_url(relative_url):
-    web_data_path = posixpath.join(spack.paths.test_path, "data", "web")
-    return "file://" + posixpath.join(web_data_path, relative_url)
+    web_data_path = os.path.join(spack.paths.test_path, "data", "web")
+    return url_util.path_to_file_url(os.path.join(web_data_path, relative_url))
 
 
 root = _create_url("index.html")
@@ -182,9 +182,24 @@ def test_get_header():
         spack.util.web.get_header(headers, "ContentLength")
 
 
+def test_etag_parser():
+    # This follows rfc7232 to some extent, relaxing the quote requirement.
+    assert spack.util.web.parse_etag('"abcdef"') == "abcdef"
+    assert spack.util.web.parse_etag("abcdef") == "abcdef"
+
+    # No empty tags
+    assert spack.util.web.parse_etag("") is None
+
+    # No quotes or spaces allowed
+    assert spack.util.web.parse_etag('"abcdef"ghi"') is None
+    assert spack.util.web.parse_etag('"abc def"') is None
+    assert spack.util.web.parse_etag("abc def") is None
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_list_url(tmpdir):
     testpath = str(tmpdir)
+    testpath_url = url_util.path_to_file_url(testpath)
 
     os.mkdir(os.path.join(testpath, "dir"))
 
@@ -199,7 +214,7 @@ def test_list_url(tmpdir):
         pass
 
     list_url = lambda recursive: list(
-        sorted(spack.util.web.list_url(testpath, recursive=recursive))
+        sorted(spack.util.web.list_url(testpath_url, recursive=recursive))
     )
 
     assert list_url(False) == ["file-0.txt", "file-1.txt", "file-2.txt"]
@@ -223,7 +238,10 @@ class MockPaginator(object):
 
 class MockClientError(Exception):
     def __init__(self):
-        self.response = {"Error": {"Code": "NoSuchKey"}}
+        self.response = {
+            "Error": {"Code": "NoSuchKey"},
+            "ResponseMetadata": {"HTTPStatusCode": 404},
+        }
 
 
 class MockS3Client(object):
@@ -242,7 +260,13 @@ class MockS3Client(object):
     def get_object(self, Bucket=None, Key=None):
         self.ClientError = MockClientError
         if Bucket == "my-bucket" and Key == "subdirectory/my-file":
-            return True
+            return {"ResponseMetadata": {"HTTPHeaders": {}}}
+        raise self.ClientError
+
+    def head_object(self, Bucket=None, Key=None):
+        self.ClientError = MockClientError
+        if Bucket == "my-bucket" and Key == "subdirectory/my-file":
+            return {"ResponseMetadata": {"HTTPHeaders": {}}}
         raise self.ClientError
 
 

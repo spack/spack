@@ -21,7 +21,7 @@ spack:
         blas: [openblas]
         mpi: [mpich]
       target: [x86_64]
-      variants: +mpi
+      variants: +mpi amdgpu_target=gfx90a cuda_arch=80
     tbb:
       require: "intel-tbb"
     binutils:
@@ -45,9 +45,9 @@ spack:
     python:
       version: [3.8.13]
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
-        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+      require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext
+        +ifpack +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
@@ -144,10 +144,7 @@ spack:
   - swig@4.0.2-fortran
   - tasmanian
   - tau +mpi +python
-  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
-    +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
-    +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
-    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - trilinos@13.0.1 +belos +ifpack2 +stokhos
   - turbine
   - umap
   - umpire
@@ -156,77 +153,73 @@ spack:
   - wannier90
 
   # CUDA
-  - amrex +cuda cuda_arch=80
-  - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
+  - amrex +cuda
+  - arborx +cuda ^kokkos@3.6.00 +wrapper
   - bricks +cuda
-  - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
-  - caliper +cuda cuda_arch=80
-  - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
-  - dealii +cuda cuda_arch=80
-  - ecp-data-vis-sdk +cuda cuda_arch=80
+  - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda
+  - caliper +cuda
+  - chai ~benchmarks ~tests +cuda ^umpire@6.0.0 ~shared
+  - dealii +cuda
+  - ecp-data-vis-sdk +cuda
     +adios2 +hdf5 +vtkm +zfp
     # Removing ascent because Dray is hung in CI.
     # +ascent
-  - flecsi +cuda cuda_arch=80
+  - flecsi +cuda
   - flux-core +cuda
-  - ginkgo +cuda cuda_arch=80
-  - heffte +cuda cuda_arch=80
+  - ginkgo +cuda
+  - heffte +cuda
   - hpctoolkit +cuda
-  - hpx max_cpu_count=512 +cuda cuda_arch=80
-  - hypre +cuda cuda_arch=80
-  - kokkos +wrapper +cuda cuda_arch=80
-  - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
-  - magma +cuda cuda_arch=80
-  - mfem +cuda cuda_arch=80
-  - omega-h +cuda cuda_arch=80
+  - hpx max_cpu_count=512 +cuda
+  - hypre +cuda
+  - kokkos +wrapper +cuda
+  - kokkos-kernels +cuda ^kokkos +wrapper +cuda
+  - magma +cuda
+  - mfem +cuda
+  - omega-h +cuda
   - papi +cuda
-  - petsc +cuda cuda_arch=80
-  - py-torch +cuda cuda_arch=80
-  - raja +cuda cuda_arch=80
-  - slate +cuda cuda_arch=80
-  - slepc +cuda cuda_arch=80
-  - strumpack ~slate +cuda cuda_arch=80
-  - sundials +cuda cuda_arch=80
-  - superlu-dist +cuda cuda_arch=80
-  - tasmanian +cuda cuda_arch=80
+  - petsc +cuda
+  - py-torch +cuda
+  - raja +cuda
+  - slate +cuda
+  - slepc +cuda
+  - strumpack ~slate +cuda
+  - sundials +cuda
+  - superlu-dist +cuda
+  - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +cuda cuda_arch=80
-  - umpire ~shared +cuda cuda_arch=80
+  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
+  - umpire ~shared +cuda
 
   # ROCm
-  - amrex +rocm amdgpu_target=gfx90a
-  - arborx +rocm amdgpu_target=gfx90a
+  - amrex +rocm
+  - arborx +rocm
   - cabana +rocm
-  - caliper +rocm amdgpu_target=gfx90a
-  - chai ~benchmarks +rocm amdgpu_target=gfx90a
-  - ecp-data-vis-sdk +rocm amdgpu_target=gfx90a
+  - caliper +rocm
+  - chai ~benchmarks +rocm
+  - ecp-data-vis-sdk +rocm
     +vtkm
-  - gasnet +rocm amdgpu_target=gfx90a
-  - ginkgo +rocm amdgpu_target=gfx90a
-  - heffte +rocm amdgpu_target=gfx90a
+  - gasnet +rocm
+  - ginkgo +rocm
+  - heffte +rocm
   - hpctoolkit +rocm
-  - hpx max_cpu_count=512 +rocm amdgpu_target=gfx90a
-  - hypre +rocm amdgpu_target=gfx90a
-  - kokkos +rocm amdgpu_target=gfx90a
-  - magma ~cuda +rocm amdgpu_target=gfx90a
-  - mfem +rocm amdgpu_target=gfx90a
-  - papi +rocm amdgpu_target=gfx90a
-  - petsc +rocm amdgpu_target=gfx90a
-  - raja ~openmp +rocm amdgpu_target=gfx90a
-  - slate +rocm amdgpu_target=gfx90a
-  - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
-  - strumpack ~slate +rocm amdgpu_target=gfx90a
-  - sundials +rocm amdgpu_target=gfx90a
-  - superlu-dist +rocm amdgpu_target=gfx90a
-  - tasmanian ~openmp +rocm amdgpu_target=gfx90a
+  - hpx max_cpu_count=512 +rocm
+  - hypre +rocm
+  - kokkos +rocm
+  - magma ~cuda +rocm
+  - mfem +rocm
+  - papi +rocm
+  - petsc +rocm
+  - raja ~openmp +rocm
+  - slate +rocm
+  - slepc +rocm ^petsc +rocm
+  - strumpack ~slate +rocm
+  - sundials +rocm
+  - superlu-dist +rocm
+  - tasmanian ~openmp +rocm
   - tau +mpi +rocm
-  - trilinos@13.4.0 +amesos +amesos2 +anasazi +aztec ~belos +boost +epetra +epetraext
-    +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos
-    +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
-    +rocm amdgpu_target=gfx90a
-  - umpire +rocm amdgpu_target=gfx90a
-  - upcxx +rocm amdgpu_target=gfx90a
+  - trilinos@13.4.0 ~belos ~ifpack2 ~stokhos +rocm
+  - umpire +rocm
+  - upcxx +rocm
 
   # CPU failures
   #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
@@ -285,6 +278,7 @@ spack:
 
       - match:
           - cuda
+          - dealii
           - dray
           - dyninst
           - ginkgo
@@ -294,12 +288,22 @@ spack:
           - magma
           - mfem
           - mpich
+          - nvhpc
+          - oce
           - openturns
+          - plumed
           - precice
+          - py-tensorflow
+          - qt
           - raja
+          - rocfft
+          - rocsolver
+          - rocsparse
           - rust
           - slate
           - trilinos
+          - visit
+          - vtk
           - vtk-m
           - warpx
         runner-attributes:

@@ -11,11 +11,12 @@ class Hipfort(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipfort"
     git = "https://github.com/ROCmSoftwarePlatform/hipfort.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
 
+    version("5.3.0", sha256="9e2aa142de45b2d2c29449d6f82293fb62844d511fbf51fa597845ba05c700fa")
     version("5.2.3", sha256="6648350ca4edc8757f0ae51d73a05a9a536808f19ad45f5b5ab84d420c72c9ec")
     version("5.2.1", sha256="ed53c9914d326124482751b81c4a353c6e64e87c1111124169a33513a3c49b42")
     version("5.2.0", sha256="a0af1fe62757993600a41af6bb6c4b8c6cfdfba650389645ac1f995f7623785c")
@@ -111,6 +112,7 @@ class Hipfort(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("hip@" + ver, type="build", when="@" + ver)
 

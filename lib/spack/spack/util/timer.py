@@ -9,16 +9,17 @@
 a stack trace and drops the user into an interpreter.
 
 """
+import collections
 import sys
 import time
-from collections import OrderedDict, namedtuple
 from contextlib import contextmanager
+from typing import Dict
 
-from llnl.util.lang import pretty_seconds
+from llnl.util.lang import pretty_seconds_formatter
 
 import spack.util.spack_json as sjson
 
-Interval = namedtuple("Interval", ("begin", "end"))
+Interval = collections.namedtuple("Interval", ("begin", "end"))
 
 #: name for the global timer (used in start(), stop(), duration() without arguments)
 global_timer_name = "_global"
@@ -65,7 +66,7 @@ class Timer(object):
             now: function that gives the seconds since e.g. epoch
         """
         self._now = now
-        self._timers: OrderedDict[str, Interval] = OrderedDict()
+        self._timers: Dict[str, Interval] = collections.OrderedDict()
 
         # _global is the overal timer since the instance was created
         self._timers[global_timer_name] = Interval(self._now(), end=None)
@@ -139,12 +140,16 @@ class Timer(object):
 
     def write_tty(self, out=sys.stdout):
         """Write a human-readable summary of timings"""
-        # Individual timers ordered by registration
-        formatted = [(p, pretty_seconds(self.duration(p))) for p in self.phases]
 
-        # Total time
-        formatted.append(("total", pretty_seconds(self.duration())))
+        times = [self.duration(p) for p in self.phases]
+
+        # Get a consistent unit for the time
+        pretty_seconds = pretty_seconds_formatter(max(times))
+
+        # Tuples of (phase, time) including total.
+        formatted = list(zip(self.phases, times))
+        formatted.append(("total", self.duration()))
 
         # Write to out
         for name, duration in formatted:
-            out.write("    {:10s} {:>10s}\n".format(name, duration))
+            out.write(f"    {name:10s} {pretty_seconds(duration):>10s}\n")
