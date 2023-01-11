@@ -154,3 +154,17 @@ def test_monkey_patching_wrapped_pkg():
     s.package.run_tests = True
     assert builder.pkg.run_tests is True
     assert builder.pkg_with_dispatcher.run_tests is True
+
+
+@pytest.mark.regression("34440")
+@pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
+def test_monkey_patching_test_log_file():
+    s = spack.spec.Spec("old-style-autotools").concretized()
+    builder = spack.builder.create(s.package)
+    assert s.package.test_log_file is None
+    assert builder.pkg.test_log_file is None
+    assert builder.pkg_with_dispatcher.test_log_file is None
+
+    s.package.test_log_file = "/some/file"
+    assert builder.pkg.test_log_file == "/some/file"
+    assert builder.pkg_with_dispatcher.test_log_file == "/some/file"
