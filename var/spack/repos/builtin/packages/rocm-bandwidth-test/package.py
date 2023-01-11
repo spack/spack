@@ -12,13 +12,14 @@ class RocmBandwidthTest(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test"
     git = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test.git"
-    url = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
     version("master", branch="master")
 
+    version("5.3.3", sha256="2bc079297e639d45d57c8017f6f47bc44d4ed34613ec76c80574bb703d79b498")
     version("5.3.0", sha256="a97365c04d79663db7c85027c63a12d56356abc0a351697f49c2d82bf9ef8999")
     version("5.2.3", sha256="b76fe33898d67ec1f5f1ec58adaea88e88ed28b1f5470aa4c08c347d8f558af2")
     version("5.2.1", sha256="ebdf868bef8ab6c7f32775ba6eab85cf3e078af1fc1b1a11fdbaad777f37a190")
@@ -126,6 +127,7 @@ class RocmBandwidthTest(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)

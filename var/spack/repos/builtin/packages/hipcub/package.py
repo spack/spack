@@ -11,11 +11,12 @@ class Hipcub(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
     git = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.3.3", sha256="b4fc3c05892729873dc098f111c31f83af7d33da572bdb7d87de100d4c238e6d")
     version("5.3.0", sha256="4016cfc240b3cc1a97b549ecc4a5b76369610d46247661834630846391e5fad2")
     version("5.2.3", sha256="cab929f10c649f8fd76df989a16d0cd9301bc6aaad91cd2f84498c831378d559")
     version("5.2.1", sha256="07b34d8cdf885838dde264c2a70044505e7b9632cb6efbdb52e2569f95112970")
@@ -125,6 +126,7 @@ class Hipcub(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
