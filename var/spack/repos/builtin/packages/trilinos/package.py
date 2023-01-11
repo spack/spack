@@ -468,7 +468,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             if "+wrapper" in spec:
                 flags.append("--expt-extended-lambda")
         elif name == "ldflags":
-            if is_cce:
+            if spec.satisfies("%cce@:14"):
                 flags.append("-fuse-ld=gold")
             if spec.satisfies("platform=linux ~cuda"):
                 # TriBITS explicitly links libraries against all transitive
