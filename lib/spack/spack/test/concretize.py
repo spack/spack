@@ -1987,6 +1987,37 @@ class TestConcretize(object):
         # namespace and an external prefix before marking concrete
         assert spec["python"].satisfies(python_spec)
 
+    def test_external_python_extension_find_dependency_from_installed(self, monkeypatch):
+        fake_path = os.path.sep + "fake"
+
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
+            },
+            "python": {
+                "buildable": False,
+                "externals": [{"spec": "python@installed", "prefix": fake_path}],
+            },
+        }
+        spack.config.set("packages", external_conf)
+
+        # install python external
+        python = Spec("python").concretized()
+        monkeypatch.setattr(spack.store.db, "query", lambda x: [python])
+
+        # ensure that we can't be faking this by getting it from config
+        external_conf.pop("python")
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == fake_path
+        # The spec is not equal to spack.spec.Spec("python@configured") because it gets a
+        # namespace and an external prefix before marking concrete
+        assert spec["python"].satisfies(python)
+
     def test_external_python_extension_find_dependency_from_detection(self, monkeypatch):
         """Test that python extensions have access to a python dependency
 
