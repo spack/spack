@@ -19,6 +19,7 @@ class Exaca(CMakePackage):
     tags = ["ecp"]
 
     version("master", branch="master")
+    version("1.1.0", sha256="10106fb1836964a19bc5bab3f374baa24188ba786c768e554442ab896b31ff24")
     version("1.0.0", sha256="48556233360a5e15e1fc20849e57dd60739c1991c7dfc7e6b2956af06688b96a")
 
     _kokkos_backends = Kokkos.devices_variants
@@ -29,15 +30,17 @@ class Exaca(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("testing", default=False, description="Build unit tests")
 
-    depends_on("cmake@3.9:", type="build")
-    depends_on("googletest@1.10:", type="build", when="@master+testing")
-    depends_on("kokkos@3.0:")
+    depends_on("cmake@3.9:", type="build", when="@:1.1")
+    depends_on("cmake@3.12:", type="build", when="@master")
+    depends_on("googletest@1.10:", type="test", when="@1.1:+testing")
+    depends_on("kokkos@3.0:", when="@:1.1")
+    depends_on("kokkos@3.2:", when="@master")
     depends_on("mpi")
 
     def cmake_args(self):
         options = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
-        if self.spec.satisfies("@master"):
+        if self.spec.satisfies("@1.1:"):
             options += [self.define_from_variant("ExaCA_ENABLE_TESTING", "testing")]
 
         return options
