@@ -45,6 +45,7 @@ from spack.build_systems.lua import LuaPackage
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.maven import MavenPackage
 from spack.build_systems.meson import MesonPackage
+from spack.build_systems.msbuild import MSBuildPackage
 from spack.build_systems.nmake import NMakePackage
 from spack.build_systems.octave import OctavePackage
 from spack.build_systems.oneapi import (
