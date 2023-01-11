@@ -37,8 +37,7 @@ class Numactl(AutotoolsPackage):
     conflicts("platform=darwin")
 
     def autoreconf(self, spec, prefix):
-        bash = which("bash")
-        bash("./autogen.sh")
+        Executable("./autogen.sh")()
 
     @when("%nvhpc")
     def patch(self):
