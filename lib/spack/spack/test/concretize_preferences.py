@@ -112,7 +112,7 @@ class TestConcretizePreferences(object):
         spec = spack.spec.Spec(spec_str)
         update_packages(spec.name, "compiler", [compiler_str])
         spec.concretize()
-        assert spec.compiler == spack.spec.CompilerSpec.maybe_literal(compiler_str)
+        assert spec.compiler == spack.spec.CompilerSpec(compiler_str)
 
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""

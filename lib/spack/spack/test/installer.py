@@ -495,9 +495,7 @@ def test_bootstrapping_compilers_with_different_names_from_spec(
             spec = spack.spec.Spec("trivial-install-test-package%oneapi@22.2.0").concretized()
             spec.package.do_install()
 
-            assert (
-                spack.spec.CompilerSpec("oneapi", "22.2.0") in spack.compilers.all_compiler_specs()
-            )
+            assert spack.spec.CompilerSpec("oneapi@22.2.0") in spack.compilers.all_compiler_specs()
 
 
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):

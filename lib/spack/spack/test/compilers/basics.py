@@ -863,7 +863,7 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
 
     apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
     compiler = apple_clang_cls(
-        spack.spec.CompilerSpec.maybe_literal("apple-clang@11.0.0"),
+        spack.spec.CompilerSpec("apple-clang@11.0.0"),
         "catalina",
         "x86_64",
         ["/usr/bin/clang", "/usr/bin/clang++", None, None],
@@ -950,7 +950,7 @@ def test_xcode_not_available(xcode_select_output, mock_executable, monkeypatch):
     # Prepare compiler
     apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
     compiler = apple_clang_cls(
-        spack.spec.CompilerSpec.maybe_literal("apple-clang@11.0.0"),
+        spack.spec.CompilerSpec("apple-clang@11.0.0"),
         "catalina",
         "x86_64",
         ["/usr/bin/clang", "/usr/bin/clang++", None, None],

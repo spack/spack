@@ -73,7 +73,7 @@ def pkg_spec_for_compiler(cspec):
 def _auto_compiler_spec(function):
     def converter(cspec_like, *args, **kwargs):
         if not isinstance(cspec_like, spack.spec.CompilerSpec):
-            cspec_like = spack.spec.CompilerSpec.maybe_literal(cspec_like)
+            cspec_like = spack.spec.CompilerSpec(cspec_like)
         return function(cspec_like, *args, **kwargs)
 
     return converter
@@ -184,7 +184,7 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     filtered_compiler_config = [
         comp
         for comp in compiler_config
-        if spack.spec.CompilerSpec.maybe_literal(comp["compiler"]["spec"]) != compiler_spec
+        if spack.spec.CompilerSpec(comp["compiler"]["spec"]) != compiler_spec
     ]
 
     # Update the cache for changes
@@ -211,7 +211,7 @@ def all_compilers_config(scope=None, init_config=True):
 def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [
-        spack.spec.CompilerSpec.maybe_literal(s["compiler"]["spec"])
+        spack.spec.CompilerSpec(s["compiler"]["spec"])
         for s in all_compilers_config(scope, init_config)
     ]
 
@@ -382,7 +382,7 @@ class CacheReference(object):
 
 
 def compiler_from_dict(items):
-    cspec = spack.spec.CompilerSpec.maybe_literal(items["spec"])
+    cspec = spack.spec.CompilerSpec(items["spec"])
     os = items.get("operating_system", None)
     target = items.get("target", None)
 

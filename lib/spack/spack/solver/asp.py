@@ -976,7 +976,7 @@ class SpackSolverSetup(object):
         # custom versions will be able to concretize properly.
         for entry in spack.compilers.all_compilers_config():
             compiler_entry = entry["compiler"]
-            cspec = spack.spec.CompilerSpec.maybe_literal(compiler_entry["spec"])
+            cspec = spack.spec.CompilerSpec(compiler_entry["spec"])
             if not compiler_entry.get("target", None):
                 continue
 
@@ -987,7 +987,7 @@ class SpackSolverSetup(object):
     def compiler_supports_os(self):
         compilers_yaml = spack.compilers.all_compilers_config()
         for entry in compilers_yaml:
-            c = spack.spec.CompilerSpec.maybe_literal(entry["compiler"]["spec"])
+            c = spack.spec.CompilerSpec(entry["compiler"]["spec"])
             operating_system = entry["compiler"]["operating_system"]
             self.gen.fact(fn.compiler_supports_os(c.name, c.version, operating_system))
 
@@ -2215,7 +2215,7 @@ class SpecBuilder(object):
         self._specs[pkg].versions = spack.version.ver([version])
 
     def node_compiler(self, pkg, compiler):
-        self._specs[pkg].compiler = spack.spec.CompilerSpec.maybe_literal(compiler)
+        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
 
     def node_compiler_version(self, pkg, compiler, version):
         self._specs[pkg].compiler.versions = spack.version.VersionList([version])

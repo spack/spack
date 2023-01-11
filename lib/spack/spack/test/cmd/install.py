@@ -964,7 +964,7 @@ def test_compiler_bootstrap(
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc", "12.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
     install("a%gcc@12.0")
@@ -998,7 +998,7 @@ def test_compiler_bootstrap_from_binary_mirror(
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc", "10.2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@10.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror("add", "test-mirror", mirror_url)
@@ -1022,7 +1022,7 @@ def test_compiler_bootstrap_already_installed(
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
 
-    assert CompilerSpec("gcc", "12.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
     install("gcc@12.0")

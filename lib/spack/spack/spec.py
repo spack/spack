@@ -56,7 +56,6 @@ import os
 import re
 import sys
 import warnings
-from typing import Union
 
 import ruamel.yaml as yaml
 
@@ -544,29 +543,64 @@ class CompilerSpec(object):
 
     __slots__ = "name", "versions"
 
-    def __init__(self, name: str, version: str):
-        self.name = name
-        self.versions = vn.VersionList()
-        self.versions.add(vn.ver(version))
+    def __init__(self, *args):
+        nargs = len(args)
+        if nargs == 1:
+            arg = args[0]
+            # If there is one argument, it's either another CompilerSpec
+            # to copy or a string to parse
+            if isinstance(arg, str):
+                spec = spack.parser.parse_one_or_raise(f"%{arg}")
+                self.name = spec.compiler.name
+                self.versions = spec.compiler.versions
 
-    @staticmethod
-    def maybe_literal(compiler_spec_like: Union[str, "CompilerSpec"]) -> "CompilerSpec":
-        """Convert a possible string literal to a CompilerSpec object"""
+            elif isinstance(arg, CompilerSpec):
+                self.name = arg.name
+                self.versions = arg.versions.copy()
+
+            else:
+                raise TypeError(
+                    "Can only build CompilerSpec from string or "
+                    + "CompilerSpec. Found %s" % type(arg)
+                )
+
+        elif nargs == 2:
+            name, version = args
+            self.name = name
+            self.versions = vn.VersionList()
+            versions = vn.ver(version)
+            self.versions.add(versions)
+
+        else:
+            raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
+
+    def _add_versions(self, version_list):
+        # If it already has a non-trivial version list, this is an error
+        if self.versions and self.versions != vn.VersionList(":"):
+            # Note: This may be impossible to reach by the current parser
+            # Keeping it in case the implementation changes.
+            raise MultipleVersionError(
+                "A spec cannot contain multiple version signifiers." " Use a version list instead."
+            )
+        self.versions = vn.VersionList()
+        for version in version_list:
+            self.versions.add(version)
+
+    def _autospec(self, compiler_spec_like):
         if isinstance(compiler_spec_like, CompilerSpec):
             return compiler_spec_like
-        spec = spack.parser.parse_one_or_raise(f"%{compiler_spec_like}")
-        return spec.compiler
+        return CompilerSpec(compiler_spec_like)
 
-    def satisfies(self, other: Union[str, "CompilerSpec"], strict: bool = False) -> bool:
-        other = self.maybe_literal(other)
+    def satisfies(self, other, strict=False):
+        other = self._autospec(other)
         return self.name == other.name and self.versions.satisfies(other.versions, strict=strict)
 
-    def constrain(self, other: Union[str, "CompilerSpec"]) -> bool:
+    def constrain(self, other):
         """Intersect self's versions with other.
 
         Return whether the CompilerSpec changed.
         """
-        other = self.maybe_literal(other)
+        other = self._autospec(other)
 
         # ensure that other will actually constrain this spec.
         if not other.satisfies(self):
@@ -575,19 +609,22 @@ class CompilerSpec(object):
         return self.versions.intersect(other.versions)
 
     @property
-    def concrete(self) -> bool:
+    def concrete(self):
         """A CompilerSpec is concrete if its versions are concrete and there
         is an available compiler with the right version."""
         return self.versions.concrete
 
     @property
-    def version(self) -> vn.VersionBase:
+    def version(self):
         if not self.concrete:
             raise spack.error.SpecError("Spec is not concrete: " + str(self))
         return self.versions[0]
 
-    def copy(self) -> "CompilerSpec":
-        return CompilerSpec(self.name, self.versions.copy())
+    def copy(self):
+        clone = CompilerSpec.__new__(CompilerSpec)
+        clone.name = self.name
+        clone.versions = self.versions.copy()
+        return clone
 
     def _cmp_iter(self):
         yield self.name
@@ -604,14 +641,14 @@ class CompilerSpec(object):
         d = d["compiler"]
         return CompilerSpec(d["name"], vn.VersionList.from_dict(d))
 
-    def __str__(self) -> str:
+    def __str__(self):
         out = self.name
         if self.versions and self.versions != _any_version:
             vlist = ",".join(str(v) for v in self.versions)
             out += "@%s" % vlist
         return out
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return str(self)
 
 
@@ -1400,6 +1437,20 @@ class Spec(object):
             result[key] = list(group)
         return result
 
+    #
+    # Private routines here are called by the parser when building a spec.
+    #
+    def _add_versions(self, version_list):
+        """Called by the parser to add an allowable version."""
+        # If it already has a non-trivial version list, this is an error
+        if self.versions and self.versions != vn.VersionList(":"):
+            raise MultipleVersionError(
+                "A spec cannot contain multiple version signifiers." " Use a version list instead."
+            )
+        self.versions = vn.VersionList()
+        for version in version_list:
+            self.versions.add(version)
+
     def _add_flag(self, name, value, propagate):
         """Called by the parser to add a known flag.
         Known flags currently include "arch"
@@ -1467,6 +1518,14 @@ class Spec(object):
                     )
                 else:
                     setattr(self.architecture, new_attr, new_value)
+
+    def _set_compiler(self, compiler):
+        """Called by the parser to set the compiler."""
+        if self.compiler:
+            raise DuplicateCompilerSpecError(
+                "Spec for '%s' cannot have two compilers." % self.name
+            )
+        self.compiler = compiler
 
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""

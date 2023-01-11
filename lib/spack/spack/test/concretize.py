@@ -1796,7 +1796,7 @@ class TestConcretize(object):
         root_spec = spack.spec.Spec("b")
         s = root_spec.concretized()
         wrong_compiler, wrong_os = s.copy(), s.copy()
-        wrong_compiler.compiler = spack.spec.CompilerSpec("gcc", "12.1.0")
+        wrong_compiler.compiler = spack.spec.CompilerSpec("gcc@12.1.0")
         wrong_os.architecture = spack.spec.ArchSpec("test-ubuntu2204-x86_64")
         reusable_specs = [wrong_compiler, wrong_os]
         with spack.config.override("concretizer:reuse", True):
