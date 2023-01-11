@@ -259,7 +259,7 @@ class PythonPackage(PythonExtension):
                         if not python.architecture.os:
                             python.architecture.os = "default_os"
                         if not python.architecture.target:
-                            python.architecture.target = archspec.cpu.host().family
+                            python.architecture.target = archspec.cpu.host().family.name
 
                     # Ensure compiler information is present
                     if not python.compiler:

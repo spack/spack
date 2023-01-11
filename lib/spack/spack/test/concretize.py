@@ -1959,13 +1959,14 @@ class TestConcretize(object):
 
     def test_external_python_extension_find_dependency_from_config(self):
         fake_path = os.path.sep + "fake"
+
         external_conf = {
             "py-extension1": {
                 "buildable": False,
                 "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
             },
             "python": {
-                "externals": [{"spec": "python@configured", "prefix": fake_path}],
+                "externals": [{"spec": "python@configured platform=test", "prefix": fake_path}],
             },
         }
         spack.config.set("packages", external_conf)
