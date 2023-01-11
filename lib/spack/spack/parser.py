@@ -85,10 +85,12 @@ HASH = r"[a-zA-Z_0-9]+"
 #: A filename starts either with a "." or a "/" or a "{name}/,
 # or on Windows, a drive letter followed by a colon and "\"
 # or "." or {name}\
+WINDOWS_FILENAME = r"(\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)([a-zA-Z0-9-_\.\\]*)(\.json|\.yaml)"
+UNIX_FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
 if not IS_WINDOWS:
-    FILENAME = r"(\.|\/|[a-zA-Z0-9-_]*\/)([a-zA-Z0-9-_\.\/]*)(\.json|\.yaml)"
+    FILENAME = UNIX_FILENAME
 else:
-    FILENAME = r"(\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)([a-zA-Z0-9-_\.\\]*)(\.json|\.yaml)"
+    FILENAME = WINDOWS_FILENAME
 
 VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
