@@ -1983,7 +1983,7 @@ class TestConcretize(object):
 
         when python isn't otherwise in the DAG"""
         python_spec = spack.spec.Spec("python@detected")
-        prefix = "/fake"
+        prefix = os.path.sep + "fake"
 
         def find_fake_python(classes, path_hints):
             return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
@@ -2008,7 +2008,7 @@ class TestConcretize(object):
         external_conf = {
             "py-extension1": {
                 "buildable": False,
-                "externals": [{"spec": "py-extension1@2.0", "prefix": "/fake"}],
+                "externals": [{"spec": "py-extension1@2.0", "prefix": os.path.sep + "fake"}],
             }
         }
         spack.config.set("packages", external_conf)
