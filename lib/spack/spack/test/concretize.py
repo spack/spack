@@ -1957,7 +1957,15 @@ class TestConcretize(object):
         assert "python" in spec["py-extension1"]
         assert spec["python"] == spec["py-extension1"]["python"]
 
-    def test_external_python_extension_find_dependency_from_config(self):
+    target = spack.platforms.test.Test.default
+
+    @pytest.mark.parametrize("python_spec", [
+        "python@configured",
+        "python@configured platform=test",
+        "python@configured os=debian",
+        "python@configured target=%s" % target,
+    ])
+    def test_external_python_extension_find_dependency_from_config(self, python_spec):
         fake_path = os.path.sep + "fake"
 
         external_conf = {
@@ -1966,7 +1974,7 @@ class TestConcretize(object):
                 "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
             },
             "python": {
-                "externals": [{"spec": "python@configured platform=test", "prefix": fake_path}],
+                "externals": [{"spec": python_spec, "prefix": fake_path}],
             },
         }
         spack.config.set("packages", external_conf)
@@ -1977,7 +1985,7 @@ class TestConcretize(object):
         assert spec["python"].prefix == fake_path
         # The spec is not equal to spack.spec.Spec("python@configured") because it gets a
         # namespace and an external prefix before marking concrete
-        assert spec["python"].satisfies("python@configured")
+        assert spec["python"].satisfies(python_spec)
 
     def test_external_python_extension_find_dependency_from_detection(self, monkeypatch):
         """Test that python extensions have access to a python dependency
