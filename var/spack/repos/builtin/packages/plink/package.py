@@ -14,6 +14,11 @@ class Plink(Package):
     homepage = "https://www.cog-genomics.org/plink/1.9/"
 
     version(
+        "1.9-beta6.27",
+        commit="a2ea957c893fbb0558358edef27f3ecbf3d360f8",
+        git="https://github.com/chrchang/plink-ng.git",
+    )
+    version(
         "1.9-beta6.10",
         sha256="f8438656996c55a5edd95c223cce96277de6efaab1b9b1d457bfee0c272058d8",
         url="https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20190617.zip",
@@ -30,10 +35,15 @@ class Plink(Package):
         preferred=True,
     )
 
-    depends_on("atlas", when="@1.9-beta5")
-    depends_on("netlib-lapack", when="@1.9-beta5")
-    depends_on("atlas", when="@1.9-beta6.10")
-    depends_on("netlib-lapack", when="@1.9-beta6.10")
+    depends_on("atlas", when="@1.9-beta5:1.9-beta6.10")
+    depends_on("netlib-lapack", when="@1.9-beta5:1.9-beta6.10")
+
+    with when("@1.9-beta-6.27:"):
+        depends_on("zlib", when="@1.9-beta6.27:")
+        depends_on("blas", when="@1.9-beta6.27:")
+        depends_on("lapack", when="@1.9-beta6.27:")
+
+    patch("dynamic_zlib.patch", when="@1.9-beta6.27:")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -46,4 +56,16 @@ class Plink(Package):
                 first_compile()
                 install("plink", prefix.bin)
         if spec.version == Version("1.9-beta6.10"):
+            install("plink", prefix.bin)
+
+    @when("@1.9-beta6.27:")
+    def setup_build_environment(self, env):
+        env.set("BLASFLAGS", self.spec["blas"].libs.ld_flags)
+        env.set("ZLIB", self.spec["zlib"].libs.ld_flags)
+
+    @when("@1.9-beta6.27:")
+    def install(self, spec, prefix):
+        with working_dir("1.9"):
+            make()
+            mkdir(prefix.bin)
             install("plink", prefix.bin)
