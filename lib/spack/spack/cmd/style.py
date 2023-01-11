@@ -40,9 +40,9 @@ exclude_directories = [
 #: bootstrapped or present in the environment.
 tool_names = [
     "isort",
-    "mypy",
     "black",
     "flake8",
+    "mypy",
 ]
 
 #: tools we run in spack style
