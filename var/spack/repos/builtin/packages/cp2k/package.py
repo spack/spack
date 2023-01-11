@@ -85,7 +85,6 @@ class Cp2k(MakefilePackage, CudaPackage):
         variant(
             "cuda_fft",
             default=False,
-            when="@:9",  # req in CP2K v2022+
             description=("Use CUDA also for FFTs in the PW part of CP2K"),
         )
         variant(
@@ -574,11 +573,10 @@ class Cp2k(MakefilePackage, CudaPackage):
                 "-lstdc++",
             ]
 
-            if spec.satisfies("@2022:"):
-                cppflags += ["-D__OFFLOAD_CUDA"]
-                libs += ["-lcufft"]
-
             if spec.satisfies("@9:"):
+                if spec.satisfies("@2022:"):
+                    cppflags += ["-D__OFFLOAD_CUDA"]
+
                 acc_compiler_var = "OFFLOAD_CC"
                 acc_flags_var = "OFFLOAD_FLAGS"
                 cppflags += [
@@ -589,8 +587,13 @@ class Cp2k(MakefilePackage, CudaPackage):
                 libs += ["-lcublas"]
 
                 if spec.satisfies("+cuda_fft"):
-                    cppflags += ["-D__PW_CUDA"]
+                    if spec.satisfies("@:9"):
+                        cppflags += ["-D__PW_CUDA"]
+
                     libs += ["-lcufft"]
+                else:
+                    if spec.satisfies("@2022:"):
+                        cppflags += ["-D__NO_OFFLOAD_PW"]
             else:
                 acc_compiler_var = "NVCC"
                 acc_flags_var = "NVFLAGS"
