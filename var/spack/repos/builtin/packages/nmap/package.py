@@ -51,7 +51,7 @@ class Nmap(AutotoolsPackage):
     #
     # Any that are included "for convenience" we should provide.
     #
-    # The recursive builds to build the vendored dependencies is also broken on
+    # The recursive builds for vendored dependencies is also broken on
     # darwin (something races); using our own deps works around that issue.
     #
     # Specifically, something is touching libpcre/configure during the build,
