@@ -44,19 +44,19 @@ class Nmap(AutotoolsPackage):
     depends_on("openssl@1.1:", when="@7.50:7.92")
     depends_on("openssl@:1.0.9", when="@:7.49")
 
-    # nmap includes vendors a few libraries, but we should build against spack's
-    # versions where appropriate. see their build guide at
+    # nmap vendors a few libraries, but we should build against spack's
+    # versions where appropriate. See their build guide at
     # https://nmap.org/book/inst-source.html#inst-configure. Also see:
     # https://github.com/nmap/nmap/issues/1602
     #
-    # Any that are included "for convinience" we should provide.
+    # Any that are included "for convenience" we should provide.
     #
     # The recursive builds to build the vendored dependencies is also broken on
     # darwin (something races); using our own deps works around that issue.
     #
     # Specifically, something is touching libpcre/configure during the build,
     # which causes the recursive `make`'s configure.status --recheck pass to
-    # attempt to rerun configure. Rerunning configure fails due and asks to run
+    # attempt to rerun configure. Rerunning configure fails and asks you to run
     # `make distclean`.
 
     depends_on("libssh2@1.10")
@@ -71,7 +71,7 @@ class Nmap(AutotoolsPackage):
 
         # ndiff and zenmap both require python2, which is deprecated in spack.
         # The next nmap release will fix this, so, disable these features
-        # completely for now. We will add feature flags for these features again
+        # completely for now. We will add flags for these features again
         # when they can be supported without a dependency on python2
         args.append("--disable-ndiff")
         args.append("--disable-zenmap")
