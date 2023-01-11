@@ -16,11 +16,11 @@ class RReadbitmap(RPackage):
 
     cran = "readbitmap"
 
-    version('0.1.5', sha256='737d7d585eb33de2c200da64d16781e3c9522400fe2af352e1460c6a402a0291')
+    version("0.1.5", sha256="737d7d585eb33de2c200da64d16781e3c9522400fe2af352e1460c6a402a0291")
 
-    depends_on('r-bmp', type=('build', 'run'))
-    depends_on('r-jpeg', type=('build', 'run'))
-    depends_on('r-png', type=('build', 'run'))
-    depends_on('r-tiff', type=('build', 'run'))
-    depends_on('jpeg')
-    depends_on('libpng')
+    depends_on("r-bmp", type=("build", "run"))
+    depends_on("r-jpeg", type=("build", "run"))
+    depends_on("r-png", type=("build", "run"))
+    depends_on("r-tiff", type=("build", "run"))
+    depends_on("jpeg")
+    depends_on("libpng")

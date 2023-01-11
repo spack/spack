@@ -19,10 +19,10 @@ class PySonlib(PythonPackage):
     # to fix the code at one point in time (1st April)
 
     homepage = "https://github.com/ComparativeGenomicsToolkit/sonLib"
-    url      = "https://github.com/ComparativeGenomicsToolkit/sonLib"
-    git      = "https://github.com/ComparativeGenomicsToolkit/sonLib.git"
+    url = "https://github.com/ComparativeGenomicsToolkit/sonLib"
+    git = "https://github.com/ComparativeGenomicsToolkit/sonLib.git"
 
-    version('devel', branch='master')
-    version('20200401', commit='7ebe2ede05a6ee366d93a7a993db69a99943a68f')
+    version("devel", branch="master")
+    version("20200401", commit="7ebe2ede05a6ee366d93a7a993db69a99943a68f")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

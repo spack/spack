@@ -12,32 +12,32 @@ class Procps(AutotoolsPackage):
     about the status of entries in its process table."""
 
     homepage = "https://gitlab.com/procps-ng/procps"
-    git      = "https://gitlab.com/procps-ng/procps.git"
+    git = "https://gitlab.com/procps-ng/procps.git"
 
-    version('master', branch='master')
-    version('3.3.15', tag='v3.3.15')
+    version("master", branch="master")
+    version("3.3.15", tag="v3.3.15")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('dejagnu',  type='test')
-    depends_on('iconv')
-    depends_on('gettext')
-    depends_on('ncurses')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("pkgconfig@0.9.0:", type="build")
+    depends_on("dejagnu", type="test")
+    depends_on("iconv")
+    depends_on("gettext")
+    depends_on("ncurses")
 
-    conflicts('platform=darwin', msg='procps is linux-only')
+    conflicts("platform=darwin", msg="procps is linux-only")
 
     def autoreconf(self, spec, prefix):
-        sh = which('sh')
-        sh('autogen.sh')
+        sh = which("sh")
+        sh("autogen.sh")
 
     def configure_args(self):
         return [
-            '--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix),
-            '--with-libintl-prefix={0}'.format(self.spec['gettext'].prefix),
-            '--with-ncurses',
+            "--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix),
+            "--with-libintl-prefix={0}".format(self.spec["gettext"].prefix),
+            "--with-ncurses",
             # Required to avoid libintl linking errors
-            '--disable-nls',
+            "--disable-nls",
         ]

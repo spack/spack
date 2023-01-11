@@ -46,6 +46,4 @@ class Dust(Package):
         purpose = "Check dust can execute (with option '--version')"
         expected = ["Dust "]
 
-        self.run_test(
-            dustpath, options=options, expected=expected, status=[0], purpose=purpose
-        )
+        self.run_test(dustpath, options=options, expected=expected, status=[0], purpose=purpose)

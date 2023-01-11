@@ -15,7 +15,7 @@ class RCachem(RPackage):
 
     cran = "cachem"
 
-    version('1.0.6', sha256='9a9452f7bcf3f79436c418b3c3290449fb8fd338714d9b992153754d112f1864')
+    version("1.0.6", sha256="9a9452f7bcf3f79436c418b3c3290449fb8fd338714d9b992153754d112f1864")
 
-    depends_on('r-rlang', type=('build', 'run'))
-    depends_on('r-fastmap', type=('build', 'run'))
+    depends_on("r-rlang", type=("build", "run"))
+    depends_on("r-fastmap", type=("build", "run"))

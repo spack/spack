@@ -1,0 +1,32 @@
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+index be288ab02e2..378381b16ff 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+@@ -616,11 +616,23 @@
+ 	return LLVMGetValueKind(v) == LLVMFunctionValueKind;
+ }
+ 
++// setOverrideStackAlignment if it exists, but SFINAE
++template <typename T>
++static auto try_set_override_stack_alignment(T* M, unsigned align)
++   -> decltype(M->setOverrideStackAlignment(align))
++{
++   M->setOverrideStackAlignment(align);
++}
++
++template <typename T>
++static void try_set_override_stack_alignment(T M, unsigned align)
++{
++// fallback for when setOverrideStackAlignment does not exist
++}
++
+ extern "C" void
+ lp_set_module_stack_alignment_override(LLVMModuleRef MRef, unsigned align)
+ {
+-#if LLVM_VERSION_MAJOR >= 13
+    llvm::Module *M = llvm::unwrap(MRef);
+-   M->setOverrideStackAlignment(align);
+-#endif
++   try_set_override_stack_alignment(M, align);
+ }
+

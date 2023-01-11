@@ -12,10 +12,10 @@ class PyCgen(PythonPackage):
     """
 
     homepage = "https://documen.tician.de/cgen/"
-    pypi     = "cgen/cgen-2020.1.tar.gz"
+    pypi = "cgen/cgen-2020.1.tar.gz"
 
-    version('2020.1', sha256='4ec99d0c832d9f95f5e51dd18a629ad50df0b5464ce557ef42c6e0cd9478bfcf')
+    version("2020.1", sha256="4ec99d0c832d9f95f5e51dd18a629ad50df0b5464ce557ef42c6e0cd9478bfcf")
 
-    depends_on('py-pytools@2015.1.2:', type=('build', 'run'))
-    depends_on('py-numpy@1.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("py-pytools@2015.1.2:", type=("build", "run"))
+    depends_on("py-numpy@1.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

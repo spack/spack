@@ -18,5 +18,5 @@ class RFastmap(RPackage):
 
     cran = "fastmap"
 
-    version('1.1.0', sha256='9113e526b4c096302cfeae660a06de2c4c82ae4e2d3d6ef53af6de812d4c822b')
-    version('1.0.1', sha256='4778b05dfebd356f8df980dfeff3b973a72bca14898f870e5c40c1d84db9faec')
+    version("1.1.0", sha256="9113e526b4c096302cfeae660a06de2c4c82ae4e2d3d6ef53af6de812d4c822b")
+    version("1.0.1", sha256="4778b05dfebd356f8df980dfeff3b973a72bca14898f870e5c40c1d84db9faec")

@@ -10,21 +10,24 @@ class Libtomlc99(Package):
     """TOML in c99; v0.4.0 compliant."""
 
     homepage = "https://github.com/cktan/tomlc99"
-    git      = "https://github.com/cktan/tomlc99.git"
+    git = "https://github.com/cktan/tomlc99.git"
 
     # Since there is no official versioning, yet, just use the date and prefix
     # with '0.' to make switching to proper versioning easier later.
-    version('0.2020.12.23', commit='e97a56633e54297990158ab56a7e50a089cddf7d')
-    version('0.2019.06.24', commit='b701a09579200b1bd87081d1e6a284a89b5576c8')
+    version("0.2020.12.23", commit="e97a56633e54297990158ab56a7e50a089cddf7d")
+    version("0.2019.06.24", commit="b701a09579200b1bd87081d1e6a284a89b5576c8")
     # Unfortunately, upstream Makefile does not build shared libaries, so use
     # local changes for now.
-    version('0.2019.05.02', commit='35118431263dec2a2a7b55e4dd717a5f54992e3e',
-            sha256sum='f131679131c1fcb012004a3334abb2b77a329490549c4d68455ba4ec55af9b10',
-            git="https://github.com/obreitwi/tomlc99.git")
+    version(
+        "0.2019.05.02",
+        commit="35118431263dec2a2a7b55e4dd717a5f54992e3e",
+        sha256sum="f131679131c1fcb012004a3334abb2b77a329490549c4d68455ba4ec55af9b10",
+        git="https://github.com/obreitwi/tomlc99.git",
+    )
     # Does not build shared libraries.
-    version('0.2019.03.06', commit='bd76f1276ee5f5df0eb064f1842af5ad1737cf1e')
+    version("0.2019.03.06", commit="bd76f1276ee5f5df0eb064f1842af5ad1737cf1e")
 
-    variant('debug', default=False, description="Build with debug enabled.")
+    variant("debug", default=False, description="Build with debug enabled.")
 
     def install(self, spec, prefix):
         make_args = []
@@ -32,4 +35,4 @@ class Libtomlc99(Package):
             make_args.append("DEBUG=1")
 
         make(*make_args)
-        make('prefix={0}'.format(prefix), 'install')
+        make("prefix={0}".format(prefix), "install")

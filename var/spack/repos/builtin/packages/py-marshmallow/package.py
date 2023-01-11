@@ -11,12 +11,12 @@ class PyMarshmallow(PythonPackage):
     complex datatypes, such as objects, to and from native Python datatypes."""
 
     homepage = "https://github.com/marshmallow-code/marshmallow"
-    pypi     = "marshmallow/marshmallow-3.15.0.tar.gz"
+    pypi = "marshmallow/marshmallow-3.15.0.tar.gz"
 
-    maintainers = ['haralmha']
+    maintainers = ["haralmha"]
 
-    version('3.15.0', sha256='2aaaab4f01ef4f5a011a21319af9fce17ab13bf28a026d1252adab0e035648d5')
+    version("3.15.0", sha256="2aaaab4f01ef4f5a011a21319af9fce17ab13bf28a026d1252adab0e035648d5")
 
-    depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-packaging', type=('build', 'run'))
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-packaging", type=("build", "run"))

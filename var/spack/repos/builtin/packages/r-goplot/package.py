@@ -20,10 +20,10 @@ class RGoplot(RPackage):
 
     cran = "GOplot"
 
-    version('1.0.2', sha256='3ddaa2b6d1297ad6daad30d18af708adf43d86e8804b1b92fa29dfbf26d80df9')
+    version("1.0.2", sha256="3ddaa2b6d1297ad6daad30d18af708adf43d86e8804b1b92fa29dfbf26d80df9")
 
-    depends_on('r@3.2.3:', type=('build', 'run'))
-    depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
-    depends_on('r-ggdendro@0.1-17:', type=('build', 'run'))
-    depends_on('r-gridextra@2.0.0:', type=('build', 'run'))
-    depends_on('r-rcolorbrewer@1.1-2:', type=('build', 'run'))
+    depends_on("r@3.2.3:", type=("build", "run"))
+    depends_on("r-ggplot2@2.0.0:", type=("build", "run"))
+    depends_on("r-ggdendro@0.1-17:", type=("build", "run"))
+    depends_on("r-gridextra@2.0.0:", type=("build", "run"))
+    depends_on("r-rcolorbrewer@1.1-2:", type=("build", "run"))

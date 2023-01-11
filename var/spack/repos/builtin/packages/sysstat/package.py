@@ -13,24 +13,24 @@ class Sysstat(AutotoolsPackage):
     collect and historize performance and activity data."""
 
     homepage = "https://github.com/sysstat"
-    url      = "https://github.com/sysstat/sysstat/archive/v12.1.6.tar.gz"
+    url = "https://github.com/sysstat/sysstat/archive/v12.1.6.tar.gz"
 
-    version('12.4.5', sha256='4e35abdd9eaf766ecdab55786f459093f3e1c350db23e57a15561afda417ff0d')
-    version('12.2.0', sha256='614ab9fe8e7937a3edb7b2b6760792a3764ea3a7310ac540292dd0e3dfac86a6')
+    version("12.4.5", sha256="4e35abdd9eaf766ecdab55786f459093f3e1c350db23e57a15561afda417ff0d")
+    version("12.2.0", sha256="614ab9fe8e7937a3edb7b2b6760792a3764ea3a7310ac540292dd0e3dfac86a6")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('gettext')
-    depends_on('lm-sensors')
+    depends_on("pkgconfig", type="build")
+    depends_on("gettext")
+    depends_on("lm-sensors")
 
     def setup_build_environment(self, env):
-        env.append_flags('rcdir', self.spec.prefix.etc)
-        env.append_flags('sa_dir', self.spec.prefix.log.sa)
-        env.append_flags('conf_dir', self.spec.prefix.etc.sysconfig)
+        env.append_flags("rcdir", self.spec.prefix.etc)
+        env.append_flags("sa_dir", self.spec.prefix.log.sa)
+        env.append_flags("conf_dir", self.spec.prefix.etc.sysconfig)
 
     def configure_args(self):
         args = [
-            '--disable-pcp',
-            '--disable-file-attr',
+            "--disable-pcp",
+            "--disable-file-attr",
         ]
 
         return args

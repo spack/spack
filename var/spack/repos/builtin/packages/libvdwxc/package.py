@@ -9,7 +9,7 @@ from spack.package import *
 
 class Libvdwxc(AutotoolsPackage):
     """Portable C library of density functionals with van der Waals
-       interactions for density functional theory"""
+    interactions for density functional theory"""
 
     homepage = "https://libvdwxc.gitlab.io/libvdwxc/"
     url = "https://launchpad.net/libvdwxc/stable/0.4.0/+download/libvdwxc-0.4.0.tar.gz"
@@ -31,9 +31,7 @@ class Libvdwxc(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            "--{0}-pfft".format(
-                "with" if self.spec.satisfies("+pfft") else "without"
-            ),
+            "--{0}-pfft".format("with" if self.spec.satisfies("+pfft") else "without"),
             "MPICC=",  # make sure both variables are always unset
             "MPIFC=",  # otherwise the configure scripts complains
         ]

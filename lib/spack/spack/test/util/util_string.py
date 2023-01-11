@@ -7,8 +7,8 @@ from spack.util.string import plural
 
 
 def test_plural():
-    assert plural(0, 'thing') == '0 things'
-    assert plural(1, 'thing') == '1 thing'
-    assert plural(2, 'thing') == '2 things'
-    assert plural(1, 'thing', 'wombats') == '1 thing'
-    assert plural(2, 'thing', 'wombats') == '2 wombats'
+    assert plural(0, "thing") == "0 things"
+    assert plural(1, "thing") == "1 thing"
+    assert plural(2, "thing") == "2 things"
+    assert plural(1, "thing", "wombats") == "1 thing"
+    assert plural(2, "thing", "wombats") == "2 wombats"

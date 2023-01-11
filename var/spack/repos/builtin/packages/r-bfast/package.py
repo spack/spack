@@ -27,17 +27,17 @@ class RBfast(RPackage):
 
     cran = "bfast"
 
-    version('1.6.1', sha256='aaf479af1924691cbec8c67c68005c00d97cead51b2b44863c18acd4cea453ee')
-    version('1.5.7', sha256='01585fe8944d05ebdb13795214077bc1365f0c0372e2a1f7edb914356dace558')
+    version("1.6.1", sha256="aaf479af1924691cbec8c67c68005c00d97cead51b2b44863c18acd4cea453ee")
+    version("1.5.7", sha256="01585fe8944d05ebdb13795214077bc1365f0c0372e2a1f7edb914356dace558")
 
-    depends_on('r@2.15.0:', type=('build', 'run'))
-    depends_on('r@3.0.0:', type=('build', 'run'), when='@1.6.1:')
-    depends_on('r-strucchangercpp', type=('build', 'run'), when='@1.6.1:')
-    depends_on('r-zoo', type=('build', 'run'))
-    depends_on('r-forecast', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.7:', type=('build', 'run'), when='@1.6.1:')
-    depends_on('r-rdpack@0.7:', type=('build', 'run'), when='@1.6.1:')
+    depends_on("r@2.15.0:", type=("build", "run"))
+    depends_on("r@3.0.0:", type=("build", "run"), when="@1.6.1:")
+    depends_on("r-strucchangercpp", type=("build", "run"), when="@1.6.1:")
+    depends_on("r-zoo", type=("build", "run"))
+    depends_on("r-forecast", type=("build", "run"))
+    depends_on("r-rcpp@0.12.7:", type=("build", "run"), when="@1.6.1:")
+    depends_on("r-rdpack@0.7:", type=("build", "run"), when="@1.6.1:")
 
-    depends_on('r-strucchange', type=('build', 'run'), when='@:1.5.7')
-    depends_on('r-sp', type=('build', 'run'), when='@:1.5.7')
-    depends_on('r-raster', type=('build', 'run'), when='@:1.5.7')
+    depends_on("r-strucchange", type=("build", "run"), when="@:1.5.7")
+    depends_on("r-sp", type=("build", "run"), when="@:1.5.7")
+    depends_on("r-raster", type=("build", "run"), when="@:1.5.7")

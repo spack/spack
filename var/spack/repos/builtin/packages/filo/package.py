@@ -10,23 +10,23 @@ class Filo(CMakePackage):
     """File flush and fetch, with MPI"""
 
     homepage = "https://github.com/ecp-veloc/filo"
-    git      = "https://github.com/ecp-veloc/filo.git"
+    git = "https://github.com/ecp-veloc/filo.git"
 
-    tags = ['ecp']
+    tags = ["ecp"]
 
-    version('main', branch='main')
+    version("main", branch="main")
 
-    depends_on('mpi')
-    depends_on('axl')
-    depends_on('kvtree')
-    depends_on('spath')
+    depends_on("mpi")
+    depends_on("axl")
+    depends_on("kvtree")
+    depends_on("spath")
 
     def cmake_args(self):
         args = []
-        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        if self.spec.satisfies('platform=cray'):
+        args.append("-DMPI_C_COMPILER=%s" % self.spec["mpi"].mpicc)
+        if self.spec.satisfies("platform=cray"):
             args.append("-DFILO_LINK_STATIC=ON")
-        args.append("-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix)
-        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec['kvtree'].prefix)
-        args.append("-DWITH_SPATH_PREFIX=%s" % self.spec['spath'].prefix)
+        args.append("-DWITH_AXL_PREFIX=%s" % self.spec["axl"].prefix)
+        args.append("-DWITH_KVTREE_PREFIX=%s" % self.spec["kvtree"].prefix)
+        args.append("-DWITH_SPATH_PREFIX=%s" % self.spec["spath"].prefix)
         return args

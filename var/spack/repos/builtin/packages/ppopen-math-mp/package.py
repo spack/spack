@@ -27,26 +27,26 @@ class PpopenMathMp(MakefilePackage):
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
     git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('master', branch='MATH/MP')
+    version("master", branch="MATH/MP")
 
-    depends_on('mpi')
+    depends_on("mpi")
 
-    build_directory = 'src'
-    build_targets = ['FC_XXX=spack']
+    build_directory = "src"
+    build_targets = ["FC_XXX=spack"]
     parallel = False
 
     def edit(self, spec, prefix):
-        flags = ['-I.']
-        if spec.satisfies('%gcc'):
-            flags.append('-ffree-line-length-none')
-        with open('src/Makefile', 'a') as makefile:
-            makefile.write('FC_spack = {0}\n'.format(spec['mpi'].mpifc))
-            makefile.write('FFLAGS_spack = {0}\n'.format(' '.join(flags)))
-            makefile.write('AR_spack = ar cr\n')
-        mkdirp('include')
-        mkdirp('lib')
+        flags = ["-I."]
+        if spec.satisfies("%gcc"):
+            flags.append("-ffree-line-length-none")
+        with open("src/Makefile", "a") as makefile:
+            makefile.write("FC_spack = {0}\n".format(spec["mpi"].mpifc))
+            makefile.write("FFLAGS_spack = {0}\n".format(" ".join(flags)))
+            makefile.write("AR_spack = ar cr\n")
+        mkdirp("include")
+        mkdirp("lib")
 
     def install(self, spec, prefix):
-        for d in ['include', 'lib', 'doc', 'test']:
+        for d in ["include", "lib", "doc", "test"]:
             mkdir(join_path(prefix, d))
             copy_tree(d, join_path(prefix, d))

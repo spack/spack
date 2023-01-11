@@ -5,9 +5,9 @@
 
 .. _cachedcmakepackage:
 
-------------------
-CachedCMakePackage
-------------------
+-----------
+CachedCMake
+-----------
 
 The CachedCMakePackage base class is used for CMake-based workflows
 that create a CMake cache file prior to running ``cmake``. This is

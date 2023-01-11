@@ -12,17 +12,17 @@ class PyLiblas(PythonPackage):
     """
 
     homepage = "https://liblas.org/"
-    pypi     = "libLAS/libLAS-1.8.1.tar.gz"
+    pypi = "libLAS/libLAS-1.8.1.tar.gz"
 
-    version('1.8.1', sha256='4d517670912989a0c7a33bb057167747e1013db6abdaa372f0775343ff0d1e16')
+    version("1.8.1", sha256="4d517670912989a0c7a33bb057167747e1013db6abdaa372f0775343ff0d1e16")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('liblas')
+    depends_on("py-setuptools", type="build")
+    depends_on("liblas")
 
     def setup_build_environment(self, env):
-        env_var = 'LD_LIBRARY_PATH'
-        if self.spec.satisfies('platform=darwin'):
-            env_var = 'DYLD_FALLBACK_LIBRARY_PATH'
-        env.prepend_path(env_var, self.spec['liblas'].libs.directories[0])
+        env_var = "LD_LIBRARY_PATH"
+        if self.spec.satisfies("platform=darwin"):
+            env_var = "DYLD_FALLBACK_LIBRARY_PATH"
+        env.prepend_path(env_var, self.spec["liblas"].libs.directories[0])
 
     setup_run_environment = setup_build_environment

@@ -8,9 +8,9 @@ from spack.package import *
 
 class ModulePathSeparator(Package):
     homepage = "http://www.llnl.gov"
-    url      = "http://www.llnl.gov/module-path-separator-1.0.tar.gz"
+    url = "http://www.llnl.gov/module-path-separator-1.0.tar.gz"
 
-    version(1.0, '0123456789abcdef0123456789abcdef')
+    version(1.0, "0123456789abcdef0123456789abcdef")
 
     def setup_run_environment(self, env):
         env.append_path("COLON", "foo")

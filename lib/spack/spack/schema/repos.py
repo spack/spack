@@ -12,19 +12,19 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    'repos': {
-        'type': 'array',
-        'default': [],
-        'items': {'type': 'string'},
+    "repos": {
+        "type": "array",
+        "default": [],
+        "items": {"type": "string"},
     },
 }
 
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack repository configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack repository configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

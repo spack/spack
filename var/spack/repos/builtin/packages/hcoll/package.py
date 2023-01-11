@@ -11,10 +11,10 @@ class Hcoll(Package):
     is a MPI-integrated software package that utilizes CORE-Direct technology
     for implementing the MPI collective communications."""
 
-    homepage = 'https://www.mellanox.com/products/fca'
+    homepage = "https://www.mellanox.com/products/fca"
     has_code = False
 
-    version('3.9.1927')
+    version("3.9.1927")
 
     # HCOLL needs to be added as an external package to SPACK. For this, the
     # config file packages.yaml needs to be adjusted:
@@ -28,5 +28,8 @@ class Hcoll(Package):
 
     def install(self, spec, prefix):
         raise InstallError(
-            self.spec.format('{name} is not installable, you need to specify '
-                             'it as an external package in packages.yaml'))
+            self.spec.format(
+                "{name} is not installable, you need to specify "
+                "it as an external package in packages.yaml"
+            )
+        )

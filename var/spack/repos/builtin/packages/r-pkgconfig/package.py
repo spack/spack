@@ -14,6 +14,6 @@ class RPkgconfig(RPackage):
 
     cran = "pkgconfig"
 
-    version('2.0.3', sha256='330fef440ffeb842a7dcfffc8303743f1feae83e8d6131078b5a44ff11bc3850')
-    version('2.0.2', sha256='25997754d1adbe7a251e3bf9879bb52dced27dd8b84767d558f0f644ca8d69ca')
-    version('2.0.1', sha256='ab02b2a4b639ba94dcba882a059fe9cddae5498a4309841f764b62ec46ba5a40')
+    version("2.0.3", sha256="330fef440ffeb842a7dcfffc8303743f1feae83e8d6131078b5a44ff11bc3850")
+    version("2.0.2", sha256="25997754d1adbe7a251e3bf9879bb52dced27dd8b84767d558f0f644ca8d69ca")
+    version("2.0.1", sha256="ab02b2a4b639ba94dcba882a059fe9cddae5498a4309841f764b62ec46ba5a40")

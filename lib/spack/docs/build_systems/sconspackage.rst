@@ -5,9 +5,9 @@
 
 .. _sconspackage:
 
-------------
-SConsPackage
-------------
+-----
+SCons
+-----
 
 SCons is a general-purpose build system that does not rely on
 Makefiles to build software. SCons is written in Python, and handles
@@ -42,7 +42,7 @@ As previously mentioned, SCons allows developers to add subcommands like
    $ scons install
 
 
-To facilitate this, the ``SConsPackage`` base class provides the
+To facilitate this, the ``SConsBuilder`` and ``SconsPackage`` base classes provide the
 following phases:
 
 #. ``build`` - build the package

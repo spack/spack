@@ -12,6 +12,6 @@ class Libbeato(AutotoolsPackage):
     from UCSC's Genome Browser Group."""
 
     homepage = "https://github.com/CRG-Barcelona/libbeato"
-    git      = "https://github.com/CRG-Barcelona/libbeato.git"
+    git = "https://github.com/CRG-Barcelona/libbeato.git"
 
-    version('master', branch='master')
+    version("master", branch="master")

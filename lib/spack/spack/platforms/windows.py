@@ -14,10 +14,10 @@ from ._platform import Platform
 
 
 class Windows(Platform):
-    priority    = 101
+    priority = 101
 
     def __init__(self):
-        super(Windows, self).__init__('windows')
+        super(Windows, self).__init__("windows")
 
         for name in archspec.cpu.TARGETS:
             self.add_target(name, spack.target.Target(name))
@@ -29,12 +29,12 @@ class Windows(Platform):
         windows_os = WindowsOs()
 
         self.default_os = str(windows_os)
-        self.front_os   = str(windows_os)
-        self.back_os    = str(windows_os)
+        self.front_os = str(windows_os)
+        self.back_os = str(windows_os)
 
         self.add_operating_system(str(windows_os), windows_os)
 
     @classmethod
     def detect(cls):
         plat = platform.system().lower()
-        return 'cygwin' in plat or 'win32' in plat or 'windows' in plat
+        return "cygwin" in plat or "win32" in plat or "windows" in plat

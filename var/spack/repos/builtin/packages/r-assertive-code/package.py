@@ -16,9 +16,9 @@ class RAssertiveCode(RPackage):
 
     cran = "assertive.code"
 
-    version('0.0-3', sha256='ef80e8d1d683d776a7618e78ddccffca7f72ab4a0fcead90c670bb8f8cb90be2')
+    version("0.0-3", sha256="ef80e8d1d683d776a7618e78ddccffca7f72ab4a0fcead90c670bb8f8cb90be2")
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))
-    depends_on('r-assertive-properties', type=('build', 'run'))
-    depends_on('r-assertive-types', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-2:", type=("build", "run"))
+    depends_on("r-assertive-properties", type=("build", "run"))
+    depends_on("r-assertive-types", type=("build", "run"))

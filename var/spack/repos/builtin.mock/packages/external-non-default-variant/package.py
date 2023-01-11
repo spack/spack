@@ -7,10 +7,11 @@ from spack.package import *
 
 class ExternalNonDefaultVariant(Package):
     """An external that is registered with a non-default value"""
+
     homepage = "http://www.python.org"
     url = "http://www.python.org/ftp/python/3.8.7/Python-3.8.7.tgz"
 
-    version('3.8.7', 'be78e48cdfc1a7ad90efff146dce6cfe')
+    version("3.8.7", "be78e48cdfc1a7ad90efff146dce6cfe")
 
-    variant('foo', default=True, description='just a variant')
-    variant('bar', default=True, description='just a variant')
+    variant("foo", default=True, description="just a variant")
+    variant("bar", default=True, description="just a variant")

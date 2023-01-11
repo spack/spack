@@ -14,4 +14,4 @@ class RAdgoftest(RPackage):
 
     cran = "ADGofTest"
 
-    version('0.3', sha256='9cd9313954f6ecd82480d373f6c5371ca84ab33e3f5c39d972d35cfcf1096846')
+    version("0.3", sha256="9cd9313954f6ecd82480d373f6c5371ca84ab33e3f5c39d972d35cfcf1096846")

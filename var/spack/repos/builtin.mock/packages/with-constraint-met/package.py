@@ -12,12 +12,12 @@ class WithConstraintMet(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/example-1.0.tar.gz"
 
-    version('2.0', '0123456789abcdef0123456789abcdef')
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("2.0", "0123456789abcdef0123456789abcdef")
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    with when('@1.0'):
-        depends_on('b')
-        conflicts('%gcc', when='+foo')
+    with when("@1.0"):
+        depends_on("b")
+        conflicts("%gcc", when="+foo")
 
-    with when('@0.14: ^b@:4.0'):
-        depends_on('c', when='@:15 ^b@3.8:')
+    with when("@0.14: ^b@:4.0"):
+        depends_on("c", when="@:15 ^b@3.8:")

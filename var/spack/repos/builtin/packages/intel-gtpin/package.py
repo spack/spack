@@ -34,28 +34,43 @@ class IntelGtpin(Package):
     homepage = "https://www.intel.com/content/www/us/en/developer/articles/tool/gtpin.html"
     url = "https://downloadmirror.intel.com/730598/external-release-gtpin-3.0-linux.tar.xz"
 
-    maintainers = ['rashawnlk']
+    maintainers = ["rashawnlk"]
 
-    version('3.0', sha256='8a8a238ab9937d85e4cc5a5c15a79cad0e4aa306b57e5d72dad3e09230a4cdab',
-            url='https://downloadmirror.intel.com/730598/external-release-gtpin-3.0-linux.tar.xz')
+    version(
+        "3.0",
+        sha256="8a8a238ab9937d85e4cc5a5c15a79cad0e4aa306b57e5d72dad3e09230a4cdab",
+        url="https://downloadmirror.intel.com/730598/external-release-gtpin-3.0-linux.tar.xz",
+    )
 
-    version('2.19', sha256='996cdfbcf7fbe736407d063e0ed1794e51bf31a72b50cf733a407af71118a304',
-            url='https://downloadmirror.intel.com/686383/external-gtpin-2.19-linux.tar.xz')
+    version(
+        "2.19",
+        sha256="996cdfbcf7fbe736407d063e0ed1794e51bf31a72b50cf733a407af71118a304",
+        url="https://downloadmirror.intel.com/686383/external-gtpin-2.19-linux.tar.xz",
+    )
 
-    version('2.13', sha256='d715a55074147b73d51583bf684660b40f871e38e29af2bfc14dfe070fcbbada',
-            url='https://downloadmirror.intel.com/682776/external-gtpin-2.13-linux.tar.bz2')
-    version('2.12', sha256='432f1365bf4b3ff5847bb1059fb468ce6c7237ccd1489fbe8005f48e5a11e218',
-            url='https://downloadmirror.intel.com/682777/external-gtpin-2.12-linux.tar.bz2')
-    version('2.11.4', sha256='57f4d3aa67e8b7eb8a2456a4a770e60af770c599180cb2b6c3c8addd37311093',
-            url='https://downloadmirror.intel.com/682779/external-gtpin-2.11.4-linux.tar.bz2')
+    version(
+        "2.13",
+        sha256="d715a55074147b73d51583bf684660b40f871e38e29af2bfc14dfe070fcbbada",
+        url="https://downloadmirror.intel.com/682776/external-gtpin-2.13-linux.tar.bz2",
+    )
+    version(
+        "2.12",
+        sha256="432f1365bf4b3ff5847bb1059fb468ce6c7237ccd1489fbe8005f48e5a11e218",
+        url="https://downloadmirror.intel.com/682777/external-gtpin-2.12-linux.tar.bz2",
+    )
+    version(
+        "2.11.4",
+        sha256="57f4d3aa67e8b7eb8a2456a4a770e60af770c599180cb2b6c3c8addd37311093",
+        url="https://downloadmirror.intel.com/682779/external-gtpin-2.11.4-linux.tar.bz2",
+    )
 
-    depends_on('patchelf', type='build')
+    depends_on("patchelf", type="build")
 
     # Gtpin only runs on linux/cray x86_64.
-    conflicts('platform=darwin', msg='intel-gtpin only runs on linux/cray')
-    conflicts('target=ppc64:',   msg='intel-gtpin only runs on x86_64')
-    conflicts('target=ppc64le:', msg='intel-gtpin only runs on x86_64')
-    conflicts('target=aarch64:', msg='intel-gtpin only runs on x86_64')
+    conflicts("platform=darwin", msg="intel-gtpin only runs on linux/cray")
+    conflicts("target=ppc64:", msg="intel-gtpin only runs on x86_64")
+    conflicts("target=ppc64le:", msg="intel-gtpin only runs on x86_64")
+    conflicts("target=aarch64:", msg="intel-gtpin only runs on x86_64")
 
     # The gtbin tar file installs into Bin, Include, Lib directories.
     @property
@@ -64,17 +79,18 @@ class IntelGtpin(Package):
 
     @property
     def headers(self):
-        return find_headers('gtpin', self.prefix.Include)
+        return find_headers("gtpin", self.prefix.Include)
 
     @property
     def libs(self):
-        return find_libraries('libgtpin', self.prefix.Lib, recursive=True)
+        return find_libraries("libgtpin", self.prefix.Lib, recursive=True)
 
     # The gtpin binary uses libraries from its own Lib directory but
     # doesn't set rpath.
     def install(self, spec, prefix):
-        patchelf = spec['patchelf'].command
-        patchelf('--set-rpath', join_path('$ORIGIN', '..', 'Lib', 'intel64'),
-                 join_path('Bin', 'gtpin'))
+        patchelf = spec["patchelf"].command
+        patchelf(
+            "--set-rpath", join_path("$ORIGIN", "..", "Lib", "intel64"), join_path("Bin", "gtpin")
+        )
 
-        install_tree('.', prefix)
+        install_tree(".", prefix)

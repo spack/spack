@@ -1,3 +1,87 @@
+[project]
+name="spack"
+description="The spack package manager"
+dependencies=[
+  "clingo",
+  "setuptools",
+]
+dynamic = ["version"]
+
+[project.scripts]
+spack = "lib.spack.spack_installable.main:main"
+
+[tool.hatch.version]
+path = "lib/spack/spack/__init__.py"
+
+[project.optional-dependencies]
+dev = [
+  "pip>=21.3",
+  "pytest",
+  "pytest-xdist",
+  "setuptools",
+  "click",
+  'black',
+  "mypy",
+  "isort",
+  "flake8",
+  "vermin",
+]
+ci = [
+  "pytest-cov",
+  "codecov[toml]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "/bin",
+  "/etc",
+  "/lib",
+  "/share",
+  "/var",
+  "CITATION.cff",
+  "COPYRIGHT",
+  "LICENSE-APACHE",
+  "LICENSE-MIT",
+  "NOTICE",
+  "README.md",
+  "SECURITY.md",
+]
+
+[tool.hatch.envs.default]
+features = [
+  "dev",
+]
+
+[tool.hatch.envs.default.scripts]
+spack = "./bin/spack"
+style = "./bin/spack style"
+test = "./bin/spack unit-test"
+
+[tool.hatch.envs.ci]
+features = [
+  "dev",
+  "ci",
+]
+
+[tool.black]
+line-length = 99
+target-version = ['py36', 'py37', 'py38', 'py39', 'py310']
+include = '''
+    \.pyi?$
+'''
+extend-exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | ^lib/spack/external/
+  | ^opt/
+)/
+'''
+
 [tool.isort]
 profile = "black"
 sections = [
@@ -55,11 +139,14 @@ ignore_missing_imports = true
   ignore_errors = true
   ignore_missing_imports = true
 
-  # jinja has syntax in it that requires python3 and causes a parse error
-  # skip importing it
+  # pytest (which we depend on) optionally imports numpy, which requires Python 3.8 in
+  # recent versions. mypy still imports its .pyi file, which has positional-only
+  # arguments, which don't work in 3.7, which causes mypy to bail out early if you have
+  # numpy installed.
   [[tool.mypy.overrides]]
-  module = 'jinja2'
+  module = 'numpy'
   follow_imports = 'skip'
+  follow_imports_for_stubs = true
 
 [tool.pyright]
 useLibraryCodeForTypes = true
@@ -75,6 +162,7 @@ parallel = true
 concurrency = ["multiprocessing"]
 branch = true
 source = ["bin", "lib"]
+data_file = "./tests-coverage/.coverage"
 omit = [
     'lib/spack/spack/test/*',
     'lib/spack/docs/*',
@@ -105,3 +193,43 @@ ignore_errors = true
 
 [tool.coverage.html]
 directory = "htmlcov"
+
+[tool.vendoring]
+destination = "lib/spack/external/_vendoring"
+requirements = "lib/spack/external/vendor.txt"
+namespace = ""
+
+protected-files = ["__init__.py", "README.rst", "vendor.txt"]
+patches-dir = "lib/spack/external/patches"
+
+[tool.vendoring.transformations]
+substitute = [
+]
+drop = [
+  # contains unnecessary scripts
+  "bin/",
+  # interpreter and OS specific msgpack libs
+  "msgpack/*.so",
+  # unneeded parts of setuptools
+  "easy_install.py",
+  "setuptools",
+  "pkg_resources/_vendor/",
+  "pkg_resources/extern/",
+  # trim vendored pygments styles and lexers
+  "pygments/styles/[!_]*.py",
+  '^pygments/lexers/(?!python|__init__|_mapping).*\.py$',
+  # trim rich's markdown support
+  "rich/markdown.py",
+]
+
+[tool.vendoring.typing-stubs]
+six = ["six.__init__", "six.moves.__init__", "six.moves.configparser"]
+distro = []
+
+[tool.vendoring.license.directories]
+setuptools = "pkg_resources"
+
+[tool.vendoring.license.fallback-urls]
+CacheControl = "https://raw.githubusercontent.com/ionrock/cachecontrol/v0.12.6/LICENSE.txt"
+distlib = "https://bitbucket.org/pypa/distlib/raw/master/LICENSE.txt"
+webencodings = "https://github.com/SimonSapin/python-webencodings/raw/master/LICENSE"

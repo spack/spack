@@ -14,15 +14,16 @@ def check(condition, msg):
 
 class NeedsRelocation(Package):
     """A dumy package that encodes its prefix."""
-    homepage  = 'https://www.cmake.org'
-    url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
-    version('0.0.0', '12345678qwertyuiasdfghjkzxcvbnm0')
+    homepage = "https://www.cmake.org"
+    url = "https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz"
+
+    version("0.0.0", "12345678qwertyuiasdfghjkzxcvbnm0")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-        exe = join_path(prefix.bin, 'exe')
-        with open(exe, 'w') as f:
+        exe = join_path(prefix.bin, "exe")
+        with open(exe, "w") as f:
             f.write(prefix)
         set_executable(exe)

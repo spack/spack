@@ -13,7 +13,7 @@ class Noversion(Package):
     """
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
     def install(self, spec, prefix):
-        touch(join_path(prefix, 'an_installation_file'))
+        touch(join_path(prefix, "an_installation_file"))

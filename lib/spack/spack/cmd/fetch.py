@@ -17,7 +17,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
+    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
     subparser.add_argument(
         "-m",
         "--missing",
@@ -55,8 +55,7 @@ def fetch(parser, args):
                 specs = env.all_specs()
             if specs == []:
                 tty.die(
-                    "No uninstalled specs in environment. Did you "
-                    "run `spack concretize` yet?"
+                    "No uninstalled specs in environment. Did you " "run `spack concretize` yet?"
                 )
         else:
             tty.die("fetch requires at least one spec argument")
@@ -65,7 +64,7 @@ def fetch(parser, args):
         spack.config.set("config:checksum", False, scope="command_line")
 
     if args.deprecated:
-        spack.config.set('config:deprecated', True, scope='command_line')
+        spack.config.set("config:deprecated", True, scope="command_line")
 
     for spec in specs:
         if args.missing or args.dependencies:

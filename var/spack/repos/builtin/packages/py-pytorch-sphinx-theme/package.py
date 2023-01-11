@@ -10,9 +10,9 @@ class PyPytorchSphinxTheme(PythonPackage):
     """PyTorch Sphinx Theme."""
 
     homepage = "https://github.com/pytorch/pytorch_sphinx_theme"
-    git      = "https://github.com/pytorch/pytorch_sphinx_theme.git"
+    git = "https://github.com/pytorch/pytorch_sphinx_theme.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-sphinx", type=("build", "run"))

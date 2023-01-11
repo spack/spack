@@ -11,14 +11,14 @@ class SpiralPackageHcol(Package):
     (HCOL)."""
 
     homepage = "https://spiral.net"
-    url      = "https://github.com/spiral-software/spiral-package-hcol/archive/refs/tags/1.0.0.tar.gz"
-    git      = "https://github.com/spiral-software/spiral-package-hcol.git"
+    url = "https://github.com/spiral-software/spiral-package-hcol/archive/refs/tags/1.0.0.tar.gz"
+    git = "https://github.com/spiral-software/spiral-package-hcol.git"
 
-    maintainers = ['spiralgen']
-    extends('spiral-software')
+    maintainers = ["spiralgen"]
+    extends("spiral-software")
 
-    version('master',  branch='master')
-    version('1.0.0', sha256='18ae6f0a090de03723612a6c91ca17cf62971129540936d8c2738bd8f807a511')
+    version("master", branch="master")
+    version("1.0.0", sha256="18ae6f0a090de03723612a6c91ca17cf62971129540936d8c2738bd8f807a511")
 
     # HCOL package is an extension for Spiral (spec: spiral-software).  Extensions
     # packages for Spiral are intended to be installed in the spiral-software prefix,
@@ -26,5 +26,5 @@ class SpiralPackageHcol(Package):
     # name 'hcol'.
 
     def install(self, spec, prefix):
-        spiral_pkgs = join_path(prefix, 'namespaces', 'packages', 'hcol')
-        install_tree('.', spiral_pkgs)
+        spiral_pkgs = join_path(prefix, "namespaces", "packages", "hcol")
+        install_tree(".", spiral_pkgs)

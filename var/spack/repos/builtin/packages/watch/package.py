@@ -14,37 +14,37 @@ class Watch(AutotoolsPackage):
     # does build on macOS.
     # https://github.com/NixOS/nixpkgs/issues/18929#issuecomment-249388571
     homepage = "https://gitlab.com/procps-ng/procps"
-    git      = "https://gitlab.com/procps-ng/procps.git"
+    git = "https://gitlab.com/procps-ng/procps.git"
 
-    version('master', branch='master')
-    version('3.3.15', tag='v3.3.15')
+    version("master", branch="master")
+    version("3.3.15", tag="v3.3.15")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext', type='build')
-    depends_on('ncurses')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("pkgconfig@0.9.0:", type="build")
+    depends_on("gettext", type="build")
+    depends_on("ncurses")
 
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/watch.rb
     def autoreconf(self, spec, prefix):
-        sh = which('sh')
-        sh('autogen.sh')
+        sh = which("sh")
+        sh("autogen.sh")
 
     def configure_args(self):
         return [
-            '--with-ncurses',
+            "--with-ncurses",
             # Required to avoid libintl linking errors
-            '--disable-nls',
+            "--disable-nls",
         ]
 
     def build(self, spec, prefix):
-        make('watch')
+        make("watch")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.man.man1)
 
-        install('watch', prefix.bin)
-        install('watch.1', prefix.man.man1)
+        install("watch", prefix.bin)
+        install("watch.1", prefix.man.man1)
