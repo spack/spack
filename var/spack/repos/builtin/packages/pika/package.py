@@ -84,7 +84,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependencies
     depends_on("boost@1.71:")
-    depends_on("fmt@0.9:", when="@0.11:")
+    depends_on("fmt@9:", when="@0.11:")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -107,7 +107,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
+        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
