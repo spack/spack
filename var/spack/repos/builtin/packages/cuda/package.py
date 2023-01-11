@@ -23,7 +23,22 @@ from spack.package import *
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 
+preferred_ver = "11.8.0"
 _versions = {
+    "12.0.0": {
+        "Linux-aarch64": (
+            "cd13e9c65d4c8f895a968706f46064d536be09f9706bce081cc864b7e4fa4544",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "905e9b9516900839fb76064719db752439f38b8cb730b49335d8bd53ddfad392",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "117fe045c71668e45d41c6119b6f27875370c78e33fc56795b6fe014c796ec60",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux_ppc64le.run",
+        ),
+    },
     "11.8.0": {
         "Linux-aarch64": (
             "e6e9a8d31163c9776b5e313fd7590877c5684e1ecddee741154f95704d4ed27c",
@@ -441,7 +456,10 @@ class Cuda(Package):
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            version(ver, sha256=pkg[0], url=pkg[1], expand=False)
+            if ver == preferred_ver:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False, preferred=True)
+            else:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False)
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
