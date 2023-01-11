@@ -184,7 +184,7 @@ class LmodConfiguration(BaseConfiguration):
         elif self.spec.name in spack.compilers.package_name_to_compiler_name:
             # If it is the package for a supported compiler, but of a different name
             cname = spack.compilers.package_name_to_compiler_name[self.spec.name]
-            provides["compiler"] = spack.spec.CompilerSpec("%s@%s" % (cname, self.spec.version))
+            provides["compiler"] = spack.spec.CompilerSpec(cname, self.spec.version)
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
