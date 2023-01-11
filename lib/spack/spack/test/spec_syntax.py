@@ -936,16 +936,16 @@ def test_specfile_error_conditions_windows(text, exc_cls):
 @pytest.mark.parametrize(
     "filename,regex",
     [
-        ("c:\\abs\\windows\\path.yaml", WINDOWS_FILENAME),
-        (".\\relative\\dot\\win\\path.yaml", WINDOWS_FILENAME),
-        ("relative\\windows\\path.yaml", WINDOWS_FILENAME),
+        (r"c:\abs\windows\\path.yaml", WINDOWS_FILENAME),
+        (r".\\relative\\dot\\win\\path.yaml", WINDOWS_FILENAME),
+        (r"relative\\windows\\path.yaml", WINDOWS_FILENAME),
         ("/absolute/path/to/file.yaml", UNIX_FILENAME),
         ("relative/path/to/file.yaml", UNIX_FILENAME),
         ("./dot/rel/to/file.yaml", UNIX_FILENAME),
     ],
 )
 def test_specfile_parsing(filename, regex):
-    match = re.match(filename, regex)
+    match = re.match(regex, filename)
     assert match
     assert match.end() == len(filename)
 
