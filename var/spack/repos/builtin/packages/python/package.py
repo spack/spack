@@ -298,11 +298,12 @@ class Python(Package):
             variants += "~pyexpat"
 
         # Some variant names do not match module names
-        try:
-            python("-c", "import tkinter.tix", error=os.devnull)
-            variants += "+tix"
-        except ProcessError:
-            variants += "~tix"
+        if "+tkinter" in variants:
+            try:
+                python("-c", "import tkinter.tix", error=os.devnull)
+                variants += "+tix"
+            except ProcessError:
+                variants += "~tix"
 
         # Some modules are platform-dependent
         if not is_windows:
