@@ -116,6 +116,7 @@ class Hip(CMakePackage):
     depends_on("perl@5.10:", type=("build", "run"))
     depends_on("gl@4.5:")
     depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
+    depends_on("cmake", type="run")
 
     for ver in [
         "3.5.0",
@@ -564,3 +565,47 @@ class Hip(CMakePackage):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
+
+    test_src_dir = "samples"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        test_subdir_arr = ["0_Intro/bit_extract", "1_Utils/hipBusBandwidth", "1_Utils/hipInfo", "2_Cookbook/0_MatrixTranspose", "2_Cookbook/1_hipEvent", "2_Cookbook/3_shared_memory", "2_Cookbook/4_shfl", "2_Cookbook/5_2dshfl", "2_Cookbook/6_dynamic_shared", "2_Cookbook/7_streams", "2_Cookbook/8_peer2peer", "2_Cookbook/9_unroll", "2_Cookbook/10_inline_asm", "2_Cookbook/13_occupancy", "2_Cookbook/14_gpu_arch"]
+        exe_arr = ["bit_extract", "hipBusBandwidth", "hipInfo", "MatrixTranspose","hipEvent", "sharedMemory", "shfl", "2dshfl", "dynamic_shared", "stream", "peer2peer", "unroll", "inline_asm", "occupancy", "gpuarch"]
+
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+
+        cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+        prefixes = ";".join(
+            [
+                self.spec["hip"].prefix,
+                self.spec["llvm-amdgpu"].prefix,
+                self.spec["comgr"].prefix,
+                self.spec["hsa-rocr-dev"].prefix,
+             ]
+        )
+        cc_options = [
+            "-DCMAKE_PREFIX_PATH=" + prefixes,
+             ".",
+        ]
+
+        for i in range(len(test_subdir_arr )):
+            print("=================== Configuring test for " + test_subdir_arr[i] + " ===================" )
+            test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir, test_subdir_arr[i])
+            with working_dir(test_dir, create=True):
+                self.run_test(cmake_bin, cc_options)
+                print("Building test " + test_subdir_arr[i])
+                make()
+                print("Executing test " + test_subdir_arr[i])
+                self.run_test(exe_arr[i])
+                make("clean")
