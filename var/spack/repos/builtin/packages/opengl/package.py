@@ -98,7 +98,7 @@ class Opengl(BundlePackage):
     def gl_libs(self):
         spec = self.spec
         if "platform=windows" in spec:
-            lib_name = "opengl32"
+            lib_name = "OpenGL32"
         elif "platform=darwin" in spec:
             lib_name = "libOpenGL"
         else:  # linux and cray
