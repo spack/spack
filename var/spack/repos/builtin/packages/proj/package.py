@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Proj(AutotoolsPackage):
+class Proj(CMakePackage):
     """PROJ is a generic coordinate transformation software, that transforms
     geospatial coordinates from one coordinate reference system (CRS) to
     another. This includes cartographic projections as well as geodetic
@@ -83,30 +83,16 @@ class Proj(AutotoolsPackage):
     )
 
     # https://proj.org/install.html#build-requirements
-    depends_on("pkgconfig@0.9.0:", type="build", when="@6:")
     depends_on("googletest", when="@6:")
     depends_on("sqlite@3.11:", when="@6:")
     depends_on("libtiff@4.0:", when="@7:+tiff")
     depends_on("curl@7.29.0:", when="@7:+curl")
 
-    def configure_args(self):
-        args = ["PROJ_LIB={0}".format(join_path(self.stage.source_path, "nad"))]
-
-        if self.spec.satisfies("@6:"):
-            args.append("--with-external-gtest")
-
-        if self.spec.satisfies("@7:"):
-            if "+tiff" in self.spec:
-                args.append("--enable-tiff")
-            else:
-                args.append("--disable-tiff")
-
-            if "+curl" in self.spec:
-                args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
-            else:
-                args.append("--without-curl")
-
-        return args
+    def cmake_args(self):
+        return [
+            self.define("PROJ_LIB", join_path(self.stage.source_path, "nad")),
+            self.define_from_variant("ENABLE_TIFF", "tiff"),
+        ]
 
     def setup_run_environment(self, env):
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
