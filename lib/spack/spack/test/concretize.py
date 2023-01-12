@@ -1959,12 +1959,15 @@ class TestConcretize(object):
 
     target = spack.platforms.test.Test.default
 
-    @pytest.mark.parametrize("python_spec", [
-        "python@configured",
-        "python@configured platform=test",
-        "python@configured os=debian",
-        "python@configured target=%s" % target,
-    ])
+    @pytest.mark.parametrize(
+        "python_spec",
+        [
+            "python@configured",
+            "python@configured platform=test",
+            "python@configured os=debian",
+            "python@configured target=%s" % target,
+        ],
+    )
     def test_external_python_extension_find_dependency_from_config(self, python_spec):
         fake_path = os.path.sep + "fake"
 
