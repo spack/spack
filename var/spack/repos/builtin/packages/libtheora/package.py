@@ -3,10 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
+import sys
+import os
+
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.msbuild import MSBuildBuilder
 from spack.package import *
 
 
-class Libtheora(AutotoolsPackage):
+class Libtheora(AutotoolsPackage, MSBuildPackage):
     """Theora Video Compression."""
 
     homepage = "https://www.theora.org"
@@ -17,13 +23,19 @@ class Libtheora(AutotoolsPackage):
 
     variant("doc", default=False, description="Build documentation")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
     depends_on("doxygen", when="+doc", type="build")
     depends_on("libogg")
     depends_on("libpng")
+    with when("build_system=autotools"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+        depends_on("m4", type="build")
+
+    with when("platform=windows"):
+        variant("static", default=True, description="Enable static build, if false shared library is built")
+
+    build_system("msbuild", "autotools", default="autotools" if sys.platform != "win32" else "msbuild")
 
     patch("exit-prior-to-running-configure.patch", when="@1.1.1")
     patch("fix_encoding.patch", when="@1.1:")
@@ -32,6 +44,13 @@ class Libtheora(AutotoolsPackage):
         sha256="8b1f256fa6bfb4ce1355c5be1104e8cfe695c8484d8ea19db06c006880a02298",
         when="^libpng@1.6:",
     )
+    patch("libtheora-inc-external-ogg.patch", when="platform=windows")
+
+class AutotoolsBuilder(AutotoolsBuilder):
+    def configure_args(self):
+        args = []
+        args += self.enable_or_disable("doc")
+        return args
 
     def autoreconf(self, spec, prefix):
         sh = which("sh")
@@ -40,7 +59,47 @@ class Libtheora(AutotoolsPackage):
         else:
             sh("./autogen.sh", "prefix={0}".format(prefix))
 
-    def configure_args(self):
-        args = []
-        args += self.enable_or_disable("doc")
-        return args
+
+class MSBuildBuilder(MSBuildBuilder):
+    def is_64bit(self):
+        return platform.machine().endswith("64")
+
+    def setup_build_environment(self, env):
+        spec = self.pkg.spec
+        env.set("SPACK_OGG_PREFIX", spec["libogg"].prefix)
+        devenv_path = os.path.join(self.pkg.compiler.vs_root, "Common7", "IDE")
+        env.prepend_path("PATH", devenv_path)
+
+    @property
+    def build_directory(self):
+        win_dir = os.path.join(super().build_directory, "win32")
+        vs_dir = "VS2008"
+        return os.path.join(win_dir, vs_dir)
+
+    @property
+    def toolchain_version(self):
+        return "v" + self.pkg.compiler.platform_toolset_ver
+
+    @property
+    def sln_file(self):
+        if self.pkg.spec.satisfies("+static"):
+            f =  "libtheora_static.sln"
+        else:
+            f = "libtheora_dynamic.sln"
+        return f
+
+    def msbuild_args(self):
+        return [self.define("Configuration", "Release"), self.sln_file]
+
+    def build(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            devenv = Executable("devenv")
+            devenv(self.sln_file, "/Upgrade")
+        super().build(pkg, spec, prefix)
+
+    def install(self, pkg, spec, prefix):
+        plat_arch = "x64" if self.is_64bit() else "x86"
+        with working_dir(self.build_directory):
+            install_tree(os.path.join(plat_arch, "Release"), prefix.lib)
+        with working_dir(pkg.stage.source_path):
+            install_tree("include", prefix.include)
