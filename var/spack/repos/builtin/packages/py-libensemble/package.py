@@ -72,12 +72,11 @@ class PyLibensemble(PythonPackage):
     def run_tutorial_tests(self, exe):
         """Run example stand alone test"""
 
-        test_dir = join_path(
-            self.test_suite.current_test_cache_dir,
-            "examples",
-            "calling_scripts",
-            "regression_tests",
-        )
+        root_test_dir = self.install_test_root
+        if self.test_suite is not None:
+            root_test_dir = self.test_suite.current_test_cache_dir
+
+        test_dir = join_path(root_test_dir, "examples", "calling_scripts", "regression_tests")
 
         if not os.path.isfile(join_path(test_dir, exe)):
             print("Skipping {0} test".format(exe))
@@ -91,4 +90,5 @@ class PyLibensemble(PythonPackage):
         )
 
     def test(self):
-        self.run_tutorial_tests("test_uniform_sampling.py")
+        super().test()
+        self.run_tutorial_tests("test_1d_sampling.py")
