@@ -488,7 +488,7 @@ class CudaToolkit(Package):
     # see https://docs.nvidia.com/cuda/archive/11.3.1/cuda-gdb/index.html#common-issues-oss
     # see https://docs.nvidia.com/cuda/archive/11.4.0/cuda-gdb/index.html#release-notes
     depends_on("ncurses abi=5", type="run", when="@:11.3.99+dev")
-    
+
     provides("opencl@:1.2", when="@7:")
     provides("opencl@:1.1", when="@:6")
 
