@@ -3,10 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.scons import SConsBuilder
 from spack.package import *
 
 
-class Libtheora(AutotoolsPackage):
+class Libtheora(AutotoolsPackage, SConsPackage):
     """Theora Video Compression."""
 
     homepage = "https://www.theora.org"
@@ -17,13 +21,16 @@ class Libtheora(AutotoolsPackage):
 
     variant("doc", default=False, description="Build documentation")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
     depends_on("doxygen", when="+doc", type="build")
     depends_on("libogg")
     depends_on("libpng")
+    with when("build_system=autotools"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+        depends_on("m4", type="build")
+
+    build_system("scons", "autotools", default="autotools" if sys.platform != "win32" else "scons")
 
     patch("exit-prior-to-running-configure.patch", when="@1.1.1")
     patch("fix_encoding.patch", when="@1.1:")
@@ -33,6 +40,13 @@ class Libtheora(AutotoolsPackage):
         when="^libpng@1.6:",
     )
 
+
+class AutotoolsBuilder(AutotoolsBuilder):
+    def configure_args(self):
+        args = []
+        args += self.enable_or_disable("doc")
+        return args
+
     def autoreconf(self, spec, prefix):
         sh = which("sh")
         if self.spec.satisfies("target=aarch64:"):
@@ -40,7 +54,6 @@ class Libtheora(AutotoolsPackage):
         else:
             sh("./autogen.sh", "prefix={0}".format(prefix))
 
-    def configure_args(self):
-        args = []
-        args += self.enable_or_disable("doc")
-        return args
+
+class SConsBuilder(SConsBuilder):
+    pass
