@@ -74,7 +74,7 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
-    depends_on("py-torch@1.13.0", when="@0.14.0", type=("build", "link", "run"))
+    depends_on("py-torch@1.13.1", when="@0.14.0", type=("build", "link", "run"))
     depends_on("py-torch@1.12.1", when="@0.13.1", type=("build", "link", "run"))
     depends_on("py-torch@1.12.0", when="@0.13.0", type=("build", "link", "run"))
     depends_on("py-torch@1.11.0", when="@0.12.0", type=("build", "link", "run"))

@@ -48,4 +48,7 @@ class PyAtlinter(PythonPackage):
     depends_on("py-scipy", when="@0.1.1:", type=("build", "run"))
     depends_on("py-torch+cuda", when="+cuda", type=("build", "run"))
     depends_on("py-torch~cuda~cudnn~nccl", when="~cuda", type=("build", "run"))
-    depends_on("py-torchvision", type=("build", "run"))
+    # force newer version to force newer py-torch
+    # py-torchvision is pretty strict about what py-torch it wants,
+    # so just setting py-torch@... is not enough
+    depends_on("py-torchvision@0.14:", type=("build", "run"))

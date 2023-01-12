@@ -249,6 +249,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@1.1:1.8.1",
     )
 
+    patch("fbgemm.patch", when="@1.3:")
+    patch("gloo.patch", when="@1.3:")
+
     # Fixes CMake configuration error when XNNPACK is disabled
     # https://github.com/pytorch/pytorch/pull/35607
     # https://github.com/pytorch/pytorch/pull/37865
@@ -374,7 +377,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 if "+" + variant in self.spec:
                     env.set(keyword + "_" + var, "ON")
                 elif "~" + variant in self.spec:
-                    env.set(keyword + "_" + var, "OFF")
+                    env.set(keyword + "_" + var, "0")
             else:
                 if "+" + variant in self.spec:
                     env.unset("NO_" + var)
@@ -541,6 +544,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # env.set("USE_SYSTEM_ONNX", "ON")
             # https://github.com/pytorch/pytorch/issues/60332
             # env.set("USE_SYSTEM_XNNPACK", "ON")
+
+        env.set("BUILD_TEST", "OFF")
 
     @run_before("install")
     def build_amd(self):
