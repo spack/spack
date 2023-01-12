@@ -12,13 +12,14 @@ class HipifyClang(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIPIFY"
     git = "https://github.com/ROCm-Developer-Tools/HIPIFY.git"
-    url = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
     version("master", branch="master")
 
+    version("5.3.3", sha256="9d08e2896e52c10a0a189a5407567043f2510adc7bf618591c97a22a23699691")
     version("5.3.0", sha256="7674900d2b9319d91fa8f469252c5acb5bedf339142417cdcb64f33ee8482e00")
     version("5.2.3", sha256="1314a37ab544b68fd51858b77d2d4b30ecff82ef3f90de6e80891a95f6749849")
     version("5.2.1", sha256="4d658d00b219f7ef40e832da3680852aeb4c258c0a114f1779fa4cda99ee23b1")
@@ -129,6 +130,7 @@ class HipifyClang(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
