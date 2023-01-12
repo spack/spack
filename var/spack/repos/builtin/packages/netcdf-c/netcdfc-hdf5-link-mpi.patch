@@ -1,0 +1,12 @@
+diff --git a/liblib/CMakeLists.txt b/liblib/CMakeLists.txt
+index aa3a842d..691902c2 100644
+--- a/liblib/CMakeLists.txt
++++ b/liblib/CMakeLists.txt
+@@ -50,6 +50,7 @@ ADD_LIBRARY(netcdf nc_initialize.c ${LARGS} )
+ 
+ IF(MPI_C_INCLUDE_PATH)
+     target_include_directories(netcdf PUBLIC ${MPI_C_INCLUDE_PATH})
++    target_link_libraries(netcdf MPI::MPI_C)
+ ENDIF(MPI_C_INCLUDE_PATH)
+ 
+ IF(MOD_NETCDF_NAME)

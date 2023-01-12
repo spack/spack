@@ -1,0 +1,14 @@
+diff --git a/plugins/CMakeLists.txt b/plugins/CMakeLists.txt
+index 65891d82..15567c8f 100644
+--- a/plugins/CMakeLists.txt
++++ b/plugins/CMakeLists.txt
+@@ -62,6 +62,9 @@ MACRO(buildplugin TARGET TARGETLIB)
+     set_target_properties(${TARGET} PROPERTIES LINK_FLAGS "/INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF")
+     # Set file name & location
+     set_target_properties(${TARGET} PROPERTIES COMPILE_PDB_NAME ${TARGET} COMPILE_PDB_OUTPUT_DIR ${CMAKE_BINARY_DIR})
++    IF(MPI_C_INCLUDE_PATH)
++      target_include_directories(${TARGET} PRIVATE ${MPI_C_INCLUDE_PATH})
++    ENDIF(MPI_C_INCLUDE_PATH)
+   ENDIF()
+ ENDMACRO()
+ 

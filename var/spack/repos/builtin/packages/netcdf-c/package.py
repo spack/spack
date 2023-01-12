@@ -64,6 +64,12 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         when="@4.7.2",
     )
 
+    patch("4.8.1-win-hdf5-with-zlib.patch", when="@4.8.1: platform=windows")
+
+    patch("netcdfc-win-inc-mpi.patch", when="platform=windows")
+
+    patch("netcdfc-hdf5-link-mpi.patch", when="platform=windows")
+
     # See https://github.com/Unidata/netcdf-c/pull/1752
     patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
 
@@ -151,26 +157,17 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         if "+zstd" in self.spec:
             env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-        # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
-        # differs from the path to the compiler that the package should be built with. Therefore,
-        # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
-        # with a backed up version, which references Spack compiler wrapper.
-        if os.path.exists(self._nc_config_backup_dir):
-            env.prepend_path("PATH", self._nc_config_backup_dir)
-
     @property
     def libs(self):
         shared = "+shared" in self.spec
         return find_libraries("libnetcdf", root=self.prefix, shared=shared, recursive=True)
 
-    @property
-    def _nc_config_backup_dir(self):
-        return join_path(self.metadata_dir, "spack-nc-config")
-
 
 class BackupStep(object):
+    @property
+    def _nc_config_backup_dir(self):
+        return join_path(self.pkg.metadata_dir, "spack-nc-config")
+
     @run_after("install")
     def backup_nc_config(self):
         # We expect this to be run before filter_compiler_wrappers:
@@ -183,12 +180,13 @@ class BackupStep(object):
 class CMakeBuilder(CMakeBuilder, BackupStep):
     def cmake_args(self):
         base_cmake_args = [
-            self.define("BUILD_SHARED_LIBS", False),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("BUILD_UTILITIES", True),
             self.define("ENABLE_NETCDF_4", True),
             self.define_from_variant("ENABLE_DAP", "dap"),
             self.define("CMAKE_INSTALL_PREFIX", self.prefix),
             self.define_from_variant("ENABLE_HDF4", "hdf4"),
+            self.define("ENABLE_PARALLEL_TESTS", False),
         ]
         if "+parallel-netcdf" in self.spec:
             base_cmake_args.append(self.define("ENABLE_PNETCDF", True))
@@ -196,6 +194,15 @@ class CMakeBuilder(CMakeBuilder, BackupStep):
 
 
 class AutotoolsBuilder(AutotoolsBuilder, BackupStep):
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+        # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
+        # differs from the path to the compiler that the package should be built with. Therefore,
+        # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
+        # with a backed up version, which references Spack compiler wrapper.
+        if os.path.exists(self._nc_config_backup_dir):
+            env.prepend_path("PATH", self._nc_config_backup_dir)
+
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
