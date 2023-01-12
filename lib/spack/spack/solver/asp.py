@@ -159,10 +159,6 @@ def build_criteria_names(
     costs: List[int], opt_criteria: List["AspFunction"], max_depth: int
 ) -> Dict[str, Union[int, List[int]]]:
     """Construct an ordered mapping from criteria names to costs."""
-    print(costs)
-    print(len(costs))
-    print(max_depth)
-    print(opt_criteria)
 
     # ensure names of all criteria are unique
     names = {criterion.args[0] for criterion in opt_criteria}
@@ -776,7 +772,7 @@ class PyclingoDriver(object):
         cores = []  # unsatisfiable cores if they do not
 
         def on_model(model):
-            models.append((model.cost, model.symbols(shown=True, terms=True)))
+            models.append((model.cost, model.priority, model.symbols(shown=True, terms=True)))
 
         solve_kwargs = {
             "assumptions": self.assumptions,
@@ -797,7 +793,7 @@ class PyclingoDriver(object):
         if result.satisfiable:
             # get the best model
             builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
-            min_cost, best_model = min(models)
+            min_cost, priorities, best_model = min(models)
 
             # first check for errors
             error_args = [fn.args for fn in extract_functions(best_model, "error")]
@@ -818,6 +814,13 @@ class PyclingoDriver(object):
             depths = extract_functions(best_model, "depth")
             print(depths)
             max_depth = max(d.args[1] for d in depths)
+
+            print(f"COST:      {len(min_cost)} {min_cost}")
+            print(f"PRIO:      {len(priorities)} {priorities}")
+            print(f"MAX_DEPTH: {max_depth}")
+            print()
+            print(opt_criteria)
+
             result.criteria = build_criteria_names(min_cost, criteria, max_depth)
 
             # record the number of models the solver considered

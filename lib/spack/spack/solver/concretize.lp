@@ -1118,7 +1118,7 @@ build_priority(Package, 0)   :- attr("node", Package), not optimize_for_reuse().
 depth(Package, 0) :- attr("root", Package).
 
 % other nodes' depth is the minimum depth of any dependent plus one.
-depth(Package, N+1) :-
+min_parent_depth(Package, N) :-
     N = #min{
         D: depends_on(Dependent, Package),
            depth(Dependent, D),
@@ -1126,8 +1126,20 @@ depth(Package, N+1) :-
            D < max_depth
     },
     0 <= N,
-    N <= max_depth,
+    N < max_depth,
     attr("node", Package).
+
+depth(Package, max_depth) :-
+    min_parent_depth(Package, P),
+    P >= max_depth,
+    attr("node", Package).
+
+depth(Package, P+1) :-
+    min_parent_depth(Package, P),
+    P >= 0,
+    P < max_depth,
+    attr("node", Package).
+
 
 %-----------------------------------------------------------------
 % Optimization to avoid errors
