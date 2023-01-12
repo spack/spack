@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class Freetype(AutotoolsPackage):
+class Freetype(CMakePackage):
     """FreeType is a freely available software library to render fonts.
     It is written in C, designed to be small, efficient, highly customizable,
     and portable while capable of producing high-quality output (glyph images)
@@ -30,7 +32,6 @@ class Freetype(AutotoolsPackage):
 
     depends_on("bzip2")
     depends_on("libpng")
-    depends_on("pkgconfig", type="build")
 
     conflicts(
         "%intel",
@@ -47,6 +48,13 @@ class Freetype(AutotoolsPackage):
         headers.directories = [self.prefix.include.freetype2]
         return headers
 
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        return [self.define("FT_WITH_ZLIB", True), self.define("FT_WITH_BZIP2", True)]
+
+
+class AutoToolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         args = [
             "--with-brotli=no",
