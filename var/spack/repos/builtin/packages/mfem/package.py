@@ -818,8 +818,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "PUMI_LIB=%s %s %s"
                 % (
                     ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
-                    pumi_dep_parmetis,
                     pumi_dep_zoltan,
+                    pumi_dep_parmetis,
                 ),
             ]
 
