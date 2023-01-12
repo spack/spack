@@ -15,13 +15,15 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     maintainers = ["jedbrown", "jeremylt"]
 
     version("develop", branch="main")
+    version("0.2.1", tag="v0.2.1")
     version("0.1.2", tag="v0.1.2")
 
     # development version
     depends_on("libceed@develop", when="@develop")
     depends_on("petsc@main", when="@develop")
-
-    # version 0.1.2
+    # released versions
+    depends_on("libceed@0.11.0:0.11", when="@0.2.1")
+    depends_on("petsc@3.18.3:3.18", when="@0.2.1")
     depends_on("libceed@0.10.1:0.10", when="@0.1.2")
     depends_on("petsc@3.17:3.17", when="@0.1.2")
 
