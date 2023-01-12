@@ -1800,8 +1800,9 @@ class SpackSolverSetup(object):
         for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
-            for parent in sorted(target.parents):
-                self.gen.fact(fn.target_parent(target.name, parent.name))
+            self.gen.fact(fn.target_compatible(target.name, target.name))
+            for ancestor in sorted(target.ancestors):
+                self.gen.fact(fn.target_compatible(target.name, ancestor.name))
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
