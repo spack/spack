@@ -32,6 +32,15 @@ class Libxcrypt(AutotoolsPackage):
 
     patch("truncating-conversion.patch", when="@4.4.30")
 
+    with when("@:4.4.17"):
+        depends_on("autoconf", type="build")
+        depends_on("automake@1.14:", type="build")
+        depends_on("libtool", type="build")
+        depends_on("m4", type="build")
+
+    # Some distros have incomplete perl installs, +open catches that.
+    depends_on("perl@5.14.0: +open", type="build", when="@4.4.18:")
+
     def configure_args(self):
         args = [
             # Disable test dependency on Python (Python itself depends on libxcrypt).
@@ -45,9 +54,3 @@ class Libxcrypt(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries("libcrypt", root=self.prefix, recursive=True)
-
-    with when("@:4.4.17"):
-        depends_on("autoconf", type="build")
-        depends_on("automake@1.14:", type="build")
-        depends_on("libtool", type="build")
-        depends_on("m4", type="build")

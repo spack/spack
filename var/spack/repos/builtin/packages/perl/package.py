@@ -159,10 +159,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # having it in core increases the "energy of activation" for doing
     # things cleanly.
     variant("cpanm", default=True, description="Optionally install cpanm with the core packages.")
-
     variant("shared", default=True, description="Build a shared libperl.so library")
-
     variant("threads", default=True, description="Build perl with threads support")
+    variant("open", default=True, description="Support open.pm")
 
     resource(
         name="cpanm",
@@ -211,6 +210,16 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 variants += "+cpanm"
             else:
                 variants += "~cpanm"
+            # this is just to detect incomplete installs
+            # normally perl installs open.pm
+            perl(
+                "-e",
+                "use open OUT => qw(:raw)",
+                output=os.devnull,
+                error=os.devnull,
+                fail_on_error=False,
+            )
+            variants += "+open" if perl.returncode == 0 else "~open"
             return variants
 
     # On a lustre filesystem, patch may fail when files
