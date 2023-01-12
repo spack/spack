@@ -123,6 +123,7 @@ spack:
   - plumed
   - precice
   - pumi
+  - py-h5py
   - py-jupyterhub
   - py-libensemble
   - py-petsc4py
