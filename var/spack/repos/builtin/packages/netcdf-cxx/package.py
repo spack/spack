@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class NetcdfCxx(AutotoolsPackage):
+class NetcdfCxx(CMakePackage):
     """Deprecated C++ compatibility bindings for NetCDF.
     These do NOT read or write NetCDF-4 files, and are no longer
     maintained by Unidata.  Developers should migrate to current
@@ -29,8 +29,8 @@ class NetcdfCxx(AutotoolsPackage):
         shared = True
         return find_libraries("libnetcdf_c++", root=self.prefix, shared=shared, recursive=True)
 
-    def configure_args(self):
-        args = []
+    def cmake_args(self):
+        args = [self.define_from_variant("USE_NETCDF4", "netcdf4")]
         if "+netcdf4" in self.spec:
             # There is no clear way to set this via configure, so set the flag
             # explicitly
