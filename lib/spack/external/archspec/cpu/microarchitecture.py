@@ -5,13 +5,10 @@
 """Types and functions to manage information
 on CPU microarchitectures.
 """
-# pylint: disable=useless-object-inheritance
 import functools
 import platform
 import re
 import warnings
-
-import six
 
 import archspec
 import archspec.cpu.alias
@@ -27,7 +24,7 @@ def coerce_target_names(func):
 
     @functools.wraps(func)
     def _impl(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             if other not in TARGETS:
                 msg = '"{0}" is not a valid target name'
                 raise ValueError(msg.format(other))
@@ -38,7 +35,7 @@ def coerce_target_names(func):
     return _impl
 
 
-class Microarchitecture(object):
+class Microarchitecture:
     """Represents a specific CPU micro-architecture.
 
     Args:
@@ -150,7 +147,7 @@ class Microarchitecture(object):
 
     def __contains__(self, feature):
         # Feature must be of a string type, so be defensive about that
-        if not isinstance(feature, six.string_types):
+        if not isinstance(feature, str):
             msg = "only objects of string types are accepted [got {0}]"
             raise TypeError(msg.format(str(type(feature))))
 
@@ -168,7 +165,7 @@ class Microarchitecture(object):
         """Returns the architecture family a given target belongs to"""
         roots = [x for x in [self] + self.ancestors if not x.ancestors]
         msg = "a target is expected to belong to just one architecture family"
-        msg += "[found {0}]".format(", ".join(str(x) for x in roots))
+        msg += f"[found {', '.join(str(x) for x in roots)}]"
         assert len(roots) == 1, msg
 
         return roots.pop()
@@ -318,9 +315,6 @@ def _known_microarchitectures():
     """Returns a dictionary of the known micro-architectures. If the
     current host platform is unknown adds it too as a generic target.
     """
-    # pylint: disable=fixme
-    # TODO: Simplify this logic using object_pairs_hook to OrderedDict
-    # TODO: when we stop supporting python2.6
 
     def fill_target_from_dict(name, data, targets):
         """Recursively fills targets by adding the micro-architecture

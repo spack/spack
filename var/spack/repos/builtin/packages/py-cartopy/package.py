@@ -13,6 +13,7 @@ class PyCartopy(PythonPackage):
     pypi = "Cartopy/Cartopy-0.20.2.tar.gz"
 
     maintainers = ["adamjstewart"]
+    skip_modules = ["cartopy.tests"]
 
     version("0.21.1", sha256="89d5649712c8582231c6e11825a04c85f6f0cee94dbb89e4db23eabca1cc250a")
     version("0.21.0", sha256="ce1d3a28a132e94c89ac33769a50f81f65634ab2bd40556317e15bd6cad1ce42")
@@ -49,9 +50,7 @@ class PyCartopy(PythonPackage):
 
     # setup.py
     depends_on("python@3.8:", when="@0.21:", type=("build", "run"))
-    depends_on("python@3.7:", when="@0.20:", type=("build", "run"))
-    depends_on("python@3.5:", when="@0.19:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    depends_on("python@:3.9", when="@:0.18", type=("build", "run"))
     depends_on("geos@3.7.2:", when="@0.20:")
     depends_on("geos@3.3.3:")
     depends_on("proj@8:", when="@0.20")
@@ -121,14 +120,3 @@ class PyCartopy(PythonPackage):
     # Needed for `spack test run py-foo` where `py-foo` depends on `py-cartopy`
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_build_environment(env)
-
-    @property
-    def import_modules(self):
-        modules = super(__class__, self).import_modules
-
-        # Tests require extra dependencies, skip them in 'import_modules'
-        ignored_imports = [
-            "cartopy.tests",
-        ]
-
-        return [i for i in modules if not any(map(i.startswith, ignored_imports))]

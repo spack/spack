@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
 import itertools
+from typing import Dict, List, Optional, Set
 
 import spack.error
+import spack.spec
 import spack.util.spack_json as sjson
 
 
@@ -53,7 +55,7 @@ class _IndexBase(object):
     #: Calling providers_for(spec) will find specs that provide a
     #: matching implementation of MPI. Derived class need to construct
     #: this attribute according to the semantics above.
-    providers = None
+    providers: Dict[str, Dict[str, Set[str]]]
 
     def providers_for(self, virtual_spec):
         """Return a list of specs of all packages that provide virtual
@@ -127,11 +129,16 @@ class _IndexBase(object):
 
 
 class ProviderIndex(_IndexBase):
-    def __init__(self, repository, specs=None, restrict=False):
+    def __init__(
+        self,
+        repository: "spack.repo.RepoType",
+        specs: Optional[List["spack.spec.Spec"]] = None,
+        restrict: bool = False,
+    ):
         """Provider index based on a single mapping of providers.
 
         Args:
-            specs (list of specs): if provided, will call update on each
+            specs: if provided, will call update on each
                 single spec to initialize this provider index.
 
             restrict: "restricts" values to the verbatim input specs; do not
