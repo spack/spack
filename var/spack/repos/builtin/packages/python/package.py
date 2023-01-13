@@ -231,9 +231,6 @@ class Python(AutotoolsPackage, Package):
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
 
-    # An in-source build with --enable-optimizations fails for python@3.X
-    build_directory = "spack-build"
-
     executables = [r"^python[\d.]*[mw]?$"]
 
     build_system(conditional("generic", when="platform=windows"), "autotools", default="autotools")
@@ -992,6 +989,9 @@ class RunAfter(object):
 
 
 class AutotoolsBuilder(AutotoolsBuilder, RunAfter, BuildEnvironment):
+    # An in-source build with --enable-optimizations fails for python@3.X
+    build_directory = "spack-build"
+
     def configure_args(self):
         spec = self.spec
         config_args = []
@@ -1035,7 +1035,7 @@ class AutotoolsBuilder(AutotoolsBuilder, RunAfter, BuildEnvironment):
         config_args.append("--without-ensurepip")
 
         if "+pic" in spec:
-            cflags.append(self.compiler.cc_pic_flag)
+            cflags.append(self.pkg.compiler.cc_pic_flag)
 
         if "+ssl" in spec:
             config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
