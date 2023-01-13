@@ -498,7 +498,9 @@ class Result(object):
         for input_spec in self.abstract_specs:
             key = (input_spec.name, "0")
             if input_spec.virtual:
-                providers = [spec.name for spec in answer.values() if spec.package.provides(input_spec.name)]
+                providers = [
+                    spec.name for spec in answer.values() if spec.package.provides(input_spec.name)
+                ]
                 key = (providers[0], "0")
             candidate = answer.get(key)
 
@@ -1562,7 +1564,9 @@ class SpackSolverSetup(object):
                     for dtype in dspec.deptypes:
                         # skip build dependencies of already-installed specs
                         if concrete_build_deps or dtype != "build":
-                            clauses.append(fn.attr("depends_on_unknown", spec.name, dep.name, dtype))
+                            clauses.append(
+                                fn.attr("depends_on_unknown", spec.name, dep.name, dtype)
+                            )
 
                             # Ensure Spack will not coconcretize this with another provider
                             # for the same virtual
