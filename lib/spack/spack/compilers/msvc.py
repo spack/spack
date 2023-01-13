@@ -112,7 +112,8 @@ class Msvc(Compiler):
     def platform_toolset_ver(self):
         """
         This is the platform toolset version of current MSVC compiler
-        of form v<toolset-ver>, i.e. v142. This is different from the VC
+        of form <toolset-ver>, i.e. 142, and is typically consumed and prepended
+        with a 'v'. This is different from the VC
         toolset version as established by `short_msvc_version`
         """
         return self.msvc_version[:2].joined.string[:3]
@@ -120,7 +121,11 @@ class Msvc(Compiler):
     @property
     def cl_version(self):
         """Cl toolset version"""
-        return spack.compiler.get_compiler_version_output(self.cc)
+        return Version(re.search(Msvc.version_regex, spack.compiler.get_compiler_version_output(self.cc, "")).group(1))
+
+    @property
+    def vs_root(self):
+        return os.path.abspath(os.path.join(self.cc, "../../../../../../../.."))
 
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the
