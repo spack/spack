@@ -7,7 +7,7 @@ paths inside text files and binaries."""
 
 import re
 from collections import OrderedDict
-from typing import Union
+from typing import Dict, Union
 
 import spack.error
 
@@ -18,7 +18,7 @@ def encode_path(p: Prefix) -> bytes:
     return p if isinstance(p, bytes) else p.encode("utf-8")
 
 
-def _prefix_to_prefix_as_bytes(prefix_to_prefix) -> OrderedDict[bytes, bytes]:
+def _prefix_to_prefix_as_bytes(prefix_to_prefix) -> Dict[bytes, bytes]:
     return OrderedDict((encode_path(k), encode_path(v)) for (k, v) in prefix_to_prefix.items())
 
 
@@ -54,7 +54,7 @@ class PrefixReplacer:
     actual work, which is different when it comes to
     binaries and text files."""
 
-    def __init__(self, prefix_to_prefix: OrderedDict[bytes, bytes]):
+    def __init__(self, prefix_to_prefix: Dict[bytes, bytes]):
         """
         Arguments:
 
@@ -98,7 +98,7 @@ class TextFilePrefixReplacer(PrefixReplacer):
 
     Note that UTF-8 encoding is assumed."""
 
-    def __init__(self, prefix_to_prefix: OrderedDict[bytes, bytes]):
+    def __init__(self, prefix_to_prefix: Dict[bytes, bytes]):
         """
         prefix_to_prefix (OrderedDict): OrderedDictionary where the keys are
             bytes representing the old prefixes and the values are the new.
@@ -109,7 +109,7 @@ class TextFilePrefixReplacer(PrefixReplacer):
 
     @classmethod
     def from_strings_or_bytes(
-        cls, prefix_to_prefix: OrderedDict[Prefix, Prefix]
+        cls, prefix_to_prefix: Dict[Prefix, Prefix]
     ) -> "TextFilePrefixReplacer":
         """Create a TextFilePrefixReplacer from an ordered prefix to prefix map."""
         return cls(_prefix_to_prefix_as_bytes(prefix_to_prefix))
@@ -160,7 +160,7 @@ class BinaryFilePrefixReplacer(PrefixReplacer):
 
     @classmethod
     def from_strings_or_bytes(
-        cls, prefix_to_prefix: OrderedDict[Prefix, Prefix], suffix_safety_size: int = 7
+        cls, prefix_to_prefix: Dict[Prefix, Prefix], suffix_safety_size: int = 7
     ) -> "BinaryFilePrefixReplacer":
         """Create a BinaryFilePrefixReplacer from an ordered prefix to prefix map.
 
