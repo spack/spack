@@ -1,85 +1,123 @@
 # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+"""This module contains pure-Python classes and functions for replacing
+paths inside text files and binaries."""
 
 import re
 from collections import OrderedDict
+from typing import Union
 
 import spack.error
 
+Prefix = Union[str, bytes]
 
-def encode_path(p):
+
+def encode_path(p: Prefix) -> bytes:
     return p if isinstance(p, bytes) else p.encode("utf-8")
 
 
-def prefix_to_prefix_as_bytes(prefix_to_prefix):
+def _prefix_to_prefix_as_bytes(prefix_to_prefix) -> OrderedDict[bytes, bytes]:
     return OrderedDict((encode_path(k), encode_path(v)) for (k, v) in prefix_to_prefix.items())
 
 
-def utf8_path_to_binary_regex(prefix):
-    """Create a (binary) regex that matches the input path in utf8"""
+def utf8_path_to_binary_regex(prefix: str):
+    """Create a binary regex that matches the input path in utf8"""
     prefix_bytes = re.escape(prefix).encode("utf-8")
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
 
 
-def byte_strings_to_single_binary_regex(prefixes):
+def _byte_strings_to_single_binary_regex(prefixes):
     all_prefixes = b"|".join(re.escape(p) for p in prefixes)
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
 
 
-def utf8_paths_to_single_binary_regex(prefixes):
+def utf8_paths_to_single_binary_regex(prefixes) -> re.Pattern:
     """Create a (binary) regex that matches any input path in utf8"""
-    return byte_strings_to_single_binary_regex(p.encode("utf-8") for p in prefixes)
+    return _byte_strings_to_single_binary_regex(p.encode("utf-8") for p in prefixes)
 
 
-def changing_prefixes(prefix_to_prefix):
-    """Filter out prefixes that have not changed"""
+def filter_identity_mappings(prefix_to_prefix):
+    """Drop mappings that are not changed."""
+    # NOTE: we don't guard against the following case:
+    # [/abc/def -> /abc/def, /abc -> /x] *will* be simplified to
+    # [/abc -> /x], meaning that after this simplification /abc/def will be
+    # mapped to /x/def instead of /abc/def. This should not be a problem.
     return OrderedDict((k, v) for (k, v) in prefix_to_prefix.items() if k != v)
 
 
 class PrefixReplacer:
-    def __init__(self, prefix_to_prefix):
-        self.prefix_to_prefix = changing_prefixes(prefix_to_prefix)
+    """Base class for applying a prefix to prefix map
+    to a list of binaries or text files.
+    Child classes implement _apply_to_file to do the
+    actual work, which is different when it comes to
+    binaries and text files."""
 
-    def apply(self, filenames):
-        if not self.prefix_to_prefix:
+    def __init__(self, prefix_to_prefix: OrderedDict[bytes, bytes]):
+        """
+        Arguments:
+
+            prefix_to_prefix (OrderedDict):
+
+                A ordered mapping from prefix to prefix. The order is
+                relevant to support substring fallbacks, for example
+                [("/first/sub", "/x"), ("/first", "/y")] will ensure
+                /first/sub is matched and replaced before /first.
+        """
+        self.prefix_to_prefix = filter_identity_mappings(prefix_to_prefix)
+
+    @property
+    def is_noop(self) -> bool:
+        """Returns true when the prefix to prefix map
+        is mapping everything to the same location (identity)
+        or there are no prefixes to replace."""
+        return bool(self.prefix_to_prefix)
+
+    def apply(self, filenames: list):
+        if self.is_noop:
             return
         for filename in filenames:
             self.apply_to_filename(filename)
 
     def apply_to_filename(self, filename):
-        if not self.prefix_to_prefix:
+        if self.is_noop:
             return
         with open(filename, "rb+") as f:
             self.apply_to_file(f)
 
     def apply_to_file(self, f):
-        if not self.prefix_to_prefix:
+        if self.is_noop:
             return
         self._apply_to_file(self, f)
 
 
 class TextFilePrefixReplacer(PrefixReplacer):
-    def __init__(self, prefix_to_prefix):
+    """This class applies prefix to prefix mappings for relocation
+    on text files.
+
+    Note that UTF-8 encoding is assumed."""
+
+    def __init__(self, prefix_to_prefix: OrderedDict[bytes, bytes]):
         """
         prefix_to_prefix (OrderedDict): OrderedDictionary where the keys are
-            bytes representing the old prefixes and the values are the new
+            bytes representing the old prefixes and the values are the new.
         """
         super().__init__(prefix_to_prefix)
-        self.regex = byte_strings_to_single_binary_regex(self.prefix_to_prefix.keys())
+        # Single regex for all paths.
+        self.regex = _byte_strings_to_single_binary_regex(self.prefix_to_prefix.keys())
 
     @classmethod
-    def from_strings_or_bytes(cls, prefix_to_prefix):
-        return cls(prefix_to_prefix_as_bytes(prefix_to_prefix))
+    def from_strings_or_bytes(
+        cls, prefix_to_prefix: OrderedDict[Prefix, Prefix]
+    ) -> "TextFilePrefixReplacer":
+        """Create a TextFilePrefixReplacer from an ordered prefix to prefix map."""
+        return cls(_prefix_to_prefix_as_bytes(prefix_to_prefix))
 
-    def apply_to_file(self, f):
-        if not self.prefix_to_prefix:
-            return
-
-        def replacement(match):
-            return match.group(1) + self.prefix_to_prefix[match.group(2)] + match.group(3)
-
+    def _apply_to_file(self, f):
+        """Text replacement implementation simply reads the entire file
+        in memory and applies the combined regex."""
+        replacement = lambda m: m.group(1) + self.prefix_to_prefix[m.group(2)] + m.group(3)
         data = f.read()
         new_data = re.sub(self.regex, replacement, data)
         if id(data) == id(new_data):
@@ -121,10 +159,19 @@ class BinaryFilePrefixReplacer(PrefixReplacer):
         )
 
     @classmethod
-    def from_strings_or_bytes(cls, prefix_to_prefix, suffix_safety_size=7):
-        return cls(prefix_to_prefix_as_bytes(prefix_to_prefix), suffix_safety_size)
+    def from_strings_or_bytes(
+        cls, prefix_to_prefix: OrderedDict[Prefix, Prefix], suffix_safety_size: int = 7
+    ) -> "BinaryFilePrefixReplacer":
+        """Create a BinaryFilePrefixReplacer from an ordered prefix to prefix map.
 
-    def apply_to_file(self, f):
+        Arguments:
+            prefix_to_prefix (OrderedDict): Ordered mapping of prefix to prefix.
+            suffix_safety_size (int): Number of bytes to retain at the end of a C-string
+                to avoid binary string-aliasing issues.
+        """
+        return cls(_prefix_to_prefix_as_bytes(prefix_to_prefix), suffix_safety_size)
+
+    def _apply_to_file(self, f):
         """
         Given a file opened in rb+ mode, apply the string replacements as
         specified by an ordered dictionary of prefix to prefix mappings. This
