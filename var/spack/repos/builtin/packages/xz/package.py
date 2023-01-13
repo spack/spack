@@ -100,9 +100,9 @@ class MSBuildBuilder(MSBuildBuilder):
         return "v" + self.pkg.compiler.platform_toolset_ver
 
     def msbuild_args(self):
-        if self.spec.satisfies("libs=shared,static"):
+        if self.pkg.spec.satisfies("libs=shared,static"):
             f =  "xz_win.sln"
-        elif self.spec.satisfies("libs=shared"):
+        elif self.pkg.spec.satisfies("libs=shared"):
             f =  "liblzma_dll.vcxproj"
         else:
             f = "liblzma.vcxproj"
