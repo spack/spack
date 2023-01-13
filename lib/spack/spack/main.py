@@ -45,7 +45,7 @@ import spack.spec
 import spack.store
 import spack.util.debug
 import spack.util.environment
-import spack.util.executable as exe
+import spack.util.git
 import spack.util.path
 from spack.error import SpackError
 
@@ -136,7 +136,7 @@ def get_version():
     version = spack.spack_version
     git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
-        git = exe.which("git")
+        git = spack.util.git.git()
         if not git:
             return version
         rev = git(
@@ -605,6 +605,10 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
+    # On Windows10 console handling for ASCI/VT100 sequences is not
+    # on by default. Turn on before we try to write to console
+    # with color
+    color.try_enable_terminal_color_on_windows()
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
 

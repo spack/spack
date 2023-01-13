@@ -30,6 +30,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     maintainers = ["adamjstewart"]
 
+    version("3.6.2", sha256="35f40d2e08061b342513cdcddc2b997b3814ef8254514f0ef1e8bc7aa56cf681")
     version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")
     version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
     version("3.5.3", sha256="d32223ddf145aafbbaec5ccfa5dbc164147fb3348a3413057f9b1600bb5b3890")

@@ -35,6 +35,7 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant("cxx", default=True, description="Enable C++ support")
 
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
@@ -51,7 +52,7 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        args = ["--enable-cxx"]
+        args = self.enable_or_disable("cxx")
         args += self.enable_or_disable("libs")
         if "libs=static" in self.spec:
             args.append("--with-pic")
