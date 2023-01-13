@@ -106,7 +106,7 @@ class Lorene(MakefilePackage):
                     "init_bin_regu",
                     "analyse",
                     "prepare_seq",
-                    *args
+                    *args,
                 )
 
     def install(self, spec, prefix):

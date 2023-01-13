@@ -142,7 +142,7 @@ class IntelMpi(IntelPackage):
                 "F77": spack_f77,
                 "F90": spack_fc,
                 "FC": spack_fc,
-            }
+            },
         )
 
     def setup_run_environment(self, env):

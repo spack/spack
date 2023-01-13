@@ -124,13 +124,13 @@ class Neuron(CMakePackage):
             "CC {0} {1}".format(assign_operator, env["CC"]),
             "CC = {0}".format(cc_compiler),
             nrnmech_makefile,
-            **kwargs
+            **kwargs,
         )
         filter_file(
             "CXX {0} {1}".format(assign_operator, env["CXX"]),
             "CXX = {0}".format(cxx_compiler),
             nrnmech_makefile,
-            **kwargs
+            **kwargs,
         )
 
         if spec.satisfies("+coreneuron"):

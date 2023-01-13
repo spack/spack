@@ -61,7 +61,7 @@ class Ompss(Package):
             "--with-nanox=%s" % prefix,
             "--enable-ompss",
             "--with-mpi=%s" % mpi.prefix,
-            *openmp_options
+            *openmp_options,
         )
         make()
         make("install")

@@ -93,7 +93,7 @@ class Gatk(Package):
                 "GenomeAnalysisTK.jar",
                 join_path(prefix.bin, "GenomeAnalysisTK.jar"),
                 script,
-                **kwargs
+                **kwargs,
             )
 
     def setup_run_environment(self, env):

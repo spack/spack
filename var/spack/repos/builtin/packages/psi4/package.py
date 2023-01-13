@@ -103,5 +103,5 @@ class Psi4(CMakePackage):
                 )
             ),
             os.path.join(prefix, template),
-            **kwargs
+            **kwargs,
         )
