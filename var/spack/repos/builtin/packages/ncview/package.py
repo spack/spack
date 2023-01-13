@@ -30,16 +30,3 @@ class Ncview(AutotoolsPackage):
                 "if false; then",
                 patched_file,
             )
-
-    def configure_args(self):
-        spec = self.spec
-
-        config_args = []
-
-        # Problems on some systems (e.g. NASA Discover with Intel)
-        # to find udunits include and library files despite
-        # dependency being specified above
-        config_args.append("--with-udunits2_incdir={}".format(spec["udunits"].prefix.include))
-        config_args.append("--with-udunits2_libdir={}".format(spec["udunits"].prefix.lib))
-
-        return config_args
