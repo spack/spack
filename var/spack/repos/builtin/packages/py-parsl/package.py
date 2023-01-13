@@ -39,7 +39,7 @@ class PyParsl(PythonPackage):
 
     with when("+monitoring"):
         depends_on("py-sqlalchemy@1.3", type=("build", "run"))
-        conflicts("^py-sqlalchemy@1.3.4", type=("build", "run"))
+        conflicts("^py-sqlalchemy@1.3.4")
         depends_on("py-sqlalchemy-utils", type=("build", "run"))
         depends_on("py-pydot", type=("build", "run"))
         depends_on("py-networkx", type=("build", "run"))
