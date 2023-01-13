@@ -122,7 +122,11 @@ class Msvc(Compiler):
     @property
     def cl_version(self):
         """Cl toolset version"""
-        return spack.compiler.get_compiler_version_output(self.cc)
+        return Version(re.search(Msvc.version_regex, spack.compiler.get_compiler_version_output(self.cc, "")).group(1))
+
+    @property
+    def vs_root(self):
+        return os.path.abspath(os.path.join(self.cc, "../../../../../../../.."))
 
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the
