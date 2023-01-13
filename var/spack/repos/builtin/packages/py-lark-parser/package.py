@@ -12,6 +12,7 @@ class PyLarkParser(PythonPackage):
     homepage = "https://github.com/lark-parser/lark/"
     pypi = "lark-parser/lark-parser-0.6.2.tar.gz"
 
+    version("0.12.0", sha256="15967db1f1214013dca65b1180745047b9be457d73da224fcda3d9dd4e96a138")
     version(
         "0.11.3",
         sha256="e29ca814a98bb0f81674617d878e5f611cb993c19ea47f22c80da3569425f9bd",

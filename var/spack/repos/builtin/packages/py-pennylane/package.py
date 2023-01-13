@@ -13,7 +13,7 @@ class PyPennylane(PythonPackage):
     homepage = "https://github.com/XanaduAI/pennylane"
     pypi = "PennyLane/PennyLane-0.28.0.tar.gz"
 
-    maintainers = ["marcodelapierre"]
+    maintainers = PythonPackage.maintainers + ["marcodelapierre"]
 
     version("0.28.0", sha256="2a6100c00277c1eb59eab6856cdad7b1237e9d1fbda98b1e15020bd5a64b10a8")
 
