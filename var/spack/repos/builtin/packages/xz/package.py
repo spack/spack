@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import re
 import sys
@@ -110,4 +111,16 @@ class MSBuildBuilder(MSBuildBuilder):
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
-            install_tree("Release", prefix)
+            libs_to_find = []
+        if self.pkg.spec.satisfies("libs=shared,static"):
+            libs_to_find.extend(["*.dll", "*.lib"])
+        elif self.pkg.spec.satisfies("libs=shared"):
+            libs_to_find.append("*.dll")
+        else:
+            libs_to_find.append("*.lib")
+        for lib in libs_to_find:
+            libs_to_install = glob.glob(os.path.join(self.build_directory, "**", lib))
+            for l in libs_to_install:
+                install(l, prefix.lib)
+        with working_dir(pkg.stage.source_path):
+            install_tree("include", prefix.include)
