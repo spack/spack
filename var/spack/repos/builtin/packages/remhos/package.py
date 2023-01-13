@@ -53,4 +53,4 @@ class Remhos(MakefilePackage):
         mkdirp(prefix.bin)
         install("remhos", prefix.bin)
 
-    install_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks: List[str] = []
