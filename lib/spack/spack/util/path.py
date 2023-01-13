@@ -51,26 +51,32 @@ def get_user():
         return getpass.getuser()
 
 
+# return value for replacements with no match
+NOMATCH = object()
+
+
 # Substitutions to perform
 def replacements():
-    # break circular import from spack.util.executable
+    # break circular imports
+    import spack.environment as ev
     import spack.paths
 
     arch = architecture()
 
     return {
-        "spack": spack.paths.prefix,
-        "user": get_user(),
-        "tempdir": tempfile.gettempdir(),
-        "user_cache_path": spack.paths.user_cache_path,
-        "architecture": str(arch),
-        "arch": str(arch),
-        "platform": str(arch.platform),
-        "operating_system": str(arch.os),
-        "os": str(arch.os),
-        "target": str(arch.target),
-        "target_family": str(arch.target.microarchitecture.family),
-        "date": date.today().strftime("%Y-%m-%d"),
+        "spack": lambda: spack.paths.prefix,
+        "user": lambda: get_user(),
+        "tempdir": lambda: tempfile.gettempdir(),
+        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "architecture": lambda: arch,
+        "arch": lambda: arch,
+        "platform": lambda: arch.platform,
+        "operating_system": lambda: arch.os,
+        "os": lambda: arch.os,
+        "target": lambda: arch.target,
+        "target_family": lambda: arch.target.microarchitecture.family,
+        "date": lambda: date.today().strftime("%Y-%m-%d"),
+        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
     }
 
 
@@ -293,20 +299,14 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    import spack.environment as ev  # break circular
-
     _replacements = replacements()
-    env = ev.active_environment()
-    if env:
-        _replacements.update({"env": env.path})
-    else:
-        # If a previous invocation added env, remove it
-        _replacements.pop("env", None)
 
     # Look up replacements
     def repl(match):
-        m = match.group(0).strip("${}")
-        return _replacements.get(m.lower(), match.group(0))
+        m = match.group(0)
+        key = m.strip("${}").lower()
+        repl = _replacements.get(key, lambda: m)()
+        return m if repl is NOMATCH else str(repl)
 
     # Replace $var or ${var}.
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
