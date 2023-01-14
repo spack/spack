@@ -48,14 +48,14 @@ class Go(Package):
     version(
         "1.19.4",
         sha256="eda74db4ac494800a3e66ee784e495bfbb9b8e535df924a8b01b1a8028b7f368",
-        depricated=True,
+        deprecated=True,
     )
 
     version("1.18.10", sha256="9cedcca58845df0c9474ae00274c44a95c9dfaefb132fc59921c28c7c106f8e6")
     version(
         "1.18.9",
         sha256="fbe7f09b96aca3db6faeaf180da8bb632868ec049731e355ff61695197c0e3ea",
-        depricated=True,
+        deprecated=True,
     )
 
     provides("golang")
