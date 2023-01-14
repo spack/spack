@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import subprocess
 
 from spack.package import *
 
@@ -214,11 +213,6 @@ class NetcdfC(AutotoolsPackage):
         hdf5_hl = self.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
-        if hdf5_hl.satisfies("~shared"):
-            libs.append(hdf5_hl.libs.link_flags)
-            h5_pc_cmd = ["pkg-config", "hdf5", "--static", "--libs"]
-            h5_flags = subprocess.check_output(h5_pc_cmd, encoding="utf8").strip()
-            libs.extend(h5_flags.split()[::-1])
 
         if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")
