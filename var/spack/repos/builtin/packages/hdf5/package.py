@@ -460,9 +460,13 @@ class Hdf5(CMakePackage):
         match = re.search(r"HDF5 Version: (\d+\.\d+\.\d+)(\D*\S*)", output)
         return match.group(1) if match else None
 
-
     @classmethod
     def determine_variants(cls, exes, version):
+        def is_enabled(text):
+            if text in set(["t", "true", "enabled", "yes", "1"]):
+                return True
+            return False
+
         results = []
         for exe in exes:
             variants = []
@@ -808,8 +812,3 @@ HDF5 version {version} {version}
 
         # Run existing install check
         self._check_install()
-
-def is_enabled(text):
-    if text in set(["t", "true", "enabled", "yes", "1"]):
-        return True
-    return False
