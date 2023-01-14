@@ -16,7 +16,7 @@ class RocmDbgapi(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCdbgapi"
     git = "https://github.com/ROCm-Developer-Tools/ROCdbgapi.git"
-    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath"]
@@ -24,6 +24,7 @@ class RocmDbgapi(CMakePackage):
 
     version("master", branch="amd-master")
 
+    version("5.3.3", sha256="3c81cb23fe671d391557a63c13b6a13d4dc367db5cb5de55592a6758284d8a3f")
     version("5.3.0", sha256="afffec78e34fe70952cd41efc3d7ba8f64e43acb2ad20aa35c9b8b591bed48ca")
     version("5.2.3", sha256="17925d23f614ecb2b40dffe5e14535cba380d4f489ea1a027762c356be9fbc2b")
     version("5.2.1", sha256="169e3914ebd99d6a5c034c568964b7bad56611262e292f77c0c65a7708e02376")
@@ -131,6 +132,7 @@ class RocmDbgapi(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, type="build", when="@" + ver)
@@ -156,6 +158,6 @@ class RocmDbgapi(CMakePackage):
 
     def cmake_args(self):
         args = []
-        if "@5.3.0:" in self.spec:
+        if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         return args
