@@ -19,6 +19,10 @@ class Etcd(Package):
 
     depends_on("go@1.19:")
 
+    def setup_build_environment(self, env):
+        # Point GOPATH at the top of the staging dir for the build step.
+        env.prepend_path("GOPATH", self.stage.path)
+
     def install(self, spec, prefix):
         make()
         install_tree("bin", prefix.bin)
