@@ -63,8 +63,12 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         description="Ultra safety checks - " "used for increased robustness and self-diagnostics",
     )
     variant("ginkgo", default=False, description="Enable/disable ginkgo solver")
-    variant("cusolver", default=False, description="Enable/disable cuSovler")
-
+    variant(
+        "cusolver_lu",
+        default=False,
+        when="+cuda @0.7.1:",
+        description="Enable/disable cuSovler LU refactorization",
+    )
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
@@ -97,7 +101,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
     depends_on("cuda@11:", when="@develop:+cuda")
-
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
@@ -111,6 +114,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipsparse", when="+rocm")
 
     depends_on("suite-sparse", when="+kron")
+    depends_on("suite-sparse", when="+cusolver_lu")
 
     depends_on("coinhsl+blas", when="+sparse")
     depends_on("metis", when="+sparse")
@@ -122,8 +126,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda+raja",
         msg="umpire+cuda exports device code and requires static libs",
     )
-    conflicts("+cusolver", when="~cuda", msg="Cusolver requires CUDA")
-    conflicts("+cusolver", when="@:0.5", msg="Cusolver support was introduced in HiOp 0.6")
 
     flag_handler = build_system_flags
 
@@ -159,7 +161,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_COINHSL", "sparse"),
                 self.define_from_variant("HIOP_TEST_WITH_BSUB", "jsrun"),
                 self.define_from_variant("HIOP_USE_GINKGO", "ginkgo"),
-                self.define_from_variant("HIOP_USE_CUSOLVER", "cusolver"),
+                self.define_from_variant("HIOP_USE_CUSOLVER_LU", "cusolver_lu"),
             ]
         )
 

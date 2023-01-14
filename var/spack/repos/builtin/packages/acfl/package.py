@@ -91,6 +91,25 @@ def get_os():
     return _os_map.get(spack_os, "RHEL-7")
 
 
+def get_armpl_version_to_3(spec):
+    """Return version string with 3 numbers"""
+    version_len = len(spec.version)
+    assert version_len == 2 or version_len == 3
+    if version_len == 2:
+        return spec.version.string + ".0"
+    elif version_len == 3:
+        return spec.version.string
+
+
+def get_armpl_prefix(spec):
+    return join_path(
+        spec.prefix,
+        "armpl-{}_AArch64_{}_arm-linux-compiler_aarch64-linux".format(
+            get_armpl_version_to_3(spec), get_os()
+        ),
+    )
+
+
 def get_acfl_prefix(spec):
     acfl_prefix = spec.prefix
     return join_path(
@@ -122,8 +141,22 @@ class Acfl(Package):
     conflicts("target=x86_64:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
-    depends_on("ncurses abi=5")
+
     executables = [r"armclang", r"armclang\+\+", r"armflang"]
+
+    variant("ilp64", default=False, description="use ilp64 specific Armpl library")
+    variant("shared", default=True, description="enable shared libs")
+    variant(
+        "threads",
+        default="none",
+        description="Multithreading support",
+        values=("openmp", "none"),
+        multi=False,
+    )
+
+    provides("blas")
+    provides("lapack")
+    provides("fftw-api@3")
 
     # Licensing - Not required from 22.0.1 on.
 
@@ -184,14 +217,71 @@ class Acfl(Package):
             return self.spec.extra_attributes["compilers"].get("fortran", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armflang")
 
+    @property
+    def lib_suffix(self):
+        suffix = ""
+        suffix += "_ilp64" if self.spec.satisfies("+ilp64") else ""
+        suffix += "_mp" if self.spec.satisfies("threads=openmp") else ""
+        return suffix
+
+    @property
+    def blas_libs(self):
+        armpl_prefix = get_armpl_prefix(self.spec)
+
+        libname = "libarmpl" + self.lib_suffix
+
+        # Get ArmPL Lib
+        armpl_libs = find_libraries(
+            [libname, "libamath", "libastring"],
+            root=armpl_prefix,
+            shared=self.spec.satisfies("+shared"),
+            recursive=True,
+        )
+
+        armpl_libs += find_system_libraries(["libm"])
+
+        return armpl_libs
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
+
+    @property
+    def fftw_libs(self):
+        return self.blas_libs
+
+    @property
+    def libs(self):
+        return self.blas_libs
+
+    @property
+    def headers(self):
+        armpl_dir = get_armpl_prefix(self.spec)
+
+        suffix = "include" + self.lib_suffix
+
+        incdir = join_path(armpl_dir, suffix)
+
+        hlist = find_all_headers(incdir)
+        hlist.directories = [incdir]
+        return hlist
+
     def setup_run_environment(self, env):
         arm_dir = get_acfl_prefix(self.spec)
+        armpl_dir = get_armpl_prefix(self.spec)
         env.set("ARM_LINUX_COMPILER_DIR", arm_dir)
         env.set("ARM_LINUX_COMPILER_INCLUDES", join_path(arm_dir, "includes"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(arm_dir, "lib"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
         env.prepend_path("PATH", join_path(arm_dir, "bin"))
         env.prepend_path("CPATH", join_path(arm_dir, "include"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
-        env.prepend_path("ARM_LICENSE_DIR", join_path(self.prefix, "licences"))
-        if "ncurses" in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", join_path(self.spec["ncurses"].prefix, "lib"))
+
+    @run_after("install")
+    def check_install(self):
+        armpl_dir = get_armpl_prefix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, "examples")
+        # run example makefile
+        make("-C", armpl_example_dir, "CC=" + self.cc, "F90=" + self.fortran)
+        # clean up
+        make("-C", armpl_example_dir, "clean")

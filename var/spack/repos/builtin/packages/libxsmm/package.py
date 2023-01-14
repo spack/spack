@@ -77,6 +77,11 @@ class Libxsmm(MakefilePackage):
     )
     depends_on("python", type="build")
 
+    # A recent `as` is needed to compile libxmss until version 1.17
+    # (<https://github.com/spack/spack/issues/28404>), but not afterwards
+    # (<https://github.com/spack/spack/pull/21671#issuecomment-779882282>).
+    depends_on("binutils+ld+gas@2.33:", type="build", when="@:1.17")
+
     @property
     def libs(self):
         result = find_libraries(["libxsmm", "libxsmmf"], root=self.prefix, recursive=True)

@@ -23,6 +23,11 @@ class Trinity(MakefilePackage):
     url = "https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.6.6.tar.gz"
 
     version(
+        "2.15.0.FULL",
+        sha256="d67de43e535e1173be75de98dcfbdab0bf67f814c9e465a44dfd056cefeb529d",
+        url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.0/trinityrnaseq-v2.15.0.FULL.tar.gz",
+    )
+    version(
         "2.14.0.FULL",
         sha256="8adf0c6890f9c9b29c21080dee29a174c60a9e32f5f2a707af86bac4c9fca4ea",
         url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.14.0/trinityrnaseq-v2.14.0.FULL.tar.gz",

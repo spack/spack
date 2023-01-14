@@ -10,6 +10,7 @@ import pytest
 
 import spack.environment as ev
 import spack.error
+import spack.parser
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
@@ -181,13 +182,11 @@ def test_spec_returncode():
 
 
 def test_spec_parse_error():
-    with pytest.raises(spack.error.SpackError) as e:
+    with pytest.raises(spack.parser.SpecSyntaxError) as e:
         spec("1.15:")
 
     # make sure the error is formatted properly
-    error_msg = """\
-    1.15:
-        ^"""
+    error_msg = "unexpected tokens in the spec string\n1.15:\n    ^"
     assert error_msg in str(e.value)
 
 

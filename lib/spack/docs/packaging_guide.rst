@@ -34,6 +34,15 @@ ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
 
+.. warning::
+
+   As a general rule, packages should install the software *from source*.
+   The only exception is for proprietary software (e.g., vendor compilers).
+
+   If a special build system needs to be added in order to support building
+   a package from source, then the associated code and recipe need to be added
+   first.
+
 
 .. _installation_procedure:
 
@@ -2397,13 +2406,15 @@ this because uninstalling the dependency would break the package.
 
 ``build``, ``link``, and ``run`` dependencies all affect the hash of Spack
 packages (along with ``sha256`` sums of patches and archives used to build the
-package, and a [canonical hash](https://github.com/spack/spack/pull/28156) of
+package, and a `canonical hash <https://github.com/spack/spack/pull/28156>`_ of
 the ``package.py`` recipes). ``test`` dependencies do not affect the package
 hash, as they are only used to construct a test environment *after* building and
 installing a given package installation. Older versions of Spack did not include
-build dependencies in the hash, but this has been
-[fixed](https://github.com/spack/spack/pull/28504) as of [Spack
-``v0.18``](https://github.com/spack/spack/releases/tag/v0.18.0)
+build dependencies in the hash, but this has been 
+`fixed <https://github.com/spack/spack/pull/28504>`_ as of |Spack v0.18|_.
+
+.. |Spack v0.18| replace:: Spack ``v0.18``
+.. _Spack v0.18: https://github.com/spack/spack/releases/tag/v0.18.0
 
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.

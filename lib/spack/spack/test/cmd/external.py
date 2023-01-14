@@ -347,7 +347,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     assert "externals" in packages_yaml["gcc"]
     externals = packages_yaml["gcc"]["externals"]
     assert len(externals) == 1
-    assert externals[0]["prefix"] == "/opt/gcc/bin"
+    assert externals[0]["prefix"] == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
 def test_new_entries_are_reported_correctly(

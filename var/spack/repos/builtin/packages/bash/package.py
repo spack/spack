@@ -16,16 +16,31 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("5.2", sha256="a139c166df7ff4471c5e0733051642ee5556c1cc8a4a78f145583c5c81ab32fb")
     version("5.1", sha256="cc012bc860406dcf42f64431bcd3d2fa7560c02915a601aba9cd597a39329baa")
     version("5.0", sha256="b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d")
     version("4.4", sha256="d86b3392c1202e8ff5a423b302e6284db7f8f435ea9f39b5b1b20fd3ac36dfcb")
     version("4.3", sha256="afc687a28e0e24dc21b988fa159ff9dbcf6b7caa92ade8645cc6d5605cd024d4")
 
     depends_on("ncurses")
+    depends_on("readline@8.2:", when="@5.2:")
     depends_on("readline@5.0:")
     depends_on("iconv")
+    depends_on("gettext")
 
     patches = [
+        ("5.2", "001", "f42f2fee923bc2209f406a1892772121c467f44533bedfe00a176139da5d310a"),
+        ("5.2", "002", "45cc5e1b876550eee96f95bffb36c41b6cb7c07d33f671db5634405cd00fd7b8"),
+        ("5.2", "003", "6a090cdbd334306fceacd0e4a1b9e0b0678efdbbdedbd1f5842035990c8abaff"),
+        ("5.2", "004", "38827724bba908cf5721bd8d4e595d80f02c05c35f3dd7dbc4cd3c5678a42512"),
+        ("5.2", "005", "ece0eb544368b3b4359fb8464caa9d89c7a6743c8ed070be1c7d599c3675d357"),
+        ("5.2", "006", "d1e0566a257d149a0d99d450ce2885123f9995e9c01d0a5ef6df7044a72a468c"),
+        ("5.2", "007", "2500a3fc21cb08133f06648a017cebfa27f30ea19c8cbe8dfefdf16227cfd490"),
+        ("5.2", "008", "6b4bd92fd0099d1bab436b941875e99e0cb3c320997587182d6267af1844b1e8"),
+        ("5.2", "009", "f95a817882eaeb0cb78bce82859a86bbb297a308ced730ebe449cd504211d3cd"),
+        ("5.2", "010", "c7705e029f752507310ecd7270aef437e8043a9959e4d0c6065a82517996c1cd"),
+        ("5.2", "011", "831b5f25bf3e88625f3ab315043be7498907c551f86041fa3b914123d79eb6f4"),
+        ("5.2", "012", "2fb107ce1fb8e93f36997c8b0b2743fc1ca98a454c7cc5a3fcabec533f67d42c"),
         ("5.1", "001", "ebb07b3dbadd98598f078125d0ae0d699295978a5cdaef6282fe19adef45b5fa"),
         ("5.1", "002", "15ea6121a801e48e658ceee712ea9b88d4ded022046a6147550790caf04f5dbe"),
         ("5.1", "003", "22f2cc262f056b22966281babf4b0a2f84cb7dd2223422e5dcd013c3dcbab6b1"),

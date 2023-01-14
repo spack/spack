@@ -26,7 +26,7 @@ import os
 import socket
 import sys
 import time
-from typing import Dict  # novm
+from typing import Dict
 
 try:
     import uuid
@@ -304,10 +304,10 @@ class Database(object):
 
     """Per-process lock objects for each install prefix."""
 
-    _prefix_locks = {}  # type: Dict[str, lk.Lock]
+    _prefix_locks: Dict[str, lk.Lock] = {}
 
     """Per-process failure (lock) objects for each install prefix."""
-    _prefix_failures = {}  # type: Dict[str, lk.Lock]
+    _prefix_failures: Dict[str, lk.Lock] = {}
 
     def __init__(
         self,

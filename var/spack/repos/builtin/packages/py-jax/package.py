@@ -21,22 +21,29 @@ class PyJax(PythonPackage, CudaPackage):
     homepage = "https://github.com/google/jax"
     pypi = "jax/jax-0.2.25.tar.gz"
 
+    version("0.3.23", sha256="bff436e15552a82c0ebdef32737043b799e1e10124423c57a6ae6118c3a7b6cd")
     version("0.2.25", sha256="822e8d1e06257eaa0fdc4c0a0686c4556e9f33647fa2a766755f984786ae7446")
 
     variant("cuda", default=True, description="CUDA support")
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.18:", type=("build", "run"), when="@0.2.25")
+    depends_on("py-numpy@1.20:", type=("build", "run"), when="@0.3.23")
     depends_on("py-numpy@1.18:", type=("build", "run"))
     depends_on("py-absl-py", type=("build", "run"))
     depends_on("py-opt-einsum", type=("build", "run"))
-    depends_on("py-scipy@1.2.1:", type=("build", "run"))
+    depends_on("py-scipy@1.2.1:", type=("build", "run"), when="@0.2.25")
+    depends_on("py-scipy@1.5:", type=("build", "run"), when="@0.3.23")
     depends_on("py-typing-extensions", type=("build", "run"))
-    depends_on("py-jaxlib@0.1.69:", type=("build", "run"), when="~cuda")
-    depends_on("py-jaxlib@0.1.69:+cuda", type=("build", "run"), when="+cuda")
+    depends_on("py-etils+epath", type=("build", "run"), when="@0.3.23")
+    depends_on("py-jaxlib@0.3.15:", type=("build", "run"), when="@0.3.23~cuda")
+    depends_on("py-jaxlib@0.3.15:+cuda", type=("build", "run"), when="@0.3.23+cuda")
+    depends_on("py-jaxlib@0.1.69:", type=("build", "run"), when="@0.2.25~cuda")
+    depends_on("py-jaxlib@0.1.69:+cuda", type=("build", "run"), when="@0.2.25+cuda")
     for arch in CudaPackage.cuda_arch_values:
         depends_on(
-            "py-jaxlib@0.1.69:+cuda cuda_arch={0}".format(arch),
+            "py-jaxlib+cuda cuda_arch={0}".format(arch),
             type=("build", "run"),
             when="cuda_arch={0}".format(arch),
         )

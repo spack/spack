@@ -28,6 +28,7 @@ class Gromacs(CMakePackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
     version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
     version("2022.2", sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf")
     version("2022.1", sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450")
@@ -142,7 +143,9 @@ class Gromacs(CMakePackage):
 
     depends_on("mpi", when="+mpi")
 
+    # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
     # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs 2021.5, 2020.6, 2019.6
     # Plumed 2.7.4 needs Gromacs 2021.4, 2020.6, 2019.6
     # Plumed 2.7.3 needs Gromacs 2021.4, 2020.6, 2019.6
     # Plumed 2.7.2 needs Gromacs 2021,   2020.6, 2019.6
@@ -170,6 +173,14 @@ class Gromacs(CMakePackage):
 
     depends_on("plumed+mpi", when="+plumed+mpi")
     depends_on("plumed~mpi", when="+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2022.3+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2022.3+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2021.6+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2021.6+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2020.7+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2020.7+plumed~mpi")
+    depends_on("plumed@2.7.5+mpi", when="@2021.5+plumed+mpi")
+    depends_on("plumed@2.7.5~mpi", when="@2021.5+plumed~mpi")
     depends_on("plumed@2.7.3:2.8.0+mpi", when="@2021.4+plumed+mpi")
     depends_on("plumed@2.7.3:2.8.0~mpi", when="@2021.4+plumed~mpi")
     depends_on("plumed@2.7.1:2.7.2+mpi", when="@2021+plumed+mpi")
@@ -182,8 +193,8 @@ class Gromacs(CMakePackage):
     depends_on("plumed@2.6.2:2.7.0~mpi", when="@2020.4+plumed~mpi")
     depends_on("plumed@2.6.1+mpi", when="@2020.2+plumed+mpi")
     depends_on("plumed@2.6.1~mpi", when="@2020.2+plumed~mpi")
-    depends_on("plumed@2.6.1:2.8.0+mpi", when="@2019.6+plumed+mpi")
-    depends_on("plumed@2.6.1:2.8.0~mpi", when="@2019.6+plumed~mpi")
+    depends_on("plumed@2.6.1:2.8.1+mpi", when="@2019.6+plumed+mpi")
+    depends_on("plumed@2.6.1:2.8.1~mpi", when="@2019.6+plumed~mpi")
     depends_on("plumed@2.5.3:2.6.0+mpi", when="@2019.4+plumed+mpi")
     depends_on("plumed@2.5.3:2.6.0~mpi", when="@2019.4+plumed~mpi")
     depends_on("plumed@2.5.2+mpi", when="@2019.2+plumed+mpi")
@@ -496,6 +507,11 @@ class Gromacs(CMakePackage):
                 options.append(
                     "-DFFTWF_LIBRARY={0}".format(self.spec["armpl-gcc"].libs.joined(";"))
                 )
+            elif "^acfl" in self.spec:
+                options.append(
+                    "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["acfl"].headers.directories[0])
+                )
+                options.append("-DFFTWF_LIBRARY={0}".format(self.spec["acfl"].libs.joined(";")))
 
         # Ensure that the GROMACS log files report how the code was patched
         # during the build, so that any problems are easier to diagnose.

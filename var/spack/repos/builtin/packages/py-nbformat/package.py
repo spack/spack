@@ -13,6 +13,7 @@ class PyNbformat(PythonPackage):
     homepage = "https://github.com/jupyter/nbformat"
     pypi = "nbformat/nbformat-5.0.7.tar.gz"
 
+    version("5.7.0", sha256="1d4760c15c1a04269ef5caf375be8b98dd2f696e5eb9e603ec2bf091f9b0d3f3")
     version("5.4.0", sha256="44ba5ca6acb80c5d5a500f1e5b83ede8cbe364d5a495c4c8cf60aaf1ba656501")
     version("5.1.3", sha256="b516788ad70771c6250977c1374fcca6edebe6126fd2adb5a69aa5c2356fd1c8")
     version("5.0.7", sha256="54d4d6354835a936bad7e8182dcd003ca3dc0cedfee5a306090e04854343b340")
@@ -24,12 +25,16 @@ class PyNbformat(PythonPackage):
     depends_on("python@3.7:", when="@5.2:", type=("build", "run"))
     depends_on("python@3.5:", when="@5:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.3:", when="@:4", type=("build", "run"))
-    depends_on("py-setuptools@60:", when="@5.3:", type="build")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-ipython-genutils", when="@:5.1", type=("build", "run"))
-    depends_on("py-traitlets@5.1:", when="@5.4:", type=("build", "run"))
-    depends_on("py-traitlets@4.1:", type=("build", "run"))
+    depends_on("py-hatchling@1.5:", when="@5.6:", type="build")
+    depends_on("py-hatch-nodejs-version", when="@5.6:", type="build")
+    depends_on("py-setuptools@60:", when="@5.3:5.4", type="build")
+    depends_on("py-setuptools", when="@:5.4", type="build")
+
+    depends_on("py-fastjsonschema", when="@5.3:", type=("build", "run"))
     depends_on("py-jsonschema@2.6:", when="@5.3:", type=("build", "run"))
     depends_on("py-jsonschema@2.4.0:2.4,2.5.1:", type=("build", "run"))
     depends_on("py-jupyter-core", type=("build", "run"))
-    depends_on("py-fastjsonschema", when="@5.3:", type=("build", "run"))
+    depends_on("py-traitlets@5.1:", when="@5.4:", type=("build", "run"))
+    depends_on("py-traitlets@4.1:", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", when="@5.7: ^python@:3.7", type=("build", "run"))
+    depends_on("py-ipython-genutils", when="@:5.1", type=("build", "run"))

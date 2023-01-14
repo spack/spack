@@ -24,7 +24,7 @@ jobs:
               make patch unzip which xz python3 python3-devel tree \
               cmake bison bison-devel libstdc++-static
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           fetch-depth: 0
       - name: Setup non-root user
@@ -62,7 +62,7 @@ jobs:
               make patch unzip xz-utils python3 python3-dev tree \
               cmake bison
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           fetch-depth: 0
       - name: Setup non-root user
@@ -99,7 +99,7 @@ jobs:
               bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
               make patch unzip xz-utils python3 python3-dev tree
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           fetch-depth: 0
       - name: Setup non-root user
@@ -133,7 +133,7 @@ jobs:
               make patch unzip which xz python3 python3-devel tree \
               cmake bison
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           fetch-depth: 0
       - name: Setup repo
@@ -158,7 +158,7 @@ jobs:
         run: |
           brew install cmake bison@2.7 tree
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
@@ -179,7 +179,7 @@ jobs:
         run: |
           brew install tree
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap clingo
         run: |
           set -ex
@@ -204,7 +204,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           fetch-depth: 0
       - name: Setup repo
@@ -247,7 +247,7 @@ jobs:
               bzip2 curl file g++ gcc patchelf gfortran git gzip \
               make patch unzip xz-utils python3 python3-dev tree
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           fetch-depth: 0
       - name: Setup non-root user
@@ -283,7 +283,7 @@ jobs:
               make patch unzip xz-utils python3 python3-dev tree \
               gawk
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
         with:
           fetch-depth: 0
       - name: Setup non-root user
@@ -316,7 +316,7 @@ jobs:
           # Remove GnuPG since we want to bootstrap it
           sudo rm -rf /usr/local/bin/gpg
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
@@ -333,7 +333,7 @@ jobs:
           # Remove GnuPG since we want to bootstrap it
           sudo rm -rf /usr/local/bin/gpg
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh

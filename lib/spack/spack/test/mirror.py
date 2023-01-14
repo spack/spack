@@ -15,6 +15,7 @@ import spack.mirror
 import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
+import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
@@ -54,7 +55,7 @@ def check_mirror():
     with Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
-        mirrors = {"spack-mirror-test": "file://" + mirror_root}
+        mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
         with spack.config.override("mirrors", mirrors):
             with spack.config.override("config:checksum", False):
                 specs = [Spec(x).concretized() for x in repos]
@@ -103,33 +104,24 @@ def test_url_mirror(mock_archive):
     repos.clear()
 
 
-@pytest.mark.skipif(not which("git"), reason="requires git to be installed")
-def test_git_mirror(mock_git_repository):
+def test_git_mirror(git, mock_git_repository):
     set_up_package("git-test", mock_git_repository, "git")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(
-    not which("svn") or not which("svnadmin"), reason="requires subversion to be installed"
-)
 def test_svn_mirror(mock_svn_repository):
     set_up_package("svn-test", mock_svn_repository, "svn")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(not which("hg"), reason="requires mercurial to be installed")
 def test_hg_mirror(mock_hg_repository):
     set_up_package("hg-test", mock_hg_repository, "hg")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(
-    not all([which("svn"), which("hg"), which("git")]),
-    reason="requires subversion, git, and mercurial to be installed",
-)
 def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive):
 
     set_up_package("git-test", mock_git_repository, "git")

@@ -707,12 +707,8 @@ class TestSpecSematics(object):
         )
 
     def test_exceptional_paths_for_constructor(self):
-
         with pytest.raises(TypeError):
             Spec((1, 2))
-
-        with pytest.raises(ValueError):
-            Spec("")
 
         with pytest.raises(ValueError):
             Spec("libelf foo")

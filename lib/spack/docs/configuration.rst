@@ -394,7 +394,7 @@ are indicated at the start of the path with ``~`` or ``~user``.
 Spack-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack understands several special variables. These are:
+Spack understands over a dozen special variables. These are:
 
 * ``$env``: name of the currently active :ref:`environment <environments>`
 * ``$spack``: path to the prefix of this Spack installation

@@ -1254,6 +1254,13 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
 
 
+def test_default_install_tree(monkeypatch):
+    s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
+    monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
+    projection = spack.config.get("config:install_tree:projections:all", scope="defaults")
+    assert s.format(projection) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
+
+
 def test_local_config_can_be_disabled(working_env):
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
     cfg = spack.config._config()

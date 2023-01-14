@@ -601,7 +601,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
 
-        cxxflags = spec.compiler_flags["cxxflags"]
+        cxxflags = spec.compiler_flags["cxxflags"].copy()
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
@@ -1116,7 +1116,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "miniapps/gslib/findpts.cpp",
             "miniapps/gslib/pfindpts.cpp",
         ]
-        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else u"\ufeff"
+        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else "\ufeff"
         for f in files_with_bom:
             filter_file(bom, "", f)
 

@@ -62,7 +62,7 @@ class PyNilearn(PythonPackage):
     # older py-nilearn versions use matplotlib.cm.revcmap which was deprecated
     # in py-matplotlib@3.4:
     depends_on("py-matplotlib@1.5.1:3.3", when="@:0.5 +plotting", type=("build", "run"))
-    depends_on("py-matplotlib@1.1.1:3.3", when="0.4.2 +plotting", type=("build", "run"))
+    depends_on("py-matplotlib@1.1.1:3.3", when="@0.4.2 +plotting", type=("build", "run"))
 
     @property
     def skip_modules(self):

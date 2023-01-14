@@ -23,7 +23,6 @@ import spack.config
 import spack.platforms
 import spack.spec
 import spack.util.executable as executable
-import spack.util.spack_json as sjson
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = sys.platform == "win32"
@@ -1013,11 +1012,7 @@ def environment_after_sourcing_files(*files, **kwargs):
             ]
         )
         output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
-        environment = json.loads(output)
-
-        # If we're in python2, convert to str objects instead of unicode
-        # like json gives us.  We can't put unicode in os.environ anyway.
-        return sjson.encode_json_dict(environment)
+        return json.loads(output)
 
     current_environment = kwargs.get("env", dict(os.environ))
     for f in files:
@@ -1054,7 +1049,7 @@ def sanitize(environment, exclude, include):
         return subset
 
     # Don't modify input, make a copy instead
-    environment = sjson.decode_json_dict(dict(environment))
+    environment = dict(environment)
 
     # include supersedes any excluded items
     prune = set_intersection(set(environment), *exclude)

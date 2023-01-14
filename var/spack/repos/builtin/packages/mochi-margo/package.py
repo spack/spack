@@ -17,6 +17,7 @@ class MochiMargo(AutotoolsPackage):
     maintainers = ["carns", "mdorier", "fbudin69500", "chuckatkins"]
 
     version("main", branch="main")
+    version("0.11.1", sha256="ce4a61e2796df2a2c6efdfbd2d2c5a6be31e524f279b740a423ed932607503f3")
     version("0.11", sha256="3f9f30591127ecf3aac8a524c69cbc90fe3c8e68e263bda4c69b1e2c8d77ebdd")
     version("0.10", sha256="163be090575ee267a84320b92791d83b98e9549b03bd705a166f0b5e4df53129")
     version("0.9.10", sha256="b205b45fe200d1b2801ea3b913fa75d709af97abf470f4ad72a08d2839f03772")

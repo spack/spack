@@ -18,6 +18,7 @@ class AwsSdkCpp(CMakePackage):
     homepage = "https://github.com/aws/aws-sdk-cpp"
     git = "https://github.com/aws/aws-sdk-cpp.git"
 
+    version("1.10.32", tag="1.10.32", submodules=True)
     version("1.9.247", tag="1.9.247", submodules=True)
 
     depends_on("cmake@3.1:", type="build")

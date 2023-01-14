@@ -13,37 +13,21 @@ import pytest
 from llnl.util.filesystem import mkdirp, working_dir
 
 import spack
-from spack.util.executable import which
 from spack.version import ver
-
-git = which("git")
-git_required_version = "2.17.0"
-
-
-def check_git_version():
-    """Check if git version is new enough for worktree functionality.
-    Return True if requirements are met.
-
-    The latest required functionality is `worktree remove` which was only added
-    in 2.17.0.
-
-    Refer:
-    https://github.com/git/git/commit/cc73385cf6c5c229458775bc92e7dbbe24d11611
-    """
-    git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
-    return git_version >= ver(git_required_version)
-
-
-pytestmark = pytest.mark.skipif(
-    not git or not check_git_version(), reason="we need git to test if we are in a git repo"
-)
 
 
 @pytest.fixture(scope="function")
-def git_tmp_worktree(tmpdir, mock_git_version_info):
+def git_tmp_worktree(git, tmpdir, mock_git_version_info):
     """Create new worktree in a temporary folder and monkeypatch
     spack.paths.prefix to point to it.
     """
+
+    # We need `git worktree remove` for this fixture, which was added in 2.17.0.
+    # See https://github.com/git/git/commit/cc73385cf6c5c229458775bc92e7dbbe24d11611
+    git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
+    if git_version < ver("2.17.0"):
+        pytest.skip("git_tmp_worktree requires git v2.17.0")
+
     with working_dir(mock_git_version_info[0]):
         # TODO: This is fragile and should be high priority for
         # follow up fixes. 27021
