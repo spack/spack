@@ -2,8 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 
 from spack.package import *
+
+is_windows = sys.platform == "win32"
 
 
 class Scons(PythonPackage):
@@ -56,4 +59,7 @@ class Scons(PythonPackage):
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
 
     def setup_dependent_package(self, module, dspec):
-        module.scons = Executable(self.spec.prefix.bin.scons)
+        if is_windows:
+            module.scons = Executable(self.spec.prefix.Scripts.scons)
+        else:
+            module.scons = Executable(self.spec.prefix.bin.scons)
