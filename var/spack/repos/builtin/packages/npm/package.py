@@ -9,13 +9,18 @@ import shutil
 from spack.package import *
 
 
-# NOTE: not actually an Autotools package
 class Npm(Package):
     """npm: A package manager for javascript."""
 
     homepage = "https://github.com/npm/cli"
     # base https://www.npmjs.com/
-    url = "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
+
+    git = "https://github.com/npm/cli.git"
+    url = "https://registry.npmjs.org/npm/-/npm-9.30.0.tgz"
+
+    version("9.30.0", commit="4d275927e069606c8047b678ad09aafbe18b1673")
+    version("8.19.3", commit="ef4299658330470b56966b48394824895b2d6d04")
+    version("7.24.2", commit="04eb43f2b2a387987b61a7318908cf18f03d97e0")
 
     version("6.14.9", sha256="1e0e880ce0d5adf0120fb3f92fc8e5ea5bac73681d37282615d074ff670f7703")
     version("6.14.8", sha256="fe8e873cb606c06f67f666b4725eb9122c8927f677c8c0baf1477f0ff81f5a2c")
@@ -35,30 +40,60 @@ class Npm(Package):
         destination="node-gyp",
         url="https://registry.npmjs.org/node-gyp/-/node-gyp-6.0.1.tgz",
         sha256="bbc0e137e17a63676efc97a0e3b1fcf101498a1c2c01c3341cd9491f248711b8",
+        when="@6",
     )
     resource(
         name="env-paths",
         destination="env-paths",
         url="https://registry.npmjs.org/env-paths/-/env-paths-2.2.0.tgz",
         sha256="168b394fbca60ea81dc84b1824466df96246b9eb4d671c2541f55f408a264b4c",
+        when="@6",
     )
 
-    phases = ["configure", "build", "install"]
-
+    @when("@6")
     def patch(self):
         shutil.rmtree("node_modules/node-gyp")
         install_tree("node-gyp/package", "node_modules/node-gyp")
         filter_file(r'"node-gyp": "\^5\..*"', '"node-gyp": "^6.0.1"', "package.json")
         install_tree("env-paths/package", "node_modules/env-paths")
 
-    def configure(self, spec, prefix):
-        configure("--prefix={0}".format(prefix))
-
-    def build(self, spec, prefix):
-        make()
-
+    @when("@:8")
     def install(self, spec, prefix):
-        make("install")
+        # `npm install .` doesn't work properly out of the box on npm up to 8, so we do
+        # what it would do manually. The only thing we seem to miss is docs) In
+        # particular, it will end up symlinking into the stage, which spack then
+        # deletes. You can avoid that with `npm install $(npm pack .)`, but `npm pack`
+        # also seems to fail on macos. So we just copy manually.
+        to_install = [
+            "LICENSE",
+            "README.md",
+            "bin",
+            "docs",
+            "index.js",
+            "lib",
+            "node_modules",
+            "package.json",
+        ]
+
+        mkdirp(prefix.bin)
+        mkdirp(prefix.lib.node_modules.npm)
+
+        # manually install all the files above (if they exist for a particular node version)
+        for filename in to_install:
+            if os.path.exists(filename):
+                install_fn = install if os.path.isfile(filename) else install_tree
+                install_fn(filename, os.path.join(prefix.lib.node_modules.npm, filename))
+
+        # set up symlinks in bin
+        node_modules_bin = os.path.relpath(prefix.lib.node_modules.npm.bin, prefix.bin)
+        symlink(os.path.join(node_modules_bin, "npm-cli.js"), prefix.bin.npm)
+        symlink(os.path.join(node_modules_bin, "npx-cli.js"), prefix.bin.npx)
+
+    @when("@9:")
+    def install(self, spec, prefix):
+        # in npm 9, `npm install .` finally works within the repo, so we can just call it.
+        node = which("node", required=True)
+        node("bin/npm-cli.js", "install", "-ddd", "--global", f"--prefix={prefix}", ".")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
@@ -68,6 +103,4 @@ class Npm(Package):
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
-        if not os.path.isdir(npm_config_cache_dir):
-            mkdirp(npm_config_cache_dir)
         env.set("npm_config_cache", npm_config_cache_dir)
