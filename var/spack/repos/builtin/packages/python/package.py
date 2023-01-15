@@ -44,6 +44,7 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
+    version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version(
         "3.10.8",
@@ -476,7 +477,10 @@ class Python(Package):
 
         if "+optimizations" in spec:
             config_args.append("--enable-optimizations")
-            config_args.append("--with-lto")
+            if "@3.11.0: %clang" in spec:
+                config_args.append("--with-lto=thin")
+            else:
+                config_args.append("--with-lto")
             config_args.append("--with-computed-gotos")
 
         if spec.satisfies("@3.7 %intel", strict=True):
