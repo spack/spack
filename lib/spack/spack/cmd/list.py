@@ -56,13 +56,6 @@ def setup_parser(subparser):
         help="format to be used to print the output [default: name_only]",
     )
     subparser.add_argument(
-        "--update",
-        metavar="FILE",
-        default=None,
-        action="store",
-        help="write output to the specified file, if any package is newer",
-    )
-    subparser.add_argument(
         "-v",
         "--virtuals",
         action="store_true",
@@ -70,6 +63,22 @@ def setup_parser(subparser):
         help="include virtual packages in list",
     )
     arguments.add_common_arguments(subparser, ["tags"])
+
+    # Doesn't really make sense to update in count mode.
+    count_or_update = subparser.add_mutually_exclusive_group()
+    count_or_update.add_argument(
+        "--count",
+        action="store_true",
+        default=False,
+        help="display the number of packages that would be listed",
+    )
+    count_or_update.add_argument(
+        "--update",
+        metavar="FILE",
+        default=None,
+        action="store",
+        help="write output to the specified file, if any package is newer",
+    )
 
 
 def filter_by_name(pkgs, args):
@@ -320,6 +329,9 @@ def list(parser, args):
         with open(args.update, "w") as f:
             formatter(sorted_packages, f)
 
+    elif args.count:
+        # just print the number of packages in the result
+        print(len(sorted_packages))
     else:
-        # Print to stdout
+        # print formatted package list
         formatter(sorted_packages, sys.stdout)
