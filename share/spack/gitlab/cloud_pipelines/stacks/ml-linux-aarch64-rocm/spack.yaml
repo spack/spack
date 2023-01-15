@@ -82,12 +82,13 @@ spack:
       - py-tensorboardx
 
       # TensorFlow
-      - py-tensorflow
-      - py-tensorflow-datasets
-      - py-tensorflow-estimator
-      - py-tensorflow-hub
-      - py-tensorflow-metadata
-      - py-tensorflow-probability
+      # https://github.com/spack/spack/issues/34954
+      # - py-tensorflow
+      # - py-tensorflow-datasets
+      # - py-tensorflow-estimator
+      # - py-tensorflow-hub
+      # - py-tensorflow-metadata
+      # - py-tensorflow-probability
 
       # XGBoost
       - py-xgboost
