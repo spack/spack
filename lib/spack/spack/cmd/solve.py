@@ -98,27 +98,40 @@ def setup_parser(subparser):
 def _process_result(result, show, required_format, kwargs):
     result.raise_if_unsat()
     opt, *_ = min(result.answers)
+
+    # dump the solutions as concretized specs
     if ("opt" in show) and (not required_format):
         tty.msg("Best of %d considered solutions." % result.nmodels)
         tty.msg("Optimization Criteria:")
 
-        maxlen = max(len(s[2]) for s in result.criteria)
-        color.cprint("@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " "))
+        maxlen = max(len(name) for name in result.criteria)
+        max_depth = max(len(v) for v in result.criteria.values() if isinstance(v, list))
 
-        fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
-        for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
-            color.cprint(
-                fmt
-                % (
-                    i,
-                    name,
-                    installed_cost if installed_cost is not None else "-",
-                    build_cost if build_cost is not None else "-",
+        header = "@*{"
+        header += "".join(f"{depth:<4}" for depth in range(max_depth))
+        header += "Criterion}"
+        color.cprint(header)
+
+        # make non-zero numbers red
+        def highlight(n, c):
+            return color.colorize(f"@{c}{{{n:<4}}}" if n > 0 else f"{n:<4}")
+
+        for i, (name, cost) in enumerate(result.criteria.items(), 1):
+            colored_name = name.replace("build:", "@c{build:}")
+            colored_name = colored_name.replace("reuse:", "@B{reuse:}")
+            colored_name = colored_name.replace("fixed:", "@G{fixed:}")
+            colored_name = color.colorize(colored_name)
+
+            if isinstance(cost, int):
+                print(highlight(cost, "G") + "    " * (max_depth - 1) + colored_name)
+            else:
+                print(
+                    "".join(highlight(c, "c" if "build:" in name else "B") for c in cost)
+                    + colored_name
                 )
-            )
+
         print()
 
-    # dump the solutions as concretized specs
     if "solutions" in show:
         for spec in result.specs:
             # With -y, just print YAML to output.

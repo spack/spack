@@ -25,8 +25,12 @@
 #show error/6.
 #show error/7.
 
-% debug
+% depths
 #show depth/2.
+#show const_max_depth/1.
+
+% debug
+
 %#show depends_on/2.
 
 %node(Package) :- attr("node", Package).
@@ -34,5 +38,3 @@
 
 %version(Package, Version) :- attr("version", Package, Version).
 %#show version/2.
-
-#show impose/1.

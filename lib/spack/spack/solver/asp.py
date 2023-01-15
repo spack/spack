@@ -154,72 +154,54 @@ high_fixed_priority_offset = 10_000_000
 #: higher priority for specs we have to build)
 build_priority_offset = 100_000
 
+#: max priority for an error
+max_error_priority = 3
+
 
 def build_criteria_names(
-    costs: List[int], opt_criteria: List["AspFunction"], max_depth: int
-) -> Dict[str, Union[int, List[int]]]:
+    costs: List[int], opt_criteria: List["AspFunction"], max_depth: int, const_max_depth: int
+) -> Dict[str, Union[int, List[Tuple[int, int]]]]:
     """Construct an ordered mapping from criteria names to costs."""
 
     # ensure names of all criteria are unique
     names = {criterion.args[0] for criterion in opt_criteria}
     assert len(names) == len(opt_criteria), "names of optimization criteria must be unique"
 
-    # costs contains:
-    #  - error criteria
-    #  - number of input specs not concretized
-    #  - N build criteria
-    #    ...
-    #  - number of packages to build
-    #  - N reuse criteria
-    #    ...
-
     # split opt criteria into two lists
     fixed_criteria = [oc for oc in opt_criteria if oc.args[1] == "fixed"]
     leveled_criteria = [oc for oc in opt_criteria if oc.args[1] == "leveled"]
 
-    print("FIXED:", len(fixed_criteria))
-    print("LEVELED:", len(leveled_criteria))
+    # first non-error criterion
+    solve_index = max_error_priority + 1
 
-    n_depths = max_depth + 1  # depths start at zero
-    total_criteria = len(fixed_criteria) + len(leveled_criteria) * 2 * n_depths
-    print(total_criteria)
+    # each criterion is aggregated for each level in the graph
+    max_leveled_costs = len(leveled_criteria) * const_max_depth
+    n_leveled_costs = len(leveled_criteria) * (max_depth + 1)
 
-    # opt_criteria has all the named criteria, which is all but the errors.
-    # So we can figure out how many build criteria there are up front.
-    # the -2 here accounts for:
-    # - number of specs not concretized
-    # - number of packages to build (vs. reuse)
-    n_leveled_criteria = len(opt_criteria) - 2
+    build_index = solve_index + 1 + max_leveled_costs
+    fixed_costs = [costs[solve_index], costs[build_index]]
 
-    n_leveled_criteria = n_build_criteria * 2 * n_depths
-    total_criteria = n_leveled_criteria + 2
-
-    assert len(costs) == total_criteria
-
-    # For each level, opt_criteria are in order, highest to lowest, as written in
-    # concretize.lp put costs in the same order as opt criteria
-    start = len(costs) - n_named_criteria
-
-    # build criteria count should be divisible by n_depths or we're doing something wrong.
-    assert n_build_criteria % n_depths == 0
+    build_costs = costs[solve_index + 1 : solve_index + 1 + n_leveled_costs]
+    reuse_costs = costs[build_index + 1 : build_index + 1 + n_leveled_costs]
+    assert len(build_costs) == len(reuse_costs) == n_leveled_costs
 
     criteria = {}
-    ordered_costs = costs[start:]
-    ordered_costs.insert(1, ordered_costs.pop(n_build_criteria + 1))
 
-    for i, (priority, type, name) in enumerate(c.args for c in opt_criteria):
-        if type == "fixed":
-            criteria[name] = ordered_costs[i]
-        else:
-            criteria[name] = ordered_costs[i::n_build_criteria]
+    def add_fixed(criterion_idx, cost_idx):
+        name = fixed_criteria[criterion_idx].args[2]
+        criteria["fixed: " + name] = costs[cost_idx]
 
-    # list of build cost, reuse cost, and name of each criterion
-    criteria: List[Tuple[int, int, str]] = []
-    for i, (priority, name) in enumerate(c.args for c in opt_criteria):
-        priority = int(priority)
-        build_cost = ordered_costs[i]
-        reuse_cost = ordered_costs[i + n_build_criteria] if priority < 100_000 else None
-        criteria.append((reuse_cost, build_cost, name))
+    add_fixed(0, solve_index)
+
+    for i, fn in enumerate(leveled_criteria):
+        name = fn.args[2]
+        criteria["build: " + name] = build_costs[i :: len(leveled_criteria)]
+
+    add_fixed(1, build_index)
+
+    for i, fn in enumerate(leveled_criteria):
+        name = fn.args[2]
+        criteria["reuse: " + name] = reuse_costs[i :: len(leveled_criteria)]
 
     return criteria
 
@@ -803,7 +785,7 @@ class PyclingoDriver(object):
 
             # build specs from spec attributes in the model
             spec_attrs = extract_functions(best_model, "attr")
-            with timer.measure("build_specs"):
+            with timer.measure("build"):
                 answers = builder.build_specs(spec_attrs)
 
             # add best spec to the results
@@ -812,16 +794,11 @@ class PyclingoDriver(object):
             # get optimization criteria
             criteria = extract_functions(best_model, "opt_criterion")
             depths = extract_functions(best_model, "depth")
-            print(depths)
+            const_max_depth, *_ = extract_functions(best_model, "const_max_depth")
+            const_max_depth = const_max_depth.args[0]
             max_depth = max(d.args[1] for d in depths)
 
-            print(f"COST:      {len(min_cost)} {min_cost}")
-            print(f"PRIO:      {len(priorities)} {priorities}")
-            print(f"MAX_DEPTH: {max_depth}")
-            print()
-            print(opt_criteria)
-
-            result.criteria = build_criteria_names(min_cost, criteria, max_depth)
+            result.criteria = build_criteria_names(min_cost, criteria, max_depth, const_max_depth)
 
             # record the number of models the solver considered
             result.nmodels = len(models)
@@ -831,7 +808,7 @@ class PyclingoDriver(object):
 
             # print any unknown functions in the model
             for sym in best_model:
-                if sym.name not in ("attr", "error", "opt_criterion"):
+                if sym.name not in ("attr", "error", "opt_criterion", "depth", "const_max_depth"):
                     tty.debug(
                         "UNKNOWN SYMBOL: %s(%s)" % (sym.name, ", ".join(stringify(sym.arguments)))
                     )
