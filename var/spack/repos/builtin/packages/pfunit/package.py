@@ -55,7 +55,6 @@ class Pfunit(CMakePackage):
 
     variant(
         "max_array_rank",
-        values=int,
         default=5,
         description="Max number of Fortran dimensions of array asserts",
     )
