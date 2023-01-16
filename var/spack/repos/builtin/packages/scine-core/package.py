@@ -9,7 +9,7 @@ from spack.package import *
 
 
 class ScineCore(CMakePackage):
-    """Core provides the functionality necessary to couple the individual SCINE modules together."""
+    """Core provides the functionality necessary to couple the individual SCINE modules together"""
 
     homepage = "https://scine.ethz.ch/"
     url = "https://github.com/qcscine/core/archive/refs/tags/4.0.2.tar.gz"
