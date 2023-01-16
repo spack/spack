@@ -70,7 +70,10 @@ spack:
       - [$sdk_base_spec]
       - [$^visit_specs]
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
+  mirrors:
+    mirror:
+      fetch: https://binaries.spack.io/develop/data-vis-sdk
+      push: s3://spack-binaries/develop/data-vis-sdk
 
   gitlab-ci:
     image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
