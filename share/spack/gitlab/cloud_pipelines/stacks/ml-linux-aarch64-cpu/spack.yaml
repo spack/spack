@@ -36,10 +36,11 @@ spack:
       - py-jaxlib
 
       # Keras
-      - py-keras
-      - py-keras-applications
-      - py-keras-preprocessing
-      - py-keras2onnx
+      # https://github.com/spack/spack/issues/34954
+      # - py-keras
+      # - py-keras-applications
+      # - py-keras-preprocessing
+      # - py-keras2onnx
 
       # PyTorch
       - py-botorch
