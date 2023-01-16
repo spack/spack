@@ -34,7 +34,7 @@ def _byte_strings_to_single_binary_regex(prefixes):
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
 
 
-def utf8_paths_to_single_binary_regex(prefixes) -> re.Pattern:
+def utf8_paths_to_single_binary_regex(prefixes):
     """Create a (binary) regex that matches any input path in utf8"""
     return _byte_strings_to_single_binary_regex(p.encode("utf-8") for p in prefixes)
 
@@ -73,7 +73,7 @@ class PrefixReplacer:
         """Returns true when the prefix to prefix map
         is mapping everything to the same location (identity)
         or there are no prefixes to replace."""
-        return bool(self.prefix_to_prefix)
+        return not bool(self.prefix_to_prefix)
 
     def apply(self, filenames: list):
         if self.is_noop:
@@ -90,7 +90,7 @@ class PrefixReplacer:
     def apply_to_file(self, f):
         if self.is_noop:
             return
-        self._apply_to_file(self, f)
+        self._apply_to_file(f)
 
 
 class TextFilePrefixReplacer(PrefixReplacer):
