@@ -17,7 +17,7 @@ class PyXxhash(PythonPackage):
 
     depends_on("python@2.6:2,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("xxhash@0.8.0")
+    depends_on("xxhash@0.8.0:")
 
     def setup_build_environment(self, env):
         env.set("XXHASH_LINK_SO", "1")
