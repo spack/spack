@@ -395,8 +395,8 @@ class Opencv(CMakePackage, CudaPackage):
             mod,
             default=False,
             description="Include opencv_{0} contrib module".format(mod),
+            when="+contrib",
         )
-        conflicts("+{0}".format(mod), when="~contrib")
 
     # contrib module conflicts and dependencies
     with when("+alphamat"):
@@ -785,7 +785,7 @@ class Opencv(CMakePackage, CudaPackage):
         description="Enable -ffast-math (not recommended for GCC 4.6.x)",
     )
     variant("nonfree", default=False, description="Enable non-free algorithms")
-    variant("contrib", default=True, description="Install extra OpenCV modules")
+    variant("contrib", default=True, description="Enable OpenCV contrib modules")
 
     # Required (dependencies)
     depends_on("cmake@3.5.1:", type="build")
