@@ -105,6 +105,23 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("whip+rocm", when="@0.9: +rocm")
     depends_on("whip+cuda", when="@0.9: +cuda")
 
+    with when("+rocm"):
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on(
+                "whip amdgpu_target={0}".format(val), when="@0.9: amdgpu_target={0}".format(val)
+            )
+            depends_on(
+                "rocsolver amdgpu_target={0}".format(val),
+                when="@0.5: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
+            )
+
+    with when("+cuda"):
+        for val in CudaPackage.cuda_arch_values:
+            depends_on("whip cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val))
+
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
         depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
