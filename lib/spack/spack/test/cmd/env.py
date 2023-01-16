@@ -3146,6 +3146,54 @@ def test_environment_depfile_out(tmpdir, mock_packages):
             assert stdout == f.read()
 
 
+def test_spack_package_ids_variable(tmpdir, mock_packages):
+    # Integration test for post-install hooks through prefix/SPACK_PACKAGE_IDS
+    # variable
+    env("create", "test")
+    makefile_path = str(tmpdir.join("Makefile"))
+    include_path = str(tmpdir.join("include.mk"))
+
+    # Create env and generate depfile in include.mk with prefix example/
+    with ev.read("test"):
+        add("libdwarf")
+        concretize()
+
+    with ev.read("test"):
+        env(
+            "depfile",
+            "-G",
+            "make",
+            "--make-disable-jobserver",
+            "--make-target-prefix=example",
+            "-o",
+            include_path,
+        )
+
+    # Include in Makefile and create target that depend on SPACK_PACKAGE_IDS
+    with open(makefile_path, "w") as f:
+        f.write(
+            r"""
+all: post-install
+
+include include.mk
+
+example/post-install/%: example/install/%
+	$(info post-install: $(HASH))
+
+post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
+"""
+        )
+    make = Executable("make")
+
+    # Do dry run.
+    out = make("-n", "-C", str(tmpdir), output=str)
+
+    # post-install: <hash> should've been executed
+    with ev.read("test") as test:
+        for s in test.all_specs():
+            assert "post-install: {}".format(s.dag_hash()) in out
+
+
 def test_unify_when_possible_works_around_conflicts():
     e = ev.create("coconcretization")
     e.unify = "when_possible"
