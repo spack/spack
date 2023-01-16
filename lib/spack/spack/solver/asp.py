@@ -159,7 +159,7 @@ max_error_priority = 3
 
 
 def build_criteria_names(
-    costs: List[int], opt_criteria: List["AspFunction"], max_depth: int, const_max_depth: int
+    costs: List[int], opt_criteria: List["AspFunction"], max_depth: int
 ) -> Dict[str, Union[int, List[Tuple[int, int]]]]:
     """Construct an ordered mapping from criteria names to costs."""
 
@@ -174,8 +174,12 @@ def build_criteria_names(
     # first non-error criterion
     solve_index = max_error_priority + 1
 
-    # each criterion is aggregated for each level in the graph
-    max_leveled_costs = len(leveled_criteria) * const_max_depth
+    # compute without needing max_depth from solve
+    max_leveled_costs = (len(costs) - max_error_priority - 3) / 2
+    assert max_leveled_costs * 2 == len(costs) - max_error_priority - 3
+    assert max_leveled_costs % len(leveled_criteria) == 0
+    max_leveled_costs = int(max_leveled_costs)
+
     n_leveled_costs = len(leveled_criteria) * (max_depth + 1)
 
     build_index = solve_index + 1 + max_leveled_costs
@@ -794,11 +798,11 @@ class PyclingoDriver(object):
             # get optimization criteria
             criteria = extract_functions(best_model, "opt_criterion")
             depths = extract_functions(best_model, "depth")
-            const_max_depth, *_ = extract_functions(best_model, "const_max_depth")
-            const_max_depth = const_max_depth.args[0]
             max_depth = max(d.args[1] for d in depths)
 
-            result.criteria = build_criteria_names(min_cost, criteria, max_depth, const_max_depth)
+            print("PRIO:", priorities)
+
+            result.criteria = build_criteria_names(min_cost, criteria, max_depth)
 
             # record the number of models the solver considered
             result.nmodels = len(models)

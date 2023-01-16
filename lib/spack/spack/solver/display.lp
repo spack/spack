@@ -27,7 +27,7 @@
 
 % depths
 #show depth/2.
-#show const_max_depth/1.
+%#show parent_depth/2.
 
 % debug
 

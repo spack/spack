@@ -1117,32 +1117,32 @@ build_priority(Package, build_prio) :- attr("node", Package), not optimize_for_r
 % Calculate min depth of nodes in the DAG
 % We use this to optimize nodes closer to roots with higher precedence.
 %-----------------------------------------------------------------------------
-#const max_depth = 5.
-const_max_depth(max_depth).
+#const max_depth = 10.
 
 % roots have depth 0.
 depth(Package, 0) :- attr("root", Package).
+depth(Package, D+1) :- depth(Dependent, D), depends_on(Dependent, Package), D < max_depth.
+
+
+%parent_depth(Package, D) :-
+%    depends_on(Dependent, Package),
+%    depth(Dependent, D),
+%    D < max_depth - 1.
+
+%depth(Package, M+1) :-
+%    M = #min{ D: parent_depth(Package, D); max_depth - 1 },
+%    attr("node", Package).
 
 % other nodes' depth is the minimum depth of any dependent plus one.
-min_parent_depth(Package, N) :-
-    N = #min{
-        D: depends_on(Dependent, Package),
-           depth(Dependent, D),
-           D = 0..max_depth - 1
-    },
-    N = 0..max_depth - 1,
-    attr("node", Package).
-
-depth(Package, max_depth - 1) :-
-    min_parent_depth(Package, P),
-    P >= max_depth - 1,
-    attr("node", Package).
-
-depth(Package, P+1) :-
-    min_parent_depth(Package, P),
-    P >= 0,
-    P < max_depth - 1,
-    attr("node", Package).
+%depth(Package, N + 1) :-
+%    N = #min{
+%        D: depends_on(Dependent, Package),
+%           depth(Dependent, D),
+%           D < max_depth;
+%        max_depth - 1
+%    },
+%    N = 0..max_depth - 1,
+%    attr("node", Package).
 
 
 %-----------------------------------------------------------------
@@ -1183,11 +1183,11 @@ depth(Package, P+1) :-
 % "leveled" criteria sum into a bucket per depth in the graph, per build priority
 #minimize{
     0@(((max_depth - D - 1) * depth_offset) + N + build_prio)
-    : opt_criterion(N, "leveled", _), D = 0..max_depth - 1
+    : opt_criterion(N, "leveled", _), depth(_, D)
 }.
 #minimize{
     0@(((max_depth - D - 1) * depth_offset) + N)
-    : opt_criterion(N, "leveled", _), D = 0..max_depth - 1
+    : opt_criterion(N, "leveled", _), depth(_, D)
 }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
