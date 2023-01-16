@@ -272,7 +272,7 @@ Selection of the target microarchitectures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The options under the ``targets`` attribute control which targets are considered during a solve.
-Currently the options in this section are only configurable from the ``concretization.yaml`` file
+Currently the options in this section are only configurable from the ``concretizer.yaml`` file
 and there are no corresponding command line arguments to enable them for a single solve.
 
 The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
