@@ -737,6 +737,16 @@ def env_depfile(args):
 
     all_pkg_identifiers = []
 
+    # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
+    # generated makefiles to add post-install hooks, like pushing to a buildcache,
+    # running tests, etc.
+    # NOTE: GNU Make allows directory separators in variable names, so for consistency
+    # we can namespace this variable with the same prefix as targets.
+    if args.make_target_prefix is None:
+        pkg_identifier_variable = "SPACK_PACKAGE_IDS"
+    else:
+        pkg_identifier_variable = os.path.join(target_prefix, "SPACK_PACKAGE_IDS")
+
     # All install and install-deps targets
     all_install_related_targets = []
 
@@ -773,6 +783,7 @@ def env_depfile(args):
             "adjacency_list": make_targets.adjacency_list,
             "phony_convenience_targets": " ".join(phony_convenience_targets),
             "target_prefix": target_prefix,
+            "pkg_ids_variable": pkg_identifier_variable,
             "pkg_ids": " ".join(all_pkg_identifiers),
         }
     )
