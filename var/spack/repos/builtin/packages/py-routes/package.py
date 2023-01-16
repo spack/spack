@@ -16,3 +16,6 @@ class PyRoutes(PythonPackage):
     version("2.5.1", sha256="b6346459a15f0cbab01a45a90c3d25caf980d4733d628b4cc1952b865125d053")
 
     depends_on("py-setuptools", type="build")
+
+    depends_on("py-six", type=("build", "run"))
+    depends_on("py-repoze-lru@0.3:", type=("build", "run"))

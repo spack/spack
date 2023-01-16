@@ -20,3 +20,6 @@ class PyGalaxy2cwl(PythonPackage):
     )
 
     depends_on("py-setuptools", type="build")
+
+    depends_on("py-pyyaml@5.3.0:", type=("build", "run"))
+    depends_on("py-gxformat2@0.11.0:", type=("build", "run"))
