@@ -107,13 +107,6 @@ class Python(Package):
     version("3.7.1", sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06")
     version("3.7.0", sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d")
 
-    # Python 3.6.15 has been added back only to allow bootstrapping Spack on Python 3.6
-    version(
-        "3.6.15",
-        sha256="54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043",
-        deprecated=True,
-    )
-
     extendable = True
 
     # Variants to avoid cyclical dependencies for concretizer
