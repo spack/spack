@@ -38,8 +38,8 @@ class GtkDoc(AutotoolsPackage):
     depends_on("py-six", type=("test"))
     depends_on("libxslt")
     depends_on("libxml2@2.3.6:")
-    depends_on("docbook-xsl@1.78.1")
-    depends_on("docbook-xml@4.3")
+    depends_on("docbook-xsl")
+    depends_on("docbook-xml")
     # depends_on('dblatex', when='+pdf')
 
     patch("build.patch")
