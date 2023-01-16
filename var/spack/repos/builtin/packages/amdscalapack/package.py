@@ -16,6 +16,12 @@ class Amdscalapack(ScalapackBase):
     AMD's optimized version of ScaLAPACK enables using BLIS and
     LibFLAME library that have optimized dense matrix functions and
     solvers for AMD EPYC processor family CPUs.
+
+    LICENSING INFORMATION: By downloading, installing and using this software,
+    you agree to the terms and conditions of the AMD AOCL-ScaLAPACK license
+    agreement.  You may obtain a copy of this license agreement from
+    https://www.amd.com/en/developer/aocl/scalapack/scalapack-libraries-4-0-eula.html
+    https://www.amd.com/en/developer/aocl/scalapack/scalapack-libraries-eula.html
     """
 
     _name = "amdscalapack"
@@ -24,6 +30,7 @@ class Amdscalapack(ScalapackBase):
 
     maintainers = ["amd-toolchain-support"]
 
+    version("4.0", sha256="f02913b5984597b22cdb9a36198ed61039a1bf130308e778dc31b2a7eb88b33b")
     version("3.2", sha256="9e00979bb1be39d627bdacb01774bc043029840d542fafc934d16fec3e3b0892")
     version("3.1", sha256="4c2ee2c44644a0feec0c6fc1b1a413fa9028f14d7035d43a398f5afcfdbacb98")
     version("3.0", sha256="6e6f3578f44a8e64518d276e7580530599ecfa8729f568303ed2590688e7096f")

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------\
+
 from spack.package import *
 from spack.pkg.builtin.libflame import LibflameBase
 
@@ -28,6 +29,12 @@ class Amdlibflame(LibflameBase):
     In combination with BLIS library which includes optimizations
     for the AMD EPYC processor family, libFLAME enables running
     high performing LAPACK functionalities on AMD platform.
+
+    LICENSING INFORMATION: By downloading, installing and using this software,
+    you agree to the terms and conditions of the AMD AOCL-libFLAME license
+    agreement.  You may obtain a copy of this license agreement from
+    https://www.amd.com/en/developer/aocl/blis/libflame-4-0-eula.html
+    https://www.amd.com/en/developer/aocl/blis/libflame-eula.html
     """
 
     _name = "amdlibflame"
@@ -37,6 +44,7 @@ class Amdlibflame(LibflameBase):
 
     maintainers = ["amd-toolchain-support"]
 
+    version("4.0", sha256="bcb05763aa1df1e88f0da5e43ff86d956826cbea1d9c5ff591d78a3e091c66a4")
     version("3.2", sha256="6b5337fb668b82d0ed0a4ab4b5af4e2f72e4cedbeeb4a8b6eb9a3ef057fb749a")
     version("3.1", sha256="4520fb93fcc89161f65a40810cae0fa1f87cecb242da4a69655f502545a53426")
     version("3.0.1", sha256="5859e7b39ffbe73115dd598b035f212d36310462cf3a45e555a5087301710776")
