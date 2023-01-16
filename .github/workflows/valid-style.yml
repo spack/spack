@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
-    - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912 # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
         python-version: '3.11'
         cache: 'pip'
@@ -38,7 +38,7 @@ jobs:
     - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912 # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
         python-version: '3.11'
         cache: 'pip'
