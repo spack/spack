@@ -12,7 +12,7 @@ class SimpleDftd3(MesonPackage):
     """
 
     homepage = "https://dftd3.readthedocs.io"
-    url = "https://github.com/dftd3/simple-dftd3/releases/download/v0.7.0/s-dftd3-0.7.0.tar.xz"
+    url = "https://github.com/dftd3/simple-dftd3/releases/download/v0.7.0/s-dftd3-0.7.0-source.tar.xz"
     git = "https://github.com/dftd3/simple-dftd3.git"
 
     maintainers = ["awvwgk"]
@@ -21,14 +21,6 @@ class SimpleDftd3(MesonPackage):
     version("0.7.0", "5390b20102474a3c37240f38226f3a54a809b34bcb910317bdd109b8c2865f4e")
     version("0.6.0", "c057361565f570cb128489c70131487f71b6891a40e5292dfe37041596810dfe")
     version("0.5.1", "0411fdaebe438f652a970cb232ae3199c4cc840366ed05fda4c38e634632040d")
-
-    def url_for_version(self, version):
-        return (
-            "https://github.com/dftd3/simple-dftd3/releases/download/v{version}/"
-            + "s-dftd3-{version}-source.tar.xz"
-            if version < Version("0.7")
-            else "s-dftd3-{version}.tar.xz"
-        ).format(version=str(version))
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")
     variant("python", default=False, description="Build Python extension module")
