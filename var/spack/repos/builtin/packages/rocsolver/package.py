@@ -122,12 +122,16 @@ class Rocsolver(CMakePackage):
 
     depends_on("cmake@3.8:", type="build", when="@4.1.0:")
     depends_on("cmake@3.5:", type="build")
-    depends_on("fmt@7:8.0.1", type="build", when="@4.5.0:")
+    depends_on("fmt@7:", type="build", when="@4.5.0:")
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
 
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
+    # Backport https://github.com/ROCmSoftwarePlatform/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
+    patch("fmt-8.1-compatibility.patch", when="@4.5.0:5.1.3")
+    # Maximize compatibility with other libraries that are using fmt.
+    patch("fmt-9-compatibility.patch", when="@5.2.0:")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocsolver-test")
