@@ -58,7 +58,7 @@ spack:
     - reportinglib
     - spatial-index
     - spykfunc
-    - steps+petsc
+    - steps+petsc^trilinos@13.0.1
     - synapsetool
     - touchdetector
     - unit-test-translator
