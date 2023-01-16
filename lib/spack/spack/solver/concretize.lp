@@ -1117,12 +1117,13 @@ build_priority(Package, build_prio) :- attr("node", Package), not optimize_for_r
 % Calculate min depth of nodes in the DAG
 % We use this to optimize nodes closer to roots with higher precedence.
 %-----------------------------------------------------------------------------
-#const max_depth = 10.
+#const max_depth = 4.
 
 % roots have depth 0.
 depth(Package, 0) :- attr("root", Package).
-depth(Package, D+1) :- depth(Dependent, D), depends_on(Dependent, Package), D < max_depth.
 
+
+%depth(Package, D+1) :- depth(Dependent, D), depends_on(Dependent, Package), D < max_depth.
 
 %parent_depth(Package, D) :-
 %    depends_on(Dependent, Package),
@@ -1134,15 +1135,15 @@ depth(Package, D+1) :- depth(Dependent, D), depends_on(Dependent, Package), D < 
 %    attr("node", Package).
 
 % other nodes' depth is the minimum depth of any dependent plus one.
-%depth(Package, N + 1) :-
-%    N = #min{
-%        D: depends_on(Dependent, Package),
-%           depth(Dependent, D),
-%           D < max_depth;
-%        max_depth - 1
-%    },
-%    N = 0..max_depth - 1,
-%    attr("node", Package).
+depth(Package, N + 1) :-
+    N = #min{
+        D: depends_on(Dependent, Package),
+           depth(Dependent, D),
+           D < max_depth;
+        max_depth - 1
+    },
+    N = 0..max_depth - 1,
+    attr("node", Package).
 
 
 %-----------------------------------------------------------------
