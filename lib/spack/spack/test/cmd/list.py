@@ -6,6 +6,7 @@
 import sys
 from textwrap import dedent
 
+import spack.repo
 from spack.main import SpackCommand
 
 list = SpackCommand("list")
@@ -123,3 +124,13 @@ def test_list_tags(mock_packages):
     output = list("--tag", "tag3")
     assert "mpich\n" not in output
     assert "mpich2" in output
+
+
+def test_list_count(mock_packages):
+    output = list("--count")
+    assert int(output.strip()) == len(spack.repo.all_package_names())
+
+    output = list("--count", "py-")
+    assert int(output.strip()) == len(
+        [name for name in spack.repo.all_package_names() if "py-" in name]
+    )
