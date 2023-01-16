@@ -25,7 +25,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
-    - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
         python-version: 3.9
     - name: spack install
@@ -40,7 +40,7 @@ jobs:
     timeout-minutes: 700
     steps:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
-    - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
         python-version: 3.9
     - name: spack install
@@ -53,7 +53,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
-    - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
         python-version: 3.9
     - name: spack install
