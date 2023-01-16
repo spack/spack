@@ -18,7 +18,6 @@ class PyPythonJose(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-pycryptodome", type=("build", "run"))
     depends_on("py-rsa", type=("build", "run"))
     depends_on("py-ecdsa@:0.14.1,0.16.0:", type=("build", "run"))
     depends_on("py-pyasn1", type=("build", "run"))

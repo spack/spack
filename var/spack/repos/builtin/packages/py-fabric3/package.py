@@ -19,7 +19,6 @@ class PyFabric3(PythonPackage):
         "1.14.post1", sha256="647e485ec83f30b587862f92374d6affc217f3d79819d1d7f512e42e7ae51e81"
     )
 
-    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-paramiko@2.0:2", type=("build", "run"))

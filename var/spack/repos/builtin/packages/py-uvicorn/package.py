@@ -16,10 +16,8 @@ class PyUvicorn(PythonPackage):
     version("0.20.0", sha256="a4e12017b940247f836bc90b72e725d7dfd0c8ed1c51eb365f5ba30d9f5127d8")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     depends_on("py-hatchling", type="build")
 
-    depends_on("py-asgiref@3.5.2", type=("build", "run"))
     depends_on("py-click@7.0:", type=("build", "run"))
     depends_on("py-h11@0.8:", type=("build", "run"))
     depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
