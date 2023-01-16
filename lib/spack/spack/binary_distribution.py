@@ -1050,7 +1050,7 @@ def generate_package_index(cache_prefix, concurrency=32):
     try:
         file_list, read_fn = _spec_files_from_cache(cache_prefix)
     except ListMirrorSpecsError as err:
-        tty.error("Unabled to generate package index, {0}".format(err))
+        tty.error("Unable to generate package index, {0}".format(err))
         return
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
