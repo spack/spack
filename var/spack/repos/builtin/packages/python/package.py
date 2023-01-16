@@ -477,7 +477,8 @@ class Python(Package):
 
         if "+optimizations" in spec:
             config_args.append("--enable-optimizations")
-            if "@3.11.0: %clang" in spec:
+            # Prefer thin LTO for faster compilation times.
+            if "@3.11.0: %clang@3.9:" in spec or "@3.11.0: %apple-clang@8:":
                 config_args.append("--with-lto=thin")
             else:
                 config_args.append("--with-lto")
