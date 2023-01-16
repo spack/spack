@@ -22,19 +22,28 @@ class Srcml(CMakePackage):
     version("1.0.0", sha256="3ddf33271c3b3953d5e3ecbb14c4f925fc0e609a81250d921d3516537dcffae2")
 
     # From https://github.com/srcML/Docker/blob/centos_latest/base/Dockerfile:
-    depends_on("which",       type=("build", "run"))
-    depends_on("zip",         type=("build", "run"))
-    depends_on("unzip",       type=("build", "run"))
-    depends_on("gcc",         type=("build", "run"))
-    depends_on("cmake@3.14:", type=("build", "run"))
-    depends_on("antlr",       type=("build", "run"))
-    depends_on("antlr+cxx",   type=("build", "run"))
-    depends_on("libxml2",     type=("build", "run"))  ## Missing +devel
-    depends_on("libxslt",     type=("build", "run"))  ## Missing +devel
-    depends_on("libarchive",  type=("build", "run"))  ## Missing +devel
-    depends_on("openssl",     type=("build", "run"))  ## Missing +devel
-    depends_on("curl",        type=("build", "run"))  ## Missing +devel
-    depends_on("bzip2",       type=("build", "run"))
-    depends_on("ninja",       type=("build", "run"))
+    depends_on("which")
+    depends_on("zip")
+    depends_on("unzip")
+    #depends_on("gcc")
+    depends_on("cmake@3.14:", type="build")
+    depends_on("antlr+cxx+java")
+    depends_on("libxml2")  ## Missing +devel
+    depends_on("libxslt")  ## Missing +devel
+    depends_on("libarchive")  ## Missing +devel
+    depends_on("openssl")  ## Missing +devel
+    depends_on("curl")  ## Missing +devel
+    depends_on("bzip2")
+    depends_on("ninja")
     # From build errors:
-    depends_on("boost",       type=("build", "run"))
+    depends_on("boost")
+
+    patch(
+            "https://patch-diff.githubusercontent.com/raw/srcML/srcML/pull/1829.patch?full_index=1",
+            sha256="384068e00a01809cdc9b6eca79fd6833bf3214d4b9ac1765b52bc374a7af333e"
+    )
+    
+    def patch(self):
+        filter_file("add_subdirectory\(package\)",
+                    "#noop",
+                    "CMakeLists.txt")
