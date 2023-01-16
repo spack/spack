@@ -810,3 +810,10 @@ class Cp2k(MakefilePackage, CudaPackage):
         with spack.util.environment.set_env(CP2K_DATA_DIR=data_dir, PWD=self.build_directory):
             with working_dir(self.build_directory):
                 make("test", *self.build_targets)
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            # CP2K Makefile doesn't set C standard, but the source code uses
+            # C99-style for-loops with inline definition of iterating variable.
+            flags.append(self.compiler.c99_flag)
+        return (flags, None, None)
