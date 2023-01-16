@@ -1482,7 +1482,7 @@ def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
     hashes = env.all_hashes() if env else None
     matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
-    push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
+    push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
     spec_kwargs = {"include_root": True, "include_dependencies": False}
     kwargs = {"force": True, "allow_root": True, "unsigned": unsigned}
     bindist.push(matches, push_url, spec_kwargs, **kwargs)

@@ -43,6 +43,8 @@ BINARY_METADATA = {
         "The sha256 checksum of binaries is checked before installation."
     ),
     "info": {
+        # This is a mis-nomer since it's not a URL; but file urls cannot
+        # represent relative paths, so we have to live with it for now.
         "url": os.path.join("..", "..", LOCAL_MIRROR_DIR),
         "homepage": "https://github.com/spack/spack-bootstrap-mirrors",
         "releases": "https://github.com/spack/spack-bootstrap-mirrors/releases",
@@ -58,7 +60,11 @@ PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/patchelf.json"
 SOURCE_METADATA = {
     "type": "install",
     "description": "Mirror with software needed to bootstrap Spack",
-    "info": {"url": os.path.join("..", "..", LOCAL_MIRROR_DIR)},
+    "info": {
+        # This is a mis-nomer since it's not a URL; but file urls cannot
+        # represent relative paths, so we have to live with it for now.
+        "url": os.path.join("..", "..", LOCAL_MIRROR_DIR)
+    },
 }
 
 

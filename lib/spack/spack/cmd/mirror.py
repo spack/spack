@@ -145,8 +145,7 @@ def setup_parser(subparser):
 
 def mirror_add(args):
     """Add a mirror to Spack."""
-    url = url_util.format(args.url)
-    spack.mirror.add(args.name, url, args.scope, args)
+    spack.mirror.add(args.name, args.url, args.scope, args)
 
 
 def mirror_remove(args):
@@ -156,7 +155,7 @@ def mirror_remove(args):
 
 def mirror_set_url(args):
     """Change the URL of a mirror."""
-    url = url_util.format(args.url)
+    url = args.url
     mirrors = spack.config.get("mirrors", scope=args.scope)
     if not mirrors:
         mirrors = syaml_dict()
