@@ -3181,3 +3181,10 @@ def test_env_include_packages_url(
 
         cfg = spack.config.get("packages")
         assert "openmpi" in cfg["all"]["providers"]["mpi"]
+
+
+def test_relative_view_path_on_command_line_is_made_absolute(tmpdir, config):
+    with fs.working_dir(str(tmpdir)):
+        env("create", "--with-view", "view", "--dir", "env")
+        environment = ev.Environment(os.path.join(".", "env"))
+        assert os.path.samefile("view", environment.default_view.root)
