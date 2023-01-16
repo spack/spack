@@ -25,6 +25,7 @@ import spack.package_base
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.url as url_util
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
@@ -89,7 +90,7 @@ echo $PATH"""
     spack.mirror.create(mirror_path, specs=[])
 
     # register mirror with spack config
-    mirrors = {"spack-mirror-test": "file://" + mirror_path}
+    mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_path)}
     spack.config.set("mirrors", mirrors)
 
     stage = spack.stage.Stage(mirrors["spack-mirror-test"], name="build_cache", keep=True)

@@ -26,7 +26,7 @@ class Bcache(MakefilePackage):
 
     def setup_build_environment(self, env):
         # Add -lintl if provided by gettext, otherwise libintl is provided by the system's glibc:
-        if any("libintl" in filename for filename in self.libs):
+        if any("libintl." in filename.split("/")[-1] for filename in self.spec["gettext"].libs):
             env.append_flags("LDFLAGS", "-lintl")
 
     patch(

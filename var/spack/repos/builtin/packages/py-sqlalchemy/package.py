@@ -11,32 +11,11 @@ class PySqlalchemy(PythonPackage):
 
     homepage = "http://www.sqlalchemy.org/"
     pypi = "SQLAlchemy/SQLAlchemy-1.3.9.tar.gz"
+    git = "https://github.com/sqlalchemy/sqlalchemy.git"
 
-    # 'sqlalchemy.testing.suite' requires 'pytest'
-    # Attempt to import everything other than 'sqlalchemy.testing'
-    # to avoid unnecessary 'pytest' dependency
-    import_modules = [
-        "sqlalchemy",
-        "sqlalchemy.connectors",
-        "sqlalchemy.databases",
-        "sqlalchemy.util",
-        "sqlalchemy.ext",
-        "sqlalchemy.ext.declarative",
-        "sqlalchemy.dialects",
-        "sqlalchemy.dialects.sybase",
-        "sqlalchemy.dialects.postgresql",
-        "sqlalchemy.dialects.oracle",
-        "sqlalchemy.dialects.sqlite",
-        "sqlalchemy.dialects.mysql",
-        "sqlalchemy.dialects.mssql",
-        "sqlalchemy.dialects.firebird",
-        "sqlalchemy.orm",
-        "sqlalchemy.engine",
-        "sqlalchemy.pool",
-        "sqlalchemy.event",
-        "sqlalchemy.sql",
-    ]
-
+    version("1.4.45", sha256="fd69850860093a3f69fefe0ab56d041edfdfe18510b53d9a2eaecba2f15fa795")
+    version("1.4.44", sha256="2dda5f96719ae89b3ec0f1b79698d86eb9aecb1d54e990abb3fdd92c04b46a90")
+    version("1.4.25", sha256="1adf3d25e2e33afbcd48cfad8076f9378793be43e7fec3e4334306cac6bec138")
     version("1.4.20", sha256="38ee3a266afef2978e82824650457f70c5d74ec0cadec1b10fe5ed6f038eb5d0")
     version("1.3.19", sha256="3bba2e9fbedb0511769780fe1d63007081008c5c2d7d715e91858c94dbaa260e")
     version("1.3.9", sha256="272a835758908412e75e87f75dd0179a51422715c125ce42109632910526b1fd")

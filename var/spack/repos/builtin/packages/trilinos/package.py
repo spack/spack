@@ -439,7 +439,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     patch(
         "https://patch-diff.githubusercontent.com/raw/trilinos/Trilinos/pull/10545.patch?full_index=1",
         sha256="62272054f7cc644583c269e692c69f0a26af19e5a5bd262db3ea3de3447b3358",
-        when="@:13.4.0 +complex",
+        when="@:13.4 +complex",
     )
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
@@ -468,7 +468,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             if "+wrapper" in spec:
                 flags.append("--expt-extended-lambda")
         elif name == "ldflags":
-            if is_cce:
+            if spec.satisfies("%cce@:14"):
                 flags.append("-fuse-ld=gold")
             if spec.satisfies("platform=linux ~cuda"):
                 # TriBITS explicitly links libraries against all transitive
@@ -650,6 +650,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ),
                 define_from_variant("Amesos2_ENABLE_Basker", "basker"),
                 define_from_variant("Amesos2_ENABLE_LAPACK", "amesos2"),
+                define_from_variant("Amesos2_ENABLE_MUMPS", "mumps"),
             ]
         )
 

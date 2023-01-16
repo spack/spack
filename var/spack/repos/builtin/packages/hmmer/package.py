@@ -30,6 +30,9 @@ class Hmmer(Package):
     depends_on("mpi", when="+mpi")
     depends_on("gsl", when="+gsl")
 
+    # https://github.com/EddyRivasLab/hmmer/issues/283
+    conflicts("target=aarch64:", msg="hmmer is only available for x86_64 and PowerPC")
+
     def install(self, spec, prefix):
         configure_args = ["--prefix={0}".format(prefix)]
 

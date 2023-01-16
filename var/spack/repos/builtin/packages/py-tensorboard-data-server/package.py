@@ -18,12 +18,17 @@ class PyTensorboardDataServer(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("rust", type="build")
+    depends_on("rust+rustfmt", type="build")
 
     # https://github.com/tensorflow/tensorboard/issues/5713
     patch(
         "https://github.com/tensorflow/tensorboard/pull/5715.patch?full_index=1",
         sha256="878bbd60fd9c38216a372792f02a65c1b422b6c546050fdf335b264ab263cd8a",
+        when="@0.6.1",
+    )
+    patch(
+        "https://github.com/tensorflow/tensorboard/pull/6101.patch?full_index=1",
+        sha256="4b3bcc2ed656699e9faad7937d013b65fa65fed58fbe58d2ae38e0e7b8006ad8",
         when="@0.6.1",
     )
 

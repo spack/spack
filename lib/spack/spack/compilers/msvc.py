@@ -42,16 +42,16 @@ def get_valid_fortran_pth(comp_ver):
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names: List[str] = ["cl.exe"]
+    cc_names: List[str] = ["cl"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names: List[str] = ["cl.exe"]
+    cxx_names: List[str] = ["cl"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names: List[str] = ["ifx.exe"]
+    f77_names: List[str] = ["ifx"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names: List[str] = ["ifx.exe"]
+    fc_names: List[str] = ["ifx"]
 
     # Named wrapper links within build_env_path
     # Due to the challenges of supporting compiler wrappers
@@ -160,6 +160,8 @@ class Msvc(Compiler):
     def fc_version(cls, fc):
         # We're using intel for the Fortran compilers, which exist if
         # ONEAPI_ROOT is a meaningful variable
+        if not sys.platform == "win32":
+            return "unknown"
         fc_ver = cls.default_version(fc)
         avail_fc_version.add(fc_ver)
         fc_path[fc_ver] = fc

@@ -48,6 +48,7 @@ import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
 import spack.hooks
+import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
@@ -419,18 +420,24 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=timer.NU
             otherwise, ``False``
         timer (Timer):
     """
+    # Early exit if no mirrors are configured.
+    if not spack.mirror.MirrorCollection():
+        return False
+
     pkg_id = package_id(pkg)
     tty.debug("Searching for binary cache of {0}".format(pkg_id))
 
     timer.start("search")
-    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
+    matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
     timer.stop("search")
 
-    if not matches:
-        return False
-
     return _process_binary_cache_tarball(
-        pkg, pkg.spec, explicit, unsigned, mirrors_for_spec=matches, timer=timer
+        pkg,
+        pkg.spec,
+        explicit,
+        unsigned,
+        mirrors_for_spec=matches,
+        timer=timer,
     )
 
 
@@ -453,11 +460,10 @@ def combine_phase_logs(phase_log_files, log_path):
         phase_log_files (list): a list or iterator of logs to combine
         log_path (str): the path to combine them to
     """
-
-    with open(log_path, "w") as log_file:
+    with open(log_path, "bw") as log_file:
         for phase_log_file in phase_log_files:
-            with open(phase_log_file, "r") as phase_log:
-                log_file.write(phase_log.read())
+            with open(phase_log_file, "br") as phase_log:
+                shutil.copyfileobj(phase_log, log_file)
 
 
 def dump_packages(spec, path):

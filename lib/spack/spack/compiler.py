@@ -9,6 +9,7 @@ import os
 import platform
 import re
 import shutil
+import sys
 import tempfile
 from typing import List, Optional, Sequence
 
@@ -26,6 +27,8 @@ from spack.util.environment import filter_system_paths
 from spack.util.path import system_path_filter
 
 __all__ = ["Compiler"]
+
+is_windows = sys.platform == "win32"
 
 
 @llnl.util.lang.memoized
@@ -153,14 +156,14 @@ def _parse_link_paths(string):
 
 
 @system_path_filter
-def _parse_non_system_link_dirs(string):
+def _parse_non_system_link_dirs(string: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 
     Args:
-        string (str): compiler debug output as a string
+        string: compiler debug output as a string
 
     Returns:
-        (list of str): implicit link paths parsed from the compiler output
+        Implicit link paths parsed from the compiler output
     """
     link_dirs = _parse_link_paths(string)
 
@@ -592,7 +595,16 @@ class Compiler(object):
         # defined for the compiler
         compiler_names = getattr(cls, "{0}_names".format(language))
         prefixes = [""] + cls.prefixes
-        suffixes = [""] + cls.suffixes
+        suffixes = [""]
+        # Windows compilers generally have an extension of some sort
+        # as do most files on Windows, handle that case here
+        if is_windows:
+            ext = r"\.(?:exe|bat)"
+            cls_suf = [suf + ext for suf in cls.suffixes]
+            ext_suf = [ext]
+            suffixes = suffixes + cls.suffixes + cls_suf + ext_suf
+        else:
+            suffixes = suffixes + cls.suffixes
         regexp_fmt = r"^({0}){1}({2})$"
         return [
             re.compile(regexp_fmt.format(prefix, re.escape(name), suffix))

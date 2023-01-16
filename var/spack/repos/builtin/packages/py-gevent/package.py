@@ -38,3 +38,9 @@ class PyGevent(PythonPackage):
 
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
     patch("icc.patch", when="%intel")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi@2023:"):
+                flags.append("-Wno-error=incompatible-function-pointer-types")
+        return (flags, None, None)

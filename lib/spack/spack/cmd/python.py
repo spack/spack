@@ -127,8 +127,10 @@ def python_interpreter(args):
                 console.runsource(startup.read(), startup_file, "exec")
 
     if args.python_command:
+        propagate_exceptions_from(console)
         console.runsource(args.python_command)
     elif args.python_args:
+        propagate_exceptions_from(console)
         sys.argv = args.python_args
         with open(args.python_args[0]) as file:
             console.runsource(file.read(), args.python_args[0], "exec")
@@ -149,3 +151,18 @@ def python_interpreter(args):
                 platform.machine(),
             )
         )
+
+
+def propagate_exceptions_from(console):
+    """Set sys.excepthook to let uncaught exceptions return 1 to the shell.
+
+    Args:
+        console (code.InteractiveConsole): the console that needs a change in sys.excepthook
+    """
+    console.push("import sys")
+    console.push("_wrapped_hook = sys.excepthook")
+    console.push("def _hook(exc_type, exc_value, exc_tb):")
+    console.push("    _wrapped_hook(exc_type, exc_value, exc_tb)")
+    console.push("    sys.exit(1)")
+    console.push("")
+    console.push("sys.excepthook = _hook")
