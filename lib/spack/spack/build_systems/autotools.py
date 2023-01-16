@@ -7,7 +7,7 @@ import os
 import os.path
 import stat
 import subprocess
-from typing import List  # novm
+from typing import List  # novm # noqa: F401
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -427,15 +427,15 @@ To resolve this problem, please try the following:
             x.filter(regex="-nostdlib", repl="", string=True)
             rehead = r"/\S*/"
             for o in [
-                "fjhpctag.o",
-                "fjcrt0.o",
-                "fjlang08.o",
-                "fjomp.o",
-                "crti.o",
-                "crtbeginS.o",
-                "crtendS.o",
+                r"fjhpctag\.o",
+                r"fjcrt0\.o",
+                r"fjlang08\.o",
+                r"fjomp\.o",
+                r"crti\.o",
+                r"crtbeginS\.o",
+                r"crtendS\.o",
             ]:
-                x.filter(regex=(rehead + o), repl="", string=True)
+                x.filter(regex=(rehead + o), repl="")
         elif self.pkg.compiler.name == "dpcpp":
             # Hack to filter out spurious predep_objects when building with Intel dpcpp
             # (see https://github.com/spack/spack/issues/32863):
