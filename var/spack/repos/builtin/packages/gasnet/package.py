@@ -37,6 +37,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("main", branch="stable")
     version("master", branch="master")
 
+    version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
     version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
     version("2022.3.0", sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09")
     version("2021.9.0", sha256="1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee")
@@ -87,6 +88,12 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         if spec.satisfies("@master:"):
             bootstrapsh = Executable("./Bootstrap")
             bootstrapsh()
+            # Record git-describe when fetched from git:
+            try:
+                git = which("git")
+                git("describe", "--long", "--always", output="version.git")
+            except spack.util.executable.ProcessError:
+                spack.main.send_warning_to_tty("Omitting version stamp due to git error")
 
         # The GASNet-EX library has a highly multi-dimensional configure space,
         # to accomodate the varying behavioral requirements of each client runtime.
