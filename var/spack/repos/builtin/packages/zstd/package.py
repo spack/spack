@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Zstd(MakefilePackage):
+class Zstd(CMakePackage, MakefilePackage):
     """Zstandard, or zstd as short version, is a fast lossless compression
     algorithm, targeting real-time compression scenarios at zlib-level and
     better compression ratios."""
@@ -55,10 +55,18 @@ class Zstd(MakefilePackage):
     # (last tested: nvhpc@22.3)
     conflicts("+programs %nvhpc")
 
-    def build(self, spec, prefix):
+    build_system(
+        "cmake",
+        "makefile",
+        default="makefile",
+    )
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+    def build(self, pkg, spec, prefix):
         pass
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         args = ["VERBOSE=1", "PREFIX=" + prefix]
 
         # Tested %nvhpc@22.3. No support for -MP
@@ -88,3 +96,18 @@ class Zstd(MakefilePackage):
                 programs_args.append("HAVE_LZ4=0")
             programs_args.append("install")
             make(*programs_args)
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    root_cmakelists_dir = join_path("build", "cmake")
+
+    def cmake_args(self):
+        args = [
+            self.define("ZSTD_BUILD_STATIC", self.spec.satisfies("libs=static")),
+            self.define("ZSTD_BUILD_SHARED", self.spec.satisfies("libs=shared")),
+            self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs"),
+            self.define("ZSTD_ZLIB_SUPPORT", self.spec.satisfies("compression=zlib")),
+            self.define("ZSTD_LZMA_SUPPORT", self.spec.satisfies("compression=lzma")),
+            self.define("ZSTD_LZ4_SUPPORT", self.spec.satisfies("compression=lz4")),
+        ]
+        return args
