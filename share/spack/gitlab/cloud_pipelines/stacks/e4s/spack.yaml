@@ -127,7 +127,7 @@ spack:
   - precice
   - pumi
   - py-jupyterhub
-  - py-libensemble
+  - py-libensemble +mpi +nlopt
   - py-petsc4py
   - py-warpx ^warpx dims=2
   - py-warpx ^warpx dims=3
