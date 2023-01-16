@@ -38,3 +38,5 @@ class PyFastfold(PythonPackage):
     depends_on("py-setproctitle", type=("build", "run"))
     depends_on("py-pdbfixer", type=("build", "run"))
     depends_on("py-pytorch-lightning", type=("build", "run"))
+    # py-fastfold uses np.int, which was removed in py-numpy@1.24.0
+    depends_on("py-numpy@:1.23", when="@0.2.0", type=("build", "run"))
