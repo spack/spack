@@ -125,7 +125,7 @@ class Vtk(CMakePackage):
     depends_on("lz4")
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-cxx4")
+    depends_on("netcdf-cxx")
     depends_on("libpng")
     depends_on("libtiff")
     depends_on("zlib")
@@ -239,7 +239,7 @@ class Vtk(CMakePackage):
             cmake_args.extend(
                 [
                     "-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF",
-                    "-DNETCDF_CXX_ROOT={0}".format(spec["netcdf-cxx4"].prefix),
+                    "-DNETCDF_CXX_ROOT={0}".format(spec["netcdf-cxx"].prefix),
                 ]
             )
 
@@ -388,10 +388,10 @@ class Vtk(CMakePackage):
             # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
             # NETCDF_CXX_INCLUDE_DIR and NETCDF_CXX_LIBRARY must be
             # used instead to detect these bindings
-            netcdf_cxx_lib = spec["netcdf-cxx4"].libs.joined()
+            netcdf_cxx_lib = spec["netcdf-cxx"].libs.joined()
             cmake_args.extend(
                 [
-                    "-DNETCDF_CXX_INCLUDE_DIR={0}".format(spec["netcdf-cxx4"].prefix.include),
+                    "-DNETCDF_CXX_INCLUDE_DIR={0}".format(spec["netcdf-cxx"].prefix.include),
                     "-DNETCDF_CXX_LIBRARY={0}".format(netcdf_cxx_lib),
                 ]
             )
