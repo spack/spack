@@ -53,10 +53,15 @@ class Pfunit(CMakePackage):
     variant("esmf", default=False, description="Enable esmf support")
     variant("docs", default=False, description="Build docs")
 
+    # The maximum rank of an array in the Fortran 2008 standard is 15
+    max_rank = 15
+    allowed_array_ranks = tuple(str(i) for i in range(1, max_rank + 1))
+
     variant(
         "max_array_rank",
         default=5,
-        description="Max number of Fortran dimensions of array asserts",
+        values=allowed_array_ranks,
+        description="Max rank for assertion overloads (higher values may be slower to build)",
     )
 
     variant(
