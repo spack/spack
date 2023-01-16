@@ -500,7 +500,7 @@ _spack_buildcache_create() {
     then
         SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index --spec-file --only"
     else
-        _all_packages
+        _mirrors
     fi
 }
 
@@ -552,11 +552,21 @@ _spack_buildcache_save_specfile() {
 }
 
 _spack_buildcache_sync() {
-    SPACK_COMPREPLY="-h --help --manifest-glob --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --manifest-glob --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+    else
+        _mirrors
+    fi
 }
 
 _spack_cd() {
@@ -1197,7 +1207,7 @@ _spack_license_update_copyright_year() {
 _spack_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --search-description --format --update -v --virtuals -t --tag"
+        SPACK_COMPREPLY="-h --help -d --search-description --format -v --virtuals -t --tag --count --update"
     else
         _all_packages
     fi

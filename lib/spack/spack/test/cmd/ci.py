@@ -1218,7 +1218,7 @@ def test_push_mirror_contents(
     working_dir = tmpdir.join("working_dir")
 
     mirror_dir = working_dir.join("mirror")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
     ci.import_signing_key(_signing_key())
 
