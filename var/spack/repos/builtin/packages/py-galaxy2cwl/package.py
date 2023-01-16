@@ -11,12 +11,11 @@ class PyGalaxy2cwl(PythonPackage):
     """Convert a Galaxy workflow to abstract Common Workflow Language (CWL)"""
 
     homepage = "https://github.com/workflowhub-eu/galaxy2cwl"
+    url = "https://github.com/workflowhub-eu/galaxy2cwl/archive/refs/tags/0.1.4.tar.gz"
 
     version(
         "0.1.4",
-        url="https://files.pythonhosted.org/packages/8d/38/79857ee2a38118ef4007311b7cba480b410369333ba004c6d842feadcc77/galaxy2cwl-0.1.4-py3-none-any.whl",
-        sha256="b6558272656e6f279948ee76d9863b4c00f467ad59b2d1190ca2304e514f7ce9",
-        expand=False,
+        sha256="ceb9024a7bf74c874be216c943cc97343563b1ec78f85fd3ec5b482c64350290",
     )
 
     depends_on("py-setuptools", type="build")
