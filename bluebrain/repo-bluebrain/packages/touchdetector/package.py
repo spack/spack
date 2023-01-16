@@ -102,7 +102,7 @@ class Touchdetector(CMakePackage):
                 self.define('CMAKE_CXX_COMPILER', self.spec['mpi'].mpicxx),
             ]
 
-        if self.spec.satisfies('@5.7.0'):
+        if self.spec.satisfies('@5.7.0:'):
             use_tests = self.spec.satisfies('@develop') or '+test' in self.spec
             args += [
                 self.define_from_variant('ENABLE_CALIPER', 'caliper'),
