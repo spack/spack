@@ -18,10 +18,25 @@ class Hugo(Package):
 
     maintainers = ["alecbcs"]
 
+    version("0.109.0", sha256="35a5ba92057fe2c20b2218c374e762887021e978511d19bbe81ce4d9c21f0c78")
     version("0.106.0", sha256="9219434beb51466487b9f8518edcbc671027c1998e5a5820d76d517e1dfbd96a")
-    version("0.74.3", sha256="9b296fa0396c20956fa6a1f7afadaa78739af62c277b6c0cfae79a91b0fe823f")
-    version("0.68.3", sha256="38e743605e45e3aafd9563feb9e78477e72d79535ce83b56b243ff991d3a2b6e")
-    version("0.53", sha256="48e65a33d3b10527101d13c354538379d9df698e5c38f60f4660386f4232e65c")
+
+    # https://nvd.nist.gov/vuln/detail/CVE-2020-26284
+    version(
+        "0.74.3",
+        sha256="9b296fa0396c20956fa6a1f7afadaa78739af62c277b6c0cfae79a91b0fe823f",
+        deprecated=True,
+    )
+    version(
+        "0.68.3",
+        sha256="38e743605e45e3aafd9563feb9e78477e72d79535ce83b56b243ff991d3a2b6e",
+        deprecated=True,
+    )
+    version(
+        "0.53",
+        sha256="48e65a33d3b10527101d13c354538379d9df698e5c38f60f4660386f4232e65c",
+        deprecated=True,
+    )
 
     # Uses go modules.
     # See https://gohugo.io/getting-started/installing/#fetch-from-github
