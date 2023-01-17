@@ -205,16 +205,6 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     assert "has external module in {0}".format(spec.external_modules) in out
 
 
-def test_process_binary_cache_tarball_none(install_mockery, monkeypatch, capfd):
-    """Tests of _process_binary_cache_tarball when no tarball."""
-    monkeypatch.setattr(spack.binary_distribution, "download_tarball", _none)
-
-    s = spack.spec.Spec("trivial-install-test-package").concretized()
-    assert not inst._process_binary_cache_tarball(s.package, None, False, False)
-
-    assert "exists in binary cache but" in capfd.readouterr()[0]
-
-
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
 
@@ -229,7 +219,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.Database, "add", _noop)
 
     spec = spack.spec.Spec("a").concretized()
-    assert inst._process_binary_cache_tarball(spec.package, spec, False, False)
+    assert inst._process_binary_cache_tarball(spec.package, explicit=False, unsigned=False)
 
     out = capfd.readouterr()[0]
     assert "Extracting a" in out
