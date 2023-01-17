@@ -48,7 +48,8 @@ class Brion(CMakePackage):
     # TODO: bzip2 is a dependency of boost. Needed here because of linking
     # issue (libboost_iostreams.so.1.68.0 not finding libbz2.so)
     depends_on('bzip2')
-    depends_on('highfive@2.3.1 +boost', when='@3.3.8:')
+    depends_on('highfive +boost', when='@3.3.9:')
+    depends_on('highfive@2.3.1 +boost', when='@3.3.8')
     depends_on('highfive@2.2.2 +boost', when='@3.3.2:3.3.7')
     depends_on('highfive@2.2.1 +boost', when='@:3.3.1')
     depends_on('mvdtool')

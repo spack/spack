@@ -41,16 +41,27 @@ class Highfive(CMakePackage):
     variant('mpi', default=True,  description='Support MPI')
     variant('eigen', default=False, description='Support Eigen')
     variant('xtensor', default=False, description='Support xtensor')
+    variant('page_buffer_patch', default=False, when="@2.6.2",
+            description='Allow using the pagebuffer with pHDF5.')
 
     # Develop builds tests which require boost
     conflicts('~boost', when='@develop')
 
     depends_on('boost @1.41: +serialization+system', when='+boost')
     depends_on('hdf5 ~mpi', when='~mpi')
-    depends_on('hdf5 +mpi', when='+mpi')
+    depends_on('hdf5 +mpi', when='+mpi~page_buffer_patch')
+
+    # Using the page buffer with pHDF5 requires HDF5 to be patched. This
+    # patch is currently only available for one version.
+    depends_on('hdf5@1.12.1 +page_buffer_patch+mpi', when='+mpi+page_buffer_patch')
+
     depends_on('eigen', when='+eigen')
     depends_on('xtensor', when='+xtensor')
     depends_on('mpi', when='+mpi')
+
+    # Enables the `PageBufferSize` property list also when building against pHDF5.
+    patch('remove-page-buffer-phdf5-check_v2.6.2.patch', when="+page_buffer_patch+mpi",
+          sha256="72a74f603bc957a9069c8e20abe28f303c4cab36d5d0e23bdcd6c6636fefe1f0")
 
     def cmake_args(self):
         return [

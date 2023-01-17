@@ -31,8 +31,7 @@ class MorphoKit(CMakePackage):
     # The HighFive update is needed for paged HDF5 features. Unfortunately, the
     # page buffer is artificially unsupported in pHDF5. Hence, we depend on a
     # particular, patched version of HDF5.
-    depends_on('highfive@2.6.0:', when='@0.3.5:')
-    depends_on('hdf5@1.12.1:+page_buffer_patch', when='@0.3.5:')
+    depends_on('highfive@2.6.2: +mpi+page_buffer_patch', when='@0.3.5:')
 
     # MPI is needed for the morphology merger.
     depends_on('mpi', when='@0.3.5:')

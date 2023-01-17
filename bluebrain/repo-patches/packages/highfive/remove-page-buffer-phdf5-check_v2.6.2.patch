@@ -1,0 +1,47 @@
+diff --git i/deps/catch2 w/deps/catch2
+index 182c910..216713a 160000
+--- i/deps/catch2
++++ w/deps/catch2
+@@ -1 +1 @@
+-Subproject commit 182c910b4b63ff587a3440e08f84f70497e49a81
++Subproject commit 216713a4066b79d9803d374f261ccb30c0fb451f
+diff --git i/include/highfive/H5PropertyList.hpp w/include/highfive/H5PropertyList.hpp
+index 916e903..b3848f7 100644
+--- i/include/highfive/H5PropertyList.hpp
++++ w/include/highfive/H5PropertyList.hpp
+@@ -327,7 +327,6 @@ class FileSpacePageSize {
+     hsize_t _page_size;
+ };
+ 
+-#ifndef H5_HAVE_PARALLEL
+ /// \brief Set size of the page buffer.
+ ///
+ /// Please, consult the upstream documentation of
+@@ -360,7 +359,6 @@ class PageBufferSize {
+     unsigned _min_raw;
+ };
+ #endif
+-#endif
+ 
+ /// \brief Set hints as to how many links to expect and their average length
+ ///
+diff --git i/include/highfive/bits/H5PropertyList_misc.hpp w/include/highfive/bits/H5PropertyList_misc.hpp
+index a41707a..dcbba05 100644
+--- i/include/highfive/bits/H5PropertyList_misc.hpp
++++ w/include/highfive/bits/H5PropertyList_misc.hpp
+@@ -110,7 +110,6 @@ inline void FileSpacePageSize::apply(const hid_t list) const {
+     }
+ }
+ 
+-#ifndef H5_HAVE_PARALLEL
+ inline PageBufferSize::PageBufferSize(size_t page_buffer_size,
+                                       unsigned min_meta_percent,
+                                       unsigned min_raw_percent)
+@@ -124,7 +123,6 @@ inline void PageBufferSize::apply(const hid_t list) const {
+     }
+ }
+ #endif
+-#endif
+ 
+ #ifdef H5_HAVE_PARALLEL
+ 
