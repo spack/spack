@@ -13,9 +13,9 @@ import llnl.util.tty as tty
 
 import spack.error
 import spack.paths
-import spack.util.prefix
 import spack.util.spack_json as sjson
 from spack.spec import Spec
+from spack.util.prefix import Prefix
 
 test_suite_filename = "test_suite.lock"
 results_filename = "results.txt"
@@ -145,6 +145,7 @@ class TestSuite(object):
 
         self.alias = alias
         self._hash = None
+        self._stage = None
 
         self.fails = 0
 
@@ -247,8 +248,19 @@ class TestSuite(object):
 
     @property
     def stage(self):
-        """The root test suite stage directory."""
-        return spack.util.prefix.Prefix(os.path.join(get_test_stage_dir(), self.content_hash))
+        """The root test suite stage directory.
+
+        Returns:
+            str: the spec's test stage directory path
+        """
+        if not self._stage:
+            self._stage = Prefix(fs.join_path(get_test_stage_dir(), self.content_hash))
+        return self._stage
+
+    @stage.setter
+    def stage(self, value):
+        """Set the value of a non-default stage directory."""
+        self._stage = value if isinstance(value, Prefix) else Prefix(value)
 
     @property
     def results_file(self):
@@ -299,7 +311,7 @@ class TestSuite(object):
         Returns:
             str: the spec's test stage directory path
         """
-        return self.stage.join(self.test_pkg_id(spec))
+        return Prefix(self.stage.join(self.test_pkg_id(spec)))
 
     @classmethod
     def tested_file_name(cls, spec):
@@ -322,7 +334,7 @@ class TestSuite(object):
         Returns:
             str: the spec's test status file path
         """
-        return self.stage.join(self.tested_file_name(spec))
+        return fs.join_path(self.stage, self.tested_file_name(spec))
 
     @property
     def current_test_cache_dir(self):

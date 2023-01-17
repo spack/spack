@@ -651,9 +651,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: List of test failures encountered during a smoke/install test run.
     test_failures = None
 
-    #: TestSuite instance used to manage smoke/install tests for one or more
-    #: specs.
+    #: TestSuite instance used to manage smoke/install tests for one or more specs.
     test_suite = None
+
+    #: Path to the log file used for tests
+    test_log_file = None
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -1884,7 +1886,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_id = self.test_suite.test_pkg_id(self.spec)
         else:
             self.test_log_file = fsys.join_path(self.stage.path, _spack_install_test_log)
+            self.test_suite = TestSuite([self.spec])
+            self.test_suite.stage = self.stage.path
             pkg_id = self.spec.format("{name}-{version}-{hash:7}")
+
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         with tty.log.log_output(self.test_log_file, verbose) as logger:
@@ -2441,6 +2446,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         with builder.pkg._setup_test(verbose=False, externals=False) as logger:
             # Report running each of the methods in the build log
             print_test_message(logger, "Running {0}-time tests".format(callback_type), True)
+            builder.pkg.test_suite.current_test_spec = builder.pkg.spec
+            builder.pkg.test_suite.current_base_spec = builder.pkg.spec
+
+            if "test" in method_names:
+                _copy_cached_test_files(builder.pkg, builder.pkg.spec)
 
             for name in method_names:
                 try:
@@ -2489,6 +2499,25 @@ def print_test_message(logger, msg, verbose):
         tty.msg(msg)
 
 
+def _copy_cached_test_files(pkg, spec):
+    """Copy any cached stand-alone test-related files."""
+
+    # copy installed test sources cache into test cache dir
+    if spec.concrete:
+        cache_source = spec.package.install_test_root
+        cache_dir = pkg.test_suite.current_test_cache_dir
+        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
+            fsys.install_tree(cache_source, cache_dir)
+
+    # copy test data into test data dir
+    data_source = Prefix(spec.package.package_dir).test
+    data_dir = pkg.test_suite.current_test_data_dir
+    if os.path.isdir(data_source) and not os.path.exists(data_dir):
+        # We assume data dir is used read-only
+        # maybe enforce this later
+        shutil.copytree(data_source, data_dir)
+
+
 def test_process(pkg, kwargs):
     verbose = kwargs.get("verbose", False)
     externals = kwargs.get("externals", False)
@@ -2527,20 +2556,7 @@ def test_process(pkg, kwargs):
                     except spack.repo.UnknownPackageError:
                         continue
 
-                    # copy installed test sources cache into test cache dir
-                    if spec.concrete:
-                        cache_source = spec_pkg.install_test_root
-                        cache_dir = pkg.test_suite.current_test_cache_dir
-                        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
-                            fsys.install_tree(cache_source, cache_dir)
-
-                    # copy test data into test data dir
-                    data_source = Prefix(spec_pkg.package_dir).test
-                    data_dir = pkg.test_suite.current_test_data_dir
-                    if os.path.isdir(data_source) and not os.path.exists(data_dir):
-                        # We assume data dir is used read-only
-                        # maybe enforce this later
-                        shutil.copytree(data_source, data_dir)
+                    _copy_cached_test_files(pkg, spec)
 
                     # grab the function for each method so we can call
                     # it with the package
