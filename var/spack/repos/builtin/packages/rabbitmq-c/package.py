@@ -19,8 +19,8 @@ class RabbitmqC(CMakePackage):
     version("0.11.0", sha256="437d45e0e35c18cf3e59bcfe5dfe37566547eb121e69fca64b98f5d2c1c2d424")
 
     variant("ssl", default=True, description="Required to connect to RabbitMQ using SSL/TLS")
-    variant("shared", default=True, description="Build as a shared library")
-    variant("static", default=True, description="Build as a static library")
+    variant("shared", default=True, description="Build shared library")
+    variant("static", default=True, description="Build static library")
     variant("doc", default=False, description="Build the documentation")
 
     depends_on("cmake@3.12:", type="build")
@@ -28,16 +28,12 @@ class RabbitmqC(CMakePackage):
     depends_on("doxygen", when="+doc", type="build")
 
     def cmake_args(self):
-        # Tests can only be built against static libraries
-        testing = (
-            "-DBUILD_TESTING:BOOL=ON" if "+static" in self.spec else "-DBUILD_TESTING:BOOL=OFF"
-        )
         args = [
             self.define_from_variant("ENABLE_SSL_SUPPORT", "ssl"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("BUILD_STATIC_LIBS", "static"),
+            # Tests can only be built against static libraries
+            self.define_from_variant("BUILD_TESTS", "static"),
             self.define_from_variant("BUILD_API_DOCS", "doc"),
-            testing,
         ]
-
         return args
