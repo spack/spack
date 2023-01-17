@@ -24,6 +24,7 @@ class Itk(CMakePackage):
 
     maintainers = ["glennpj"]
 
+    version("5.3.0", sha256="57a4471133dc8f76bde3d6eb45285c440bd40d113428884a1487472b7b71e383")
     version("5.3rc02", sha256="163aaf4a6cecd5b70ff718c1a986c746581797212fd1b629fa81f12ae4756d14")
     version(
         "5.2.1",
@@ -62,6 +63,7 @@ class Itk(CMakePackage):
     depends_on("jpeg")
     depends_on("libpng")
     depends_on("libtiff")
+    depends_on("mpi")
     depends_on("zlib")
 
     def cmake_args(self):
