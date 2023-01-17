@@ -119,6 +119,10 @@ class Mirror(object):
         return Mirror(fetch_url=url)
 
     def to_dict(self):
+        # Keep it a key-value pair <name>: <url> when possible.
+        if isinstance(self._fetch_url, str) and self._push_url is None:
+            return self._fetch_url
+
         if self._push_url is None:
             return syaml_dict([("fetch", self._fetch_url), ("push", self._fetch_url)])
         else:
@@ -556,37 +560,17 @@ def mirror_cache_and_stats(path, skip_unstable_versions=False):
     return mirror_cache, mirror_stats
 
 
-def add(name, url, scope, args):
+def add(mirror: Mirror, scope=None):
     """Add a named mirror in the given scope"""
     mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml_dict()
 
-    if name in mirrors:
-        tty.die("Mirror with name %s already exists." % name)
+    if mirror.name in mirrors:
+        tty.die("Mirror with name {} already exists.".format(mirror.name))
 
     items = [(n, u) for n, u in mirrors.items()]
-    if (
-        args.s3_access_key_id
-        or args.s3_access_key_secret
-        or args.s3_access_token
-        or args.s3_profile
-        or args.s3_endpoint_url
-    ):
-        url_dict = {"url": url}
-        if args.s3_access_key_id and args.s3_access_key_secret:
-            url_dict["access_pair"] = (args.s3_access_key_id, args.s3_access_key_secret)
-        if args.s3_access_token:
-            url_dict["access_token"] = args.s3_access_token
-        if args.s3_profile:
-            url_dict["profile"] = args.s3_profile
-        if args.s3_endpoint_url:
-            url_dict["endpoint_url"] = args.s3_endpoint_url
-        mirror_data = {"fetch": url_dict, "push": url_dict}
-    else:
-        mirror_data = url
-
-    items.insert(0, (name, mirror_data))
+    items.insert(0, (mirror.name, mirror.to_dict()))
     mirrors = syaml_dict(items)
     spack.config.set("mirrors", mirrors, scope=scope)
 
