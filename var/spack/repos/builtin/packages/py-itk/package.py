@@ -52,7 +52,7 @@ class PyItk(PythonPackage):
 
         # version 5.3.0
         version(
-            "5.3.0-cp37m",
+            "5.3.0-cp37",
             url="https://pypi.io/packages/cp37/i/itk/itk-5.3.0-cp37-cp37m-macosx_10_9_x86_64.whl",
             sha256="493e28a3c9f38502f82613fa6ab9855fb19bff671095c287100a441830a921d0",
             expand=False,
@@ -118,7 +118,7 @@ class PyItk(PythonPackage):
 
         # version 5.3.0
         version(
-            "5.3.0-cp37m",
+            "5.3.0-cp37",
             url="https://pypi.io/packages/cp37/i/itk/itk-5.3.0-cp37-cp37m-manylinux_2_28_x86_64.whl",
             sha256="265c8b28469164a45fd9d94c211b2ed017acc7cda7a9e74bbb20b38c49c1af61",
             expand=False,
@@ -148,7 +148,7 @@ class PyItk(PythonPackage):
             expand=False,
         )
 
-    depends_on("python@3.7.0:3.7", when="@5.1.1-cp37,5.1.2-cp37,5.3.0-cp37m", type=("build", "run"))
+    depends_on("python@3.7.0:3.7", when="@5.1.1-cp37,5.1.2-cp37,5.3.0-cp37", type=("build", "run"))
     depends_on("python@3.8.0:3.8", when="@5.1.1-cp38,5.1.2-cp38,5.3.0-cp38", type=("build", "run"))
     depends_on("python@3.9.0:3.9", when="@5.1.2-cp39,5.3.0-cp39", type=("build", "run"))
     depends_on("python@3.10.0:3.10", when="@5.3.0-cp310", type=("build", "run"))
