@@ -71,6 +71,14 @@ def setup_parser(subparser):
     )
 
     subparser.add_argument(
+        "--best-arch",
+        action="store_true",
+        default=False,
+        dest="load_best",
+        help="load the best match for the architecture if multiple packages match the spec",
+    )
+
+    subparser.add_argument(
         "--only",
         default="package,dependencies",
         dest="things_to_load",
@@ -99,7 +107,7 @@ def load(parser, args):
         return
 
     specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
+        spack.cmd.disambiguate_spec(spec, env, first=args.load_first, best_arch=args.load_best)
         for spec in spack.cmd.parse_specs(args.constraint)
     ]
 
