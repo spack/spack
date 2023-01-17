@@ -1,0 +1,11 @@
+diff -ruN spack-src/src/rempi_message_manager.h spack-src-patched/src/rempi_message_manager.h
+--- spack-src/src/rempi_message_manager.h	2018-06-22 11:07:41.000000000 -0700
++++ spack-src-patched/src/rempi_message_manager.h	2023-01-17 07:24:04.252076735 -0800
+@@ -26,6 +26,7 @@
+ 
+ #include <unordered_map>
+ #include <list>
++#include <string>
+ 
+ #include "mpi.h"
+ 
