@@ -119,7 +119,7 @@ def test_load_best_arch(install_mockery, mock_fetch, mock_archive, mock_packages
     install("libelf@0.8.12 arch=x86_64")
     install("libelf@0.8.12")
 
-    # Now there are two versions of libelf installed for different archs, which should cause an error
+    # Now there are 2 versions of libelf installed for different archs, which should cause an error
     out = load("--sh", "libelf", fail_on_error=False)
     assert "matches multiple packages" in out
     assert "Use a more specific spec" in out
