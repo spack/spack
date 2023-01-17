@@ -15,10 +15,10 @@ jobs:
   unit-tests:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -39,10 +39,10 @@ jobs:
   unit-tests-cmd:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -63,10 +63,10 @@ jobs:
   build-abseil:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -87,10 +87,10 @@ jobs:
   #       git config --global core.symlinks false
   #     shell:
   #       powershell
-  #   - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+  #   - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
   #     with:
   #       fetch-depth: 0
-  #   - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912
+  #   - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
   #     with:
   #       python-version: 3.9
   #   - name: Install Python packages
@@ -121,7 +121,7 @@ jobs:
   #     run:
   #       shell: pwsh
   #   steps:
-  #   - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912
+  #   - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
   #     with:
   #       python-version: 3.9
   #   - name: Install Python packages
