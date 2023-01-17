@@ -16,7 +16,7 @@ class PySphinxImmaterial(PythonPackage):
 
     depends_on("node-js@14:", type="build")
     depends_on("npm", type="build")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm", type="build")
 
     depends_on("py-appdirs", type=("build", "run"))
