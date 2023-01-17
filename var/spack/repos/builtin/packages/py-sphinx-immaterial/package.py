@@ -14,6 +14,7 @@ class PySphinxImmaterial(PythonPackage):
 
     version("0.11.2", sha256="a1c8387ca8b4da282949e474647d06f3b2f7d12fe54e9e662b962771012bf257")
 
+    depends_on("python@3.8:", type=("build", "run"))
     depends_on("node-js@14:", type="build")
     depends_on("npm", type="build")
     depends_on("py-setuptools@42:", type="build")
