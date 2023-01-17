@@ -39,7 +39,7 @@ class PikaAlgorithms(CMakePackage):
 
     # Other dependencies
     depends_on("boost@1.71:")
-    depends_on("fmt@0.9:")
+    depends_on("fmt@9:")
     depends_on("pika@0.11:")
 
     for cxxstd in cxxstds:

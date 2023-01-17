@@ -15,7 +15,7 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
@@ -35,6 +35,7 @@ class Rocsolver(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.3.3", sha256="d2248b5e2e0b20e08dd1ee5408e38deb02ecd28096dc7c7f2539351df6cb6ad5")
     version("5.3.0", sha256="4569f860d240d50e94e77d498050f5cafe5ad11daddaead3e7e9eaa1957878a7")
     version("5.2.3", sha256="b278a1640f31fb1905f18dc5127d57e2b1d36fd2b4f39ae811b5537fa6ce87d4")
     version("5.2.1", sha256="74c127efaefec70a14dff6fa0e92276f38a6c313bf1271d68d03a4222d1fc3b6")
@@ -121,12 +122,16 @@ class Rocsolver(CMakePackage):
 
     depends_on("cmake@3.8:", type="build", when="@4.1.0:")
     depends_on("cmake@3.5:", type="build")
-    depends_on("fmt@7:8.0.1", type="build", when="@4.5.0:")
+    depends_on("fmt@7:", type="build", when="@4.5.0:")
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
 
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
+    # Backport https://github.com/ROCmSoftwarePlatform/rocSOLVER/commit/2bbfb8976f6e4d667499c77e41a6433850063e88
+    patch("fmt-8.1-compatibility.patch", when="@4.5.0:5.1.3")
+    # Maximize compatibility with other libraries that are using fmt.
+    patch("fmt-9-compatibility.patch", when="@5.2.0:")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocsolver-test")
@@ -162,6 +167,7 @@ class Rocsolver(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)

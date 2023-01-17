@@ -12,10 +12,15 @@ class Arbor(CMakePackage, CudaPackage):
 
     homepage = "https://arbor-sim.org"
     git = "https://github.com/arbor-sim/arbor.git"
-    url = "https://github.com/arbor-sim/arbor/releases/download/v0.8/arbor-v0.8-full.tar.gz"
+    url = "https://github.com/arbor-sim/arbor/releases/download/v0.8.1/arbor-v0.8.1-full.tar.gz"
     maintainers = ["bcumming", "brenthuisman", "haampie", "schmitts"]
 
     version("master", branch="master", submodules=True)
+    version(
+        "0.8.1",
+        sha256="caebf96676ace6a9c50436541c420ca4bb53f0639dcab825de6fa370aacf6baa",
+        url="https://github.com/arbor-sim/arbor/releases/download/v0.8.1/arbor-v0.8.1-full.tar.gz",
+    )
     version(
         "0.8",
         sha256="18df5600308841616996a9de93b55a105be0f59692daa5febd3a65aae5bc2c5d",
@@ -44,12 +49,17 @@ class Arbor(CMakePackage, CudaPackage):
     )
     variant("doc", default=False, description="Build documentation.")
     variant("mpi", default=False, description="Enable MPI support")
-    variant("neuroml", default=True, description="Build NeuroML support library.")
     variant("python", default=True, description="Enable Python frontend support")
     variant(
         "vectorize",
         default=False,
         description="Enable vectorization of computational kernels",
+    )
+    variant(
+        "gpu_rng",
+        default=False,
+        description="Use GPU generated random numbers -- not bitwise equal to CPU version",
+        when="+cuda",
     )
 
     # https://docs.arbor-sim.org/en/latest/install/build_install.html#compilers
@@ -64,9 +74,9 @@ class Arbor(CMakePackage, CudaPackage):
     # misc dependencies
     depends_on("fmt@7.1:", when="@0.5.3:")  # required by the modcc compiler
     depends_on("fmt@9.1:", when="@0.7.1:")
+    depends_on("pugixml@1.11:", when="@0.7.1:")
     depends_on("nlohmann-json")
     depends_on("random123")
-    depends_on("libxml2", when="+neuroml")
     with when("+cuda"):
         depends_on("cuda@10:")
         depends_on("cuda@11:", when="@0.7.1:")
@@ -97,13 +107,13 @@ class Arbor(CMakePackage, CudaPackage):
         args = [
             self.define_from_variant("ARB_WITH_ASSERTIONS", "assertions"),
             self.define_from_variant("ARB_WITH_MPI", "mpi"),
-            self.define_from_variant("ARB_WITH_NEUROML", "neuroml"),
             self.define_from_variant("ARB_WITH_PYTHON", "python"),
             self.define_from_variant("ARB_VECTORIZE", "vectorize"),
         ]
 
         if "+cuda" in self.spec:
             args.append("-DARB_GPU=cuda")
+            args.append(self.define_from_variant("ARB_USE_GPU_RNG", "gpu_rng"))
 
         # query spack for the architecture-specific compiler flags set by its wrapper
         args.append("-DARB_ARCH=none")

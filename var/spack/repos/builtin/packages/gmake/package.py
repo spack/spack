@@ -17,29 +17,11 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
     maintainers = ["haampie"]
 
-    # Alpha releases
-    version(
-        "4.3.90",
-        url="http://alpha.gnu.org/gnu/make/make-4.3.90.tar.gz",
-        sha256="b85021da86c3ceaa104151ac1f4af3c811f5f2f61cd383f0de739aa5b2f98c7d",
-    )
-
     # Stable releases
-    version(
-        "4.3",
-        sha256="e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19",
-        preferred=True,
-    )
-    version(
-        "4.2.1",
-        sha256="e40b8f018c1da64edd1cc9a6fce5fa63b2e707e404e20cad91fbae337c98a5b7",
-        preferred=True,
-    )
-    version(
-        "4.0",
-        sha256="fc42139fb0d4b4291929788ebaf77e2a4de7eaca95e31f3634ef7d4932051f69",
-        preferred=True,
-    )
+    version("4.4", sha256="581f4d4e872da74b3941c874215898a7d35802f03732bdccee1d4a7979105d18")
+    version("4.3", sha256="e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19")
+    version("4.2.1", sha256="e40b8f018c1da64edd1cc9a6fce5fa63b2e707e404e20cad91fbae337c98a5b7")
+    version("4.0", sha256="fc42139fb0d4b4291929788ebaf77e2a4de7eaca95e31f3634ef7d4932051f69")
 
     variant("guile", default=False, description="Support GNU Guile for embedded scripting")
     variant("nls", default=True, description="Enable Native Language Support")
