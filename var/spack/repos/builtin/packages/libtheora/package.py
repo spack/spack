@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import platform
 import sys
 import os
@@ -67,6 +68,9 @@ class MSBuildBuilder(MSBuildBuilder):
     def setup_build_environment(self, env):
         spec = self.pkg.spec
         env.set("SPACK_OGG_PREFIX", spec["libogg"].prefix)
+        # devenv is needed to convert ancient MSbuild project to modern
+        # msbuild project so MSBuild versions older than 2010 can build this
+        # project
         devenv_path = os.path.join(self.pkg.compiler.vs_root, "Common7", "IDE")
         env.prepend_path("PATH", devenv_path)
 
@@ -98,8 +102,15 @@ class MSBuildBuilder(MSBuildBuilder):
         super().build(pkg, spec, prefix)
 
     def install(self, pkg, spec, prefix):
-        plat_arch = "x64" if self.is_64bit() else "x86"
-        with working_dir(self.build_directory):
-            install_tree(os.path.join(plat_arch, "Release"), prefix.lib)
+        if not os.path.isdir(prefix.lib):
+            mkdirp(prefix.lib)
+        libs_to_install = glob.glob(os.path.join(self.build_directory, "**", "*.lib"), recursive=True)
+        for l in libs_to_install:
+            install(l, prefix.lib)
+        rename(os.path.join(prefix.lib, "libtheora_static.lib"), os.path.join(prefix.lib, "theora.lib"))
+        # The encoder and decoder libs are baked into the theora lib on Windows, so we spoof them
+        # here so libtheora is detectable by CMake and pkg-config and linkable by consuming projects
+        copy("theora.lib", "theoradec.lib")
+        copy("theora.lib", "theoraenc.lib")
         with working_dir(pkg.stage.source_path):
             install_tree("include", prefix.include)
