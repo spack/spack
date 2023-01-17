@@ -13,12 +13,17 @@ class SraTools(CMakePackage):
     homepage = "https://github.com/ncbi/sra-tools"
     git = "https://github.com/ncbi/sra-tools.git"
 
+    version("3.0.3", tags="3.0.3")
     version("3.0.0", tags="3.0.0")
 
     depends_on("openjdk")
     depends_on("flex@2.6:")
     depends_on("libxml2")
     depends_on("ncbi-vdb")
+
+    # The CMakeLists.txt  file set the path to ${TARGDIR}/obj but the code
+    # actually uses ${TARGDIR}.
+    patch("ngs-java.patch")
 
     def cmake_args(self):
         args = [
