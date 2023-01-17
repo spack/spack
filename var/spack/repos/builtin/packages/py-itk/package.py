@@ -148,9 +148,9 @@ class PyItk(PythonPackage):
             expand=False,
         )
 
-    depends_on("python@3.7.0:3.7", when="@5.1.1-cp37,5.1.2-cp37", type=("build", "run"))
-    depends_on("python@3.8.0:3.8", when="@5.1.1-cp38,5.1.2-cp38", type=("build", "run"))
-    depends_on("python@3.9.0:3.9", when="@5.1.2-cp39", type=("build", "run"))
+    depends_on("python@3.7.0:3.7", when="@5.1.1-cp37,5.1.2-cp37,5.3.0-cp37m", type=("build", "run"))
+    depends_on("python@3.8.0:3.8", when="@5.1.1-cp38,5.1.2-cp38,5.3.0-cp38", type=("build", "run"))
+    depends_on("python@3.9.0:3.9", when="@5.1.2-cp39,5.3.0-cp39", type=("build", "run"))
     depends_on("python@3.10.0:3.10", when="@5.3.0-cp310", type=("build", "run"))
     depends_on("python@3.11.0:3.11", when="@5.3.0-cp311", type=("build", "run"))
     depends_on("py-setuptools", type="run")
