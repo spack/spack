@@ -8,6 +8,7 @@ import shutil
 
 import llnl.util.tty as tty
 
+from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
 
@@ -462,6 +463,36 @@ class Hdf5(CMakePackage):
             msg = "cannot build a Fortran variant without a Fortran compiler"
             raise RuntimeError(msg)
 
+    @run_before("cmake")
+    def fix_package_config_template(self):
+        # We need to fix the pkg-config template files. We are not doing it with a patch file
+        # because the develop version of the package contains a separate template for the fortran
+        # interface, which has the same problems.
+        pc_template_files = find(
+            join_path(self.stage.source_path, "config"), "libhdf5*pc.in", recursive=False
+        )
+        if not pc_template_files:
+            return
+
+        # List package libraries in the Libs section also when ~shared (note that we always build
+        # static libraries, therefore _PKG_CONFIG_LIBS is always set):
+        filter_file(
+            r"(Libs:.*)@_PKG_CONFIG_SH_LIBS@(.*)",
+            r"\1@_PKG_CONFIG_LIBS@\2",
+            *pc_template_files,
+            backup=False,
+        )
+
+        # Package libraries should be listed before the dependencies in the Libs.private section.
+        # However, since they are already listed in the Libs section (see above), we can simply
+        # remove them:
+        filter_file(
+            r"(Libs\.private:.*)@_PKG_CONFIG_LIBS@(.*)",
+            r"\1\2",
+            *pc_template_files,
+            backup=False,
+        )
+
     def cmake_args(self):
         spec = self.spec
 
@@ -568,6 +599,14 @@ class Hdf5(CMakePackage):
         filter_file(
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
             r"\1\2\3",
+            *pc_files,
+            backup=False,
+        )
+
+        # Fix linker flags:
+        filter_file(
+            r"-l(/[^\s]*)/lib([^\s]+)\.(?:{0}|{1})".format(dso_suffix, stat_suffix),
+            r"-L\1 -l\2",
             *pc_files,
             backup=False,
         )
