@@ -91,6 +91,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     variant("visit", default=False, description="Enable VisIt")
     variant("vtkm", default=False, description="Enable VTK-m")
     variant("zfp", default=False, description="Enable ZFP")
+    variant("rebuild-me-please", default=True, description="Rebuild for CI testing purposes")
 
     # Language Options
     variant("fortran", default=True, sticky=True, description="Enable fortran language features.")
