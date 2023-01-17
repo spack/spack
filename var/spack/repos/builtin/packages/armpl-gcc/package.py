@@ -262,3 +262,15 @@ class ArmplGcc(Package):
         make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
         # clean up
         make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "clean")
+
+    @run_after("install")
+    def make_pkgconfig_files(self):
+        # ARMpl pkcfonfig files do not have .pc extension and are thus not found by pkg-config
+        armpl_dir = get_armpl_prefix(self.spec)
+        for f in find(join_path(armpl_dir, "pkgconfig"), '*'):
+            copy(f, f + '.pc')
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # pkgconfig directory is not in standard ("lib", "lib64", "share") location
+        armpl_dir = get_armpl_prefix(self.spec)
+        env.append_path("PKG_CONFIG_PATH",  join_path(armpl_dir, "pkgconfig"))
