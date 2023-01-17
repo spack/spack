@@ -18,5 +18,3 @@ class PyOpencensusContext(PythonPackage):
         sha256="1a3fdf6bec537031efcc93d51b04f1edee5201f8c9a0c85681d63308b76f5702",
         expand=False,
     )
-
-    depends_on("py-contextvars", when="^python@3.6.0:3.6", type=("build", "run"))

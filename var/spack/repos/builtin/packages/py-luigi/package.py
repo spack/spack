@@ -25,8 +25,6 @@ class PyLuigi(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-enum34@1.1.1:", when="^python@:3.3", type=("build", "run"))
-
     depends_on("py-tornado@4.0:4", type=("build", "run"), when="@:2")
     depends_on("py-tornado@5.0:5", type=("build", "run"), when="@3.0.1")
     depends_on("py-tornado@5.0:6", type=("build", "run"), when="@3.0.2:")

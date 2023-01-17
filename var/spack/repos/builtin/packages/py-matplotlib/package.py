@@ -37,6 +37,7 @@ class PyMatplotlib(PythonPackage):
         "pylab",
     ]
 
+    version("3.6.3", sha256="1f4d69707b1677560cd952544ee4962f68ff07952fb9069ff8c12b56353cb8c9")
     version("3.6.2", sha256="b03fd10a1709d0101c054883b550f7c4c5e974f751e2680318759af005964990")
     version("3.6.1", sha256="e2d1b7225666f7e1bcc94c0bc9c587a82e3e8691da4757e357e5c2515222ee37")
     version("3.6.0", sha256="c5108ebe67da60a9204497d8d403316228deb52b550388190c53a57394d41531")
@@ -162,14 +163,9 @@ class PyMatplotlib(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
 
     # Historical dependencies
-    depends_on(
-        "py-backports-functools-lru-cache", type=("build", "run"), when="@2.1.0:2 ^python@:2"
-    )
-    depends_on("py-functools32", type=("build", "run"), when="@:2.0 ^python@:2.7")
     depends_on("py-pytz", type=("build", "run"), when="@:2")
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@2")
     depends_on("py-six@1.9.0:", type=("build", "run"), when="@:1")
-    depends_on("py-subprocess32", type=("build", "run"), when="^python@:2.7")
 
     # Optional dependencies
     # Backends

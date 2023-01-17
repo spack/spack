@@ -21,8 +21,9 @@ be present on the machine where Spack is run:
    :header-rows: 1
 
 These requirements can be easily installed on most modern Linux systems;
-on macOS, XCode is required.  Spack is designed to run on HPC
-platforms like Cray.  Not all packages should be expected
+on macOS, the Command Line Tools package is required, and a full XCode suite 
+may be necessary for some packages such as Qt and apple-gl. Spack is designed
+to run on HPC platforms like Cray.  Not all packages should be expected
 to work on all platforms.
 
 A build matrix showing which packages are working on which systems is shown below.

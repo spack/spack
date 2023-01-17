@@ -16,7 +16,12 @@ class PyPyproj(PythonPackage):
 
     maintainers = ["citibeth", "adamjstewart"]
 
+    version("3.4.1", sha256="261eb29b1d55b1eb7f336127344d9b31284d950a9446d1e0d1c2411f7dd8e3ac")
     version("3.4.0", sha256="a708445927ace9857f52c3ba67d2915da7b41a8fdcd9b8f99a4c9ed60a75eb33")
+    version("3.3.1", sha256="b3d8e14d91cc95fb3dbc03a9d0588ac58326803eefa5bbb0978d109de3304fbe")
+    version("3.3.0", sha256="ce8bfbc212729e9a643f5f5d77f7a93394e032eda1e2d8799ae902d08add747e")
+    version("3.2.1", sha256="4a936093825ff55b24c1fc6cc093541fcf6d0f6d406589ed699e62048ebf3877")
+    version("3.2.0", sha256="48df0d5ab085bd2dc6db3bca79e20bf15b08ffca4f4e42df6d87b566633b800c")
     version("3.1.0", sha256="67b94f4e694ae33fc90dfb7da0e6b5ed5f671dd0acc2f6cf46e9c39d56e16e1a")
     version("3.0.1", sha256="bfbac35490dd17f706700673506eeb8170f8a2a63fb5878171d4e6eef242d141")
     version("3.0.0", sha256="539e320d06e5441edadad2e2ab276e1877445eca384fc1c056b5501453d433c2")
@@ -32,13 +37,7 @@ class PyPyproj(PythonPackage):
 
     # In setup.cfg
     depends_on("python@3.8:", when="@3.3:", type=("build", "link", "run"))
-    depends_on("python@3.7:", when="@3.1:", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@3.0:", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@2.3:", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@2.2:", type=("build", "link", "run"))
-    depends_on("python@2.6:2.8,3.3:", type=("build", "link", "run"))
-    depends_on("py-certifi", when="@3.0:", type=("build", "run"))
-    depends_on("py-aenum", when="@2.2 ^python@:3.5", type=("build", "run"))
+    depends_on("py-certifi", when="@3:", type=("build", "run"))
 
     # https://pyproj4.github.io/pyproj/stable/installation.html#installing-from-source
     depends_on("proj@8.2:", when="@3.4:")

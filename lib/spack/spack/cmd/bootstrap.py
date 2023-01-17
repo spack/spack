@@ -5,7 +5,6 @@
 from __future__ import print_function
 
 import os.path
-import platform
 import shutil
 import tempfile
 
@@ -15,6 +14,8 @@ import llnl.util.tty.color
 
 import spack
 import spack.bootstrap
+import spack.bootstrap.config
+import spack.bootstrap.core
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
@@ -42,6 +43,8 @@ BINARY_METADATA = {
         "The sha256 checksum of binaries is checked before installation."
     ),
     "info": {
+        # This is a mis-nomer since it's not a URL; but file urls cannot
+        # represent relative paths, so we have to live with it for now.
         "url": os.path.join("..", "..", LOCAL_MIRROR_DIR),
         "homepage": "https://github.com/spack/spack-bootstrap-mirrors",
         "releases": "https://github.com/spack/spack-bootstrap-mirrors/releases",
@@ -57,7 +60,11 @@ PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/patchelf.json"
 SOURCE_METADATA = {
     "type": "install",
     "description": "Mirror with software needed to bootstrap Spack",
-    "info": {"url": os.path.join("..", "..", LOCAL_MIRROR_DIR)},
+    "info": {
+        # This is a mis-nomer since it's not a URL; but file urls cannot
+        # represent relative paths, so we have to live with it for now.
+        "url": os.path.join("..", "..", LOCAL_MIRROR_DIR)
+    },
 }
 
 
@@ -75,7 +82,8 @@ def _add_scope_option(parser):
 def setup_parser(subparser):
     sp = subparser.add_subparsers(dest="subcommand")
 
-    sp.add_parser("now", help="Spack ready, right now!")
+    now = sp.add_parser("now", help="Spack ready, right now!")
+    now.add_argument("--dev", action="store_true", help="bootstrap dev dependencies too")
 
     status = sp.add_parser("status", help="get the status of Spack")
     status.add_argument(
@@ -194,7 +202,7 @@ def _root(args):
 
 
 def _list(args):
-    sources = spack.bootstrap.bootstrapping_sources(scope=args.scope)
+    sources = spack.bootstrap.core.bootstrapping_sources(scope=args.scope)
     if not sources:
         llnl.util.tty.msg("No method available for bootstrapping Spack's dependencies")
         return
@@ -298,7 +306,7 @@ def _status(args):
         sections.append("develop")
 
     header = "@*b{{Spack v{0} - {1}}}".format(
-        spack.spack_version, spack.bootstrap.spec_for_current_python()
+        spack.spack_version, spack.bootstrap.config.spec_for_current_python()
     )
     print(llnl.util.tty.color.colorize(header))
     print()
@@ -323,7 +331,7 @@ def _status(args):
 
 
 def _add(args):
-    initial_sources = spack.bootstrap.bootstrapping_sources()
+    initial_sources = spack.bootstrap.core.bootstrapping_sources()
     names = [s["name"] for s in initial_sources]
 
     # If the name is already used error out
@@ -353,7 +361,7 @@ def _add(args):
 
 
 def _remove(args):
-    initial_sources = spack.bootstrap.bootstrapping_sources()
+    initial_sources = spack.bootstrap.core.bootstrapping_sources()
     names = [s["name"] for s in initial_sources]
     if args.name not in names:
         msg = (
@@ -386,7 +394,10 @@ def _mirror(args):
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible
     # TODO: dependencies of a spec
-    root_specs = spack.bootstrap.all_root_specs(development=args.dev) + ["gnuconfig"]
+    root_specs = spack.bootstrap.all_core_root_specs() + ["gnuconfig"]
+    if args.dev:
+        root_specs += spack.bootstrap.BootstrapEnvironment.spack_dev_requirements()
+
     for spec_str in root_specs:
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'
         llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
@@ -436,10 +447,9 @@ def _mirror(args):
 
 def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
-        if platform.system().lower() == "linux":
-            spack.bootstrap.ensure_patchelf_in_path_or_raise()
-        spack.bootstrap.ensure_clingo_importable_or_raise()
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        spack.bootstrap.ensure_core_dependencies()
+        if args.dev:
+            spack.bootstrap.ensure_environment_dependencies()
 
 
 def bootstrap(parser, args):

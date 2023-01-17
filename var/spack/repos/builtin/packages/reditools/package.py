@@ -32,7 +32,7 @@ class Reditools(PythonPackage):
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
-    depends_on("py-reindent", type="build", when="^python@3:")
+    depends_on("py-reindent", type="build")
     depends_on("blat", type="run")
     depends_on("py-fisher", type="run")
     depends_on("py-numpy", type="run")

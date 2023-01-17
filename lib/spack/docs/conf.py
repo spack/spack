@@ -36,7 +36,7 @@ link_name = os.path.abspath("_spack_root")
 if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/pytest-fallback"))
+sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/_vendoring"))
 sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
@@ -74,8 +74,16 @@ apidoc_args = [
     "--force",  # Overwrite existing files
     "--no-toc",  # Don't create a table of contents file
     "--output-dir=.",  # Directory to place all output
+    "--module-first",  # emit module docs before submodule docs
 ]
-sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/spack"])
+sphinx_apidoc(
+    apidoc_args
+    + [
+        "_spack_root/lib/spack/spack",
+        "_spack_root/lib/spack/spack/test/*.py",
+        "_spack_root/lib/spack/spack/test/cmd/*.py",
+    ]
+)
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
 
 # Enable todo items
@@ -200,12 +208,14 @@ nitpick_ignore = [
     ("py:class", "_frozen_importlib_external.SourceFileLoader"),
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
+    ("py:class", "TextIO"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack.build_systems._checks.BaseBuilder"),
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.VersionBase"),
+    ("py:class", "spack.spec.DependencySpec"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

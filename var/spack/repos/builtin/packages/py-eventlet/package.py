@@ -16,4 +16,3 @@ class PyEventlet(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-greenlet@0.3:")
-    depends_on("py-enum34", type=("build", "run"), when="^python@:3.3")

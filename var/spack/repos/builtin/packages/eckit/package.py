@@ -15,6 +15,9 @@ class Eckit(CMakePackage):
 
     maintainers = ["skosukhin"]
 
+    version("1.20.2", sha256="9c11ddaaf346e40d11312b81ca7f1b510017f26618f4c0f5c5c59c37623fbac8")
+    version("1.19.0", sha256="a5fef36b4058f2f0aac8daf5bcc9740565f68da7357ddd242de3a5eed4765cc7")
+    version("1.16.3", sha256="d2aae7d8030e2ce39e5d04e36dd6aa739f3c8dfffe32c61c2a3127c36b573485")
     version("1.16.0", sha256="9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1")
 
     variant("tools", default=True, description="Build the command line tools")
@@ -85,7 +88,7 @@ class Eckit(CMakePackage):
     def cmake_args(self):
         args = [
             # Some features that we want to build are experimental:
-            self.define("ENABLE_EXPERIMENTAL", True),
+            self.define("ENABLE_EXPERIMENTAL", self._enable_experimental),
             self.define_from_variant("ENABLE_BUILD_TOOLS", "tools"),
             # We let ecBuild find the MPI library. We could help it by setting
             # CMAKE_C_COMPILER to mpicc but that might give CMake a wrong
@@ -146,3 +149,22 @@ class Eckit(CMakePackage):
             args.append(self.define("CURSES_NEED_NCURSES", True))
 
         return args
+
+    def check(self):
+        ctest_args = ["-j", str(make_jobs)]
+
+        broken_tests = []
+        if self._enable_experimental:
+            # The following test quasi-randomly fails not because it reveals a bug in the library
+            # but because its implementation has a bug (static initialization order fiasco):
+            broken_tests.append("eckit_test_experimental_singleton_singleton")
+
+        if broken_tests:
+            ctest_args.extend(["-E", "|".join(broken_tests)])
+
+        with working_dir(self.build_directory):
+            ctest(*ctest_args)
+
+    @property
+    def _enable_experimental(self):
+        return "linalg=armadillo" in self.spec

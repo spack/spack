@@ -19,4 +19,3 @@ class PySymfit(PythonPackage):
     depends_on("py-numpy", type="run")
     depends_on("py-scipy", type="run")
     depends_on("py-sympy", type="run")
-    depends_on("py-funcsigs", type="run", when="^python@:2.8")

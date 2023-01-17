@@ -49,6 +49,11 @@ class Libevent(AutotoolsPackage):
 
         return url.format(version)
 
+    @property
+    def libs(self):
+        libs = find_libraries("libevent", root=self.prefix, shared=True, recursive=True)
+        return LibraryList(libs)
+
     def configure_args(self):
         spec = self.spec
         configure_args = []

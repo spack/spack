@@ -14,6 +14,7 @@ class PySymengine(PythonPackage):
     git = "https://github.com/symengine/symengine.py.git"
 
     version("master", branch="master")
+    version("0.9.2", sha256="0f7e45f5bba3fa844f7de7aa8d6640faaacb1075df76d8e4996e82b0ec6a4f62")
     # pypi source doesn't have necessary files in cmake directory
     version(
         "0.8.1",
@@ -25,12 +26,15 @@ class PySymengine(PythonPackage):
     # Build dependencies
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"), when="@0.2.0")
     depends_on("python@3.6:3", type=("build", "run"), when="@0.8.1:")
+    depends_on("python@3.7:3", type=("build", "run"), when="@0.9.2:")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.19.1:", type="build", when="@0.2.0")
     depends_on("py-cython@0.29.24:", type="build", when="@0.8.1:")
     depends_on("cmake@2.8.12:", type="build")
+    # see symengine_version.txt
     depends_on("symengine@0.2.0", when="@0.2.0")
     depends_on("symengine@0.8.1", when="@0.8.1")
+    depends_on("symengine@0.9.0", when="@0.9.2")
 
     def install_options(self, spec, prefix):
         return ["--symengine-dir={0}".format(spec["symengine"].prefix)]

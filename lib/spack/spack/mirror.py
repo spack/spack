@@ -17,26 +17,29 @@ import os
 import os.path
 import sys
 import traceback
+import urllib.parse
 
 import ruamel.yaml.error as yaml_error
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
+import spack.caches
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
+import spack.mirror
 import spack.spec
 import spack.url as url
+import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.util.spack_yaml import syaml_dict
 from spack.version import VersionList
 
-
-def _is_string(url):
-    return isinstance(url, str)
+#: What schemes do we support
+supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs")
 
 
 def _display_mirror_entry(size, name, url, type_=None):
@@ -46,6 +49,19 @@ def _display_mirror_entry(size, name, url, type_=None):
         type_ = ""
 
     print("%-*s%s%s" % (size + 4, name, url, type_))
+
+
+def _url_or_path_to_url(url_or_path: str) -> str:
+    """For simplicity we allow mirror URLs in config files to be local, relative paths.
+    This helper function takes care of distinguishing between URLs and paths, and
+    canonicalizes paths before transforming them into file:// URLs."""
+    # Is it a supported URL already? Then don't do path-related canonicalization.
+    parsed = urllib.parse.urlparse(url_or_path)
+    if parsed.scheme in supported_url_schemes:
+        return url_or_path
+
+    # Otherwise we interpret it as path, and we should promote it to file:// URL.
+    return url_util.path_to_file_url(spack.util.path.canonicalize_path(url_or_path))
 
 
 class Mirror(object):
@@ -86,6 +102,21 @@ class Mirror(object):
             return Mirror.from_dict(d, name)
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON mirror:", str(e)) from e
+
+    @staticmethod
+    def from_local_path(path: str):
+        return Mirror(fetch_url=url_util.path_to_file_url(path))
+
+    @staticmethod
+    def from_url(url: str):
+        """Create an anonymous mirror by URL. This method validates the URL."""
+        if not urllib.parse.urlparse(url).scheme in supported_url_schemes:
+            raise ValueError(
+                '"{}" is not a valid mirror URL. Scheme must be once of {}.'.format(
+                    url, ", ".join(supported_url_schemes)
+                )
+            )
+        return Mirror(fetch_url=url)
 
     def to_dict(self):
         if self._push_url is None:
@@ -198,7 +229,11 @@ class Mirror(object):
 
     @property
     def fetch_url(self):
-        return self._fetch_url if _is_string(self._fetch_url) else self._fetch_url["url"]
+        """Get the valid, canonicalized fetch URL"""
+        url_or_path = (
+            self._fetch_url if isinstance(self._fetch_url, str) else self._fetch_url["url"]
+        )
+        return _url_or_path_to_url(url_or_path)
 
     @fetch_url.setter
     def fetch_url(self, url):
@@ -207,9 +242,12 @@ class Mirror(object):
 
     @property
     def push_url(self):
+        """Get the valid, canonicalized push URL. Returns fetch URL if no custom
+        push URL is defined"""
         if self._push_url is None:
-            return self._fetch_url if _is_string(self._fetch_url) else self._fetch_url["url"]
-        return self._push_url if _is_string(self._push_url) else self._push_url["url"]
+            return self.fetch_url
+        url_or_path = self._push_url if isinstance(self._push_url, str) else self._push_url["url"]
+        return _url_or_path_to_url(url_or_path)
 
     @push_url.setter
     def push_url(self, url):
@@ -507,19 +545,13 @@ def mirror_cache_and_stats(path, skip_unstable_versions=False):
             they do not have a stable archive checksum (as determined by
             ``fetch_strategy.stable_target``)
     """
-    parsed = url_util.parse(path)
-    mirror_root = url_util.local_file_path(parsed)
-    if not mirror_root:
-        raise spack.error.SpackError("MirrorCaches only work with file:// URLs")
     # Get the absolute path of the root before we start jumping around.
-    if not os.path.isdir(mirror_root):
+    if not os.path.isdir(path):
         try:
-            mkdirp(mirror_root)
+            mkdirp(path)
         except OSError as e:
-            raise MirrorError("Cannot create directory '%s':" % mirror_root, str(e))
-    mirror_cache = spack.caches.MirrorCache(
-        mirror_root, skip_unstable_versions=skip_unstable_versions
-    )
+            raise MirrorError("Cannot create directory '%s':" % path, str(e))
+    mirror_cache = spack.caches.MirrorCache(path, skip_unstable_versions=skip_unstable_versions)
     mirror_stats = MirrorStats()
     return mirror_cache, mirror_stats
 
@@ -666,33 +698,12 @@ def create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats):
     return True
 
 
-def push_url_from_directory(output_directory):
-    """Given a directory in the local filesystem, return the URL on
-    which to push binary packages.
-    """
-    scheme = url_util.parse(output_directory, scheme="<missing>").scheme
-    if scheme != "<missing>":
-        raise ValueError("expected a local path, but got a URL instead")
-    mirror_url = "file://" + output_directory
-    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
-    return url_util.format(mirror.push_url)
-
-
-def push_url_from_mirror_name(mirror_name):
-    """Given a mirror name, return the URL on which to push binary packages."""
-    mirror = spack.mirror.MirrorCollection().lookup(mirror_name)
-    if mirror.name == "<unnamed>":
+def require_mirror_name(mirror_name):
+    """Find a mirror by name and raise if it does not exist"""
+    mirror = spack.mirror.MirrorCollection().get(mirror_name)
+    if not mirror:
         raise ValueError('no mirror named "{0}"'.format(mirror_name))
-    return url_util.format(mirror.push_url)
-
-
-def push_url_from_mirror_url(mirror_url):
-    """Given a mirror URL, return the URL on which to push binary packages."""
-    scheme = url_util.parse(mirror_url, scheme="<missing>").scheme
-    if scheme == "<missing>":
-        raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
-    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
-    return url_util.format(mirror.push_url)
+    return mirror
 
 
 class MirrorError(spack.error.SpackError):

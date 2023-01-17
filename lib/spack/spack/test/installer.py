@@ -488,7 +488,7 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
 
 
 def test_bootstrapping_compilers_with_different_names_from_spec(
-    install_mockery, mutable_config, mock_fetch
+    install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
 ):
     with spack.config.override("config:install_missing_compilers", True):
         with spack.concretize.disable_compiler_existence_check():
@@ -622,13 +622,29 @@ def test_combine_phase_logs(tmpdir):
 
     # This is the output log we will combine them into
     combined_log = os.path.join(str(tmpdir), "combined-out.txt")
-    spack.installer.combine_phase_logs(phase_log_files, combined_log)
+    inst.combine_phase_logs(phase_log_files, combined_log)
     with open(combined_log, "r") as log_file:
         out = log_file.read()
 
     # Ensure each phase log file is represented
     for log_file in log_files:
         assert "Output from %s\n" % log_file in out
+
+
+def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
+    # this is invalid utf-8 at a minimum
+    data = b"\x00\xF4\xBF\x00\xBF\xBF"
+    input = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
+    output = str(tmpdir.join("c"))
+
+    for path in input:
+        with open(path, "wb") as f:
+            f.write(data)
+
+    inst.combine_phase_logs(input, output)
+
+    with open(output, "rb") as f:
+        assert f.read() == data * 2
 
 
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):

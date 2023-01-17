@@ -16,10 +16,11 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
     and can be used for both traditional and GPU-enhanced nodes."""
 
     homepage = "https://mvapich.cse.ohio-state.edu/benchmarks/"
-    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-7.0.tar.gz"
+    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-7.0.1.tar.gz"
 
     maintainers = ["natshineman", "harisubramoni", "MatthewLieber"]
 
+    version("7.0.1", sha256="04954aea082ba1b90a461ffab82a3cee43fe2d5a60fed99f5cb4585ac7da8c66")
     version("7.0", sha256="958e2faf9f3a4a244d7baac3469acee0375447decff6026c442552f0f6f08306")
     version("6.2", sha256="bb9dbc87dcf8ec6785977a61f6fceee8febf1a682488eaab4c58cf50e4fa985f")
     version("6.1", sha256="ecccedc868264f75db4d9529af79005419a2775113c7fae8f4e4a8434362e4a7")
@@ -39,6 +40,11 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("5.3", sha256="d7b3ad4bee48ac32f5bef39650a88f8f2c23a3050b17130c63966283edced89b")
 
     depends_on("mpi")
+    variant("papi", description="Enable/Disable support for papi", default=False)
+    variant("graphing", description="Enable/Disable support for graphing", default=False)
+    depends_on("papi", when="+papi")
+    depends_on("gnuplot", when="+graphing")
+    depends_on("imagemagick", when="+graphing")
 
     def configure_args(self):
         spec = self.spec
@@ -55,6 +61,16 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
             rocm_arch = spec.variants["amdgpu_target"].value
             if "none" not in rocm_arch:
                 config_args.append("HCC_AMDGPU_TARGET=" + " ".join(self.hip_flags(rocm_arch)))
+
+        if "+papi" in spec:
+            config_args.extend(["--enable-papi", "--with-papi=%s" % spec["papi"].prefix])
+        if "+graphing" in spec:
+            config_args.extend(
+                [
+                    "--with-convert=%s/bin" % spec["imagemagick"].prefix,
+                    "--with-gnuplot=%s/bin" % spec["gnuplot"].prefix,
+                ]
+            )
 
         # librt not available on darwin (and not required)
         if not sys.platform == "darwin":

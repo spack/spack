@@ -18,6 +18,3 @@ class Libicd(CMakePackage):
     depends_on("jpeg")
     depends_on("libpng")
     depends_on("lerc")
-
-    # https://github.com/lucianpls/libicd/issues/3
-    conflicts("platform=darwin")

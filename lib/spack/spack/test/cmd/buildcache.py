@@ -12,9 +12,11 @@ import sys
 import pytest
 
 import spack.binary_distribution
+import spack.cmd.buildcache
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.util.url
 from spack.spec import Spec
 
 buildcache = spack.main.SpackCommand("buildcache")

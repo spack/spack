@@ -6,9 +6,7 @@
 """Schema for mirrors.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
-   :lines: 13-
 """
-
 
 #: Properties for inclusion in other schemas
 properties = {

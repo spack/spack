@@ -84,4 +84,3 @@ class PyPyro4(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-serpent@1.27:", type=("build", "run"))
-    depends_on("py-selectors34", when="^python@:3.3", type=("build", "run"))

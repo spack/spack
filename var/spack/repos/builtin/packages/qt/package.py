@@ -38,94 +38,9 @@ class Qt(Package):
     version("5.15.3", sha256="b7412734698a87f4a0ae20751bab32b1b07fdc351476ad8e35328dbe10efdedb")
     version("5.15.2", sha256="3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240")
     version("5.14.2", sha256="c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa")
-    version(
-        "5.14.1",
-        sha256="6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8",
-        deprecated=True,
-    )
-    version(
-        "5.14.0",
-        sha256="be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba",
-        deprecated=True,
-    )
-    version(
-        "5.13.1",
-        sha256="adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e",
-        deprecated=True,
-    )
     version("5.12.10", sha256="3e0ee1e57f5cf3eeb038d0b4b22c7eb442285c62639290756b39dc93a1d0e14f")
-    version(
-        "5.12.7",
-        sha256="873783a0302129d98a8f63de9afe4520fb5f8d5316be8ad7b760c59875cd8a8d",
-        deprecated=True,
-    )
-    version(
-        "5.12.5",
-        sha256="a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298",
-        deprecated=True,
-    )
-    version(
-        "5.12.2",
-        sha256="59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5",
-        deprecated=True,
-    )
-    version(
-        "5.11.3",
-        sha256="859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d",
-        deprecated=True,
-    )
-    version(
-        "5.11.2",
-        sha256="c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81",
-        deprecated=True,
-    )
-    version(
-        "5.10.0",
-        sha256="936d4cf5d577298f4f9fdb220e85b008ae321554a5fcd38072dc327a7296230e",
-        deprecated=True,
-    )
     version("5.9.9", sha256="5ce285209290a157d7f42ec8eb22bf3f1d76f2e03a95fc0b99b553391be01642")
-    version(
-        "5.9.1",
-        sha256="7b41a37d4fe5e120cdb7114862c0153f86c07abbec8db71500443d2ce0c89795",
-        deprecated=True,
-    )
-    version(
-        "5.9.0",
-        sha256="f70b5c66161191489fc13c7b7eb69bf9df3881596b183e7f6d94305a39837517",
-        deprecated=True,
-    )
-    version(
-        "5.8.0",
-        sha256="0f4c54386d3dbac0606a936a7145cebb7b94b0ca2d29bc001ea49642984824b6",
-        deprecated=True,
-    )
-    version(
-        "5.7.1",
-        sha256="46ebca977deb629c5e69c2545bc5fe13f7e40012e5e2e451695c583bd33502fa",
-        deprecated=True,
-    )
-    version(
-        "5.7.0",
-        sha256="a6a2632de7e44bbb790bc3b563f143702c610464a7f537d02036749041fd1800",
-        deprecated=True,
-    )
     version("5.6.3", sha256="2fa0cf2e5e8841b29a4be62062c1a65c4f6f2cf1beaf61a5fd661f520cd776d0")
-    version(
-        "5.5.1",
-        sha256="c7fad41a009af1996b62ec494e438aedcb072b3234b2ad3eeea6e6b1f64be3b3",
-        deprecated=True,
-    )
-    version(
-        "5.4.2",
-        sha256="cfc768c55f0a0cd232bed914a9022528f8f2e50cb010bf0e4f3f62db3dfa17bd",
-        deprecated=True,
-    )
-    version(
-        "5.4.0",
-        sha256="1739633424bde3d89164ae6ff1c5c913be38b9997e451558ef873aac4bbc408a",
-        deprecated=True,
-    )
     version("5.3.2", sha256="c8d3fd2ead30705c6673c5e4af6c6f3973346b4fb2bd6079c7be0943a5b0282d")
     version("5.2.1", sha256="84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1")
     version("4.8.7", sha256="e2882295097e47fe089f8ac741a95fef47e0a73a3f3cdf21b56990638f626ea0")
@@ -281,15 +196,6 @@ class Qt(Package):
         depends_on("bison", type="build")
         depends_on("gperf")
 
-        # qtwebengine@5.7:5.15 are based on Google Chromium versions which depend on Py2
-        with when("@5.7:5.15"):
-            depends_on("python@2.7.5:2", type="build")
-            # mesa inherits MesonPackage (since October 2020) which depends on Py@3.
-            # The conflicts('mesa') enables a regular build of `qt@5.7:5.15+webkit`
-            # without having to specify the exact version by causing the concretizer
-            # to select mesa18 which does not depend on python@3.
-            conflicts("mesa")
-
         with when("@5.10:"):
             depends_on("nss@3.62:")
 
@@ -307,6 +213,12 @@ class Qt(Package):
             depends_on("libxrandr")
             depends_on("libxdamage")
             depends_on("gettext")
+
+    conflicts(
+        "+webkit",
+        when="@5.7:5.15",
+        msg="qtwebengine@5.7:5.15 are based on Google Chromium versions which depend on Py2",
+    )
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html

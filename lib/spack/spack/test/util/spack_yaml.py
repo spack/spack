@@ -86,6 +86,7 @@ def test_config_blame_defaults():
         if match:
             filename, line, key, val = match.groups()
             line = int(line)
+            val = val.strip("'\"")
 
             if val.lower() in ("true", "false"):
                 val = val.lower()

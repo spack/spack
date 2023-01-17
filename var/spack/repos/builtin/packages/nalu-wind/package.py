@@ -21,7 +21,7 @@ class NaluWind(CMakePackage, CudaPackage):
     homepage = "https://nalu-wind.readthedocs.io"
     git = "https://github.com/exawind/nalu-wind.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers = ["jrood-nrel", "psakievich"]
 
     tags = ["ecp", "ecp-apps"]
 

@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class PyPip(Package):
+class PyPip(Package, PythonExtension):
     """The PyPA recommended tool for installing Python packages."""
 
     homepage = "https://pip.pypa.io/"

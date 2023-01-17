@@ -5,9 +5,9 @@
 
 .. _rpackage:
 
---------
-RPackage
---------
+--
+R
+--
 
 Like Python, R has its own built-in build system.
 

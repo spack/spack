@@ -26,7 +26,6 @@ class PyPytools(PythonPackage):
     depends_on("py-six@1.8.0:", when="@:2019.1.1", type=("build", "run"))
     depends_on("py-numpy@1.6.0:", when="@:2021.2.9", type=("build", "run"))
     depends_on("py-numpy@1.6.0:", when="@2022.1.12: +numpy", type=("build", "run"))
-    depends_on("py-dataclasses@0.7:", when="@2021.2.9: ^python@:3.6", type=("build", "run"))
     depends_on("py-typing-extensions@4.0:", when="@2021.2.9: ^python@:3.10", type=("build", "run"))
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
     depends_on("python@3.6:3", when="@2021.2.9:", type=("build", "run"))

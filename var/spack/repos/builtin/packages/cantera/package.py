@@ -45,8 +45,6 @@ class Cantera(SConsPackage):
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-scipy", when="+python", type=("build", "run"))
     depends_on("py-3to2", when="+python", type=("build", "run"))
-    depends_on("py-unittest2", when="+python^python@2.6.0:2.6", type=("build", "run"))
-    depends_on("py-unittest2py3k", when="+python^python@3.1.0:3.1", type=("build", "run"))
 
     # Matlab toolbox dependencies
     extends("matlab", when="+matlab")

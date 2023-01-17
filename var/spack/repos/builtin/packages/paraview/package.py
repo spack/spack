@@ -9,7 +9,7 @@ import os
 from spack.package import *
 
 
-class Paraview(CMakePackage, CudaPackage):
+class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     """ParaView is an open-source, multi-platform data analysis and
     visualization application. This package includes the Catalyst
     in-situ library for versions 5.7 and greater, otherwise use the
@@ -57,8 +57,7 @@ class Paraview(CMakePackage, CudaPackage):
         default=True,
         description="Install include files for Catalyst or plugins support",
     )
-    variant("python", default=False, description="Enable Python support")
-    variant("python3", default=False, description="Enable Python3 support")
+    variant("python", default=False, description="Enable Python support", when="@5.6:")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("mpi", default=True, description="Enable MPI support")
     variant("osmesa", default=False, description="Enable OSMesa support")
@@ -72,6 +71,12 @@ class Paraview(CMakePackage, CudaPackage):
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
+    variant(
+        "openpmd",
+        default=False,
+        description="Enable openPMD support (w/ ADIOS2/HDF5)",
+        when="@5.9: +python",
+    )
     variant("catalyst", default=False, description="Enable Catalyst 1", when="@5.7:")
     variant(
         "libcatalyst",
@@ -105,12 +110,12 @@ class Paraview(CMakePackage, CudaPackage):
 
     conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
-    conflicts("+python", when="+python3")
-    # Python 2 support dropped with 5.9.0
-    conflicts("+python", when="@5.9:")
-    conflicts("+python3", when="@:5.5")
+    conflicts("+openpmd", when="~adios2 ~hdf5", msg="openPMD needs ADIOS2 and/or HDF5")
     conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
+    conflicts("+rocm", when="+cuda")
+    conflicts("+rocm", when="use_vtkm=off")
+    conflicts("paraview@:5.10", when="+rocm")
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts("~opengl2", when="@5.5:")
@@ -141,37 +146,28 @@ class Paraview(CMakePackage, CudaPackage):
         conflicts("cuda_arch=%d" % _arch, when="+cuda", msg="ParaView requires cuda_arch >= 20")
 
     depends_on("cmake@3.3:", type="build")
+    depends_on("cmake@3.21:", type="build", when="+rocm")
 
     depends_on("ninja", type="build")
 
-    # Workaround for
-    # adding the following to your packages.yaml
-    # packages:
-    #   python:
-    #     version: [3, 2]
-    # without this you'll get:
-    # paraview requires python version 3:, but spec asked for 2.7.16
-    # for `spack spec paraview+python+osmesa`
-    # see spack pull request #11539
     extends("python", when="+python")
-    extends("python", when="+python3")
-
-    depends_on("python@2.7:2.8", when="+python", type=("build", "run"))
 
     # VTK < 8.2.1 can't handle Python 3.8
     # This affects Paraview <= 5.7 (VTK 8.2.0)
     # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
-    depends_on("python@3:3.7", when="@:5.7 +python3", type=("build", "run"))
-    depends_on("python@3:", when="@5.8:+python3", type=("build", "run"))
+    depends_on("python@3:3.7", when="@:5.7 +python", type=("build", "run"))
+    depends_on("python@3:", when="@5.8:+python", type=("build", "run"))
 
-    depends_on("py-numpy@:1.15.4", when="+python", type=("build", "run"))
-    depends_on("py-numpy", when="+python3", type=("build", "run"))
+    depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
-    depends_on("py-mpi4py", when="+python3+mpi", type=("build", "run"))
 
-    depends_on("py-matplotlib@:2", when="+python", type="run")
-    depends_on("py-matplotlib", when="+python3", type="run")
-    depends_on("py-pandas@0.21:", when="+python3", type="run")
+    depends_on("py-matplotlib", when="+python", type="run")
+    depends_on("py-pandas@0.21:", when="+python", type="run")
+
+    # openPMD is implemented as a Python module and provides ADIOS2 and HDF5 backends
+    depends_on("openpmd-api@0.14.5: +python", when="+python +openpmd", type=("build", "run"))
+    depends_on("openpmd-api +adios2", when="+openpmd +adios2", type=("build", "run"))
+    depends_on("openpmd-api +hdf5", when="+openpmd +hdf5", type=("build", "run"))
 
     depends_on("mpi", when="+mpi")
     depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
@@ -216,17 +212,18 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("lz4")
     depends_on("xz")
     depends_on("zlib")
-    depends_on("libcatalyst", when="+libcatalyst")
+    depends_on("libcatalyst@2:", when="+libcatalyst")
+    depends_on("hip@5.2:", when="+rocm")
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos +rocm amdgpu_target={0}".format(target),
+            when="+rocm amdgpu_target={0}".format(target),
+        )
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
     depends_on("pugixml@:1.10", when="@:5.8")
     depends_on("pugixml", when="@5.9:")
-
-    # Can't contretize with python2 and py-setuptools@45.0.0:
-    depends_on("py-setuptools@:44", when="+python")
-    # Can't contretize with python2 and py-pillow@7.0.0:
-    depends_on("pil@:6", when="+python")
 
     # ParaView depends on cli11 due to changes in MR
     # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
@@ -262,11 +259,14 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit.patch", when="@5.8:5.10")
+    patch("vtk-adios2-module-no-kit.patch", when="@5.8:")
 
     # Patch for paraview 5.9.0%xl_r
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
     patch("xlc-compilation-pv590.patch", when="@5.9.0%xl_r")
+
+    # intel oneapi doesn't compile some code in catalyst
+    patch("catalyst-etc_oneapi_fix.patch", when="@5.10.0:5.10.1%oneapi")
 
     @property
     def generator(self):
@@ -349,7 +349,7 @@ class Paraview(CMakePackage, CudaPackage):
         env.prepend_path("LIBRARY_PATH", lib_dir)
         env.prepend_path("LD_LIBRARY_PATH", lib_dir)
 
-        if "+python" in self.spec or "+python3" in self.spec:
+        if "+python" in self.spec:
             if self.spec.version <= Version("5.4.1"):
                 pv_pydir = join_path(lib_dir, "site-packages")
                 env.prepend_path("PYTHONPATH", pv_pydir)
@@ -475,10 +475,10 @@ class Paraview(CMakePackage, CudaPackage):
 
         # CMake flags for python have changed with newer ParaView versions
         # Make sure Spack uses the right cmake flags
-        if "+python" in spec or "+python3" in spec:
+        if "+python" in spec:
             py_use_opt = "USE" if spec.satisfies("@5.8:") else "ENABLE"
             py_ver_opt = "PARAVIEW" if spec.satisfies("@5.7:") else "VTK"
-            py_ver_val = 3 if "+python3" in spec else 2
+            py_ver_val = 3
             cmake_args.extend(
                 [
                     "-DPARAVIEW_%s_PYTHON:BOOL=ON" % py_use_opt,
@@ -590,16 +590,25 @@ class Paraview(CMakePackage, CudaPackage):
             cmake_args.append("-DPARAVIEW_ENABLE_MOTIONFX:BOOL=OFF")
 
         # Encourage Paraview to use the correct Python libs
-        if spec.satisfies("+python") or spec.satisfies("+python3"):
+        if spec.satisfies("+python"):
             pylibdirs = spec["python"].libs.directories
             cmake_args.append("-DCMAKE_INSTALL_RPATH={0}".format(":".join(self.rpath + pylibdirs)))
 
         if "+advanced_debug" in spec:
             cmake_args.append("-DVTK_DEBUG_LEAKS:BOOL=ON")
 
+        if spec.satisfies("@5.11:"):
+            cmake_args.append("-DPARAVIEW_USE_HIP:BOOL=%s" % variant_bool("+rocm"))
+            if "+rocm" in spec:
+                archs = spec.variants["amdgpu_target"].value
+                if archs != "none":
+                    arch_str = ",".join(archs)
+                    cmake_args.append("-DCMAKE_HIP_ARCHITECTURES=%s" % arch_str)
+                cmake_args.append("-DKokkos_CXX_COMPILER=%s" % spec["hip"].hipcc)
+
         if "+catalyst" in spec:
             cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_Catalyst=YES")
-            if "+python3" in spec:
+            if "+python" in spec:
                 cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_PythonCatalyst=YES")
 
         if "+libcatalyst" in spec:

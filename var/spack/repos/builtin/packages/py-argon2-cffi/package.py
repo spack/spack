@@ -25,8 +25,6 @@ class PyArgon2Cffi(PythonPackage):
     depends_on("py-setuptools", when="@:21.1", type="build")
 
     depends_on("py-argon2-cffi-bindings", when="@21.2:", type=("build", "run"))
-    depends_on("py-dataclasses", when="@21.2: ^python@:3.6", type=("build", "run"))
     depends_on("py-typing-extensions", when="@21.2: ^python@:3.7", type=("build", "run"))
     depends_on("py-cffi@1.0.0:", when="@:21.1", type=("build", "run"))
     depends_on("py-six", when="@:20.1", type=("build", "run"))
-    depends_on("py-enum34", when="^python@:3.3", type=("build", "run"))

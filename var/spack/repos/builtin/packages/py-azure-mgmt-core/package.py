@@ -19,5 +19,3 @@ class PyAzureMgmtCore(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-azure-core@1.7.0:1", when="@1.2:", type=("build", "run"))
     depends_on("py-azure-core@1.4.0:1", type=("build", "run"))
-    depends_on("py-azure-mgmt-nspkg", when="^python@:2", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

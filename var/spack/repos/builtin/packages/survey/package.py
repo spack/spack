@@ -33,7 +33,8 @@ class Survey(CMakePackage):
     maintainers = ["jgalarowicz"]
 
     version("master", branch="master")
-    version("1.0.6", branch="1.0.6")
+    version("1.0.7", branch="1.0.7")
+    version("1.0.6", tag="1.0.6")
     version("1.0.5", tag="1.0.5")
     version("1.0.4", tag="1.0.4")
     version("1.0.3", tag="1.0.3")

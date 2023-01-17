@@ -961,21 +961,21 @@
         ],
         "intel": [
           {
-            "versions": "18.0:",
+            "versions": "18.0:2021.2",
             "name": "knl",
             "flags": "-march={name} -mtune={name}"
           }
         ],
         "oneapi": [
           {
-            "versions": ":",
+            "versions": ":2021.2",
             "name": "knl",
             "flags": "-march={name} -mtune={name}"
           }
         ],
         "dpcpp": [
           {
-            "versions": ":",
+            "versions": ":2021.2",
             "name": "knl",
             "flags": "-march={name} -mtune={name}"
           }
@@ -1905,6 +1905,86 @@
         ]
       }
     },
+    "zen4": {
+      "from": ["zen3", "x86_64_v4"],
+      "vendor": "AuthenticAMD",
+      "features": [
+        "bmi1",
+        "bmi2",
+        "f16c",
+        "fma",
+        "fsgsbase",
+        "avx",
+        "avx2",
+        "rdseed",
+        "clzero",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "movbe",
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "abm",
+        "xsavec",
+        "xsaveopt",
+        "clflushopt",
+        "popcnt",
+        "clwb",
+        "vaes",
+        "vpclmulqdq",
+        "pku",
+        "gfni",
+        "flush_l1d",
+        "erms",
+        "avic",
+        "avx512f",
+        "avx512dq",
+        "avx512ifma",
+        "avx512cd",
+        "avx512bw",
+        "avx512vl",
+        "avx512_bf16",
+        "avx512vbmi",
+        "avx512_vbmi2",
+        "avx512_vnni",
+        "avx512_bitalg",
+	"avx512_vpopcntdq"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "10.3:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "3.0:3.9",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg",
+            "warnings": "Zen4 processors are not fully supported by AOCC versions < 4.0.  For optimal performance please upgrade to a newer version of AOCC"
+          },
+          {
+            "versions": "4.0:",
+            "name": "znver4",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
     "ppc64": {
       "from": [],
       "vendor": "generic",
@@ -2302,7 +2382,6 @@
         "fp",
         "asimd",
         "evtstrm",
-        "pmull",
         "sha1",
         "sha2",
         "crc32",

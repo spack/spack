@@ -21,5 +21,4 @@ class PyWsproto(PythonPackage):
 
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-dataclasses", type=("build", "run"), when="^python@:3.6")
     depends_on("py-h11@0.9.0:0", type=("build", "run"))

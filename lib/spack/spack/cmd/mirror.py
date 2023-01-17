@@ -145,8 +145,7 @@ def setup_parser(subparser):
 
 def mirror_add(args):
     """Add a mirror to Spack."""
-    url = url_util.format(args.url)
-    spack.mirror.add(args.name, url, args.scope, args)
+    spack.mirror.add(args.name, args.url, args.scope, args)
 
 
 def mirror_remove(args):
@@ -156,7 +155,7 @@ def mirror_remove(args):
 
 def mirror_set_url(args):
     """Change the URL of a mirror."""
-    url = url_util.format(args.url)
+    url = args.url
     mirrors = spack.config.get("mirrors", scope=args.scope)
     if not mirrors:
         mirrors = syaml_dict()
@@ -357,11 +356,10 @@ def versions_per_spec(args):
 
 
 def create_mirror_for_individual_specs(mirror_specs, directory_hint, skip_unstable_versions):
-    local_push_url = local_mirror_url_from_user(directory_hint)
     present, mirrored, error = spack.mirror.create(
-        local_push_url, mirror_specs, skip_unstable_versions
+        directory_hint, mirror_specs, skip_unstable_versions
     )
-    tty.msg("Summary for mirror in {}".format(local_push_url))
+    tty.msg("Summary for mirror in {}".format(directory_hint))
     process_mirror_stats(present, mirrored, error)
 
 
@@ -389,9 +387,7 @@ def local_mirror_url_from_user(directory_hint):
     mirror_directory = spack.util.path.canonicalize_path(
         directory_hint or spack.config.get("config:source_cache")
     )
-    tmp_mirror = spack.mirror.Mirror(mirror_directory)
-    local_url = url_util.format(tmp_mirror.push_url)
-    return local_url
+    return url_util.path_to_file_url(mirror_directory)
 
 
 def mirror_create(args):

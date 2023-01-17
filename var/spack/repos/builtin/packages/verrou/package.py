@@ -30,8 +30,6 @@ class Verrou(AutotoolsPackage):
     version("develop", branch="master")
     version("2.2.0", sha256="d4ea3d19f0c61329723907b5b145d85776bb702643c1605a31f584484d2c5efc")
     version("2.1.0", sha256="b1ba49f84aebab15b8ab5649946c9c31b53ad1499f6ffb681c98db41ed28566d")
-    version("2.0.0", sha256="798df6e426ec57646a2a626d756b72f0171647ae5b07c982952dae2d71e26045")
-    version("1.1.0", sha256="b5105f61c65680f31551199cd143b2e15f412c34c821537998a7165e315dde2d")
 
     # The server is sometimes a bit slow to respond
     timeout = {"timeout": 60}
@@ -65,8 +63,7 @@ class Verrou(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
-    depends_on("python@:2", when="@1.1.0:2.0", type=("build", "run"))
-    depends_on("python@3.0:", when="@2.1.0:", type=("build", "run"))
+    depends_on("python@3.0:", type=("build", "run"))
     extends("python")
 
     def patch(self):

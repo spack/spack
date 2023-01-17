@@ -42,7 +42,8 @@ do
     succeeds _spack_completions "${line[@]}" ''
 
     # Test that completion with flags works
-    contains '-h --help' _spack_completions "${line[@]}" -
+    # all commands but spack pkg grep have -h; all have --help
+    contains '--help' _spack_completions "${line[@]}" -
 done <<- EOF
     $(spack commands --aliases --format=subcommands)
 EOF

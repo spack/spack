@@ -13,26 +13,22 @@ class PyPipits(PythonPackage):
     url = "https://github.com/hsgweon/pipits/archive/2.4.tar.gz"
 
     version("2.4", sha256="b08a9d70ac6e5dd1c64d56b77384afd69e21e7d641b2fc4416feff862a2cd054")
-    version("1.5.0", sha256="6c76fff42a9db62ff4bb1d4d520ebee6cb20d5a726f12c3d5a3d42314947a659")
 
     # https://github.com/bioconda/bioconda-recipes/blob/master/recipes/pipits/meta.yaml
-    depends_on("python@3:", type=("build", "run"), when="@2:")
-    depends_on("python@:2", type=("build", "run"), when="@:1")
-    depends_on("py-setuptools", type="build", when="@2:")
-    depends_on("py-pispino@1.1:", type=("build", "run"), when="@2:")
+    depends_on("python@3:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pispino@1.1:", type=("build", "run"))
     depends_on("vsearch", type="run")
     depends_on("fastx-toolkit", type="run")
     depends_on("hmmer", type="run")
     depends_on("itsx", type="run")
     depends_on("py-biom-format", type=("build", "run"))
-    depends_on("rdptools", type="run", when="@2:")
+    depends_on("rdptools", type="run")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"), when="@2:")
-    depends_on("py-progressbar2", type=("build", "run"), when="@2:")
-    depends_on("py-requests", type=("build", "run"), when="@2:")
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-progressbar2", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"))
     depends_on("seqkit", type="run")
-    depends_on("java", type=("build", "run"), when="@:1")
-    depends_on("rdp-classifier", type="run", when="@:1")
 
     resource(
         name="UNITE_retrained",

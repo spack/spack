@@ -13,7 +13,7 @@ class SourcewarePackage(spack.package_base.PackageBase):
     packages."""
 
     #: Path of the package in a Sourceware mirror
-    sourceware_mirror_path = None  # type: Optional[str]
+    sourceware_mirror_path: Optional[str] = None
 
     #: List of Sourceware mirrors used by Spack
     base_mirrors = [

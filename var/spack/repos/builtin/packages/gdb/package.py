@@ -37,7 +37,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     version("7.11.1", sha256="57e9e9aa3172ee16aa1e9c66fef08b4393b51872cc153e3f1ffdf18a57440586")
     version("7.10.1", sha256="ff14f8050e6484508c73cbfa63731e57901478490ca1672dc0b5e2b03f6af622")
 
-    variant("python", default=True, description="Compile with Python support")
+    variant("python", default=True, description="Compile with Python support", when="@8.2:")
     variant("xz", default=True, description="Compile with lzma support")
     variant("source-highlight", default=False, description="Compile with source-highlight support")
     variant("lto", default=False, description="Enable lto")
@@ -73,7 +73,6 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     # Optional dependencies
     depends_on("python", when="+python", type=("build", "link", "run"))
-    depends_on("python@:3.6", when="@:8.1+python", type=("build", "link", "run"))
     # gdb@9.2 will segmentation fault if it builds with python@3.9.
     # https://bugzilla.redhat.com/show_bug.cgi?id=1829702
     depends_on("python@:3.8", when="@:9.2+python", type=("build", "link", "run"))

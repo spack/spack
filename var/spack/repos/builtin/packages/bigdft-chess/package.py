@@ -18,9 +18,6 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     version("1.9.2", sha256="dc9e49b68f122a9886fa0ef09970f62e7ba21bb9ab1b86be9b7d7e22ed8fbe0f")
     version("1.9.1", sha256="3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41")
     version("1.9.0", sha256="4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8")
-    version("1.8.3", sha256="f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909")
-    version("1.8.2", sha256="042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61")
-    version("1.8.1", sha256="e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3")
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
@@ -28,9 +25,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     variant("ntpoly", default=False, description="Option to use NTPoly")
     # variant('minpack', default=False,  description='Give the link-line for MINPACK')
 
-    depends_on("python@:2.8", type=("build", "run"), when="@:1.8.3")
-    depends_on("python@3.0:", type=("build", "run"), when="@1.9.0:")
-    depends_on("python@3.0:", type=("build", "run"), when="@develop")
+    depends_on("python@3.0:", type=("build", "run"))
 
     depends_on("blas")
     depends_on("lapack")
@@ -40,9 +35,8 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     depends_on("ntpoly", when="+ntpoly")
     # depends_on('netlib-minpack', when='+minpack')
 
-    for vers in ["1.8.1", "1.8.2", "1.8.3", "1.9.0", "1.9.1", "1.9.2", "develop"]:
+    for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
         depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
-    for vers in ["1.8.3", "1.9.0", "1.9.1", "1.9.2", "develop"]:
         depends_on("bigdft-atlab@{0}".format(vers), when="@{0}".format(vers))
 
     build_directory = "chess"
@@ -93,8 +87,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         else:
             args.append("--without-openmp")
 
-        if spec.satisfies("@1.8.3:") or spec.satisfies("@develop"):
-            args.append("--with-atlab-libs=%s" % spec["bigdft-atlab"].prefix.lib)
+        args.append("--with-atlab-libs=%s" % spec["bigdft-atlab"].prefix.lib)
 
         if "+cuda" in spec:
             args.append("--enable-cuda-gpu")

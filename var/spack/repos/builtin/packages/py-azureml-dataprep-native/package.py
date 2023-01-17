@@ -33,18 +33,6 @@ class PyAzuremlDataprepNative(PythonPackage):
             expand=False,
             url="https://pypi.io/packages/cp37/a/azureml_dataprep_native/azureml_dataprep_native-30.0.0-cp37-cp37m-macosx_10_9_x86_64.whl",
         )
-        version(
-            "30.0.0-py3.6",
-            sha256="bd81f0ac0df442b4e09bd2ee76ccff1279437b73e08324d9038c13a5e4708598",
-            expand=False,
-            url="https://pypi.io/packages/cp36/a/azureml_dataprep_native/azureml_dataprep_native-30.0.0-cp36-cp36m-macosx_10_9_x86_64.whl",
-        )
-        version(
-            "30.0.0-py3.5",
-            sha256="2d1702a2dd9b851ccba9d4624a240f5657f3f34a89977f01ee99f9ccaab905a9",
-            expand=False,
-            url="https://pypi.io/packages/cp35/a/azureml_dataprep_native/azureml_dataprep_native-30.0.0-cp35-cp35m-macosx_10_9_x86_64.whl",
-        )
 
         version(
             "14.2.1-py3.7",
@@ -72,18 +60,6 @@ class PyAzuremlDataprepNative(PythonPackage):
             expand=False,
             url="https://pypi.io/packages/cp37/a/azureml_dataprep_native/azureml_dataprep_native-30.0.0-cp37-cp37m-manylinux1_x86_64.whl",
         )
-        version(
-            "30.0.0-py3.6",
-            sha256="d2560d3f20cd3b8ad2d2159b1048b83dd330cf8c44aa8becedd6dcaf72876062",
-            expand=False,
-            url="https://pypi.io/packages/cp36/a/azureml_dataprep_native/azureml_dataprep_native-30.0.0-cp36-cp36m-manylinux1_x86_64.whl",
-        )
-        version(
-            "30.0.0-py3.5",
-            sha256="15b55d903d5688b5a9a290e388db62c8f3d042bc1796db44723f4455b7b18d07",
-            expand=False,
-            url="https://pypi.io/packages/cp35/a/azureml_dataprep_native/azureml_dataprep_native-30.0.0-cp35-cp35m-manylinux1_x86_64.whl",
-        )
 
         version(
             "14.2.1-py3.7",
@@ -95,6 +71,4 @@ class PyAzuremlDataprepNative(PythonPackage):
     depends_on("python@3.9.0:3.9", when="@30.0.0-py3.9", type=("build", "run"))
     depends_on("python@3.8.0:3.8", when="@30.0.0-py3.8", type=("build", "run"))
     depends_on("python@3.7.0:3.7", when="@30.0.0-py3.7", type=("build", "run"))
-    depends_on("python@3.6.0:3.6", when="@30.0.0-py3.6", type=("build", "run"))
-    depends_on("python@3.5.0:3.5", when="@30.0.0-py3.5", type=("build", "run"))
     depends_on("python@3.7.0:3.7", when="@14.2.1-py3.7", type=("build", "run"))

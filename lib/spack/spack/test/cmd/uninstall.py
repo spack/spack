@@ -3,12 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import sys
 
 import pytest
 
 import llnl.util.tty as tty
 
+import spack.cmd.uninstall
 import spack.environment
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
@@ -38,6 +40,39 @@ def test_installed_dependents(mutable_database):
     """Test can't uninstall when there are installed dependents."""
     with pytest.raises(SpackCommandError):
         uninstall("-y", "libelf")
+
+
+@pytest.mark.db
+def test_correct_installed_dependents(mutable_database):
+    # Test whether we return the right dependents.
+
+    # Take callpath from the database
+    callpath = spack.store.db.query_local("callpath")[0]
+
+    # Ensure it still has dependents and dependencies
+    dependents = callpath.dependents(deptype="all")
+    dependencies = callpath.dependencies(deptype="all")
+    assert dependents and dependencies
+
+    # Uninstall it, so it's missing.
+    callpath.package.do_uninstall(force=True)
+
+    # Retrieve all dependent hashes
+    inside_dpts, outside_dpts = spack.cmd.uninstall.installed_dependents(dependencies, None)
+    dependent_hashes = [s.dag_hash() for s in itertools.chain(*outside_dpts.values())]
+    set_dependent_hashes = set(dependent_hashes)
+
+    # We dont have an env, so this should be empty.
+    assert not inside_dpts
+
+    # Assert uniqueness
+    assert len(dependent_hashes) == len(set_dependent_hashes)
+
+    # Ensure parents of callpath are listed
+    assert all(s.dag_hash() in set_dependent_hashes for s in dependents)
+
+    # Ensure callpath itself is not, since it was missing.
+    assert callpath.dag_hash() not in set_dependent_hashes
 
 
 @pytest.mark.db
@@ -173,9 +208,7 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
 
 # Note: I want to use https://docs.pytest.org/en/7.1.x/how-to/skipping.html#skip-all-test-functions-of-a-class-or-module
 # the style formatter insists on separating these two lines.
-pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Windows")
-
-
+@pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Windows")
 class TestUninstallFromEnv(object):
     """Tests an installation with two environments e1 and e2, which each have
     shared package installations:

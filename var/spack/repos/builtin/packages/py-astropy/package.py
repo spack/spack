@@ -16,6 +16,7 @@ class PyAstropy(PythonPackage):
     homepage = "https://astropy.org/"
     pypi = "astropy/astropy-4.0.1.post1.tar.gz"
 
+    version("5.1", sha256="1db1b2c7eddfc773ca66fa33bd07b25d5b9c3b5eee2b934e0ca277fa5b1b7b7e")
     version(
         "4.0.1.post1", sha256="5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5"
     )
@@ -27,6 +28,7 @@ class PyAstropy(PythonPackage):
     variant("extras", default=False, description="Enable extra functionality")
 
     # Required dependencies
+    depends_on("python@3.8:", when="@5.1:", type=("build", "run"))
     depends_on("python@3.6:", when="@4.0:", type=("build", "run"))
     depends_on("python@3.5:", when="@3.0:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@2.0:", type=("build", "run"))
@@ -34,12 +36,19 @@ class PyAstropy(PythonPackage):
     depends_on("python@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29.13:", type="build")
+    depends_on("py-numpy@1.18:", when="@5.1:", type=("build", "run"))
     depends_on("py-numpy@1.16:", when="@4.0:", type=("build", "run"))
     depends_on("py-numpy@1.13:", when="@3.1:", type=("build", "run"))
     depends_on("py-numpy@1.10:", when="@3.0:", type=("build", "run"))
     depends_on("py-numpy@1.9:", when="@2.0:", type=("build", "run"))
     depends_on("py-numpy@1.7:", when="@1.2:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-packaging@19.0:", when="@5.1:", type=("build", "run"))
+    depends_on("py-pyyaml@3.13:", when="@5.1:", type=("build", "run"))
+    depends_on("py-pyerfa@2.0:", when="@5.1:", type=("build", "run"))
+    depends_on("py-setuptools-scm@6.2:", when="@5.1:", type="build")
+    depends_on("py-cython@0.29.30", when="@5.1:", type="build")
+    depends_on("py-extension-helpers", when="@5.1:", type="build")
     depends_on("pkgconfig", type="build")
 
     # Optional dependencies
@@ -72,7 +81,8 @@ class PyAstropy(PythonPackage):
         # avoids issues with PyCode_New() in newer
         # versions of python in the distributed
         # cython-ized files
-        os.remove("astropy/cython_version.py")
+        if os.path.exists("astropy/cython_version.py"):
+            os.remove("astropy/cython_version.py")
 
     def install_options(self, spec, prefix):
         args = [

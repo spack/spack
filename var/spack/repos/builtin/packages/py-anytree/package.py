@@ -17,4 +17,3 @@ class PyAnytree(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-six@1.9.0:", type=("build", "run"))
-    depends_on("py-ordereddict", when="^python@:2.6", type=("build", "run"))

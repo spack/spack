@@ -17,4 +17,3 @@ class PyHumanfriendly(PythonPackage):
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-monotonic", when="^python@:2", type=("build", "run"))

@@ -24,7 +24,7 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     version("1.11.6", sha256="53dbf1945401c43f4ce19c1971baecdbf8bc32e0f37fa3f49fe7b6992d0d2030")
 
     depends_on("autoconf", type="build")
-    depends_on("perl", type=("build", "run"))
+    depends_on("perl+threads", type=("build", "run"))
 
     build_directory = "spack-build"
 

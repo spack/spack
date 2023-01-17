@@ -56,7 +56,6 @@ class PyTensorflowEstimator(Package):
     depends_on("bazel@0.19.0:", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-funcsigs@1.0.2:", type=("build", "run"), when="^python@:3.2")
 
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")

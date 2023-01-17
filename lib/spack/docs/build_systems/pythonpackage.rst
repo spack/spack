@@ -5,9 +5,9 @@
 
 .. _pythonpackage:
 
--------------
-PythonPackage
--------------
+------
+Python
+------
 
 Python packages and modules have their own special build system. This
 documentation covers everything you'll need to know in order to write

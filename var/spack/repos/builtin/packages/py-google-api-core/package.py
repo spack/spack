@@ -26,4 +26,3 @@ class PyGoogleApiCore(PythonPackage):
     depends_on("py-setuptools@34.0.0:", type=("build", "run"))
     depends_on("py-six@1.10.0:", type=("build", "run"))
     depends_on("py-pytz", type=("build", "run"))
-    depends_on("py-futures@3.2.0:", type=("build", "run"), when="^python@:3.1")

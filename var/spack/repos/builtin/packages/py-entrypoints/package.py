@@ -20,4 +20,3 @@ class PyEntrypoints(PythonPackage):
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("py-flit-core@2:3", when="@0.4:", type="build")
     depends_on("py-flit", when="@:0.3", type="build")
-    depends_on("py-configparser@3.5:", when="^python@2.7", type=("build", "run"))

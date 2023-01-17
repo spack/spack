@@ -18,9 +18,9 @@ class Hermes(CMakePackage):
 
     version("master", branch="master")
     version(
-        "0.8.0-beta",
-        url="https://github.com/HDFGroup/hermes/archive/v0.7.0-beta.tar.gz",
-        sha256="697c8b0ca2d94512326d1dc8d1895d3d37fbff708013d7bf578a3158b06cb158",
+        "0.9.0-beta",
+        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v0.9.0-beta.tar.gz",
+        sha256="abf258a52fa79729dfeb28559957abf8945f3ad37cadefb3bc685227c5f057a8",
     )
 
     variant("vfd", default=False, description="Enable HDF5 VFD")
@@ -31,6 +31,7 @@ class Hermes(CMakePackage):
     depends_on("glog@0.4.0:")
     depends_on("mpi")
     depends_on("hdf5@1.13.0:", when="+vfd")
+    depends_on("yaml-cpp")
 
     def cmake_args(self):
         args = [

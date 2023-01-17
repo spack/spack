@@ -61,4 +61,3 @@ class PyRasterio(PythonPackage):
     depends_on("py-snuggs@1.4.1:", type=("build", "run"))
     depends_on("py-click-plugins", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-enum34", type="run", when="^python@:3.3")

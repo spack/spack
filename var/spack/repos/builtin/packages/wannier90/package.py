@@ -80,6 +80,12 @@ class Wannier90(MakefilePackage):
         for key, value in substitutions.items():
             filter_file(key, value, self.makefile_name)
 
+        if self.spec.satisfies("%gcc@10:"):
+            fflags = [
+                "-fallow-argument-mismatch",
+            ]
+            filter_file(r"(^FCOPTS=.*)", r"\1 {0}".format(" ".join(fflags)), self.makefile_name)
+
         if "@:2 +shared" in self.spec:
             # this is to build a .shared wannier90 library
             filter_file(
@@ -188,3 +194,7 @@ class Wannier90(MakefilePackage):
 
         for file in find(join_path(self.stage.source_path, "src/obj"), "*.mod"):
             install(file, self.prefix.modules)
+
+    @property
+    def libs(self):
+        return find_libraries("libwannier", self.prefix, shared=True, recursive=True)

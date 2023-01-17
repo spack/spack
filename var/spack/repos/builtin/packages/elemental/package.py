@@ -27,7 +27,6 @@ class Elemental(CMakePackage):
         "openmp_blas", default=False, description="Use OpenMP for threading in the BLAS library"
     )
     variant("c", default=False, description="Build C interface")
-    variant("python", default=False, description="Install Python interface")
     variant("parmetis", default=False, description="Enable ParMETIS")
     variant("quad", default=False, description="Enable quad precision")
     variant("int64", default=False, description="Use 64bit integers")
@@ -83,8 +82,6 @@ class Elemental(CMakePackage):
     depends_on("mpi")
     # Allow Elemental to build internally when using 8-byte ints
     depends_on("scalapack", when="+scalapack ~int64_blas")
-    extends("python", when="+python")
-    depends_on("python@:2.8", when="+python")
     depends_on("gmp", when="+mpfr")
     depends_on("mpc", when="+mpfr")
     depends_on("mpfr", when="+mpfr")
@@ -117,7 +114,6 @@ class Elemental(CMakePackage):
             "-DBUILD_SHARED_LIBS:BOOL=%s" % ("+shared" in spec),
             "-DEL_HYBRID:BOOL=%s" % ("+hybrid" in spec),
             "-DEL_C_INTERFACE:BOOL=%s" % ("+c" in spec),
-            "-DINSTALL_PYTHON_PACKAGE:BOOL=%s" % ("+python" in spec),
             "-DEL_DISABLE_PARMETIS:BOOL=%s" % ("~parmetis" in spec),
             "-DEL_DISABLE_QUAD:BOOL=%s" % ("~quad" in spec),
             "-DEL_USE_64BIT_INTS:BOOL=%s" % ("+int64" in spec),
@@ -174,8 +170,5 @@ class Elemental(CMakePackage):
                 math_libs = spec["scalapack"].libs + math_libs
 
             args.extend(["-DMATH_LIBS:STRING={0}".format(math_libs.ld_flags)])
-
-        if "+python" in spec:
-            args.extend(["-DPYTHON_SITE_PACKAGES:STRING={0}".format(python_platlib)])
 
         return args

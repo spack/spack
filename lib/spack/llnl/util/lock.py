@@ -9,7 +9,6 @@ import socket
 import sys
 import time
 from datetime import datetime
-from typing import Dict, Tuple  # novm
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
@@ -81,7 +80,7 @@ class OpenFileTracker(object):
 
     def __init__(self):
         """Create a new ``OpenFileTracker``."""
-        self._descriptors = {}  # type: Dict[Tuple[int, int], OpenFile]
+        self._descriptors = {}
 
     def get_fh(self, path):
         """Get a filehandle for a lockfile.
@@ -103,7 +102,7 @@ class OpenFileTracker(object):
         try:
             # see whether we've seen this inode/pid before
             stat = os.stat(path)
-            key = (stat.st_ino, pid)
+            key = (stat.st_dev, stat.st_ino, pid)
             open_file = self._descriptors.get(key)
 
         except OSError as e:
@@ -129,31 +128,31 @@ class OpenFileTracker(object):
 
             # if we just created the file, we'll need to get its inode here
             if not stat:
-                inode = os.fstat(fd).st_ino
-                key = (inode, pid)
+                stat = os.fstat(fd)
+                key = (stat.st_dev, stat.st_ino, pid)
 
             self._descriptors[key] = open_file
 
         open_file.refs += 1
         return open_file.fh
 
-    def release_fh(self, path):
-        """Release a filehandle, only closing it if there are no more references."""
-        try:
-            inode = os.stat(path).st_ino
-        except OSError as e:
-            if e.errno != errno.ENOENT:  # only handle file not found
-                raise
-            inode = None  # this will not be in self._descriptors
-
-        key = (inode, os.getpid())
+    def release_by_stat(self, stat):
+        key = (stat.st_dev, stat.st_ino, os.getpid())
         open_file = self._descriptors.get(key)
-        assert open_file, "Attempted to close non-existing lock path: %s" % path
+        assert open_file, "Attempted to close non-existing inode: %s" % stat.st_inode
 
         open_file.refs -= 1
         if not open_file.refs:
             del self._descriptors[key]
             open_file.fh.close()
+
+    def release_by_fh(self, fh):
+        self.release_by_stat(os.fstat(fh.fileno()))
+
+    def purge(self):
+        for key in list(self._descriptors.keys()):
+            self._descriptors[key].fh.close()
+            del self._descriptors[key]
 
 
 #: Open file descriptors for locks in this process. Used to prevent one process
@@ -432,8 +431,7 @@ class Lock(object):
 
         """
         fcntl.lockf(self._file, fcntl.LOCK_UN, self._length, self._start, os.SEEK_SET)
-
-        file_tracker.release_fh(self.path)
+        file_tracker.release_by_fh(self._file)
         self._file = None
         self._reads = 0
         self._writes = 0

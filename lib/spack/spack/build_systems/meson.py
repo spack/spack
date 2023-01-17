@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
-from typing import List  # novm
+from typing import List
 
 import llnl.util.filesystem as fs
 
@@ -95,7 +95,7 @@ class MesonBuilder(BaseBuilder):
         "build_directory",
     )
 
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     install_targets = ["install"]
 
     build_time_test_callbacks = ["check"]

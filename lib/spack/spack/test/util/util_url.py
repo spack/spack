@@ -6,111 +6,44 @@
 """Test Spack's URL handling utility functions."""
 import os
 import os.path
-import posixpath
-import re
-import sys
+import urllib.parse
 
 import pytest
 
-import spack.paths
 import spack.util.url as url_util
-from spack.util.path import convert_to_posix_path
-
-is_windows = sys.platform == "win32"
-if is_windows:
-    drive_m = re.search(r"[A-Za-z]:", spack.paths.test_path)
-    drive = drive_m.group() if drive_m else None
 
 
-def test_url_parse():
+def test_url_local_file_path(tmpdir):
+    # Create a file
+    path = str(tmpdir.join("hello.txt"))
+    with open(path, "wb") as f:
+        f.write(b"hello world")
 
-    parsed = url_util.parse("/path/to/resource", scheme="fake")
-    assert parsed.scheme == "fake"
-    assert parsed.netloc == ""
-    assert parsed.path == "/path/to/resource"
+    # Go from path -> url -> path.
+    roundtrip = url_util.local_file_path(url_util.path_to_file_url(path))
 
-    parsed = url_util.parse("file:///path/to/resource")
-    assert parsed.scheme == "file"
-    assert parsed.netloc == ""
-    assert parsed.path == "/path/to/resource"
+    # Verify it's the same file.
+    assert os.path.samefile(roundtrip, path)
 
-    parsed = url_util.parse("file:///path/to/resource", scheme="fake")
-    assert parsed.scheme == "file"
-    assert parsed.netloc == ""
-    assert parsed.path == "/path/to/resource"
-
-    parsed = url_util.parse("file://path/to/resource")
-    assert parsed.scheme == "file"
-    expected = convert_to_posix_path(os.path.abspath(posixpath.join("path", "to", "resource")))
-    if is_windows:
-        expected = expected.lstrip(drive)
-    assert parsed.path == expected
-
-    if is_windows:
-        parsed = url_util.parse("file://%s\\path\\to\\resource" % drive)
-        assert parsed.scheme == "file"
-        expected = "/" + posixpath.join("path", "to", "resource")
-        assert parsed.path == expected
-
-    parsed = url_util.parse("https://path/to/resource")
-    assert parsed.scheme == "https"
-    assert parsed.netloc == "path"
-    assert parsed.path == "/to/resource"
-
-    parsed = url_util.parse("gs://path/to/resource")
-    assert parsed.scheme == "gs"
-    assert parsed.netloc == "path"
-    assert parsed.path == "/to/resource"
-
-    spack_root = spack.paths.spack_root
-    parsed = url_util.parse("file://$spack")
-    assert parsed.scheme == "file"
-
-    if is_windows:
-        spack_root = "/" + convert_to_posix_path(spack_root)
-
-    assert parsed.netloc + parsed.path == spack_root
+    # Test if it accepts urlparse objects
+    parsed = urllib.parse.urlparse(url_util.path_to_file_url(path))
+    assert os.path.samefile(url_util.local_file_path(parsed), path)
 
 
-def test_url_local_file_path():
-    spack_root = spack.paths.spack_root
-    sep = os.path.sep
-    lfp = url_util.local_file_path("/a/b/c.txt")
-    assert lfp == sep + os.path.join("a", "b", "c.txt")
+def test_url_local_file_path_no_file_scheme():
+    assert url_util.local_file_path("https://example.com/hello.txt") is None
+    assert url_util.local_file_path("C:\\Program Files\\hello.txt") is None
 
-    lfp = url_util.local_file_path("file:///a/b/c.txt")
-    assert lfp == sep + os.path.join("a", "b", "c.txt")
 
-    if is_windows:
-        lfp = url_util.local_file_path("file://a/b/c.txt")
-        expected = os.path.abspath(os.path.join("a", "b", "c.txt"))
-        assert lfp == expected
+def test_relative_path_to_file_url(tmpdir):
+    # Create a file
+    path = str(tmpdir.join("hello.txt"))
+    with open(path, "wb") as f:
+        f.write(b"hello world")
 
-    lfp = url_util.local_file_path("file://$spack/a/b/c.txt")
-    expected = os.path.abspath(os.path.join(spack_root, "a", "b", "c.txt"))
-    assert lfp == expected
-
-    if is_windows:
-        lfp = url_util.local_file_path("file:///$spack/a/b/c.txt")
-        expected = os.path.abspath(os.path.join(spack_root, "a", "b", "c.txt"))
-        assert lfp == expected
-
-    lfp = url_util.local_file_path("file://$spack/a/b/c.txt")
-    expected = os.path.abspath(os.path.join(spack_root, "a", "b", "c.txt"))
-    assert lfp == expected
-
-    # not a file:// URL - so no local file path
-    lfp = url_util.local_file_path("http:///a/b/c.txt")
-    assert lfp is None
-
-    lfp = url_util.local_file_path("http://a/b/c.txt")
-    assert lfp is None
-
-    lfp = url_util.local_file_path("http:///$spack/a/b/c.txt")
-    assert lfp is None
-
-    lfp = url_util.local_file_path("http://$spack/a/b/c.txt")
-    assert lfp is None
+    with tmpdir.as_cwd():
+        roundtrip = url_util.local_file_path(url_util.path_to_file_url("hello.txt"))
+        assert os.path.samefile(roundtrip, path)
 
 
 def test_url_join_local_paths():
@@ -179,26 +112,6 @@ def test_url_join_local_paths():
         == "https://mirror.spack.io/build_cache/my-package"
     )
 
-    # file:// URL path components are *NOT* canonicalized
-    spack_root = spack.paths.spack_root
-
-    if sys.platform != "win32":
-        join_result = url_util.join("/a/b/c", "$spack")
-        assert join_result == "file:///a/b/c/$spack"  # not canonicalized
-        format_result = url_util.format(join_result)
-        # canoncalize by hand
-        expected = url_util.format(
-            os.path.abspath(os.path.join("/", "a", "b", "c", "." + spack_root))
-        )
-        assert format_result == expected
-
-        # see test_url_join_absolute_paths() for more on absolute path components
-        join_result = url_util.join("/a/b/c", "/$spack")
-        assert join_result == "file:///$spack"  # not canonicalized
-        format_result = url_util.format(join_result)
-        expected = url_util.format(spack_root)
-        assert format_result == expected
-
     # For s3:// URLs, the "netloc" (bucket) is considered part of the path.
     # Make sure join() can cross bucket boundaries in this case.
     args = ["s3://bucket/a/b", "new-bucket", "c"]
@@ -253,38 +166,7 @@ def test_url_join_absolute_paths():
     # works as if everything before the http:// URL was left out
     assert url_util.join("literally", "does", "not", "matter", p, "resource") == join_result
 
-    # It's important to keep in mind that this logic applies even if the
-    # component's path is not an absolute path!
-
-    # For eaxmple:
-    p = "./d"
-    # ...is *NOT* an absolute path
-    # ...is also *NOT* an absolute path component
-
-    u = "file://./d"
-    # ...is a URL
-    #     The path of this URL is *NOT* an absolute path
-    #     HOWEVER, the URL, itself, *is* an absolute path component
-
-    # (We just need...
-    cwd = os.getcwd()
-    # ...to work out what resource it points to)
-
-    if sys.platform == "win32":
-        convert_to_posix_path(cwd)
-        cwd = "/" + cwd
-
-    # So, even though parse() assumes "file://" URL, the scheme is still
-    # significant in URL path components passed to join(), even if the base
-    # is a file:// URL.
-
-    path_join_result = "file:///a/b/c/d"
-    assert url_util.join("/a/b/c", p) == path_join_result
-    assert url_util.join("file:///a/b/c", p) == path_join_result
-
-    url_join_result = "file://{CWD}/d".format(CWD=cwd)
-    assert url_util.join("/a/b/c", u) == url_join_result
-    assert url_util.join("file:///a/b/c", u) == url_join_result
+    assert url_util.join("file:///a/b/c", "./d") == "file:///a/b/c/d"
 
     # Finally, resolve_href should have no effect for how absolute path
     # components are handled because local hrefs can not be absolute path

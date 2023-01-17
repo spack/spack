@@ -19,3 +19,6 @@ class Stdexec(CMakePackage):
 
     conflicts("%gcc@:10")
     conflicts("%clang@:13")
+
+    def build(self, spec, prefix):
+        pass

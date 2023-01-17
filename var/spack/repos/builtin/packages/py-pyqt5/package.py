@@ -30,7 +30,6 @@ class PyPyqt5(SIPPackage):
     # sip: QOpenGLFramebufferObject is undefined
     depends_on("qt@5:+opengl")
     depends_on("python@2.6:", type=("build", "run"))
-    depends_on("py-enum34", type=("build", "run"), when="^python@:3.3")
     depends_on("py-sip module=PyQt5.sip", type=("build", "run"))
     depends_on("py-sip@:4.19.18 module=PyQt5.sip", type=("build", "run"), when="@:5.13.0")
 

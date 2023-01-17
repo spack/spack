@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import posixpath
 import sys
 
 import jinja2
@@ -325,6 +324,13 @@ class TestConcretize(object):
         assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
         assert not set(cmake.compiler_flags["fflags"])
 
+    def test_compiler_flags_from_compiler_and_dependent(self):
+        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
+        client.concretize()
+        cmake = client["cmake"]
+        for spec in [client, cmake]:
+            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
+
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
         spec.concretize()
@@ -332,7 +338,7 @@ class TestConcretize(object):
         assert spec.satisfies("^openblas cflags='-g'")
 
     @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
         reason="Optional compiler propagation isn't deprecated for original concretizer",
     )
     def test_concretize_compiler_flag_does_not_propagate(self):
@@ -342,7 +348,7 @@ class TestConcretize(object):
         assert not spec.satisfies("^openblas cflags='-g'")
 
     @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
         reason="Optional compiler propagation isn't deprecated for original concretizer",
     )
     def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
@@ -442,7 +448,7 @@ class TestConcretize(object):
             s.concretize()
 
     @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
         reason="Optional compiler propagation isn't deprecated for original concretizer",
     )
     def test_concretize_propagate_disabled_variant(self):
@@ -459,7 +465,6 @@ class TestConcretize(object):
 
         assert spec.satisfies("^openblas+shared")
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="No Compiler for Arch on Win")
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
@@ -520,7 +525,7 @@ class TestConcretize(object):
     def test_external_package(self):
         spec = Spec("externaltool%gcc")
         spec.concretize()
-        assert spec["externaltool"].external_path == posixpath.sep + posixpath.join(
+        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_tool"
         )
         assert "externalprereq" not in spec
@@ -551,10 +556,10 @@ class TestConcretize(object):
     def test_external_and_virtual(self):
         spec = Spec("externaltest")
         spec.concretize()
-        assert spec["externaltool"].external_path == posixpath.sep + posixpath.join(
+        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_tool"
         )
-        assert spec["stuff"].external_path == posixpath.sep + posixpath.join(
+        assert spec["stuff"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_virtual_gcc"
         )
         assert spec["externaltool"].compiler.satisfies("gcc")
@@ -1481,21 +1486,25 @@ class TestConcretize(object):
         assert ver("2.7.21") == Spec("python@2.7.21").concretized().version
 
     @pytest.mark.parametrize(
-        "spec_str",
+        "spec_str,valid",
         [
-            "conditional-values-in-variant@1.62.0 cxxstd=17",
-            "conditional-values-in-variant@1.62.0 cxxstd=2a",
-            "conditional-values-in-variant@1.72.0 cxxstd=2a",
+            ("conditional-values-in-variant@1.62.0 cxxstd=17", False),
+            ("conditional-values-in-variant@1.62.0 cxxstd=2a", False),
+            ("conditional-values-in-variant@1.72.0 cxxstd=2a", False),
             # Ensure disjoint set of values work too
-            "conditional-values-in-variant@1.72.0 staging=flexpath",
+            ("conditional-values-in-variant@1.72.0 staging=flexpath", False),
+            # Ensure conditional values set False fail too
+            ("conditional-values-in-variant foo=bar", False),
+            ("conditional-values-in-variant foo=foo", True),
         ],
     )
-    def test_conditional_values_in_variants(self, spec_str):
+    def test_conditional_values_in_variants(self, spec_str, valid):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer doesn't resolve conditional values in variants")
 
         s = Spec(spec_str)
-        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+        raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
+        with llnl.util.lang.nullcontext() if valid else raises:
             s.concretize()
 
     def test_conditional_values_in_conditional_variant(self):
@@ -1804,7 +1813,6 @@ class TestConcretize(object):
         c = s.concretized()
         assert hash in str(c)
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize("git_ref", ("a" * 40, "0.2.15", "main"))
     def test_git_ref_version_is_equivalent_to_specified_version(self, git_ref):
         if spack.config.get("config:concretizer") == "original":
@@ -1816,7 +1824,6 @@ class TestConcretize(object):
         assert s.satisfies("@develop")
         assert s.satisfies("@0.1:")
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize("git_ref", ("a" * 40, "0.2.15", "fbranch"))
     def test_git_ref_version_errors_if_unknown_version(self, git_ref):
         if spack.config.get("config:concretizer") == "original":

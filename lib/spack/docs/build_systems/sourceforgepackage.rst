@@ -5,15 +5,15 @@
 
 .. _sourceforgepackage:
 
-------------------
-SourceforgePackage
-------------------
+-----------
+Sourceforge
+-----------
 
-``SourceforgePackage`` is a 
+``SourceforgePackage`` is a
 `mixin-class <https://en.wikipedia.org/wiki/Mixin>`_. It automatically
 sets the URL based on a list of Sourceforge mirrors listed in
 `sourceforge_mirror_path`, which defaults to a half dozen known mirrors.
-Refer to the package source 
+Refer to the package source
 (`<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/sourceforge.py>`__) for the current list of mirrors used by Spack.
 
 
@@ -29,7 +29,7 @@ This package provides a method for populating mirror URLs.
     It is decorated with `property` so its results are treated as
     a package attribute.
 
-    Refer to 
+    Refer to
     `<https://spack.readthedocs.io/en/latest/packaging_guide.html#mirrors-of-the-main-url>`__
     for information on how Spack uses the `urls` attribute during
     fetching.

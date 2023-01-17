@@ -19,4 +19,3 @@ class PyAsttokens(PythonPackage):
     depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
 
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-typing", when="@2.0.7: ^python@:3.4", type=("build", "run"))

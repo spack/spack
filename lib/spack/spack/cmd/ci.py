@@ -241,8 +241,9 @@ def ci_reindex(args):
     ci_mirrors = yaml_root["mirrors"]
     mirror_urls = [url for url in ci_mirrors.values()]
     remote_mirror_url = mirror_urls[0]
+    mirror = spack.mirror.Mirror(remote_mirror_url)
 
-    buildcache.update_index(remote_mirror_url, update_keys=True)
+    buildcache.update_index(mirror, update_keys=True)
 
 
 def ci_rebuild(args):
@@ -356,7 +357,7 @@ def ci_rebuild(args):
             # dependencies from previous stages available since we do not
             # allow pushing binaries to the remote mirror during PR pipelines.
             enable_artifacts_mirror = True
-            pipeline_mirror_url = "file://" + local_mirror_dir
+            pipeline_mirror_url = url_util.path_to_file_url(local_mirror_dir)
             mirror_msg = "artifact buildcache enabled, mirror url: {0}".format(pipeline_mirror_url)
             tty.debug(mirror_msg)
 

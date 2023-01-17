@@ -11,11 +11,11 @@ class CpuFeatures(CMakePackage):
 
     homepage = "https://github.com/google/cpu_features"
     git = "https://github.com/google/cpu_features.git"
+    url = "https://github.com/google/cpu_features/archive/refs/tags/v0.7.0.tar.gz"
 
     version("main", branch="main")
     version("develop", branch="main", deprecated=True)
-
-    version("0.7.0", tag="v0.7.0")
+    version("0.7.0", sha256="df80d9439abf741c7d2fdcdfd2d26528b136e6c52976be8bd0cd5e45a27262c0")
 
     variant("shared", description="Build shared libraries", default=False)
 
@@ -23,5 +23,5 @@ class CpuFeatures(CMakePackage):
 
     def cmake_args(self):
         args = ["-DBUILD_TESTING:BOOL=OFF"]
-        args += self.enable_or_disable("BUILD_SHARED_LIBS", variant="shared")
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", variant="shared"))
         return args

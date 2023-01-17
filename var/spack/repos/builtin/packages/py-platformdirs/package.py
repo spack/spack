@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.build_systems.python
 from spack.package import *
 
 
@@ -18,6 +19,13 @@ class PyPlatformdirs(PythonPackage):
     version("2.4.0", sha256="367a5e80b3d04d2428ffa76d33f124cf11e8fff2acdaa9b43d545f5c7d661ef2")
     version("2.3.0", sha256="15b056538719b1c94bdaccb29e5f81879c7f7f0f4a153f46086d155dffcd4f0f")
 
+    variant(
+        "wheel",
+        default=False,
+        sticky=True,
+        description="Install from wheel (required for bootstrapping Spack)",
+    )
+
     depends_on("python@3.7:", when="@2.4.1:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@44:", when="@:2.5.1", type="build")
@@ -25,10 +33,10 @@ class PyPlatformdirs(PythonPackage):
     depends_on("py-hatchling@0.22.0:", when="@2.5.2:", type="build")
     depends_on("py-hatch-vcs", when="@2.5.2:", type="build")
 
-    @when("^python@:3.6")
-    def setup_build_environment(self, env):
-        """Python 3.6 needs a little help with setup.cfg re:
 
-        https://github.com/platformdirs/platformdirs/issues/50
-        """
-        env.set("LC_ALL", "en_US.UTF-8")
+class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
+    @when("+wheel")
+    def install(self, pkg, spec, prefix):
+        args = list(filter(lambda x: x != "--no-index", self.std_args(self.pkg)))
+        args += [f"--prefix={prefix}", self.spec.format("platformdirs=={version}")]
+        pip(*args)

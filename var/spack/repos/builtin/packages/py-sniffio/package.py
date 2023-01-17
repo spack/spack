@@ -20,4 +20,3 @@ class PySniffio(PythonPackage):
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("python@3.7:", when="@1.3.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-contextvars@2.1:", when="^python@:3.6", type=("build", "run"))

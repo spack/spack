@@ -26,6 +26,7 @@ import spack.package_base
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
+from spack.parser import SpecSyntaxError
 from spack.spec import CompilerSpec, Spec
 
 install = SpackCommand("install")
@@ -362,7 +363,7 @@ def test_install_conflicts(conflict_spec):
 )
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
-    with pytest.raises(SpackError, match="Unexpected token"):
+    with pytest.raises(SpecSyntaxError, match="unexpected tokens"):
         install(invalid_spec)
 
 
@@ -1178,3 +1179,11 @@ def test_install_use_buildcache(
         # Alternative to --cache-only (always) or --no-cache (never)
         for opt in ["auto", "only", "never"]:
             install_use_buildcache(opt)
+
+
+@pytest.mark.regression("34006")
+@pytest.mark.disable_clean_stage_check
+def test_padded_install_runtests_root(install_mockery_mutable_config, mock_fetch):
+    spack.config.set("config:install_tree:padded_length", 255)
+    output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
+    assert output.count("method not implemented") == 1

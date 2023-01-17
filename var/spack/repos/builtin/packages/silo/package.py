@@ -52,7 +52,8 @@ class Silo(AutotoolsPackage):
     depends_on("automake", type="build", when="+shared")
     depends_on("libtool", type="build", when="+shared")
     depends_on("mpi", when="+mpi")
-    depends_on("hdf5@1.8:", when="+hdf5")
+    depends_on("hdf5@1.8", when="@:4.10+hdf5")
+    depends_on("hdf5@1.12:", when="@4.11:+hdf5")
     depends_on("qt+gui~framework@4.8:4.9", when="+silex")
     depends_on("libx11", when="+silex")
     # Xmu dependency is required on Ubuntu 18-20
@@ -83,6 +84,9 @@ class Silo(AutotoolsPackage):
     # hzip and fpzip are not available in the BSD releases
     conflicts("+hzip", when="@4.10.2-bsd,4.11-bsd")
     conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
+
+    # zfp include missing
+    patch("zfp_error.patch", when="@4.11 +hdf5")
 
     def flag_handler(self, name, flags):
         spec = self.spec

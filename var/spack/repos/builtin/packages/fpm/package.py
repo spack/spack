@@ -23,6 +23,7 @@ class Fpm(Package):
 
     maintainers = ["awvwgk"]
 
+    version("0.7.0", "536dec7d4502221734683b15e6ff64a6ab3f9910df122d18f851c9a68711f91f")
     version("0.6.0", "365516f66b116a112746af043e8eccb3d854d6feb1fad0507c570433dacbf7be")
     version("0.5.0", "e4a06956d2300f9aa1d06bd3323670480e946549617582e32684ded6921a921e")
     version("0.4.0", "cd9b80b7f40d9cf357ca8d5d4fe289fd32dfccb729bad7d2a68f245e4cdd0045")

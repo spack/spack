@@ -28,7 +28,6 @@ class MlperfDeepcam(Package, CudaPackage):
     depends_on("py-pillow", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pillow", type=("build", "run"))
-    depends_on("py-argparse", when="^python@:2.6,3.0:3.1", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-apex", type=("build", "run"))
     depends_on("py-wandb", type=("build", "run"))

@@ -16,5 +16,4 @@ class PyHpccm(PythonPackage):
     version("19.2.0", sha256="c60eec914a802b0a76596cfd5fdf7122d3f8665fcef06ef928323f5dfb5219a6")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-enum34", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))

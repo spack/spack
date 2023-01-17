@@ -23,7 +23,6 @@ class PyHttpx(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-certifi", type=("build", "run"))
     depends_on("py-charset-normalizer", type=("build", "run"), when="@0.22.0:")
-    depends_on("py-async-generator", type=("build", "run"), when="@0.22.0:^python@:3.6")
 
     depends_on("py-httpcore@0.11.0:0.11", type=("build", "run"), when="@0.15.2")
     depends_on("py-httpcore@0.14.5:0.14", type=("build", "run"), when="@0.22.0:")

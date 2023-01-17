@@ -34,7 +34,7 @@ class RacketPackage(PackageBase):
 
     extends("racket", when="build_system=racket")
 
-    racket_name = None  # type: Optional[str]
+    racket_name: Optional[str] = None
     parallel = True
 
     @lang.classproperty
@@ -51,7 +51,7 @@ class RacketBuilder(spack.builder.Builder):
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = tuple()  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = tuple()
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = ("build_directory", "build_time_test_callbacks", "subdirectory")
@@ -59,7 +59,7 @@ class RacketBuilder(spack.builder.Builder):
     #: Callback names for build-time test
     build_time_test_callbacks = ["check"]
 
-    racket_name = None  # type: Optional[str]
+    racket_name: Optional[str] = None
 
     @property
     def subdirectory(self):

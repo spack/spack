@@ -19,5 +19,4 @@ class PyBoostHistogram(PythonPackage):
     depends_on("py-setuptools@45:", type="build")
     depends_on("py-setuptools-scm@4.1.2:+toml", type="build")
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
-    depends_on("py-dataclasses", when="^python@:3.6", type=("build", "run"))
     depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))

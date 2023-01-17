@@ -20,6 +20,7 @@ class Libpressio(CMakePackage, CudaPackage):
     tests_require_compiler = True
     version("master", branch="master")
     version("develop", branch="develop")
+    version("0.90.2", sha256="1fe3f4073952a96bda1b3d7c237bc5d64d1f7bf13bfe1830074852ea33006bf9")
     version("0.88.3", sha256="b2df2ed11f77eb2e07206f7bdfa4754017559017235c3324820021ef451fd48b")
     version("0.88.2", sha256="f5de6aff5ff906b164d6b2199ada10a8e32fb1e2a6295da3f0b79d9626661a46")
     version("0.88.1", sha256="d7fe73a6b2d8de6d19c85e87888dcf1a62956f56b4e6dfd23e26901740031e00")
@@ -246,6 +247,11 @@ class Libpressio(CMakePackage, CudaPackage):
     depends_on("arc", when="+arc")
     depends_on("netcdf-c", when="+netcdf")
     depends_on("mgardx", when="+mgardx")
+    conflicts(
+        "^ mgard@2022-11-18",
+        when="@:0.88.3+mgard",
+        msg="mgard@2022-11-18 is not supported before 0.89.0",
+    )
     conflicts(
         "+mgardx", when="+szauto"
     )  # SZ auto and MGARDx cause symbol conflicts with each other

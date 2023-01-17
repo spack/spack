@@ -21,5 +21,4 @@ class PyPybtex(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-latexcodec@1.0.4:", type=("build", "run"))
     depends_on("py-pyyaml@3.01:", type=("build", "run"))
-    depends_on("py-counter@1:", when="^python@:2.6", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@0.24.0:")

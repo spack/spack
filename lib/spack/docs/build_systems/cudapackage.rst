@@ -5,9 +5,9 @@
 
 .. _cudapackage:
 
------------
-CudaPackage
------------
+----
+Cuda
+----
 
 Different from other packages, ``CudaPackage`` does not represent a build system.
 Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by providing a `mixin-class <https://en.wikipedia.org/wiki/Mixin>`_.
@@ -80,7 +80,7 @@ standard CUDA compiler flags.
 
 **cuda_flags**
 
-    This built-in static method returns a list of command line flags 
+    This built-in static method returns a list of command line flags
     for the chosen ``cuda_arch`` value(s).  The flags are intended to
     be passed to the CUDA compiler driver (i.e., ``nvcc``).
 

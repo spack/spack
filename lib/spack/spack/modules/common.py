@@ -34,7 +34,7 @@ import datetime
 import inspect
 import os.path
 import re
-from typing import Optional  # novm
+from typing import Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
@@ -588,7 +588,7 @@ class BaseFileLayout(object):
     """
 
     #: This needs to be redefined
-    extension = None  # type: Optional[str]
+    extension: Optional[str] = None
 
     def __init__(self, configuration):
         self.conf = configuration

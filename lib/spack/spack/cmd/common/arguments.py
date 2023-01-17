@@ -5,6 +5,7 @@
 
 
 import argparse
+import os.path
 
 from llnl.util.lang import stable_partition
 
@@ -12,7 +13,9 @@ import spack.cmd
 import spack.config
 import spack.dependency as dep
 import spack.environment as ev
+import spack.mirror
 import spack.modules
+import spack.reporters
 import spack.spec
 import spack.store
 from spack.util.pattern import Args
@@ -121,6 +124,64 @@ class DeptypeAction(argparse.Action):
             deptype = dep.canonical_deptype(deptype)
 
         setattr(namespace, self.dest, deptype)
+
+
+def _cdash_reporter(namespace):
+    """Helper function to create a CDash reporter. This function gets an early reference to the
+    argparse namespace under construction, so it can later use it to create the object.
+    """
+
+    def _factory():
+        def installed_specs(args):
+            if getattr(args, "spec", ""):
+                packages = args.spec
+            elif getattr(args, "specs", ""):
+                packages = args.specs
+            elif getattr(args, "package", ""):
+                # Ensure CI 'spack test run' can output CDash results
+                packages = args.package
+            else:
+                packages = []
+                for file in args.specfiles:
+                    with open(file, "r") as f:
+                        s = spack.spec.Spec.from_yaml(f)
+                        packages.append(s.format())
+            return packages
+
+        configuration = spack.reporters.CDashConfiguration(
+            upload_url=namespace.cdash_upload_url,
+            packages=installed_specs(namespace),
+            build=namespace.cdash_build,
+            site=namespace.cdash_site,
+            buildstamp=namespace.cdash_buildstamp,
+            track=namespace.cdash_track,
+            ctest_parsing=getattr(namespace, "ctest_parsing", False),
+        )
+        return spack.reporters.CDash(configuration=configuration)
+
+    return _factory
+
+
+class CreateReporter(argparse.Action):
+    """Create the correct object to generate reports for installation and testing."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+        if values == "junit":
+            setattr(namespace, "reporter", spack.reporters.JUnit)
+        elif values == "cdash":
+            setattr(namespace, "reporter", _cdash_reporter(namespace))
+
+
+@arg
+def log_format():
+    return Args(
+        "--log-format",
+        default=None,
+        action=CreateReporter,
+        choices=("junit", "cdash"),
+        help="format to be used for log files",
+    )
 
 
 # TODO: merge constraint and installed_specs
@@ -493,3 +554,42 @@ def use_buildcache(cli_arg_value):
             dependencies = val
 
     return package, dependencies
+
+
+def mirror_name_or_url(m):
+    # Look up mirror by name or use anonymous mirror with path/url.
+    # We want to guard against typos in mirror names, to avoid pushing
+    # accidentally to a dir in the current working directory.
+
+    # If there's a \ or / in the name, it's interpreted as a path or url.
+    if "/" in m or "\\" in m:
+        return spack.mirror.Mirror(m)
+
+    # Otherwise, the named mirror is required to exist.
+    try:
+        return spack.mirror.require_mirror_name(m)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(
+            str(e) + ". Did you mean {}?".format(os.path.join(".", m))
+        )
+
+
+def mirror_url(url):
+    try:
+        return spack.mirror.Mirror.from_url(url)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_directory(path):
+    try:
+        return spack.mirror.Mirror.from_local_path(path)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_name(name):
+    try:
+        return spack.mirror.require_mirror_name(name)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))

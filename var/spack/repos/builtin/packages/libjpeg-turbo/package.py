@@ -48,7 +48,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     provides("jpeg")
 
     build_system(
-        conditional("autotools", when="@1.3.1:1.5.3"),
+        conditional("autotools", when="@:1.5.3"),
         conditional("cmake", when="@1.5.90:"),
         default="cmake",
     )

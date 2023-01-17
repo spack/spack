@@ -16,5 +16,3 @@ class PyInstaller(PythonPackage):
 
     depends_on("python@2.7,3.5:", type=("build", "run"))
     depends_on("py-flit-core@2", type="build")
-    depends_on("py-configparser@3.5:", when="^python@:2", type=("build", "run"))
-    depends_on("py-importlib-resources", when="^python@:3.6", type=("build", "run"))
