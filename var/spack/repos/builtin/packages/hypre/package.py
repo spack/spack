@@ -75,6 +75,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("fortran", default=True, description="Enables fortran bindings")
     variant("gptune", default=False, description="Add the GPTune hookup code")
     variant("umpire", default=False, description="Enable Umpire support")
+    variant("sycl", default=False, description="Enable SYCL support")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -269,6 +270,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                     "--disable-rocsparse",
                 ]
             )
+
+        if "+sycl" in spec:
+            configure_args.append("--with-scyl")
 
         if "+unified-memory" in spec:
             configure_args.append("--enable-unified-memory")
