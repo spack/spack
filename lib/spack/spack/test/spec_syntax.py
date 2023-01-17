@@ -629,10 +629,12 @@ def test_spec_by_hash_tokens(text, tokens):
     parser = SpecParser(text)
     assert parser.tokens() == tokens
 
-
 @pytest.mark.db
-def test_spec_by_hash(database):
+def test_spec_by_hash(database, config):
     mpileaks = database.query_one("mpileaks ^zmpi")
+    a = spack.spec.Spec("a").concretized()
+    monkeypatch.setattr(spack.binary_distribution,
+                        "update_cache_and_get_specs", lambda: a)
 
     hash_str = f"/{mpileaks.dag_hash()}"
     assert str(SpecParser(hash_str).next_spec()) == str(mpileaks)
@@ -643,9 +645,11 @@ def test_spec_by_hash(database):
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
     assert str(SpecParser(name_version_and_hash).next_spec()) == str(mpileaks)
 
+    a_hash = f"/{a.dag_hash()}"
+    assert SpecParser(a_hash).next_spec() == a
 
 @pytest.mark.db
-def test_dep_spec_by_hash(database):
+def test_dep_spec_by_hash(database, config):
     mpileaks_zmpi = database.query_one("mpileaks ^zmpi")
     zmpi = database.query_one("zmpi")
     fake = database.query_one("fake")
@@ -681,7 +685,7 @@ def test_dep_spec_by_hash(database):
 
 
 @pytest.mark.db
-def test_multiple_specs_with_hash(database):
+def test_multiple_specs_with_hash(database, config):
     mpileaks_zmpi = database.query_one("mpileaks ^zmpi")
     callpath_mpich2 = database.query_one("callpath ^mpich2")
 
@@ -713,7 +717,7 @@ def test_multiple_specs_with_hash(database):
 
 
 @pytest.mark.db
-def test_ambiguous_hash(mutable_database, default_mock_concretization):
+def test_ambiguous_hash(mutable_database, default_mock_concretization, config):
     x1 = default_mock_concretization("a")
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
@@ -731,7 +735,7 @@ def test_ambiguous_hash(mutable_database, default_mock_concretization):
 
 
 @pytest.mark.db
-def test_invalid_hash(database):
+def test_invalid_hash(database, config):
     zmpi = database.query_one("zmpi")
     mpich = database.query_one("mpich")
 
@@ -747,7 +751,7 @@ def test_invalid_hash(database):
 
 
 @pytest.mark.db
-def test_nonexistent_hash(database):
+def test_nonexistent_hash(database, config):
     """Ensure we get errors for non existent hashes."""
     specs = database.query()
 

@@ -399,6 +399,9 @@ class SpecNodeParser:
                 if not matches:
                     matches = spack.store.db.get_by_hash(dag_hash)
                 if not matches:
+                    query = spack.binary_distribution.BinaryCacheQuery(True)
+                    matches = query(self.ctx.current_token.value)
+                if not matches:
                     raise spack.spec.NoSuchHashError(dag_hash)
 
                 if len(matches) != 1:
