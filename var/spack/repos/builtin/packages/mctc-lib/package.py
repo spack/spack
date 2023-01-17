@@ -27,6 +27,5 @@ class MctcLib(MesonPackage):
 
     def meson_args(self):
         return [
-            "--wrap-mode=nodownload",
             "-Djson={0}".format("enabled" if "+json" in self.spec else "disabled"),
         ]
