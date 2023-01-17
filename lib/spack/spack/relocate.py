@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import itertools
 import multiprocessing.pool
 import os
 import re
@@ -299,29 +300,24 @@ def modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
     if idpath:
         new_idpath = paths_to_paths.get(idpath, None)
         if new_idpath and not idpath == new_idpath:
-            args_to_add = ["-id", new_idpath]
-            if args_to_add not in args:
-                args += [args_to_add]
+            args += [("-id", new_idpath)]
 
     for dep in deps:
         new_dep = paths_to_paths.get(dep)
         if new_dep and dep != new_dep:
-            args_to_add = ["-change", dep, new_dep]
-            if args_to_add not in args:
-                args += [args_to_add]
+            args += [("-change", dep, new_dep)]
 
     new_rpaths = []
     for orig_rpath in rpaths:
         new_rpath = paths_to_paths.get(orig_rpath)
         if new_rpath and not orig_rpath == new_rpath:
-            args_to_add = ["-rpath", orig_rpath, new_rpath]
+            args_to_add = ("-rpath", orig_rpath, new_rpath)
             if args_to_add not in args and new_rpath not in new_rpaths:
                 args += [args_to_add]
                 new_rpaths.append(new_rpath)
 
-    # Flatten list of lists
-    args = [item for subargs in args for item in subargs]
-
+    # Deduplicate and flatten
+    args = list(itertools.chain.from_iterable(llnl.util.lang.dedupe(args)))
     if args:
         args.append(str(cur_path))
         install_name_tool = executable.Executable("install_name_tool")
