@@ -97,6 +97,7 @@ if sys.version_info < (3, 7, 4):
         If the optional flag `follow_symlinks` is not set, symlinks aren't
         followed if and only if both `src` and `dst` are symlinks.
         """
+
         def _nop(args, ns=None, follow_symlinks=None):
             pass
 
@@ -106,6 +107,7 @@ if sys.version_info < (3, 7, 4):
             # use the real function if it exists
             def lookup(name):
                 return getattr(os, name, _nop)
+
         else:
             # use the real function only if it exists
             # *and* it supports follow_symlinks
@@ -118,8 +120,7 @@ if sys.version_info < (3, 7, 4):
 
         st = lookup("stat")(src, follow_symlinks=follow)
         mode = stat.S_IMODE(st.st_mode)
-        lookup("utime")(dst, ns=(st.st_atime_ns, st.st_mtime_ns),
-                        follow_symlinks=follow)
+        lookup("utime")(dst, ns=(st.st_atime_ns, st.st_mtime_ns), follow_symlinks=follow)
 
         # We must copy extended attributes before the file is (potentially)
         # chmod()'ed read-only, otherwise setxattr() will error with -EACCES.
@@ -139,11 +140,11 @@ if sys.version_info < (3, 7, 4):
             # symlink.  give up, suppress the error.
             # (which is what shutil always did in this circumstance.)
             pass
-        if hasattr(st, 'st_flags'):
+        if hasattr(st, "st_flags"):
             try:
                 lookup("chflags")(dst, st.st_flags, follow_symlinks=follow)
             except OSError as why:
-                for err in 'EOPNOTSUPP', 'ENOTSUP':
+                for err in "EOPNOTSUPP", "ENOTSUP":
                     if hasattr(errno, err) and why.errno == getattr(errno, err):
                         break
                 else:
