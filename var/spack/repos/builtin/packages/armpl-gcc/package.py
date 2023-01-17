@@ -273,4 +273,4 @@ class ArmplGcc(Package):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # pkgconfig directory is not in standard ("lib", "lib64", "share") location
         armpl_dir = get_armpl_prefix(self.spec)
-        env.append_path("PKG_CONFIG_PATH",  join_path(armpl_dir, "pkgconfig"))
+        env.append_path("PKG_CONFIG_PATH", join_path(armpl_dir, "pkgconfig"))
