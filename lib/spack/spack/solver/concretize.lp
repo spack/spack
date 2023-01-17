@@ -1208,7 +1208,6 @@ opt_criterion(65, "leveled", "requirement weight").
       depth(Package, D)
 }.
 
-% Minimize the number of deprecated versions being used
 opt_criterion(60, "leveled", "deprecated versions used").
 #minimize{
     1@(60 + ((max_depth - D - 1) * depth_offset) + Priority), Package
@@ -1217,10 +1216,6 @@ opt_criterion(60, "leveled", "deprecated versions used").
       depth(Package, D)
 }.
 
-% Minimize the:
-% 1. Version weight
-% 2. Number of variants with a non default value, if not set
-% for the root package.
 opt_criterion(55, "leveled", "version badness").
 #minimize{
     Weight@(55 + ((max_depth - D - 1) * depth_offset) + Priority), Package
@@ -1253,7 +1248,6 @@ opt_criterion(40, "leveled", "default values of variants not being used").
       depth(Package, D)
 }.
 
-% Try to use default variants or variants that have been set
 opt_criterion(35, "leveled", "compiler mismatches (not from CLI)").
 #minimize{
     1@(35 + ((max_depth - D - 1) * depth_offset) + Priority), Dependent, Package
@@ -1270,7 +1264,6 @@ opt_criterion(30, "leveled", "compiler mismatches (from CLI)").
       depth(Package, D)
 }.
 
-% Try to minimize the number of compiler mismatches in the DAG.
 opt_criterion(25, "leveled", "OS mismatches").
 #minimize{
     1@(25 + ((max_depth - D - 1) * depth_offset) + Priority), Dependent, Package
@@ -1279,7 +1272,6 @@ opt_criterion(25, "leveled", "OS mismatches").
       depth(Package, D)
 }.
 
-% Try to use preferred compilers
 opt_criterion(20, "leveled", "non-preferred compilers").
 #minimize{
     Weight@(20 + ((max_depth - D - 1) * depth_offset) + Priority), Package
@@ -1317,7 +1309,10 @@ opt_criterion(5, "leveled", "non-preferred targets").
 %-----------------
 % Domain heuristic
 %-----------------
+
 #heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("node", Package). [10, true]
+
+
 #heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("node", Package). [10, true]
 #heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("node", Package). [10, true]
 #heuristic node_target_weight(Package, 0) : attr("node", Package). [10, true]
