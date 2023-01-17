@@ -1,0 +1,4 @@
+108c108
+< mr2d_malloc(Int n)
+---
+> mr2d_malloc(long long n)

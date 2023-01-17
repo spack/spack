@@ -44,6 +44,10 @@ class ScalapackBase(CMakePackage):
         sha256="072b006e485f0ca4cba56096912a986e4d3da73aae51c2205928aa5eb842cefd",
         when="@2.2.0",
     )
+    # In file `scalapack-2.2.0/REDIST/SRC/pgemraux.c`,
+    # change variable n type from `Int` to `long long`,
+    # so that `xxmr2d:out of memory` can be avoid
+    patch("mr2d_malloc-memory.patch", when="@2.2.0")
 
     def flag_handler(self, name, flags):
         iflags = []
