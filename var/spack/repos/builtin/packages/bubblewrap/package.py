@@ -15,6 +15,7 @@ class Bubblewrap(AutotoolsPackage):
     )
     maintainers = ["haampie"]
 
+    version("0.7.0", sha256="764ab7100bd037ea53d440d362e099d7a425966bc62d1f00ab26b8fbb882a9dc")
     version("0.6.2", sha256="8a0ec802d1b3e956c5bb0a40a81c9ce0b055a31bf30a8efa547433603b8af20b")
     version("0.6.1", sha256="9609c7dc162bc68abc29abfab566934fdca37520a15ed01b675adcf3a4303282")
     version("0.6.0", sha256="11393cf2058f22e6a6c6e9cca3c85ff4c4239806cb28fee657c62a544df35693")
