@@ -154,7 +154,7 @@ def mirror_add(args):
     ):
         connection = {"url": args.url}
         if args.s3_access_key_id and args.s3_access_key_secret:
-            connection["access_pair"] = (args.s3_access_key_id, args.s3_access_key_secret)
+            connection["access_pair"] = [args.s3_access_key_id, args.s3_access_key_secret]
         if args.s3_access_token:
             connection["access_token"] = args.s3_access_token
         if args.s3_profile:

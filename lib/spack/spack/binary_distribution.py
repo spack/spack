@@ -319,7 +319,7 @@ class BinaryCacheIndex:
         self._init_local_index_cache()
 
         mirrors = spack.mirror.MirrorCollection()
-        configured_mirror_urls = [m.fetch_url for m in mirrors.values()]
+        configured_mirror_urls = [m.fetch_url for m in mirrors.values() if m.binary]
         items_to_remove = []
         spec_cache_clear_needed = False
         spec_cache_regenerate_needed = not self._mirrors_for_spec
@@ -1465,8 +1465,9 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
            "signature_verified": "true-if-binary-pkg-was-already-verified"
        }
     """
-    if not spack.mirror.MirrorCollection():
-        tty.die("Please add a spack mirror to allow " + "download of pre-compiled packages.")
+    configured_mirrors = [m for m in spack.mirror.MirrorCollection().values() if m.binary]
+    if not configured_mirrors:
+        tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
 
     tarball = tarball_path_name(spec, ".spack")
     specfile_prefix = tarball_name(spec, ".spec")
@@ -1483,11 +1484,7 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     # we need was in an un-indexed mirror.  No need to check any
     # mirror for the spec twice though.
     try_first = [i["mirror_url"] for i in mirrors_for_spec] if mirrors_for_spec else []
-    try_next = [
-        i.fetch_url
-        for i in spack.mirror.MirrorCollection().values()
-        if i.fetch_url not in try_first
-    ]
+    try_next = [i.fetch_url for i in configured_mirrors if i.fetch_url not in try_first]
 
     for url in try_first + try_next:
         mirrors_to_try.append(
@@ -1980,7 +1977,11 @@ def try_direct_fetch(spec, mirrors=None):
     specfile_is_signed = False
     found_specs = []
 
-    for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
+    binary_mirrors = [
+        m for m in spack.mirror.MirrorCollection(mirrors=mirrors).values() if m.binary
+    ]
+
+    for mirror in binary_mirrors:
         buildcache_fetch_url_json = url_util.join(
             mirror.fetch_url, _build_cache_relative_path, specfile_name
         )

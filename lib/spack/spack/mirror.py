@@ -18,6 +18,7 @@ import os.path
 import sys
 import traceback
 import urllib.parse
+from typing import Any, Union
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -39,14 +40,19 @@ from spack.version import VersionList
 #: What schemes do we support
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs")
 
+#: Mirror connection keys
+mirror_connection_keys = ("url", "access_pair", "access_token", "profile", "endpoint_url")
 
-def _display_mirror_entry(size, name, url, type_=None):
+
+def _display_mirror_entry(size, name, url, type_=None, source=True, binary=True):
     if type_:
         type_ = "".join((" (", type_, ")"))
     else:
         type_ = ""
 
-    print("%-*s%s%s" % (size + 4, name, url, type_))
+    source_or_binary = "[{}{}] ".format("s" if source else " ", "b" if binary else " ")
+
+    print("%s%-*s%s%s" % (source_or_binary, size + 4, name, url, type_))
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -71,13 +77,22 @@ class Mirror:
     to them. These two URLs are usually the same.
     """
 
-    def __init__(self, fetch_url, push_url=None, name=None):
+    def __init__(self, fetch_url, push_url=None, name=None, source=True, binary=True):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
 
+        # What type of mirror is this: source, binary, or both.
+        self._source = source
+        self._binary = binary
+
     def __eq__(self, other):
-        return self._fetch_url == other._fetch_url and self._push_url == other._push_url
+        return (
+            self._fetch_url == other._fetch_url
+            and self._push_url == other._push_url
+            and self._source == other._source
+            and self._binary == other._binary
+        )
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
@@ -124,18 +139,55 @@ class Mirror:
             return syaml_dict([("fetch", self._fetch_url), ("push", self._push_url)])
 
     @staticmethod
-    def from_dict(d, name=None):
+    def from_dict(d: Union[str, dict], name=None):
+        # There are three different formats
+
+        # 1: just a URL
         if isinstance(d, str):
             return Mirror(d, name=name)
+
+        # 2: common url for fetch and push
+        elif "fetch" not in d:
+            # Take only the relevant key value pairs for connection; requires a url field.
+            fetch: Any = {k: d[k] for k in mirror_connection_keys if k in d}
+            push: Any = None
+
+        # 3: separate connection data for fetch and push (either dict or just url string)
         else:
-            return Mirror(d["fetch"], d["push"], name=name)
+            if isinstance(d["fetch"], str):
+                fetch = d["fetch"]
+            else:
+                fetch = {k: d["fetch"][k] for k in mirror_connection_keys if k in d["fetch"]}
+            if isinstance(d["push"], str):
+                push = d["push"]
+            else:
+                push = {k: d["push"][k] for k in mirror_connection_keys if k in d["push"]}
+
+        return Mirror(
+            fetch_url=fetch,
+            push_url=push,
+            name=name,
+            source=d.get("source", True),
+            binary=d.get("binary", True),
+        )
 
     def display(self, max_len=0):
         if self._push_url is None:
-            _display_mirror_entry(max_len, self._name, self.fetch_url)
+            _display_mirror_entry(
+                max_len, self._name, self.fetch_url, source=self.source, binary=self.binary
+            )
         else:
-            _display_mirror_entry(max_len, self._name, self.fetch_url, "fetch")
-            _display_mirror_entry(max_len, self._name, self.push_url, "push")
+            _display_mirror_entry(
+                max_len,
+                self._name,
+                self.fetch_url,
+                "fetch",
+                source=self.source,
+                binary=self.binary,
+            )
+            _display_mirror_entry(
+                max_len, self._name, self.push_url, "push", source=self.source, binary=self.binary
+            )
 
     def __str__(self):
         name = self._name
@@ -159,6 +211,8 @@ class Mirror:
                         ("fetch_url", self._fetch_url),
                         ("push_url", self._push_url),
                         ("name", self._name),
+                        ("source", self._source),
+                        ("binary", self._binary),
                     )
                     if k == "fetch_url" or v
                 ),
@@ -169,6 +223,14 @@ class Mirror:
     @property
     def name(self):
         return self._name or "<unnamed>"
+
+    @property
+    def binary(self):
+        return self._binary
+
+    @property
+    def source(self):
+        return self._source
 
     def get_profile(self, url_type):
         if isinstance(self._fetch_url, dict):
