@@ -264,68 +264,6 @@ class CDash(Reporter):
                 self.build_report_for_package(directory_name, package, duration)
         self.finalize_report()
 
-    def extract_ctest_test_data(self, package, phases, report_data):
-        """Extract ctest test data for the package."""
-        # Track the phases we perform so we know what reports to create.
-        # We always report the update step because this is how we tell CDash
-        # what revision of Spack we are using.
-        assert "update" in phases
-
-        for phase in phases:
-            report_data[phase] = {}
-            report_data[phase]["loglines"] = []
-            report_data[phase]["status"] = 0
-            report_data[phase]["endtime"] = self.endtime
-
-        # Generate a report for this package.
-        # The first line just says "Testing package name-hash"
-        report_data["test"]["loglines"].append(
-            str("{0} output for {1}:".format("test", package["name"]))
-        )
-        for line in package["stdout"].splitlines()[1:]:
-            report_data["test"]["loglines"].append(xml.sax.saxutils.escape(line))
-
-        for phase in phases:
-            report_data[phase]["starttime"] = self.starttime
-            report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
-            errors, warnings = parse_log_events(report_data[phase]["loglines"])
-            # Cap the number of errors and warnings at 50 each.
-            errors = errors[0:49]
-            warnings = warnings[0:49]
-
-            if phase == "test":
-                # Convert log output from ASCII to Unicode and escape for XML.
-                def clean_log_event(event):
-                    event = vars(event)
-                    event["text"] = xml.sax.saxutils.escape(event["text"])
-                    event["pre_context"] = xml.sax.saxutils.escape("\n".join(event["pre_context"]))
-                    event["post_context"] = xml.sax.saxutils.escape(
-                        "\n".join(event["post_context"])
-                    )
-                    # source_file and source_line_no are either strings or
-                    # the tuple (None,).  Distinguish between these two cases.
-                    if event["source_file"][0] is None:
-                        event["source_file"] = ""
-                        event["source_line_no"] = ""
-                    else:
-                        event["source_file"] = xml.sax.saxutils.escape(event["source_file"])
-                    return event
-
-                # Convert errors to warnings if the package reported success.
-                if package["result"] == "success":
-                    warnings = errors + warnings
-                    errors = []
-
-                report_data[phase]["errors"] = []
-                report_data[phase]["warnings"] = []
-                for error in errors:
-                    report_data[phase]["errors"].append(clean_log_event(error))
-                for warning in warnings:
-                    report_data[phase]["warnings"].append(clean_log_event(warning))
-
-            if phase == "update":
-                report_data[phase]["revision"] = self.revision
-
     def extract_standalone_test_data(self, package, phases, report_data):
         """Extract stand-alone test outputs for the package."""
 
