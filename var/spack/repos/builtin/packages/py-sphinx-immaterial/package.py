@@ -24,5 +24,5 @@ class PySphinxImmaterial(PythonPackage):
     depends_on("py-markupsafe", type=("build", "run"))
     depends_on("py-pydantic", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-sphinx@4.5:", type=("build", "run"))
+    depends_on("py-sphinx@4:", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"))
