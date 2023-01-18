@@ -16,18 +16,43 @@ class Npm(Package):
     # base https://www.npmjs.com/
 
     git = "https://github.com/npm/cli.git"
-    url = "https://registry.npmjs.org/npm/-/npm-9.30.0.tgz"
+    url = "https://registry.npmjs.org/npm/-/npm-9.3.1.tgz"
 
-    version("9.30.0", commit="4d275927e069606c8047b678ad09aafbe18b1673")
-    version("8.19.3", commit="ef4299658330470b56966b48394824895b2d6d04")
-    version("7.24.2", commit="04eb43f2b2a387987b61a7318908cf18f03d97e0")
+    version("9.3.1", sha256="41caa26a340b0562bc5429d28792049c980fe3e872b42b82cad94e8f70e37f40")
+    version("8.19.3", sha256="634bf4e0dc87be771ebf48a058629960e979a209c20a51ebdbc4897ca6a25260")
+    version("7.24.2", sha256="5b9eeea011f8bc3b76e55cc33339e87213800677f37e0756ad13ef0e9eaccd64")
+    version("6.14.18", sha256="c9b15f277e2a0b1b57e05bad04504296a27024555d56c2aa967f862e957ad2ed")
 
-    version("6.14.9", sha256="1e0e880ce0d5adf0120fb3f92fc8e5ea5bac73681d37282615d074ff670f7703")
-    version("6.14.8", sha256="fe8e873cb606c06f67f666b4725eb9122c8927f677c8c0baf1477f0ff81f5a2c")
-    version("6.13.7", sha256="6adf71c198d61a5790cf0e057f4ab72c6ef6c345d72bed8bb7212cb9db969494")
-    version("6.13.4", sha256="a063290bd5fa06a8753de14169b7b243750432f42d01213fbd699e6b85916de7")
-    version("3.10.9", sha256="fb0871b1aebf4b74717a72289fade356aedca83ee54e7386e38cb51874501dd6")
-    version("3.10.5", sha256="ff019769e186152098841c1fa6325e5a79f7903a45f13bd0046a4dc8e63f845f")
+    version(
+        "6.14.9",
+        sha256="1e0e880ce0d5adf0120fb3f92fc8e5ea5bac73681d37282615d074ff670f7703",
+        deprecated=True,
+    )
+    version(
+        "6.14.8",
+        sha256="fe8e873cb606c06f67f666b4725eb9122c8927f677c8c0baf1477f0ff81f5a2c",
+        deprecated=True,
+    )
+    version(
+        "6.13.7",
+        sha256="6adf71c198d61a5790cf0e057f4ab72c6ef6c345d72bed8bb7212cb9db969494",
+        deprecated=True,
+    )
+    version(
+        "6.13.4",
+        sha256="a063290bd5fa06a8753de14169b7b243750432f42d01213fbd699e6b85916de7",
+        deprecated=True,
+    )
+    version(
+        "3.10.9",
+        sha256="fb0871b1aebf4b74717a72289fade356aedca83ee54e7386e38cb51874501dd6",
+        deprecated=True,
+    )
+    version(
+        "3.10.5",
+        sha256="ff019769e186152098841c1fa6325e5a79f7903a45f13bd0046a4dc8e63f845f",
+        deprecated=True,
+    )
 
     depends_on("node-js", type=("build", "run"))
     depends_on("libvips")
@@ -60,10 +85,10 @@ class Npm(Package):
     @when("@:8")
     def install(self, spec, prefix):
         # `npm install .` doesn't work properly out of the box on npm up to 8, so we do
-        # what it would do manually. The only thing we seem to miss is docs) In
+        # what it would do manually. The only thing we seem to miss is docs. In
         # particular, it will end up symlinking into the stage, which spack then
         # deletes. You can avoid that with `npm install $(npm pack .)`, but `npm pack`
-        # also seems to fail on macos. So we just copy manually.
+        # also seems to fail when run from the tarball on macos. So we just copy manually.
         to_install = [
             "LICENSE",
             "README.md",
