@@ -310,6 +310,13 @@ class Hdf5(CMakePackage):
     # See https://github.com/HDFGroup/hdf5/issues/1157
     patch("fortran-kinds-2.patch", when="@1.10.8,1.12.1")
 
+    # Patch needed for HDF5 1.14.0 where dependency on MPI::MPI_C was declared
+    # PUBLIC.  Dependent packages using the default hdf5 package but not  
+    # expecting to use MPI then failed to configure because they did not call 
+    # find_package(MPI).  This patch does that for them.  Later HDF5 versions 
+    # will include the patch code changes.
+    patch("hdf5_1_14_0_config_find_mpi.patch", when="@1.14.0")
+
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
     # declared as intent(in) though it is modified by the invocation. As a
     # result, aggressive compilers such as Fujitsu's may do a wrong
@@ -524,14 +531,22 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec and "platform=windows" not in spec:
-            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
-
-            if "+cxx" in self.spec:
-                args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
-
-            if "+fortran" in self.spec:
-                args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
+        if "+mpi" in spec:
+            args.extend(
+                [
+                    "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
+                    "-DMPI_C_COMPILER:PATH=%s" % spec["mpi"].mpicc,
+                    "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc, 
+                ]
+            )
+#        if "+mpi" in spec and "platform=windows" not in spec:
+#            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
+#
+#            if "+cxx" in self.spec:
+#                args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
+#
+#            if "+fortran" in self.spec:
+#                args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
         if spec.satisfies("@1.10.8,1.13.0"):

@@ -1,0 +1,21 @@
+diff --git a/config/cmake/hdf5-config.cmake.in b/config/cmake/hdf5-config.cmake.in
+index 35cee4f606..0e636f8745 100644
+--- a/config/cmake/hdf5-config.cmake.in
++++ b/config/cmake/hdf5-config.cmake.in
+@@ -57,12 +57,16 @@ set (${HDF5_PACKAGE_NAME}_PARALLEL_FILTERED_WRITES "@PARALLEL_FILTERED_WRITES@")
+ # Dependencies
+ #-----------------------------------------------------------------------------
+ if (${HDF5_PACKAGE_NAME}_ENABLE_PARALLEL)
++  set(_hdf5_mpi_enabled_languages C;CXX)
+   set (${HDF5_PACKAGE_NAME}_MPI_C_INCLUDE_PATH "@MPI_C_INCLUDE_DIRS@")
+   set (${HDF5_PACKAGE_NAME}_MPI_C_LIBRARIES    "@MPI_C_LIBRARIES@")
+   if (${HDF5_PACKAGE_NAME}_BUILD_FORTRAN)
+     set (${HDF5_PACKAGE_NAME}_MPI_Fortran_INCLUDE_PATH "@MPI_Fortran_INCLUDE_DIRS@")
+     set (${HDF5_PACKAGE_NAME}_MPI_Fortran_LIBRARIES    "@MPI_Fortran_LIBRARIES@")
++    list(APPEND _hdf5_mpi_enabled_languages Fortran)
+   endif ()
++  find_package(MPI QUIET REQUIRED
++    COMPONENTS ${_hdf5_mpi_enabled_languages})
+ endif ()
+ 
+ if (${HDF5_PACKAGE_NAME}_BUILD_JAVA)
