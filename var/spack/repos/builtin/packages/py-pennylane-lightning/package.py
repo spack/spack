@@ -18,18 +18,18 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     phases = ["build_ext", "install"]
 
     version("develop", branch="master")
-    version("0.28.0",  sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
-    version("0.28.1",  sha256="038bc11ec913c3b90dd056bd0b134920db0ec5ff6f6a0bb94db6eaa687ce6618")
+    version("0.28.0", sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
+    version("0.28.1", sha256="038bc11ec913c3b90dd056bd0b134920db0ec5ff6f6a0bb94db6eaa687ce6618")
 
-    variant("python",  default=True,  description="Build with Python support")
-    variant("native",  default=False, description="Build natively for given hardware")
-    variant("blas",    default=False, description="Build with BLAS support")
-    variant("openmp",  default=True,  description="Build with OpenMP support")
-    variant("kokkos",  default=True,  description="Build with Kokkos support")
+    variant("python", default=True, description="Build with Python support")
+    variant("native", default=False, description="Build natively for given hardware")
+    variant("blas", default=False, description="Build with BLAS support")
+    variant("openmp", default=True, description="Build with OpenMP support")
+    variant("kokkos", default=True, description="Build with Kokkos support")
     variant("verbose", default=False, description="Build with full verbosity")
 
-    variant('cpptests', default=False, description='Build CPP tests')
-    variant('cppbenchmark', default=False, description='Build CPP benchmark examples')
+    variant("cpptests", default=False, description="Build CPP tests")
+    variant("cppbenchmark", default=False, description="Build CPP benchmark examples")
 
     variant(
         "build_type",
@@ -41,8 +41,8 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     extends("python")
 
     # hard dependencies
-    depends_on('cmake@3.21.0:', type='build') #3.21 and newer
-    depends_on('ninja', type='build')
+    depends_on("cmake@3.21.0:", type="build")  # 3.21 and newer
+    depends_on("ninja", type="build")
 
     # variant defined dependencies
     depends_on("blas", when="+blas")
@@ -61,28 +61,29 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
         Here we specify all variant options that can be dynamicaly specified at build time
         """
         args = [
-            self.define_from_variant('CMAKE_BUILD_TYPE', 'build_type'),
-            self.define_from_variant('ENABLE_OPENMP', 'openmp'),
-            self.define_from_variant('ENABLE_NATIVE', 'native'),
-            self.define_from_variant('ENABLE_BLAS', 'blas'),
-            self.define_from_variant('CMAKE_VERBOSE_MAKEFILE:BOOL', 'verbose'),
-            self.define_from_variant('BUILD_TESTS', 'cpptests'),
-            self.define_from_variant('BUILD_BENCHMARKS', 'cppbenchmark'),
-            self.define_from_variant('ENABLE_PYTHON', 'python'),
-            ]
+            self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"),
+            self.define_from_variant("ENABLE_OPENMP", "openmp"),
+            self.define_from_variant("ENABLE_NATIVE", "native"),
+            self.define_from_variant("ENABLE_BLAS", "blas"),
+            self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
+            self.define_from_variant("BUILD_TESTS", "cpptests"),
+            self.define_from_variant("BUILD_BENCHMARKS", "cppbenchmark"),
+            self.define_from_variant("ENABLE_PYTHON", "python"),
+        ]
 
-        if self.spec.variants['kokkos'].value:
-            args += [   "-DENABLE_KOKKOS=ON",
-                        f"-DKokkos_Core_DIR={self.spec['kokkos'].home}",
-                        f"-DKokkos_Kernels_DIR={self.spec['kokkos-kernels'].home}",
-                    ]
+        if self.spec.variants["kokkos"].value:
+            args += [
+                "-DENABLE_KOKKOS=ON",
+                f"-DKokkos_Core_DIR={self.spec['kokkos'].home}",
+                f"-DKokkos_Kernels_DIR={self.spec['kokkos-kernels'].home}",
+            ]
         else:
             args += ["-DENABLE_KOKKOS=OFF"]
 
         return args
 
     def build_ext(self, spec, prefix):
-        if self.spec.variants['python'].value:
+        if self.spec.variants["python"].value:
             cm_args = ";".join([s[2:] for s in self.cmake_args()])
             args = ["-i", f"--define={cm_args}"]
             build_ext = Executable(f"{self.spec['python'].command.path}" + " setup.py build_ext")
@@ -91,7 +92,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
             print("Python disabled")
 
     def install(self, spec, prefix):
-        if self.spec.variants['python'].value:
+        if self.spec.variants["python"].value:
             pip_args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*pip_args)
         else:
