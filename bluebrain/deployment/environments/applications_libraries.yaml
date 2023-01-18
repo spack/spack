@@ -39,8 +39,7 @@ spack:
     - hypre+int64+mpi
     - metis+int64
     - neuron+mpi~debug%intel
-    - omega-h+trilinos
-    - omega-h+gmsh+trilinos
+    - omega-h+gmsh+kokkos
     - petsc~int64+mpi
     - petsc+int64+mpi
     - py-breathe

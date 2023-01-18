@@ -48,6 +48,8 @@ packages:
       prefix: /usr
   julia:
     variants: +external_llvm
+  kokkos:
+    variants: +openmp
   libtool:
     buildable: false  # different versions interact badly with autohell
     version: [2.4.2]
@@ -60,7 +62,7 @@ packages:
     - spec: m4@1.4.16
       prefix: /usr
   omega-h:
-    variants: +trilinos
+    variants: +kokkos
   opencv:
     variants: ~gtk~vtk
   openssl:
@@ -118,8 +120,6 @@ packages:
       prefix: /usr
   timemory:
     variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
-  trilinos:
-    variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
   all:
     compiler: [gcc@11.2.0]
     target: [skylake]
