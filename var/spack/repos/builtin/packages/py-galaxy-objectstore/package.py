@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyGalaxyObjectStore(PythonPackage):
+class PyGalaxyObjectstore(PythonPackage):
     """The Galaxy object store framework and default implementations."""
 
     homepage = "https://github.com/galaxyproject/galaxy"
