@@ -438,7 +438,7 @@ _versions = {
 }
 
 
-class Cuda(Package):
+class CudaToolkit(Package):
     """CUDA is a parallel computing platform and programming model invented
     by NVIDIA. It enables dramatic increases in computing performance by
     harnessing the power of the graphics processing unit (GPU).
@@ -449,7 +449,7 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
-    maintainers = ["ax3l", "Rombur"]
+    maintainers = ["ax3l", "Rombur", "wyphan"]
     executables = ["^nvcc$"]
 
     for ver, packages in _versions.items():
@@ -460,6 +460,7 @@ class Cuda(Package):
                 version(ver, sha256=pkg[0], url=pkg[1], expand=False, preferred=True)
             else:
                 version(ver, sha256=pkg[0], url=pkg[1], expand=False)
+        provides(f"cuda@{ver}", when=f"@{ver}")
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
@@ -510,14 +511,6 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
-
-    @property
-    def cmake_prefix_paths(self):
-        cmake_prefix_paths = [self.prefix]
-        if self.spec.satisfies("target=x86_64:"):
-            cub_path = self.prefix.targets + "/x86_64-linux/lib/cmake"
-            cmake_prefix_paths.append(cub_path)
-        return cmake_prefix_paths
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
@@ -601,6 +594,3 @@ class Cuda(Package):
             if "compat" not in parts and "stubs" not in parts:
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)
-
-    # Avoid binding stub libraries by absolute path
-    non_bindable_shared_objects = ["stubs"]

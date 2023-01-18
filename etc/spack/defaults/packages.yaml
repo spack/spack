@@ -19,6 +19,7 @@ packages:
     providers:
       awk: [gawk]
       blas: [openblas, amdblis]
+      cuda: [cuda-toolkit, nvhpc, nvhpc-slim]
       D: [ldc]
       daal: [intel-daal]
       elf: [elfutils]
