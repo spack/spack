@@ -13,7 +13,9 @@ class ScineDatabase(CMakePackage):
 
     homepage = "https://scine.ethz.ch/"
     url = "https://github.com/qcscine/database/archive/refs/tags/1.1.0.tar.gz"
+    git = "https://github.com/qcscine/database.git"
 
+    version("develop", branch="master")
     version("1.1.0", "a9144631dfb90e06f6924cf58fc5db13719cf8577fcd3bbf788a135060a70c18")
 
     resource(
@@ -26,11 +28,11 @@ class ScineDatabase(CMakePackage):
     variant("python", default=False, description="Build Python extension module")
 
     depends_on("eigen@3:")
-    depends_on("googletest")
+    depends_on("googletest", type="build")
     depends_on("mongo-cxx-driver@3.2.1:")
     depends_on("python@3.6:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11", when="+python", type=("build", "run"))
+    depends_on("py-pybind11", when="+python", type="build")
     depends_on("scine-utilities@5:")
 
     extends("python", when="+python")

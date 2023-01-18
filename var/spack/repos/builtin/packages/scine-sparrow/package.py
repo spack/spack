@@ -26,9 +26,11 @@ class ScineSparrow(CMakePackage):
 
     homepage = "https://scine.ethz.ch/download/sparrow"
     url = "https://github.com/qcscine/sparrow/archive/refs/tags/3.1.0.tar.gz"
+    git = "https://github.com/qcscine/sparrow.git"
 
     maintainers = ["frobnitzem"]
 
+    version("develop", branch="master")
     version("3.1.0", "91412de0f2670a1735c4ca76406db5bea04236eeac0bc1f93ccfe18104aa7ce4")
     version("3.0.0", "70636871694c9363ae3fb2df5050bddb22667b71d875d5a7e9afd872f6a2b65d")
 
@@ -44,7 +46,7 @@ class ScineSparrow(CMakePackage):
     depends_on("boost+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("cereal")
     depends_on("eigen@3.3.2:")
-    depends_on("googletest")
+    depends_on("googletest", type="build")
     depends_on("python@3.6:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
     depends_on("scine-core")

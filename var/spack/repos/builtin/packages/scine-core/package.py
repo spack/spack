@@ -13,7 +13,9 @@ class ScineCore(CMakePackage):
 
     homepage = "https://scine.ethz.ch/"
     url = "https://github.com/qcscine/core/archive/refs/tags/4.0.2.tar.gz"
+    git = "https://github.com/qcscine/core.git"
 
+    version("develop", branch="master")
     version("4.0.2", "7181c6f93d71def22f1e0e5767afc7587c04b49abc03516f6926394868e7adc6")
 
     resource(
@@ -24,7 +26,7 @@ class ScineCore(CMakePackage):
     )
 
     depends_on("boost+filesystem+program_options cxxstd=17 @1.65.0:")
-    depends_on("googletest")
+    depends_on("googletest", type="build")
 
     def patch(self):
         os.rmdir("dev")

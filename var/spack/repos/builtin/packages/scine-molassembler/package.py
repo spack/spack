@@ -13,7 +13,9 @@ class ScineMolassembler(CMakePackage):
 
     homepage = "https://scine.ethz.ch/download/molassembler"
     url = "https://github.com/qcscine/molassembler/archive/refs/tags/1.2.1.tar.gz"
+    git = "https://github.com/qcscine/molassembler.git"
 
+    version("develop", branch="master")
     version("1.2.1", "c9fea41d383b7f54cf8a3ed4dabebe9e942fe3ef5b47895e3533e8ce42dacd38")
 
     resource(
@@ -56,12 +58,12 @@ class ScineMolassembler(CMakePackage):
 
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("eigen@3:")
-    depends_on("googletest")
+    depends_on("googletest", type="build")
     depends_on("nauty")
     depends_on("nlohmann-json", type="build")
     depends_on("python@3.6:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11@2.6.2:", when="+python", type=("build", "run"))
+    depends_on("py-pybind11@2.6.2:", when="+python", type="build")
     # depends_on("ringdecomposerlib")
     depends_on("scine-core")
     depends_on("scine-utilities")

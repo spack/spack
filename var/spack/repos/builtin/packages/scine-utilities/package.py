@@ -13,7 +13,9 @@ class ScineUtilities(CMakePackage):
 
     homepage = "https://scine.ethz.ch"
     url = "https://github.com/qcscine/utilities/archive/refs/tags/6.0.0.tar.gz"
+    git = "https://github.com/qcscine/utilities.git"
 
+    version("develop", branch="master")
     version("6.0.0", "e4387d5562b7442a8e31e4dfc028bacfeb6d12e39f2d8aa6effc6db380863b4a")
     version("5.0.0", "a304c89d9a196fe304f38610dea6b066d74590c0d434e4bd09a9796340700465")
 
@@ -28,11 +30,11 @@ class ScineUtilities(CMakePackage):
 
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("eigen@3:")
-    depends_on("googletest")
+    depends_on("googletest", type="build")
     depends_on("lbfgspp", type="build")
-    depends_on("python@3.7:", when="+python", type=("build", "run"))
+    depends_on("python@3.6:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11@2.6.2:", when="+python", type=("build", "run"))
+    depends_on("py-pybind11@2.6.2:", when="+python", type="build")
     depends_on("scine-core")
     depends_on("yaml-cpp")
 

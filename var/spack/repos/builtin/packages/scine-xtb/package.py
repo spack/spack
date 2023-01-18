@@ -13,7 +13,9 @@ class ScineXtb(CMakePackage):
 
     homepage = "https://scine.ethz.ch"
     url = "https://github.com/qcscine/xtb_wrapper/archive/refs/tags/1.0.2.tar.gz"
+    git = "https://github.com/qcscine/xtb_wrapper.git"
 
+    version("develop", branch="master")
     version("1.0.2", "9beb1103467f3cfd9ad33beb2f3ec650bc3e6dc7094876774be3cc4e6f210487")
 
     resource(
@@ -28,7 +30,7 @@ class ScineXtb(CMakePackage):
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("eigen@3:")
     depends_on("pkgconfig", type="build")
-    depends_on("python@3.7:", when="+python", type=("build", "run"))
+    depends_on("python@3.6:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
     depends_on("scine-core")
     depends_on("scine-utilities")
