@@ -32,7 +32,7 @@ class ScineUtilities(CMakePackage):
     depends_on("lbfgspp", type="build")
     depends_on("python@3.7:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11", when="+python", type=("build", "run"))
+    depends_on("py-pybind11@2.6.2:", when="+python", type=("build", "run"))
     depends_on("scine-core")
     depends_on("yaml-cpp")
 
@@ -66,8 +66,8 @@ class ScineUtilities(CMakePackage):
             self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
             self.define("SCINE_MARCH", ""),
             self.define("BOOST_ROOT", self.spec["boost"].prefix),
-            self.define("BOOST_LIBRARY_DIR", self.spec["boost"].prefix.lib),
-            self.define("BOOST_INCLUDE_DIR", self.spec["boost"].prefix.include),
+            self.define("BOOST_LIBRARY_DIR", self.spec["boost"].libs.directories[0]),
+            self.define("BOOST_INCLUDE_DIR", self.spec["boost"].headers.directories[0]),
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]

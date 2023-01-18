@@ -15,6 +15,7 @@ class PyScineChemoton(PythonPackage):
     version("2.2.0", "cda4f9de1e1c00ecc5e0b2d9c17a5edb56b468d454022e3f4045ec116ba2ec45")
 
     depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-networkx", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-setproctitle", type=("build", "run"))

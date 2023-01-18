@@ -23,6 +23,7 @@ class PyScinePuffin(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-setproctitle", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    # Promoted from optional to explicit dependencies to avoid compiling them on puffin startup
     depends_on("scine-database+python", type=("build", "run"))
     depends_on("scine-molassembler+python", type=("build", "run"))
     depends_on("scine-readuct+python", type=("build", "run"))
