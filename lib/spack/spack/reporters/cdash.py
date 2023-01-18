@@ -48,7 +48,7 @@ CDASH_PHASES.add("update")
 
 CDashConfiguration = collections.namedtuple(
     "CDashConfiguration",
-    ["upload_url", "packages", "build", "site", "buildstamp", "track", "ctest_parsing"],
+    ["upload_url", "packages", "build", "site", "buildstamp", "track"],
 )
 
 
@@ -106,7 +106,6 @@ class CDash(Reporter):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.main.get_version())
         self.multiple_packages = False
-        self.ctest_parsing = configuration.ctest_parsing
 
     def report_build_name(self, pkg_name):
         return (
@@ -265,68 +264,6 @@ class CDash(Reporter):
                 self.build_report_for_package(directory_name, package, duration)
         self.finalize_report()
 
-    def extract_ctest_test_data(self, package, phases, report_data):
-        """Extract ctest test data for the package."""
-        # Track the phases we perform so we know what reports to create.
-        # We always report the update step because this is how we tell CDash
-        # what revision of Spack we are using.
-        assert "update" in phases
-
-        for phase in phases:
-            report_data[phase] = {}
-            report_data[phase]["loglines"] = []
-            report_data[phase]["status"] = 0
-            report_data[phase]["endtime"] = self.endtime
-
-        # Generate a report for this package.
-        # The first line just says "Testing package name-hash"
-        report_data["test"]["loglines"].append(
-            str("{0} output for {1}:".format("test", package["name"]))
-        )
-        for line in package["stdout"].splitlines()[1:]:
-            report_data["test"]["loglines"].append(xml.sax.saxutils.escape(line))
-
-        for phase in phases:
-            report_data[phase]["starttime"] = self.starttime
-            report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
-            errors, warnings = parse_log_events(report_data[phase]["loglines"])
-            # Cap the number of errors and warnings at 50 each.
-            errors = errors[0:49]
-            warnings = warnings[0:49]
-
-            if phase == "test":
-                # Convert log output from ASCII to Unicode and escape for XML.
-                def clean_log_event(event):
-                    event = vars(event)
-                    event["text"] = xml.sax.saxutils.escape(event["text"])
-                    event["pre_context"] = xml.sax.saxutils.escape("\n".join(event["pre_context"]))
-                    event["post_context"] = xml.sax.saxutils.escape(
-                        "\n".join(event["post_context"])
-                    )
-                    # source_file and source_line_no are either strings or
-                    # the tuple (None,).  Distinguish between these two cases.
-                    if event["source_file"][0] is None:
-                        event["source_file"] = ""
-                        event["source_line_no"] = ""
-                    else:
-                        event["source_file"] = xml.sax.saxutils.escape(event["source_file"])
-                    return event
-
-                # Convert errors to warnings if the package reported success.
-                if package["result"] == "success":
-                    warnings = errors + warnings
-                    errors = []
-
-                report_data[phase]["errors"] = []
-                report_data[phase]["warnings"] = []
-                for error in errors:
-                    report_data[phase]["errors"].append(clean_log_event(error))
-                for warning in warnings:
-                    report_data[phase]["warnings"].append(clean_log_event(warning))
-
-            if phase == "update":
-                report_data[phase]["revision"] = self.revision
-
     def extract_standalone_test_data(self, package, phases, report_data):
         """Extract stand-alone test outputs for the package."""
 
@@ -361,7 +298,7 @@ class CDash(Reporter):
             tty.debug("Preparing to upload {0}".format(phase_report))
             self.upload(phase_report)
 
-    def test_report_for_package(self, directory_name, package, duration, ctest_parsing=False):
+    def test_report_for_package(self, directory_name, package, duration):
         if "stdout" not in package:
             # Skip reporting on packages that did not generate any output.
             tty.debug("Skipping report for {0}: No generated output".format(package["name"]))
@@ -377,12 +314,8 @@ class CDash(Reporter):
 
         report_data = self.initialize_report(directory_name)
         report_data["hostname"] = socket.gethostname()
-        if ctest_parsing:
-            phases = ["test", "update"]
-            self.extract_ctest_test_data(package, phases, report_data)
-        else:
-            phases = ["testing"]
-            self.extract_standalone_test_data(package, phases, report_data)
+        phases = ["testing"]
+        self.extract_standalone_test_data(package, phases, report_data)
 
         self.report_test_data(directory_name, package, phases, report_data)
 
@@ -394,12 +327,7 @@ class CDash(Reporter):
             if "time" in spec:
                 duration = int(spec["time"])
             for package in spec["packages"]:
-                self.test_report_for_package(
-                    directory_name,
-                    package,
-                    duration,
-                    self.ctest_parsing,
-                )
+                self.test_report_for_package(directory_name, package, duration)
 
         self.finalize_report()
 
@@ -414,7 +342,7 @@ class CDash(Reporter):
             "result": "skipped",
             "stdout": output,
         }
-        self.test_report_for_package(directory_name, package, duration=0.0, ctest_parsing=False)
+        self.test_report_for_package(directory_name, package, duration=0.0)
 
     def concretization_report(self, directory_name, msg):
         self.buildname = self.base_buildname
