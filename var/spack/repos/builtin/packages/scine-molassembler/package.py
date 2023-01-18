@@ -15,7 +15,7 @@ class ScineMolassembler(CMakePackage):
     url = "https://github.com/qcscine/molassembler/archive/refs/tags/1.2.1.tar.gz"
     git = "https://github.com/qcscine/molassembler.git"
 
-    version("develop", branch="master")
+    version("master", branch="master")
     version("1.2.1", "c9fea41d383b7f54cf8a3ed4dabebe9e942fe3ef5b47895e3533e8ce42dacd38")
 
     resource(

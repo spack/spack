@@ -15,7 +15,7 @@ class ScineXtb(CMakePackage):
     url = "https://github.com/qcscine/xtb_wrapper/archive/refs/tags/1.0.2.tar.gz"
     git = "https://github.com/qcscine/xtb_wrapper.git"
 
-    version("develop", branch="master")
+    version("master", branch="master")
     version("1.0.2", "9beb1103467f3cfd9ad33beb2f3ec650bc3e6dc7094876774be3cc4e6f210487")
 
     resource(
