@@ -33,14 +33,15 @@ class PyAtlinter(PythonPackage):
     depends_on("py-dvc+ssh", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pillow", type=("build", "run"))
-    depends_on("py-pytorch-fid", type=("build", "run"))
+    depends_on("py-pytorch-fid+cuda", when="+cuda", type=("build", "run"))
+    depends_on("py-pytorch-fid~cuda", when="~cuda", type=("build", "run"))
     depends_on("py-pynrrd", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-scikit-image", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-torch+cuda", when="+cuda", type=("build", "run"))
-    depends_on("py-torch~cuda~cudnn~nccl", when="~cuda", type=("build", "run"))
+    depends_on("py-torch~cuda", when="~cuda", type=("build", "run"))
     # force newer version to force newer py-torch
     # py-torchvision is pretty strict about what py-torch it wants,
     # so just setting py-torch@... is not enough

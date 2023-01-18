@@ -16,7 +16,9 @@ class PyTorch(BuiltinPyTorch):
     # Build fails without this one marked as a link dependency!
     depends_on("glog", type=("build", "link", "run"))
 
-    depends_on("cuda@:11", when="@1.13:+cuda", type=("build", "link", "run"))
+    # Brute force for BBP purposes: pin the compiler to something cuda-compatible
+    depends_on("cuda@11.8.0%gcc@:11", when="@1.13:+cuda", type=("build", "link", "run"))
+    depends_on("cudnn@8.4:", when="@1.13:+cudnn", type=("build", "link", "run"))
 
     def setup_build_environment(self, env):
         super().setup_build_environment(env)

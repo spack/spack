@@ -58,7 +58,6 @@ packages:
       # - one_of: ["%intel", "%nvhpc"]
   mxnet:
     version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
-    variants: cuda_arch=70
   neurodamus-core:
     variants: ~gpu
     require: "%intel"

@@ -24,5 +24,5 @@ class PyPytorchFid(PythonPackage):
     depends_on('py-pillow', type='run')
     depends_on('py-scipy', type='run')
     depends_on('py-torch@1.0.1:+cuda', when='+cuda', type='run')
-    depends_on('py-torch@1.0.1:~cuda~cudnn~nccl', when='~cuda', type='run')
+    depends_on('py-torch@1.0.1:~cuda', when='~cuda', type='run')
     depends_on('py-torchvision@0.2.2:', type='run')
