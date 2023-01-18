@@ -727,13 +727,19 @@ def generate_gitlab_ci_yaml(
         # --check-index-only, then the override mirror needs to be added to
         # the configured mirrors when bindist.update() is run, or else we
         # won't fetch its index and include in our local cache.
-        spack.mirror.add("ci_pr_mirror", remote_mirror_override, cfg.default_modify_scope())
+        spack.mirror.add(
+            spack.mirror.Mirror(remote_mirror_override, name="ci_pr_mirror"),
+            cfg.default_modify_scope(),
+        )
 
     shared_pr_mirror = None
     if spack_pipeline_type == "spack_pull_request":
         stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
         shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
-        spack.mirror.add("ci_shared_pr_mirror", shared_pr_mirror, cfg.default_modify_scope())
+        spack.mirror.add(
+            spack.mirror.Mirror(shared_pr_mirror, name="ci_shared_pr_mirror"),
+            cfg.default_modify_scope(),
+        )
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -1482,7 +1488,7 @@ def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
     hashes = env.all_hashes() if env else None
     matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
-    push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
+    push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
     spec_kwargs = {"include_root": True, "include_dependencies": False}
     kwargs = {"force": True, "allow_root": True, "unsigned": unsigned}
     bindist.push(matches, push_url, spec_kwargs, **kwargs)
@@ -2364,7 +2370,6 @@ class CDashHandler(object):
             site=self.site,
             buildstamp=self.build_stamp,
             track=None,
-            ctest_parsing=False,
         )
         reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)

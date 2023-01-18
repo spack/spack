@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyDgl(CMakePackage):
+class PyDgl(CMakePackage, PythonExtension):
     """Deep Graph Library (DGL).
 
     DGL is an easy-to-use, high performance and scalable Python package for
@@ -138,10 +138,3 @@ class PyDgl(CMakePackage):
             )
 
         return modules
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        with working_dir("spack-test", create=True):
-            for module in self.import_modules:
-                python("-c", "import {0}".format(module))
