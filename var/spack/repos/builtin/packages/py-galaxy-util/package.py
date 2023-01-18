@@ -22,7 +22,7 @@ class PyGalaxyUtil(PythonPackage):
     depends_on("py-docutils", type=("build", "run"))
     depends_on("py-importlib-resources", type=("build", "run"))
     depends_on("py-markupsafe", type=("build", "run"))
-    depends_on("py-packaging@:22", type=("build", "run"))
+    depends_on("py-packaging@:21", type=("build", "run"))
     depends_on("py-pycryptodome", type=("build", "run"))
     depends_on("py-pyparsing", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
