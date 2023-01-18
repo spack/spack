@@ -311,9 +311,9 @@ class Hdf5(CMakePackage):
     patch("fortran-kinds-2.patch", when="@1.10.8,1.12.1")
 
     # Patch needed for HDF5 1.14.0 where dependency on MPI::MPI_C was declared
-    # PUBLIC.  Dependent packages using the default hdf5 package but not  
-    # expecting to use MPI then failed to configure because they did not call 
-    # find_package(MPI).  This patch does that for them.  Later HDF5 versions 
+    # PUBLIC.  Dependent packages using the default hdf5 package but not
+    # expecting to use MPI then failed to configure because they did not call
+    # find_package(MPI).  This patch does that for them.  Later HDF5 versions
     # will include the patch code changes.
     patch("hdf5_1_14_0_config_find_mpi.patch", when="@1.14.0")
 
@@ -536,17 +536,9 @@ class Hdf5(CMakePackage):
                 [
                     "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
                     "-DMPI_C_COMPILER:PATH=%s" % spec["mpi"].mpicc,
-                    "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc, 
+                    "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc,
                 ]
             )
-#        if "+mpi" in spec and "platform=windows" not in spec:
-#            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
-#
-#            if "+cxx" in self.spec:
-#                args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
-#
-#            if "+fortran" in self.spec:
-#                args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
         if spec.satisfies("@1.10.8,1.13.0"):
