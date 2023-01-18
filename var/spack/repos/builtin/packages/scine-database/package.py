@@ -34,6 +34,7 @@ class ScineDatabase(CMakePackage):
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-pybind11", when="+python", type="build")
     depends_on("scine-utilities@5:")
+    depends_on("scine-utilities+python", when="+python")
 
     extends("python", when="+python")
 
