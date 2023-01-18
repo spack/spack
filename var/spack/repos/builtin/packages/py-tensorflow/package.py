@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTensorflow(Package, CudaPackage, ROCmPackage):
+class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     """An Open Source Machine Learning Framework for Everyone.
 
     TensorFlow is an end-to-end open source platform for machine learning. It has a
@@ -1037,16 +1037,3 @@ def protobuf_deps():
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
         remove_linked_tree(tmp_path)
-
-    def test(self):
-        """Attempts to import modules of the installed package."""
-
-        # Make sure we are importing the installed modules,
-        # not the ones in the source directory
-        for module in self.import_modules:
-            self.run_test(
-                self.spec["python"].command.path,
-                ["-c", "import {0}".format(module)],
-                purpose="checking import of {0}".format(module),
-                work_dir="spack-test",
-            )
