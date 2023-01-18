@@ -27,7 +27,16 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
+from typing import (  # novm # noqa: F401
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+)
 
 import six
 

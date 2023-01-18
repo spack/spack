@@ -6,7 +6,7 @@ import collections
 import copy
 import functools
 import inspect
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple  # noqa: F401
 
 import six
 
