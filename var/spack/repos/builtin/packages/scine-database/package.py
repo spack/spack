@@ -28,13 +28,12 @@ class ScineDatabase(CMakePackage):
     depends_on("eigen@3:")
     depends_on("googletest")
     depends_on("mongo-cxx-driver@3.2.1:")
+    depends_on("py-python@3.7", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11", when="+python")
+    depends_on("py-pybind11", when="+python", type=("build", "run"))
     depends_on("scine-utilities@5:")
 
     extends("python", when="+python")
-
-    provides("py-scine-database", when="+python")
 
     def patch(self):
         os.rmdir("dev")

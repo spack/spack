@@ -45,16 +45,14 @@ class ScineSparrow(CMakePackage):
     depends_on("cereal")
     depends_on("eigen@3.3.2:")
     depends_on("googletest")
-    depends_on("python@3.7:", when="+python")
-    depends_on("py-pip", type="build", when="+python")
-    depends_on("py-scine-utilities", when="+python")
+    depends_on("python@3.7:", when="+python", type=("build", "run"))
+    depends_on("py-pip", when="+python", type="build")
     depends_on("scine-core")
     depends_on("scine-utilities")
+    depends_on("scine-utilities+python", when="+python", type=("build", "run"))
     depends_on("yaml-cpp")
 
     extends("python", when="+python")
-
-    provides("py-scine-sparrow", when="+python")
 
     def patch(self):
         os.rmdir("dev")

@@ -28,11 +28,11 @@ class ScineXtb(CMakePackage):
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("eigen@3:")
     depends_on("pkgconfig", type="build")
-    depends_on("python@3.7:", when="+python")
+    depends_on("python@3.7:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-scine-utilities", when="+python")
     depends_on("scine-core")
     depends_on("scine-utilities")
+    depends_on("scine-utilities+python", when="+python", type=("build", "run"))
     depends_on("xtb")
 
     extends("python", when="+python")

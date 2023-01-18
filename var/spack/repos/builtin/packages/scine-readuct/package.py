@@ -31,17 +31,15 @@ class ScineReaduct(CMakePackage):
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("eigen@3:")
     depends_on("googletest")
-    depends_on("python@3.7:", when="+python")
+    depends_on("python@3.7:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11", when="+python")
-    depends_on("py-scine-utilities", when="+python")
+    depends_on("py-pybind11", when="+python", type=("build", "run"))
     depends_on("scine-core")
     depends_on("scine-utilities")
+    depends_on("scine-utilities+python", when="+python", type=("build", "run"))
     depends_on("yaml-cpp")
 
     extends("python", when="+python")
-
-    provides("py-scine-readuct", when="+python")
 
     def patch(self):
         os.rmdir("dev")

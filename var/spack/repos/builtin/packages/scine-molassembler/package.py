@@ -36,17 +36,15 @@ class ScineMolassembler(CMakePackage):
     depends_on("googletest")
     # depends_on("nauty")
     depends_on("nlohmann-json", type="build")
-    depends_on("python@3.7:", when="+python")
+    depends_on("python@3.7:", when="+python", type=("build", "run"))
     depends_on("py-pip", when="+python", type="build")
-    depends_on("py-pybind11", when="+python")
-    depends_on("py-scine-utilities", when="+python")
+    depends_on("py-pybind11", when="+python", type=("build", "run"))
     # depends_on("ringdecomposerlib")
     depends_on("scine-core")
     depends_on("scine-utilities")
+    depends_on("scine-utilities+python", when="+python", type=("build", "run"))
 
     extends("python", when="+python")
-
-    provides("py-scine-molassembler", when="+python")
 
     def patch(self):
         os.rmdir("dev")
