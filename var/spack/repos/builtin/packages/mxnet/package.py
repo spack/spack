@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Mxnet(CMakePackage, CudaPackage):
+class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     """MXNet is a deep learning framework
     designed for both efficiency and flexibility."""
 
@@ -16,51 +16,6 @@ class Mxnet(CMakePackage, CudaPackage):
     git = "https://github.com/apache/incubator-mxnet.git"
 
     maintainers = ["adamjstewart"]
-    import_modules = [
-        "mxnet",
-        "mxnet.numpy_extension",
-        "mxnet.optimizer",
-        "mxnet.module",
-        "mxnet.io",
-        "mxnet.cython",
-        "mxnet.ndarray",
-        "mxnet.gluon",
-        "mxnet.symbol",
-        "mxnet._cy3",
-        "mxnet.contrib",
-        "mxnet.numpy",
-        "mxnet._ffi",
-        "mxnet.image",
-        "mxnet.kvstore",
-        "mxnet.notebook",
-        "mxnet._ctypes",
-        "mxnet.rnn",
-        "mxnet.ndarray.numpy_extension",
-        "mxnet.ndarray.numpy",
-        "mxnet.gluon.nn",
-        "mxnet.gluon.model_zoo",
-        "mxnet.gluon.contrib",
-        "mxnet.gluon.data",
-        "mxnet.gluon.rnn",
-        "mxnet.gluon.model_zoo.vision",
-        "mxnet.gluon.contrib.nn",
-        "mxnet.gluon.contrib.estimator",
-        "mxnet.gluon.contrib.cnn",
-        "mxnet.gluon.contrib.data",
-        "mxnet.gluon.contrib.rnn",
-        "mxnet.gluon.data.vision",
-        "mxnet.symbol.numpy_extension",
-        "mxnet.symbol.numpy",
-        "mxnet.contrib.onnx",
-        "mxnet.contrib.svrg_optimization",
-        "mxnet.contrib.amp",
-        "mxnet.contrib.text",
-        "mxnet.contrib.onnx.mx2onnx",
-        "mxnet.contrib.onnx.onnx2mx",
-        "mxnet.contrib.amp.lists",
-        "mxnet._ffi._cy3",
-        "mxnet._ffi._ctypes",
-    ]
 
     version("master", branch="master", submodules=True)
     version("1.master", branch="v1.x", submodules=True)
@@ -173,17 +128,3 @@ class Mxnet(CMakePackage, CudaPackage):
             with working_dir("python"):
                 args = std_pip_args + ["--prefix=" + prefix, "."]
                 pip(*args)
-
-    def test(self):
-        """Attempts to import modules of the installed package."""
-
-        if "+python" in self.spec:
-            # Make sure we are importing the installed modules,
-            # not the ones in the source directory
-            for module in self.import_modules:
-                self.run_test(
-                    self.spec["python"].command.path,
-                    ["-c", "import {0}".format(module)],
-                    purpose="checking import of {0}".format(module),
-                    work_dir="spack-test",
-                )
