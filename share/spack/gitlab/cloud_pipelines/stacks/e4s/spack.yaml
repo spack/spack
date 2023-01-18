@@ -126,7 +126,8 @@ spack:
   - plumed
   - precice
   - pumi
-  - py-h5py
+  - py-h5py +mpi
+  - py-h5py ~mpi
   - py-jupyterhub
   - py-libensemble +mpi +nlopt
   - py-petsc4py
