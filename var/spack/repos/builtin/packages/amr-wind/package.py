@@ -28,6 +28,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=False, description="Enable OpenMP for CPU builds")
     variant("shared", default=True, description="Build shared libraries")
     variant("tests", default=True, description="Activate regression tests")
+    variant("tiny_profile", default=False, description="Activate tiny profile")
 
     depends_on("hypre~int64@2.20.0:", when="+hypre")
     depends_on("hypre+mpi", when="+hypre+mpi")
@@ -73,6 +74,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             "openfast",
             "rocm",
             "tests",
+            "tiny_profile",
         ]
         args = [self.define_from_variant("AMR_WIND_ENABLE_%s" % v.upper(), v) for v in vs]
 
