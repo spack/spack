@@ -17,6 +17,10 @@ class PyPulsarGalaxyLib(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
+    depends_on("py-galaxy-job-metrics@19.9.0:", type=("build", "run"))
+    depends_on("py-galaxy-objectstore@19.9.0:", type=("build", "run"))
+    depends_on("py-galaxy-tool-util@19.9.0:", type=("build", "run"))
+    depends_on("py-galaxy-util@19.9.0:", type=("build", "run"))
     depends_on("py-webob", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-pastedeploy", type=("build", "run"))
