@@ -462,6 +462,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch("patch-fc930b3010bd0de899a3da3209eab20664ddb703.patch", when="@10.1:10.3")
     patch("patch-f1feb74046e0feb0596b93bbb822fae02940a90e.patch", when="@11.1")
 
+    # libstdc++: Fix inconsistent noexcept-specific for valarray begin/end
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/423cd47cfc9640ba3d6811b780e8a0b94b704dcb.patch?full_index=1",
+        sha256="0d136226eb07bc43f1b15284f48bd252e3748a0426b5d7ac9084ebc406e15490",
+        when="@9.5.0:11.2",
+    )
+
     build_directory = "spack-build"
 
     @classproperty
