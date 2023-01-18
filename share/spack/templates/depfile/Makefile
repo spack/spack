@@ -1,6 +1,9 @@
 SPACK ?= spack
 SPACK_INSTALL_FLAGS ?=
 
+# This variable can be used to add post install hooks
+{{ pkg_ids_variable }} := {{ pkg_ids }}
+
 .PHONY: {{ all_target }} {{ clean_target }}
 
 {{ all_target }}: {{ env_target }}
