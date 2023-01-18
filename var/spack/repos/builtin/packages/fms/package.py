@@ -49,7 +49,7 @@ class Fms(CMakePackage):
     
     variant(
         "32bit",
-        default=True,
+        default=False,
         description="Build a version of the library with default 32 bit reals",
     )
     variant(
