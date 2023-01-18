@@ -46,7 +46,12 @@ class Fms(CMakePackage):
     version(
         "2019.01.03", sha256="60a5181e883e141f2fdd4a30c535a788d609bcbbbca4af7e1ec73f66f4e58dc0"
     )
-
+    
+    variant(
+        "32bit",
+        default=True,
+        description="Build a version of the library with default 32 bit reals",
+    )
     variant(
         "64bit",
         default=True,
@@ -80,6 +85,7 @@ class Fms(CMakePackage):
 
     def cmake_args(self):
         args = [
+            self.define_from_variant("32BIT"),
             self.define_from_variant("64BIT"),
             self.define_from_variant("GFS_PHYS"),
             self.define_from_variant("OPENMP"),
