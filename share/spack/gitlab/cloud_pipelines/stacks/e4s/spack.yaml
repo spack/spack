@@ -42,6 +42,9 @@ spack:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    paraview:
+      # Don't build GUI support or GLX rendering for HPC/container deployments
+      require: "@5.11 ~qt+osmesa"
     python:
       version: [3.8.13]
     trilinos:
@@ -123,8 +126,9 @@ spack:
   - plumed
   - precice
   - pumi
+  - py-h5py
   - py-jupyterhub
-  - py-libensemble
+  - py-libensemble +mpi +nlopt
   - py-petsc4py
   - py-warpx ^warpx dims=2
   - py-warpx ^warpx dims=3
@@ -160,8 +164,8 @@ spack:
   - caliper +cuda
   - chai ~benchmarks ~tests +cuda ^umpire@6.0.0 ~shared
   - dealii +cuda
-  - ecp-data-vis-sdk +cuda
-    +adios2 +hdf5 +vtkm +zfp
+  - ecp-data-vis-sdk +cuda cuda_arch=80
+    +adios2 +hdf5 +paraview +vtkm +zfp
     # Removing ascent because Dray is hung in CI.
     # +ascent
   - flecsi +cuda
@@ -196,8 +200,8 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +rocm
-    +vtkm
+  - ecp-data-vis-sdk +rocm amdgpu_target=gfx90a
+    +paraview +vtkm
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm

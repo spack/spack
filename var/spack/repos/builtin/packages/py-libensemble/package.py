@@ -37,7 +37,7 @@ class PyLibensemble(PythonPackage):
     version("0.2.0", sha256="ecac7275d4d0f4a5e497e5c9ef2cd998da82b2c020a0fb87546eeea262f495ff")
     version("0.1.0", sha256="0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb")
 
-    variant("mpi", default=False, description="Install with MPI")
+    variant("mpi", default=True, description="Install with MPI")
     variant("scipy", default=False, description="Install with scipy")
     variant("petsc4py", default=False, description="Install with petsc4py")
     variant("nlopt", default=False, description="Install with nlopt")
@@ -80,7 +80,7 @@ class PyLibensemble(PythonPackage):
         )
 
         if not os.path.isfile(join_path(test_dir, exe)):
-            print("Skipping {0} test".format(exe))
+            print("SKIPPED: {0} test does not exist".format(exe))
             return
 
         self.run_test(
@@ -91,4 +91,6 @@ class PyLibensemble(PythonPackage):
         )
 
     def test(self):
-        self.run_tutorial_tests("test_uniform_sampling.py")
+        super(__class__, self).test()
+        for tutorial in ["test_uniform_sampling.py", "test_1d_sampling.py"]:
+            self.run_tutorial_tests(tutorial)

@@ -23,6 +23,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     maintainers = ["dev-zero"]
 
+    version("2022.2", sha256="1a473dea512fe264bb45419f83de432d441f90404f829d89cbc3a03f723b8354")
     version("2022.1", sha256="2c34f1a7972973c62d471cd35856f444f11ab22f2ff930f6ead20f3454fd228b")
     version("9.1", sha256="fedb4c684a98ad857cd49b69a3ae51a73f85a9c36e9cb63e3b02320c74454ce6")
     version("8.2", sha256="2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a")
@@ -115,6 +116,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on("fftw+openmp", when="^fftw")
         depends_on("amdfftw+openmp", when="^amdfftw")
         depends_on("cray-fftw+openmp", when="^cray-fftw")
+        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
         depends_on("openblas threads=openmp", when="^openblas")
         # The Cray compiler wrappers will automatically add libsci_mp with
         # -fopenmp. Since CP2K unconditionally links blas/lapack/scalapack
@@ -242,6 +244,10 @@ class Cp2k(MakefilePackage, CudaPackage):
         when="@8.2",
     )
 
+    def url_for_version(self, version):
+        url = "https://github.com/cp2k/cp2k/releases/download/v{0}/cp2k-{0}.tar.bz2"
+        return url.format(version)
+
     @property
     def makefile_architecture(self):
         return "{0.architecture}-{0.compiler.name}".format(self.spec)
@@ -270,6 +276,9 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0]
         elif "^amdfftw" in spec:
             fftw = spec["amdfftw:openmp" if "+openmp" in spec else "amdfftw"]
+            fftw_header_dir = fftw.headers.directories[0]
+        elif "^armpl-gcc" in spec:
+            fftw = spec["armpl-gcc:openmp" if "+openmp" in spec else "armpl-gcc"]
             fftw_header_dir = fftw.headers.directories[0]
         elif "^intel-mkl" in spec:
             fftw = spec["intel-mkl"]
@@ -569,6 +578,9 @@ class Cp2k(MakefilePackage, CudaPackage):
             ]
 
             if spec.satisfies("@9:"):
+                if spec.satisfies("@2022:"):
+                    cppflags += ["-D__OFFLOAD_CUDA"]
+
                 acc_compiler_var = "OFFLOAD_CC"
                 acc_flags_var = "OFFLOAD_FLAGS"
                 cppflags += [
@@ -577,6 +589,15 @@ class Cp2k(MakefilePackage, CudaPackage):
                     "-DOFFLOAD_TARGET=cuda",
                 ]
                 libs += ["-lcublas"]
+
+                if spec.satisfies("+cuda_fft"):
+                    if spec.satisfies("@:9"):
+                        cppflags += ["-D__PW_CUDA"]
+
+                    libs += ["-lcufft"]
+                else:
+                    if spec.satisfies("@2022:"):
+                        cppflags += ["-D__NO_OFFLOAD_PW"]
             else:
                 acc_compiler_var = "NVCC"
                 acc_flags_var = "NVFLAGS"
@@ -587,9 +608,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                 else:
                     cppflags += ["-D__DBCSR_ACC"]
 
-            if spec.satisfies("+cuda_fft"):
-                cppflags += ["-D__PW_CUDA"]
-                libs += ["-lcufft", "-lcublas"]
+                if spec.satisfies("+cuda_fft"):
+                    cppflags += ["-D__PW_CUDA"]
+                    libs += ["-lcufft", "-lcublas"]
 
             cuda_arch = spec.variants["cuda_arch"].value[0]
             if cuda_arch:
@@ -762,7 +783,11 @@ class Cp2k(MakefilePackage, CudaPackage):
         to generate and override entire libcp2k.pc.
         """
         if self.spec.satisfies("@9.1:"):
-            with open(join_path(self.prefix.lib.pkgconfig, "libcp2k.pc"), "r+") as handle:
+            pkgconfig_file = join_path(self.prefix.lib.pkgconfig, "libcp2k.pc")
+            filter_file(r"(^includedir=).*", r"\1{0}".format(self.prefix.include), pkgconfig_file)
+            filter_file(r"(^libdir=).*", r"\1{0}".format(self.prefix.lib), pkgconfig_file)
+
+            with open(pkgconfig_file, "r+") as handle:
                 content = handle.read().rstrip()
 
                 content += " " + self.spec["blas"].libs.ld_flags

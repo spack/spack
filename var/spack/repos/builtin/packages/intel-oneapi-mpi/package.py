@@ -114,11 +114,11 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
             self.spec.mpifc = join_path(self.component_prefix.bin, "mpiifort")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("MPICH_CC", spack_cc)
-        env.set("MPICH_CXX", spack_cxx)
-        env.set("MPICH_F77", spack_f77)
-        env.set("MPICH_F90", spack_fc)
-        env.set("MPICH_FC", spack_fc)
+        env.set("I_MPI_CC", spack_cc)
+        env.set("I_MPI_CXX", spack_cxx)
+        env.set("I_MPI_F77", spack_f77)
+        env.set("I_MPI_F90", spack_fc)
+        env.set("I_MPI_FC", spack_fc)
 
         # Set compiler wrappers for dependent build stage
         if "+generic-names" in self.spec:

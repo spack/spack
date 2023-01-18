@@ -44,6 +44,7 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
+    version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version(
         "3.10.8",
@@ -106,13 +107,6 @@ class Python(Package):
     version("3.7.2", sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d")
     version("3.7.1", sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06")
     version("3.7.0", sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d")
-
-    # Python 3.6.15 has been added back only to allow bootstrapping Spack on Python 3.6
-    version(
-        "3.6.15",
-        sha256="54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043",
-        deprecated=True,
-    )
 
     extendable = True
 
@@ -298,11 +292,12 @@ class Python(Package):
             variants += "~pyexpat"
 
         # Some variant names do not match module names
-        try:
-            python("-c", "import tkinter.tix", error=os.devnull)
-            variants += "+tix"
-        except ProcessError:
-            variants += "~tix"
+        if "+tkinter" in variants:
+            try:
+                python("-c", "import tkinter.tix", error=os.devnull)
+                variants += "+tix"
+            except ProcessError:
+                variants += "~tix"
 
         # Some modules are platform-dependent
         if not is_windows:
@@ -475,7 +470,11 @@ class Python(Package):
 
         if "+optimizations" in spec:
             config_args.append("--enable-optimizations")
-            config_args.append("--with-lto")
+            # Prefer thin LTO for faster compilation times.
+            if "@3.11.0: %clang@3.9:" in spec or "@3.11.0: %apple-clang@8:" in spec:
+                config_args.append("--with-lto=thin")
+            else:
+                config_args.append("--with-lto")
             config_args.append("--with-computed-gotos")
 
         if spec.satisfies("@3.7 %intel", strict=True):

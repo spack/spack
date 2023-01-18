@@ -14,11 +14,17 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
     url = "https://github.com/harfbuzz/harfbuzz/releases/download/2.9.1/harfbuzz-2.9.1.tar.xz"
     git = "https://github.com/harfbuzz/harfbuzz.git"
 
-    version("5.1.0", sha256="2edb95db668781aaa8d60959d21be2ff80085f31b12053cdd660d9a50ce84f05")
     build_system(
         conditional("autotools", when="@:2.9"), conditional("meson", when="@3:"), default="meson"
     )
 
+    version("6.0.0", sha256="1d1010a1751d076d5291e433c138502a794d679a7498d1268ee21e2d4a140eb4")
+    version(
+        "5.3.1",
+        sha256="4a6ce097b75a8121facc4ba83b5b083bfec657f45b003cd5a3424f2ae6b4434d",
+        preferred=True,
+    )
+    version("5.1.0", sha256="2edb95db668781aaa8d60959d21be2ff80085f31b12053cdd660d9a50ce84f05")
     version("4.2.1", sha256="bd17916513829aeff961359a5ccebba6de2f4bf37a91faee3ac29c120e3d7ee1")
     version("4.1.0", sha256="f7984ff4241d4d135f318a93aa902d910a170a8265b7eaf93b5d9a504eed40c8")
     version("4.0.1", sha256="98f68777272db6cd7a3d5152bac75083cd52a26176d87bc04c8b3929d33bce49")

@@ -9,6 +9,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
+import spack.caches
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.concretize
@@ -18,7 +19,6 @@ import spack.mirror
 import spack.repo
 import spack.spec
 import spack.util.path
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
@@ -145,8 +145,26 @@ def setup_parser(subparser):
 
 def mirror_add(args):
     """Add a mirror to Spack."""
-    url = url_util.format(args.url)
-    spack.mirror.add(args.name, url, args.scope, args)
+    if (
+        args.s3_access_key_id
+        or args.s3_access_key_secret
+        or args.s3_access_token
+        or args.s3_profile
+        or args.s3_endpoint_url
+    ):
+        connection = {"url": args.url}
+        if args.s3_access_key_id and args.s3_access_key_secret:
+            connection["access_pair"] = (args.s3_access_key_id, args.s3_access_key_secret)
+        if args.s3_access_token:
+            connection["access_token"] = args.s3_access_token
+        if args.s3_profile:
+            connection["profile"] = args.s3_profile
+        if args.s3_endpoint_url:
+            connection["endpoint_url"] = args.s3_endpoint_url
+        mirror = spack.mirror.Mirror(fetch_url=connection, push_url=connection, name=args.name)
+    else:
+        mirror = spack.mirror.Mirror(args.url, name=args.name)
+    spack.mirror.add(mirror, args.scope)
 
 
 def mirror_remove(args):
@@ -156,7 +174,7 @@ def mirror_remove(args):
 
 def mirror_set_url(args):
     """Change the URL of a mirror."""
-    url = url_util.format(args.url)
+    url = args.url
     mirrors = spack.config.get("mirrors", scope=args.scope)
     if not mirrors:
         mirrors = syaml_dict()
@@ -356,11 +374,9 @@ def versions_per_spec(args):
     return num_versions
 
 
-def create_mirror_for_individual_specs(mirror_specs, directory_hint, skip_unstable_versions):
-    present, mirrored, error = spack.mirror.create(
-        directory_hint, mirror_specs, skip_unstable_versions
-    )
-    tty.msg("Summary for mirror in {}".format(directory_hint))
+def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions):
+    present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
+    tty.msg("Summary for mirror in {}".format(path))
     process_mirror_stats(present, mirrored, error)
 
 
@@ -376,19 +392,6 @@ def process_mirror_stats(present, mirrored, error):
         tty.error("Failed downloads:")
         colify.colify(s.cformat("{name}{@version}") for s in error)
         sys.exit(1)
-
-
-def local_mirror_url_from_user(directory_hint):
-    """Return a file:// url pointing to the local mirror to be used.
-
-    Args:
-        directory_hint (str or None): directory where to create the mirror. If None,
-            defaults to "config:source_cache".
-    """
-    mirror_directory = spack.util.path.canonicalize_path(
-        directory_hint or spack.config.get("config:source_cache")
-    )
-    return url_util.path_to_file_url(mirror_directory)
 
 
 def mirror_create(args):
@@ -421,9 +424,12 @@ def mirror_create(args):
             "The option '--all' already implies mirroring all versions for each package.",
         )
 
+    # When no directory is provided, the source dir is used
+    path = args.directory or spack.caches.fetch_cache_location()
+
     if args.all and not ev.active_environment():
         create_mirror_for_all_specs(
-            directory_hint=args.directory,
+            path=path,
             skip_unstable_versions=args.skip_unstable_versions,
             selection_fn=not_excluded_fn(args),
         )
@@ -431,7 +437,7 @@ def mirror_create(args):
 
     if args.all and ev.active_environment():
         create_mirror_for_all_specs_inside_environment(
-            directory_hint=args.directory,
+            path=path,
             skip_unstable_versions=args.skip_unstable_versions,
             selection_fn=not_excluded_fn(args),
         )
@@ -440,16 +446,15 @@ def mirror_create(args):
     mirror_specs = concrete_specs_from_user(args)
     create_mirror_for_individual_specs(
         mirror_specs,
-        directory_hint=args.directory,
+        path=path,
         skip_unstable_versions=args.skip_unstable_versions,
     )
 
 
-def create_mirror_for_all_specs(directory_hint, skip_unstable_versions, selection_fn):
+def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
     mirror_specs = all_specs_with_all_versions(selection_fn=selection_fn)
-    local_push_url = local_mirror_url_from_user(directory_hint=directory_hint)
     mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
-        local_push_url, skip_unstable_versions=skip_unstable_versions
+        path, skip_unstable_versions=skip_unstable_versions
     )
     for candidate in mirror_specs:
         pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
@@ -459,13 +464,11 @@ def create_mirror_for_all_specs(directory_hint, skip_unstable_versions, selectio
     process_mirror_stats(*mirror_stats.stats())
 
 
-def create_mirror_for_all_specs_inside_environment(
-    directory_hint, skip_unstable_versions, selection_fn
-):
+def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions, selection_fn):
     mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
     create_mirror_for_individual_specs(
         mirror_specs,
-        directory_hint=directory_hint,
+        path=path,
         skip_unstable_versions=skip_unstable_versions,
     )
 
