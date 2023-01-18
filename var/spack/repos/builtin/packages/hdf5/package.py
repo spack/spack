@@ -33,7 +33,7 @@ class Hdf5(CMakePackage):
     ]
 
     tags = ["e4s"]
-    executables = ["^h5cc$"]
+    executables = ["^h5cc$", "^h5pcc$"]
 
     test_requires_compiler = True
 
