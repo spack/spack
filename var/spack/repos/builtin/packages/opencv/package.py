@@ -929,10 +929,10 @@ class Opencv(CMakePackage, CudaPackage):
         ]
 
         if self.spec.satisfies("+contrib"):
-            args += self.define(
+            args.append(self.define(
                 "OPENCV_EXTRA_MODULES_PATH",
                 join_path(self.stage.source_path, "opencv_contrib", "modules"),
-            )
+            ))
 
         # OpenCV pre-built apps
         apps_list = []
