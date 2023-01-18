@@ -419,7 +419,7 @@ class BinaryCacheIndex(object):
 
         self._write_local_index_cache()
 
-        if all_methods_failed:
+        if configured_mirror_urls and all_methods_failed:
             raise FetchCacheError(fetch_errors)
         if fetch_errors:
             tty.warn(
