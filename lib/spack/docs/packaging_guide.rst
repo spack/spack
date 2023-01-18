@@ -34,6 +34,15 @@ ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
 
+.. warning::
+
+   As a general rule, packages should install the software *from source*.
+   The only exception is for proprietary software (e.g., vendor compilers).
+
+   If a special build system needs to be added in order to support building
+   a package from source, then the associated code and recipe need to be added
+   first.
+
 
 .. _installation_procedure:
 
