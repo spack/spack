@@ -38,7 +38,7 @@ class PyParsl(PythonPackage):
     depends_on("py-psutil@5.5.1:", type=("build", "run"))
 
     with when("+monitoring"):
-        depends_on("py-sqlalchemy@1.3:", type=("build", "run"))
+        depends_on("py-sqlalchemy@1.3", type=("build", "run"))
         conflicts("^py-sqlalchemy@1.3.4")
         depends_on("py-sqlalchemy-utils", type=("build", "run"))
         depends_on("py-pydot", type=("build", "run"))
