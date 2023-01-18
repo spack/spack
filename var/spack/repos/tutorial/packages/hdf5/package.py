@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -441,7 +441,7 @@ class Hdf5(CMakePackage):
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
             r"\1\2\3",
             *pc_files,
-            backup=False
+            backup=False,
         )
 
         # Create non-versioned symlinks to the versioned pkg-config files:

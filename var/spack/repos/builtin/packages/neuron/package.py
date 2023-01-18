@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -124,13 +124,13 @@ class Neuron(CMakePackage):
             "CC {0} {1}".format(assign_operator, env["CC"]),
             "CC = {0}".format(cc_compiler),
             nrnmech_makefile,
-            **kwargs
+            **kwargs,
         )
         filter_file(
             "CXX {0} {1}".format(assign_operator, env["CXX"]),
             "CXX = {0}".format(cxx_compiler),
             nrnmech_makefile,
-            **kwargs
+            **kwargs,
         )
 
         if spec.satisfies("+coreneuron"):
