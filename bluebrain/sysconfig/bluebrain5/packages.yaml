@@ -44,6 +44,8 @@ packages:
       prefix: /usr
   julia:
     variants: +external_llvm
+  kokkos:
+    variants: +openmp
   libtool:
     buildable: false  # different versions interact badly with autohell
     version: [2.4.2]
@@ -86,7 +88,7 @@ packages:
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   omega-h:
-    variants: +trilinos
+    variants: +kokkos
   opencv:
     variants: ~gtk~vtk
   openssh:
@@ -153,8 +155,6 @@ packages:
       prefix: /usr
   timemory:
     variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
-  trilinos:
-    variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
   all:
     require: "%gcc@12.2.0"
     target: [skylake]

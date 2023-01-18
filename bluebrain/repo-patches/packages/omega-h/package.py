@@ -42,11 +42,13 @@ class OmegaH(CMakePackage):
     variant('symbols', default=True, description='Compile C++ with debug symbols')
     variant('warnings', default=False, description='Compile C++ with warnings')
     variant('gmsh', default=False, description='Use Gmsh C++ API')
+    variant('kokkos', default=False, description='Use Kokkos')
 
     depends_on('gmsh', when='+examples')
     depends_on('gmsh@4.4.1:', when='+gmsh')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos +kokkos', when='+trilinos')
+    depends_on('kokkos', when='+kokkos')
     depends_on('zlib', when='+zlib')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
@@ -82,6 +84,8 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_USE_Trilinos:BOOL=ON')
         if '+gmsh' in self.spec:
             args.append('-DOmega_h_USE_Gmsh:BOOL=ON')
+        if '+kokkos' in self.spec:
+            args.append('-DOmega_h_USE_Kokkos:BOOL=ON')
         if '+zlib' in self.spec:
             args.append('-DOmega_h_USE_ZLIB:BOOL=ON')
             args.append('-DZLIB_ROOT:PATH={0}'.format(
