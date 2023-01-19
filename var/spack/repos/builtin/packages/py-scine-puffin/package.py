@@ -13,7 +13,7 @@ class PyScinePuffin(PythonPackage):
     pypi = "scine_puffin/scine_puffin-1.1.0.tar.gz"
     git = "https://github.com/qcscine/puffin.git"
 
-    version("develop", branch="master")
+    version("master", branch="master")
     version("1.1.0", "1a15232b1b472c36349e5534e4fdf9dd90bc554926cb42fba37eee8e60be8c44")
 
     depends_on("python@3.6:", type=("build", "run"))
