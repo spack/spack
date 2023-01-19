@@ -1139,7 +1139,7 @@ opt_criterion(75, "requirement weight").
 #minimize{ 0@275: #true }.
 #minimize{ 0@75: #true }.
 #minimize {
-    Weight@75+Priority
+    Weight@75+Priority,Package
     : requirement_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
