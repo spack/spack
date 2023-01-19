@@ -48,15 +48,18 @@ class Fms(CMakePackage):
     )
 
     variant(
-        "32bit",
-        default=True,
-        description="Build a version of the library with default 32 bit reals",
+        "precision",
+        values=('32', '64'),
+        description="Build a version of the library with default 32 or 64 bit reals or both",
+        default='64',
+        multi=True,
     )
-    variant(
-        "64bit",
-        default=False,
-        description="Build a version of the library with default 64 bit reals",
+    conflicts(
+        "precision=32,64", 
+        when="@:2022.03",
+        msg="FMS versions prior to 2022.04 do not support both 32 and 64 bit precision",
     )
+
     variant("gfs_phys", default=True, description="Use GFS Physics")
     variant("openmp", default=True, description="Use OpenMP")
     variant("quad_precision", default=True, description="quad precision reals")
@@ -84,27 +87,15 @@ class Fms(CMakePackage):
     depends_on("libyaml", when="+yaml")
 
     def cmake_args(self):
-        # If we are older than 2022.04, we allow only one of 32bit or 64bit
-        if self.spec.satisfies("@:2022.03"):
-            if "+32bit" in self.spec and "+64bit" in self.spec:
-                raise InstallError(
-                    "FMS 2022.03 and older can only build as "
-                    "either 32bit or 64bit, not both. Please choose one."
-                )
-
-        # No matter the version, a user must choose at least one of 32bit or 64bit
-        if "+32bit" not in self.spec and "+64bit" not in self.spec:
-            raise InstallError("FMS requires at least one variant of 32bit or 64bit")
-
         args = [
-            self.define_from_variant("32BIT"),
-            self.define_from_variant("64BIT"),
             self.define_from_variant("GFS_PHYS"),
             self.define_from_variant("OPENMP"),
             self.define_from_variant("ENABLE_QUAD_PRECISION", "quad_precision"),
             self.define_from_variant("WITH_YAML", "yaml"),
             self.define_from_variant("CONSTANTS"),
             self.define_from_variant("FPIC"),
+            "-D32BIT:BOOL={}".format("ON" if "precision=32" in self.spec else "OFF"),
+            "-D64BIT:BOOL={}".format("ON" if "precision=64" in self.spec else "OFF"),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
