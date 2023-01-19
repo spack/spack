@@ -46,7 +46,7 @@ jobs:
           spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   ubuntu-clingo-sources:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
           spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   ubuntu-clingo-binaries-and-patchelf:
     runs-on: ubuntu-latest
@@ -118,7 +118,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   opensuse-clingo-sources:
     runs-on: ubuntu-latest
@@ -149,7 +149,7 @@ jobs:
           spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   macos-clingo-sources:
     runs-on: macos-latest
@@ -167,7 +167,7 @@ jobs:
           spack bootstrap disable github-actions-v0.3
           spack external find --not-buildable cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   macos-clingo-binaries:
     runs-on: ${{ matrix.macos-version }}
@@ -267,7 +267,7 @@ jobs:
           source share/spack/setup-env.sh
           spack bootstrap disable spack-install
           spack -d gpg list
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   ubuntu-gnupg-sources:
     runs-on: ubuntu-latest
@@ -305,7 +305,7 @@ jobs:
           spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack -d gpg list
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   macos-gnupg-binaries:
     runs-on: macos-latest
@@ -322,7 +322,7 @@ jobs:
           source share/spack/setup-env.sh
           spack bootstrap disable spack-install
           spack -d gpg list
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
   macos-gnupg-sources:
     runs-on: macos-latest
@@ -341,7 +341,7 @@ jobs:
           spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack -d gpg list
-          tree ~/.spack/bootstrap/store/
+          tree ~/.spack-compilers-as-deps/bootstrap/store/
 
 
 # [1] Distros that have patched git to resolve CVE-2022-24765 (e.g. Ubuntu patching v2.25.1)
