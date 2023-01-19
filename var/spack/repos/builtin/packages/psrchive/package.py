@@ -44,7 +44,7 @@ class Psrchive(AutotoolsPackage):
     depends_on("tempo")
     depends_on("fftw@3:")
     depends_on("python")
-    depends_on("pgplot")
+    depends_on("pgplot+X")
 
     depends_on("mpi", when="+mpi")
     depends_on("mkl", when="+mkl")
