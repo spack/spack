@@ -48,7 +48,7 @@ class Fms(CMakePackage):
         "precision",
         values=("32", "64"),
         description="Build a version of the library with default 32 or 64 bit reals or both",
-        default="64",
+        default="32",
         multi=True,
     )
     conflicts(
