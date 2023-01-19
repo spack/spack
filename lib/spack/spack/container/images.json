@@ -26,6 +26,16 @@
         "develop": "latest"
       }
     },
+    "rockylinux:8": {
+      "bootstrap": {
+        "template": "container/rockylinux_8.dockerfile"
+      },
+      "os_package_manager": "yum",
+      "build": "spack/rockylinux",
+      "build_tags": {
+        "develop": "latest"
+      }
+    },
     "centos:7": {
       "bootstrap": {
         "template": "container/centos_7.dockerfile"
