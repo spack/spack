@@ -140,6 +140,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     # Option added in v2.21.0
     conflicts("+umpire", when="@:2.20")
 
+    # Option added in v2.24.0
+    conflicts("+sycl", when="@:2.23")
+
     configure_directory = "src"
 
     def url_for_version(self, version):
