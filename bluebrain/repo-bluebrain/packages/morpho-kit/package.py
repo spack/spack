@@ -41,6 +41,11 @@ class MorphoKit(CMakePackage):
     patch('h5.patch', when='@0.3.2')
 
     def cmake_args(self):
-        return [
+        args = [
             '-DBUILD_BINDINGS:BOOL=OFF',
         ]
+
+        if self.spec.satisfies('@0.3.5:'):
+            args.append('-DMORPHOKIT_HAS_PATCHED_HDF5:BOOL=ON')
+
+        return args
