@@ -62,7 +62,7 @@ packages:
     - spec: m4@1.4.16
       prefix: /usr
   omega-h:
-    variants: +kokkos
+    variants: ~kokkos~trilinos
   opencv:
     variants: ~gtk~vtk
   openssl:
