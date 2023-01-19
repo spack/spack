@@ -736,7 +736,7 @@ def test_ambiguous_hash(mutable_database, default_mock_concretization, mutable_e
 
 
 @pytest.mark.db
-def test_invalid_hash(database, config):
+def test_invalid_hash(database, mutable_empty_config):
     zmpi = database.query_one("zmpi")
     mpich = database.query_one("mpich")
 
