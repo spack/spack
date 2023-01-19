@@ -155,6 +155,7 @@ spack:
   - umpire
   - upcxx
   - variorum
+  - veloc
   - wannier90
 
   # CUDA
