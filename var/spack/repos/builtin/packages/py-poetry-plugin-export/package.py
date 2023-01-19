@@ -15,5 +15,6 @@ class PyPoetryPluginExport(PythonPackage):
     version("1.0.7", sha256="f6ac707ae227b06b2481249ed2678ff6b810b3487cac0fbb66eb0dc2bfd6ecf1")
 
     depends_on("python@3.7:3", type=("build", "run"))
-    # depends_on("py-poetry@1.2:1", type=("build", "run")) # circular dependency
     depends_on("py-poetry-core@1.1:1", type=("build", "run"))
+
+    # depends_on("py-poetry@1.2:1", type="run") # circular dependency
