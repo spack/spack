@@ -46,13 +46,13 @@ class Fms(CMakePackage):
 
     variant(
         "precision",
-        values=('32', '64'),
+        values=("32", "64"),
         description="Build a version of the library with default 32 or 64 bit reals or both",
-        default='64',
+        default="64",
         multi=True,
     )
     conflicts(
-        "precision=32,64", 
+        "precision=32,64",
         when="@:2022.03",
         msg="FMS versions prior to 2022.04 do not support both 32 and 64 bit precision",
     )
