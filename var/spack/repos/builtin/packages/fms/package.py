@@ -88,7 +88,8 @@ class Fms(CMakePackage):
         if self.spec.satisfies("@:2022.03"):
             if "+32bit" in self.spec and "+64bit" in self.spec:
                 raise InstallError(
-                    "FMS 2022.03 and older can only build as either 32bit or 64bit, not both.  Please choose one."
+                    "FMS 2022.03 and older can only build as "
+                    "either 32bit or 64bit, not both. Please choose one."
                 )
 
         # No matter the version, a user must choose at least one of 32bit or 64bit
