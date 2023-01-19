@@ -1494,7 +1494,7 @@ class Environment(object):
 
         return self.views[default_view_name]
 
-    def update_default_view(self, viewpath):
+    def update_default_view(self, viewpath, link):
         name = default_view_name
         if name in self.views and self.default_view.root != viewpath:
             shutil.rmtree(self.default_view.root)
@@ -1502,8 +1502,9 @@ class Environment(object):
         if viewpath:
             if name in self.views:
                 self.default_view.root = viewpath
+                self.default_view.link = link
             else:
-                self.views[name] = ViewDescriptor(self.path, viewpath)
+                self.views[name] = ViewDescriptor(self.path, root=viewpath, link=link)
         else:
             self.views.pop(name, None)
 

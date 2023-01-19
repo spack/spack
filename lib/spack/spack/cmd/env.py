@@ -424,6 +424,12 @@ def env_view_setup_parser(subparser):
     subparser.add_argument(
         "view_path", nargs="?", help="when enabling a view, optionally set the path manually"
     )
+    subparser.add_argument(
+        "--link",
+        choices=("all", "run", "roots"),
+        default="all",
+        help="when enabling a view, optionally specify the link type",
+    )
 
 
 def env_view(args):
@@ -437,7 +443,7 @@ def env_view(args):
                 view_path = args.view_path
             else:
                 view_path = env.view_path_default
-            env.update_default_view(view_path)
+            env.update_default_view(view_path, args.link)
             env.write()
         elif args.action == ViewAction.disable:
             env.update_default_view(None)

@@ -977,7 +977,7 @@ _spack_env_loads() {
 _spack_env_view() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --link"
     else
         SPACK_COMPREPLY=""
     fi
