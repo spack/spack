@@ -806,6 +806,8 @@ class PyclingoDriver(object):
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
+        if spack.error.debug:
+            self.control.load(os.path.join(parent_dir, "causation.lp"))
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
