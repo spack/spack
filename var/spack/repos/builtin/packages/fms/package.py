@@ -54,7 +54,7 @@ class Fms(CMakePackage):
     )
     variant(
         "64bit",
-        default=True,
+        default=False,
         description="Build a version of the library with default 64 bit reals",
     )
     variant("gfs_phys", default=True, description="Use GFS Physics")
@@ -84,6 +84,19 @@ class Fms(CMakePackage):
     depends_on("libyaml", when="+yaml")
 
     def cmake_args(self):
+        # If we are older than 2022.04, we allow only one of 32bit or 64bit
+        if self.spec.satisfies("@:2022.03"):
+            if "+32bit" in self.spec and "+64bit" in self.spec:
+                raise InstallError(
+                    "FMS 2022.03 and older can only build as either 32bit or 64bit, not both.  Please choose one."
+                )
+
+        # No matter the version, a user must choose at least one of 32bit or 64bit
+        if "+32bit" not in self.spec and "+64bit" not in self.spec:
+            raise InstallError(
+                "FMS requires at least one variant of 32bit or 64bit"
+            )
+
         args = [
             self.define_from_variant("32BIT"),
             self.define_from_variant("64BIT"),
