@@ -1048,9 +1048,6 @@ print(json.dumps(config))
             return path.replace(prefix, "")
         return os.path.join("include", "python{}".format(self.version.up_to(2)))
 
-    def setup_run_environment(self, env):
-        env.prepend_path("CPATH", os.pathsep.join(self.spec["python"].headers.directories))
-
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
