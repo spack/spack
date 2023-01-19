@@ -2408,6 +2408,10 @@ class BinaryCacheQuery(object):
         self.possible_specs = specs
 
     def __call__(self, spec, **kwargs):
+        """
+        Args:
+            spec (str): The spec being searched for in its string representation or hash.
+        """
         matches = []
         if spec.startswith("/"):
             # Matching a DAG hash
