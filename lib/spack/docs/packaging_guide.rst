@@ -2455,8 +2455,8 @@ with Python 2.4.x through 2.6.x, this would look like:
    depends_on("python@2.4:2.6")
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
-greater than or equal to ``2.4.0`` and lesser than or equal to ``2.6.infinity``.
-If you want to specify that a package works with any version of Python 3 (or
+greater than or equal to ``2.4`` and lesser than or equal to any ``2.6.x``. If
+you want to specify that a package works with any version of Python 3 (or
 higher), this would look like:
 
 .. code-block:: python
