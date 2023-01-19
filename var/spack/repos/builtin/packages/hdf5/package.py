@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -341,6 +341,8 @@ class Hdf5(CMakePackage):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
                 cmake_flags.append(self.compiler.cc_pic_flag)
+            if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
+                cmake_flags.append("-Wno-error=int-conversion")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
