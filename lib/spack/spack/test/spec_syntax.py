@@ -629,6 +629,7 @@ def test_spec_by_hash_tokens(text, tokens):
     parser = SpecParser(text)
     assert parser.tokens() == tokens
 
+
 @pytest.mark.db
 def test_spec_by_hash(database, monkeypatch, mutable_empty_config):
     mpileaks = database.query_one("mpileaks ^zmpi")
