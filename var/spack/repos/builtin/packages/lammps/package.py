@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -909,6 +909,12 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append("-DFFT=MKL")
             if "^amdfftw" in spec:
                 args.append(self.define("FFT", "FFTW3"))
+            if "^armpl-gcc" in spec:
+                args.append(self.define("FFT", "FFTW3"))
+                args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
+                args.append(
+                    self.define("FFTW3_INCLUDE_DIR", self.spec["fftw-api"].headers.directories[0])
+                )
             if "^cray-fftw" in spec:
                 args.append("-DFFT=FFTW3")
             # Using the -DFFT_SINGLE setting trades off a little accuracy

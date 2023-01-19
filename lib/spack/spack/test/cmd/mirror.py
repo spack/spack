@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -300,20 +300,6 @@ class TestMirrorCreate(object):
         args = MockMirrorArgs(**cli_args)
         with pytest.raises(spack.error.SpackError, match=error_str):
             spack.cmd.mirror.mirror_create(args)
-
-    @pytest.mark.parametrize(
-        "cli_args,expected_end",
-        [
-            ({"directory": None}, os.path.join("source")),
-            ({"directory": os.path.join("foo", "bar")}, os.path.join("foo", "bar")),
-        ],
-    )
-    def test_mirror_path_is_valid(self, cli_args, expected_end, config):
-        args = MockMirrorArgs(**cli_args)
-        local_push_url = spack.cmd.mirror.local_mirror_url_from_user(args.directory)
-        assert local_push_url.startswith("file:")
-        assert os.path.isabs(local_push_url.replace("file://", ""))
-        assert local_push_url.endswith(expected_end)
 
     @pytest.mark.parametrize(
         "cli_args,not_expected",

@@ -126,7 +126,8 @@ spack:
   - plumed
   - precice
   - pumi
-  - py-h5py
+  - py-h5py +mpi
+  - py-h5py ~mpi
   - py-jupyterhub
   - py-libensemble +mpi +nlopt
   - py-petsc4py
@@ -146,6 +147,7 @@ spack:
   - superlu-dist
   - swig
   - swig@4.0.2-fortran
+  - sz3
   - tasmanian
   - tau +mpi +python
   - trilinos@13.0.1 +belos +ifpack2 +stokhos
@@ -154,6 +156,7 @@ spack:
   - umpire
   - upcxx
   - variorum
+  - veloc
   - wannier90
 
   # CUDA
