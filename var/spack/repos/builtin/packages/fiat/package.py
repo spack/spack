@@ -18,6 +18,7 @@ class Fiat(CMakePackage):
 
     version("main", branch="main", no_cache=True)
     # Defined for spack use only
+    version("1.1.0", commit="9398e04fd5d00887b9598151abfa31c388e605d5")
     version("1.0.0", commit="1295120464c3905e5edcbb887e4921686653eab8")
 
     variant(
