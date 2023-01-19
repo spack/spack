@@ -147,6 +147,7 @@ spack:
   - superlu-dist
   - swig
   - swig@4.0.2-fortran
+  - sz3
   - tasmanian
   - tau +mpi +python
   - trilinos@13.0.1 +belos +ifpack2 +stokhos
