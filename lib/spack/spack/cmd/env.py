@@ -588,12 +588,13 @@ def env_revert(args):
 def env_depfile_setup_parser(subparser):
     """generate a depfile from the concrete environment specs"""
     subparser.add_argument(
+        "--make-prefix",
         "--make-target-prefix",
         default=None,
         metavar="TARGET",
-        help="prefix Makefile targets with <TARGET>/<name>. By default the absolute "
-        "path to the directory makedeps under the environment metadata dir is "
-        "used. Can be set to an empty string --make-target-prefix ''.",
+        help="prefix Makefile targets (and variables) with <TARGET>/<name>. By default "
+        "the absolute path to the directory makedeps under the environment metadata dir is "
+        "used. Can be set to an empty string --make-prefix ''.",
     )
     subparser.add_argument(
         "--make-disable-jobserver",
@@ -695,26 +696,26 @@ def env_depfile(args):
 
     # Special make targets are useful when including a makefile in another, and you
     # need to "namespace" the targets to avoid conflicts.
-    if args.make_target_prefix is None:
-        target_prefix = os.path.join(env.env_subdir_path, "makedeps")
+    if args.make_prefix is None:
+        prefix = os.path.join(env.env_subdir_path, "makedeps")
     else:
-        target_prefix = args.make_target_prefix
+        prefix = args.make_prefix
 
     def get_target(name):
         # The `all` and `clean` targets are phony. It doesn't make sense to
         # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
         # sense to have a prefix like `env/all`, `env/clean` when they are
         # supposed to be included
-        if name in ("all", "clean") and os.path.isabs(target_prefix):
+        if name in ("all", "clean") and os.path.isabs(prefix):
             return name
         else:
-            return os.path.join(target_prefix, name)
+            return os.path.join(prefix, name)
 
     def get_install_target(name):
-        return os.path.join(target_prefix, "install", name)
+        return os.path.join(prefix, "install", name)
 
     def get_install_deps_target(name):
-        return os.path.join(target_prefix, "install-deps", name)
+        return os.path.join(prefix, "install-deps", name)
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
@@ -742,10 +743,10 @@ def env_depfile(args):
     # running tests, etc.
     # NOTE: GNU Make allows directory separators in variable names, so for consistency
     # we can namespace this variable with the same prefix as targets.
-    if args.make_target_prefix is None:
+    if args.make_prefix is None:
         pkg_identifier_variable = "SPACK_PACKAGE_IDS"
     else:
-        pkg_identifier_variable = os.path.join(target_prefix, "SPACK_PACKAGE_IDS")
+        pkg_identifier_variable = os.path.join(prefix, "SPACK_PACKAGE_IDS")
 
     # All install and install-deps targets
     all_install_related_targets = []
@@ -759,7 +760,7 @@ def env_depfile(args):
         all_pkg_identifiers.append(tgt)
         all_install_related_targets.append(get_install_target(tgt))
         all_install_related_targets.append(get_install_deps_target(tgt))
-        if args.make_target_prefix is None:
+        if args.make_prefix is None:
             phony_convenience_targets.append(os.path.join("install", tgt))
             phony_convenience_targets.append(os.path.join("install-deps", tgt))
 
@@ -782,7 +783,6 @@ def env_depfile(args):
             "jobserver_support": "+" if args.jobserver else "",
             "adjacency_list": make_targets.adjacency_list,
             "phony_convenience_targets": " ".join(phony_convenience_targets),
-            "target_prefix": target_prefix,
             "pkg_ids_variable": pkg_identifier_variable,
             "pkg_ids": " ".join(all_pkg_identifiers),
         }

@@ -1004,7 +1004,7 @@ _spack_env_revert() {
 _spack_env_depfile() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
+        SPACK_COMPREPLY="-h --help --make-prefix --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
     else
         _all_packages
     fi

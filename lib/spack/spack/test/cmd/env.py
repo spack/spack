@@ -3115,7 +3115,7 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
             "-o",
             makefile,
             "--make-disable-jobserver",
-            "--make-target-prefix=prefix",
+            "--make-prefix=prefix",
             *depfile_flags,
         )
 
@@ -3164,7 +3164,7 @@ def test_spack_package_ids_variable(tmpdir, mock_packages):
             "-G",
             "make",
             "--make-disable-jobserver",
-            "--make-target-prefix=example",
+            "--make-prefix=example",
             "-o",
             include_path,
         )
