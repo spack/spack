@@ -2410,7 +2410,7 @@ package, and a `canonical hash <https://github.com/spack/spack/pull/28156>`_ of
 the ``package.py`` recipes). ``test`` dependencies do not affect the package
 hash, as they are only used to construct a test environment *after* building and
 installing a given package installation. Older versions of Spack did not include
-build dependencies in the hash, but this has been 
+build dependencies in the hash, but this has been
 `fixed <https://github.com/spack/spack/pull/28504>`_ as of |Spack v0.18|_.
 
 .. |Spack v0.18| replace:: Spack ``v0.18``
@@ -3603,6 +3603,70 @@ for instance:
 In the example above ``Cp2k`` inherits all the conflicts and variants that ``CudaPackage`` defines.
 
 .. _install-environment:
+
+--------------------------------
+Package Inheritance
+--------------------------------
+
+Spack packages are Python classes, and you can use inheritance with them just as you can
+with any Python class. This is common when you have your own package :ref:`repository
+<repositories>` with packages that extend Spack's ``builtin`` packages.
+
+You can extend a ``builtin`` package like this:
+
+.. code-block:: python
+
+   from spack.pkg.builtin.mpich import Mpich
+
+   class MyPackage(Mpich):
+       version("1.0", "0209444070d9c8af9b62c94095a217e3bc6843692d1e3fdc1ff5371e03aac47c")
+       version("2.0", "5dda192154047d6296ba14a4ab2d869c6926fd7f44dce8ce94f63aae2e359c5b")
+
+Every repository registered with Spack ends up in a submodule of ``spack.pkg`` with a
+name corresponding to its :ref:`namespace <namespaces>`. So, if you have a different
+repository with namespace ``myrepo`` you want to import packages from , you might write:
+
+.. code-block:: python
+
+   from spack.pkg.myrepo.my_package import MyPackage
+
+   class NewPackage(MyPackage):
+       version("3.0", "08721a102fefcea2ae4add8c9cc548df77e9224f5385ad0872a9150fdd26a415")
+       version("4.0", "9cc39dd33dd4227bb82301d285437588d705290846d22ab6b8791c7e631ce385")
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+``disinherit``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+When you inherit from a package in Spack, you inherit all the metadata from its
+directives, including ``version``, ``provides``, ``depends_on``, ``conflicts``, etc. For
+example, ``NewPackage`` above will have four versions: ``1.0`` and ``2.0`` inherited
+from ``MyPackage``, as well as, ``3.0``, and ``4.0`` defined in ``NewPackage``.
+
+If you do not want your package to define all the same things as its base class, you can
+use the ``disinherit`` directive to start fresh in your subclass:
+
+.. code-block:: python
+
+   from spack.pkg.myrepo.my_package import MyPackage
+
+   class NewerPackage(MyPackage):
+       disinherit("versions")    # don't inherit any versions from MyPackage
+       version("5.0", "08721a102fefcea2ae4add8c9cc548df77e9224f5385ad0872a9150fdd26a415")
+       version("6.0", "9cc39dd33dd4227bb82301d285437588d705290846d22ab6b8791c7e631ce385")
+
+Now, ``NewerPackage`` will have **only** versions ``5.0`` and ``6.0``, and will not
+inherit ``1.0`` or ``2.0`` from ``MyPackage``. You can ``disinherit`` many different
+properties from base packages. The full list of options is:
+
+* ``conflicts``
+* ``dependencies``
+* ``extendees``
+* ``patches``
+* ``provided``
+* ``resources``
+* ``variants``
+* ``versions``
 
 -----------------------
 The build environment
