@@ -54,6 +54,7 @@ default:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
   interruptible: true
+  timeout: 60 minutes
   retry:
     max: 2
     when:
