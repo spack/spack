@@ -150,9 +150,9 @@ class PyNumpy(PythonPackage):
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
     conflicts("%nvhpc", when="@:1.19")
 
-    # Newer versions will not build with Intel https://github.com/numpy/numpy/issues/22011
-    conflicts("%intel", when="@1.23.0:")
-    conflicts("%oneapi", when="@1.23.0:")
+    # See https://github.com/numpy/numpy/issues/22011
+    conflicts("%intel", when="@1.23.0:1.23.3")
+    conflicts("%oneapi", when="@1.23.0:1.23.3")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}"
@@ -313,6 +313,12 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write("include_dirs = {0}\n".format(lapack_header_dirs))
                     f.write("extra_link_args = {0}\n".format(self.spec["lapack"].libs.ld_flags))
+
+            if "^armpl-gcc" in spec:
+                f.write("[blas]\n")
+                f.write("libraries = {0}\n".format(lapackblas_lib_names))
+                write_library_dirs(f, lapackblas_lib_dirs)
+                f.write("include_dirs = {0}\n".format(lapackblas_header_dirs))
 
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
