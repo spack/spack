@@ -2440,8 +2440,8 @@ can be built with a range of versions. The simplest way to construct a range is
 to use a partial version number. If all of the packages are versioned with three
 numbers, ``x.y.z``, then ``x.y`` can match any version beginning with ``x.y.``
 (the third version number is a free variable). This is different from previous
-versions of Spack where ``x.y`` would match only the latest ``x.y.z`` and none
-before.
+versions of Spack where ``x.y`` only match exactly ``x.y``, which might not even
+exist.
 
 One can specify looser ranges by writing two versions separated by a colon. The
 left-hand version is the first acceptable version, while the right-hand version
