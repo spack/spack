@@ -554,9 +554,9 @@ class NoOverwriteException(spack.error.SpackError):
     """
 
     def __init__(self, file_path):
-        err_msg = "\n%s\nexists\n" % file_path
-        err_msg += "Use -f option to overwrite."
-        super(NoOverwriteException, self).__init__(err_msg)
+        super(NoOverwriteException, self).__init__(
+            '"{}" exists in buildcache. Use --force flag to overwrite.'.format(file_path)
+        )
 
 
 class NoGpgException(spack.error.SpackError):
