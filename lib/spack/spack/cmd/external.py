@@ -39,6 +39,11 @@ def setup_parser(subparser):
         help="packages with detected externals won't be built with Spack",
     )
     find_parser.add_argument(
+        "--exclude",
+        action="append",
+        help="packages to exclude from search",
+    )
+    find_parser.add_argument(
         "-p",
         "--path",
         default=None,
@@ -150,6 +155,10 @@ def external_find(args):
     # If the list of packages is empty, search for every possible package
     if not args.tags and not pkg_cls_to_check:
         pkg_cls_to_check = list(spack.repo.path.all_package_classes())
+
+    # If the user specified any packages to exclude from external find, add them here
+    if args.exclude:
+        pkg_cls_to_check = [pkg for pkg in pkg_cls_to_check if pkg.name not in args.exclude]
 
     detected_packages = spack.detection.by_executable(pkg_cls_to_check, path_hints=args.path)
     detected_packages.update(spack.detection.by_library(pkg_cls_to_check, path_hints=args.path))
