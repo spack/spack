@@ -16,6 +16,7 @@ class Nasm(AutotoolsPackage):
     url = "https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.gz"
     list_url = "https://www.nasm.us/pub/nasm/releasebuilds"
     list_depth = 1
+    tags = ["windows"]
 
     build_system("autotools", conditional("generic", when="platform=windows"), default="autotools")
 

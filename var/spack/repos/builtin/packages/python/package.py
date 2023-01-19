@@ -35,6 +35,7 @@ class Python(Package):
     url = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
+    tags = ["windows"]
 
     maintainers = ["adamjstewart", "skosukhin", "scheibelp", "pradyunsg"]
 

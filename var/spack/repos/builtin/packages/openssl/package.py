@@ -24,7 +24,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
-    tags = ["core-packages"]
+    tags = ["core-packages", "windows"]
 
     executables = ["openssl"]
 
