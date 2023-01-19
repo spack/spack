@@ -17,7 +17,7 @@ class Git(AutotoolsPackage):
 
     homepage = "http://git-scm.com"
     url = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
-    maintainers = ["jennfshr"]
+    maintainers = ["alecbcs", "jennfshr"]
 
     tags = ["build-tools"]
 
@@ -26,25 +26,47 @@ class Git(AutotoolsPackage):
     # Every new git release comes with a corresponding manpage resource:
     # https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
-    version("2.38.1", sha256="620ed3df572a34e782a2be4c7d958d443469b2665eac4ae33f27da554d88b270")
-    version("2.37.4", sha256="a638c9bf9e45e8d48592076266adaa9b7aa272a99ee2aee2e166a649a9ba8a03")
-    version("2.36.3", sha256="0c831b88b0534f08051d1287505dfe45c367108ee043de6f1c0502711a7aa3a6")
-    version("2.35.5", sha256="2cca63fe7bebb5b4bf8efea7b46b12bb89c16ff9711b6b6d845928501d00d0a3")
-    version("2.34.5", sha256="26831c5e48a8c2bf6a4fede1b38e1e51ffd6dad85952cf69ac520ebd81a5ae82")
-    version("2.33.5", sha256="d061ed97f890befaef18b4aad80a37b40db90bcf24113c42765fee157a69c7de")
-    version("2.32.4", sha256="4c791b8e1d96948c9772efc21373ab9b3187af42cdebc3bcbb1a06d794d4e494")
-    version("2.31.5", sha256="2d4197660322937cc44cab5742deef727ba519ef7405455e33100912e3b019f2")
-    version("2.30.6", sha256="a6130b38843a5c80e80fb4f7ac4864d361cbf103d262b64e267264e49440d24a")
+    version("2.39.1", sha256="ae8d3427e4ccd677abc931f16183c0ec953e3bfcd866493601351e04a2b97398")
+    version("2.38.3", sha256="ba8f1c56763cfde0433657b045629a4c55047c243eb3091d39dea6f281c8d8e1")
+    version("2.37.5", sha256="5c11f90652afee6c77ef7ddfc672facd4bc6f2596d9627df2f1780664b058b9a")
+    version("2.36.4", sha256="8b99bd166d904103eccf90b7a9681247a1fb7eba82a72aba70625d9eb95c3db4")
+    version("2.35.6", sha256="6bd51e0487028543ba40fe3d5b33bd124526a7f7109824aa7f022e79edf93bd1")
+    version("2.34.6", sha256="01c0ae4161a07ffeb89cfb8bda564eb2dcb83b45b678cf2930cdbdd8e81784d0")
+    version("2.33.6", sha256="76f6a64a198bec38e83044f97fb5a2dfa8404091df5a905404615d2a4c5ebfb7")
+    version("2.32.5", sha256="9982e17209cf4a385ce4a6167863cdd29f68e425d4249aac186434dc3536fe5f")
+    version("2.31.6", sha256="73971208dccdd6d87639abe50ee3405421ec4ba05dec9f8aa90b4e7f1985e15c")
+    version("2.30.7", sha256="c98bf38a296f23ad5619a097df928044b31859df8f89b3ae5a8ea109d3ebd88e")
 
     # Deprecated versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2022-41903
+    version(
+        "2.38.1",
+        sha256="620ed3df572a34e782a2be4c7d958d443469b2665eac4ae33f27da554d88b270",
+        deprecated=True,
+    )
+    version(
+        "2.37.4",
+        sha256="a638c9bf9e45e8d48592076266adaa9b7aa272a99ee2aee2e166a649a9ba8a03",
+        deprecated=True,
+    )
     version(
         "2.37.0",
         sha256="fc3ffe6c65c1f7c681a1ce6bb91703866e432c762731d4b57c566d696f6d62c3",
         deprecated=True,
     )
     version(
+        "2.36.3",
+        sha256="0c831b88b0534f08051d1287505dfe45c367108ee043de6f1c0502711a7aa3a6",
+        deprecated=True,
+    )
+    version(
         "2.36.1",
         sha256="37d936fd17c81aa9ddd3dba4e56e88a45fa534ad0ba946454e8ce818760c6a2c",
+        deprecated=True,
+    )
+    version(
+        "2.35.5",
+        sha256="2cca63fe7bebb5b4bf8efea7b46b12bb89c16ff9711b6b6d845928501d00d0a3",
         deprecated=True,
     )
     version(
@@ -63,6 +85,11 @@ class Git(AutotoolsPackage):
         deprecated=True,
     )
     version(
+        "2.34.5",
+        sha256="26831c5e48a8c2bf6a4fede1b38e1e51ffd6dad85952cf69ac520ebd81a5ae82",
+        deprecated=True,
+    )
+    version(
         "2.34.1",
         sha256="fc4eb5ecb9299db91cdd156c06cdeb41833f53adc5631ddf8c0cb13eaa2911c1",
         deprecated=True,
@@ -70,6 +97,11 @@ class Git(AutotoolsPackage):
     version(
         "2.34.0",
         sha256="0ce6222bfd31938b29360150286b51c77c643fa97740b1d35b6d1ceef8b0ecd7",
+        deprecated=True,
+    )
+    version(
+        "2.33.5",
+        sha256="d061ed97f890befaef18b4aad80a37b40db90bcf24113c42765fee157a69c7de",
         deprecated=True,
     )
     version(
@@ -83,8 +115,18 @@ class Git(AutotoolsPackage):
         deprecated=True,
     )
     version(
+        "2.32.4",
+        sha256="4c791b8e1d96948c9772efc21373ab9b3187af42cdebc3bcbb1a06d794d4e494",
+        deprecated=True,
+    )
+    version(
         "2.32.0",
         sha256="6038f06d396ba9dab2eee541c7db6e7f9f847f181ec62f3d8441893f8c469398",
+        deprecated=True,
+    )
+    version(
+        "2.31.5",
+        sha256="2d4197660322937cc44cab5742deef727ba519ef7405455e33100912e3b019f2",
         deprecated=True,
     )
     version(
@@ -95,6 +137,11 @@ class Git(AutotoolsPackage):
     version(
         "2.31.0",
         sha256="bc6168777883562569144d536e8a855b12d25d46870d95188a3064260d7784ee",
+        deprecated=True,
+    )
+    version(
+        "2.30.6",
+        sha256="a6130b38843a5c80e80fb4f7ac4864d361cbf103d262b64e267264e49440d24a",
         deprecated=True,
     )
     version(
