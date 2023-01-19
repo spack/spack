@@ -93,9 +93,7 @@ class Fms(CMakePackage):
 
         # No matter the version, a user must choose at least one of 32bit or 64bit
         if "+32bit" not in self.spec and "+64bit" not in self.spec:
-            raise InstallError(
-                "FMS requires at least one variant of 32bit or 64bit"
-            )
+            raise InstallError("FMS requires at least one variant of 32bit or 64bit")
 
         args = [
             self.define_from_variant("32BIT"),
