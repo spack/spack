@@ -15,9 +15,15 @@ class Opencascade(CMakePackage):
 
     homepage = "https://www.opencascade.com"
     url = "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
+    git = "https://git.dev.opencascade.org/repos/occt.git"
 
     maintainers = ["wdconinc"]
 
+    version(
+        "7.7.0",
+        extension="tar.gz",
+        sha256="075ca1dddd9646fcf331a809904925055747a951a6afd07a463369b9b441b445",
+    )
     version(
         "7.6.3",
         extension="tar.gz",
