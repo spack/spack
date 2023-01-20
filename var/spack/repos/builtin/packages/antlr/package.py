@@ -31,9 +31,9 @@ class Antlr(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        return [
-            "--disable-csharp",
-            "--{0}-cxx".format("enable" if "+cxx" in spec else "disable"),
-            "--{0}-java".format("enable" if "+java" in spec else "disable"),
-            "--{0}-python".format("enable" if "+python" in spec else "disable"),
-        ]
+        args = [ "--disable-csharp" ]
+        args.extend(self.enable_or_disable("cxx"))
+        args.extend(self.enable_or_disable("java"))
+        args.extend(self.enable_or_disable("python"))
+
+        return args
