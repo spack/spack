@@ -199,7 +199,7 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a 
+  - ecp-data-vis-sdk +paraview +vtkm +rocm
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm
