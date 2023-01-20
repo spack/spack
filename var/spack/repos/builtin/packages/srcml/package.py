@@ -21,21 +21,11 @@ class Srcml(CMakePackage):
 
     version("1.0.0", sha256="3ddf33271c3b3953d5e3ecbb14c4f925fc0e609a81250d921d3516537dcffae2")
 
-    # From https://github.com/srcML/Docker/blob/centos_latest/base/Dockerfile:
-    depends_on("which")
-    depends_on("zip")
-    depends_on("unzip")
-    #depends_on("gcc")
     depends_on("cmake@3.14:", type="build")
     depends_on("antlr+cxx+java+pic")
-    depends_on("libxml2")  ## Missing +devel
-    depends_on("libxslt")  ## Missing +devel
-    depends_on("libarchive")  ## Missing +devel
-    depends_on("openssl")  ## Missing +devel
-    depends_on("curl")  ## Missing +devel
-    depends_on("bzip2")
-    depends_on("ninja")
-    # From build errors:
+    depends_on("libxslt")
+    depends_on("libarchive@3:")
+    depends_on("curl")
     depends_on("boost")
 
     patch(
