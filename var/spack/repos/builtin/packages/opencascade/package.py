@@ -60,6 +60,13 @@ class Opencascade(CMakePackage):
         sha256="655da7717dac3460a22a6a7ee68860c1da56da2fec9c380d8ac0ac0349d67676",
     )
 
+    # fix for numeric_limits in gcc-12; applies cleanly to all older versions
+    patch(
+        "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=patch;h=2a8c5ad46cfef8114b13c3a33dcd88a81e522c1e",
+        sha256="bd0d7463259f469f8fc06a2b11eec7b0c89882aeea2f8c8647cf750c44b3e656",
+        when="@:7.7.0",
+    )
+
     variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
     variant("vtk", default=False, description="Enable VTK support")
     variant("freeimage", default=False, description="Build with FreeImage")
