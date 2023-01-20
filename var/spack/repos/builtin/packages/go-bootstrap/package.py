@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,11 @@ class GoBootstrap(Package):
 
     depends_on("git", type=("build", "link", "run"))
 
-    conflicts("os=monterey", msg="go-bootstrap won't build on new macOS")
+    conflicts(
+        "os=monterey",
+        msg="go-bootstrap won't build on MacOS Monterey: "
+        "try `brew install go` and `spack external find go`",
+    )
     conflicts("target=aarch64:", msg="Go bootstrap doesn't support aarch64 architectures")
 
     # This virtual package allows a fallback to gccgo for aarch64,

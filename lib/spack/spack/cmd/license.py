@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,14 +13,10 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.paths
-from spack.util.executable import which
 
 description = "list and check license headers on files in spack"
 section = "developer"
 level = "long"
-
-#: need the git command to check new files
-git = which("git")
 
 #: SPDX license id must appear in the first <license_lines> lines of a file
 license_lines = 7
@@ -97,7 +93,7 @@ def list_files(args):
 OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH = range(1, 4)
 
 #: Latest year that copyright applies. UPDATE THIS when bumping copyright.
-latest_year = 2022
+latest_year = 2023
 strict_date = r"Copyright 2013-%s" % latest_year
 
 #: regexes for valid license lines at tops of files
@@ -238,9 +234,6 @@ def setup_parser(subparser):
 
 
 def license(parser, args):
-    if not git:
-        tty.die("spack license requires git in your environment")
-
     licensed_files[:] = [re.compile(regex) for regex in licensed_files]
 
     commands = {

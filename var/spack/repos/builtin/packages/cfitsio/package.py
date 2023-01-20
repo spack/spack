@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Cfitsio(AutotoolsPackage):
     homepage = "https://heasarc.gsfc.nasa.gov/fitsio/"
     url = "https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-3.49.tar.gz"
 
+    version("4.2.0", sha256="eba53d1b3f6e345632bb09a7b752ec7ced3d63ec5153a848380f3880c5d61889")
     version("4.1.0", sha256="b367c695d2831958e7166921c3b356d5dfa51b1ecee505b97416ba39d1b6c17a")
     version("4.0.0", sha256="b2a8efba0b9f86d3e1bd619f662a476ec18112b4f27cc441cc680a4e3777425e")
     version("3.49", sha256="5b65a20d5c53494ec8f638267fca4a629836b7ac8dd0ef0266834eab270ed4b3")

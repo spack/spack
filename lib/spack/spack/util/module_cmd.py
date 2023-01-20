@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,6 @@ parsing environment modules.
 import os
 import re
 import subprocess
-import sys
 
 import llnl.util.tty as tty
 
@@ -50,10 +49,7 @@ def module(*args, **kwargs):
 
         # Update os.environ with new dict
         os.environ.clear()
-        if sys.version_info >= (3, 2):
-            os.environb.update(environ)  # novermin
-        else:
-            os.environ.update(environ)
+        os.environb.update(environ)  # novermin
 
     else:
         # Simply execute commands that don't change state and return output

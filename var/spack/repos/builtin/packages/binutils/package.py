@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,12 +81,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on("m4", type="build", when="@:2.29 +gold")
     depends_on("bison", type="build", when="@:2.29 +gold")
 
-    # 2.38 with +gas needs makeinfo due to a bug, see:
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
-    depends_on("texinfo", type="build", when="@2.38 +gas")
-    # 2.34 needs makeinfo due to a bug, see:
+    # 2.34:2.38 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
-    depends_on("texinfo", type="build", when="@2.34")
+    depends_on("texinfo", type="build", when="@2.34:2.38")
 
     conflicts("+gold", when="platform=darwin", msg="Binutils cannot build linkers on macOS")
 

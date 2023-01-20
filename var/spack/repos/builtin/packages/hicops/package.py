@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,11 +81,9 @@ class Hicops(CMakePackage):
     depends_on("py-setuptools")
     depends_on("py-bottleneck")
     depends_on("py-pyparsing")
-    depends_on("py-subprocess32")
     depends_on("py-six")
     depends_on("py-setuptools-scm")
     depends_on("py-et-xmlfile")
-    depends_on("py-argparse")
     depends_on("py-cython")
     depends_on("py-cycler")
     depends_on("py-pytz")

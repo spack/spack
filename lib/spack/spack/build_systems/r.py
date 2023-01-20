@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,10 +22,10 @@ class RBuilder(GenericBuilder):
     """
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = (
+    legacy_methods: Tuple[str, ...] = (
         "configure_args",
         "configure_vars",
-    ) + GenericBuilder.legacy_methods  # type: Tuple[str, ...]
+    ) + GenericBuilder.legacy_methods
 
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""
@@ -64,10 +64,10 @@ class RPackage(Package):
     # package attributes that can be expanded to set the homepage, url,
     # list_url, and git values
     # For CRAN packages
-    cran = None  # type: Optional[str]
+    cran: Optional[str] = None
 
     # For Bioconductor packages
-    bioc = None  # type: Optional[str]
+    bioc: Optional[str] = None
 
     GenericBuilder = RBuilder
 

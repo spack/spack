@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class RKegggraph(RPackage):
 
     bioc = "KEGGgraph"
 
+    version("1.58.0", commit="7c3f148b57903b8df517f94824f07f38bbd3b591")
     version("1.56.0", commit="e95cbf9f8a095d59b78a053463191b89c00d5ded")
     version("1.54.0", commit="135ee3dad30ca208e21acd0a2d81120b74b64079")
     version("1.50.0", commit="3335e85cdba264c04e6e36378578cf6c83a30eb8")

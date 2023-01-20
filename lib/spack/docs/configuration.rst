@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -394,7 +394,7 @@ are indicated at the start of the path with ``~`` or ``~user``.
 Spack-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack understands several special variables. These are:
+Spack understands over a dozen special variables. These are:
 
 * ``$env``: name of the currently active :ref:`environment <environments>`
 * ``$spack``: path to the prefix of this Spack installation
@@ -416,6 +416,8 @@ Spack understands several special variables. These are:
   ArchSpec. E.g. ``skylake`` or ``neoverse-n1``.
 * ``$target_family``. The target family for the current host, as
   detected by ArchSpec. E.g. ``x86_64`` or ``aarch64``.
+* ``$date``: the current date in the format YYYY-MM-DD
+
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -131,6 +131,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
     conflicts("+rocm", when="+gdrcopy", msg="gdrcopy > 2.0 does not support rocm")
 
     configure_abs_path = "contrib/configure-release"
+
+    # See https://github.com/openucx/ucx/pull/8629, wrong int type
+    patch("commit-2523555.patch", when="@1.13.1")
 
     @when("@1.9-dev")
     def autoreconf(self, spec, prefix):

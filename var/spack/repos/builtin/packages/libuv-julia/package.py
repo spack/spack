@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,4 +19,9 @@ class LibuvJulia(AutotoolsPackage):
 
     @property
     def libs(self):
-        return find_libraries(["libuv"], root=self.prefix, recursive=True)
+        return find_libraries(["libuv"], root=self.prefix, recursive=True, shared=False)
+
+    def configure_args(self):
+        # Only build static libaries for now
+        # https://github.com/JuliaLang/julia/issues/47620
+        return ["--disable-shared", "--enable-static", "--with-pic"]

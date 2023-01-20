@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class NaluWind(CMakePackage, CudaPackage):
     homepage = "https://nalu-wind.readthedocs.io"
     git = "https://github.com/exawind/nalu-wind.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers = ["jrood-nrel", "psakievich"]
 
     tags = ["ecp", "ecp-apps"]
 

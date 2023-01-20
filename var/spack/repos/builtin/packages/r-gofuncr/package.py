@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ class RGofuncr(RPackage):
 
     bioc = "GOfuncR"
 
+    version("1.18.0", commit="49182411e40a5d72abf99a5cca9287f34f870b19")
     version("1.16.0", commit="603fc79e13b58ec4612b6092f37d2450078dbfe1")
     version("1.14.0", commit="b3d445acf95851241d1fdb673d108ee115bdc17b")
     version("1.10.0", commit="51b01a2b9afa03fde2e1628036096cbeafaa2ef4")

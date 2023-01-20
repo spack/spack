@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -193,6 +193,18 @@ with '-Wl,-commons,use_dylibs' and without
         sha256="d4c0e99a80f6cb0cb0ced91f6ad5da776c4a70f70f805f08096939ec9a92483e",
         when="@4.0:4.0.2",
     )
+
+    # Fix checking whether the datatype is contiguous
+    # https://github.com/pmodels/yaksa/pull/189
+    # https://github.com/pmodels/mpich/issues/5391
+    # The problem has been fixed starting version 4.0 by updating the yaksa git submodule, which
+    # has not been done for the 3.4.x branch. The following patch is a backport of the
+    # aforementioned pull request for the unreleased version of yaksa that is vendored with MPICH.
+    # Note that Spack builds MPICH against a non-vendored yaksa only starting version 4.0.
+    with when("@3.4"):
+        # Apply the patch only when yaksa is used:
+        patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
+        patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
 
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
@@ -571,7 +583,7 @@ with '-Wl,-commons,use_dylibs' and without
         elif "datatype-engine=dataloop" in spec:
             config_args.append("--with-datatype-engine=dataloop")
         elif "datatype-engine=auto" in spec:
-            config_args.append("--with-datatye-engine=auto")
+            config_args.append("--with-datatype-engine=auto")
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,9 +29,7 @@ class PyCorrectionlib(PythonPackage):
     depends_on("py-make", type="build")
     depends_on("py-pybind11@2.6.1:", type="build")
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
-    depends_on("py-typing", type=("build", "run"), when="^python@:3.4")
     depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-dataclasses", type=("build", "run"), when="^python@:3.6")
     depends_on("py-pydantic@1.7.3:", type=("build", "run"))
     depends_on("py-rich", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"), when="+convert")

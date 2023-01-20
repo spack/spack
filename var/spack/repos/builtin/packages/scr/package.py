@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,7 +81,7 @@ class Scr(CMakePackage):
     depends_on("rankstr@0.1.0", when="@3.0.1:")
     depends_on("redset@0.2.0", when="@3.0.1:")
     depends_on("shuffile@0.2.0", when="@3.0.1:")
-    depends_on("spath@0.2.0", when="@3.0.1:")
+    depends_on("spath@0.2.0 +mpi", when="@3.0.1:")
     depends_on("dtcmp@1.1.4", when="@3.0.1:")
 
     depends_on("axl@0.6.0", when="@3.0.0")

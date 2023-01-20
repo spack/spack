@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,8 +40,6 @@ class PyTransformers(PythonPackage):
     depends_on("py-tqdm@4.27:", type=("build", "run"))
 
     # Historical requirements
-    depends_on("py-dataclasses", when="@4.6.1 ^python@:3.6", type=("build", "run"))
     depends_on("py-sacremoses", when="@:4.6", type=("build", "run"))
     depends_on("py-boto3", when="@2.8.0", type=("build", "run"))
-    depends_on("py-dataclasses", when="@2.8.0 ^python@:3.6", type=("build", "run"))
     depends_on("py-sentencepiece", when="@2.8.0", type=("build", "run"))

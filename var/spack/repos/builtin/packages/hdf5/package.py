@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import shutil
 
 import llnl.util.tty as tty
@@ -26,15 +27,13 @@ class Hdf5(CMakePackage):
         "lrknox",
         "brtnfld",
         "byrnHDF",
-        "ChristopherHogan",
-        "epourmal",
         "gheber",
         "hyoklee",
         "lkurz",
-        "soumagne",
     ]
 
     tags = ["e4s"]
+    executables = ["^h5cc$", "^h5pcc$"]
 
     test_requires_compiler = True
 
@@ -46,6 +45,7 @@ class Hdf5(CMakePackage):
     version("develop-1.8", branch="hdf5_1_8")
 
     # Odd versions are considered experimental releases
+    version("1.13.3", sha256="83c7c06671f975cee6944b0b217f95005faa55f79ea5532cf4ac268989866af4")
     version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
 
     # Even versions are maintenance versions
@@ -195,14 +195,18 @@ class Hdf5(CMakePackage):
     )
 
     depends_on("cmake@3.12:", type="build")
+    depends_on("cmake@3.18:", type="build", when="@1.13:")
 
+    depends_on("msmpi", when="+mpi platform=windows")
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
     depends_on("zlib@1.1.2:")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
-    depends_on("pkgconfig", type="run")
+    # Skip this on Windows since pkgconfig is autotools
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("pkgconfig", when="platform=%s" % plat, type="run")
 
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
@@ -339,6 +343,8 @@ class Hdf5(CMakePackage):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
                 cmake_flags.append(self.compiler.cc_pic_flag)
+            if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
+                cmake_flags.append("-Wno-error=int-conversion")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
@@ -450,6 +456,79 @@ class Hdf5(CMakePackage):
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("-showconfig", output=str, error=str)
+        match = re.search(r"HDF5 Version: (\d+\.\d+\.\d+)(\D*\S*)", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def is_enabled(text):
+            if text in set(["t", "true", "enabled", "yes", "1"]):
+                return True
+            return False
+
+        results = []
+        for exe in exes:
+            variants = []
+            output = Executable(exe)("-showconfig", output=str, error=os.devnull)
+            match = re.search(r"High-level library: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+hl")
+            else:
+                variants.append("~hl")
+
+            match = re.search(r"Parallel HDF5: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+mpi")
+            else:
+                variants.append("~mpi")
+
+            match = re.search(r"C\+\+: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+cxx")
+            else:
+                variants.append("~cxx")
+
+            match = re.search(r"Fortran: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+fortran")
+            else:
+                variants.append("~fortran")
+
+            match = re.search(r"Java: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+java")
+            else:
+                variants.append("~java")
+
+            match = re.search(r"Threadsafety: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+threadsafe")
+            else:
+                variants.append("~threadsafe")
+
+            match = re.search(r"Build HDF5 Tools: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+tools")
+            else:
+                variants.append("~tools")
+
+            match = re.search(r"I/O filters \(external\): \S*(szip\(encoder\))\S*", output)
+            if match:
+                variants.append("+szip")
+            else:
+                variants.append("~szip")
+
+            match = re.search(r"Default API mapping: (\S+)", output)
+            if match and match.group(1) in set(["v114", "v112", "v110", "v18", "v16"]):
+                variants.append("api={0}".format(match.group(1)))
+
+            results.append(" ".join(variants))
+
+        return results
+
     @when("@:1.8.21,1.10.0:1.10.5+szip")
     def setup_build_environment(self, env):
         env.set("SZIP_INSTALL", self.spec["szip"].prefix)
@@ -498,7 +577,7 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec:
+        if "+mpi" in spec and "platform=windows" not in spec:
             args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
 
             if "+cxx" in self.spec:
@@ -567,7 +646,7 @@ class Hdf5(CMakePackage):
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
             r"\1\2\3",
             *pc_files,
-            backup=False
+            backup=False,
         )
 
         # Create non-versioned symlinks to the versioned pkg-config files:

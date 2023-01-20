@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,6 @@ class PyDatasets(PythonPackage):
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-requests@2.19:", type=("build", "run"))
     depends_on("py-tqdm@4.27:4.49", type=("build", "run"))
-    depends_on("py-dataclasses", when="^python@:3.6", type=("build", "run"))
     depends_on("py-xxhash", type=("build", "run"))
     depends_on("py-multiprocess", type=("build", "run"))
     depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))

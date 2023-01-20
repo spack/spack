@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,7 @@ class PySdv(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-faker@3.0.0:9", type=("build", "run"))
     depends_on("py-graphviz@0.13.2:0", type=("build", "run"))
-    depends_on("py-numpy@1.18:1.19", type=("build", "run"), when="^python@3.6")
-    depends_on("py-numpy@1.20:1", type=("build", "run"), when="^python@3.7:")
+    depends_on("py-numpy@1.20:1", type=("build", "run"))
     depends_on("py-pandas@1.1.3:1.1.4", type=("build", "run"))
     depends_on("py-tqdm@4.15:4", type=("build", "run"))
     depends_on("py-copulas@0.6.0:0.6", type=("build", "run"))

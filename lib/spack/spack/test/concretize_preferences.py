@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,6 @@ import os
 import stat
 
 import pytest
-
-import archspec
 
 import spack.config
 import spack.package_prefs
@@ -105,28 +103,16 @@ class TestConcretizePreferences(object):
         update_packages("multivalue-variant", "variants", "foo=bar")
         assert_variant_values("multivalue-variant foo=*", foo=("bar",))
 
-    def test_preferred_compilers(self):
+    @pytest.mark.parametrize(
+        "compiler_str,spec_str",
+        [("gcc@4.5.0", "mpileaks"), ("clang@12.0.0", "mpileaks"), ("gcc@4.5.0", "openmpi")],
+    )
+    def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Fixing the parser broke this test for the original concretizer.")
-
-        # Need to make sure the test uses an available compiler
-        arch = spack.spec.ArchSpec(("test", "redhat6", archspec.cpu.host().name))
-
-        compiler_list = spack.compilers.compiler_specs_for_arch(arch)
-        assert compiler_list
-
-        # Try the first available compiler
-        compiler = str(compiler_list[0])
-        update_packages("mpileaks", "compiler", [compiler])
-        spec = concretize("mpileaks")
-        assert spec.compiler == spack.spec.CompilerSpec(compiler)
-
-        # Try the last available compiler
-        compiler = str(compiler_list[-1])
-        update_packages("mpileaks", "compiler", [compiler])
-        spec = concretize("mpileaks os=redhat6")
-        assert spec.compiler == spack.spec.CompilerSpec(compiler)
+        spec = spack.spec.Spec(spec_str)
+        update_packages(spec.name, "compiler", [compiler_str])
+        spec.concretize()
+        assert spec.compiler == spack.spec.CompilerSpec(compiler_str)
 
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
@@ -284,7 +270,7 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec("mpi")
         spec.concretize()
-        assert spec["mpich"].external_path == os.sep + os.path.join("dummy", "path")
+        assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
     def test_external_module(self, monkeypatch):
         """Test that packages can find externals specified by module
@@ -319,7 +305,7 @@ mpi:
         # ensure that once config is in place, external is used
         spec = Spec("mpi")
         spec.concretize()
-        assert spec["mpich"].external_path == "/dummy/path"
+        assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
     def test_buildable_false(self):
         conf = syaml.load_config(

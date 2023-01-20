@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,6 +77,10 @@ class Sz(CMakePackage, AutotoolsPackage):
     depends_on("cunit", type="test")
 
     patch("ctags-only-if-requested.patch", when="@2.1.8.1:2.1.8.3")
+
+    def setup_run_environment(self, env):
+        if "+hdf5" in self.spec:
+            env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 
     def _test_2d_float(self):
         """This test performs simple 2D compression/decompression (float)"""

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,14 +24,16 @@ class Global(Package):
     depends_on("exuberant-ctags", type=("build", "run"))
     depends_on("ncurses")
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix={0}".format(prefix)]
+    patch("global-ncurse.patch")
 
-        config_args.append(
+    def install(self, spec, prefix):
+        config_args = [
+            "--prefix={0}".format(prefix),
             "--with-exuberant-ctags={0}".format(
                 os.path.join(spec["exuberant-ctags"].prefix.bin, "ctags")
-            )
-        )
+            ),
+            "--with-ncurses={0}".format(spec["ncurses"].prefix),
+        ]
 
         configure(*config_args)
 

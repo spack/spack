@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,5 +15,3 @@ class PyPyfaidx(PythonPackage):
 
     depends_on("py-setuptools@0.7:", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-ordereddict", type=("build", "run"), when="^python@:2.6")
-    depends_on("py-argparse", type=("build", "run"), when="^python@:2.6,3.0:3.1")
