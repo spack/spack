@@ -27,7 +27,7 @@ class Srcml(CMakePackage):
     depends_on("unzip")
     #depends_on("gcc")
     depends_on("cmake@3.14:", type="build")
-    depends_on("antlr+cxx+java")
+    depends_on("antlr+cxx+java+pic")
     depends_on("libxml2")  ## Missing +devel
     depends_on("libxslt")  ## Missing +devel
     depends_on("libarchive")  ## Missing +devel
