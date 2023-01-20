@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -510,9 +510,9 @@ class NoOverwriteException(spack.error.SpackError):
     """
 
     def __init__(self, file_path):
-        err_msg = "\n%s\nexists\n" % file_path
-        err_msg += "Use -f option to overwrite."
-        super(NoOverwriteException, self).__init__(err_msg)
+        super(NoOverwriteException, self).__init__(
+            '"{}" exists in buildcache. Use --force flag to overwrite.'.format(file_path)
+        )
 
 
 class NoGpgException(spack.error.SpackError):
@@ -1050,7 +1050,7 @@ def generate_package_index(cache_prefix, concurrency=32):
     try:
         file_list, read_fn = _spec_files_from_cache(cache_prefix)
     except ListMirrorSpecsError as err:
-        tty.error("Unabled to generate package index, {0}".format(err))
+        tty.error("Unable to generate package index, {0}".format(err))
         return
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))

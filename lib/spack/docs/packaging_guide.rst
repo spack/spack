@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,15 @@ implementation language for two reasons.  First, Python is becoming
 ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
+
+.. warning::
+
+   As a general rule, packages should install the software *from source*.
+   The only exception is for proprietary software (e.g., vendor compilers).
+
+   If a special build system needs to be added in order to support building
+   a package from source, then the associated code and recipe need to be added
+   first.
 
 
 .. _installation_procedure:
@@ -225,7 +234,7 @@ generates a boilerplate template for your package, and opens up the new
 .. code-block:: python
    :linenos:
 
-   # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+   # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    # Spack Project Developers. See the top-level COPYRIGHT file for details.
    #
    # SPDX-License-Identifier: (Apache-2.0 OR MIT)

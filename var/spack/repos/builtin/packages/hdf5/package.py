@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import shutil
 
 import llnl.util.tty as tty
@@ -32,6 +33,7 @@ class Hdf5(CMakePackage):
     ]
 
     tags = ["e4s"]
+    executables = ["^h5cc$", "^h5pcc$"]
 
     test_requires_compiler = True
 
@@ -341,6 +343,8 @@ class Hdf5(CMakePackage):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
                 cmake_flags.append(self.compiler.cc_pic_flag)
+            if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
+                cmake_flags.append("-Wno-error=int-conversion")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
@@ -451,6 +455,79 @@ class Hdf5(CMakePackage):
         libraries = query2libraries[key]
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("-showconfig", output=str, error=str)
+        match = re.search(r"HDF5 Version: (\d+\.\d+\.\d+)(\D*\S*)", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def is_enabled(text):
+            if text in set(["t", "true", "enabled", "yes", "1"]):
+                return True
+            return False
+
+        results = []
+        for exe in exes:
+            variants = []
+            output = Executable(exe)("-showconfig", output=str, error=os.devnull)
+            match = re.search(r"High-level library: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+hl")
+            else:
+                variants.append("~hl")
+
+            match = re.search(r"Parallel HDF5: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+mpi")
+            else:
+                variants.append("~mpi")
+
+            match = re.search(r"C\+\+: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+cxx")
+            else:
+                variants.append("~cxx")
+
+            match = re.search(r"Fortran: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+fortran")
+            else:
+                variants.append("~fortran")
+
+            match = re.search(r"Java: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+java")
+            else:
+                variants.append("~java")
+
+            match = re.search(r"Threadsafety: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+threadsafe")
+            else:
+                variants.append("~threadsafe")
+
+            match = re.search(r"Build HDF5 Tools: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+tools")
+            else:
+                variants.append("~tools")
+
+            match = re.search(r"I/O filters \(external\): \S*(szip\(encoder\))\S*", output)
+            if match:
+                variants.append("+szip")
+            else:
+                variants.append("~szip")
+
+            match = re.search(r"Default API mapping: (\S+)", output)
+            if match and match.group(1) in set(["v114", "v112", "v110", "v18", "v16"]):
+                variants.append("api={0}".format(match.group(1)))
+
+            results.append(" ".join(variants))
+
+        return results
 
     @when("@:1.8.21,1.10.0:1.10.5+szip")
     def setup_build_environment(self, env):
