@@ -31,4 +31,4 @@ class Dyninst(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix)
-        touch(os.path.join(prefix, "dummyfile"))
+        touch(join_path(prefix, "dummyfile"))

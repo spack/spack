@@ -19,7 +19,7 @@ class Callpath(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix)
-        touch(os.path.join(prefix, "dummyfile"))
+        touch(join_path(prefix, "dummyfile"))
 
     def setup_run_environment(self, env):
         env.set("FOOBAR", self.name)
