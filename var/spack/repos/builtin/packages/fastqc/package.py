@@ -18,7 +18,7 @@ class Fastqc(Package):
     version("0.11.4", sha256="adb233f9fae7b02fe99e716664502adfec1b9a3fbb84eed4497122d6d33d1fe7")
 
     depends_on("java", type="run")
-    depends_on("perl")  # for fastqc "script", any perl will do
+    depends_on("perl", type=("build", "run"))  # for fastqc "script", any perl will do
 
     patch("fastqc.patch", level=0)
 
@@ -32,6 +32,11 @@ class Fastqc(Package):
             install_tree(d, join_path(prefix.lib, d))
         chmod = which("chmod")
         chmod("+x", prefix.bin.fastqc)
+
+    @run_after("install")
+    def fix_interpreter_directive(self):
+        with working_dir(self.prefix.bin):
+            filter_file("#!/usr/bin/perl", "#!/usr/bin/env perl", "fastqc", string=True)
 
     # In theory the 'run' dependency on 'jdk' above should take
     # care of this for me. In practice, it does not.
