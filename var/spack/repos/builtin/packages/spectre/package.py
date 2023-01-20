@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,9 @@ class Spectre(CMakePackage):
     generator = "Ninja"
 
     version("develop", branch="develop")
+    version(
+        "2023.01.13", sha256="fa1392015e4a8900483e0428e6b7b51a6c129f3d64f7ff862d810cfea0e04b40"
+    )
     version(
         "2022.12.16", sha256="2b692ff1be889c86bc2d95ef523dc1a4880e66b9bdf75883e299643f4ccbcb50"
     )

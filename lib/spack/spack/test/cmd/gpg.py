@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,25 +23,6 @@ bootstrap = SpackCommand("bootstrap")
 mirror = SpackCommand("mirror")
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-
-
-@pytest.fixture
-def tmp_scope():
-    """Creates a temporary configuration scope"""
-
-    base_name = "internal-testing-scope"
-    current_overrides = set(
-        x.name for x in spack.config.config.matching_scopes(r"^{0}".format(base_name))
-    )
-
-    num_overrides = 0
-    scope_name = base_name
-    while scope_name in current_overrides:
-        scope_name = "{0}{1}".format(base_name, num_overrides)
-        num_overrides += 1
-
-    with spack.config.override(spack.config.InternalConfigScope(scope_name)):
-        yield scope_name
 
 
 # test gpg command detection
@@ -81,7 +62,7 @@ def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
 
 
 @pytest.mark.maybeslow
-def test_gpg(tmpdir, tmp_scope, mock_gnupghome):
+def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
         gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
@@ -211,6 +192,6 @@ def test_gpg(tmpdir, tmp_scope, mock_gnupghome):
     test_path = tmpdir.join("named_cache")
     os.makedirs("%s" % test_path)
     mirror_url = "file://%s" % test_path
-    mirror("add", "--scope", tmp_scope, "gpg", mirror_url)
+    mirror("add", "gpg", mirror_url)
     gpg("publish", "--rebuild-index", "-m", "gpg")
     assert os.path.exists("%s/build_cache/_pgp/index.json" % test_path)
