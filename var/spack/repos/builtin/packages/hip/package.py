@@ -577,14 +577,10 @@ class Hip(CMakePackage):
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test(self):
-        test_subdir_arr = ["0_Intro/bit_extract", "1_Utils/hipBusBandwidth", "1_Utils/hipInfo", "2_Cookbook/0_MatrixTranspose", "2_Cookbook/1_hipEvent", "2_Cookbook/3_shared_memory", "2_Cookbook/4_shfl", "2_Cookbook/5_2dshfl", "2_Cookbook/6_dynamic_shared", "2_Cookbook/7_streams", "2_Cookbook/8_peer2peer", "2_Cookbook/9_unroll", "2_Cookbook/10_inline_asm", "2_Cookbook/13_occupancy", "2_Cookbook/14_gpu_arch"]
-        exe_arr = ["bit_extract", "hipBusBandwidth", "hipInfo", "MatrixTranspose","hipEvent", "sharedMemory", "shfl", "2dshfl", "dynamic_shared", "stream", "peer2peer", "unroll", "inline_asm", "occupancy", "gpuarch"]
-
         if self.spec.satisfies("@:5.1.0"):
             print("Skipping: stand-alone tests")
             return
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
-
         cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
         prefixes = ";".join(
             [
@@ -598,14 +594,32 @@ class Hip(CMakePackage):
             "-DCMAKE_PREFIX_PATH=" + prefixes,
              ".",
         ]
+        #Get top level directories of samples
+        top_subdirs = sorted([os.path.join(test_dir, o) for o in os.listdir(test_dir) if os.path.isdir(os.path.join(test_dir,o))])
+        failed_tests = []
+        for top_subdir in top_subdirs:
+            #Get the directories of each test
+            bottom_subdirs = sorted([os.path.join(top_subdir, o) for o in os.listdir(top_subdir) if os.path.isdir(os.path.join(top_subdir,o))])
+            for test_dir in bottom_subdirs:
+                with working_dir(test_dir, create=True):
+                    test_name = test_dir.rsplit('/', 1)[1]
+                    try:
+                        print("{:=^80}".format("Configuring test for " + test_name))
+                        if(os.path.exists(test_dir + "/CMakeLists.txt")):
+                            self.run_test(cmake_bin, cc_options)
+                        else:
+                            print("CMakeLists.txt doesn't exist for this test, attempting to run Makefile")
+                        print("Building test " + test_name)
+                        make()
+                        exe = os.popen("find . -maxdepth 1 -type f -executable").read()
+                        exe = exe[2:-1]
+                        print("Executing test " + test_name)
+                        self.run_test(exe)
+                        make("clean")
+                    except:
+                        print("Test Failed\n")
+                        failed_tests.append(test_name)
 
-        for i in range(len(test_subdir_arr )):
-            print("=================== Configuring test for " + test_subdir_arr[i] + " ===================" )
-            test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir, test_subdir_arr[i])
-            with working_dir(test_dir, create=True):
-                self.run_test(cmake_bin, cc_options)
-                print("Building test " + test_subdir_arr[i])
-                make()
-                print("Executing test " + test_subdir_arr[i])
-                self.run_test(exe_arr[i])
-                make("clean")
+        print("\nFailed Tests List:")
+        print(*failed_tests, sep = "\n")
+
