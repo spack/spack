@@ -31,8 +31,9 @@ class File(AutotoolsPackage):
     variant("static", default=True, description="Also build static libraries")
 
     depends_on("bzip2")
-    depends_on("xz")
+    depends_on("xz", when="@5.38:")
     depends_on("zlib")
+    depends_on("zstd", when="@5.44:")
 
     @classmethod
     def determine_version(cls, exe):
@@ -47,6 +48,8 @@ class File(AutotoolsPackage):
             "--enable-zlib",
             "--enable-bzlib",
             "--enable-xzlib",
+            "--enable-zstdlib",
+            "--disable-lzlib",
         ]
         args += self.enable_or_disable("static")
         return args
