@@ -203,7 +203,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # use F77 compiler if IBM XL
             args.extend(
                 [
-                    self.define("CMAKE_Fortran_COMPILER", self.compiler.f77),
+                    self.define("CMAKE_Fortran_COMPILER", self.pkg.compiler.f77),
                     self.define(
                         "CMAKE_Fortran_FLAGS",
                         " ".join(self.spec.compiler_flags["fflags"]) + " -O3 -qnohot",
