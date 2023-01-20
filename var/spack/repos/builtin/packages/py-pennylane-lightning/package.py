@@ -56,14 +56,15 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    build_targets = ['runner', 'test']
+    build_targets = ["runner", "test"]
     phases = ("cmake", "build", "build_ext", "install")
     build_directory = "build"
 
     def __init__(self, spec):
         super().__init__(spec)
-        if (not self.spec.variants["cpptests"].value):
+        if not self.spec.variants["cpptests"].value:
             self.build_targets = []
             self.phases = ("build_ext", "install")
 
