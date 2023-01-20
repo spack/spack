@@ -2095,7 +2095,7 @@ class SpackSolverSetup(object):
                 try:
                     spec.version
                     version_specs.append(spec)
-                except:
+                except spack.spec.SpecError:
                     pass
 
             return version_specs
