@@ -135,22 +135,22 @@ def test_find_cli_output_format(database, mock_tty_stdout):
     # restore this test
     out = find("zmpi")
     if not sys.platform == "win32":
-      assert out.endswith(
-          dedent(
-              """\
+        assert out.endswith(
+            dedent(
+                """\
       zmpi@1.0
       ==> 1 installed package
       """
-          )
-      )
+            )
+        )
     else:
-      assert out.endswith(
-          dedent(
-            """\
+        assert out.endswith(
+            dedent(
+                """\
       zmpi@1.0
       """
-          )
-      )
+            )
+        )
 
 
 def _check_json_output(spec_list):
