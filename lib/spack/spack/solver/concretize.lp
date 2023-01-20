@@ -1011,6 +1011,7 @@ error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source
 attr("node_flag_source", Package, FlagType, Package) :- attr("node_flag_set", Package, FlagType, _).
 attr("node_flag_source", Dependency, FlagType, Q)
  :- attr("node_flag_source", Package, FlagType, Q), node_flag_inherited(Dependency, FlagType, _),
+    depends_on(Package, Dependency),
     attr("node_flag_propagate", Package, FlagType).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
