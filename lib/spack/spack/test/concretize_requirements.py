@@ -124,13 +124,16 @@ packages:
         Spec("x@1.1").concretize()
 
 
-def test_requirement_adds_new_version(concretize_scope, test_repo, mock_git_version_info, monkeypatch):
+def test_requirement_adds_new_version(
+    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+):
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
 
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(spack.package_base.PackageBase, 'git', 'file://%s' % repo_path,
-                         raising=False)
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
 
     a_commit_hash = commits[0]
     conf_str = """\
@@ -138,20 +141,25 @@ packages:
   v:
     require: "@{0}=2.2"
     version: ["2.2"]
-""".format(a_commit_hash)
+""".format(
+        a_commit_hash
+    )
     update_packages_config(conf_str)
 
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
 
 
-def test_requirement_adds_multiple_new_versions(concretize_scope, test_repo, mock_git_version_info, monkeypatch):
+def test_requirement_adds_multiple_new_versions(
+    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+):
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
 
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(spack.package_base.PackageBase, 'git', 'file://%s' % repo_path,
-                         raising=False)
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
 
     a_commit_hash = commits[0]
     conf_str = """\
@@ -160,7 +168,9 @@ packages:
     require:
     - one_of: ["@{0}=2.2", "@{1}=2.3"]
     version: ["2.2", "2.3"]
-""".format(commits[0], commits[1])
+""".format(
+        commits[0], commits[1]
+    )
     update_packages_config(conf_str)
 
     s1 = Spec("v").concretized()

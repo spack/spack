@@ -2080,7 +2080,7 @@ class SpackSolverSetup(object):
                 spec_strs = []
                 # Each of these will be one_of or any_of
                 for spec_group in section:
-                    x, = spec_group.values()
+                    (x,) = spec_group.values()
                     spec_strs.extend(x)
 
                 extracted_specs = []
