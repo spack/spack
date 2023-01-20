@@ -866,7 +866,7 @@ class PyclingoDriver(object):
 
             # print any unknown functions in the model
             for sym in best_model:
-                if sym.name not in ("attr", "error", "opt_criterion"):
+                if sym.name not in ("attr", "error", "opt_criterion", "condition", "condition_cause"):
                     tty.debug(
                         "UNKNOWN SYMBOL: %s(%s)" % (sym.name, ", ".join(stringify(sym.arguments)))
                     )
