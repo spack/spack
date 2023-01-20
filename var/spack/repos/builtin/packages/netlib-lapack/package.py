@@ -17,6 +17,7 @@ class NetlibLapack(CMakePackage):
 
     homepage = "https://www.netlib.org/lapack/"
     url = "https://www.netlib.org/lapack/lapack-3.5.0.tgz"
+    tags = ["windows"]
 
     version(
         "3.10.1",

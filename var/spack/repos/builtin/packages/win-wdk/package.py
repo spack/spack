@@ -18,6 +18,7 @@ class WinWdk(Package):
     """
 
     homepage = "https://learn.microsoft.com/en-us/windows-hardware/drivers/"
+    tags = ["windows"]
 
     # The wdk has many libraries and executables. Record one for detection purposes
     libraries = ["mmos.lib"]
