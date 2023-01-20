@@ -32,7 +32,7 @@ class Hdf5(CMakePackage):
         "lkurz",
     ]
 
-    tags = ["e4s"]
+    tags = ["e4s", "windows"]
     executables = ["^h5cc$", "^h5pcc$"]
 
     test_requires_compiler = True

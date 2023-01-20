@@ -19,7 +19,7 @@ class Ninja(Package):
     url = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
     git = "https://github.com/ninja-build/ninja.git"
 
-    tags = ["build-tools", "e4s"]
+    tags = ["build-tools", "e4s", "windows"]
 
     executables = ["^ninja$"]
 

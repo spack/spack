@@ -23,7 +23,7 @@ class Cmake(Package):
     git = "https://gitlab.kitware.com/cmake/cmake.git"
     maintainers = ["chuckatkins"]
 
-    tags = ["build-tools"]
+    tags = ["build-tools", "windows"]
 
     executables = ["^cmake$"]
 

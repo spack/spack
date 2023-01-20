@@ -18,6 +18,7 @@ class Msmpi(Package):
     homepage = "https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi"
     url = "https://github.com/microsoft/Microsoft-MPI/archive/refs/tags/v10.1.1.tar.gz"
     git = "https://github.com/microsoft/Microsoft-MPI.git"
+    tags = ["windows"]
 
     executable = ["mpiexec"]
 
