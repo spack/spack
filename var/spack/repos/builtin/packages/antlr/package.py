@@ -34,9 +34,7 @@ class Antlr(AutotoolsPackage):
             env.set('CXXFLAGS', '-fPIC')
 
     def configure_args(self):
-        spec = self.spec
-
-        args = [ "--disable-csharp" ]
+        args = ["--disable-csharp"]
         args.extend(self.enable_or_disable("cxx"))
         args.extend(self.enable_or_disable("java"))
         args.extend(self.enable_or_disable("python"))
