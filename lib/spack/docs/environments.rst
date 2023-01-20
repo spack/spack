@@ -1039,7 +1039,7 @@ gets installed and is available for use in the ``env`` target.
    	$(SPACK) -e . concretize -f
 
    env.mk: spack.lock
-   	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
+   	$(SPACK) -e . env depfile -o $@ --make-prefix spack
 
    env: spack/env
    	$(info Environment installed!)
@@ -1062,9 +1062,9 @@ the include is conditional.
 .. note::
 
    When including generated ``Makefile``\s, it is important to use
-   the ``--make-target-prefix`` flag and use the non-phony target
-   ``<target-prefix>/env`` as prerequisite, instead of the phony target
-   ``<target-prefix>/all``.
+   the ``--make-prefix`` flag and use the non-phony target
+   ``<prefix>/env`` as prerequisite, instead of the phony target
+   ``<prefix>/all``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a subset of the environment
@@ -1105,7 +1105,7 @@ associated ``Makefile`` with a prefix ``example``:
 
 .. code:: console
 
-   $ spack env depfile -o env.mk --make-target-prefix example
+   $ spack env depfile -o env.mk --make-prefix example
 
 And we now include it in a different ``Makefile``, in which we create a target
 ``example/push/%`` with ``%`` referring to a package identifier. This target
