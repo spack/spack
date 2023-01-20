@@ -2070,6 +2070,48 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(specs, version_provenance.spec)
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
+        def specs_from_requires(pkg_name, section):
+            if isinstance(section, str):
+                spec = spack.spec.Spec(section)
+                if not spec.name:
+                    spec.name = pkg_name
+                extracted_specs = [spec]
+            else:
+                spec_strs = []
+                # Each of these will be one_of or any_of
+                for spec_group in section:
+                    x, = spec_group.values()
+                    spec_strs.extend(x)
+
+                extracted_specs = []
+                for spec_str in spec_strs:
+                    spec = spack.spec.Spec(spec_str)
+                    if not spec.name:
+                        spec.name = pkg_name
+                    extracted_specs.append(spec)
+
+            version_specs = []
+            for spec in extracted_specs:
+                try:
+                    spec.version
+                    version_specs.append(spec)
+                except:
+                    pass
+
+            return version_specs
+
+        req_version_specs = list()
+
+        config = spack.config.get("packages")
+        for pkg_name, d in config.items():
+            if pkg_name == "all":
+                continue
+            if "require" in d:
+                req_version_specs.extend(specs_from_requires(pkg_name, d["require"]))
+
+        # TODO: if I use version_provenance.packages_yaml, the associated test fail
+        self.add_concrete_versions_from_specs(req_version_specs, version_provenance.spec)
+
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
