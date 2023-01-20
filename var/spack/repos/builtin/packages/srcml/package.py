@@ -28,12 +28,10 @@ class Srcml(CMakePackage):
     depends_on("curl")
     depends_on("boost")
 
-    patch(
-            "https://patch-diff.githubusercontent.com/raw/srcML/srcML/pull/1829.patch?full_index=1",
-            sha256="384068e00a01809cdc9b6eca79fd6833bf3214d4b9ac1765b52bc374a7af333e"
-    )
-    
+    patch("https://patch-diff.githubusercontent.com/raw/srcML/srcML/pull/1829.patch?full_index=1",
+          sha256="384068e00a01809cdc9b6eca79fd6833bf3214d4b9ac1765b52bc374a7af333e")
+
     def patch(self):
-        filter_file("add_subdirectory\(package\)",
+        filter_file(r"add_subdirectory\(package\)",
                     "#noop",
                     "CMakeLists.txt")
