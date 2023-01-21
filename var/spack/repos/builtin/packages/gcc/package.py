@@ -141,7 +141,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         "profiled",
         default=False,
         description="Use Profile Guided Optimization",
-        when="+bootstrap %gcc",
+        when="+bootstrap",
     )
 
     depends_on("flex", type="build", when="@master")
