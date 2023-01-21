@@ -20,6 +20,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^nm$", "^readelf$"]
 
+    version("2.40", sha256="f8298eb153a4b37d112e945aa5cb2850040bcf26a3ea65b5a715c83afe05e48a")
+    version("2.39", sha256="da24a84fef220102dd24042df06fdea851c2614a5377f86effa28f33b7b16148")
     version("2.38", sha256="070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8")
     version("2.37", sha256="67fc1a4030d08ee877a4867d3dcab35828148f87e1fd05da6db585ed5a166bd4")
     version("2.36.1", sha256="5b4bd2e79e30ce8db0abd76dd2c2eae14a94ce212cfc59d3c37d23e24bc6d7a3")
@@ -30,6 +32,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     version("2.33.1", sha256="0cb4843da15a65a953907c96bad658283f3c4419d6bcc56bf2789db16306adb2")
     version("2.32", sha256="de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d")
     version("2.31.1", sha256="ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0")
+    version("2.30", sha256="efeade848067e9a03f1918b1da0d37aaffa0b0127a06b5e9236229851d9d0c09")
     version("2.29.1", sha256="1509dff41369fb70aed23682351b663b56db894034773e6dbf7d5d6071fc55cc")
     version("2.28", sha256="6297433ee120b11b4b0a1c8f3512d7d73501753142ab9e2daa13c5a3edd32a72")
     version("2.27", sha256="369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88")
