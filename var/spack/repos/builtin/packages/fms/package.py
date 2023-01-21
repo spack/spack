@@ -91,8 +91,8 @@ class Fms(CMakePackage):
             self.define_from_variant("WITH_YAML", "yaml"),
             self.define_from_variant("CONSTANTS"),
             self.define_from_variant("FPIC"),
-            "-D32BIT:BOOL={}".format("ON" if "precision=32" in self.spec else "OFF"),
-            "-D64BIT:BOOL={}".format("ON" if "precision=64" in self.spec else "OFF"),
+            self.define("32BIT", "precision=32" in self.spec),
+            self.define("64BIT", "precision=64" in self.spec),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
