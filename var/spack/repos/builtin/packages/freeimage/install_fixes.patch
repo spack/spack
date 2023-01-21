@@ -4,10 +4,10 @@
 
  # General configuration variables:
  DESTDIR ?= /
--INCDIR ?= $(DESTDIR)/include
--INSTALLDIR ?= $(DESTDIR)/lib
-+INCDIR ?= $(DESTDIR)/usr/include
-+INSTALLDIR ?= $(DESTDIR)/usr/lib
+-INCDIR ?= $(DESTDIR)/usr/include
+-INSTALLDIR ?= $(DESTDIR)/usr/lib
++INCDIR ?= $(DESTDIR)/include
++INSTALLDIR ?= $(DESTDIR)/lib
 
  # Converts cr/lf to just lf
  DOS2UNIX = dos2unix
