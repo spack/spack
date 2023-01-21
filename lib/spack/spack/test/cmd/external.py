@@ -162,6 +162,21 @@ def test_find_external_cmd_full_repo(
     assert {"spec": "find-externals1@1.foo", "prefix": prefix} in pkg_externals
 
 
+def test_find_external_cmd_exclude(
+    mutable_config, working_env, mock_executable, mutable_mock_repo, _platform_executables
+):
+    """Test invoking 'spack external find --all --exclude', to ensure arbitary
+    external packages can be ignored.
+    """
+    exe_path1 = mock_executable("find-externals1-exe", output="echo find-externals1 version 1.foo")
+    os.environ["PATH"] = os.pathsep.join([os.path.dirname(exe_path1)])
+    external("find", "--all", "--exclude=find-externals1")
+
+    pkgs_cfg = spack.config.get("packages")
+
+    assert "find-externals1" not in pkgs_cfg.keys()
+
+
 def test_find_external_no_manifest(
     mutable_config,
     working_env,
