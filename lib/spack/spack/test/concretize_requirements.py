@@ -161,7 +161,6 @@ def test_requirement_adds_multiple_new_versions(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
 
-    a_commit_hash = commits[0]
     conf_str = """\
 packages:
   v:
