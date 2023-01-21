@@ -105,12 +105,14 @@ class Arrow(CMakePackage, CudaPackage):
             filter_file(
                 r'set\(ARROW_LLVM_VERSIONS "10" "9" "8" "7"\)',
                 'set(ARROW_LLVM_VERSIONS "11" "10" "9" "8" "7")',
-                "cpp/CMakeLists.txt"
+                "cpp/CMakeLists.txt",
             )
             filter_file(
                 r"#include <llvm/Support/DynamicLibrary\.h>",
-                r"#include <llvm/Support/DynamicLibrary.h>" + "\n" + r"#include <llvm/Support/Host.h>",
-                "cpp/src/gandiva/engine.cc"
+                r"#include <llvm/Support/DynamicLibrary.h>"
+                + "\n"
+                + r"#include <llvm/Support/Host.h>",
+                "cpp/src/gandiva/engine.cc",
             )
 
     def cmake_args(self):
