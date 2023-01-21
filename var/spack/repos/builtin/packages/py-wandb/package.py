@@ -16,7 +16,11 @@ class PyWandb(PythonPackage):
     maintainers = ["thomas-bouvier"]
 
     version("0.13.9", sha256="0a17365ce1f18306ce7a7f16b943094fac7284bb85f4e52c0685705602f9e307")
-    version("0.10.1", sha256="d02427cda58a6618ba10a027a76d9e3f68ad923d35964b1b68785c49e5160009", deprecated=True)
+    version(
+        "0.10.1",
+        sha256="d02427cda58a6618ba10a027a76d9e3f68ad923d35964b1b68785c49e5160009",
+        deprecated=True,
+    )
 
     depends_on("python@3.6:", type=("build", "link", "run"), when="@0.13.0:")
     depends_on("py-setuptools", type=("build", "run"))
