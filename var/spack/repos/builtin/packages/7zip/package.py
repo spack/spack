@@ -17,6 +17,7 @@ class _7zip(SourceforgePackage, Package):
 
     homepage = "https://sourceforge.net/projects/sevenzip"
     sourceforge_mirror_path = "sevenzip/files/7z2107-src.tar.xz"
+    tags = ["windows"]
 
     executables = ["7z"]
 

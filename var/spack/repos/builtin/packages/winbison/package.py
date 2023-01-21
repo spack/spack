@@ -16,6 +16,7 @@ class Winbison(CMakePackage):
 
     homepage = "https://github.com/lexxmark/winflexbison#readme"
     url = "https://github.com/lexxmark/winflexbison/archive/v2.5.25.tar.gz"
+    tags = ["windows"]
 
     executables = [r"^bison(.*)?$"]
 
