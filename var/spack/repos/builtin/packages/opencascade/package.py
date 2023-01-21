@@ -96,7 +96,7 @@ class Opencascade(CMakePackage):
 
         if "+tbb" in self.spec:
             args.append("-DUSE_TBB=ON")
-            args.append("-D3RDPARTY_VTK_DIR=%s" % self.spec["intel-tbb"].prefix)
+            args.append("-D3RDPARTY_TBB_DIR=%s" % self.spec["intel-tbb"].prefix)
         else:
             args.append("-DUSE_TBB=OFF")
 
@@ -110,6 +110,7 @@ class Opencascade(CMakePackage):
         if "+freeimage" in self.spec:
             args.append("-DUSE_FREEIMAGE=ON")
             args.append("-D3RDPARTY_FREEIMAGE_DIR=%s" % self.spec["freeimage"].prefix)
+            args.append("-D3RDPARTY_FREEIMAGE_INCLUDE_DIR=%s" % self.spec["freeimage"].prefix.include)
         else:
             args.append("-DUSE_FREEIMAGE=OFF")
 
