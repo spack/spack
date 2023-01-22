@@ -126,12 +126,16 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("raja+openmp", when="+openmp")
 
     for val in CudaPackage.cuda_arch_values:
-        depends_on("raja +cuda cuda_arch={0}".format(val), when="+raja +cuda cuda_arch={0}".format(val))
-        depends_on("umpire +cuda cuda_arch={0}".format(val), when="+umpire +cuda cuda_arch={0}".format(val))
+        raja_cuda = "raja +cuda cuda_arch={0}".format(val)
+        umpire_cuda = "umpire +cuda cuda_arch={0}".format(val)
+        depends_on(raja_cuda, when="+{0}".format(raja_cuda))
+        depends_on(umpire_cuda, when="+{0}".format(umpire_cuda))
 
     for val in ROCmPackage.amdgpu_targets:
-        depends_on("raja +rocm amdgpu_target={0}".format(val), when="+rocm amdgpu_target={0}".format(val))
-        depends_on("umpire +rocm amdgpu_target={0}".format(val), when="+rocm amdgpu_target={0}".format(val))
+        raja_rocm = "raja +rocm amdgpu_target={0}".format(val)
+        umpire_rocm = "umpire +rocm amdgpu_target={0}".format(val)
+        depends_on(raja_rocm, when="+{0}".format(raja_rocm))
+        depends_on(umpire_rocm, when="+{0}".format(umpire_rocm))
 
     depends_on("mfem", when="+mfem")
     depends_on("mfem~mpi", when="+mfem~mpi")
