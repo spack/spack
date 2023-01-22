@@ -32,8 +32,8 @@ class PyDatasets(PythonPackage):
     depends_on("py-xxhash", type=("build", "run"))
     depends_on("py-multiprocess", type=("build", "run"))
     depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
-    depends_on("py-huggingface-hub@:0", type=("build", "run"))
-    depends_on("py-huggingface-hub@0.2.0:", type=("build", "run"), when="@2.8.0:")
+    depends_on("py-huggingface-hub@:0.0", type=("build", "run"), when="@:1.8.0")
+    depends_on("py-huggingface-hub@0.2:0", type=("build", "run"), when="@2.8.0:")
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-aiohttp", type=("build", "run"), when="@2.8.0:")
     depends_on("py-responses@:0.18", type=("build", "run"), when="@2.8.0:")
@@ -42,4 +42,4 @@ class PyDatasets(PythonPackage):
     with when("@:1.8.0"):
         depends_on("py-fsspec", type=("build", "run"), when="^python@3.8:")
         depends_on("py-fsspec@:0.8.0", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-fsspec@2021.11.1:", type=("build", "run"), when="@2.8.0:")
+    depends_on("py-fsspec@2021.11.1:+http", type=("build", "run"), when="@2.8.0:")
