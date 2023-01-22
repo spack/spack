@@ -161,6 +161,7 @@ spack:
   # CUDA
   - amrex +cuda
   - arborx +cuda ^kokkos +wrapper
+  - axom +cuda
   - bricks +cuda
   - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda
   - caliper +cuda
