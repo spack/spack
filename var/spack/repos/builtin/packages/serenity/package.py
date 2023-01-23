@@ -94,7 +94,8 @@ class Serenity(CMakePackage):
 
         filter_file(
             "function(import_pybind11)",
-            "function(import_pybind11)\n" "find_package(pybind11)" "cmake/ImportPybind11.cmake",
+            "function(import_pybind11)\nfind_package(pybind11 REQUIRED)",
+            "cmake/ImportPybind11.cmake",
             string=True,
         )
 
