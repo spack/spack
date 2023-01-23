@@ -60,6 +60,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # when compiling with debug symbols on gcc.
     variant("gas", default=False, when="+ld", description="Enable as assembler.")
     variant("interwork", default=False, description="Enable interwork.")
+    variant("gprofng", default=False, description="Enable gprofng.", when="@2.39:")
     variant(
         "libs",
         default="shared,static",
@@ -84,9 +85,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on("m4", type="build", when="@:2.29 +gold")
     depends_on("bison", type="build", when="@:2.29 +gold")
 
-    # 2.34:2.38 needs makeinfo due to a bug, see:
+    # 2.34:2.40 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
-    depends_on("texinfo", type="build", when="@2.34:2.38")
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
+    depends_on("texinfo", type="build", when="@2.34:2.40")
+
+    # gprofng requires bison
+    depends_on("bison@3.0.4:", type="build", when="+gprofng")
 
     conflicts("+gold", when="platform=darwin", msg="Binutils cannot build linkers on macOS")
 
@@ -163,6 +168,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         args += self.enable_or_disable("gold")
         args += self.enable_or_disable("nls")
         args += self.enable_or_disable("plugins")
+        args += self.enable_or_disable("gprofng")
 
         if "+libiberty" in self.spec:
             args.append("--enable-install-libiberty")
