@@ -12,7 +12,6 @@ class Maintainers3(Maintainers1):
     homepage = "http://www.example.com"
     url = "http://www.example.com/maintainers2-1.0.tar.gz"
 
-    maintainer("user0")
-    maintainer("user3")
+    maintainers("user0", "user3")
 
     version("1.0", "0123456789abcdef0123456789abcdef")

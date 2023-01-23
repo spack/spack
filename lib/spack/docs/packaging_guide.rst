@@ -501,13 +501,12 @@ In general, you won't have to remember this naming convention because
 Maintainers
 -----------
 
-In Spack, packages can optionally have one or more maintainers. The ``maintainer``
+In Spack, packages can optionally have one or more maintainers. The ``maintainers``
 directive can be used to add them:
 
 .. code-block:: python
 
-   maintainer("user1")
-   maintainer("user2")
+   maintainers("user1", "user2")
 
 The list of maintainers is inherited from parent packages by default, but users can pass
 the ``reset=True`` argument if they want to restart this list from scratch:
@@ -515,7 +514,7 @@ the ``reset=True`` argument if they want to restart this list from scratch:
 .. code-block:: python
 
    class CustomFoo(Foo):
-      maintainer("user1", reset=True)
+      maintainers("user1", reset=True)
 
 In the snippet above, maintainers declared in the `Foo` package will not be part of the list
 for the ``CustomFoo`` package.

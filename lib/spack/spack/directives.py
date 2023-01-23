@@ -54,7 +54,7 @@ __all__ = [
     "conflicts",
     "depends_on",
     "extends",
-    "maintainer",
+    "maintainers",
     "provides",
     "patch",
     "variant",
@@ -769,22 +769,21 @@ def build_system(*values, **kwargs):
 
 
 @directive(dicts=())
-def maintainer(name: str, reset: bool = False):
+def maintainers(*names: str, reset: bool = False):
     """Add a new maintainer directive, to specify maintainers in a declarative way.
 
     Args:
-        name: GitHub username for the maintainer
+        names: GitHub username for the maintainer
         reset: if True, discards all maintainers recorded so far for this package
     """
 
     def _execute_maintainer(pkg):
         if reset:
-            pkg.maintainers = [name]
+            pkg.maintainers = list(names)
             return
         maintainers = getattr(pkg, "maintainers", [])
-        # Here it is essential to copy, otherwise we might add to
-        # an empty list in the parent
-        maintainers = maintainers + [name]
+        # Here it is essential to copy, otherwise we might add to an empty list in the parent
+        maintainers = maintainers + list(names)
         pkg.maintainers = list(sorted(set(maintainers)))
 
     return _execute_maintainer
