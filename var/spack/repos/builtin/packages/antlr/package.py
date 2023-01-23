@@ -24,16 +24,19 @@ class Antlr(AutotoolsPackage):
     variant("cxx", default=True, description="Enable ANTLR for C++")
     variant("java", default=False, description="Enable ANTLR for Java")
     variant("python", default=False, description="Enable ANTLR for Python")
+    variant("pic", default=False, description="Enable fPIC")
 
     extends("python", when="+python")
     depends_on("java", type=("build", "run"), when="+java")
 
-    def configure_args(self):
-        spec = self.spec
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+pic"):
+            env.set("CXXFLAGS", "-fPIC")
 
-        return [
-            "--disable-csharp",
-            "--{0}-cxx".format("enable" if "+cxx" in spec else "disable"),
-            "--{0}-java".format("enable" if "+java" in spec else "disable"),
-            "--{0}-python".format("enable" if "+python" in spec else "disable"),
-        ]
+    def configure_args(self):
+        args = ["--disable-csharp"]
+        args.extend(self.enable_or_disable("cxx"))
+        args.extend(self.enable_or_disable("java"))
+        args.extend(self.enable_or_disable("python"))
+
+        return args
