@@ -39,10 +39,15 @@ spec expression syntax:
     compiler flags:
       @g{cflags="flags"}                cppflags, cflags, cxxflags,
                                     fflags, ldflags, ldlibs
+      @g{cflags=="flags"}               propagate flags to package dependencies
+                                    cppflags, cflags, cxxflags, fflags,
+                                    ldflags, ldlibs
 
     variants:
       @B{+variant}                      enable <variant>
+      @B{++variant}                     propagate enable <variant>
       @r{-variant} or @r{~variant}          disable <variant>
+      @r{--variant} or @r{~~variant}        propagate disable <variant>
       @B{variant=value}                 set non-boolean <variant> to <value>
       @B{variant=value1,value2,value3}  set multi-value <variant> values
 
@@ -68,6 +73,8 @@ spec expression syntax:
       hdf5 @c{@1.8:} @g{%gcc}               hdf5 1.8 or higher built with gcc
       hdf5 @B{+mpi}                     hdf5 with mpi enabled
       hdf5 @r{~mpi}                     hdf5 with mpi disabled
+      hdf5 @B{++mpi}                    hdf5 with mpi enabled and propagates
+      hdf5 @r{~~mpi}                    hdf5 with mpi disabled and propagates
       hdf5 @B{+mpi} ^mpich              hdf5 with mpi, using mpich
       hdf5 @B{+mpi} ^openmpi@c{@1.7}        hdf5 with mpi, using openmpi 1.7
       boxlib @B{dim=2}                  boxlib built for 2 dimensions
