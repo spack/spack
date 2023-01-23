@@ -90,6 +90,7 @@ class MSBuildBuilder(MSBuildBuilder):
         def get_file_string_number(f):
             s = re.findall(r"\d+$", f)
             return (int(s[0]) if s else -1, f)
+
         win_dir = os.path.join(super().build_directory, "windows")
         compiler_dirs = []
         with working_dir(win_dir):
@@ -109,9 +110,9 @@ class MSBuildBuilder(MSBuildBuilder):
     def msbuild_args(self):
         plat = "x64" if self.is_64bit() else "x86"
         if self.pkg.spec.satisfies("libs=shared,static"):
-            f =  "xz_win.sln"
+            f = "xz_win.sln"
         elif self.pkg.spec.satisfies("libs=shared"):
-            f =  "liblzma_dll.vcxproj"
+            f = "liblzma_dll.vcxproj"
         else:
             f = "liblzma.vcxproj"
         return [self.define("Configuration", "Release"), self.define("Platform", plat), f]
@@ -129,7 +130,9 @@ class MSBuildBuilder(MSBuildBuilder):
             else:
                 libs_to_find.append("*.lib")
             for lib in libs_to_find:
-                libs_to_install = glob.glob(os.path.join(self.build_directory, "**", lib), recursive=True)
+                libs_to_install = glob.glob(
+                    os.path.join(self.build_directory, "**", lib), recursive=True
+                )
                 for l in libs_to_install:
                     install(l, prefix.lib)
         with working_dir(pkg.stage.source_path):
