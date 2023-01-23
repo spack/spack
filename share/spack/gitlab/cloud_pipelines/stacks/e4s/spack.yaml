@@ -165,6 +165,7 @@ spack:
   - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda
   - caliper +cuda
   - chai ~benchmarks ~tests +cuda ^umpire ~shared
+  - cusz +cuda
   - dealii +cuda
   - ecp-data-vis-sdk +cuda +adios2 +hdf5 +paraview +vtkm +zfp # Removing ascent because Dray is hung in CI. +ascent
   - flecsi +cuda
