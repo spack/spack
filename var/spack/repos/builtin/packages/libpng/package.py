@@ -36,21 +36,12 @@ class Libpng(CMakePackage):
         description="Build shared libs, static libs or both",
     )
 
-    def configure_args(self):
-        args = [
-            # not honored, see
-            #   https://sourceforge.net/p/libpng/bugs/210/#33f1
-            # '--with-zlib=' + self.spec['zlib'].prefix,
-            f"CPPFLAGS={self.spec['zlib'].headers.include_flags}",
-            f"LDFLAGS={self.spec['zlib'].libs.search_flags}",
-        ]
-
-        args += self.enable_or_disable("libs")
-        return args
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         return [
             self.define("CMAKE_CXX_FLAGS", self.spec["zlib"].headers.include_flags),
             self.define("ZLIB_ROOT", self.spec["zlib"].prefix),
+            self.define("PNG_SHARED", "shared" in self.pkg.variants["libs"]),
+            self.define("PNG_STATIC", "static" in self.pkg.variants["libs"])
         ]
