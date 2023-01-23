@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
@@ -51,18 +50,10 @@ class Freetype(CMakePackage):
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
-        return [self.define("FT_WITH_ZLIB", True), self.define("FT_WITH_BZIP2", True)]
-
-
-class AutoToolsBuilder(AutotoolsBuilder):
-    def configure_args(self):
-        args = [
-            "--with-brotli=no",
-            "--with-bzip2=yes",
-            "--with-harfbuzz=no",
-            "--with-png=yes",
-            "--with-zlib=no",
+        return [
+            self.define("FT_DISABLE_ZLIB", True),
+            self.define("FT_DISABLE_BROTLI", True),
+            self.define("FT_DISABLE_HARFBUZZ", True),
+            self.define("FT_DISABLE_PNG", True),
+            self.define("FT_WITH_BZIP2", True),
         ]
-        if self.spec.satisfies("@2.9.1:"):
-            args.append("--enable-freetype-config")
-        return args
