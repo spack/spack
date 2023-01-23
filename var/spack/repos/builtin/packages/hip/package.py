@@ -121,10 +121,10 @@ class Hip(CMakePackage):
     depends_on("cmake@3.16.8:", type="build", when="@4.5.0:")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
-    depends_on("gl@4.5:")
-    depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
 
     with when("+rocm"):
+        depends_on("gl@4.5:")
+        depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
         for ver in [
             "3.5.0",
             "3.7.0",
@@ -491,7 +491,7 @@ class Hip(CMakePackage):
                 "hip-config.cmake.in",
                 string=True,
             )
-        if self.spec.satisfies("@5.2:"):
+        if self.spec.satisfies("@5.2: +rocm"):
             filter_file(
                 '"${ROCM_PATH}/llvm"',
                 self.spec["llvm-amdgpu"].prefix,
