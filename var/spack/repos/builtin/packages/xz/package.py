@@ -7,7 +7,6 @@ import glob
 import os
 import platform
 import re
-import sys
 
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.msbuild import MSBuildBuilder
@@ -133,7 +132,7 @@ class MSBuildBuilder(MSBuildBuilder):
                 libs_to_install = glob.glob(
                     os.path.join(self.build_directory, "**", lib), recursive=True
                 )
-                for l in libs_to_install:
-                    install(l, prefix.lib)
+                for library in libs_to_install:
+                    install(library, prefix.lib)
         with working_dir(pkg.stage.source_path):
             install_tree(os.path.join("src", "liblzma", "api"), prefix.include)
