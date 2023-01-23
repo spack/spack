@@ -51,7 +51,7 @@ class Rmgdft(CMakePackage):
     conflicts("%llvm@:3.4", when="@3.6.0:", msg=compiler_warning14)
 
     # RMGDFT 5.0.0 requires C++17 and increase the minimum gcc to 8
-    compiler_warning17 = "RMGDFT 5.0.0 or later requires a " "compiler with support for C++17"
+    compiler_warning17 = "RMGDFT 5.0.0 or later requires a compiler with support for C++17"
     conflicts("%gcc@:7", when="@5.0.0:", msg=compiler_warning17)
 
     depends_on("cmake", type="build")
