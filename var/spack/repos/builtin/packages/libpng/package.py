@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 from spack.build_systems.cmake import CMakeBuilder
+from spack.package import *
+
 
 class Libpng(CMakePackage):
     """libpng is the official PNG reference library."""
@@ -43,5 +44,5 @@ class CMakeBuilder(CMakeBuilder):
             self.define("CMAKE_CXX_FLAGS", self.spec["zlib"].headers.include_flags),
             self.define("ZLIB_ROOT", self.spec["zlib"].prefix),
             self.define("PNG_SHARED", "shared" in self.pkg.variants["libs"]),
-            self.define("PNG_STATIC", "static" in self.pkg.variants["libs"])
+            self.define("PNG_STATIC", "static" in self.pkg.variants["libs"]),
         ]
