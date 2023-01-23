@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,6 +69,20 @@ def path_to_file_url(path):
 
 def file_url_string_to_path(url):
     return urllib.request.url2pathname(urllib.parse.urlparse(url).path)
+
+
+def is_path_instead_of_url(path_or_url):
+    """Historically some config files and spack commands used paths
+    where urls should be used. This utility can be used to validate
+    and promote paths to urls."""
+    scheme = urllib.parse.urlparse(path_or_url).scheme
+
+    # On non-Windows, no scheme means it's likely a path
+    if not sys.platform == "win32":
+        return not scheme
+
+    # On Windows, we may have drive letters.
+    return "A" <= scheme <= "Z"
 
 
 def format(parsed_url):

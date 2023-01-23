@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,11 +53,15 @@ class Pfunit(CMakePackage):
     variant("esmf", default=False, description="Enable esmf support")
     variant("docs", default=False, description="Build docs")
 
+    # The maximum rank of an array in the Fortran 2008 standard is 15
+    max_rank = 15
+    allowed_array_ranks = tuple(str(i) for i in range(1, max_rank + 1))
+
     variant(
         "max_array_rank",
-        values=int,
         default=5,
-        description="Max number of Fortran dimensions of array asserts",
+        values=allowed_array_ranks,
+        description="Max rank for assertion overloads (higher values may be slower to build)",
     )
 
     variant(
@@ -71,7 +75,7 @@ class Pfunit(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("esmf", when="+esmf")
     depends_on("m4", when="@4.1.5:", type="build")
-    depends_on("fargparse")
+    depends_on("fargparse", when="@4:")
 
     conflicts(
         "%gcc@:8.3.9",

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -130,11 +130,6 @@ class PyScipy(PythonPackage):
     # Meson adds this flag for all Python extensions which include Fortran code.
     conflicts("%oneapi", when="@1.9:")
 
-    # FIXME: mysterious build issues with MKL
-    conflicts("^intel-mkl", when="@1.9:")
-    conflicts("^intel-oneapi-mkl", when="@1.9:")
-    conflicts("^intel-parallel-studio", when="@1.9:")
-
     # https://github.com/scipy/scipy/issues/12860
     patch(
         "https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd",
@@ -200,14 +195,16 @@ class PyScipy(PythonPackage):
     def install(self, spec, prefix):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
-        # FIXME: MKL support doesn't work, why?
         if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             blas = "mkl-dynamic-lp64-seq"
         if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             lapack = "mkl-dynamic-lp64-seq"
-
         if spec["blas"].name in ["blis", "amdblis"]:
             blas = "blis"
+        if blas == "armpl":
+            blas += "-dynamic-lp64-seq"
+        if lapack == "armpl":
+            lapack += "-dynamic-lp64-seq"
 
         args = [
             "setup",

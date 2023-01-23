@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -500,7 +500,7 @@ _spack_buildcache_create() {
     then
         SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index --spec-file --only"
     else
-        _all_packages
+        _mirrors
     fi
 }
 
@@ -552,11 +552,21 @@ _spack_buildcache_save_specfile() {
 }
 
 _spack_buildcache_sync() {
-    SPACK_COMPREPLY="-h --help --manifest-glob --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --manifest-glob --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_buildcache_update_index() {
-    SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+    else
+        _mirrors
+    fi
 }
 
 _spack_cd() {
@@ -994,7 +1004,7 @@ _spack_env_revert() {
 _spack_env_depfile() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
+        SPACK_COMPREPLY="-h --help --make-prefix --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
     else
         _all_packages
     fi
@@ -1021,7 +1031,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable -p --path --scope --all -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable --exclude -p --path --scope --all -t --tag"
     else
         _all_packages
     fi
@@ -1197,7 +1207,7 @@ _spack_license_update_copyright_year() {
 _spack_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --search-description --format --update -v --virtuals -t --tag"
+        SPACK_COMPREPLY="-h --help -d --search-description --format -v --virtuals -t --tag --count --update"
     else
         _all_packages
     fi
