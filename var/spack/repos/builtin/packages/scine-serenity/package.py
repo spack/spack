@@ -12,7 +12,6 @@ class ScineSerenity(CMakePackage):
     """Wrapper around Serenity to make it compatible with Scine"""
 
     homepage = "https://scine.ethz.ch"
-    homepage = "https://www.example.com"
     url = "https://github.com/qcscine/serenity_wrapper/archive/refs/tags/1.0.1.tar.gz"
     git = "https://github.com/qcscine/serenity_wrapper"
 
