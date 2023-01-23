@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -429,12 +429,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.2-petsc-3.15.0.patch", when="@4.2.0+petsc ^petsc@3.15.0:")
     patch("mfem-4.3-hypre-2.23.0.patch", when="@4.3.0")
     patch("mfem-4.3-cusparse-11.4.patch", when="@4.3.0+cuda")
-
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
     # https://github.com/mfem/mfem/pull/1043 for the bugfix contributed
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
+    patch("mfem-4.5.patch", when="@4.5.0")
+
     phases = ["configure", "build", "install"]
 
     def setup_build_environment(self, env):
@@ -600,7 +601,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
 
-        cxxflags = spec.compiler_flags["cxxflags"]
+        cxxflags = spec.compiler_flags["cxxflags"].copy()
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
@@ -804,9 +805,22 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "apf_zoltan",
                 "spr",
             ]
+            pumi_dep_zoltan = ""
+            pumi_dep_parmetis = ""
+            if "+zoltan" in spec["pumi"]:
+                pumi_dep_zoltan = ld_flags_from_dirs([spec["zoltan"].prefix.lib], ["zoltan"])
+                if "+parmetis" in spec["zoltan"]:
+                    pumi_dep_parmetis = ld_flags_from_dirs(
+                        [spec["parmetis"].prefix.lib], ["parmetis"]
+                    )
             options += [
                 "PUMI_OPT=-I%s" % spec["pumi"].prefix.include,
-                "PUMI_LIB=%s" % ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
+                "PUMI_LIB=%s %s %s"
+                % (
+                    ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
+                    pumi_dep_zoltan,
+                    pumi_dep_parmetis,
+                ),
             ]
 
         if "+gslib" in spec:
@@ -1029,9 +1043,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
             # make('check', parallel=False)
         else:
-            # As of v4.5.0 and ROCm up to 5.2.3, the following miniapp crashes
-            # the HIP compiler, so it has to be disabled for testing with HIP:
-            # filter_file("PAR_MINIAPPS = hooke", "PAR_MINIAPPS =", "miniapps/hooke/makefile")
             make("all")
             make("test", parallel=False)
 
@@ -1118,7 +1129,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "miniapps/gslib/findpts.cpp",
             "miniapps/gslib/pfindpts.cpp",
         ]
-        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else u"\ufeff"
+        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else "\ufeff"
         for f in files_with_bom:
             filter_file(bom, "", f)
 

@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
 
+import spack.directives
 import spack.repo
 import spack.spec
 
@@ -60,3 +61,10 @@ def test_extends_spec(config, mock_packages):
 
     assert extender.dependencies
     assert extender.package.extends(extendee)
+
+
+@pytest.mark.regression("34368")
+def test_error_on_anonymous_dependency(config, mock_packages):
+    pkg = spack.repo.path.get_pkg_class("a")
+    with pytest.raises(spack.directives.DependencyError):
+        spack.directives._depends_on(pkg, "@4.5")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,9 @@ class CrayMpich(Package):
     version("7.7.15")
     version("7.7.14")
     version("7.7.13")
+
+    depends_on("cray-pmi")
+    depends_on("libfabric")
 
     # cray-mpich 8.1.7: features MPI compiler wrappers
     variant("wrappers", default=True, when="@8.1.7:", description="enable MPI wrappers")

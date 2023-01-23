@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,7 +56,7 @@ class Serialbox(CMakePackage):
 
     # pp_ser fails to process source files containing Unicode character with
     # Python 3 (https://github.com/GridTools/serialbox/pull/249):
-    patch("ppser_py3.patch", when="@2.2.1:")
+    patch("ppser_py3.patch", when="@2.2.0:")
 
     # NAG patches:
     patch("nag/interface.patch", when="@2.0.1:%nag+fortran")

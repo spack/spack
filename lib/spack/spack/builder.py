@@ -1,16 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import collections.abc
 import copy
 import functools
 import inspect
 from typing import List, Optional, Tuple
-
-import six
-
-import llnl.util.compat
 
 import spack.build_environment
 
@@ -127,7 +124,17 @@ def _create(pkg):
             wrapper_cls = type(self)
             bases = (package_cls, wrapper_cls)
             new_cls_name = package_cls.__name__ + "Wrapper"
-            new_cls = type(new_cls_name, bases, {})
+            # Forward attributes that might be monkey patched later
+            new_cls = type(
+                new_cls_name,
+                bases,
+                {
+                    "run_tests": property(lambda x: x.wrapped_package_object.run_tests),
+                    "test_log_file": property(lambda x: x.wrapped_package_object.test_log_file),
+                    "test_failures": property(lambda x: x.wrapped_package_object.test_failures),
+                    "test_suite": property(lambda x: x.wrapped_package_object.test_suite),
+                },
+            )
             new_cls.__module__ = package_cls.__module__
             self.__class__ = new_cls
             self.__dict__.update(wrapped_pkg_object.__dict__)
@@ -168,7 +175,7 @@ def _create(pkg):
             property(forward_property_to_getattr(attribute_name)),
         )
 
-    class Adapter(six.with_metaclass(_PackageAdapterMeta, base_cls)):
+    class Adapter(base_cls, metaclass=_PackageAdapterMeta):
         def __init__(self, pkg):
             # Deal with custom phases in packages here
             if hasattr(pkg, "phases"):
@@ -280,7 +287,7 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
 
-class BuilderMeta(PhaseCallbacksMeta, type(llnl.util.compat.Sequence)):  # type: ignore
+class BuilderMeta(PhaseCallbacksMeta, type(collections.abc.Sequence)):  # type: ignore
     pass
 
 
@@ -457,7 +464,7 @@ class InstallationPhase(object):
         return copy.deepcopy(self)
 
 
-class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
+class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
     """A builder is a class that, given a package object (i.e. associated with
     concrete spec), knows how to install it.
 
@@ -469,19 +476,23 @@ class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
     """
 
     #: Sequence of phases. Must be defined in derived classes
-    phases = ()  # type: Tuple[str, ...]
+    phases: Tuple[str, ...] = ()
     #: Build system name. Must also be defined in derived classes.
-    build_system = None  # type: Optional[str]
+    build_system: Optional[str] = None
 
-    legacy_methods = ()  # type: Tuple[str, ...]
-    legacy_attributes = ()  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = ()
+    legacy_attributes: Tuple[str, ...] = ()
+
+    # type hints for some of the legacy methods
+    build_time_test_callbacks: List[str]
+    install_time_test_callbacks: List[str]
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
     #: copied in the same directory tree as _spack_build_logfile and
     #: _spack_build_envfile.
-    archive_files = []  # type: List[str]
+    archive_files: List[str] = []
 
     def __init__(self, pkg):
         self.pkg = pkg

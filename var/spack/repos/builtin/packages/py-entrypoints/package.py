@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,4 +20,3 @@ class PyEntrypoints(PythonPackage):
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("py-flit-core@2:3", when="@0.4:", type="build")
     depends_on("py-flit", when="@:0.3", type="build")
-    depends_on("py-configparser@3.5:", when="^python@2.7", type=("build", "run"))

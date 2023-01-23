@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -75,29 +75,15 @@ class Cctools(AutotoolsPackage):
 
         # make sure we do not pick a python outside spack:
         if self.spec.satisfies("@6.1.1"):
-            if self.spec.satisfies("^python@3:"):
-                args.extend(
-                    ["--with-python3-path", self.spec["python"].prefix, "--with-python-path", "no"]
-                )
-            elif self.spec.satisfies("^python@:2.9"):
-                args.extend(
-                    ["--with-python-path", self.spec["python"].prefix, "--with-python3-path", "no"]
-                )
-            else:
-                args.extend(["--with-python-path", "no", "--with-python3-path", "no"])
+            args.extend(
+                ["--with-python3-path", self.spec["python"].prefix, "--with-python-path", "no"]
+            )
         else:
             # versions 7 and above, where --with-python-path recognized the
             # python version:
-            if self.spec.satisfies("^python@3:"):
-                args.extend(
-                    ["--with-python-path", self.spec["python"].prefix, "--with-python2-path", "no"]
-                )
-            elif self.spec.satisfies("^python@:2.9"):
-                args.extend(
-                    ["--with-python-path", self.spec["python"].prefix, "--with-python3-path", "no"]
-                )
-            else:
-                args.extend(["--with-python2-path", "no", "--with-python3-path", "no"])
+            args.extend(
+                ["--with-python-path", self.spec["python"].prefix, "--with-python2-path", "no"]
+            )
 
         # disable these bits
         for p in ["mysql", "xrootd"]:

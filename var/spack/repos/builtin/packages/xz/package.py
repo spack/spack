@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,10 @@ class Xz(AutotoolsPackage, SourceforgePackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+
+    # xz-5.2.7/src/liblzma/common/common.h:56 uses attribute __symver__ instead of
+    # __asm__(.symver) for newer GCC releases.
+    conflicts("%intel", when="@5.2.7", msg="icc does not support attribute __symver__")
 
     def configure_args(self):
         return self.enable_or_disable("libs")

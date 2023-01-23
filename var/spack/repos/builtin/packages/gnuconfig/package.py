@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,9 @@ class Gnuconfig(Package):
     maintainers = ["haampie"]
 
     version("master", branch="master")
+    version(
+        "2022-09-17", sha256="95306801ad7086e6a6e13397cb859183d8b7adbba2e372ce0819bad5fcb919b7"
+    )
     version(
         "2021-08-14", sha256="69b6d2868e70167ba1bdb9030b49beeb20f00b37e30825e83fd04291d96bc5f7"
     )

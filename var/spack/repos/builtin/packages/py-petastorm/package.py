@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,6 @@ class PyPetastorm(PythonPackage):
     depends_on("py-dill@0.2.1:", type=("build", "run"))
     depends_on("py-diskcache@3.0.0:", type=("build", "run"))
     depends_on("py-future@0.10.2:", type=("build", "run"))
-    depends_on("py-futures@2.0:", type=("build", "run"), when="^python@:2")
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
     depends_on("py-packaging@15.0:", type=("build", "run"))
     depends_on("py-pandas@0.19.0:", type=("build", "run"))

@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,9 @@ be present on the machine where Spack is run:
    :header-rows: 1
 
 These requirements can be easily installed on most modern Linux systems;
-on macOS, XCode is required.  Spack is designed to run on HPC
-platforms like Cray.  Not all packages should be expected
+on macOS, the Command Line Tools package is required, and a full XCode suite 
+may be necessary for some packages such as Qt and apple-gl. Spack is designed
+to run on HPC platforms like Cray.  Not all packages should be expected
 to work on all platforms.
 
 A build matrix showing which packages are working on which systems is shown below.
@@ -1699,27 +1700,15 @@ If in the previous step, you did not have CMake or Ninja installed, running the 
 Windows Compatible Packages
 """""""""""""""""""""""""""
 
-Many Spack packages are not currently compatible with Windows, due to Unix
-dependencies or incompatible build tools like autoconf. Here are several
-packages known to work on Windows:
-
-* abseil-cpp
-* clingo
-* cpuinfo
-* cmake
-* glm
-* nasm
-* netlib-lapack (requires Intel Fortran)
-* ninja
-* openssl
-* perl
-* python
-* ruby
-* wrf
-* zlib
+Not all spack packages currently have Windows support. Some are inherently incompatible with the
+platform, and others simply have yet to be ported. To view the current set of packages with Windows
+support, the list command should be used via `spack list -t windows`. If there's a package you'd like
+to install on Windows but is not in that list, feel free to reach out to request the port or contribute
+the port yourself.
 
 .. note::
-   This is by no means a comprehensive list
+   This is by no means a comprehensive list, some packages may have ports that were not tagged
+   while others may just work out of the box on Windows and have not been tagged as such.
 
 ^^^^^^^^^^^^^^
 For developers
@@ -1731,3 +1720,4 @@ Instructions for creating the installer are at
 https://github.com/spack/spack/blob/develop/lib/spack/spack/cmd/installer/README.md
 
 Alternatively a pre-built copy of the Windows installer is available as an artifact of Spack's Windows CI
+available at each run of the CI on develop or any PR.

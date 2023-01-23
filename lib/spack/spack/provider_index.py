@@ -1,13 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
 import itertools
-
-import six
+from typing import Dict, List, Optional, Set
 
 import spack.error
+import spack.spec
 import spack.util.spack_json as sjson
 
 
@@ -55,7 +55,7 @@ class _IndexBase(object):
     #: Calling providers_for(spec) will find specs that provide a
     #: matching implementation of MPI. Derived class need to construct
     #: this attribute according to the semantics above.
-    providers = None
+    providers: Dict[str, Dict[str, Set[str]]]
 
     def providers_for(self, virtual_spec):
         """Return a list of specs of all packages that provide virtual
@@ -66,7 +66,7 @@ class _IndexBase(object):
         """
         result = set()
         # Allow string names to be passed as input, as well as specs
-        if isinstance(virtual_spec, six.string_types):
+        if isinstance(virtual_spec, str):
             virtual_spec = spack.spec.Spec(virtual_spec)
 
         # Add all the providers that satisfy the vpkg spec.
@@ -129,11 +129,16 @@ class _IndexBase(object):
 
 
 class ProviderIndex(_IndexBase):
-    def __init__(self, repository, specs=None, restrict=False):
+    def __init__(
+        self,
+        repository: "spack.repo.RepoType",
+        specs: Optional[List["spack.spec.Spec"]] = None,
+        restrict: bool = False,
+    ):
         """Provider index based on a single mapping of providers.
 
         Args:
-            specs (list of specs): if provided, will call update on each
+            specs: if provided, will call update on each
                 single spec to initialize this provider index.
 
             restrict: "restricts" values to the verbatim input specs; do not
@@ -174,7 +179,7 @@ class ProviderIndex(_IndexBase):
         assert not self.repository.is_virtual_safe(spec.name), msg
 
         pkg_provided = self.repository.get_pkg_class(spec.name).provided
-        for provided_spec, provider_specs in six.iteritems(pkg_provided):
+        for provided_spec, provider_specs in pkg_provided.items():
             for provider_spec_readonly in provider_specs:
                 # TODO: fix this comment.
                 # We want satisfaction other than flags
@@ -310,7 +315,7 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
 
     def mapiter(mappings):
         if isinstance(mappings, dict):
-            return six.iteritems(mappings)
+            return mappings.items()
         else:
             return iter(mappings)
 

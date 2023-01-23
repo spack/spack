@@ -1,9 +1,8 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import posixpath
 import sys
 
 import jinja2
@@ -15,6 +14,7 @@ import llnl.util.lang
 
 import spack.compilers
 import spack.concretize
+import spack.detection
 import spack.error
 import spack.hash_types as ht
 import spack.platforms
@@ -325,6 +325,13 @@ class TestConcretize(object):
         assert set(client.compiler_flags["fflags"]) == set(["-O0", "-g"])
         assert not set(cmake.compiler_flags["fflags"])
 
+    def test_compiler_flags_from_compiler_and_dependent(self):
+        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
+        client.concretize()
+        cmake = client["cmake"]
+        for spec in [client, cmake]:
+            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
+
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
         spec.concretize()
@@ -332,7 +339,7 @@ class TestConcretize(object):
         assert spec.satisfies("^openblas cflags='-g'")
 
     @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
         reason="Optional compiler propagation isn't deprecated for original concretizer",
     )
     def test_concretize_compiler_flag_does_not_propagate(self):
@@ -342,7 +349,7 @@ class TestConcretize(object):
         assert not spec.satisfies("^openblas cflags='-g'")
 
     @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
         reason="Optional compiler propagation isn't deprecated for original concretizer",
     )
     def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
@@ -442,7 +449,7 @@ class TestConcretize(object):
             s.concretize()
 
     @pytest.mark.skipif(
-        os.environ.get("SPACK_TEST_SOLVER") == "original" or sys.platform == "win32",
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
         reason="Optional compiler propagation isn't deprecated for original concretizer",
     )
     def test_concretize_propagate_disabled_variant(self):
@@ -459,7 +466,6 @@ class TestConcretize(object):
 
         assert spec.satisfies("^openblas+shared")
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="No Compiler for Arch on Win")
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
@@ -520,7 +526,7 @@ class TestConcretize(object):
     def test_external_package(self):
         spec = Spec("externaltool%gcc")
         spec.concretize()
-        assert spec["externaltool"].external_path == posixpath.sep + posixpath.join(
+        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_tool"
         )
         assert "externalprereq" not in spec
@@ -551,10 +557,10 @@ class TestConcretize(object):
     def test_external_and_virtual(self):
         spec = Spec("externaltest")
         spec.concretize()
-        assert spec["externaltool"].external_path == posixpath.sep + posixpath.join(
+        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_tool"
         )
-        assert spec["stuff"].external_path == posixpath.sep + posixpath.join(
+        assert spec["stuff"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_virtual_gcc"
         )
         assert spec["externaltool"].compiler.satisfies("gcc")
@@ -840,7 +846,6 @@ class TestConcretize(object):
             ("py-extension3@1.0 ^python@3.5.1", ["patchelf@0.10"], []),
         ],
     )
-    @pytest.mark.skipif(sys.version_info[:2] == (3, 5), reason="Known failure with Python3.5")
     def test_conditional_dependencies(self, spec_str, expected, unexpected):
         s = Spec(spec_str).concretized()
 
@@ -955,7 +960,6 @@ class TestConcretize(object):
         assert s.satisfies("^cumulative-vrange-bottom@2.2")
 
     @pytest.mark.regression("9937")
-    @pytest.mark.skipif(sys.version_info[:2] == (3, 5), reason="Known failure with Python3.5")
     def test_dependency_conditional_on_another_dependency_state(self):
         root_str = "variant-on-dependency-condition-root"
         dep_str = "variant-on-dependency-condition-a"
@@ -1225,9 +1229,6 @@ class TestConcretize(object):
             second_spec.concretize()
         assert first_spec.dag_hash() != second_spec.dag_hash()
 
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     @pytest.mark.regression("20292")
     @pytest.mark.parametrize(
         "context",
@@ -1486,21 +1487,25 @@ class TestConcretize(object):
         assert ver("2.7.21") == Spec("python@2.7.21").concretized().version
 
     @pytest.mark.parametrize(
-        "spec_str",
+        "spec_str,valid",
         [
-            "conditional-values-in-variant@1.62.0 cxxstd=17",
-            "conditional-values-in-variant@1.62.0 cxxstd=2a",
-            "conditional-values-in-variant@1.72.0 cxxstd=2a",
+            ("conditional-values-in-variant@1.62.0 cxxstd=17", False),
+            ("conditional-values-in-variant@1.62.0 cxxstd=2a", False),
+            ("conditional-values-in-variant@1.72.0 cxxstd=2a", False),
             # Ensure disjoint set of values work too
-            "conditional-values-in-variant@1.72.0 staging=flexpath",
+            ("conditional-values-in-variant@1.72.0 staging=flexpath", False),
+            # Ensure conditional values set False fail too
+            ("conditional-values-in-variant foo=bar", False),
+            ("conditional-values-in-variant foo=foo", True),
         ],
     )
-    def test_conditional_values_in_variants(self, spec_str):
+    def test_conditional_values_in_variants(self, spec_str, valid):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer doesn't resolve conditional values in variants")
 
         s = Spec(spec_str)
-        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+        raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
+        with llnl.util.lang.nullcontext() if valid else raises:
             s.concretize()
 
     def test_conditional_values_in_conditional_variant(self):
@@ -1552,9 +1557,6 @@ class TestConcretize(object):
             s = Spec("python target=k10").concretized()
         assert s.satisfies("target=k10")
 
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     @pytest.mark.regression("29201")
     def test_delete_version_and_reuse(self, mutable_database, repo_with_changing_recipe):
         """Test that we can reuse installed specs with versions not
@@ -1573,9 +1575,6 @@ class TestConcretize(object):
         assert root.dag_hash() == new_root.dag_hash()
 
     @pytest.mark.regression("29201")
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     def test_installed_version_is_selected_only_for_reuse(
         self, mutable_database, repo_with_changing_recipe
     ):
@@ -1815,7 +1814,6 @@ class TestConcretize(object):
         c = s.concretized()
         assert hash in str(c)
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize("git_ref", ("a" * 40, "0.2.15", "main"))
     def test_git_ref_version_is_equivalent_to_specified_version(self, git_ref):
         if spack.config.get("config:concretizer") == "original":
@@ -1827,7 +1825,6 @@ class TestConcretize(object):
         assert s.satisfies("@develop")
         assert s.satisfies("@0.1:")
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize("git_ref", ("a" * 40, "0.2.15", "fbranch"))
     def test_git_ref_version_errors_if_unknown_version(self, git_ref):
         if spack.config.get("config:concretizer") == "original":
@@ -1841,9 +1838,6 @@ class TestConcretize(object):
             s.concretized()
 
     @pytest.mark.regression("31484")
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-    )
     def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
         """Test that external specs that are in the DB can be reused."""
         if spack.config.get("config:concretizer") == "original":
@@ -1947,7 +1941,9 @@ class TestConcretize(object):
             assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
 
     def test_external_python_extensions_have_dependency(self):
-        """Test that python extensions have access to a python dependency"""
+        """Test that python extensions have access to a python dependency
+
+        when python is otherwise in the DAG"""
         external_conf = {
             "py-extension1": {
                 "buildable": False,
@@ -1960,3 +1956,106 @@ class TestConcretize(object):
 
         assert "python" in spec["py-extension1"]
         assert spec["python"] == spec["py-extension1"]["python"]
+
+    target = spack.platforms.test.Test.default
+
+    @pytest.mark.parametrize(
+        "python_spec",
+        [
+            "python@configured",
+            "python@configured platform=test",
+            "python@configured os=debian",
+            "python@configured target=%s" % target,
+        ],
+    )
+    def test_external_python_extension_find_dependency_from_config(self, python_spec):
+        fake_path = os.path.sep + "fake"
+
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
+            },
+            "python": {
+                "externals": [{"spec": python_spec, "prefix": fake_path}],
+            },
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == fake_path
+        # The spec is not equal to spack.spec.Spec("python@configured") because it gets a
+        # namespace and an external prefix before marking concrete
+        assert spec["python"].satisfies(python_spec)
+
+    def test_external_python_extension_find_dependency_from_installed(self, monkeypatch):
+        fake_path = os.path.sep + "fake"
+
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
+            },
+            "python": {
+                "buildable": False,
+                "externals": [{"spec": "python@installed", "prefix": fake_path}],
+            },
+        }
+        spack.config.set("packages", external_conf)
+
+        # install python external
+        python = Spec("python").concretized()
+        monkeypatch.setattr(spack.store.db, "query", lambda x: [python])
+
+        # ensure that we can't be faking this by getting it from config
+        external_conf.pop("python")
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == fake_path
+        # The spec is not equal to spack.spec.Spec("python@configured") because it gets a
+        # namespace and an external prefix before marking concrete
+        assert spec["python"].satisfies(python)
+
+    def test_external_python_extension_find_dependency_from_detection(self, monkeypatch):
+        """Test that python extensions have access to a python dependency
+
+        when python isn't otherwise in the DAG"""
+        python_spec = spack.spec.Spec("python@detected")
+        prefix = os.path.sep + "fake"
+
+        def find_fake_python(classes, path_hints):
+            return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
+
+        monkeypatch.setattr(spack.detection, "by_executable", find_fake_python)
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": "%s" % prefix}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == prefix
+        assert spec["python"] == python_spec
+
+    def test_external_python_extension_find_unified_python(self):
+        """Test that python extensions use the same python as other specs in unified env"""
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": os.path.sep + "fake"}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        abstract_specs = [spack.spec.Spec(s) for s in ["py-extension1", "python"]]
+        specs = spack.concretize.concretize_specs_together(*abstract_specs)
+        assert specs[0]["python"] == specs[1]["python"]

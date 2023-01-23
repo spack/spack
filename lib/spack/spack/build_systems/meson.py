@@ -1,10 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
-from typing import List  # novm
+from typing import List
 
 import llnl.util.filesystem as fs
 
@@ -95,7 +95,7 @@ class MesonBuilder(BaseBuilder):
         "build_directory",
     )
 
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
     install_targets = ["install"]
 
     build_time_test_callbacks = ["check"]

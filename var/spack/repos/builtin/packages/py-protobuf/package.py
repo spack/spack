@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -79,8 +79,6 @@ class PyProtobuf(PythonPackage):
     depends_on("python@3.7:", when="@3.20:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.9:", when="@3:", type=("build", "run"))
-    depends_on("py-ordereddict", when="@3: ^python@:2", type=("build", "run"))
-    depends_on("py-unittest2", when="@3: ^python@:2", type=("build", "run"))
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases

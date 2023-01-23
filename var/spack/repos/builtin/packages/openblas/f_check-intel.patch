@@ -1,0 +1,24 @@
+diff -ur a/f_check b/f_check
+--- a/f_check	2022-08-07 15:36:26.000000000 -0500
++++ b/f_check	2022-12-09 16:17:43.475278869 -0600
+@@ -102,7 +102,7 @@
+                             vendor=FLANG
+                             openmp='-fopenmp'
+                             ;;
+-                        *ifx*)
++                        *ifort*|*ifx*)
+                             vendor=INTEL
+                             openmp='-fopenmp'
+                             ;;
+diff -ur a/f_check.pl b/f_check.pl
+--- a/f_check.pl	2022-08-07 15:36:26.000000000 -0500
++++ b/f_check.pl	2022-12-09 16:18:59.982923288 -0600
+@@ -95,7 +95,7 @@
+ 		if ($compiler =~ /flang/) {
+ 		    $vendor = FLANG;
+ 		    $openmp = "-fopenmp";
+-	    } elsif ($compiler =~ /ifx/) {
++	    } elsif ($compiler =~ /ifort/ || $compiler =~ /ifx/) {
+ 		    $vendor = INTEL;
+ 		    $openmp = "-fopenmp";
+ 	    } elsif ($compiler =~ /pgf/ || $compiler =~ /nvf/) {

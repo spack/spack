@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -90,6 +90,9 @@ class Adios2(CMakePackage, CudaPackage):
     conflicts("%gcc@:4.7")
     conflicts("%intel@:15")
     conflicts("%pgi@:14")
+
+    # ifx does not support submodules in separate files
+    conflicts("%oneapi@:2022.1.0", when="+fortran")
 
     depends_on("cmake@3.12.0:", type="build")
     depends_on("pkgconfig", type="build")
@@ -208,6 +211,7 @@ class Adios2(CMakePackage, CudaPackage):
 
         if "+python" in spec or self.run_tests:
             args.append("-DPYTHON_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
+            args.append("-DPython_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
 
         return args
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,4 +23,3 @@ class PySoupsieve(PythonPackage):
     depends_on("py-setuptools", when="@:2.1", type="build")
     depends_on("py-setuptools@42:", when="@2.2", type="build")
     depends_on("py-hatchling@0.21.1:", when="@2.3.2:", type="build")
-    depends_on("py-backports-functools-lru-cache", when="^python@:2", type=("build", "run"))

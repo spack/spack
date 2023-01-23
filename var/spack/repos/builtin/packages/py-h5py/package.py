@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,7 +52,6 @@ class PyH5py(PythonPackage):
     # Build and runtime dependencies
     depends_on("py-cached-property@1.5:", type=("build", "run"), when="^python@:3.7")
     depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
-    depends_on("py-numpy@1.12:", type=("build", "run"), when="@3: ^python@3.6.0:3.6")
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3: ^python@3.7.0:3.7")
     depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3: ^python@3.8.0:3.8")
     depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3: ^python@3.9.0:")
@@ -70,6 +69,13 @@ class PyH5py(PythonPackage):
     depends_on("py-mpi4py@3:", when="@3:3.2+mpi^python@3:3.7", type=("build", "run"))
     depends_on("py-mpi4py@3.0.2:", when="@3.3.0:+mpi^python@3:3.7", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", when="@3:+mpi^python@3.8.0:", type=("build", "run"))
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi@2023.0.0:"):
+                flags.append("-Wno-error=incompatible-function-pointer-types")
+                flags.append("-Wno-error=incompatible-pointer-types-discards-qualifiers")
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)

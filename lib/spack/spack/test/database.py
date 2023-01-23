@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ except ImportError:
     _use_uuid = False
     pass
 
-from jsonschema import validate
+import jsonschema
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -456,7 +456,7 @@ def test_005_db_exists(database):
 
     with open(index_file) as fd:
         index_object = json.load(fd)
-        validate(index_object, schema)
+        jsonschema.validate(index_object, schema)
 
 
 def test_010_all_install_sanity(database):
@@ -719,13 +719,13 @@ def test_external_entries_in_db(mutable_database):
     assert not rec.spec.external_modules
 
     rec = mutable_database.get_record("externaltool")
-    assert rec.spec.external_path == os.sep + os.path.join("path", "to", "external_tool")
+    assert rec.spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record("externaltool")
-    assert rec.spec.external_path == os.sep + os.path.join("path", "to", "external_tool")
+    assert rec.spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
     assert not rec.spec.external_modules
     assert rec.explicit is True
 
@@ -750,7 +750,7 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.db._index_path, "r") as f:
         db_obj = json.loads(f.read())
 
-    validate(db_obj, schema)
+    jsonschema.validate(db_obj, schema)
 
     s = spack.spec.Spec("externaltool")
     s.concretize()
@@ -835,7 +835,7 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
 
 
 @pytest.mark.db
-def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
+def test_clear_failure_forced(default_mock_concretization, mutable_database, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when force."""
 
     def _is(db, spec):
@@ -846,7 +846,7 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
     # Ensure raise OSError when try to remove the non-existent marking
     monkeypatch.setattr(spack.database.Database, "prefix_failure_marked", _is)
 
-    s = spack.spec.Spec("a").concretized()
+    s = default_mock_concretization("a")
     spack.store.db.clear_failure(s, force=True)
     out = capfd.readouterr()[1]
     assert "Removing failure marking despite lock" in out
@@ -854,7 +854,7 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
 
 
 @pytest.mark.db
-def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
+def test_mark_failed(default_mock_concretization, mutable_database, monkeypatch, tmpdir, capsys):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
@@ -864,7 +864,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
 
     with tmpdir.as_cwd():
-        s = spack.spec.Spec("a").concretized()
+        s = default_mock_concretization("a")
         spack.store.db.mark_failed(s)
 
         out = str(capsys.readouterr()[1])
@@ -876,13 +876,13 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
 
 
 @pytest.mark.db
-def test_prefix_failed(mutable_database, monkeypatch):
+def test_prefix_failed(default_mock_concretization, mutable_database, monkeypatch):
     """Add coverage to prefix_failed operation."""
 
     def _is(db, spec):
         return True
 
-    s = spack.spec.Spec("a").concretized()
+    s = default_mock_concretization("a")
 
     # Confirm the spec is not already marked as failed
     assert not spack.store.db.prefix_failed(s)
@@ -900,13 +900,13 @@ def test_prefix_failed(mutable_database, monkeypatch):
     assert spack.store.db.prefix_failed(s)
 
 
-def test_prefix_read_lock_error(mutable_database, monkeypatch):
+def test_prefix_read_lock_error(default_mock_concretization, mutable_database, monkeypatch):
     """Cover the prefix read lock exception."""
 
     def _raise(db, spec):
         raise lk.LockError("Mock lock error")
 
-    s = spack.spec.Spec("a").concretized()
+    s = default_mock_concretization("a")
 
     # Ensure subsequent lock operations fail
     monkeypatch.setattr(lk.Lock, "acquire_read", _raise)
@@ -916,13 +916,13 @@ def test_prefix_read_lock_error(mutable_database, monkeypatch):
             assert False
 
 
-def test_prefix_write_lock_error(mutable_database, monkeypatch):
+def test_prefix_write_lock_error(default_mock_concretization, mutable_database, monkeypatch):
     """Cover the prefix write lock exception."""
 
     def _raise(db, spec):
         raise lk.LockError("Mock lock error")
 
-    s = spack.spec.Spec("a").concretized()
+    s = default_mock_concretization("a")
 
     # Ensure subsequent lock operations fail
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise)

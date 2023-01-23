@@ -1,0 +1,16 @@
+--- a/ngs/ngs-java/CMakeLists.txt	2023-01-12 17:48:48.901017181 -0600
++++ b/ngs/ngs-java/CMakeLists.txt	2023-01-12 18:46:26.833359507 -0600
+@@ -140,11 +140,8 @@
+             set(SRC_FILES "${SRC_FILES} ${f}")
+         endforeach()
+ 
+-        if( ${OS} STREQUAL "windows" )
+-            set( NGS_JAVADOC_DIR ${TARGDIR} )
+-        else()
+-            set( NGS_JAVADOC_DIR ${TARGDIR}/obj )
+-        endif()
++	set( NGS_JAVADOC_DIR ${TARGDIR} )
++
+         if ( Java_JAR_EXECUTABLE AND NOT (${OS} STREQUAL "windows") )
+             add_custom_target(
+                 ngs-doc-jar ALL COMMAND

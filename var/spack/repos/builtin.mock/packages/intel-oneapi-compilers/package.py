@@ -1,7 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
 
 from spack.package import *
 
@@ -23,6 +25,12 @@ class IntelOneapiCompilers(Package):
     def install(self, spec, prefix):
         # Create the minimal compiler that will fool `spack compiler find`
         mkdirp(self.compiler_search_prefix)
-        with open(self.compiler_search_prefix.icx, "w") as f:
-            f.write('#!/bin/bash\necho "oneAPI DPC++ Compiler %s"' % str(spec.version))
-        set_executable(self.compiler_search_prefix.icx)
+        comp = self.compiler_search_prefix.icx
+        if sys.platform == "win32":
+            comp = comp + ".bat"
+            comp_string = "@echo off\necho oneAPI DPC++ Compiler %s" % str(spec.version)
+        else:
+            comp_string = '#!/bin/bash\necho "oneAPI DPC++ Compiler %s"' % str(spec.version)
+        with open(comp, "w") as f:
+            f.write(comp_string)
+        set_executable(comp)
