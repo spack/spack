@@ -108,7 +108,7 @@ class Boost(Package):
     )
 
     @staticmethod
-    def boost_variant(name, is_library=True, buildable=None, **kwargs):
+    def _boost_variant(name, is_library=True, buildable=None, **kwargs):
         """
         Create a spack.Variant, but with extra logic to handle
         the cases when libraries should be compiled
@@ -148,6 +148,9 @@ class Boost(Package):
         libraries = ["libboost_*%s*" % lib for lib in libnames]
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
+
+    # staticmethod's aren't directly callable, except in very recent python 3.x
+    boost_variant = _boost_variant.__func__
 
     boost_variant(
         "cxxstd",
