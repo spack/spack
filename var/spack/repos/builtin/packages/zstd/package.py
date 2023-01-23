@@ -106,8 +106,14 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("ZSTD_BUILD_STATIC", self.spec.satisfies("libs=static")),
             self.define("ZSTD_BUILD_SHARED", self.spec.satisfies("libs=shared")),
             self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs"),
-            self.define("ZSTD_ZLIB_SUPPORT", self.spec.satisfies("compression=zlib")),
-            self.define("ZSTD_LZMA_SUPPORT", self.spec.satisfies("compression=lzma")),
-            self.define("ZSTD_LZ4_SUPPORT", self.spec.satisfies("compression=lz4")),
         ]
+
+        if self.spec.satisfies("+programs"):
+            args.extend(
+                [
+                    self.define("ZSTD_ZLIB_SUPPORT", self.spec.satisfies("compression=zlib")),
+                    self.define("ZSTD_LZMA_SUPPORT", self.spec.satisfies("compression=lzma")),
+                    self.define("ZSTD_LZ4_SUPPORT", self.spec.satisfies("compression=lz4")),
+                ]
+            )
         return args
