@@ -497,6 +497,29 @@ some examples:
 In general, you won't have to remember this naming convention because
 :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
+-----------
+Maintainers
+-----------
+
+In Spack, packages can optionally have one or more maintainers. The ``maintainer``
+directive can be used to add them:
+
+.. code-block:: python
+
+   maintainer("user1")
+   maintainer("user2")
+
+The list of maintainers is inherited from parent packages by default, but users can pass
+the ``reset=True`` argument if they want to restart this list from scratch:
+
+.. code-block:: python
+
+   class CustomFoo(Foo):
+      maintainer("user1", reset=True)
+
+In the snippet above, maintainers declared in the `Foo` package will not be part of the list
+for the ``CustomFoo`` package.
+
 -----------------
 Trusted Downloads
 -----------------
