@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack.build_systems.cmake import CMakeBuilder
 from spack.build_systems.makefile import MakefileBuilder
 from spack.package import *
