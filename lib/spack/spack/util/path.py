@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import date
+from typing import Callable
 from urllib.parse import urlparse
 
 import llnl.util.tty as tty
@@ -320,40 +321,59 @@ def substitute_path_variables(path):
     return path
 
 
-def _get_padding_string(length):
-    spack_path_padding_size = len(SPACK_PATH_PADDING_CHARS)
-    num_reps = int(length / (spack_path_padding_size + 1))
-    extra_chars = length % (spack_path_padding_size + 1)
-    reps_list = [SPACK_PATH_PADDING_CHARS for i in range(num_reps)]
-    reps_list.append(SPACK_PATH_PADDING_CHARS[:extra_chars])
-    return os.path.sep.join(reps_list)
+def add_padding(path: str, length: int, fsencode: Callable[[str], bytes] = os.fsencode):
+    """Given a path ``path``, add placeholder subdirectories such that its length in code
+    units (depenending on the fs encoding) *without* trailing directory seperators is at
+    least ``length``.
 
+    This should work with UTF-16 encoding of paths, and also deal properly with paths containing
+    code points that are multiple code units. In principle since PEP 529 we could assume code
+    units are one byte, but unfortunately UTF-8 paths are not strictly enforced on Windows.
 
-def add_padding(path, length):
-    """Add padding subdirectories to path until total is length characters
+    Returns: padded path as string, without trailing separator.
+    """
 
-    Returns the padded path. If path is length - 1 or more characters long,
-    returns path. If path is length - 1 characters, warns that it is not
-    padding to length
+    # Drop trailing dir seperators
+    path = path.rstrip(os.path.sep)
 
-    Assumes path does not have a trailing path separator"""
-    padding_length = length - len(path)
-    if padding_length == 1:
-        # The only 1 character addition we can make to a path is `/`
-        # Spack internally runs normpath, so `foo/` will be reduced to `foo`
-        # Even if we removed this behavior from Spack, the user could normalize
-        # the path, removing the additional `/`.
-        # Because we can't expect one character of padding to show up in the
-        # resulting binaries, we warn the user and do not pad by a single char
-        tty.warn("Cannot pad path by exactly one character.")
-    if padding_length <= 0:
+    # NOTE: the assumption is that "." is one unit
+    bytes_per_unit = len(fsencode("."))
+
+    # How many units is our current path, and how many should we add.
+    units_in_path = len(fsencode(path)) // bytes_per_unit
+    pad_units = length - units_in_path
+
+    # If we can only fit a dir seperator, then we pad instead with _.
+    if pad_units <= 0:
         return path
 
-    # we subtract 1 from the padding_length to account for the path separator
-    # coming from os.path.join below
-    padding = _get_padding_string(padding_length - 1)
+    # os.path.sep should really be one unit, but let's be generic.
+    units_per_sep = len(fsencode(os.path.sep)) // bytes_per_unit
+    if pad_units <= units_per_sep:
+        return os.path.join(path, "_")
 
-    return os.path.join(path, padding)
+    # Our padding including dir separator is how many units?
+    sep_with_dirname = os.path.sep + SPACK_PATH_PADDING_CHARS
+    bytes_per_sep_with_dirname = len(fsencode(sep_with_dirname))
+
+    # Ensure that there are no multi-unit characters (this way it's valid to truncate on any unit)
+    assert bytes_per_sep_with_dirname == len(sep_with_dirname) * bytes_per_unit
+    units_per_sep_with_dirname = bytes_per_sep_with_dirname // bytes_per_unit
+
+    # Compute how often we should repeat it and how many units remain
+    div, rem = divmod(pad_units, units_per_sep_with_dirname)
+
+    path += div * sep_with_dirname
+
+    # Deal with the special case where the remainder is (part of) the separator
+    # We should never end with that, cause trailing repeated separators may
+    # get lost, for instance: os.path.join('/x/', 'y') == '/x/y' not '/x//y'.
+    if 1 <= rem <= units_per_sep:
+        assert len(fsencode("_")) == bytes_per_unit
+        return path + "_" * rem
+
+    # Truncate the last dir (we've asserted one char = one unit, so this is fine)
+    return path + sep_with_dirname[:rem]
 
 
 def canonicalize_path(path, default_wd=None):

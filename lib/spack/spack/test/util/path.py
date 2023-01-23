@@ -129,3 +129,35 @@ def test_path_debug_padded_filter(debug, monkeypatch):
     monkeypatch.setattr(tty, "_debug", debug)
     with spack.config.override("config:install_tree", {"padded_length": 128}):
         assert expected == sup.debug_padded_filter(string)
+
+
+@pytest.mark.parametrize("encoding", ["ascii", "utf-8", "utf-16-le"])
+def test_add_padding_separator_at_boundary(encoding):
+    # In this test we do *not* have utf code points spanning multiple code units.
+    encode = lambda s: s.encode(encoding)
+
+    # No padding
+    assert "abc" == sup.add_padding("abc", length=0, fsencode=encode)
+    assert "abc" == sup.add_padding("abc", length=3, fsencode=encode)
+
+    # "abc" with length 4 means we get "abc/_" of length 5, since trailing "/" is not allowed.
+    assert os.path.join("abc", "_") == sup.add_padding("abc", length=4, fsencode=encode)
+
+    # which is the same at padding with length 5 "abc/_"
+    assert os.path.join("abc", "_") == sup.add_padding("abc", length=5, fsencode=encode)
+
+    # At the next boundary trailing / is replace with _
+    # So not "abc/__spack_path_placeholder__/" but "abc/__spack_path_placeholder___"
+    assert os.path.join("abc", "__spack_path_placeholder___") == sup.add_padding(
+        "abc", length=31, fsencode=encode
+    )
+    assert os.path.join("abc", "__spack_path_placeholder__", "_") == sup.add_padding(
+        "abc", length=32, fsencode=encode
+    )
+
+
+def test_padding_with_multiple_code_unit():
+    # This is 4 units/bytes and string length 1.
+    path = "😬"
+    padded = sup.add_padding(path, length=8, fsencode=lambda s: s.encode("utf-8"))
+    assert len(padded.encode("utf-8")) == 8
