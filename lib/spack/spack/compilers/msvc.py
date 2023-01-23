@@ -103,10 +103,20 @@ class Msvc(Compiler):
         """
         This is the shorthand VCToolset version of form
         MSVC<short-ver> *NOT* the full version, for that see
-        Msvc.msvc_version
+        Msvc.msvc_version or MSVC.platform_toolset_ver for the
+        raw platform toolset version
         """
-        ver = self.msvc_version[:2].joined.string[:3]
+        ver = self.platform_toolset_ver
         return "MSVC" + ver
+
+    @property
+    def platform_toolset_ver(self):
+        """
+        This is the platform toolset version of current MSVC compiler
+        of form v<toolset-ver>, i.e. v142. This is different from the VC
+        toolset version as established by `short_msvc_version`
+        """
+        return self.msvc_version[:2].joined.string[:3]
 
     @property
     def cl_version(self):
