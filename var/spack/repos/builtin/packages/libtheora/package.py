@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
+import os
 import platform
 import sys
-import os
 
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.msbuild import MSBuildBuilder
@@ -34,9 +34,15 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
         depends_on("m4", type="build")
 
     with when("platform=windows"):
-        variant("static", default=True, description="Enable static build, if false shared library is built")
+        variant(
+            "static",
+            default=True,
+            description="Enable static build, if false shared library is built",
+        )
 
-    build_system("msbuild", "autotools", default="autotools" if sys.platform != "win32" else "msbuild")
+    build_system(
+        "msbuild", "autotools", default="autotools" if sys.platform != "win32" else "msbuild"
+    )
 
     patch("exit-prior-to-running-configure.patch", when="@1.1.1")
     patch("fix_encoding.patch", when="@1.1:")
@@ -46,6 +52,7 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
         when="^libpng@1.6:",
     )
     patch("libtheora-inc-external-ogg.patch", when="platform=windows")
+
 
 class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
@@ -81,13 +88,9 @@ class MSBuildBuilder(MSBuildBuilder):
         return os.path.join(win_dir, vs_dir)
 
     @property
-    def toolchain_version(self):
-        return "v" + self.pkg.compiler.platform_toolset_ver
-
-    @property
     def sln_file(self):
         if self.pkg.spec.satisfies("+static"):
-            f =  "libtheora_static.sln"
+            f = "libtheora_static.sln"
         else:
             f = "libtheora_dynamic.sln"
         return f
@@ -104,13 +107,20 @@ class MSBuildBuilder(MSBuildBuilder):
     def install(self, pkg, spec, prefix):
         if not os.path.isdir(prefix.lib):
             mkdirp(prefix.lib)
-        libs_to_install = glob.glob(os.path.join(self.build_directory, "**", "*.lib"), recursive=True)
-        for l in libs_to_install:
-            install(l, prefix.lib)
-        rename(os.path.join(prefix.lib, "libtheora_static.lib"), os.path.join(prefix.lib, "theora.lib"))
+        libs_to_install = glob.glob(
+            os.path.join(self.build_directory, "**", "*.lib"), recursive=True
+        )
+        for library in libs_to_install:
+            install(library, prefix.lib)
+        rename(
+            os.path.join(prefix.lib, "libtheora_static.lib"),
+            os.path.join(prefix.lib, "theora.lib"),
+        )
         # The encoder and decoder libs are baked into the theora lib on Windows, so we spoof them
-        # here so libtheora is detectable by CMake and pkg-config and linkable by consuming projects
-        copy("theora.lib", "theoradec.lib")
-        copy("theora.lib", "theoraenc.lib")
+        # here so libtheora is detectable by CMake and pkg-config and linkable by
+        # consuming projects
+        with working_dir(prefix.lib):
+            copy("theora.lib", "theoradec.lib")
+            copy("theora.lib", "theoraenc.lib")
         with working_dir(pkg.stage.source_path):
             install_tree("include", prefix.include)

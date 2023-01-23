@@ -122,7 +122,11 @@ class Msvc(Compiler):
     @property
     def cl_version(self):
         """Cl toolset version"""
-        return Version(re.search(Msvc.version_regex, spack.compiler.get_compiler_version_output(self.cc, "")).group(1))
+        return Version(
+            re.search(
+                Msvc.version_regex, spack.compiler.get_compiler_version_output(self.cc, "")
+            ).group(1)
+        )
 
     @property
     def vs_root(self):
