@@ -25,6 +25,8 @@ class Yafyaml(CMakePackage):
 
     version("main", branch="main")
 
+    # Generate checksum with spack checksum yafyaml@x.y.z
+    version("1.0.5", sha256="84abad01cdcfe387240844c35e5fb36d5099f657b57a50d5d5909cc567e72200")
     version("1.0.4", sha256="93ba67c87cf96be7ebe479907ca5343251aa48072b2671b8630bd244540096d3")
     version("1.0.3", sha256="cfbc6b6db660c5688e37da56f9f0091e5cafeeaec395c2a038469066c83b0c65")
     version("1.0.2", sha256="1d08d093d0f4331e4019306a3b6cb0b230aed18998692b57931555d6805f3d94")

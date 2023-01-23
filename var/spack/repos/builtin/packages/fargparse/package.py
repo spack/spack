@@ -19,6 +19,8 @@ class Fargparse(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    # Generate checksum with spack checksum fargparse@x.y.z
+    version("1.4.2", sha256="2cd3f14845235407c6a4171ab4602499dade045e3f9b7dc75190f4a315ac8b44")
     version("1.4.1", sha256="8f9b92a80f05b0a8ab2dd5cd309ad165041c7fcdd589b96bf75c7dd889b9b584")
     version("1.3.1", sha256="65d168696762b53f9a34fac8a82527fb602372f47be05018ebb382ec27b52c6c")
     version("1.3.0", sha256="08fde5fb1b739b69203ac336fe7b39915cfc7f52e068e564b9b6d905d79fc93d")

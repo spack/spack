@@ -20,6 +20,8 @@ class Pfunit(CMakePackage):
 
     maintainers = ["mathomp4", "tclune"]
 
+    # Generate checksum with spack checksum pfunit@x.y.z
+    version("4.6.2", sha256="fd302a1f7a131b38e18bc31ede69a216e580c640152e5e313f5a1e084669a950")
     version("4.6.1", sha256="19de22ff0542ca900aaf2957407f24d7dadaccd993ea210beaf22032d3095add")
     version("4.6.0", sha256="7c768ea3a2d16d8ef6229b25bd7756721c24a18db779c7422afde0e3e2248d72")
     version("4.5.0", sha256="ae0ed4541f2f4ec7b1d06eed532a49cb4c666394ab92b233911f92ce50f76743")

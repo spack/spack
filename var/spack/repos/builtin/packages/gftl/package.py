@@ -38,6 +38,8 @@ class Gftl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    # Generate checksum with spack checksum gftl@x.y.z
+    version("1.8.2", sha256="7ee9a1db62f6dd09e533516d7dc53fbc9c8c81464bb12f6eb558ad5d3bfd85ef")
     version("1.8.1", sha256="b8171ea69b108325816472ee47068618d709a3f563959142bc58ff38908a7210")
     version("1.8.0", sha256="e99def0a9a1b3031ceff22c416bee75e70558cf6b91ce4be70b0ad752dda26c6")
     version("1.7.2", sha256="35a39a0dffb91969af5577b6dd7681379e1c16ca545f0cc2dae0b5192474d852")
