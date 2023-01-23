@@ -307,9 +307,9 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + spack_cppflags
-        + spack_cflags
         + spack_ldflags
         + common_compile_args
+        + spack_cflags
         + spack_ldlibs,
     )
 
@@ -321,9 +321,9 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + spack_cppflags
-        + spack_cxxflags
         + spack_ldflags
         + common_compile_args
+        + spack_cxxflags
         + spack_ldlibs,
     )
 
@@ -334,10 +334,10 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
-        + spack_fflags
         + spack_cppflags
         + spack_ldflags
         + common_compile_args
+        + spack_fflags
         + spack_ldlibs,
     )
 
