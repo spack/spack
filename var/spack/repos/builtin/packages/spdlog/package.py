@@ -51,6 +51,8 @@ class Spdlog(CMakePackage):
         default=False,
         description="Build using external fmt libraries instead of bundled one",
     )
+    variant("pic", default=True, description="Build pic-enabled static libraries")
+
 
     depends_on("cmake@3.2:", when="@:1.7.0", type="build")
     depends_on("cmake@3.10:", when="@1.8.0:", type="build")
@@ -68,6 +70,7 @@ class Spdlog(CMakePackage):
                 [
                     self.define_from_variant("SPDLOG_BUILD_SHARED", "shared"),
                     self.define_from_variant("SPDLOG_FMT_EXTERNAL", "fmt_external"),
+                    self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
                     # tests and examples
                     self.define("SPDLOG_BUILD_TESTS", self.run_tests),
                     self.define("SPDLOG_BUILD_EXAMPLE", self.run_tests),
