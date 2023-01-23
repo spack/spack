@@ -217,6 +217,9 @@ class Python(Package):
     # https://github.com/python/cpython/pull/16717
     patch("intel-3.7.patch", when="@3.7.1:3.7.5 %intel")
 
+    # Fix curses/readline detection logic to not be triggered by path name
+    patch("curses.patch", when="@:3.11")
+
     # CPython tries to build an Objective-C file with GCC's C frontend
     # https://github.com/spack/spack/pull/16222
     # https://github.com/python/cpython/pull/13306
