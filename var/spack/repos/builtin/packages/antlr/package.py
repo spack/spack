@@ -31,7 +31,7 @@ class Antlr(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+pic"):
-            env.set('CXXFLAGS', '-fPIC')
+            env.set("CXXFLAGS", "-fPIC")
 
     def configure_args(self):
         args = ["--disable-csharp"]
