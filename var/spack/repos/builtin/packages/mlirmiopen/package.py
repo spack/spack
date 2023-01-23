@@ -41,6 +41,7 @@ class Mlirmiopen(CMakePackage):
                 "external/llvm-project/mlir/lib/ExecutionEngine/CMakeLists.txt",
                 string=True,
             )
+
     depends_on("python", type="build")
     depends_on("z3", type="link")
     depends_on("zlib", type="link")
