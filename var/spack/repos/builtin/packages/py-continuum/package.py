@@ -16,6 +16,8 @@ class PyContinuum(PythonPackage):
 
     version("1.2.7", sha256="baadcdbe2f5b3c05254307c73434a012f2a3d663e1be9469a03d4b82559e98e1")
 
+    depends_on("python@3.6:")
+
     depends_on("py-setuptools", type="build")
     depends_on("py-torch@1.2.0:", type=("build", "run"))
     depends_on("py-torchvision@0.4.0:", type=("build", "run"))
