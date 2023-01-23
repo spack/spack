@@ -11,12 +11,11 @@ class PyPennylane(PythonPackage):
     """PennyLane is a Python quantum machine learning library by Xanadu Inc."""
     homepage = "https://docs.pennylane.ai/"
     git = "https://github.com/PennyLaneAI/pennylane.git"
-    url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.28.0.tar.gz"
     pypi = "PennyLane/PennyLane-0.28.0.tar.gz"
 
     maintainers = PythonPackage.maintainers + ["mlxd", "marcodelapierre"]
 
-    version("0.28.0", sha256="2a6100c00277c1eb59eab6856cdad7b1237e9d1fbda98b1e15020bd5a64b10a8")
+    version("0.28.0", sha256="7736a17dc972d918e3a737ce4360d16ac84b9f9f6fca440f167de579c926c114")
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -30,7 +29,7 @@ class PyPennylane(PythonPackage):
     depends_on("py-cachetools", type="run")
     depends_on("py-networkx", type="run")
     depends_on("py-numpy@:1.23", type="run")
-    depends_on("py-pennylane-lightning@0.28:", type="run")
+    depends_on("py-pennylane-lightning@0.28:+python", type="run")
     depends_on("py-retworkx", type="run")
     depends_on("py-requests", type="run")
     depends_on("py-scipy", type="run")
