@@ -19,6 +19,7 @@ class Freeimage(MakefilePackage):
 
     def edit(self, spec, prefix):
         env["DESTDIR"] = prefix
+        env["CXXFLAGS"] = "-std=c++14"
 
     def url_for_version(self, version):
         url = "https://downloads.sourceforge.net/project/freeimage/Source%20Distribution/{0}/FreeImage{1}.zip"
