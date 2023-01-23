@@ -34,6 +34,7 @@ class Wgl(Package):
     version("10.0.14393")
     version("10.0.10586")
     version("10.0.26639")
+    version("10.0.20348")
 
     # As per https://github.com/spack/spack/pull/31748 this provisory version represents
     # an arbitrary openGL version designed for maximum compatibility with calling packages
@@ -48,13 +49,15 @@ class Wgl(Package):
     # needed to use OpenGL are found in the SDK (GL/gl.h)
     # Dep is needed to consolidate sdk version to locate header files for
     # version of SDK being used
-    depends_on("win-sdk@10.0.19041", when="@10.0.19041")
-    depends_on("win-sdk@10.0.18362", when="@10.0.18362")
-    depends_on("win-sdk@10.0.17763", when="@10.0.17763")
-    depends_on("win-sdk@10.0.17134", when="@10.0.17134")
-    depends_on("win-sdk@10.0.16299", when="@10.0.16299")
-    depends_on("win-sdk@10.0.15063", when="@10.0.15063")
-    depends_on("win-sdk@10.0.14393", when="@10.0.14393")
+    # Generic depends to capture handling for external versions
+    depends_on("win-sdk", type=("build", "run"))
+    depends_on("win-sdk@10.0.19041", when="@10.0.19041", type=("build", "run"))
+    depends_on("win-sdk@10.0.18362", when="@10.0.18362", type=("build", "run"))
+    depends_on("win-sdk@10.0.17763", when="@10.0.17763", type=("build", "run"))
+    depends_on("win-sdk@10.0.17134", when="@10.0.17134", type=("build", "run"))
+    depends_on("win-sdk@10.0.16299", when="@10.0.16299", type=("build", "run"))
+    depends_on("win-sdk@10.0.15063", when="@10.0.15063", type=("build", "run"))
+    depends_on("win-sdk@10.0.14393", when="@10.0.14393", type=("build", "run"))
 
     # WGL has no meaning on other platforms, should not be able to spec
     for plat in ["linux", "darwin", "cray"]:
@@ -80,11 +83,11 @@ class Wgl(Package):
     # As noted above, the headers neccesary to include
     @property
     def headers(self):
-        return find_headers("GL/gl.h", root=self.spec["win-sdk"].prefix.includes, recursive=True)
+        return find_headers("GL", root=os.path.join(self.prefix.Include, str(self.version)+".0"), recursive=True)
 
     @property
     def libs(self):
-        return find_libraries("opengl32", shared=False, root=self.prefix, recursive=True)
+        return find_libraries("opengl32", shared=False, root=os.path.join(self.prefix.Lib, str(self.version)+".0", "um", self.spec.variants["plat"].value), recursive=True)
 
     def install(self, spec, prefix):
         raise RuntimeError(
