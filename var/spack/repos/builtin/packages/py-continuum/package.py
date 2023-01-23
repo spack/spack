@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyContinuum(PythonPackage):
-    """ A clean and simple data loading library for Continual Learning"""
+    """A clean and simple data loading library for Continual Learning"""
 
     homepage = "https://continuum.readthedocs.io/en/latest/"
     pypi = "continuum/continuum-1.2.7.tar.gz"
