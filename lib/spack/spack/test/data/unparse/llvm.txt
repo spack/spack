@@ -1,0 +1,775 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import os.path
+import re
+import sys
+
+import llnl.util.tty as tty
+
+import spack.build_environment
+import spack.util.executable
+from spack.package import *
+
+
+class Llvm(CMakePackage, CudaPackage):
+    """The LLVM Project is a collection of modular and reusable compiler and
+       toolchain technologies. Despite its name, LLVM has little to do
+       with traditional virtual machines, though it does provide helpful
+       libraries that can be used to build them. The name "LLVM" itself
+       is not an acronym; it is the full name of the project.
+    """
+
+    homepage = "https://llvm.org/"
+    url = "https://github.com/llvm/llvm-project/archive/llvmorg-7.1.0.tar.gz"
+    list_url = "https://releases.llvm.org/download.html"
+    git = "https://github.com/llvm/llvm-project"
+    maintainers = ['trws', 'haampie']
+
+    tags = ['e4s']
+
+    generator = 'Ninja'
+
+    family = "compiler"  # Used by lmod
+
+    # fmt: off
+    version('main', branch='main')
+    version('14.0.6', sha256='98f15f842700bdb7220a166c8d2739a03a72e775b67031205078f39dd756a055')
+    version('14.0.5', sha256='a4a57f029cb81f04618e05853f05fc2d21b64353c760977d8e7799bf7218a23a')
+    version('14.0.4', sha256='1333236f9bee38658762076be4236cb5ebf15ae9b7f2bfce6946b96ae962dc73')
+    version('14.0.3', sha256='0e1d049b050127ecf6286107e9a4400b0550f841d5d2288b9d31fd32ed0683d5')
+    version('14.0.2', sha256='ca52232b3451c8e017f00eb882277707c13e30fac1271ec97015f6d0eeb383d1')
+    version('14.0.1', sha256='c8be00406e872c8a24f8571cf6f5517b73ae707104724b1fd1db2f0af9544019')
+    version('14.0.0', sha256='87b1a068b370df5b79a892fdb2935922a8efb1fddec4cc506e30fe57b6a1d9c4')
+    version('13.0.1', sha256='09c50d558bd975c41157364421820228df66632802a4a6a7c9c17f86a7340802')
+    version('13.0.0', sha256='a1131358f1f9f819df73fa6bff505f2c49d176e9eef0a3aedd1fdbce3b4630e8')
+    version('12.0.1', sha256='66b64aa301244975a4aea489f402f205cde2f53dd722dad9e7b77a0459b4c8df')
+    version('12.0.0', sha256='8e6c99e482bb16a450165176c2d881804976a2d770e0445af4375e78a1fbf19c')
+    version('11.1.0', sha256='53a0719f3f4b0388013cfffd7b10c7d5682eece1929a9553c722348d1f866e79')
+    version('11.0.1', sha256='9c7ad8e8ec77c5bde8eb4afa105a318fd1ded7dff3747d14f012758719d7171b')
+    version('11.0.0', sha256='8ad4ddbafac4f2c8f2ea523c2c4196f940e8e16f9e635210537582a48622a5d5')
+    version('10.0.1', sha256='c7ccb735c37b4ec470f66a6c35fbae4f029c0f88038f6977180b1a8ddc255637')
+    version('10.0.0', sha256='b81c96d2f8f40dc61b14a167513d87c0d813aae0251e06e11ae8a4384ca15451')
+    version('9.0.1', sha256='be7b034641a5fda51ffca7f5d840b1a768737779f75f7c4fd18fe2d37820289a')
+    version('9.0.0', sha256='7807fac25330e24e9955ca46cd855dd34bbc9cc4fdba8322366206654d1036f2')
+    version('8.0.1', sha256='5b18f6111c7aee7c0933c355877d4abcfe6cb40c1a64178f28821849c725c841')
+    version('8.0.0', sha256='d81238b4a69e93e29f74ce56f8107cbfcf0c7d7b40510b7879e98cc031e25167')
+    version('7.1.0', sha256='71c93979f20e01f1a1cc839a247945f556fa5e63abf2084e8468b238080fd839')
+    version('7.0.1', sha256='f17a6cd401e8fd8f811fbfbb36dcb4f455f898c9d03af4044807ad005df9f3c0')
+    version('6.0.1', sha256='aefadceb231f4c195fe6d6cd3b1a010b269c8a22410f339b5a089c2e902aa177')
+    version('6.0.0', sha256='1946ec629c88d30122afa072d3c6a89cc5d5e4e2bb28dc63b2f9ebcc7917ee64')
+    version('5.0.2', sha256='fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795')
+    version('5.0.1', sha256='84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3')
+    version('5.0.0', sha256='1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6')
+    version('4.0.1', sha256='cd664fb3eec3208c08fb61189c00c9118c290b3be5adb3215a97b24255618be5')
+    version('4.0.0', sha256='28ca4b2fc434cb1f558e8865386c233c2a6134437249b8b3765ae745ffa56a34')
+    version('3.9.1', sha256='f5b6922a5c65f9232f83d89831191f2c3ccf4f41fdd8c63e6645bbf578c4ab92')
+    version('3.9.0', sha256='9c6563a72c8b5b79941c773937d997dd2b1b5b3f640136d02719ec19f35e0333')
+    version('3.8.1', sha256='69360f0648fde0dc3d3c4b339624613f3bc2a89c4858933bc3871a250ad02826')
+    version('3.8.0', sha256='b5cc5974cc2fd4e9e49e1bbd0700f872501a8678bd9694fa2b36c65c026df1d1')
+    version('3.7.1', sha256='d2cb0eb9b8eb21e07605bfe5e7a5c6c5f5f8c2efdac01ec1da6ffacaabe4195a')
+    version('3.7.0', sha256='dc00bc230be2006fb87b84f6fe4800ca28bc98e6692811a98195da53c9cb28c6')
+    version('3.6.2', sha256='f75d703a388ba01d607f9cf96180863a5e4a106827ade17b221d43e6db20778a')
+    version('3.5.1', sha256='5d739684170d5b2b304e4fb521532d5c8281492f71e1a8568187bfa38eb5909d')
+    # fmt: on
+
+    # NOTE: The debug version of LLVM is an order of magnitude larger than
+    # the release version, and may take up 20-30 GB of space. If you want
+    # to save space, build with `build_type=Release`.
+
+    variant(
+        "clang",
+        default=True,
+        description="Build the LLVM C/C++/Objective-C compiler frontend",
+    )
+    variant(
+        "flang",
+        default=False, when='@11: +clang',
+        description="Build the LLVM Fortran compiler frontend "
+        "(experimental - parser only, needs GCC)",
+    )
+    variant(
+        "omp_debug",
+        default=False,
+        description="Include debugging code in OpenMP runtime libraries",
+    )
+    variant("lldb", default=True, when='+clang', description="Build the LLVM debugger")
+    variant("lld", default=True, description="Build the LLVM linker")
+    variant("mlir", default=False, when='@10:', description="Build with MLIR support")
+    variant(
+        "internal_unwind",
+        default=True, when='+clang',
+        description="Build the libcxxabi libunwind",
+    )
+    variant(
+        "polly",
+        default=True,
+        description="Build the LLVM polyhedral optimization plugin, "
+        "only builds for 3.7.0+",
+    )
+    variant(
+        "libcxx",
+        default=True, when='+clang',
+        description="Build the LLVM C++ standard library",
+    )
+    variant(
+        "compiler-rt", when='+clang',
+        default=True,
+        description="Build LLVM compiler runtime, including sanitizers",
+    )
+    variant(
+        "gold",
+        default=(sys.platform != "darwin"),
+        description="Add support for LTO with the gold linker plugin",
+    )
+    variant(
+        "split_dwarf",
+        default=False,
+        description="Build with split dwarf information",
+    )
+    variant(
+        "llvm_dylib",
+        default=True,
+        description="Build a combined LLVM shared library with all components",
+    )
+    variant(
+        "link_llvm_dylib",
+        default=False, when='+llvm_dylib',
+        description="Link LLVM tools against the LLVM shared library",
+    )
+    variant(
+        "targets",
+        default="none",
+        description=("What targets to build. Spack's target family is always added "
+                     "(e.g. X86 is automatically enabled when targeting znver2)."),
+        values=("all", "none", "aarch64", "amdgpu", "arm", "avr", "bpf", "cppbackend",
+                "hexagon", "lanai", "mips", "msp430", "nvptx", "powerpc", "riscv",
+                "sparc", "systemz", "webassembly", "x86", "xcore"),
+        multi=True
+    )
+    variant(
+        "build_type",
+        default="Release",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+    )
+    variant(
+        "omp_tsan",
+        default=False, when='@6:',
+        description="Build with OpenMP capable thread sanitizer",
+    )
+    variant(
+        "omp_as_runtime",
+        default=True,
+        when='+clang @12:',
+        description="Build OpenMP runtime via ENABLE_RUNTIME by just-built Clang",
+    )
+    variant('code_signing', default=False,
+            when='+lldb platform=darwin',
+            description="Enable code-signing on macOS")
+    variant("python", default=False, description="Install python bindings")
+    variant('version_suffix', default='none', description="Add a symbol suffix")
+    variant(
+        'shlib_symbol_version',
+        default='none',
+        description="Add shared library symbol version",
+        when='@13:'
+    )
+    variant(
+        'z3',
+        default=False,
+        when='+clang @8:',
+        description='Use Z3 for the clang static analyzer'
+    )
+
+    provides('libllvm@14', when='@14.0.0:14')
+    provides('libllvm@13', when='@13.0.0:13')
+    provides('libllvm@12', when='@12.0.0:12')
+    provides('libllvm@11', when='@11.0.0:11')
+    provides('libllvm@10', when='@10.0.0:10')
+    provides('libllvm@9', when='@9.0.0:9')
+    provides('libllvm@8', when='@8.0.0:8')
+    provides('libllvm@7', when='@7.0.0:7')
+    provides('libllvm@6', when='@6.0.0:6')
+    provides('libllvm@5', when='@5.0.0:5')
+    provides('libllvm@4', when='@4.0.0:4')
+    provides('libllvm@3', when='@3.0.0:3')
+
+    extends("python", when="+python")
+
+    # Build dependency
+    depends_on("cmake@3.4.3:", type="build")
+    depends_on('cmake@3.13.4:', type='build', when='@12:')
+    depends_on("ninja", type="build")
+    depends_on("python@2.7:2.8", when="@:4 ~python", type="build")
+    depends_on("python", when="@5: ~python", type="build")
+    depends_on("pkgconfig", type="build")
+
+    # Universal dependency
+    depends_on("python@2.7:2.8", when="@:4+python")
+    depends_on("python", when="@5:+python")
+
+    # clang and clang-tools dependencies
+    depends_on("z3@4.7.1:", when="+z3")
+
+    # openmp dependencies
+    depends_on("perl-data-dumper", type=("build"))
+    depends_on("hwloc")
+    depends_on("libelf", when="+cuda")  # libomptarget
+    depends_on("libffi", when="+cuda")  # libomptarget
+
+    # llvm-config --system-libs libraries.
+    depends_on("zlib")
+
+    # lldb dependencies
+    depends_on("swig", when="+lldb")
+    depends_on("libedit", when="+lldb")
+    depends_on("ncurses", when="+lldb")
+    depends_on("py-six", when="@5.0.0: +lldb +python")
+
+    # gold support, required for some features
+    depends_on("binutils+gold+ld+plugins", when="+gold")
+
+    # polly plugin
+    depends_on("gmp", when="@:3.6 +polly")
+    depends_on("isl", when="@:3.6 +polly")
+
+    # Older LLVM do not build with newer compilers, and vice versa
+    conflicts("%gcc@8:", when="@:5")
+    conflicts("%gcc@:5.0", when="@8:")
+    # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
+    conflicts("%clang@8:", when="@:4")
+    # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
+    conflicts('%gcc@8.4:8.4.9', when='@12: target=aarch64:')
+
+    # When these versions are concretized, but not explicitly with +libcxx, these
+    # conflicts will enable clingo to set ~libcxx, making the build successful:
+
+    # libc++ of LLVM13, see https://libcxx.llvm.org/#platform-and-compiler-support
+    # @13 does not support %gcc@:10 https://bugs.llvm.org/show_bug.cgi?id=51359#c1
+    # GCC    11     - latest stable release per GCC release page
+    # Clang: 11, 12 - latest two stable releases per LLVM release page
+    # AppleClang 12 - latest stable release per Xcode release page
+    conflicts("%gcc@:10",         when="@13:+libcxx")
+    conflicts("%clang@:10",       when="@13:+libcxx")
+    conflicts("%apple-clang@:11", when="@13:+libcxx")
+
+    # libcxx-4 and compiler-rt-4 fail to build with "newer" clang and gcc versions:
+    conflicts('%gcc@7:',         when='@:4+libcxx')
+    conflicts('%clang@6:',       when='@:4+libcxx')
+    conflicts('%apple-clang@6:', when='@:4+libcxx')
+    conflicts('%gcc@7:',         when='@:4+compiler-rt')
+    conflicts('%clang@6:',       when='@:4+compiler-rt')
+    conflicts('%apple-clang@6:', when='@:4+compiler-rt')
+
+    # cuda_arch value must be specified
+    conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
+
+    # LLVM bug https://bugs.llvm.org/show_bug.cgi?id=48234
+    # CMake bug: https://gitlab.kitware.com/cmake/cmake/-/issues/21469
+    # Fixed in upstream versions of both
+    conflicts('^cmake@3.19.0', when='@6:11.0.0')
+
+    # Github issue #4986
+    patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
+
+    # sys/ustat.h has been removed in favour of statfs from glibc-2.28. Use fixed sizes:
+    patch('llvm5-sanitizer-ustat.patch', when="@4:6.0.0+compiler-rt")
+
+    # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
+    patch('llvm4-lld-ELF-Symbols.patch', when="@4+lld%clang@6:")
+    patch('llvm5-lld-ELF-Symbols.patch', when="@5+lld%clang@7:")
+
+    # Fix missing std:size_t in 'llvm@4:5' when built with '%clang@7:'
+    patch('xray_buffer_queue-cstddef.patch', when="@4:5+compiler-rt%clang@7:")
+
+    # https://github.com/llvm/llvm-project/commit/947f9692440836dcb8d88b74b69dd379d85974ce
+    patch('sanitizer-ipc_perm_mode.patch', when="@5:7+compiler-rt%clang@11:")
+    patch('sanitizer-ipc_perm_mode.patch', when="@5:9+compiler-rt%gcc@9:")
+
+    # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
+    patch('missing-includes.patch', when='@8')
+
+    # Backport from llvm master + additional fix
+    # see  https://bugs.llvm.org/show_bug.cgi?id=39696
+    # for a bug report about this problem in llvm master.
+    patch("constexpr_longdouble.patch", when="@6:8+libcxx")
+    patch("constexpr_longdouble_9.0.patch", when="@9:10.0.0+libcxx")
+
+    # Backport from llvm master; see
+    # https://bugs.llvm.org/show_bug.cgi?id=38233
+    # for a bug report about this problem in llvm master.
+    patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
+
+    # https://bugs.llvm.org/show_bug.cgi?id=39696
+    patch("thread-p9.patch", when="@:10 +libcxx")
+
+    # https://github.com/spack/spack/issues/19625,
+    # merged in llvm-11.0.0_rc2, but not found in 11.0.1
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11.0.1+lldb")
+
+    # https://github.com/spack/spack/issues/19908
+    # merged in llvm main prior to 12.0.0
+    patch("llvm_python_path.patch", when="@:11")
+
+    # Workaround for issue https://github.com/spack/spack/issues/18197
+    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.0:19.1.99')
+
+    # Remove cyclades support to build against newer kernel headers
+    # https://reviews.llvm.org/D102059
+    patch('no_cyclades.patch', when='@10:12.0.0')
+    patch('no_cyclades9.patch', when='@6:9')
+
+    patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
+
+    # add -lpthread to build OpenMP libraries with Fujitsu compiler
+    patch('llvm12-thread.patch', when='@12 %fj')
+    patch('llvm13-thread.patch', when='@13 %fj')
+
+    # avoid build failed with Fujitsu compiler
+    patch('llvm13-fujitsu.patch', when='@13 %fj')
+
+    # patch for missing hwloc.h include for libompd
+    patch('llvm14-hwloc-ompd.patch', when='@14')
+
+    # make libflags a list in openmp subproject when ~omp_as_runtime
+    patch('libomp-libflags-as-list.patch', when='@3.7:')
+
+    # The functions and attributes below implement external package
+    # detection for LLVM. See:
+    #
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
+    executables = ['clang', 'flang', 'ld.lld', 'lldb']
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # Executables like lldb-vscode-X are daemon listening
+            # on some port and would hang Spack during detection.
+            # clang-cl and clang-cpp are dev tools that we don't
+            # need to test
+            if any(x in exe for x in ('vscode', 'cpp', '-cl', '-gpu')):
+                continue
+            result.append(exe)
+        return result
+
+    @classmethod
+    def determine_version(cls, exe):
+        version_regex = re.compile(
+            # Normal clang compiler versions are left as-is
+            r'clang version ([^ )\n]+)-svn[~.\w\d-]*|'
+            # Don't include hyphenated patch numbers in the version
+            # (see https://github.com/spack/spack/pull/14365 for details)
+            r'clang version ([^ )\n]+?)-[~.\w\d-]*|'
+            r'clang version ([^ )\n]+)|'
+            # LLDB
+            r'lldb version ([^ )\n]+)|'
+            # LLD
+            r'LLD ([^ )\n]+) \(compatible with GNU linkers\)'
+        )
+        try:
+            compiler = Executable(exe)
+            output = compiler('--version', output=str, error=str)
+            if 'Apple' in output:
+                return None
+            match = version_regex.search(output)
+            if match:
+                return match.group(match.lastindex)
+        except spack.util.executable.ProcessError:
+            pass
+        except Exception as e:
+            tty.debug(e)
+
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants, compilers = ['+clang'], {}
+        lld_found, lldb_found = False, False
+        for exe in exes:
+            if 'clang++' in exe:
+                compilers['cxx'] = exe
+            elif 'clang' in exe:
+                compilers['c'] = exe
+            elif 'flang' in exe:
+                variants.append('+flang')
+                compilers['fc'] = exe
+                compilers['f77'] = exe
+            elif 'ld.lld' in exe:
+                lld_found = True
+                compilers['ld'] = exe
+            elif 'lldb' in exe:
+                lldb_found = True
+                compilers['lldb'] = exe
+
+        variants.append('+lld' if lld_found else '~lld')
+        variants.append('+lldb' if lldb_found else '~lldb')
+
+        return ''.join(variants), {'compilers': compilers}
+
+    @classmethod
+    def validate_detected_spec(cls, spec, extra_attributes):
+        # For LLVM 'compilers' is a mandatory attribute
+        msg = ('the extra attribute "compilers" must be set for '
+               'the detected spec "{0}"'.format(spec))
+        assert 'compilers' in extra_attributes, msg
+        compilers = extra_attributes['compilers']
+        for key in ('c', 'cxx'):
+            msg = '{0} compiler not found for {1}'
+            assert key in compilers, msg.format(key, spec)
+
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('c', None)
+        result = None
+        if '+clang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'clang')
+        return result
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('cxx', None)
+        result = None
+        if '+clang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'clang++')
+        return result
+
+    @property
+    def fc(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fc', None)
+        result = None
+        if '+flang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'flang')
+        return result
+
+    @property
+    def f77(self):
+        msg = "cannot retrieve Fortran 77 compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('f77', None)
+        result = None
+        if '+flang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'flang')
+        return result
+
+    @property
+    def libs(self):
+        return LibraryList(self.llvm_config("--libfiles", "all",
+                                            result="list"))
+
+    @run_before('cmake')
+    def codesign_check(self):
+        if self.spec.satisfies("+code_signing"):
+            codesign = which('codesign')
+            mkdir('tmp')
+            llvm_check_file = join_path('tmp', 'llvm_check')
+            copy('/usr/bin/false', llvm_check_file)
+            try:
+                codesign('-f', '-s', 'lldb_codesign', '--dryrun',
+                         llvm_check_file)
+
+            except ProcessError:
+                # Newer LLVM versions have a simple script that sets up
+                # automatically when run with sudo priviliges
+                setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
+                try:
+                    setup()
+                except Exception:
+                    raise RuntimeError(
+                        'spack was unable to either find or set up'
+                        'code-signing on your system. Please refer to'
+                        'https://lldb.llvm.org/resources/build.html#'
+                        'code-signing-on-macos for details on how to'
+                        'create this identity.'
+                    )
+
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+            return(None, flags, None)
+        elif name == 'ldflags' and self.spec.satisfies('%intel'):
+            flags.append('-shared-intel')
+            return(None, flags, None)
+        return(flags, None, None)
+
+    def setup_build_environment(self, env):
+        """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
+        if self.compiler.name in ['clang', 'apple-clang']:
+            for lld in 'ld.lld-{0}'.format(self.compiler.version.version[0]), 'ld.lld':
+                bin = os.path.join(os.path.dirname(self.compiler.cc), lld)
+                sym = os.path.join(self.stage.path, 'ld.lld')
+                if os.path.exists(bin) and not os.path.exists(sym):
+                    mkdirp(self.stage.path)
+                    os.symlink(bin, sym)
+            env.prepend_path('PATH', self.stage.path)
+
+    def setup_run_environment(self, env):
+        if "+clang" in self.spec:
+            env.set("CC", join_path(self.spec.prefix.bin, "clang"))
+            env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
+        if "+flang" in self.spec:
+            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
+            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
+
+    root_cmakelists_dir = "llvm"
+
+    def cmake_args(self):
+        spec = self.spec
+        define = CMakePackage.define
+        from_variant = self.define_from_variant
+
+        python = spec['python']
+        cmake_args = [
+            define("LLVM_REQUIRES_RTTI", True),
+            define("LLVM_ENABLE_RTTI", True),
+            define("LLVM_ENABLE_EH", True),
+            define("LLVM_ENABLE_TERMINFO", False),
+            define("LLVM_ENABLE_LIBXML2", False),
+            define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
+            define("PYTHON_EXECUTABLE", python.command.path),
+            define("LIBOMP_USE_HWLOC", True),
+            define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
+        ]
+
+        version_suffix = spec.variants['version_suffix'].value
+        if version_suffix != 'none':
+            cmake_args.append(define('LLVM_VERSION_SUFFIX', version_suffix))
+
+        shlib_symbol_version = spec.variants.get('shlib_symbol_version', None)
+        if shlib_symbol_version is not None and shlib_symbol_version.value != 'none':
+            cmake_args.append(define('LLVM_SHLIB_SYMBOL_VERSION',
+                              shlib_symbol_version.value))
+
+        if python.version >= Version("3"):
+            cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
+        else:
+            cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
+
+        projects = []
+        runtimes = []
+
+        if "+cuda" in spec:
+            cmake_args.extend([
+                define("CUDA_TOOLKIT_ROOT_DIR", spec["cuda"].prefix),
+                define("LIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES",
+                       ",".join(spec.variants["cuda_arch"].value)),
+                define("CLANG_OPENMP_NVPTX_DEFAULT_ARCH",
+                       "sm_{0}".format(spec.variants["cuda_arch"].value[-1])),
+            ])
+            if "+omp_as_runtime" in spec:
+                cmake_args.extend([
+                    define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
+                    # work around bad libelf detection in libomptarget
+                    define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR",
+                           spec["libelf"].prefix.include),
+                ])
+        else:
+            # still build libomptarget but disable cuda
+            cmake_args.extend([
+                define("CUDA_TOOLKIT_ROOT_DIR", "IGNORE"),
+                define("CUDA_SDK_ROOT_DIR", "IGNORE"),
+                define("CUDA_NVCC_EXECUTABLE", "IGNORE"),
+                define("LIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES", "IGNORE"),
+            ])
+
+        cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "omp_debug"))
+
+        if "+lldb" in spec:
+            projects.append("lldb")
+            cmake_args.append(define('LLDB_ENABLE_LIBEDIT', True))
+            cmake_args.append(define('LLDB_ENABLE_NCURSES', True))
+            cmake_args.append(define('LLDB_ENABLE_LIBXML2', False))
+            if spec.version >= Version('10'):
+                cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", 'python'))
+            else:
+                cmake_args.append(define("LLDB_DISABLE_PYTHON", '~python' in spec))
+            if spec.satisfies("@5.0.0: +python"):
+                cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
+
+        if "+gold" in spec:
+            cmake_args.append(
+                define("LLVM_BINUTILS_INCDIR", spec["binutils"].prefix.include)
+            )
+
+        if "+clang" in spec:
+            projects.append("clang")
+            projects.append("clang-tools-extra")
+            if "+omp_as_runtime" in spec:
+                runtimes.append("openmp")
+            else:
+                projects.append("openmp")
+
+            if '@8' in spec:
+                cmake_args.append(from_variant('CLANG_ANALYZER_ENABLE_Z3_SOLVER', 'z3'))
+            elif '@9:' in spec:
+                cmake_args.append(from_variant('LLVM_ENABLE_Z3_SOLVER', 'z3'))
+
+        if "+flang" in spec:
+            projects.append("flang")
+        if "+lld" in spec:
+            projects.append("lld")
+        if "+compiler-rt" in spec:
+            projects.append("compiler-rt")
+        if "+libcxx" in spec:
+            projects.append("libcxx")
+            projects.append("libcxxabi")
+        if "+mlir" in spec:
+            projects.append("mlir")
+        if "+internal_unwind" in spec:
+            projects.append("libunwind")
+        if "+polly" in spec:
+            projects.append("polly")
+            cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
+
+        cmake_args.extend([
+            define("BUILD_SHARED_LIBS", False),
+            from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
+            from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
+            from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),
+            # By default on Linux, libc++.so is a ldscript. CMake fails to add
+            # CMAKE_INSTALL_RPATH to it, which fails. Statically link libc++abi.a
+            # into libc++.so, linking with -lc++ or -stdlib=libc++ is enough.
+            define('LIBCXX_ENABLE_STATIC_ABI_LIBRARY', True)
+        ])
+
+        cmake_args.append(define(
+            "LLVM_TARGETS_TO_BUILD",
+            get_llvm_targets_to_build(spec)))
+
+        cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "omp_tsan"))
+
+        if self.compiler.name == "gcc":
+            compiler = Executable(self.compiler.cc)
+            gcc_output = compiler('-print-search-dirs', output=str, error=str)
+
+            for line in gcc_output.splitlines():
+                if line.startswith("install:"):
+                    # Get path and strip any whitespace
+                    # (causes oddity with ancestor)
+                    gcc_prefix = line.split(":")[1].strip()
+                    gcc_prefix = ancestor(gcc_prefix, 4)
+                    break
+            cmake_args.append(define("GCC_INSTALL_PREFIX", gcc_prefix))
+
+        if self.spec.satisfies("~code_signing platform=darwin"):
+            cmake_args.append(define('LLDB_USE_SYSTEM_DEBUGSERVER', True))
+
+        # Semicolon seperated list of projects to enable
+        cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
+
+        # Semicolon seperated list of runtimes to enable
+        if runtimes:
+            cmake_args.append(define("LLVM_ENABLE_RUNTIMES", runtimes))
+
+        return cmake_args
+
+    @run_after("install")
+    def post_install(self):
+        spec = self.spec
+        define = CMakePackage.define
+
+        # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
+        if "+cuda ~omp_as_runtime" in self.spec:
+            ompdir = "build-bootstrapped-omp"
+            prefix_paths = spack.build_environment.get_cmake_prefix_path(self)
+            prefix_paths.append(str(spec.prefix))
+            # rebuild libomptarget to get bytecode runtime library files
+            with working_dir(ompdir, create=True):
+                cmake_args = [
+                    '-G', 'Ninja',
+                    define('CMAKE_BUILD_TYPE', spec.variants['build_type'].value),
+                    define("CMAKE_C_COMPILER", spec.prefix.bin + "/clang"),
+                    define("CMAKE_CXX_COMPILER", spec.prefix.bin + "/clang++"),
+                    define("CMAKE_INSTALL_PREFIX", spec.prefix),
+                    define('CMAKE_PREFIX_PATH', prefix_paths)
+                ]
+                cmake_args.extend(self.cmake_args())
+                cmake_args.extend([
+                    define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
+                    define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR",
+                           spec["libelf"].prefix.include),
+                    self.stage.source_path + "/openmp",
+                ])
+
+                cmake(*cmake_args)
+                ninja()
+                ninja("install")
+        if "+python" in self.spec:
+            install_tree("llvm/bindings/python", python_platlib)
+
+            if "+clang" in self.spec:
+                install_tree("clang/bindings/python", python_platlib)
+
+        with working_dir(self.build_directory):
+            install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
+
+    def llvm_config(self, *args, **kwargs):
+        lc = Executable(self.prefix.bin.join('llvm-config'))
+        if not kwargs.get('output'):
+            kwargs['output'] = str
+        ret = lc(*args, **kwargs)
+        if kwargs.get('result') == "list":
+            return ret.split()
+        else:
+            return ret
+
+
+def get_llvm_targets_to_build(spec):
+    targets = spec.variants['targets'].value
+
+    # Build everything?
+    if 'all' in targets:
+        return 'all'
+
+    # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
+    spack_to_cmake = {
+        "aarch64": "AArch64",
+        "amdgpu": "AMDGPU",
+        "arm": "ARM",
+        "avr": "AVR",
+        "bpf": "BPF",
+        "cppbackend": "CppBackend",
+        "hexagon": "Hexagon",
+        "lanai": "Lanai",
+        "mips": "Mips",
+        "msp430": "MSP430",
+        "nvptx": "NVPTX",
+        "powerpc": "PowerPC",
+        "riscv": "RISCV",
+        "sparc": "Sparc",
+        "systemz": "SystemZ",
+        "webassembly": "WebAssembly",
+        "x86": "X86",
+        "xcore": "XCore"
+    }
+
+    if 'none' in targets:
+        llvm_targets = set()
+    else:
+        llvm_targets = set(spack_to_cmake[target] for target in targets)
+
+    if spec.target.family in ("x86", "x86_64"):
+        llvm_targets.add("X86")
+    elif spec.target.family == "arm":
+        llvm_targets.add("ARM")
+    elif spec.target.family == "aarch64":
+        llvm_targets.add("AArch64")
+    elif spec.target.family in ("sparc", "sparc64"):
+        llvm_targets.add("Sparc")
+    elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
+        llvm_targets.add("PowerPC")
+
+    return list(llvm_targets)

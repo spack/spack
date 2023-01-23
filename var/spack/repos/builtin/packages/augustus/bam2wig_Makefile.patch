@@ -17,7 +17,7 @@
 -	HTSERRHINT:=$(HTSERRHINT)"Check if HTSlib is installed and of version 1.10 or higher - see README.txt"
 -endif
 +INCLUDES=-I$(HTSLIBDIR)/include/htslib
-+HTSLIBS=-L$(HTSLIBDIR)/lib -Wl,-rpath,$(HTSLIBDIR)/lib -lhts -lcurses -lm -lz -lpthread -lcurl -lssl -lcrypto -lbz2 -llzma
++HTSLIBS=-L$(HTSLIBDIR)/lib -Wl,-rpath,$(HTSLIBDIR)/lib -lhts -lncurses -lm -lz -lpthread -lcurl -lssl -lcrypto -lbz2 -llzma
  
  CFLAGS:=-Wall -O2 $(CFLAGS)
  CC?=gcc

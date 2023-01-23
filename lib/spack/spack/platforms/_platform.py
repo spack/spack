@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import Optional
+
 import llnl.util.lang
 
 import spack.error
@@ -15,24 +17,43 @@ class NoPlatformError(spack.error.SpackError):
 
 @llnl.util.lang.lazy_lexicographic_ordering
 class Platform(object):
-    """Base class for each type of Platform"""
+    """Platform is an abstract class extended by subclasses.
+
+    To add a new type of platform (such as cray_xe), create a subclass and set all the
+    class attributes such as priority, front_target, back_target, front_os, back_os.
+
+    Platform also contain a priority class attribute. A lower number signifies higher
+    priority. These numbers are arbitrarily set and can be changed though often there
+    isn't much need unless a new platform is added and the user wants that to be
+    detected first.
+
+    Targets are created inside the platform subclasses. Most architecture (like linux,
+    and darwin) will have only one target family (x86_64) but in the case of Cray
+    machines, there is both a frontend and backend processor. The user can specify
+    which targets are present on front-end and back-end architecture.
+
+    Depending on the platform, operating systems are either autodetected or are
+    set. The user can set the frontend and backend operating setting by the class
+    attributes front_os and back_os. The operating system will be responsible for
+    compiler detection.
+    """
 
     # Subclass sets number. Controls detection order
-    priority = None   # type: int
+    priority: Optional[int] = None
 
     #: binary formats used on this platform; used by relocation logic
-    binary_formats = ['elf']
+    binary_formats = ["elf"]
 
-    front_end = None   # type: str
-    back_end = None   # type: str
-    default = None   # type: str # The default back end target.
+    front_end: Optional[str] = None
+    back_end: Optional[str] = None
+    default: Optional[str] = None  # The default back end target.
 
-    front_os = None   # type: str
-    back_os = None   # type: str
-    default_os = None   # type: str
+    front_os: Optional[str] = None
+    back_os: Optional[str] = None
+    default_os: Optional[str] = None
 
-    reserved_targets = ['default_target', 'frontend', 'fe', 'backend', 'be']
-    reserved_oss = ['default_os', 'frontend', 'fe', 'backend', 'be']
+    reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
+    reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]
 
     def __init__(self, name):
         self.targets = {}
@@ -57,11 +78,11 @@ class Platform(object):
         """
         # TODO: Check if we can avoid using strings here
         name = str(name)
-        if name == 'default_target':
+        if name == "default_target":
             name = self.default
-        elif name == 'frontend' or name == 'fe':
+        elif name == "frontend" or name == "fe":
             name = self.front_end
-        elif name == 'backend' or name == 'be':
+        elif name == "backend" or name == "be":
             name = self.back_end
 
         return self.targets.get(name, None)
@@ -76,20 +97,20 @@ class Platform(object):
         self.operating_sys[name] = os_class
 
     def operating_system(self, name):
-        if name == 'default_os':
+        if name == "default_os":
             name = self.default_os
-        if name == 'frontend' or name == "fe":
+        if name == "frontend" or name == "fe":
             name = self.front_os
-        if name == 'backend' or name == 'be':
+        if name == "backend" or name == "be":
             name = self.back_os
 
         return self.operating_sys.get(name, None)
 
-    @classmethod
-    def setup_platform_environment(cls, pkg, env):
+    def setup_platform_environment(self, pkg, env):
         """Subclass can override this method if it requires any
         platform-specific build environment modifications.
         """
+        pass
 
     @classmethod
     def detect(cls):
@@ -118,9 +139,11 @@ class Platform(object):
         def targets():
             for t in sorted(self.targets.values()):
                 yield t._cmp_iter
+
         yield targets
 
         def oses():
             for o in sorted(self.operating_sys.values()):
                 yield o._cmp_iter
+
         yield oses

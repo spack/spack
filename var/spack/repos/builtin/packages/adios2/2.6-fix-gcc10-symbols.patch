@@ -1,0 +1,32 @@
+From 0ed2c03e407e6e6b501b00e7ce0b18f6a731ca6d Mon Sep 17 00:00:00 2001
+From: Kai Germaschewski <kai.germaschewski@unh.edu>
+Date: Mon, 24 May 2021 15:00:38 -0400
+Subject: [PATCH] fix unresolved symbol errors when compiling with gcc10
+
+---
+ .../toolkit/format/dataman/DataManSerializer.cpp       | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/source/adios2/toolkit/format/dataman/DataManSerializer.cpp b/source/adios2/toolkit/format/dataman/DataManSerializer.cpp
+index 697d080ae..0ecca6b23 100644
+--- a/source/adios2/toolkit/format/dataman/DataManSerializer.cpp
++++ b/source/adios2/toolkit/format/dataman/DataManSerializer.cpp
+@@ -1143,5 +1143,15 @@ void DataManSerializer::Log(const int level, const std::string &message,
+     }
+ }
+ 
++#define declare_template_instantiation(T)                                      \
++    template int DataManSerializer::GetData<T>(                                \
++        T * outputData, const std::string &varName, const Dims &varStart,      \
++        const Dims &varCount, const size_t step, const Dims &varMemStart,      \
++        const Dims &varMemCount);
++
++ADIOS2_FOREACH_PRIMITIVE_STDTYPE_1ARG(declare_template_instantiation)
++declare_template_instantiation(std::string)
++#undef declare_template_instantiation
++
+ } // namespace format
+ } // namespace adios2
+-- 
+2.32.0.rc3
+

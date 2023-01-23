@@ -19,7 +19,7 @@ config:
   install_tree:
     root: $spack/opt/spack
     projections:
-      all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+      all: "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
     # install_tree can include an optional padded length (int or boolean)
     # default is False (do not pad)
     # if padded_length is True, Spack will pad as close to the system max path
@@ -33,6 +33,9 @@ config:
   template_dirs:
     - $spack/share/spack/templates
 
+  # Directory where licenses should be located
+  license_dir: $spack/etc/spack/licenses
+
   # Temporary locations Spack can try to use for builds.
   #
   # Recommended options are given below.
@@ -42,14 +45,19 @@ config:
   # (i.e., ``$TMP` or ``$TMPDIR``).
   #
   # Another option that prevents conflicts and potential permission issues is
-  # to specify `~/.spack/stage`, which ensures each user builds in their home
-  # directory.
+  # to specify `$user_cache_path/stage`, which ensures each user builds in their
+  # home directory.
   #
   # A more traditional path uses the value of `$spack/var/spack/stage`, which
   # builds directly inside Spack's instance without staging them in a
   # temporary space.  Problems with specifying a path inside a Spack instance
   # are that it precludes its use as a system package and its ability to be
   # pip installable.
+  #
+  # In Spack environment files, chaining onto existing system Spack
+  # installations, the $env variable can be used to download, cache and build
+  # into user-writable paths that are relative to the currently active
+  # environment.
   #
   # In any case, if the username is not already in the path, Spack will append
   # the value of `$user` in an attempt to avoid potential conflicts between
@@ -60,13 +68,13 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+    - $user_cache_path/stage
   # - $spack/var/spack/stage
 
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
-  test_stage: ~/.spack/test
+  test_stage: $user_cache_path/test
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
@@ -75,7 +83,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: ~/.spack/cache
+  misc_cache: $user_cache_path/cache
 
 
   # Timeout in seconds used for downloading sources etc. This only applies
@@ -134,7 +142,7 @@ config:
   # enabling locks.
   locks: true
 
-  # The default url fetch method to use. 
+  # The default url fetch method to use.
   # If set to 'curl', Spack will require curl on the user's system
   # If set to 'urllib', Spack will use python built-in libs to fetch
   url_fetch_method: urllib
@@ -155,14 +163,17 @@ config:
 
   # The concretization algorithm to use in Spack. Options are:
   #
-  #   'original': Spack's original greedy, fixed-point concretizer. This
-  #       algorithm can make decisions too early and will not backtrack
-  #       sufficiently for many specs.
-  #
   #   'clingo': Uses a logic solver under the hood to solve DAGs with full
   #       backtracking and optimization for user preferences. Spack will
   #       try to bootstrap the logic solver, if not already available.
   #
+  #   'original': Spack's original greedy, fixed-point concretizer. This
+  #       algorithm can make decisions too early and will not backtrack
+  #       sufficiently for many specs. This will soon be deprecated in
+  #       favor of clingo.
+  #
+  # See `concretizer.yaml` for more settings you can fine-tune when
+  # using clingo.
   concretizer: clingo
 
 
@@ -181,12 +192,35 @@ config:
   package_lock_timeout: null
 
 
-  # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries.
-  # Has no effect on macOS. DO NOT MIX these within the same install tree.
-  # See the Spack documentation for details.
-  shared_linking: 'rpath'
+  # Control how shared libraries are located at runtime on Linux. See the
+  # the Spack documentation for details.
+  shared_linking:
+    # Spack automatically embeds runtime search paths in ELF binaries for their
+    # dependencies. Their type can either be "rpath" or "runpath". For glibc, rpath is
+    # inherited and has precedence over LD_LIBRARY_PATH; runpath is not inherited
+    # and of lower precedence. DO NOT MIX these within the same install tree.
+    type: rpath
+
+
+    # (Experimental) Embed absolute paths of dependent libraries directly in ELF
+    # binaries to avoid runtime search. This can improve startup time of
+    # executables with many dependencies, in particular on slow filesystems.
+    bind: false
 
 
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
   # manipulation by unprivileged user (e.g. AFS)
   allow_sgid: true
+
+  # Whether to set the terminal title to display status information during
+  # building and installing packages. This gives information about Spack's
+  # current progress as well as the current and total number of packages.
+  terminal_title: false
+
+  # Number of seconds a buildcache's index.json is cached locally before probing
+  # for updates, within a single Spack invocation. Defaults to 10 minutes.
+  binary_index_ttl: 600
+
+  flags:
+    # Whether to keep -Werror flags active in package builds.
+    keep_werror: 'none'

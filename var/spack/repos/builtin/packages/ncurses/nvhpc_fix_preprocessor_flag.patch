@@ -1,0 +1,30 @@
+From a2ae279d50514edca1f8d1fe74a59c4e77385567 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Tue, 19 Apr 2022 13:24:48 +0200
+Subject: [PATCH] MKlib_gen.sh: -P for nvhpc means "stop after preprocessing"
+ and outputs nothing
+
+---
+ ncurses/base/MKlib_gen.sh | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/ncurses/base/MKlib_gen.sh b/ncurses/base/MKlib_gen.sh
+index 5a3770e..f256546 100755
+--- a/ncurses/base/MKlib_gen.sh
++++ b/ncurses/base/MKlib_gen.sh
+@@ -77,12 +77,6 @@ PRG=`echo "$1" | $AWK '{ sub(/^[ 	]*/,""); sub(/[ 	].*$/, ""); print; }' || exit
+ FSF=`"$PRG" --version 2>/dev/null || exit 0 | fgrep "Free Software Foundation" | head -n 1`
+ ALL=`"$PRG" -dumpversion 2>/dev/null || exit 0`
+ ONE=`echo "$ALL" | sed -e 's/\..*$//'`
+-if test -n "$FSF" && test -n "$ALL" && test -n "$ONE" ; then
+-	if test $ONE -ge 5 ; then
+-		echo ".. adding -P option to work around $PRG $ALL" >&2
+-		preprocessor="$preprocessor -P"
+-	fi
+-fi
+ 
+ PID=$$
+ ED1=sed1_${PID}.sed
+-- 
+2.25.1
+

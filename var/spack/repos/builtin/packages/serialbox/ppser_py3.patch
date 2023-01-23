@@ -1,0 +1,48 @@
+# This patch is applicable starting version 2.2.0
+--- a/src/serialbox-python/pp_ser/pp_ser.py
++++ b/src/serialbox-python/pp_ser/pp_ser.py
+@@ -51 +51 @@ __email__ = 'oliver.fuhrer@meteoswiss.ch'
+-def to_ascii(text):
++def open23(name, mode='r'):
+@@ -53 +53,10 @@ def to_ascii(text):
+-        return bytes(text, 'ascii')
++        return open(name, mode,
++                    encoding=(None if 'b' in mode else 'UTF-8'),
++                    errors=(None if 'b' in mode else 'surrogateescape'))
++    else:
++        return open(name, mode)
++
++
++def bytes23(text):
++    if sys.version_info[0] == 3:
++        return bytes(text, 'UTF-8', 'surrogateescape')
+@@ -57,0 +67,11 @@ def to_ascii(text):
++def getline(filename, lineno):
++    try:
++        return linecache.getline(filename, lineno)
++    except:
++        with open23(filename, 'r') as f:
++            for i, line in enumerate(f, start=1):
++                if i == lineno:
++                    return line
++            return ''
++
++
+@@ -608 +628 @@ class PpSer:
+-            nextline = linecache.getline(os.path.join(self.infile), lookahead_index)
++            nextline = getline(os.path.join(self.infile), lookahead_index)
+@@ -613 +633 @@ class PpSer:
+-                nextline = linecache.getline(os.path.join(self.infile), lookahead_index)
++                nextline = getline(os.path.join(self.infile), lookahead_index)
+@@ -711 +731 @@ class PpSer:
+-                nextline = linecache.getline(os.path.join(self.infile), lookahead_index)
++                nextline = getline(os.path.join(self.infile), lookahead_index)
+@@ -716 +736 @@ class PpSer:
+-                        nextline = linecache.getline(os.path.join(self.infile), lookahead_index)
++                        nextline = getline(os.path.join(self.infile), lookahead_index)
+@@ -803 +823 @@ class PpSer:
+-        input_file = open(os.path.join(self.infile), 'r')
++        input_file = open23(os.path.join(self.infile), 'r')
+@@ -843 +863 @@ class PpSer:
+-            output_file.write(to_ascii(self.__outputBuffer))
++            output_file.write(bytes23(self.__outputBuffer))

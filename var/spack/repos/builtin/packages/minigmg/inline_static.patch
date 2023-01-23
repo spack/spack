@@ -1,0 +1,14 @@
+diff --git a/operators.ompif/exchange_boundary.c b/operators.ompif/exchange_boundary.c
+index 6cb27b2..702a2cb 100644
+--- a/operators.ompif/exchange_boundary.c
++++ b/operators.ompif/exchange_boundary.c
+@@ -6,7 +6,7 @@
+ #include <stdint.h>
+ #include "../timer.h"
+ //------------------------------------------------------------------------------------------------------------------------------
+-inline void DoBufferCopy(domain_type *domain, int level, int grid_id, int buffer){
++inline static void DoBufferCopy(domain_type *domain, int level, int grid_id, int buffer){
+   // copy 3D array from read_i,j,k of read[] to write_i,j,k in write[]
+   int   dim_i      = domain->bufferCopies[level][buffer].dim.i;
+   int   dim_j      = domain->bufferCopies[level][buffer].dim.j;
+

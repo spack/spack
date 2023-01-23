@@ -1,0 +1,6522 @@
+diff --git a/Njetlib/Njet.inc b/Njetlib/Njet.inc
+index 32dc414..67b57f5 100644
+--- a/Njetlib/Njet.inc
++++ b/Njetlib/Njet.inc
+@@ -8,3 +8,7 @@ c event kinematics, explicit labelling of flavours, leptons, etc
+       double precision pin,pout,pjet,ptj,etaj,drjj
+       common/usrevt/pin(4,2),pout(4,maxpar-2),pjet(4,maxpar),
+      + ptj(maxpar),etaj(maxpar),drjj(maxpar,maxpar)
++c
++c my counters
++      integer ggclsn,gqclsn,qqclsn
++      common/mycounters/ggclsn,gqclsn,qqclsn
+diff --git a/Njetwork/Njetusr_100_160.f b/Njetwork/Njetusr_100_160.f
+new file mode 100644
+index 0000000..5c1476d
+--- /dev/null
++++ b/Njetwork/Njetusr_100_160.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.100 .or. ptj(ord(njets)).ge.160) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_100_180.f b/Njetwork/Njetusr_100_180.f
+new file mode 100644
+index 0000000..3ae31ff
+--- /dev/null
++++ b/Njetwork/Njetusr_100_180.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.100 .or. ptj(ord(njets)).ge.180) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_140_180.f b/Njetwork/Njetusr_140_180.f
+new file mode 100644
+index 0000000..93d7173
+--- /dev/null
++++ b/Njetwork/Njetusr_140_180.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.140 .or. ptj(ord(njets)).ge.180) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_140_5600.f b/Njetwork/Njetusr_140_5600.f
+new file mode 100644
+index 0000000..54c8f29
+--- /dev/null
++++ b/Njetwork/Njetusr_140_5600.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.140 .or. ptj(ord(njets)).ge.ptjmax) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_160_200.f b/Njetwork/Njetusr_160_200.f
+new file mode 100644
+index 0000000..ef9eb20
+--- /dev/null
++++ b/Njetwork/Njetusr_160_200.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.160 .or. ptj(ord(njets)).ge.200) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_180_250.f b/Njetwork/Njetusr_180_250.f
+new file mode 100644
+index 0000000..f80e0bb
+--- /dev/null
++++ b/Njetwork/Njetusr_180_250.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.180 .or. ptj(ord(njets)).ge.250) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_180_5600.f b/Njetwork/Njetusr_180_5600.f
+new file mode 100644
+index 0000000..8feb15d
+--- /dev/null
++++ b/Njetwork/Njetusr_180_5600.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.180 .or. ptj(ord(njets)).ge.ptjmax) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_200_250.f b/Njetwork/Njetusr_200_250.f
+new file mode 100644
+index 0000000..75ce624
+--- /dev/null
++++ b/Njetwork/Njetusr_200_250.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.200 .or. ptj(ord(njets)).ge.250) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_20_100.f b/Njetwork/Njetusr_20_100.f
+new file mode 100644
+index 0000000..c08dda0
+--- /dev/null
++++ b/Njetwork/Njetusr_20_100.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.20 .or. ptj(ord(njets)).ge.100) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_20_80.f b/Njetwork/Njetusr_20_80.f
+new file mode 100644
+index 0000000..08452b3
+--- /dev/null
++++ b/Njetwork/Njetusr_20_80.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.20 .or. ptj(ord(njets)).ge.80) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_250_400.f b/Njetwork/Njetusr_250_400.f
+new file mode 100644
+index 0000000..e31a24f
+--- /dev/null
++++ b/Njetwork/Njetusr_250_400.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.250 .or. ptj(ord(njets)).ge.400) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_400_5600.f b/Njetwork/Njetusr_400_5600.f
+new file mode 100644
+index 0000000..48ef581
+--- /dev/null
++++ b/Njetwork/Njetusr_400_5600.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.400 .or. ptj(ord(njets)).ge.ptjmax) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/Njetusr_80_140.f b/Njetwork/Njetusr_80_140.f
+new file mode 100644
+index 0000000..a7c5b3c
+--- /dev/null
++++ b/Njetwork/Njetusr_80_140.f
+@@ -0,0 +1,143 @@
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      ptbin=10e0
++      ptmax=400e0
++      xmbin=4e0
++      xmmax=400e0
++      do i=1,njets
++        call mbook(i,'pt_jet',ptbin,0e0,ptmax)
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mbook(i*10+j,'dR',0.1,0e0,5e0)
++        enddo
++      enddo
++      end
++
++      subroutine usrcut(lnot,weight)
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++c                                                                c
++c     Applies kinematical cuts to the final state during the phase
++c     -space generation                                          c
++c                                                                c
++cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer lnot,ord(10)
++      double precision cutkin(10)
++      common/loccut/cutkin
++      double precision weight
++
++      weight=1.d0
++      lnot=0
++c
++      call alusor(ptj,njets,ord,2)
++      if(ptj(ord(njets)).lt.80 .or. ptj(ord(njets)).ge.140) goto 10
++c
++ 20   return
++c
++ 10   lnot=1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer i,j
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++      do i=1,200
++         call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,njets-1
++        do j=i+1,njets
++          call mtop(i*10+j,99,'dR['//jet(i)//jet(j)//']',' ','LIN')
++        enddo
++      enddo
++c
++      close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      integer n
++      character *15 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'Njet.inc'
++      real*8 mQQ,wgt
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      do i=1,njets-1
++        do j=i+1,njets
++          call mfill(i*10+j,real(drjj(ord(njets+1-i),ord(njets+1-j)))
++     $         ,rwgt)
++        enddo
++      enddo
++c     
++      end
++
++
++
+diff --git a/Njetwork/cmsMakefile b/Njetwork/cmsMakefile
+new file mode 100644
+index 0000000..5a72d96
+--- /dev/null
++++ b/Njetwork/cmsMakefile
+@@ -0,0 +1,4 @@
++include ../compile.mk
++prc=Njet
++usrfun=$(USRF)
++include ../alplib/cms_alpgen.mk
+\ No newline at end of file
+diff --git a/alplib/cms_alpgen.mk b/alplib/cms_alpgen.mk
+new file mode 100644
+index 0000000..f62763b
+--- /dev/null
++++ b/alplib/cms_alpgen.mk
+@@ -0,0 +1,75 @@
++# DO NOT EDIT FROM HERE ON:
++#
++# DEFINE DIRECTORY AND FILE ALIASES
++alp= ../alplib
++her= ../herlib
++prclib= ../$(prc)lib
++prcusr=.
++prcfile=$(prclib)/$(prc)
++execfile=$(prc)_$(usrfun)gen
++usrfile=$(prcusr)/$(prc)usr_$(usrfun)
++
++VF90= ../VF90
++
++# DEFINE FILE GROUPS:
++# Files used for the parton-level event genertaion:
++ALPGEN= $(alp)/alpgen.f $(alp)/Acp.f $(alp)/Aint.f $(alp)/alputi.f \
++	$(alp)/alppdf.f $(alp)/Asu3.f
++PARTON= $(prcfile).f $(usrfile).f $(ALPGEN)
++
++# Include files
++INC=  $(prclib)/$(prc).inc $(alp)/alpgen.inc
++
++# include files' dependencies
++$(PARTON): $(INC)
++
++# object files
++OBJ=$(PARTON:.f=.o) $(PARTON90:.f90=.o)
++
++
++# compilation
++%.o: %.f $(PARTON) $(INC)
++	$(FFF) -c -o $*.o $*.f 
++$(prclib)/XXX.o90 : $(alp)/A90.f90 $(prclib)/ini_$(prc).f90
++	cd $(prclib); cp $(alp)/A90.f90 XXX.f90; \
++	cat $(prclib)/ini_$(prc).f90 >> XXX.f90;\
++	$(FF90)  -c XXX.f90; cp XXX.o XXX.o90
++
++$(prclib)/XXX.o90V : $(alp)/A90.f90 $(prclib)/ini_$(prc).f90
++	cd $(VF90); cp $(alp)/A90.f90 XXX.f90;\
++        cat $(prclib)/ini_$(prc).f90 >> XXX.f90;\
++	$(FF90V) -c XXX.f90; cp XXX.o $(prclib)/XXX.o90V; mv XXX.o $(prclib); \
++	rm -f *.vo; rm -f V*.inc;
++
++# fortran77 version
++gen: $(OBJ)
++	$(FFF) -o $(execfile) $(usrfile).o $(prcfile).o \
++	$(alp)/alpgen.o $(alp)/alputi.o $(alp)/alppdf.o \
++	$(alp)/Acp.o $(alp)/Asu3.o $(alp)/Aint.o
++# fortran90 version
++gen90: $(usrfile).o $(prcfile).o $(prclib)/$(prc).inc\
++	$(alp)/alpgen.o $(alp)/alputi.o $(alp)/alppdf.o \
++	$(alp)/Aint90.o $(prclib)/XXX.o90 $(alp)/alpgen.inc 
++	$(FF90) -o $(execfile)90 $(usrfile).o $(prcfile).o \
++	$(alp)/alpgen.o $(alp)/alputi.o $(alp)/alppdf.o \
++	$(alp)/Aint90.o $(prclib)/XXX.o
++# fortran90 version, Vast/Veridian compyler
++gen90V: $(usrfile).o $(prcfile).o $(prclib)/$(prc).inc\
++	$(alp)/alpgen.o $(alp)/alputi.o $(alp)/alppdf.o \
++	$(alp)/Aint90.o $(prclib)/XXX.o90V $(alp)/alpgen.inc 
++	$(FFF) -o $(execfile)90V $(usrfile).o $(prcfile).o \
++	$(alp)/alpgen.o $(alp)/alputi.o $(alp)/alppdf.o \
++	$(prclib)/XXX.o $(alp)/Aint90.o $(VF90)/libvast90.a
++
++# DIRECTORY CLEANUP UTILITIES:
++#
++# remove object files only
++cleanobj:
++	-rm $(PARTON:.f=.o) $(PARTON90:.f90=.o) $(prcusr)/../*/*.o90*
++
++# remove object files, etc
++cleanall:
++	-rm $(OBJ) $(prcusr)/fort.* $(prcusr)/*.top $(prcusr)/*.par \
++	$(prcusr)/*.wgt $(prcusr)/*.unw $(prcusr)/*.mon \
++	$(prcusr)/*.stat $(prcusr)/../*/*.o90*
++
+diff --git a/phjetwork/cmsMakefile b/phjetwork/cmsMakefile
+new file mode 100644
+index 0000000..9c416bd
+--- /dev/null
++++ b/phjetwork/cmsMakefile
+@@ -0,0 +1,4 @@
++include ../compile.mk
++prc=phjet
++usrfun=$(USRF)
++include ../alplib/cms_alpgen.mk
+diff --git a/phjetwork/phjetusr_120_180bin.f b/phjetwork/phjetusr_120_180bin.f
+new file mode 100644
+index 0000000..fa1f4bd
+--- /dev/null
++++ b/phjetwork/phjetusr_120_180bin.f
+@@ -0,0 +1,137 @@
++c      data resc/1d3/
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      double precision wusr
++      integer lnot,i
++      double precision PTGMIN, PTGMAX, ptg
++      integer init
++      data init /0/
++
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++      PTGMIN = 120d0
++      PTGMAX = 180d0
++       ptg=sqrt(pphot(1,1)**2+pphot(2,1)**2) 
++c      if(cuts not passed) goto 10
++C      write (*,*)  ptg , ptp(1)
++       if(ptg.le.PTGMIN) goto 10
++       if(ptg.gt.PTGMAX) goto 10 
++ 5    return
++ 10     lnot= 1
++       return 
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++      call mbook(4,'pt_4',ptbin,0e0,ptmax)
++      call mbook(5,'pt_5',ptbin,0e0,ptmax)
++      call mbook(6,'pt_6',ptbin,0e0,ptmax)
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
+diff --git a/phjetwork/phjetusr_180_240bin.f b/phjetwork/phjetusr_180_240bin.f
+new file mode 100644
+index 0000000..dd21cb6
+--- /dev/null
++++ b/phjetwork/phjetusr_180_240bin.f
+@@ -0,0 +1,137 @@
++c      data resc/1d3/
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      double precision wusr
++      integer lnot,i
++      double precision PTGMIN, PTGMAX, ptg
++      integer init
++      data init /0/
++
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++      PTGMIN = 180d0
++      PTGMAX = 240d0
++       ptg=sqrt(pphot(1,1)**2+pphot(2,1)**2) 
++c      if(cuts not passed) goto 10
++C      write (*,*)  ptg , ptp(1)
++       if(ptg.le.PTGMIN) goto 10
++       if(ptg.gt.PTGMAX) goto 10 
++ 5    return
++ 10     lnot= 1
++       return 
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++      call mbook(4,'pt_4',ptbin,0e0,ptmax)
++      call mbook(5,'pt_5',ptbin,0e0,ptmax)
++      call mbook(6,'pt_6',ptbin,0e0,ptmax)
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
+diff --git a/phjetwork/phjetusr_20_60bin.f b/phjetwork/phjetusr_20_60bin.f
+new file mode 100644
+index 0000000..1bdd6af
+--- /dev/null
++++ b/phjetwork/phjetusr_20_60bin.f
+@@ -0,0 +1,137 @@
++c      data resc/1d3/
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      double precision wusr
++      integer lnot,i
++      double precision PTGMIN, PTGMAX, ptg
++      integer init
++      data init /0/
++
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++      PTGMIN = 20d0
++      PTGMAX = 60d0
++       ptg=sqrt(pphot(1,1)**2+pphot(2,1)**2) 
++c      if(cuts not passed) goto 10
++C      write (*,*)  ptg , ptp(1)
++       if(ptg.le.PTGMIN) goto 10
++       if(ptg.gt.PTGMAX) goto 10 
++ 5    return
++ 10     lnot= 1
++       return 
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++      call mbook(4,'pt_4',ptbin,0e0,ptmax)
++      call mbook(5,'pt_5',ptbin,0e0,ptmax)
++      call mbook(6,'pt_6',ptbin,0e0,ptmax)
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
+diff --git a/phjetwork/phjetusr_240_300bin.f b/phjetwork/phjetusr_240_300bin.f
+new file mode 100644
+index 0000000..d72191a
+--- /dev/null
++++ b/phjetwork/phjetusr_240_300bin.f
+@@ -0,0 +1,137 @@
++c      data resc/1d3/
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      double precision wusr
++      integer lnot,i
++      double precision PTGMIN, PTGMAX, ptg
++      integer init
++      data init /0/
++
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++      PTGMIN = 240d0
++      PTGMAX = 300d0
++       ptg=sqrt(pphot(1,1)**2+pphot(2,1)**2) 
++c      if(cuts not passed) goto 10
++C      write (*,*)  ptg , ptp(1)
++       if(ptg.le.PTGMIN) goto 10
++       if(ptg.gt.PTGMAX) goto 10 
++ 5    return
++ 10     lnot= 1
++       return 
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++      call mbook(4,'pt_4',ptbin,0e0,ptmax)
++      call mbook(5,'pt_5',ptbin,0e0,ptmax)
++      call mbook(6,'pt_6',ptbin,0e0,ptmax)
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
+diff --git a/phjetwork/phjetusr_300_5000bin.f b/phjetwork/phjetusr_300_5000bin.f
+new file mode 100644
+index 0000000..5fc57ab
+--- /dev/null
++++ b/phjetwork/phjetusr_300_5000bin.f
+@@ -0,0 +1,137 @@
++c      data resc/1d3/
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      double precision wusr
++      integer lnot,i
++      double precision PTGMIN, PTGMAX, ptg
++      integer init
++      data init /0/
++
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++      PTGMIN = 300d0
++      PTGMAX = 5000d0
++       ptg=sqrt(pphot(1,1)**2+pphot(2,1)**2) 
++c      if(cuts not passed) goto 10
++C      write (*,*)  ptg , ptp(1)
++       if(ptg.le.PTGMIN) goto 10
++       if(ptg.gt.PTGMAX) goto 10 
++ 5    return
++ 10     lnot= 1
++       return 
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++      call mbook(4,'pt_4',ptbin,0e0,ptmax)
++      call mbook(5,'pt_5',ptbin,0e0,ptmax)
++      call mbook(6,'pt_6',ptbin,0e0,ptmax)
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
+diff --git a/phjetwork/phjetusr_60_120bin.f b/phjetwork/phjetusr_60_120bin.f
+new file mode 100644
+index 0000000..56cce90
+--- /dev/null
++++ b/phjetwork/phjetusr_60_120bin.f
+@@ -0,0 +1,137 @@
++c      data resc/1d3/
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      double precision wusr
++      integer lnot,i
++      double precision PTGMIN, PTGMAX, ptg
++      integer init
++      data init /0/
++
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++      PTGMIN = 60d0
++      PTGMAX = 120d0
++       ptg=sqrt(pphot(1,1)**2+pphot(2,1)**2) 
++c      if(cuts not passed) goto 10
++C      write (*,*)  ptg , ptp(1)
++       if(ptg.le.PTGMIN) goto 10
++       if(ptg.gt.PTGMAX) goto 10 
++ 5    return
++ 10     lnot= 1
++       return 
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++      call mbook(4,'pt_4',ptbin,0e0,ptmax)
++      call mbook(5,'pt_5',ptbin,0e0,ptmax)
++      call mbook(6,'pt_6',ptbin,0e0,ptmax)
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,njets
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'phjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,njets
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
+diff --git a/wjetwork/cmsMakefile b/wjetwork/cmsMakefile
+new file mode 100644
+index 0000000..c493b7d
+--- /dev/null
++++ b/wjetwork/cmsMakefile
+@@ -0,0 +1,4 @@
++include ../compile.mk
++prc=wjet
++usrfun=$(USRF)
++include ../alplib/cms_alpgen.mk
+\ No newline at end of file
+diff --git a/wjetwork/wjetusr_0ptw100.f b/wjetwork/wjetusr_0ptw100.f
+new file mode 100644
+index 0000000..34cadb8
+--- /dev/null
++++ b/wjetwork/wjetusr_0ptw100.f
+@@ -0,0 +1,157 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++
++c     smaria@cern.ch sep.2005 for tails cut
++      real ptw
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++c     smaria@cern.ch sep.2005 for tails cut
++      ptw=sqrt(pw(1)**2+pw(2)**2)
++      if(ptw.gt.100) goto 10
++
++      return
++ 10      lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++      end
++      
+diff --git a/wjetwork/wjetusr_100ptw300.f b/wjetwork/wjetusr_100ptw300.f
+new file mode 100644
+index 0000000..5659736
+--- /dev/null
++++ b/wjetwork/wjetusr_100ptw300.f
+@@ -0,0 +1,158 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++
++c     smaria@cern.ch sep.2005 for tails cut
++      real ptw
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++c     smaria@cern.ch sep.2005 for tails cut
++      ptw=sqrt(pw(1)**2+pw(2)**2)
++      if(ptw.le.100) goto 10
++      if(ptw.gt.300) goto 10
++
++      return
++ 10      lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++      end
++      
+diff --git a/wjetwork/wjetusr_1600ptw.f b/wjetwork/wjetusr_1600ptw.f
+new file mode 100644
+index 0000000..7f7b972
+--- /dev/null
++++ b/wjetwork/wjetusr_1600ptw.f
+@@ -0,0 +1,157 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++
++c     smaria@cern.ch sep.2005 for tails cut
++      real ptw
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++c     smaria@cern.ch sep.2005 for tails cut
++      ptw=sqrt(pw(1)**2+pw(2)**2)
++      if(ptw.le.1600) goto 10
++
++      return
++ 10      lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++      end
++      
+diff --git a/wjetwork/wjetusr_1600ptw3200.f b/wjetwork/wjetusr_1600ptw3200.f
+new file mode 100644
+index 0000000..395b816
+--- /dev/null
++++ b/wjetwork/wjetusr_1600ptw3200.f
+@@ -0,0 +1,158 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++
++c     smaria@cern.ch sep.2005 for tails cut
++      real ptw
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++c     smaria@cern.ch sep.2005 for tails cut
++      ptw=sqrt(pw(1)**2+pw(2)**2)
++      if(ptw.le.1600) goto 10
++      if(ptw.gt.3200) goto 10
++
++      return
++ 10      lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++      end
++      
+diff --git a/wjetwork/wjetusr_2j_vbf_inv.f b/wjetwork/wjetusr_2j_vbf_inv.f
+new file mode 100644
+index 0000000..430eebe
+--- /dev/null
++++ b/wjetwork/wjetusr_2j_vbf_inv.f
+@@ -0,0 +1,219 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-)
++c     lepton/jet isolation (if l+l-)
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      double precision wusr
++      integer lnot
++c local params
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj
++      integer i,imax,imin,j1,j2
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point.
++c     if(cut-not-passed) goto 10
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++ 
++      if((etaj(j1)-etaj(j2)).ge.0.and.(etaj(j1)-etaj(j2)).le. 2) goto 10
++      if((etaj(j1)-etaj(j2)).le.0.and.(etaj(j1)-etaj(j2)).ge.-2) goto 10
++ 
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 -
++     &             (pjet(1,j1)+pjet(1,j2))**2 -
++     &             (pjet(2,j1)+pjet(2,j2))**2 -
++     &             (pjet(3,j1)+pjet(3,j2))**2 )
++ 
++      if(xmjj.le.300) goto 10
++c
++ 5    return
++c     if(cut-not-passed) goto 10
++ 10   lnot= 1
++      return
++      end
++ 
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++      call mbook(15,'detajj',0.2,0.,10.)
++      call mbook(16,'mjj',100.,0.,5000.)
++ 
++      end
++ 
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++      call mtop(15,99,'detajj',' ','LIN')
++      call mtop(16,99,'mjj',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++ 
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif
++      endif
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,tmp,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c ===================================================
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj, deta
++      integer j1,j2
++c ===================================================
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++c ===================================================
++c  USR will add possible extra cuts at this point.
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++c
++      deta = abs(etaj(j2)-etaj(j1))
++      if(abs(etaj(j1)-etaj(j2)).ge.abs(etaj(j2)-etaj(j1))) then
++         deta = abs(etaj(j1)-etaj(j2))
++      endif
++c
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2
++     &           - (pjet(1,j1)+pjet(1,j2))**2
++     &           - (pjet(2,j1)+pjet(2,j2))**2
++     &           - (pjet(3,j1)+pjet(3,j2))**2 )
++c
++      call mfill(15,real(deta),rwgt)
++      call mfill(16,real(xmjj),rwgt)
++c ===================================================
++      end
++ 
++
+diff --git a/wjetwork/wjetusr_300ptw800.f b/wjetwork/wjetusr_300ptw800.f
+new file mode 100644
+index 0000000..84917d2
+--- /dev/null
++++ b/wjetwork/wjetusr_300ptw800.f
+@@ -0,0 +1,158 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++
++c     smaria@cern.ch sep.2005 for tails cut
++      real ptw
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++c     smaria@cern.ch sep.2005 for tails cut
++      ptw=sqrt(pw(1)**2+pw(2)**2)
++      if(ptw.le.300) goto 10
++      if(ptw.gt.800) goto 10
++
++      return
++ 10      lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++      end
++ 
+diff --git a/wjetwork/wjetusr_3200ptw5000.f b/wjetwork/wjetusr_3200ptw5000.f
+new file mode 100644
+index 0000000..f4ce29b
+--- /dev/null
++++ b/wjetwork/wjetusr_3200ptw5000.f
+@@ -0,0 +1,158 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++
++c     smaria@cern.ch sep.2005 for tails cut
++      real ptw
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++c     smaria@cern.ch sep.2005 for tails cut
++      ptw=sqrt(pw(1)**2+pw(2)**2)
++      if(ptw.le.3200) goto 10
++      if(ptw.gt.5000) goto 10
++
++      return
++ 10      lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++      end
++      
+diff --git a/wjetwork/wjetusr_3j_vbf_inv.f b/wjetwork/wjetusr_3j_vbf_inv.f
+new file mode 100644
+index 0000000..430eebe
+--- /dev/null
++++ b/wjetwork/wjetusr_3j_vbf_inv.f
+@@ -0,0 +1,219 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-)
++c     lepton/jet isolation (if l+l-)
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      double precision wusr
++      integer lnot
++c local params
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj
++      integer i,imax,imin,j1,j2
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point.
++c     if(cut-not-passed) goto 10
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++ 
++      if((etaj(j1)-etaj(j2)).ge.0.and.(etaj(j1)-etaj(j2)).le. 2) goto 10
++      if((etaj(j1)-etaj(j2)).le.0.and.(etaj(j1)-etaj(j2)).ge.-2) goto 10
++ 
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 -
++     &             (pjet(1,j1)+pjet(1,j2))**2 -
++     &             (pjet(2,j1)+pjet(2,j2))**2 -
++     &             (pjet(3,j1)+pjet(3,j2))**2 )
++ 
++      if(xmjj.le.300) goto 10
++c
++ 5    return
++c     if(cut-not-passed) goto 10
++ 10   lnot= 1
++      return
++      end
++ 
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++      call mbook(15,'detajj',0.2,0.,10.)
++      call mbook(16,'mjj',100.,0.,5000.)
++ 
++      end
++ 
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++      call mtop(15,99,'detajj',' ','LIN')
++      call mtop(16,99,'mjj',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++ 
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif
++      endif
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,tmp,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c ===================================================
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj, deta
++      integer j1,j2
++c ===================================================
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++c ===================================================
++c  USR will add possible extra cuts at this point.
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++c
++      deta = abs(etaj(j2)-etaj(j1))
++      if(abs(etaj(j1)-etaj(j2)).ge.abs(etaj(j2)-etaj(j1))) then
++         deta = abs(etaj(j1)-etaj(j2))
++      endif
++c
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2
++     &           - (pjet(1,j1)+pjet(1,j2))**2
++     &           - (pjet(2,j1)+pjet(2,j2))**2
++     &           - (pjet(3,j1)+pjet(3,j2))**2 )
++c
++      call mfill(15,real(deta),rwgt)
++      call mfill(16,real(xmjj),rwgt)
++c ===================================================
++      end
++ 
++
+diff --git a/wjetwork/wjetusr_800ptw1600.f b/wjetwork/wjetusr_800ptw1600.f
+new file mode 100644
+index 0000000..5f47b04
+--- /dev/null
++++ b/wjetwork/wjetusr_800ptw1600.f
+@@ -0,0 +1,158 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++
++c     smaria@cern.ch sep.2005 for tails cut
++      real ptw
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++c     smaria@cern.ch sep.2005 for tails cut
++      ptw=sqrt(pw(1)**2+pw(2)**2)
++      if(ptw.le.800) goto 10
++      if(ptw.gt.1600) goto 10
++
++      return
++ 10      lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++      end
++
+diff --git a/wjetwork/wjetusr_VBFHiggsTo2Tau.f b/wjetwork/wjetusr_VBFHiggsTo2Tau.f
+new file mode 100644
+index 0000000..c8d65f8
+--- /dev/null
++++ b/wjetwork/wjetusr_VBFHiggsTo2Tau.f
+@@ -0,0 +1,231 @@
++c-------------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-------------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     pt(lept)>ptlmin  etmiss > minetmiss 
++c     abs(eta(lept)) < etalmax 
++c     lepton/jet isolation 
++c
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer lnot
++      double precision wusr
++c local params
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj
++      integer i,j1,j2
++c
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++
++      if((etaj(j1)-etaj(j2)).ge.0.and.(etaj(j1)-etaj(j2)).le. 2) goto 10
++      if((etaj(j1)-etaj(j2)).le.0.and.(etaj(j1)-etaj(j2)).ge.-2) goto 10
++
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 -
++     &             (pjet(1,j1)+pjet(1,j2))**2 -      
++     &             (pjet(2,j1)+pjet(2,j2))**2 -      
++     &             (pjet(3,j1)+pjet(3,j2))**2 )
++
++      if(xmjj.le.300) goto 10
++
++ 5    return
++c     if(cut-not-passed) goto 10
++
++      return
++ 10   lnot= 1
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      character*1 ijet(6)
++      integer i
++      data ijet/'1','2','3','4','5','6'/
++      ptbin=2.5e0
++      ptmax=100*ptbin
++      xmbin=4e0
++      xmmax=400e0
++c
++      do i=1,min(5,njets)
++        call mbook(i,'pt j'//ijet(i),ptbin,0e0,ptmax)
++        call mbook(5+i,'eta j'//ijet(i),0.1,-3e0,3e0)
++      enddo
++      call mbook(12,'ptlept',2.,0e0,200.)
++      call mbook(13,'mW',0.5,70.,110.)
++      call mbook(14,'etal',0.2,-5.,5.)
++      call mbook(15,'detajj',0.2,0.,10.)
++      call mbook(16,'mjj',100.,0.,5000.)
++      end
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c debug
++      integer idbg
++      double precision fcount
++      common/fldbg/fcount(16),idbg
++      data idbg/0/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(5,njets)
++        call mtop(i,99,'pt j'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(5,njets)
++        call mtop(5+i,99,'eta j'//jet(i),' ','LIN')
++      enddo
++c
++      call mtop(12,99,'ptl',' ','LIN')
++      call mtop(13,99,'mW',' ','LIN')
++      call mtop(14,99,'etal',' ','LIN')
++      call mtop(15,99,'detajj',' ','LIN')
++      call mtop(16,99,'mjj',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,1000000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'wjet.inc'
++      real*8 wgt,xmw
++      real rwgt
++      integer i,jproc,ord(10)
++c ===================================================
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj, deta
++      integer j1,j2
++c ===================================================
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++      call mfill(12,real(ptlep),rwgt)
++      if(njets.eq.0) return
++      call alusor(ptj,njets,ord,2)
++      do i=1,min(5,njets)
++        call mfill(i,real(ptj(ord(njets-i+1))),rwgt)
++        call mfill(5+i,real(etaj(ord(njets-i+1))),rwgt)
++      enddo
++      xmw=sqrt(pw(4)**2-pw(1)**2-pw(2)**2-pw(3)**2)
++      call mfill(13,real(xmw),rwgt)
++      call mfill(14,real(etalep),rwgt)
++c ===================================================
++c  USR will add possible extra cuts at this point. 
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++c
++      deta = abs(etaj(j2)-etaj(j1))
++      if(abs(etaj(j1)-etaj(j2)).ge.abs(etaj(j2)-etaj(j1))) then
++         deta = abs(etaj(j1)-etaj(j2))
++      endif
++c
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 
++     &           - (pjet(1,j1)+pjet(1,j2))**2       
++     &           - (pjet(2,j1)+pjet(2,j2))**2       
++     &           - (pjet(3,j1)+pjet(3,j2))**2 )
++c
++      call mfill(15,real(deta),rwgt)
++      call mfill(16,real(xmjj),rwgt)
++c ===================================================
++      end
++      
+diff --git a/zjetwork/cmsMakefile b/zjetwork/cmsMakefile
+new file mode 100644
+index 0000000..eb67e38
+--- /dev/null
++++ b/zjetwork/cmsMakefile
+@@ -0,0 +1,4 @@
++include ../compile.mk
++prc=zjet
++usrfun=$(USRF)
++include ../alplib/cms_alpgen.mk
+diff --git a/zjetwork/zjetusr_0ptz100.f b/zjetwork/zjetusr_0ptz100.f
+new file mode 100644
+index 0000000..d2a8fd1
+--- /dev/null
++++ b/zjetwork/zjetusr_0ptz100.f
+@@ -0,0 +1,149 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++
++      real ptz
++
++c local params
++      double precision emax,emin
++      integer i,imax,imin
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++
++c     if(cut-not-passed) goto 10
++c      for tails cut
++      ptz=sqrt(pz(1)**2+pz(2)**2)
++      if(ptz.lt.0) goto 10
++      if(ptz.gt.100) goto 10
++      return
++ 10   lnot= 1
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
++
++
+diff --git a/zjetwork/zjetusr_100ptz300.f b/zjetwork/zjetusr_100ptz300.f
+new file mode 100644
+index 0000000..8270cc3
+--- /dev/null
++++ b/zjetwork/zjetusr_100ptz300.f
+@@ -0,0 +1,149 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++
++      real ptz
++
++c local params
++      double precision emax,emin
++      integer i,imax,imin
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++
++c     if(cut-not-passed) goto 10
++c      for tails cut
++      ptz=sqrt(pz(1)**2+pz(2)**2)
++      if(ptz.lt.100) goto 10
++      if(ptz.gt.300) goto 10
++      return
++ 10   lnot= 1
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
++
++
+diff --git a/zjetwork/zjetusr_1600ptz.f b/zjetwork/zjetusr_1600ptz.f
+new file mode 100644
+index 0000000..ed6b814
+--- /dev/null
++++ b/zjetwork/zjetusr_1600ptz.f
+@@ -0,0 +1,148 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++
++      real ptz
++
++c local params
++      double precision emax,emin
++      integer i,imax,imin
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++
++c     if(cut-not-passed) goto 10
++c      for tails cut
++      ptz=sqrt(pz(1)**2+pz(2)**2)
++      if(ptz.lt.1600) goto 10
++      return
++ 10   lnot= 1
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
++
++
+diff --git a/zjetwork/zjetusr_1600ptz3200.f b/zjetwork/zjetusr_1600ptz3200.f
+new file mode 100644
+index 0000000..1f30941
+--- /dev/null
++++ b/zjetwork/zjetusr_1600ptz3200.f
+@@ -0,0 +1,149 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++
++      real ptz
++
++c local params
++      double precision emax,emin
++      integer i,imax,imin
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++
++c     if(cut-not-passed) goto 10
++c      for tails cut
++      ptz=sqrt(pz(1)**2+pz(2)**2)
++      if(ptz.lt.1600) goto 10
++      if(ptz.gt.3200) goto 10
++      return
++ 10   lnot= 1
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
++
++
+diff --git a/zjetwork/zjetusr_2j_vbf_inv.f b/zjetwork/zjetusr_2j_vbf_inv.f
+new file mode 100644
+index 0000000..7e33f64
+--- /dev/null
++++ b/zjetwork/zjetusr_2j_vbf_inv.f
+@@ -0,0 +1,219 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++c local params
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj
++      integer i,imax,imin,j1,j2
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++
++      if((etaj(j1)-etaj(j2)).ge.0.and.(etaj(j1)-etaj(j2)).le. 2) goto 10
++      if((etaj(j1)-etaj(j2)).le.0.and.(etaj(j1)-etaj(j2)).ge.-2) goto 10
++
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 -
++     &             (pjet(1,j1)+pjet(1,j2))**2 -      
++     &             (pjet(2,j1)+pjet(2,j2))**2 -      
++     &             (pjet(3,j1)+pjet(3,j2))**2 )
++
++      if(xmjj.le.300) goto 10
++c
++ 5    return
++c     if(cut-not-passed) goto 10
++ 10   lnot= 1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++      call mbook(15,'detajj',0.2,0.,10.)
++      call mbook(16,'mjj',100.,0.,5000.)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++      call mtop(15,99,'detajj',' ','LIN')
++      call mtop(16,99,'mjj',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c ===================================================
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj, deta
++      integer j1,j2
++c ===================================================
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++c ===================================================
++c  USR will add possible extra cuts at this point. 
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++c
++      deta = abs(etaj(j2)-etaj(j1))
++      if(abs(etaj(j1)-etaj(j2)).ge.abs(etaj(j2)-etaj(j1))) then
++         deta = abs(etaj(j1)-etaj(j2))
++      endif
++c
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 
++     &           - (pjet(1,j1)+pjet(1,j2))**2       
++     &           - (pjet(2,j1)+pjet(2,j2))**2       
++     &           - (pjet(3,j1)+pjet(3,j2))**2 )
++c
++      call mfill(15,real(deta),rwgt)
++      call mfill(16,real(xmjj),rwgt)
++c ===================================================
++      end
++
++
+diff --git a/zjetwork/zjetusr_300ptz800.f b/zjetwork/zjetusr_300ptz800.f
+new file mode 100644
+index 0000000..fdf4439
+--- /dev/null
++++ b/zjetwork/zjetusr_300ptz800.f
+@@ -0,0 +1,149 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++
++      real ptz
++
++c local params
++      double precision emax,emin
++      integer i,imax,imin
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++
++c     if(cut-not-passed) goto 10
++c      for tails cut
++      ptz=sqrt(pz(1)**2+pz(2)**2)
++      if(ptz.lt.300) goto 10
++      if(ptz.gt.800) goto 10
++      return
++ 10   lnot= 1
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
++
++
+diff --git a/zjetwork/zjetusr_3200ptz5000.f b/zjetwork/zjetusr_3200ptz5000.f
+new file mode 100644
+index 0000000..a57b645
+--- /dev/null
++++ b/zjetwork/zjetusr_3200ptz5000.f
+@@ -0,0 +1,149 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++
++      real ptz
++
++c local params
++      double precision emax,emin
++      integer i,imax,imin
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++
++c     if(cut-not-passed) goto 10
++c      for tails cut
++      ptz=sqrt(pz(1)**2+pz(2)**2)
++      if(ptz.lt.3200) goto 10
++      if(ptz.gt.5000) goto 10
++      return
++ 10   lnot= 1
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
++
++
+diff --git a/zjetwork/zjetusr_3j_vbf_inv.f b/zjetwork/zjetusr_3j_vbf_inv.f
+new file mode 100644
+index 0000000..7e33f64
+--- /dev/null
++++ b/zjetwork/zjetusr_3j_vbf_inv.f
+@@ -0,0 +1,219 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++c local params
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj
++      integer i,imax,imin,j1,j2
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++
++      if((etaj(j1)-etaj(j2)).ge.0.and.(etaj(j1)-etaj(j2)).le. 2) goto 10
++      if((etaj(j1)-etaj(j2)).le.0.and.(etaj(j1)-etaj(j2)).ge.-2) goto 10
++
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 -
++     &             (pjet(1,j1)+pjet(1,j2))**2 -      
++     &             (pjet(2,j1)+pjet(2,j2))**2 -      
++     &             (pjet(3,j1)+pjet(3,j2))**2 )
++
++      if(xmjj.le.300) goto 10
++c
++ 5    return
++c     if(cut-not-passed) goto 10
++ 10   lnot= 1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++      call mbook(15,'detajj',0.2,0.,10.)
++      call mbook(16,'mjj',100.,0.,5000.)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++      call mtop(15,99,'detajj',' ','LIN')
++      call mtop(16,99,'mjj',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c ===================================================
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj, deta
++      integer j1,j2
++c ===================================================
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++c ===================================================
++c  USR will add possible extra cuts at this point. 
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++c
++      deta = abs(etaj(j2)-etaj(j1))
++      if(abs(etaj(j1)-etaj(j2)).ge.abs(etaj(j2)-etaj(j1))) then
++         deta = abs(etaj(j1)-etaj(j2))
++      endif
++c
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 
++     &           - (pjet(1,j1)+pjet(1,j2))**2       
++     &           - (pjet(2,j1)+pjet(2,j2))**2       
++     &           - (pjet(3,j1)+pjet(3,j2))**2 )
++c
++      call mfill(15,real(deta),rwgt)
++      call mfill(16,real(xmjj),rwgt)
++c ===================================================
++      end
++
++
+diff --git a/zjetwork/zjetusr_800ptz1600.f b/zjetwork/zjetusr_800ptz1600.f
+new file mode 100644
+index 0000000..e334085
+--- /dev/null
++++ b/zjetwork/zjetusr_800ptz1600.f
+@@ -0,0 +1,149 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++
++      real ptz
++
++c local params
++      double precision emax,emin
++      integer i,imax,imin
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++
++c     if(cut-not-passed) goto 10
++c      for tails cut
++      ptz=sqrt(pz(1)**2+pz(2)**2)
++      if(ptz.lt.800) goto 10
++      if(ptz.gt.1600) goto 10
++      return
++ 10   lnot= 1
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++      end
++
++
+diff --git a/zjetwork/zjetusr_VBFHiggsTo2Tau.f b/zjetwork/zjetusr_VBFHiggsTo2Tau.f
+new file mode 100644
+index 0000000..7e33f64
+--- /dev/null
++++ b/zjetwork/zjetusr_VBFHiggsTo2Tau.f
+@@ -0,0 +1,219 @@
++c-----------------------------------------------------------------
++      subroutine usrcut(lnot,wusr)
++c-----------------------------------------------------------------
++c PRIMARY CUTS ALREADY APPLIED TO PHASE-SPACE GENERATION:
++c     ptjmin < pt(jet) < ptjmax for all light jets
++c     -etajmax < eta(jet) < etajmax for all light jets
++c     delta R(jj) > drjmin for all (light jet, light jet) pairs
++c     mllmin < m(l+l-) < mllmax
++c     pt(lept)>ptlmin (if l+l-) or  etmiss > minetmiss (if nu nubar)
++c     abs(eta(lept)) < etalmax (if l+l-) 
++c     lepton/jet isolation (if l+l-) 
++c USE THIS ROUTINE TO ENFORCE OTHER CUTS    
++c
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      double precision wusr
++      integer lnot
++c local params
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj
++      integer i,imax,imin,j1,j2
++c initialize output parameters
++      lnot=0
++      wusr=1d0
++c
++c  USR will add possible extra cuts at this point. 
++c     if(cut-not-passed) goto 10
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++
++      if((etaj(j1)-etaj(j2)).ge.0.and.(etaj(j1)-etaj(j2)).le. 2) goto 10
++      if((etaj(j1)-etaj(j2)).le.0.and.(etaj(j1)-etaj(j2)).ge.-2) goto 10
++
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 -
++     &             (pjet(1,j1)+pjet(1,j2))**2 -      
++     &             (pjet(2,j1)+pjet(2,j2))**2 -      
++     &             (pjet(3,j1)+pjet(3,j2))**2 )
++
++      if(xmjj.le.300) goto 10
++c
++ 5    return
++c     if(cut-not-passed) goto 10
++ 10   lnot= 1
++      return
++      end
++
++c-------------------------------------------------------------------
++      subroutine alshis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real ptbin,ptmax,xmbin,xmmax
++      ptbin=2e0
++      ptmax=200e0
++      xmbin=4e0
++      xmmax=400e0
++c
++      call mbook(1,'pt_1',2.*ptbin,0e0,2.*ptmax)
++      call mbook(2,'pt_2',ptbin,0e0,ptmax)
++      call mbook(3,'pt_3',ptbin,0e0,ptmax)
++c
++      call mbook(11,'eta_1',0.2,-5.0,5.0)
++      call mbook(12,'eta_2',0.2,-5.0,5.0)
++      call mbook(13,'eta_3',0.2,-5.0,5.0)
++      call mbook(15,'detajj',0.2,0.,10.)
++      call mbook(16,'mjj',100.,0.,5000.)
++
++      end
++
++c-------------------------------------------------------------------
++      subroutine alfhis
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer i
++      real  xnorm
++      character *1 jet(9)
++      data jet/'1','2','3','4','5','6','7','8','9'/
++c
++      open(unit=99,file=topfile,err=101,status='unknown')
++      if(imode.le.1) then
++         xnorm=sngl(avgwgt/totwgt)
++      elseif(imode.eq.2) then
++         xnorm=1e0/real(unwev)
++      else
++         write(*,*) 'imode type not allowed, stop'
++         stop
++      endif
++c
++      do i=1,200
++         if(i.ne.61) call mopera(i,'F',i,i,xnorm,1.)
++         call mfinal(i)
++      enddo 
++c
++      do i=1,min(3,njets)
++         call mtop(i,99,'pt'//jet(i),' ','LOG')
++      enddo
++      do i=1,min(3,njets)
++         call mtop(10+i,99,'eta'//jet(i),' ','LIN')
++      enddo
++      call mtop(15,99,'detajj',' ','LIN')
++      call mtop(16,99,'mjj',' ','LIN')
++c
++ 100  close(99)
++ 101  return
++      end
++
++      subroutine monitor(n,mon_fname)
++c     This routine is called by default every 100K events.
++c     The user can use it to get regular updates on the run
++c     while this is progressing. Textual output can be written to file
++c     fname, where partial cross-sections and and generation
++c     efficiencies have already been printed by default
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      integer n
++      character *50 mon_fname
++c
++      if(evgen) then
++         if(mod(n,100000).eq.0) then
++c     save histograms' contents
++            call msave
++c     print out histograms
++            call alfhis
++c     restore original contents, to proceed with analysis
++            call mrestore
++         endif 
++      endif 
++      end
++c-------------------------------------------------------------------
++      subroutine aleana(jproc,wgt)
++c     analyse event, fill histograms
++c-------------------------------------------------------------------
++      implicit none
++      include 'alpgen.inc'
++      include 'zjet.inc'
++      real*8 wgt,tmp,ptlep,etmiss,xmz,mll
++      real rwgt
++      integer i,j,jproc,ord(10)
++c ===================================================
++      double precision emax,emin, ptjbig, ptjets(maxpar-2), xmjj, deta
++      integer j1,j2
++c ===================================================
++c
++      rwgt=real(wgt)
++      if(rwgt.lt.0e0) then
++         write(*,*) 'negative wgt=',wgt
++         return
++      elseif (rwgt.eq.0e0) then
++         return
++      endif 
++c
++c     reordering according to pt
++      call alusor(ptj,njets,ord,2)              
++      do i=1,min(3,njets)
++         call mfill(i,real(ptj(ord(njets+1-i))),rwgt)
++         call mfill(10+i,real(etaj(ord(njets+1-i))),rwgt)
++      enddo
++c
++c ===================================================
++c  USR will add possible extra cuts at this point. 
++      do i = 1, njets
++         ptjets(i) = ptj(i)
++      enddo
++c  first max pt jet selection
++      ptjbig = -10.
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j1 = i
++         endif
++      enddo
++      ptjets(j1) = -10.
++      ptjbig = -10.
++c  second max pt jet selection      
++      do i = 1, njets
++         if(ptjets(i).gt.ptjbig) then
++            ptjbig = ptjets(i)
++            j2 = i
++         endif
++      enddo
++c
++      deta = abs(etaj(j2)-etaj(j1))
++      if(abs(etaj(j1)-etaj(j2)).ge.abs(etaj(j2)-etaj(j1))) then
++         deta = abs(etaj(j1)-etaj(j2))
++      endif
++c
++      xmjj = sqrt( (pjet(4,j1)+pjet(4,j2))**2 
++     &           - (pjet(1,j1)+pjet(1,j2))**2       
++     &           - (pjet(2,j1)+pjet(2,j2))**2       
++     &           - (pjet(3,j1)+pjet(3,j2))**2 )
++c
++      call mfill(15,real(deta),rwgt)
++      call mfill(16,real(xmjj),rwgt)
++c ===================================================
++      end
++
++

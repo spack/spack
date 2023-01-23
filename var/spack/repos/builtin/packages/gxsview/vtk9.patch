@@ -1,0 +1,26 @@
+diff --git a/gui/vtk9.pri b/gui/vtk9.pri
+index 15fdd91..ca452e0 100644
+--- a/gui/vtk9.pri
++++ b/gui/vtk9.pri
+@@ -60,21 +60,8 @@ LIBS += \
+   -lvtkRenderingUI$$VTK_VER_SUFFIX \
+   -lvtkRenderingVolume$$VTK_VER_SUFFIX \
+   -lvtkRenderingVtkJS$$VTK_VER_SUFFIX \
+-  -lvtkdoubleconversion$$VTK_VER_SUFFIX \
+-  -lvtkexpat$$VTK_VER_SUFFIX \
+-  -lvtkfreetype$$VTK_VER_SUFFIX \
+-  -lvtkglew$$VTK_VER_SUFFIX \
+-  -lvtkgl2ps$$VTK_VER_SUFFIX \
+-  -lvtkjpeg$$VTK_VER_SUFFIX \
+-  -lvtkjsoncpp$$VTK_VER_SUFFIX \
+   -lvtkloguru$$VTK_VER_SUFFIX \
+-  -lvtklz4$$VTK_VER_SUFFIX \
+-  -lvtklzma$$VTK_VER_SUFFIX \
+   -lvtkmetaio$$VTK_VER_SUFFIX \
+-  -lvtkpng$$VTK_VER_SUFFIX \
+-  -lvtkpugixml$$VTK_VER_SUFFIX \
+   -lvtksys$$VTK_VER_SUFFIX \
+-  -lvtktiff$$VTK_VER_SUFFIX \
+-  -lvtkzlib$$VTK_VER_SUFFIX \
+   -lvtkViewsContext2D$$VTK_VER_SUFFIX \
+   -lvtkViewsCore$$VTK_VER_SUFFIX \

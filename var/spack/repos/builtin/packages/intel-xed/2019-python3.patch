@@ -1,0 +1,12 @@
+Old revs call python instead of python3.
+
+diff --git a/mfile.py b/mfile.py
+index b6889c6..b43b442 100755
+--- a/mfile.py
++++ b/mfile.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # -*- python -*-
+ #BEGIN_LEGAL
+ #

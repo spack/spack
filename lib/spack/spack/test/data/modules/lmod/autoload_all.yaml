@@ -8,4 +8,4 @@ lmod:
   verbose: true
 
   all:
-    autoload: 'all'
+    autoload: all

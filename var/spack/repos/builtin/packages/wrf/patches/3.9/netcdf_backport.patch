@@ -7,16 +7,16 @@ diff -Naur a/Makefile b/Makefile
            cd ../external/io_netcdf ; \
 -          $(MAKE) NETCDFPATH="$(NETCDFPATH)" \
 -               FC="$(FC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
-+          $(MAKE) NETCDFPATH="$(NETCDFPATH)" FNETCDFFPATH="$(NETCDFFPATH)" \
-+               C="$(FC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
++          $(MAKE) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" \
++               FC="$(FC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
                 CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
  	       LIB_LOCAL="$(LIB_LOCAL)" \
                 ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR" diffwrf; \
            cd ../io_netcdf ; \
 -          $(MAKE) NETCDFPATH="$(NETCDFPATH)" \
 -               FC="$(SFC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
-+          $(MAKE) NETCDFPATH="$(NETCDFPATH)" FNETCDFFPATH="$(NETCDFFPATH)"\
-+               C="$(SFC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
++          $(MAKE) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)"\
++               FC="$(SFC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
                 CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
  	       LIB_LOCAL="$(LIB_LOCAL)" \
                 ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR"; \
@@ -226,8 +226,8 @@ diff -Naur a/external/io_netcdf/makefile b/external/io_netcdf/makefile
 -LIBS    = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdf
 -LIBFFS  = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdff -lnetcdf $(NETCDF4_DEP_LIB)
 +FFLAGS  =  $(FCFLAGS) -I$(NETCDFFPATH)/include -I../ioapi_share
-+LIBS    = $(LIB_LOCAL) -L$(NETCDFFPATH)/lib -lnetcdf
-+LIBFFS  = $(LIB_LOCAL) -L$(NETCDFFPATH)/lib -lnetcdff -lnetcdf $(NETCDF4_DEP_LIB)
++LIBS    = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdf
++LIBFFS  = $(LIB_LOCAL) -L$(NETCDFFPATH)/lib -lnetcdff -L$(NETCDFPATH)/lib -lnetcdf $(NETCDF4_DEP_LIB)
  CPP1    = $(CPP) -P $(TRADFLAG)
  M4      = m4 -Uinclude -Uindex -Ulen
  AR      = ar
@@ -254,7 +254,7 @@ diff -Naur a/external/io_netcdf/makefile b/external/io_netcdf/makefile
  	@if [ \( -f ../../frame/wrf_debug.o \) -a \( -f ../../frame/module_wrf_error.o \) -a \( -f $(ESMF_MOD_DEPENDENCE) \) -a \( -f ../../frame/clog.o \) ] ; then \
  	  echo "diffwrf io_netcdf is being built now. " ; \
 -          if [ \( -f $(NETCDFPATH)/lib/libnetcdff.a -o -f $(NETCDFPATH)/lib/libnetcdff.so \) ] ; then \
-+          if [ \( -f $(NETCDFFPATH)/lib/libnetcdff.a -o -f $(NETCDFPATH)/lib/libnetcdff.so \) ] ; then \
++          if [ \( -f $(NETCDFFPATH)/lib/libnetcdff.a -o -f $(NETCDFFPATH)/lib/libnetcdff.so \) ] ; then \
              $(FC) $(FFLAGS) $(LDFLAGS) -o diffwrf diffwrf.o $(OBJSL) ../../frame/wrf_debug.o ../../frame/module_wrf_error.o ../../frame/clog.o $(ESMF_IO_LIB_EXT) $(LIBFFS) ;\
            else \
              $(FC) $(FFLAGS) $(LDFLAGS) -o diffwrf diffwrf.o $(OBJSL) ../../frame/wrf_debug.o ../../frame/module_wrf_error.o ../../frame/clog.o $(ESMF_IO_LIB_EXT) $(LIBS) ;\

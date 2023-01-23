@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ locally to speed up the review process.
    new release that is causing problems. If this is the case, please file an issue.
 
 
-We currently test against Python 2.6, 2.7, and 3.5-3.7 on both macOS and Linux and
+We currently test against Python 2.7 and 3.6-3.10 on both macOS and Linux and
 perform 3 types of tests:
 
 .. _cmd-spack-unit-test:
@@ -253,27 +253,6 @@ to update them.
    multiple runs of ``spack style`` just to re-compute line numbers and
    makes it much easier to fix errors directly off of the CI output.
 
-.. warning::
-
-   Flake8 and ``pep8-naming`` require a number of dependencies in order
-   to run.  If you installed ``py-flake8`` and ``py-pep8-naming``, the
-   easiest way to ensure the right packages are on your ``PYTHONPATH`` is
-   to run::
-
-     spack activate py-flake8
-     spack activate pep8-naming
-
-   so that all of the dependencies are symlinked to a central
-   location. If you see an error message like:
-
-   .. code-block:: console
-
-      Traceback (most recent call last):
-        File: "/usr/bin/flake8", line 5, in <module>
-          from pkg_resources import load_entry_point
-      ImportError: No module named pkg_resources
-
-   that means Flake8 couldn't find setuptools in your ``PYTHONPATH``.
 
 ^^^^^^^^^^^^^^^^^^^
 Documentation Tests
@@ -309,13 +288,9 @@ All of these can be installed with Spack, e.g.
 
    .. code-block:: console
 
-      $ spack activate py-sphinx
-      $ spack activate py-sphinx-rtd-theme
-      $ spack activate py-sphinxcontrib-programoutput
+      $ spack load py-sphinx py-sphinx-rtd-theme py-sphinxcontrib-programoutput
 
-   so that all of the dependencies are symlinked into that Python's
-   tree.  Alternatively, you could arrange for their library
-   directories to be added to PYTHONPATH.  If you see an error message
+   so that all of the dependencies are added to PYTHONPATH.  If you see an error message
    like:
 
    .. code-block:: console
@@ -337,15 +312,6 @@ Once all of the dependencies are installed, you can try building the documentati
 
 If you see any warning or error messages, you will have to correct those before
 your PR is accepted.
-
-.. note::
-
-   There is also a ``run-doc-tests`` script in ``share/spack/qa``. The only
-   difference between running this script and running ``make`` by hand is that
-   the script will exit immediately if it encounters an error or warning. This
-   is necessary for CI. If you made a lot of documentation changes, it is
-   much quicker to run ``make`` by hand so that you can see all of the warnings
-   at once.
 
 If you are editing the documentation, you should obviously be running the
 documentation tests. But even if you are simply adding a new package, your

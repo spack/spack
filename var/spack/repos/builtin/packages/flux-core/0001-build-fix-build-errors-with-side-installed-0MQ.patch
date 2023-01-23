@@ -1,0 +1,60 @@
+From bb0496137d5a15f67ccde15e4d1462d6abaee339 Mon Sep 17 00:00:00 2001
+From: Jim Garlick <garlick.jim@gmail.com>
+Date: Tue, 19 Oct 2021 14:27:47 -0700
+Subject: [PATCH 1/1] build: fix build errors with side-installed 0MQ
+
+Problem: when building against side-installed libzmq, libczmq,
+compilation fails with a missing zframe_t definition.
+
+If the side installed 0MQ packages were built with the "draft APIs"
+enabled (the default), libczmqcontainers/zhashx.h and zlistx.h define
+function prototypes using zframe_t.  Extend CZMQ_BUILD_EXTRA to
+include those prototypes so they are never defined in libczmqcontainers.
+---
+ src/common/libczmqcontainers/zhashx.h | 2 +-
+ src/common/libczmqcontainers/zlistx.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/common/libczmqcontainers/zhashx.h b/src/common/libczmqcontainers/zhashx.h
+index 01a69ae0a..d9cbe1712 100644
+--- a/src/common/libczmqcontainers/zhashx.h
++++ b/src/common/libczmqcontainers/zhashx.h
+@@ -267,7 +267,6 @@ CZMQ_EXPORT zhashx_t *
+ //  Self test of this class.
+ CZMQ_EXPORT void
+     zhashx_test (bool verbose);
+-#endif // CZMQ_BUILD_EXTRA
+ 
+ #ifdef CZMQ_BUILD_DRAFT_API
+ //  *** Draft method, for development use, may change without warning ***
+@@ -284,6 +283,7 @@ CZMQ_EXPORT zframe_t *
+     zhashx_pack_own (zhashx_t *self, zhashx_serializer_fn serializer);
+ 
+ #endif // CZMQ_BUILD_DRAFT_API
++#endif // CZMQ_BUILD_EXTRA
+ //  @end
+ 
+ #ifdef __cplusplus
+diff --git a/src/common/libczmqcontainers/zlistx.h b/src/common/libczmqcontainers/zlistx.h
+index c2ccd9877..1bb55eb6c 100644
+--- a/src/common/libczmqcontainers/zlistx.h
++++ b/src/common/libczmqcontainers/zlistx.h
+@@ -197,7 +197,6 @@ CZMQ_EXPORT void
+ //  Self test of this class.
+ CZMQ_EXPORT void
+     zlistx_test (bool verbose);
+-#endif // CZMQ_BUILD_EXTRA
+ 
+ #ifdef CZMQ_BUILD_DRAFT_API
+ //  *** Draft method, for development use, may change without warning ***
+@@ -225,6 +224,7 @@ CZMQ_EXPORT zframe_t *
+     zlistx_pack (zlistx_t *self);
+ 
+ #endif // CZMQ_BUILD_DRAFT_API
++#endif // CZMQ_BUILD_EXTRA
+ //  @end
+ 
+ 
+-- 
+2.27.0
+
