@@ -51,6 +51,7 @@ spec expression syntax:
       @B{variant=value}                 set non-boolean <variant> to <value>
       @B{variant==value}                 propagate non-boolean <variant> to <value>
       @B{variant=value1,value2,value3}  set multi-value <variant> values
+      @B{variant==value1,value2,value3}  propagate multi-value <variant> values
 
     architecture variants:
       @m{platform=platform}             linux, darwin, cray, etc.
