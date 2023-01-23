@@ -117,9 +117,8 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("jpeg"),
             self.define_from_variant("zlib"),
             self.define_from_variant("jbig"),
-            self.define_from_variant("pixarlog")
+            self.define_from_variant("pixarlog"),
         ]
-
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
