@@ -1012,11 +1012,13 @@ class SpackSolverSetup(object):
     def package_requirement_rules(self, pkg):
         pkg_name = pkg.name
         config = spack.config.get("packages")
-        requirements, verify = config.get(pkg_name, {}).get("require", []), True
+        requirements, raise_on_failure = config.get(pkg_name, {}).get("require", []), True
         if not requirements:
-            requirements, verify = config.get("all", {}).get("require", []), False
+            requirements, raise_on_failure = config.get("all", {}).get("require", []), False
         rules = self._rules_from_requirements(pkg_name, requirements)
-        self.emit_facts_from_requirement_rules(rules, virtual=False, verify=verify)
+        self.emit_facts_from_requirement_rules(
+            rules, virtual=False, raise_on_failure=raise_on_failure
+        )
 
     def _rules_from_requirements(self, pkg_name, requirements):
         """Manipulate requirements from packages.yaml, and return a list of tuples
@@ -1142,9 +1144,7 @@ class SpackSolverSetup(object):
 
         self.package_requirement_rules(pkg)
 
-    def condition(
-        self, required_spec, imposed_spec=None, name=None, msg=None, node=False, **kwargs
-    ):
+    def condition(self, required_spec, imposed_spec=None, name=None, msg=None, node=False):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
@@ -1156,7 +1156,6 @@ class SpackSolverSetup(object):
             msg (str or None): description of the condition
             node (bool): if False does not emit "node" or "virtual_node" requirements
                 from the imposed spec
-            **kwargs: keyword arguments forwarded directly to spec clauses
         Returns:
             int: id of the condition created by this function
         """
@@ -1164,23 +1163,23 @@ class SpackSolverSetup(object):
         named_cond.name = named_cond.name or name
         assert named_cond.name, "must provide name for anonymous condtions!"
 
+        # Check if we can emit the requirements before updating the condition ID counter.
+        # In this way, if a condition can't be emitted but the exception is handled in the caller,
+        # we won't emit partial facts.
+        requirements = self.spec_clauses(named_cond, body=True, required_from=name)
+
         condition_id = next(self._condition_id_counter)
         self.gen.fact(fn.condition(condition_id, msg))
-
-        # requirements trigger the condition
-        requirements = self.spec_clauses(named_cond, body=True, required_from=name, **kwargs)
         for pred in requirements:
             self.gen.fact(fn.condition_requirement(condition_id, *pred.args))
 
         if imposed_spec:
-            self.impose(condition_id, imposed_spec, node=node, name=name, **kwargs)
+            self.impose(condition_id, imposed_spec, node=node, name=name)
 
         return condition_id
 
-    def impose(self, condition_id, imposed_spec, node=True, name=None, body=False, **kwargs):
-        imposed_constraints = self.spec_clauses(
-            imposed_spec, body=body, required_from=name, **kwargs
-        )
+    def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
+        imposed_constraints = self.spec_clauses(imposed_spec, body=body, required_from=name)
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
             if not node and pred.args[0] in ("node", "virtual_node"):
@@ -1266,27 +1265,39 @@ class SpackSolverSetup(object):
             rules = self._rules_from_requirements(virtual_str, requirements)
             self.emit_facts_from_requirement_rules(rules, virtual=True)
 
-    def emit_facts_from_requirement_rules(self, rules, *, virtual=False, verify=True):
-        """Generate facts to enforce requirements from packages.yaml."""
+    def emit_facts_from_requirement_rules(self, rules, *, virtual=False, raise_on_failure=True):
+        """Generate facts to enforce requirements from packages.yaml.
+
+        Args:
+            rules: rules for which we want facts to be emitted
+            virtual: if True the requirements are on a virtual spec
+            raise_on_failure: if True raise an exception when a requirement condition is invalid
+                for the current spec. If False, just skip that condition
+        """
         for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
-            for requirement_weight, spec_str in enumerate(requirement_grp):
+            requirement_weight = 0
+            for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
                 when_spec = spec
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
-                member_id = self.condition(
-                    required_spec=when_spec,
-                    imposed_spec=spec,
-                    name=pkg_name,
-                    node=virtual,
-                    verify=verify,
-                )
+
+                try:
+                    member_id = self.condition(
+                        required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
+                    )
+                except Exception as e:
+                    if raise_on_failure:
+                        raise RuntimeError("cannot emit requirements for the solver") from e
+                    continue
+
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+                requirement_weight += 1
 
     def external_packages(self):
         """Facts on external packages, as read from packages.yaml"""
@@ -1422,7 +1433,6 @@ class SpackSolverSetup(object):
         transitive=True,
         expand_hashes=False,
         concrete_build_deps=False,
-        verify=True,
     ):
         """Return a list of clauses for a spec mandates are true.
 
@@ -1436,7 +1446,6 @@ class SpackSolverSetup(object):
                 (default False)
             concrete_build_deps (bool): if False, do not include pure build deps
                 of concrete specs (as they have no effect on runtime constraints)
-            verify (bool): if False, do not verify variant existence
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -1503,7 +1512,7 @@ class SpackSolverSetup(object):
                     continue
 
                 # validate variant value only if spec not concrete
-                if not spec.concrete and verify:
+                if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
                         pkg_cls = spack.repo.path.get_pkg_class(spec.name)
