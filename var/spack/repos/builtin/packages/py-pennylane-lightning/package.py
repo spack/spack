@@ -10,9 +10,10 @@ from spack.package import *
 class PyPennylaneLightning(CMakePackage, PythonExtension):
     """The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++."""
 
-    homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
+    homepage = "https://docs.pennylane.ai/projects/lightning"
     git = "https://github.com/PennyLaneAI/pennylane-lightning.git"
     url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.0.tar.gz"
+    tag = "v0.28.0"
 
     maintainers = ["mlxd, AmintorDusko"]
 
@@ -23,8 +24,8 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     variant("python", default=True, description="Build with Python support")
     variant("native", default=False, description="Build natively for given hardware")
     variant("blas", default=False, description="Build with BLAS support")
-    variant("openmp", default=True, description="Build with OpenMP support")
-    variant("kokkos", default=True, description="Build with Kokkos support")
+    variant("openmp", default=False, description="Build with OpenMP support")
+    variant("kokkos", default=False, description="Build with Kokkos support")
     variant("verbose", default=False, description="Build with full verbosity")
 
     variant("cpptests", default=False, description="Build CPP tests")
@@ -40,14 +41,14 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     extends("python")
 
     # hard dependencies
-    depends_on("cmake@3.21.0:", type="build")  # 3.21 and newer
+    depends_on("cmake@3.21.0:3.24.0", type="build")  # 3.21-3.24
     depends_on("ninja", type="build")
 
     # variant defined dependencies
     depends_on("blas", when="+blas")
-
     depends_on("kokkos@3.7.00", when="+kokkos")
     depends_on("kokkos-kernels@3.7.00", when="+kokkos")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     depends_on("python@3.8:", type=("build", "run"), when="+python")
     depends_on("py-setuptools", type="build", when="+python")
