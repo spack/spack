@@ -27,6 +27,7 @@ class PyContinuum(PythonPackage):
     depends_on("py-scikit-learn@0.24.1:", type=("build", "run"))
     depends_on("py-pandas@1.1.5:", type=("build", "run"))
     depends_on("py-pytest@5.0.1:", type=("build", "run"))
+    depends_on("py-pytest-mock@3.6.1:", type=("build", "run"))
     depends_on("py-h5py@3.1.0:", type=("build", "run"))
     depends_on("py-requests@2.24.0:", type=("build", "run"))
     depends_on("py-datasets@1.6.0:", type=("build", "run"))
