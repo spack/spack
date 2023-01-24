@@ -12,16 +12,16 @@ class Costa(CMakePackage):
     Distributed Communication-Optimal Matrix Transpose and Reshuffle Library
     Based on the paper: https://arxiv.org/abs/2106.06601
     """
-
-    maintainers = ["haampie", "kabicm"]
+    maintainers = ["haampie", "kabicm", "RMeli"]
     homepage = "https://github.com/eth-cscs/COSTA"
-    url = "https://github.com/eth-cscs/COSTA/releases/download/v2.0/COSTA-v2.0.tar.gz"
+    url = "https://github.com/eth-cscs/COSTA/archive/refs/tags/v2.0.tar.gz"
     git = "https://github.com/eth-cscs/COSTA.git"
 
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=True)
-    version("2.0", sha256="de250197f31f7d23226c6956a687c3ff46fb0ff6c621a932428236c3f7925fe4")
+    version("2.1", sha256="c1e86452415083f7470b292d93ec60708b7c8dbafc2bac383636bb4b28135866")
+    version("2.0", sha256="0692a9c962282899894ccdbc7006216c835473a6999f1080c10bf94f23094521")
 
     variant("scalapack", default=False, description="Build with ScaLAPACK API")
     variant("shared", default=False, description="Build shared libraries")
