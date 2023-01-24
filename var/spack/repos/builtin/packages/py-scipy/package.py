@@ -100,10 +100,10 @@ class PyScipy(PythonPackage):
     depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
     depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
     depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
-    depends_on("python@3.7:", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@:1.2", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10.0", when="@1.6:1.6.1", type=("build", "link", "run"))
+    depends_on("python@3.6:3.10.0", when="@1.5.0:1.5", type=("build", "link", "run"))
+    depends_on("python@3.5:3.10.0", when="@1.3:1.4", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:3.10.0", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # NOTE: scipy should use the same BLAS/LAPACK as numpy.
