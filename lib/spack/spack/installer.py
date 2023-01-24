@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -233,7 +233,7 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     dep.concretize()
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
-        dep._dependents.add(spack.spec.DependencySpec(pkg.spec, dep, ("build",)))
+        dep._dependents.add(spack.spec.DependencySpec(pkg.spec, dep, deptypes=("build",)))
     packages = [(s.package, False) for s in dep.traverse(order="post", root=False)]
 
     packages.append((dep.package, True))

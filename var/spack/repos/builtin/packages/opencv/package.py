@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -929,9 +929,11 @@ class Opencv(CMakePackage, CudaPackage):
         ]
 
         if self.spec.satisfies("+contrib"):
-            args += self.define(
-                "OPENCV_EXTRA_MODULES_PATH",
-                join_path(self.stage.source_path, "opencv_contrib", "modules"),
+            args.append(
+                self.define(
+                    "OPENCV_EXTRA_MODULES_PATH",
+                    join_path(self.stage.source_path, "opencv_contrib", "modules"),
+                )
             )
 
         # OpenCV pre-built apps

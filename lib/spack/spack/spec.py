@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,6 +56,7 @@ import os
 import re
 import sys
 import warnings
+from typing import Tuple
 
 import ruamel.yaml as yaml
 
@@ -653,8 +654,9 @@ class CompilerSpec(object):
 
 
 @lang.lazy_lexicographic_ordering
-class DependencySpec(object):
-    """DependencySpecs connect two nodes in the DAG, and contain deptypes.
+class DependencySpec:
+    """DependencySpecs represent an edge in the DAG, and contain dependency types
+    and information on the virtuals being provided.
 
     Dependencies can be one (or more) of several types:
 
@@ -662,20 +664,20 @@ class DependencySpec(object):
     - link: is linked to and added to compiler flags.
     - run: needs to be in the PATH for the package to run.
 
-    Fields:
-    - spec: Spec depended on by parent.
-    - parent: Spec that depends on `spec`.
-    - deptypes: list of strings, representing dependency relationships.
+    Args:
+        parent: starting node of the edge
+        spec: ending node of the edge.
+        deptypes: list of strings, representing dependency relationships.
     """
 
     __slots__ = "parent", "spec", "deptypes"
 
-    def __init__(self, parent, spec, deptypes):
+    def __init__(self, parent: "Spec", spec: "Spec", *, deptypes: dp.DependencyArgument):
         self.parent = parent
         self.spec = spec
         self.deptypes = dp.canonical_deptype(deptypes)
 
-    def update_deptypes(self, deptypes):
+    def update_deptypes(self, deptypes: dp.DependencyArgument) -> bool:
         deptypes = set(deptypes)
         deptypes.update(self.deptypes)
         deptypes = tuple(sorted(deptypes))
@@ -684,10 +686,10 @@ class DependencySpec(object):
         self.deptypes = deptypes
         return changed
 
-    def copy(self):
-        return DependencySpec(self.parent, self.spec, self.deptypes)
+    def copy(self) -> "DependencySpec":
+        return DependencySpec(self.parent, self.spec, deptypes=self.deptypes)
 
-    def add_type(self, type):
+    def add_type(self, type: dp.DependencyArgument):
         self.deptypes = dp.canonical_deptype(self.deptypes + dp.canonical_deptype(type))
 
     def _cmp_iter(self):
@@ -695,17 +697,17 @@ class DependencySpec(object):
         yield self.spec.name if self.spec else None
         yield self.deptypes
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s %s--> %s" % (
             self.parent.name if self.parent else None,
             self.deptypes,
             self.spec.name if self.spec else None,
         )
 
-    def canonical(self):
+    def canonical(self) -> Tuple[str, str, Tuple[str, ...]]:
         return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
 
-    def flip(self):
+    def flip(self) -> "DependencySpec":
         return DependencySpec(parent=self.spec, spec=self.parent, deptypes=self.deptypes)
 
 
@@ -1575,7 +1577,7 @@ class Spec(object):
                 edge.add_type(deptype)
                 return
 
-        edge = DependencySpec(self, dependency_spec, deptype)
+        edge = DependencySpec(self, dependency_spec, deptypes=deptype)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 

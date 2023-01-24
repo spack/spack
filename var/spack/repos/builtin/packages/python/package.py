@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,7 @@ class Python(Package):
     url = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
+    tags = ["windows"]
 
     maintainers = ["adamjstewart", "skosukhin", "scheibelp", "pradyunsg"]
 
@@ -1047,9 +1048,6 @@ print(json.dumps(config))
         if path.startswith(prefix):
             return path.replace(prefix, "")
         return os.path.join("include", "python{}".format(self.version.up_to(2)))
-
-    def setup_run_environment(self, env):
-        env.prepend_path("CPATH", os.pathsep.join(self.spec["python"].headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the

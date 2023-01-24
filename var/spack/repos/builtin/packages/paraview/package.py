@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -267,6 +267,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # intel oneapi doesn't compile some code in catalyst
     patch("catalyst-etc_oneapi_fix.patch", when="@5.10.0:5.10.1%oneapi")
+
+    # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
+    patch("vtk-xdmf2-hdf51.13.1.patch", when="@5.10.0:5.10 +hdf5")
+    patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10: +hdf5")
 
     @property
     def generator(self):
