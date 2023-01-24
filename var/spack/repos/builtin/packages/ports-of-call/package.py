@@ -16,24 +16,31 @@ class PortsOfCall(CMakePackage):
     maintainers = ["rbberger"]
 
     version("main", branch="main")
-    version("1.2.0", sha256="b802ffa07c5f34ea9839f23841082133d8af191efe5a526cb7e53ec338ac146b")
-    version("1.1.0", sha256="c47f7e24c82176b69229a2bcb23a6adcf274dc90ec77a452a36ccae0b12e6e39")
+    version("1.3.0", sha256="54b4a62539c23b1a345dd87c1eac65f4f69db4e50336cd81a15a627ce80ce7d9")
+    version(
+        "1.2.0",
+        sha256="b802ffa07c5f34ea9839f23841082133d8af191efe5a526cb7e53ec338ac146b",
+        deprecated=True,
+    )
+    version(
+        "1.1.0",
+        sha256="c47f7e24c82176b69229a2bcb23a6adcf274dc90ec77a452a36ccae0b12e6e39",
+        deprecated=True,
+    )
 
-    variant("doc", default=False, description="Sphinx Documentation Support")
     variant(
         "portability_strategy",
         description="Portability strategy backend",
         values=("Kokkos", "Cuda", "None"),
         multi=False,
         default="None",
+        when="@:1.2.0",
     )
 
-    depends_on("cmake@3.12:")
-
-    depends_on("py-sphinx", when="+doc")
-    depends_on("py-sphinx-rtd-theme@0.4.3", when="+doc")
-    depends_on("py-sphinx-multiversion", when="+doc")
+    depends_on("cmake@3.12:", type="build")
 
     def cmake_args(self):
-        args = [self.define_from_variant("PORTABILITY_STRATEGY", "portability_strategy")]
+        args = []
+        if self.spec.satisfies("@:1.2.0"):
+            args.append(self.define_from_variant("PORTABILITY_STRATEGY", "portability_strategy"))
         return args
