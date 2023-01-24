@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,24 +18,9 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.paths as spack_paths
+import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
-
-
-@pytest.fixture
-def tmp_scope():
-    """Creates a temporary configuration scope"""
-    base_name = "internal-testing-scope"
-    current_overrides = set(x.name for x in cfg.config.matching_scopes(r"^{0}".format(base_name)))
-
-    num_overrides = 0
-    scope_name = base_name
-    while scope_name in current_overrides:
-        scope_name = "{0}{1}".format(base_name, num_overrides)
-        num_overrides += 1
-
-    with cfg.override(cfg.InternalConfigScope(scope_name)):
-        yield scope_name
 
 
 def test_urlencode_string():
@@ -180,14 +165,13 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     monkeypatch.setattr(spack.paths, "prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to find the path" in err
 
     monkeypatch.setattr(spack.paths, "prefix", prefix_save)
-
-    monkeypatch.setattr(spack.util.executable, "which", lambda cmd: None)
+    monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
     out, err = capfd.readouterr()
@@ -208,39 +192,39 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
 
     git_cmd = mock_git_cmd()
 
-    monkeypatch.setattr(spack.util.executable, "which", lambda cmd: git_cmd)
+    monkeypatch.setattr(spack.util.git, "git", lambda: git_cmd)
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c2 else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Missing commit: {0}".format(c2) in err
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c1 else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Missing commit: {0}".format(c1) in err
 
     git_cmd.check = lambda *a, **k: 1 if a[0] == "clone" else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to clone" in err
 
     git_cmd.check = lambda *a, **k: 1 if a[0] == "checkout" else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to checkout" in err
 
     git_cmd.check = lambda *a, **k: 1 if "merge" in a else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to merge {0}".format(c1) in err

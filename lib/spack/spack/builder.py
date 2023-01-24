@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -128,7 +128,12 @@ def _create(pkg):
             new_cls = type(
                 new_cls_name,
                 bases,
-                {"run_tests": property(lambda x: x.wrapped_package_object.run_tests)},
+                {
+                    "run_tests": property(lambda x: x.wrapped_package_object.run_tests),
+                    "test_log_file": property(lambda x: x.wrapped_package_object.test_log_file),
+                    "test_failures": property(lambda x: x.wrapped_package_object.test_failures),
+                    "test_suite": property(lambda x: x.wrapped_package_object.test_suite),
+                },
             )
             new_cls.__module__ = package_cls.__module__
             self.__class__ = new_cls
@@ -477,6 +482,10 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
 
     legacy_methods: Tuple[str, ...] = ()
     legacy_attributes: Tuple[str, ...] = ()
+
+    # type hints for some of the legacy methods
+    build_time_test_callbacks: List[str]
+    install_time_test_callbacks: List[str]
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.

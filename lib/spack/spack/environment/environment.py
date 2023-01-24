@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -384,7 +384,8 @@ class ViewDescriptor(object):
         link_type="symlink",
     ):
         self.base = base_path
-        self.root = spack.util.path.canonicalize_path(root)
+        self.raw_root = root
+        self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
         self.projections = projections
         self.select = select
         self.exclude = exclude
@@ -410,7 +411,7 @@ class ViewDescriptor(object):
         )
 
     def to_dict(self):
-        ret = syaml.syaml_dict([("root", self.root)])
+        ret = syaml.syaml_dict([("root", self.raw_root)])
         if self.projections:
             # projections guaranteed to be ordered dict if true-ish
             # for python2.6, may be syaml or ruamel.yaml implementation
@@ -532,18 +533,18 @@ class ViewDescriptor(object):
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
-        specs = []
+        dag_hash = lambda spec: spec.dag_hash()
 
-        for s in concretized_root_specs:
-            if self.link == "all":
-                specs.extend(s.traverse(deptype=("link", "run")))
-            elif self.link == "run":
-                specs.extend(s.traverse(deptype=("run")))
-            else:
-                specs.append(s)
-
-        # De-dupe by dag hash
-        specs = dedupe(specs, key=lambda s: s.dag_hash())
+        # With deps, requires traversal
+        if self.link == "all" or self.link == "run":
+            deptype = ("run") if self.link == "run" else ("link", "run")
+            specs = list(
+                spack.traverse.traverse_nodes(
+                    concretized_root_specs, deptype=deptype, key=dag_hash
+                )
+            )
+        else:
+            specs = list(dedupe(concretized_root_specs, key=dag_hash))
 
         # Filter selected, installed specs
         with spack.store.db.read_transaction():
@@ -2127,7 +2128,7 @@ class Environment(object):
         # Construct YAML representation of view
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
-            path = self.default_view.root
+            path = self.default_view.raw_root
             if self.default_view == ViewDescriptor(self.path, self.view_path_default):
                 view = True
             elif self.default_view == ViewDescriptor(self.path, path):

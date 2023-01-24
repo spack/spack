@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers = ["adamjstewart", "rgommers"]
 
     version("main", branch="main")
+    version("1.24.1", sha256="2386da9a471cc00a1f47845e27d916d5ec5346ae9696e01a8a34760858fe9dd2")
     version("1.24.0", sha256="c4ab7c9711fe6b235e86487ca74c1b092a6dd59a3cb45b63241ea0a148501853")
     version("1.23.5", sha256="1b1766d6f397c18153d40015ddfc79ddb715cabadc04d2d228d4e5a8bc4ded1a")
     version("1.23.4", sha256="ed2cc92af0efad20198638c69bb0fc2870a58dabfba6eb722c933b48556c686c")
@@ -149,9 +150,9 @@ class PyNumpy(PythonPackage):
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
     conflicts("%nvhpc", when="@:1.19")
 
-    # Newer versions will not build with Intel https://github.com/numpy/numpy/issues/22011
-    conflicts("%intel", when="@1.23.0:")
-    conflicts("%oneapi", when="@1.23.0:")
+    # See https://github.com/numpy/numpy/issues/22011
+    conflicts("%intel", when="@1.23.0:1.23.3")
+    conflicts("%oneapi", when="@1.23.0:1.23.3")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}"
@@ -312,6 +313,12 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write("include_dirs = {0}\n".format(lapack_header_dirs))
                     f.write("extra_link_args = {0}\n".format(self.spec["lapack"].libs.ld_flags))
+
+            if "^armpl-gcc" in spec:
+                f.write("[blas]\n")
+                f.write("libraries = {0}\n".format(lapackblas_lib_names))
+                write_library_dirs(f, lapackblas_lib_dirs)
+                f.write("include_dirs = {0}\n".format(lapackblas_header_dirs))
 
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.

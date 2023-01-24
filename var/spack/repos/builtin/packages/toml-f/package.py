@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,3 @@ class TomlF(MesonPackage):
     version("0.2.3", "2dca7ff6d3e35415cd92454c31560d2b656c014af8236be09c54c13452e4539c")
 
     depends_on("meson@0.57.2:", type="build")
-
-    def meson_args(self):
-        return [
-            "--wrap-mode=nodownload",
-        ]
