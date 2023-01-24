@@ -24,6 +24,8 @@ class Curl(NMakePackage, AutotoolsPackage):
     executables = ["^curl$"]
     tags = ["build-tools", "windows"]
 
+    version("7.87.0", sha256="5d6e128761b7110946d1276aff6f0f266f2b726f5e619f7e0a057a474155f307")
+    version("7.86.0", sha256="f5ca69db03eea17fa8705bdfb1a9f58d76a46c9010518109bb38f313137e0a28")
     version("7.85.0", sha256="21a7e83628ee96164ac2b36ff6bf99d467c7b0b621c1f7e317d8f0d96011539c")
     version("7.84.0", sha256="702fb26e73190a3bd77071aa146f507b9817cc4dfce218d2ab87f00cd3bc059d")
     version("7.83.0", sha256="247c7ec7521c4258e65634e529270d214fe32969971cccb72845e7aa46831f96")
