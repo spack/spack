@@ -39,6 +39,9 @@ spack:
       variants: ~mpi
     vtk:
       variants: ~mpi~ffmpeg~opengl2
+    py-ipyparallel:
+      # otherwise, 6.3 is picked (cheaper setuptools penalty), and things break
+      require: "@8:"
     py-torch:
       require: "@1.13.1"
   specs:
