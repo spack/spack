@@ -37,7 +37,7 @@ class PyTrimesh(PythonPackage):
     depends_on("py-msgpack", type=("build", "run"), when="+easy")
     depends_on("py-networkx", type=("build", "run"), when="+easy")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pil", type=("build", "run"), when="+easy")
+    depends_on("pil", type=("build", "run"), when="+easy")
     depends_on("py-pycollada", type=("build", "run"), when="+easy")
     depends_on("py-pyglet@:1", type=("build", "run"), when="+easy")
     depends_on("py-requests", type=("build", "run"), when="+easy")
