@@ -70,6 +70,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     patch("netcdfc-hdf5-link-mpi.patch", when="platform=windows")
 
+    patch("netcdfc-cmake-config-import-mpi.patch", when="platform=windows")
+
     # See https://github.com/Unidata/netcdf-c/pull/1752
     patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
 
