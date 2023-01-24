@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,11 +53,15 @@ class Pfunit(CMakePackage):
     variant("esmf", default=False, description="Enable esmf support")
     variant("docs", default=False, description="Build docs")
 
+    # The maximum rank of an array in the Fortran 2008 standard is 15
+    max_rank = 15
+    allowed_array_ranks = tuple(str(i) for i in range(1, max_rank + 1))
+
     variant(
         "max_array_rank",
-        values=int,
         default=5,
-        description="Max number of Fortran dimensions of array asserts",
+        values=allowed_array_ranks,
+        description="Max rank for assertion overloads (higher values may be slower to build)",
     )
 
     variant(
@@ -71,7 +75,7 @@ class Pfunit(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("esmf", when="+esmf")
     depends_on("m4", when="@4.1.5:", type="build")
-    depends_on("fargparse")
+    depends_on("fargparse", when="@4:")
 
     conflicts(
         "%gcc@:8.3.9",
@@ -113,20 +117,26 @@ class Pfunit(CMakePackage):
             self.define_from_variant("BUILD_SHARED", "shared"),
             "-DCMAKE_Fortran_MODULE_DIRECTORY=%s" % spec.prefix.include,
             self.define_from_variant("BUILD_DOCS", "docs"),
-            "-DMAX_ASSERT_RANK=%s" % spec.variants["max_array_rank"].value,
         ]
-
-        if self.spec.satisfies("%gcc@10:"):
-            args.append("-DCMAKE_Fortran_FLAGS_DEBUG=-g -O2 -fallow-argument-mismatch")
 
         if spec.satisfies("@4.0.0:"):
             args.append("-DSKIP_MPI=%s" % ("YES" if "~mpi" in spec else "NO"))
             args.append("-DSKIP_OPENMP=%s" % ("YES" if "~openmp" in spec else "NO"))
             args.append("-DSKIP_FHAMCREST=%s" % ("YES" if "~fhamcrest" in spec else "NO"))
             args.append("-DSKIP_ESMF=%s" % ("YES" if "~esmf" in spec else "NO"))
+            args.append("-DMAX_ASSERT_RANK=%s" % spec.variants["max_array_rank"].value)
         else:
+            if spec.satisfies("%gcc@10:"):
+                args.append("-DCMAKE_Fortran_FLAGS_DEBUG=-g -O2 -fallow-argument-mismatch")
+
             args.append(self.define_from_variant("MPI", "mpi"))
             args.append(self.define_from_variant("OPENMP", "openmp"))
+            args.append("-DMAX_RANK=%s" % spec.variants["max_array_rank"].value)
+
+        if spec.satisfies("@:4.2.1") and spec.satisfies("%gcc@5:"):
+            # prevents breakage when max_array_rank is larger than default. Note
+            # that 4.0.0-4.2.1 still had a 512 limit
+            args.append("-DCMAKE_Fortran_FLAGS=-ffree-line-length-none")
 
         if spec.satisfies("+mpi"):
             args.extend(

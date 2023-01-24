@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Cmake(Package):
     git = "https://gitlab.kitware.com/cmake/cmake.git"
     maintainers = ["chuckatkins"]
 
-    tags = ["build-tools"]
+    tags = ["build-tools", "windows"]
 
     executables = ["^cmake$"]
 
@@ -311,6 +311,13 @@ class Cmake(Package):
         spec = self.spec
         args = []
         self.generator = make
+
+        # The Intel compiler isn't able to deal with noinline member functions of
+        # template classes defined in headers.  As such it outputs
+        #   warning #2196: routine is both "inline" and "noinline"
+        # cmake bootstrap will fail due to the word 'warning'.
+        if spec.satisfies("%intel@:2021.6.0"):
+            args.append("CXXFLAGS=-diag-disable=2196")
 
         if self.spec.satisfies("platform=windows"):
             args.append("-GNinja")

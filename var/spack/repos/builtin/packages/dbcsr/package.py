@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["dev-zero"]
 
     version("develop", branch="develop")
+    version("2.5.0", sha256="24138461cf0b347ab6df0fba192bca6a026f22c3f0bc29abdae2df9e830809ca")
+    version("2.4.1", sha256="e5c545ec16688027537f7865976b905c0783d038ec289e65635e63e961330601")
+    version("2.4.0", sha256="2e4483453bf445b3d124f9a6f807409b444588e93cdddb6ce9589a12b67b1bb1")
     version("2.3.0", sha256="f750de586cffa66852b646f7f85eb831eeb64fa2d25ce50ed10e1df016dd3364")
     version("2.2.0", sha256="245b0382ddc7b80f85af8288f75bd03d56ec51cdfb6968acb4931529b35173ec")
     version("2.1.0", sha256="9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c")

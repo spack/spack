@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,5 @@ class MctcLib(MesonPackage):
 
     def meson_args(self):
         return [
-            "--wrap-mode=nodownload",
             "-Djson={0}".format("enabled" if "+json" in self.spec else "disabled"),
         ]
