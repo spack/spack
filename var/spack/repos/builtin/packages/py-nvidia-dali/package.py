@@ -49,5 +49,8 @@ class PyNvidiaDali(PythonPackage):
             url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda110/nvidia_dali_cuda110-1.22.0-6988993-py3-none-manylinux2014_aarch64.whl",
         )
 
+    depends_on("python@3.6:3.10", type=("build", "run"))
     depends_on("cuda@12", when="@1.22.0-cuda120", type=("build", "run"))
     depends_on("cuda@11", when="@1.22.0-cuda110", type=("build", "run"))
+    depends_on("py-astunparse@1.6.0:", type=("build", "run"))
+    depends_on("py-gast@0.2.1:0.4.0", type=("build", "run"))
