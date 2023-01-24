@@ -15,7 +15,7 @@ class Srcml(CMakePackage):
     code exploration, analysis, and manipulation."""
 
     homepage = "https://github.com/srcML/srcML"
-    url      = "https://github.com/srcML/srcML/archive/refs/tags/v1.0.0.tar.gz"
+    url = "https://github.com/srcML/srcML/archive/refs/tags/v1.0.0.tar.gz"
 
     maintainers = ["meyersbs"]
 
@@ -28,10 +28,10 @@ class Srcml(CMakePackage):
     depends_on("curl")
     depends_on("boost@:1.78.0")
 
-    patch("https://patch-diff.githubusercontent.com/raw/srcML/srcML/pull/1829.patch?full_index=1",
-          sha256="384068e00a01809cdc9b6eca79fd6833bf3214d4b9ac1765b52bc374a7af333e")
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/srcML/srcML/pull/1829.patch?full_index=1",
+        sha256="384068e00a01809cdc9b6eca79fd6833bf3214d4b9ac1765b52bc374a7af333e",
+    )
 
     def patch(self):
-        filter_file(r"add_subdirectory\(package\)",
-                    "#noop",
-                    "CMakeLists.txt")
+        filter_file(r"add_subdirectory\(package\)", "#noop", "CMakeLists.txt")
