@@ -12,7 +12,12 @@ class Costa(CMakePackage):
     Distributed Communication-Optimal Matrix Transpose and Reshuffle Library
     Based on the paper: https://arxiv.org/abs/2106.06601
     """
-    maintainers = ["haampie", "kabicm", "RMeli",]
+
+    maintainers = [
+        "haampie",
+        "kabicm",
+        "RMeli",
+    ]
     homepage = "https://github.com/eth-cscs/COSTA"
     url = "https://github.com/eth-cscs/COSTA/archive/refs/tags/v2.0.tar.gz"
     git = "https://github.com/eth-cscs/COSTA.git"
