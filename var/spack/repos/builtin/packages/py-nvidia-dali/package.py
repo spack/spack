@@ -11,15 +11,16 @@ from spack.package import *
 class PyNvidiaDali(PythonPackage):
     """A GPU-accelerated library containing highly optimized building blocks and
     an execution engine for data processing to accelerate deep learning training
-    and inference applications. """
+    and inference applications."""
 
     homepage = "https://developer.nvidia.com/dali"
     url = "https://developer.download.nvidia.com/compute/redist/"
 
     maintainers = ["thomas-bouvier"]
 
+    system = platform.system().lower()
     arch = platform.machine()
-    if arch == "x86_64":
+    if "linux" in system and arch == "x86_64":
         version(
             "1.22.0-cuda120",
             sha256="6cbd9e3139d4c203f61f960f5ad1fc4b461621a60b7fa7ef0ba6d77c780b35f4",
@@ -33,7 +34,7 @@ class PyNvidiaDali(PythonPackage):
             preferred=True,
             url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda110/nvidia_dali_cuda110-1.22.0-6988993-py3-none-manylinux2014_x86_64.whl",
         )
-    elif arch == "aarch64":
+    elif "linux" in system and arch == "aarch64":
         version(
             "1.22.0-cuda120",
             sha256="5e496eebeba3bc1cddd18e081c8c45121283478931cbe9b64912d2394d0942ca",
