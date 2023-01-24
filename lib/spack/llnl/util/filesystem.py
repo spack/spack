@@ -116,13 +116,7 @@ def path_contains_subdirectory(path, root):
 @memoized
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
-    try:
-        file_cmd = which("file", required=True)
-    except CommandNotFoundError as e:
-        if is_windows:
-            raise CommandNotFoundError("`file` utility is not available on Windows")
-        else:
-            raise e
+    file_cmd = which("file", required=True)
     for arg in args:
         file_cmd.add_default_arg(arg)
     return file_cmd
@@ -133,7 +127,11 @@ def _get_mime_type():
     """Generate method to call `file` system command to aquire mime type
     for a specified path
     """
-    return file_command("-b", "-h", "--mime-type")
+    if is_windows:
+        # -h option (no-dereference) does not exist in Windows
+        return file_command("-b", "--mime-type")
+    else:
+        return file_command("-b", "-h", "--mime-type")
 
 
 @memoized
