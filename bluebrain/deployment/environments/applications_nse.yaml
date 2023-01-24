@@ -27,10 +27,6 @@ spack:
           - py-region-grower
           - py-sonata-network-reduction
   packages:
-    hdf5:
-      variants: ~mpi+hl
-    highfive:
-      variants: ~mpi
     libsonata:
       variants: ~mpi
     mvdtool:
