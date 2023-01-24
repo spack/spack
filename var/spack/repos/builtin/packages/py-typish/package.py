@@ -13,6 +13,7 @@ class PyTypish(PythonPackage):
     * Instance checks considering generics
     * Typesafe Duck-typing
     """
+
     homepage = "https://github.com/ramonhagenaars/typish"
     url = "https://github.com/ramonhagenaars/typish/archive/v1.9.2.tar.gz"
 
