@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Msmpi(Package):
     homepage = "https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi"
     url = "https://github.com/microsoft/Microsoft-MPI/archive/refs/tags/v10.1.1.tar.gz"
     git = "https://github.com/microsoft/Microsoft-MPI.git"
+    tags = ["windows"]
 
     executable = ["mpiexec"]
 

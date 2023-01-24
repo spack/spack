@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,3 +38,5 @@ class PyFastfold(PythonPackage):
     depends_on("py-setproctitle", type=("build", "run"))
     depends_on("py-pdbfixer", type=("build", "run"))
     depends_on("py-pytorch-lightning", type=("build", "run"))
+    # py-fastfold uses np.int, which was removed in py-numpy@1.24.0
+    depends_on("py-numpy@:1.23", when="@0.2.0", type=("build", "run"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -116,6 +116,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on("fftw+openmp", when="^fftw")
         depends_on("amdfftw+openmp", when="^amdfftw")
         depends_on("cray-fftw+openmp", when="^cray-fftw")
+        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
         depends_on("openblas threads=openmp", when="^openblas")
         # The Cray compiler wrappers will automatically add libsci_mp with
         # -fopenmp. Since CP2K unconditionally links blas/lapack/scalapack
@@ -275,6 +276,9 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0]
         elif "^amdfftw" in spec:
             fftw = spec["amdfftw:openmp" if "+openmp" in spec else "amdfftw"]
+            fftw_header_dir = fftw.headers.directories[0]
+        elif "^armpl-gcc" in spec:
+            fftw = spec["armpl-gcc:openmp" if "+openmp" in spec else "armpl-gcc"]
             fftw_header_dir = fftw.headers.directories[0]
         elif "^intel-mkl" in spec:
             fftw = spec["intel-mkl"]

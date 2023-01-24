@@ -77,8 +77,7 @@ spack:
   - conduit
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm
-    +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
   - exaworks
   - flecsi
   - flit
@@ -126,7 +125,8 @@ spack:
   - plumed
   - precice
   - pumi
-  - py-h5py
+  - py-h5py +mpi
+  - py-h5py ~mpi
   - py-jupyterhub
   - py-libensemble +mpi +nlopt
   - py-petsc4py
@@ -146,6 +146,7 @@ spack:
   - superlu-dist
   - swig
   - swig@4.0.2-fortran
+  - sz3
   - tasmanian
   - tau +mpi +python
   - trilinos@13.0.1 +belos +ifpack2 +stokhos
@@ -154,20 +155,19 @@ spack:
   - umpire
   - upcxx
   - variorum
+  - veloc
   - wannier90
 
   # CUDA
   - amrex +cuda
-  - arborx +cuda ^kokkos@3.6.00 +wrapper
+  - arborx +cuda ^kokkos +wrapper
   - bricks +cuda
-  - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda
+  - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda
   - caliper +cuda
-  - chai ~benchmarks ~tests +cuda ^umpire@6.0.0 ~shared
+  - chai ~benchmarks ~tests +cuda ^umpire ~shared
+  - cusz +cuda
   - dealii +cuda
-  - ecp-data-vis-sdk +cuda cuda_arch=80
-    +adios2 +hdf5 +paraview +vtkm +zfp
-    # Removing ascent because Dray is hung in CI.
-    # +ascent
+  - ecp-data-vis-sdk +cuda +adios2 +hdf5 +paraview +vtkm +zfp # Removing ascent because Dray is hung in CI. +ascent
   - flecsi +cuda
   - flux-core +cuda
   - ginkgo +cuda
@@ -200,8 +200,7 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +rocm amdgpu_target=gfx90a
-    +paraview +vtkm
+  - ecp-data-vis-sdk +paraview +vtkm +rocm
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm
@@ -226,14 +225,13 @@ spack:
   - upcxx +rocm
 
   # CPU failures
-  #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- loki                                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
-  #- paraview +qt                                 # llvm@14
-  #- pruners-ninja                                # test/ninja_test_util.c:34: multiple definition of `a';
-  #- rempi                                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
+  #- geopm                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
+  #- loki                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
+  #- pruners-ninja                # test/ninja_test_util.c:34: multiple definition of `a';
+  #- rempi                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
 
   # CUDA failures
-  #- parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+  #- parsec +cuda                 # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
