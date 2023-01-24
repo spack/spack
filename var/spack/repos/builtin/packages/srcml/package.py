@@ -26,7 +26,7 @@ class Srcml(CMakePackage):
     depends_on("libxslt")
     depends_on("libarchive@3:")
     depends_on("curl")
-    depends_on("boost")
+    depends_on("boost@:1.78.0")
 
     patch("https://patch-diff.githubusercontent.com/raw/srcML/srcML/pull/1829.patch?full_index=1",
           sha256="384068e00a01809cdc9b6eca79fd6833bf3214d4b9ac1765b52bc374a7af333e")
