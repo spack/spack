@@ -212,8 +212,6 @@ class Rocfft(CMakePackage):
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         if self.spec.satisfies("@5.4.0:"):
-            args.append(
-                "-Dsqlite_INCLUDE_DIR={0}".format(self.spec["sqlite"].prefix.include)
-            )
+            args.append("-Dsqlite_INCLUDE_DIR={0}".format(self.spec["sqlite"].prefix.include))
 
         return args
