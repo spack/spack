@@ -287,10 +287,12 @@ class Wrf(Package):
             config = FileFilter(join_path("arch", "configure.defaults"))
 
         if self.spec.satisfies("@3.9.1.1 %gcc"):
+            # Compiling with OpenMPI requires using `-DMPI2SUPPORT`.
+            other_flags = " -DMPI2SUPPORT" if self.spec.satisfies("^openmpi") else ""
             config.filter(
-                "^DM_FC.*mpif90 -f90=$(SFC)", "DM_FC = {0}".format(self.spec["mpi"].mpifc)
+                "^DM_FC.*mpif90 -f90=\$\(SFC\)", "DM_FC = {0}".format(self.spec["mpi"].mpifc) + other_flags
             )
-            config.filter("^DM_CC.*mpicc -cc=$(SCC)", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
+            config.filter("^DM_CC.*mpicc -cc=\$\(SCC\)", "DM_CC = {0}".format(self.spec["mpi"].mpicc) + other_flags)
 
         if self.spec.satisfies("%aocc"):
             config.filter(
