@@ -30,6 +30,8 @@ class Freetype(AutotoolsPackage, CMakePackage):
     version("2.7", sha256="7b657d5f872b0ab56461f3bd310bd1c5ec64619bd15f0d8e08282d494d9cfea4")
     version("2.5.3", sha256="41217f800d3f40d78ef4eb99d6a35fd85235b64f81bc56e4812d7672fca7b806")
 
+    build_system("cmake", "autotools", default="autotools")
+
     depends_on("bzip2")
     depends_on("libpng")
     for plat in ["linux", "darwin", "cray"]:
