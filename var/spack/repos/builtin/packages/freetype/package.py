@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class Freetype(CMakePackage):
+class Freetype(AutotoolsPackage, CMakePackage):
     """FreeType is a freely available software library to render fonts.
     It is written in C, designed to be small, efficient, highly customizable,
     and portable while capable of producing high-quality output (glyph images)
@@ -31,6 +32,8 @@ class Freetype(CMakePackage):
 
     depends_on("bzip2")
     depends_on("libpng")
+    for plat in ["linux", "darwin", "cray"]:
+        depends_on("pkgconfig", type="build", when="platform=%s" % plat)
 
     conflicts(
         "%intel",
@@ -48,12 +51,26 @@ class Freetype(CMakePackage):
         return headers
 
 
+class AutotoolsBuilder(AutotoolsBuilder):
+    def configure_args(self):
+        args = [
+            "--with-brotli=no",
+            "--with-bzip2=yes",
+            "--with-harfbuzz=no",
+            "--with-png=yes",
+            "--with-zlib=no",
+        ]
+        if self.spec.satisfies("@2.9.1:"):
+            args.append("--enable-freetype-config")
+        return args
+
+
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         return [
             self.define("FT_DISABLE_ZLIB", True),
             self.define("FT_DISABLE_BROTLI", True),
             self.define("FT_DISABLE_HARFBUZZ", True),
-            self.define("FT_DISABLE_PNG", True),
-            self.define("FT_WITH_BZIP2", True),
+            self.define("FT_REQUIRE_PNG", True),
+            self.define("FT_REQUIRE_BZIP2", True),
         ]
