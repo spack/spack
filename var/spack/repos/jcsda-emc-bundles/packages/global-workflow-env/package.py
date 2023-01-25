@@ -19,6 +19,7 @@ class GlobalWorkflowEnv(BundlePackage):
 
     depends_on("ufs-pyenv", when="+python")
     depends_on("prod-util")
+    depends_on("grib-util")
     depends_on("nco")
     depends_on("cdo")
     depends_on("netcdf-c")
