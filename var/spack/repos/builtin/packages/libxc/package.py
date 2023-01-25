@@ -11,7 +11,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
     density-functional theory."""
 
     homepage = "https://tddft.org/programs/libxc/"
-    url = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
+    url = "https://www.tddft.org/programs/libxc/down/2.2.2/libxc-2.2.2.tar.gz"
 
     # Get checksum from latest release package at https://tddft.org/programs/libxc/download/
     version("6.1.0", sha256="a3aa16915942543031a5d9c4a92c439ce54249bdcda8c91c4e69e65329dc9a54")
