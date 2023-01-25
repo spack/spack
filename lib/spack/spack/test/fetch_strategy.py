@@ -5,7 +5,7 @@
 
 import pytest
 
-import spack.fetch_strategy as fetch_strategy
+from spack import fetch_strategy
 
 
 def test_fetchstrategy_bad_url_scheme():
