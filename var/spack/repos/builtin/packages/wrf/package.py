@@ -290,9 +290,13 @@ class Wrf(Package):
             # Compiling with OpenMPI requires using `-DMPI2SUPPORT`.
             other_flags = " -DMPI2SUPPORT" if self.spec.satisfies("^openmpi") else ""
             config.filter(
-                "^DM_FC.*mpif90 -f90=\$\(SFC\)", "DM_FC = {0}".format(self.spec["mpi"].mpifc) + other_flags
+                "^DM_FC.*mpif90 -f90=\$\(SFC\)",
+                "DM_FC = {0}".format(self.spec["mpi"].mpifc) + other_flags,
             )
-            config.filter("^DM_CC.*mpicc -cc=\$\(SCC\)", "DM_CC = {0}".format(self.spec["mpi"].mpicc) + other_flags)
+            config.filter(
+                "^DM_CC.*mpicc -cc=\$\(SCC\)",
+                "DM_CC = {0}".format(self.spec["mpi"].mpicc) + other_flags,
+            )
 
         if self.spec.satisfies("%aocc"):
             config.filter(
