@@ -8,6 +8,7 @@ from spack.package import *
 
 class PyNptyping(PythonPackage):
     """Type hints for numpy"""
+
     homepage = "https://github.com/ramonhagenaars/nptyping"
     pypi = "nptyping/nptyping-2.4.1.tar.gz"
 
