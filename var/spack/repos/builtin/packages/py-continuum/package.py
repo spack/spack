@@ -16,7 +16,10 @@ class PyContinuum(PythonPackage):
 
     version("1.2.7", sha256="baadcdbe2f5b3c05254307c73434a012f2a3d663e1be9469a03d4b82559e98e1")
 
-    patch("move_prospector_dev_requires.patch")
+    # This patch moves the `prospector` dependency of package continuum to the
+    # dev dependencies, as it is not called from any Python code.
+    # https://github.com/Continvvm/continuum/pull/280
+    patch("move_prospector_dev_requires.patch", when="@:1.2.7")
 
     depends_on("python@3.6:")
 
