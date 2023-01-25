@@ -6,7 +6,7 @@ spack:
         include:
           - brayns
           - py-brayns
-          - brion+python
+          - brion
           - meshball
           - ultraliser
   specs:
