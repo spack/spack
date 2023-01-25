@@ -278,7 +278,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("python", when="+python")
     depends_on("python@3.8:", when="+python @19.11:19")
     depends_on("python@3.8:", when="+python @21:")
-    depends_on("py-onnx-runtime", when="+onnx")
+    depends_on("py-onnxruntime", when="+onnx")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
     depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
