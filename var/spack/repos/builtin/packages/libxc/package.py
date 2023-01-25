@@ -97,13 +97,9 @@ class Libxc(AutotoolsPackage, CudaPackage):
                 env.append_flags("CFLAGS", "-arch=sm_{0}".format(cuda_arch))
 
     def configure_args(self):
-        spec = self.spec
-
-        args = [
-            "--enable-shared" if "+shared" in spec else "--disable-shared",
-            "--enable-cuda" if "+cuda" in spec else "--disable-cuda",
-        ]
-
+        args = []
+        args += self.enable_or_disable("shared")
+        args += self.enable_or_disable("cuda")
         return args
 
     @run_after("configure")
