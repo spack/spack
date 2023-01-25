@@ -1,0 +1,30 @@
+From a4478b5a9a4d048671d078356bbb5d3ef333a9f9 Mon Sep 17 00:00:00 2001
+From: Thomas Bouvier <contact@thomas-bouvier.io>
+Date: Mon, 23 Jan 2023 11:24:39 +0100
+Subject: [PATCH] Move package `prospector` to dev dependencies
+
+---
+ requirements.txt     | 1 -
+ requirements_dev.txt | 1 +
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ create mode 100644 requirements_dev.txt
+
+diff --git a/requirements.txt b/requirements.txt
+index b9e40cd9..46c81d93 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -9,7 +9,6 @@ scikit-learn>=0.24.1
+ pandas>=1.1.5
+ pytest>=5.0.1
+ pytest-mock>=3.6.1
+-prospector[with_mypy]>=1.2.0
+ h5py>=3.1.0
+ requests>=2.24.0
+ ImageHash>=4.2.1
+diff --git a/requirements_dev.txt b/requirements_dev.txt
+new file mode 100644
+index 00000000..a1986540
+--- /dev/null
++++ b/requirements_dev.txt
+@@ -0,0 +1 @@
++prospector[with_mypy]>=1.2.0
