@@ -16,3 +16,14 @@ class PyLazy(PythonPackage):
     version("1.2", sha256="127ea610418057b953f0d102bed83f2c367be13b59f8d0ddf3b8a86c7d31b970")
 
     depends_on("py-setuptools", type="build")
+
+    def url_for_version(self, version):
+        url = "https://pypi.io/packages/source/l/lazy/"
+
+        if version < Version("1.5"):
+            url += "lazy-{0}.zip"
+        else:
+            url += "lazy-{0}.tar.gz"
+
+        url = url.format(version)
+        return url
