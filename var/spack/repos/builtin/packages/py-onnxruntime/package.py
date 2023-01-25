@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyOnnxRuntime(CMakePackage, PythonExtension):
+class PyOnnxruntime(CMakePackage, PythonExtension):
     """ONNX Runtime is a performance-focused complete scoring
     engine for Open Neural Network Exchange (ONNX) models, with
     an open extensible architecture to continually address the
@@ -14,16 +14,13 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     stays up to date with the ONNX standard with complete
     implementation of all ONNX operators, and supports all
     ONNX releases (1.2+) with both future and backwards
-    compatibility.
-
-    Deprecated in favor of py-onnxruntime.
-    """
+    compatibility."""
 
     homepage = "https://github.com/microsoft/onnxruntime"
     git = "https://github.com/microsoft/onnxruntime.git"
 
-    version("1.10.0", tag="v1.10.0", submodules=True, deprecated=True)
-    version("1.7.2", tag="v1.7.2", submodules=True, deprecated=True)
+    version("1.10.0", tag="v1.10.0", submodules=True)
+    version("1.7.2", tag="v1.7.2", submodules=True)
 
     variant("cuda", default=False, description="Build with CUDA support")
 
