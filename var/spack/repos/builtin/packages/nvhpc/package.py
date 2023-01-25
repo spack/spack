@@ -24,15 +24,15 @@ _versions = {
     "23.1": {
         "Linux-aarch64": (
             "5b430e03752954ea62ac1c745b1735cfdaa43b2e981a9412c1465ecb0412fff6",
-            "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_aarch64_cuda_multi.tar.gz"
+            "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_aarch64_cuda_multi.tar.gz",
         ),
         "Linux-ppc64le": (
             "81759e7c747bf4f552b75e7657301f76ecc0828b94fe860f81108c6e83e6ad2b",
-            "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_ppc64le_cuda_multi.tar.gz"
+            "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_ppc64le_cuda_multi.tar.gz",
         ),
         "Linux-x86_64": (
             "55a064415f6d4ce6a01823ee27ebd266f4fb579679871e7c1a7c054bdc18e9f5",
-            "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_x86_64_cuda_multi.tar.gz"
+            "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_x86_64_cuda_multi.tar.gz",
         )
     },
     "22.11": {
