@@ -1984,7 +1984,15 @@ class Environment(object):
         # Track specs by their DAG hash, allows handling DAG hash collisions
         first_seen = {}
         current_lockfile_format = d["_meta"]["lockfile-version"]
-        reader = READER_CLS[current_lockfile_format]
+        try:
+            reader = READER_CLS[current_lockfile_format]
+        except KeyError:
+            msg = (
+                f"Spack {spack.__version__} cannot read environment lockfiles using the "
+                f"v{current_lockfile_format} format"
+            )
+            raise RuntimeError(msg)
+
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
             spec = reader.from_node_dict(node_dict)
