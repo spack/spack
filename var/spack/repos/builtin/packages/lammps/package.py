@@ -232,6 +232,7 @@ class Lammps(CMakePackage, CudaPackage):
         "meam",
         "misc",
         "mliap",
+        "ml-hdnnp",
         "ml-iap",
         "ml-snap",
         "molecule",
@@ -262,6 +263,7 @@ class Lammps(CMakePackage, CudaPackage):
         "user-eff",
         "user-fep",
         "user-h5md",
+        "user-hdnnp",
         "user-intel",
         "user-lb",
         "user-manifold",
@@ -412,6 +414,9 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("py-numpy", when="+mliap+python")
     depends_on("py-numpy", when="+ml-iap+python")
     depends_on("py-setuptools", when="@20220217:+python", type="build")
+    depends_on("n2p2@2.1.4:", when="+user-hdnnp")
+    depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
+    depends_on("n2p2+shared", when="+lib ^n2p2")
 
     conflicts("+cuda", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
@@ -603,6 +608,19 @@ class Lammps(CMakePackage, CudaPackage):
         msg="+user-h5md was removed after @20210527, use +h5md instead",
     )
     conflicts("+h5md", when="@:20210527", msg="+h5md only added @20210702, use +user-h5md instead")
+    conflicts(
+        "+user-hdnnp", when="@:20210514", msg="+user-hdnnp was introduced in version @20210527"
+    )
+    conflicts(
+        "+user-hdnnp",
+        when="@20210702:",
+        msg="+user-hdnnp was removed after @20210527, use +ml-hdnnp instead",
+    )
+    conflicts(
+        "+ml-hdnnp",
+        when="@:20210527",
+        msg="+ml-hdnnp only added @20210702, use +user-hdnnp instead",
+    )
     conflicts(
         "+user-intel",
         when="@20210702:",
@@ -938,6 +956,9 @@ class Lammps(CMakePackage, CudaPackage):
         if "+user-smd" in spec or "+machdyn" in spec:
             args.append("-DDOWNLOAD_EIGEN3=no")
             args.append("-DEIGEN3_INCLUDE_DIR={0}".format(self.spec["eigen"].prefix.include))
+        if "+user-hdnnp" in spec or "+ml-hdnnp" in spec:
+            args.append("-DDOWNLOAD_N2P2=no")
+            args.append("-DN2P2_DIR={0}".format(self.spec["n2p2"].prefix))
 
         return args
 
