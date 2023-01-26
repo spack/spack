@@ -139,6 +139,7 @@ class Python(Package):
     variant("dbm", default=True, description="Build dbm module")
     variant("nis", default=False, description="Build nis module")
     variant("zlib", default=True, description="Build zlib module")
+    variant("zlib_ng", default=False, when="+zlib", description="Use zlib-ng instead of zlib")
     variant("bz2", default=True, description="Build bz2 module")
     variant("lzma", default=True, description="Build lzma module")
     variant("pyexpat", default=True, description="Build pyexpat module")
@@ -169,7 +170,8 @@ class Python(Package):
         depends_on("sqlite@3.7.15:", when="@3.10:+sqlite3")
         depends_on("gdbm", when="+dbm")  # alternatively ndbm or berkeley-db
         depends_on("libnsl", when="+nis")
-        depends_on("zlib@1.1.3:", when="+zlib")
+        depends_on("zlib@1.1.3:", when="+zlib ~zlib_ng")
+        depends_on("zlib-ng +compat", when="+zlib_ng")
         depends_on("bzip2", when="+bz2")
         depends_on("xz", when="+lzma")
         depends_on("expat", when="+pyexpat")
