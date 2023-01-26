@@ -22,49 +22,6 @@ spack:
       target: [ppc64le]
       variants: +mpi cuda_arch=70
     tbb:
-      require: "intel-tbb"
-    binutils:
-      variants: +ld +gold +headers +libiberty ~nls
-    cuda:
-      version: [11.7.0]
-    elfutils:
-      variants: +bzip2 ~nls +xz
-    hdf5:
-      variants: +fortran +hl +shared
-    libfabric:
-      variants: fabrics=sockets,tcp,udp,rxm
-    libunwind:
-      variants: +pic +xz
-    mpich:
-      variants: ~wrapperrpath
-    ncurses:
-      variants: +termlib
-    openblas:
-      variants: threads=openmp
-    paraview:
-      # Don't build GUI support or GLX rendering for HPC/container deployments
-      require: "@5.11 ~qt+osmesa"
-    python:
-      version: [3.7.15]
-    trilinos:
-      require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext
-        +ifpack +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stratimikos
-        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
-    xz:
-      variants: +pic
-    mesa:
-      version: [21.3.8]
-
-  packages:
-    all:
-      compiler: [gcc@11.1.0]
-      providers:
-        blas: [openblas]
-        mpi: [mpich]
-      target: [ppc64le]
-      variants: +mpi cuda_arch=70
-    tbb:
       require: intel-tbb
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
