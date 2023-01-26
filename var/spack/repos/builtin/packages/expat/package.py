@@ -113,10 +113,7 @@ class Expat(CMakePackage):
         return url.format(version.underscored, version.dotted)
 
     def cmake_args(self):
-        args = [
-            self.define("EXPAT_BUILD_DOCS", False),
-            self.define("BUILD_SHARED_LIBS", False)
-        ]
+        args = [self.define("EXPAT_BUILD_DOCS", False), self.define("BUILD_SHARED_LIBS", False)]
 
         if "+libbsd" in self.spec and "@2.2.1:" in self.spec:
             args.append(self.define_from_variant("EXPAT_WITH_LIBBSD", "libbsd"))
