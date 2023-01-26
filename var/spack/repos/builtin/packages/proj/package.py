@@ -90,10 +90,6 @@ class Proj(CMakePackage, AutotoolsPackage):
     depends_on("curl@7.29.0:", when="@7:+curl")
     depends_on("pkgconfig@0.9.0:", type="build", when="@6: build_system=autotools")
     depends_on("cmake@2.6.0:", type="build", when="build_system=cmake")
-    # Builds for Windows via CMake available only
-    # after this version - builds before exist
-    # for Windows but are targeted at VS2005
-    conflicts("platform=windows", when="@:5.0.0")
 
     build_system("autotools", conditional("cmake", when="@5.0.0:"), default="autotools")
 
