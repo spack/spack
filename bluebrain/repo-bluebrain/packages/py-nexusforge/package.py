@@ -48,7 +48,7 @@ class PyNexusforge(PythonPackage):
     depends_on('py-pytest', type='test')
     depends_on('py-pytest-cov', type='test')
     depends_on('py-tox', type='test')
-    depends_on('py-pytest-bdd@3.4.0', type='test')
+    depends_on('py-pytest-bdd', type='test')
     depends_on('py-pytest-mock', type='test')
     depends_on('py-codecov', type='test')
 
