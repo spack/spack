@@ -37,6 +37,7 @@ class PyH5py(PythonPackage):
     variant("mpi", default=True, description="Build with MPI support")
 
     # Python versions
+    depends_on("python@:3.9", type=("build", "run"), when="@:2.8")
     depends_on("python@3.6:", type=("build", "run"), when="@3:3.1")
     depends_on("python@3.7:", type=("build", "run"), when="@3.2:")
 
