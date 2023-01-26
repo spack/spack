@@ -57,7 +57,7 @@ class ScineSerenity(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("SCINE_BUILD_TESTS", self.run_tests),
-            self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
+            self.define_from_variant("SCINE_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SCINE_MARCH", ""),
             self.define("serenity_DIR", self.spec["serenity"].prefix.lib.cmake.serenity),
             self.define("SERENITY_INCLUDE_DIR", self.spec["serenity"].prefix.include.serenity),

@@ -13,6 +13,7 @@ class Serenity(CMakePackage):
     url = "https://github.com/qcserenity/serenity/archive/refs/tags/1.4.0.tar.gz"
     git = "https://github.com/qcserenity/serenity.git"
 
+    version("master", branch="master")
     version("1.4.0", "c7a87fc8e6f8ca21685a27e08d09d49824d9a1e9947fc6abb40d20fbba0cc6e8")
 
     variant("blas", default=True, description="Use BLAS library with Eigen")
@@ -23,7 +24,7 @@ class Serenity(CMakePackage):
     depends_on("cmake@3.12:", type="build")
     depends_on("boost")
     depends_on("eigen@3:")
-    depends_on("googletest@1.8.1:")
+    depends_on("googletest@1.8.1:", type="test")
     depends_on("hdf5@1.10.1:")
     depends_on("lapack", when="+lapack")
     depends_on("libecpint")
@@ -35,6 +36,8 @@ class Serenity(CMakePackage):
     depends_on("serenity-libint")
     depends_on("xcfun")
 
+    extends("python", when="+python")
+
     def patch(self):
 
         filter_file(
@@ -44,19 +47,20 @@ class Serenity(CMakePackage):
             string=True,
         )
 
-        filter_file(
-            "find_package(GTest 1.8.1 QUIET)",
-            "find_package(GTest REQUIRED)",
-            "cmake/ImportGTest.cmake",
-            string=True,
-        )
+        if self.run_tests:
+            filter_file(
+                "find_package(GTest 1.8.1 QUIET)",
+                "find_package(GTest REQUIRED)",
+                "cmake/ImportGTest.cmake",
+                string=True,
+            )
 
-        filter_file(
-            "find_package(GMock 1.8.1 QUIET)",
-            "return()",
-            "cmake/ImportGTest.cmake",
-            string=True,
-        )
+            filter_file(
+                "find_package(GMock 1.8.1 QUIET)",
+                "return()",
+                "cmake/ImportGTest.cmake",
+                string=True,
+            )
 
         filter_file(
             "function(import_libecpint)",
@@ -112,7 +116,7 @@ class Serenity(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("SERENITY_BUILD_TESTS", self.run_tests),
-            self.define("SERENITY_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
+            self.define_from_variant("SERENITY_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SERENITY_MARCH", ""),
             self.define("SERENITY_PREFER_XCFUN", False),
             self.define("SERENITY_USE_XCFUN", True),
@@ -120,8 +124,8 @@ class Serenity(CMakePackage):
             self.define(
                 "SERENITY_USE_INTEL_MKL", self.spec["lapack"].libs.names[0].startswith("mkl")
             ),
-            self.define("SERENITY_USE_LAPACK", "+lapack" in self.spec),
-            self.define("SERENITY_USE_BLAS", "+blas" in self.spec),
+            self.define_from_variant("SERENITY_USE_LAPACK", "lapack"),
+            self.define_from_variant("SERENITY_USE_BLAS", "blas"),
             self.define("SERENITY_USAGE_FROM_SOURCE", False),
             self.define("Libint2_DIR", self.spec["serenity-libint"].prefix.lib.cmake.libint2),
             self.define("XCFun_DIR", self.spec["xcfun"].prefix.share.XCFun),
