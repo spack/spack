@@ -33,7 +33,7 @@ _versions = {
         "Linux-x86_64": (
             "55a064415f6d4ce6a01823ee27ebd266f4fb579679871e7c1a7c054bdc18e9f5",
             "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_x86_64_cuda_multi.tar.gz",
-        )
+        ),
     },
     "22.11": {
         "Linux-aarch64": (
