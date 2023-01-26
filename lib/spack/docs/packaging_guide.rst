@@ -268,7 +268,7 @@ generates a boilerplate template for your package, and opens up the new
 
        # FIXME: Add a list of GitHub accounts to
        # notify when the package is updated.
-       # maintainers = ["github_user1", "github_user2"]
+       # maintainers("github_user1", "github_user2")
 
        version("6.2.1", sha256="eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c")
 
@@ -319,14 +319,8 @@ The rest of the tasks you need to do are as follows:
 
 #. Add a comma-separated list of maintainers.
 
-   The ``maintainers`` field is a list of GitHub accounts of people
-   who want to be notified any time the package is modified. When a
-   pull request is submitted that updates the package, these people
-   will be requested to review the PR. This is useful for developers
-   who maintain a Spack package for their own software, as well as
-   users who rely on a piece of software and want to ensure that the
-   package doesn't break. It also gives users a list of people to
-   contact for help when someone reports a build error with the package.
+   Add a list of Github accounts of people who want to be notified
+   any time the package is modified. See :ref:`package_maintainers`.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -497,27 +491,30 @@ some examples:
 In general, you won't have to remember this naming convention because
 :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
+.. _package_maintainers:
+
 -----------
 Maintainers
 -----------
 
-In Spack, packages can optionally have one or more maintainers. The ``maintainers``
-directive can be used to add them:
+Each package in Spack may have one or more maintainers, i.e. one or more
+GitHub accounts of people who want to be notified any time the package is
+modified.
+
+When a pull request is submitted that updates the package, these people will
+be requested to review the PR. This is useful for developers who maintain a
+Spack package for their own software, as well as users who rely on a piece of
+software and want to ensure that the package doesn't break. It also gives users
+a list of people to contact for help when someone reports a build error with
+the package.
+
+To add maintainers to a package, simply declare them with the ``maintainers`` directive:
 
 .. code-block:: python
 
    maintainers("user1", "user2")
 
-The list of maintainers is inherited from parent packages by default, but users can pass
-the ``reset=True`` argument if they want to restart this list from scratch:
-
-.. code-block:: python
-
-   class CustomFoo(Foo):
-      maintainers("user1", reset=True)
-
-In the snippet above, maintainers declared in the `Foo` package will not be part of the list
-for the ``CustomFoo`` package.
+The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
 
 -----------------
 Trusted Downloads

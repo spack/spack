@@ -769,22 +769,17 @@ def build_system(*values, **kwargs):
 
 
 @directive(dicts=())
-def maintainers(*names: str, reset: bool = False):
+def maintainers(*names: str):
     """Add a new maintainer directive, to specify maintainers in a declarative way.
 
     Args:
         names: GitHub username for the maintainer
-        reset: if True, discards all maintainers recorded so far for this package
     """
 
     def _execute_maintainer(pkg):
-        if reset:
-            pkg.maintainers = list(names)
-            return
-        maintainers = getattr(pkg, "maintainers", [])
+        maintainers_from_base = getattr(pkg, "maintainers", [])
         # Here it is essential to copy, otherwise we might add to an empty list in the parent
-        maintainers = maintainers + list(names)
-        pkg.maintainers = list(sorted(set(maintainers)))
+        pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
 
     return _execute_maintainer
 
