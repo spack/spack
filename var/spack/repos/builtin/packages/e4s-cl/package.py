@@ -30,5 +30,5 @@ class E4sCl(PythonPackage):
     depends_on("py-python-ptrace@0.9.7:", type=("build", "run"))
     depends_on("py-pyelftools@0.27", type=("build", "run"))
     depends_on("py-requests@2.26.0:", type=("build", "run"))
-    depends_on("py-tinydb@4.7.0", type=("build", "run"))
+    depends_on("py-tinydb@4.5.2", type=("build", "run"))
     depends_on("py-python-sotools@0.1.0", type=("build", "run"))
