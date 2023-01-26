@@ -19,7 +19,7 @@ class PyVascpy(PythonPackage):
     version("0.1.0", sha256="0d6aa4faebe75bce36f44bd6f884d015a8f24e1dc76977d8c7fd6be7ea8e725b")
 
     depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm:", type="build")
+    depends_on("py-setuptools-scm", type="build")
 
     depends_on("py-numpy@1.17.0:", type=("build", "run"))
     depends_on("py-scipy@1.0.0:", type=("build", "run"))
