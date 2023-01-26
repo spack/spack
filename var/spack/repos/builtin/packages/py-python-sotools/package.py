@@ -16,3 +16,4 @@ class PyPythonSotools(PythonPackage):
             "39a088f2ca384294e19a96a82d883feb729f0f2e5ae21d9785be357124ec61f2")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-pyelftools@0.26", type="run")
