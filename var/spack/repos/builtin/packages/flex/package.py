@@ -66,10 +66,6 @@ class Flex(AutotoolsPackage):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 
-    def setup_build_environment(self, env):
-        if self.spec.satisfies("%oneapi@2023.0.0:"):
-            env.set("CFLAGS", "-Wno-error=implicit-function-declaration")
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
