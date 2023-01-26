@@ -24,7 +24,7 @@ class E4sCl(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-termcolor@1.1.0", type=("build", "run"))
+    depends_on("py-termcolor@1.1.0:", type=("build", "run"))
     depends_on("py-pyyaml@6.0:", type=("build", "run"))
     depends_on("py-texttable@1.6.2:", type=("build", "run"))
     depends_on("py-python-ptrace@0.9.7:", type=("build", "run"))
