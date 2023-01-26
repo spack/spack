@@ -258,7 +258,7 @@ def test_has_test_method_fails(capsys):
     assert "is not a class" in captured
 
 
-def test_read_old_results(mock_test_stage):
+def test_read_old_results(mock_packages, mock_test_stage):
     """Take test data generated before the switch to full hash everywhere
     and make sure we can still read it in"""
     # Test data was generated with:
