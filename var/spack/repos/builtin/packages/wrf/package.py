@@ -246,7 +246,7 @@ class Wrf(Package):
         # Same flags as FCFLAGS/FFLAGS above, but forced through the compiler
         # wrapper when compiling v3.9.1.1.
         if self.spec.satisfies("@3.9.1.1 %gcc@10:") and name == "fflags":
-            flags.append("-w -O2 -fallow-argument-mismatch -fallow-invalid-boz")
+            flags.extend(["-w", "-O2", "-fallow-argument-mismatch", "-fallow-invalid-boz"])
         return (flags, None, None)
 
     def patch(self):
