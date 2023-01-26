@@ -1188,6 +1188,26 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
+    def test_reuse_by_spec(self, mutable_config, monkeypatch):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Known failure of the original concretizer")
+
+        test_platform = spack.platforms.test.Test
+        constraints = ["target=%s" % t for t in [test_platform.front_end, test_platform.back_end]]
+        with spack.config.override("concretizer:reuse", False):
+            specs = [spack.spec.Spec("mpileaks %s" % c).concretized() for c in constraints]
+
+        def query(*args, **kwargs):
+            return specs
+
+        monkeypatch.setattr(spack.store.db, "query", query)
+
+        # For each constraint
+        for constraint in constraints:
+            with spack.config.override("concretizer:reuse", [constraint]):
+                s = spack.spec.Spec("mpileaks").concretized()
+                assert s in spack.store.db.query("mpileaks %s" % constraint)
+
     @pytest.mark.parametrize("dev_first", [True, False])
     @pytest.mark.parametrize(
         "spec", ["dev-build-test-install", "dev-build-test-dependent ^dev-build-test-install"]

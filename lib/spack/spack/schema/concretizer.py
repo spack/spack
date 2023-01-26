@@ -14,7 +14,9 @@ properties = {
         "type": "object",
         "additionalProperties": False,
         "properties": {
-            "reuse": {"type": "boolean"},
+            "reuse": {
+                "oneOf": [{"type": "boolean"}, {"type": "array", "items": {"type": "string"}}]
+            },
             "enable_node_namespace": {"type": "boolean"},
             "targets": {
                 "type": "object",
