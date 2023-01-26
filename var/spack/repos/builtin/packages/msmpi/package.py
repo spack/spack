@@ -41,7 +41,6 @@ class Msmpi(Package):
         ver_str = re.search(r"Microsoft MPI Startup Program \[Version ([0-9.]+)\]", output)
         return Version(ver_str.group(1)) if ver_str else None
 
-
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
 
