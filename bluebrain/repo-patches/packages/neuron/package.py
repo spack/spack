@@ -44,9 +44,14 @@ class Neuron(CMakePackage):
 
     variant("binary",     default=True, description="Create special as a binary instead of shell script (8.0.x and earlier)")
     conflicts("~binary", when='@8.0.999:')
+    variant(
+        "build_type",
+        default="RelWithDebInfo",
+        description="CMake build type",
+        values=("Debug", "FastDebug", "RelWithDebInfo", "Release"),
+    )
     variant("coreneuron", default=True, description="Enable CoreNEURON support")
     variant("mod-compatibility",  default=True, description="Enable CoreNEURON compatibility for MOD files")
-    variant("debug",          default=False, description="Build with flags -g -O0")
     variant("interviews", default=False, description="Enable GUI with INTERVIEWS")
     variant("legacy-fr",  default=True,  description="Use original faraday, R, etc. instead of 2019 nist constants")
     variant("memacs",     default=True,  description="Enable use of memacs")
@@ -109,11 +114,6 @@ class Neuron(CMakePackage):
     depends_on("coreneuron~legacy-unit~caliper", when="@:8.99+coreneuron~legacy-unit~caliper")
     depends_on("coreneuron+legacy-unit+caliper", when="@:8.99+coreneuron+legacy-unit+caliper")
     depends_on("coreneuron~legacy-unit+caliper", when="@:8.99+coreneuron~legacy-unit+caliper")
-
-    # TODO: if +debug variant is used (e.g. in CIs), we have to make sure
-    # coreneuron with Debug build is used. This can be removed when we
-    # remove +debug variant from this recipe.
-    depends_on("coreneuron build_type=Debug", when="@:8.99+coreneuron+debug")
 
     # dependencies from coreneuron package
     depends_on('python', type=('build', 'run'))
@@ -182,8 +182,17 @@ class Neuron(CMakePackage):
         if "+python" in self.spec:
             args.append("-DPYTHON_EXECUTABLE:FILEPATH="
                         + self.spec["python"].command.path)
-        if "+debug" in self.spec:
-            compilation_flags += ['-g', '-O0']
+        if self.spec.variants["build_type"].value == "FastDebug":
+            # Do *not* add -DNDEBUG, so assertions are enabled
+            # Good debug information and stack traces
+            compilation_flags.append("-g")
+            if '%nvhpc' not in self.spec:
+                compilation_flags.append("-fno-omit-frame-pointer")
+            # Moderate optimisation by default
+            compilation_flags.append("-O1")
+            if "%intel" in self.spec:
+                # This one definitely seems wise
+                compilation_flags += ["-fp-model", "consistent"]
             # Remove default flags (RelWithDebInfo etc.)
             args.append("-DCMAKE_BUILD_TYPE=Custom")
 
@@ -207,11 +216,13 @@ class Neuron(CMakePackage):
             args.append("-DNRN_AVOID_ABSOLUTE_PATHS=ON")
         # Pass Spack's target architecture flags in explicitly so that they're
         # saved to the nrnivmodl Makefile.
-        if "~debug" in self.spec:
-            compilation_flags.append(
-                self.spec.architecture.target.optimization_flags(self.spec.compiler)
-            )
-        compilation_flags = ' '.join(compilation_flags)
+        compilation_flags.append(
+            self.spec.architecture.target.optimization_flags(self.spec.compiler)
+        )
+        if "%intel" in self.spec:
+            # icpc: command line warning #10121: overriding '-march=skylake' with '-march=skylake'
+            compilation_flags.append("-diag-disable=10121")
+        compilation_flags = " ".join(compilation_flags)
         args.append("-DCMAKE_C_FLAGS=" + compilation_flags)
         args.append("-DCMAKE_CXX_FLAGS=" + compilation_flags)
         if "+caliper" in self.spec:
