@@ -83,11 +83,20 @@ class Wgl(Package):
     # As noted above, the headers neccesary to include
     @property
     def headers(self):
-        return find_headers("GL", root=os.path.join(self.prefix.Include, str(self.version)+".0"), recursive=True)
+        return find_headers(
+            "GL", root=os.path.join(self.prefix.Include, str(self.version) + ".0"), recursive=True
+        )
 
     @property
     def libs(self):
-        return find_libraries("opengl32", shared=False, root=os.path.join(self.prefix.Lib, str(self.version)+".0", "um", self.spec.variants["plat"].value), recursive=True)
+        return find_libraries(
+            "opengl32",
+            shared=False,
+            root=os.path.join(
+                self.prefix.Lib, str(self.version) + ".0", "um", self.spec.variants["plat"].value
+            ),
+            recursive=True,
+        )
 
     def install(self, spec, prefix):
         raise RuntimeError(
