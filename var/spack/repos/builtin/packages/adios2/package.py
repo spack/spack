@@ -102,7 +102,7 @@ class Adios2(CMakePackage, CudaPackage):
             "pic",
             default=False,
             description="Build pic-enabled static libraries",
-            when="platform=%s" % plat
+            when="platform=%s" % plat,
         )
         # libffi and libfabric and not currently supported on Windows
         # see Paraview's superbuild handling of libfabric at
