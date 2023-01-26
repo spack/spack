@@ -20,9 +20,10 @@ class Awscli(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("python@3.7:", when="@1.25:", type=("build", "run"))
 
-    depends_on("py-botocore@1.29", when="@1.27", type=("build", "run"))
-    depends_on("py-botocore@1.13", when="@1.16.308", type=("build", "run"))
-    depends_on("py-botocore@1.12", when="@1.16.179", type=("build", "run"))
+    # py-botocore is pinned to the patch version number
+    depends_on("py-botocore@1.29.56", when="@1.27", type=("build", "run"))
+    depends_on("py-botocore@1.13.44", when="@1.16.308", type=("build", "run"))
+    depends_on("py-botocore@1.12.169", when="@1.16.179", type=("build", "run"))
 
     depends_on("py-colorama@0.2.5:0.4", type=("build", "run"))
 
