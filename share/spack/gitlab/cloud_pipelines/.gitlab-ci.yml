@@ -60,7 +60,6 @@ default:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  tags: ["spack", "aws", "public", "medium", "x86_64"]
   variables:
     KUBERNETES_CPU_REQUEST: 4000m
     KUBERNETES_MEMORY_REQUEST: 16G
@@ -69,19 +68,15 @@ default:
   retry:
     max: 2
     when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
+      - always
 
 .generate:
   extends: [ ".generate-base" ]
-  tags: ["spack", "aws", "public", "medium", "x86_64"]
-  variables:
-    KUBERNETES_CPU_REQUEST: 4000m
-    KUBERNETES_MEMORY_REQUEST: 8G
+  tags: ["spack", "public", "medium", "x86_64"]
 
 .generate-aarch64:
   extends: [ ".generate" ]
-  tags: ["spack", "aws", "public", "medium", "aarch64"]
+  tags: ["spack", "public", "medium", "aarch64"]
 
 .pr-generate:
   extends: [ ".pr", ".generate" ]
@@ -370,7 +365,7 @@ e4s-oneapi-protected-build:
 ########################################
 .e4s-power-generate-tags-and-image:
   image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
-  tags: ["spack", "large", "ppc64le"]
+  tags: ["spack", "public", "large", "ppc64le"]
 
 .e4s-power:
   variables:
@@ -395,8 +390,6 @@ e4s-power-pr-build:
 
 e4s-power-protected-build:
   extends: [ ".e4s-power", ".protected-build" ]
-  variables:
-    SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
