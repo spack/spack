@@ -3,6 +3,7 @@ From: {{ build.image }}
 Stage: build
 
 %post
+{% block build_stage %}
 {% if os_packages_build.list %}
   # Update, install and cleanup of system packages needed at build-time
   {% if os_package_update %}
@@ -37,7 +38,7 @@ EOF
 {% if extra_instructions.build %}
 {{ extra_instructions.build }}
 {% endif %}
-
+{% endblock build_stage %}
 {% if apps %}
 {% for application, help_text in apps.items() %}
 
@@ -61,6 +62,7 @@ Stage: final
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
+{% block final_stage %}
 {% if os_packages_final.list %}
   # Update, install and cleanup of system packages needed at run-time
   {% if os_package_update %}
@@ -74,6 +76,7 @@ Stage: final
 {% if extra_instructions.final %}
 {{ extra_instructions.final }}
 {% endif %}
+{% endblock final_stage %}
 {% if runscript %}
 
 %runscript

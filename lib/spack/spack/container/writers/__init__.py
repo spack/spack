@@ -7,6 +7,7 @@ convenience functions.
 """
 import collections
 import copy
+from typing import Optional
 
 import spack.environment as ev
 import spack.schema.env
@@ -130,6 +131,9 @@ class PathContext(tengine.Context):
     install software in a common location and make it available
     directly via PATH.
     """
+
+    # Must be set by derived classes
+    template_name: Optional[str] = None
 
     def __init__(self, config, last_phase):
         self.config = ev.config_dict(config)
@@ -280,7 +284,8 @@ class PathContext(tengine.Context):
     def __call__(self):
         """Returns the recipe as a string"""
         env = tengine.make_environment()
-        t = env.get_template(self.template_name)
+        template_name = self.container_config.get("template", self.template_name)
+        t = env.get_template(template_name)
         return t.render(**self.to_dict())
 
 

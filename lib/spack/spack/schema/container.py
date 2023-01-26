@@ -63,6 +63,8 @@ container_schema = {
         },
         # Add labels to the image
         "labels": {"type": "object"},
+        # Use a custom template to render the recipe
+        "template": {"type": "string", "default": None},
         # Add a custom extra section at the bottom of a stage
         "extra_instructions": {
             "type": "object",
