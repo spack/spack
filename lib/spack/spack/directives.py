@@ -53,6 +53,7 @@ __all__ = [
     "version",
     "conflicts",
     "depends_on",
+    "disinherit",
     "extends",
     "provides",
     "patch",
@@ -235,12 +236,12 @@ class DirectiveMeta(type):
         if isinstance(dicts, str):
             dicts = (dicts,)
 
-        if not isinstance(dicts, collections.abc.Sequence):
-            message = "dicts arg must be list, tuple, or string. Found {0}"
-            raise TypeError(message.format(type(dicts)))
+        if dicts is not None:
+            if not isinstance(dicts, collections.abc.Sequence):
+                raise TypeError(f"dicts arg must be list, tuple, or string. Found {type(dicts)}")
 
-        # Add the dictionary names if not already there
-        DirectiveMeta._directive_dict_names |= set(dicts)
+            # Add the dictionary names if not already there
+            DirectiveMeta._directive_dict_names |= set(dicts)
 
         # This decorator just returns the directive functions
         def _decorator(decorated_function):
@@ -765,6 +766,35 @@ def build_system(*values, **kwargs):
         default=default,
         multi=False,
     )
+
+
+@directive()
+def disinherit(dict_name: str):
+    """Clear all values in a dict inherited from base packages.
+
+    You can use this to, e.g., remove all inherited versions from a base package:
+
+        disinherit("versions")  # this package doesn't share any versions w/parents
+        version("2.0", ...)     # new versions specific to this package
+        version("3.0", ...)
+
+    The dictionary name is checked, so you can't call this on somethign that's not a
+    valid directive dictonary.
+
+    Arguments:
+        dict_name: name of directive dictionary to clear.
+
+    """
+    if dict_name not in DirectiveMeta._directive_dict_names:
+        names = ", ".join(DirectiveMeta._directive_dict_names)
+        raise DirectiveError(f"Can't disinherit '{dict_name}'. Options are: {names}")
+
+    def _execute_disinherit(pkg):
+        dictionary = getattr(pkg, dict_name, None)
+        if dictionary:
+            dictionary.clear()
+
+    return _execute_disinherit
 
 
 class DirectiveError(spack.error.SpackError):

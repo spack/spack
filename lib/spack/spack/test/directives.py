@@ -68,3 +68,21 @@ def test_error_on_anonymous_dependency(config, mock_packages):
     pkg = spack.repo.path.get_pkg_class("a")
     with pytest.raises(spack.directives.DependencyError):
         spack.directives._depends_on(pkg, "@4.5")
+
+
+def test_disinherited_version(config, mock_packages):
+    pkg = spack.repo.path.get_pkg_class("disinherit")
+
+    # these would be inherited from A if disinherit failed
+    assert "1.0" not in pkg.versions
+    assert "2.0" not in pkg.versions
+
+    # these are defined in dininherit
+    assert "3.0" not in pkg.versions
+    assert "4.0" not in pkg.versions
+
+
+def test_disinherit(config, mock_packages):
+    with pytest.raises(spack.directives.DirectiveError):
+        # This is not a valid thing to disinherit
+        spack.directives.disinherit("foobarbaz")

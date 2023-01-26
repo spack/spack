@@ -15,6 +15,7 @@ class GromacsSwaxs(Gromacs):
     git = "https://gitlab.com/cbjh/gromacs-swaxs.git"
     maintainers = ["w8jcik"]
 
+    disinherit("versions")
     version(
         "2021.5-0.4",
         sha256="9f8ed6d448a04789d45e847cbbc706a07130377f578388220a9d5357fae9d1c3",
@@ -136,18 +137,3 @@ class GromacsSwaxs(Gromacs):
     conflicts("+plumed")
     conflicts("+opencl")
     conflicts("+sycl")
-
-    def remove_parent_versions(self):
-        """
-        By inheriting GROMACS package we also inherit versions.
-        They are not valid, so we are removing them.
-        """
-
-        for version_key in Gromacs.versions.keys():
-            if version_key in self.versions:
-                del self.versions[version_key]
-
-    def __init__(self, spec):
-        super(GromacsSwaxs, self).__init__(spec)
-
-        self.remove_parent_versions()

@@ -91,6 +91,8 @@ packages and use the first valid file:
   to eventually support URLs in ``repos.yaml``, so that you can easily
   point to remote package repositories, but that is not yet implemented.
 
+.. _namespaces:
+
 ---------------------
 Namespaces
 ---------------------
@@ -426,36 +428,3 @@ By path:
   $ spack repo list
   ==> 1 package repository.
   builtin    ~/spack/var/spack/repos/builtin
-
---------------------------------
-Repo namespaces and Python
---------------------------------
-
-You may have noticed that namespace notation for repositories is similar
-to the notation for namespaces in Python.  As it turns out, you *can*
-treat Spack repositories like Python packages; this is how they are
-implemented.
-
-You could, for example, extend a ``builtin`` package in your own
-repository:
-
-.. code-block:: python
-
-   from spack.pkg.builtin.mpich import Mpich
-
-   class MyPackage(Mpich):
-       ...
-
-Spack repo namespaces are actually Python namespaces tacked on under
-``spack.pkg``.  The search semantics of ``repos.yaml`` are actually
-implemented using Python's built-in `sys.path
-<https://docs.python.org/2/library/sys.html#sys.path>`_ search.  The
-:py:mod:`spack.repo` module implements a custom `Python importer
-<https://docs.python.org/2/library/imp.html>`_.
-
-.. warning::
-
-   The mechanism for extending packages is not yet extensively tested,
-   and extending packages across repositories imposes inter-repo
-   dependencies, which may be hard to manage.  Use this feature at your
-   own risk, but let us know if you have a use case for it.
