@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,8 +27,7 @@ class PyIpyparallel(PythonPackage):
     depends_on("py-packaging", type="build", when="@7.1:")
     depends_on("py-setuptools@40.8:", type="build", when="@7.1:8.2")
     depends_on("py-setuptools@:60", type="build", when="@:8.2.0")
-    depends_on("py-setuptools", type="build", when="@:8.2")
-    depends_on("py-hatchling@0.25:", type=("build"), when="@8.4:")
+    depends_on("py-hatchling@0.25:", type="build", when="@8.4:")
 
     depends_on("py-ipython-genutils", type=("build", "run"), when="@:6.3")
     depends_on("py-entrypoints", type=("build", "run"), when="@7.1:")
