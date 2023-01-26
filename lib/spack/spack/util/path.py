@@ -10,6 +10,7 @@ TODO: this is really part of spack.config. Consolidate it.
 import contextlib
 import getpass
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -166,6 +167,42 @@ def sanitize_file_path(pth):
         san_cmp = re.sub(illegal_chars, "", cmp)
         pth.append(san_cmp)
     return drive + os.path.join(*pth)
+
+
+def args_to_pathlib(*args):
+    return [
+        pathlib.Path(arg) if (isinstance(arg, str) and not is_path_url(arg)) else arg
+        for arg in args
+    ]
+
+
+def pathlib_filter(_func=None, arg_slice=None):
+    """
+    Filters function arguments composing path arguments into Pathlib Path objects
+    Optional slicing range can be specified to select specific or groups of arguments
+
+    This decorator is identical to system_path_filter except it converts from str
+    to pathlib.Path - it is intended as a temporary functional stopgap to facilitate a
+    piecewise conversion of the Spack codebase to use pathlib. Once internal useage is consistent
+    this decorator and other cross platform path logic specific to spack should be removed
+    """
+    from functools import wraps
+
+    def holder_func(func):
+        @wraps(func)
+        def path_filter_caller(*args, **kwargs):
+            args = list(args)
+            if arg_slice:
+                args[arg_slice] = args_to_pathlib(*args[arg_slice])
+            else:
+                args = args_to_pathlib(*args)
+            return func(*args, **kwargs)
+
+        return path_filter_caller
+
+    if _func:
+        return holder_func(_func)
+    return holder_func
 
 
 def system_path_filter(_func=None, arg_slice=None):
