@@ -91,10 +91,10 @@ class Proj(CMakePackage, AutotoolsPackage):
     depends_on("pkgconfig@0.9.0:", type="build", when="@6: build_system=autotools")
     depends_on("cmake@2.6.0:", type="build", when="build_system=cmake")
 
-    build_system("autotools", conditional("cmake", when="@5.0.0:"), default="autotools")
+    build_system("autotools", conditional("cmake", when="@5.0.0:"), default="cmake")
 
 
-class Setup(object):
+class Setup:
     def setup_run_environment(self, env):
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
         # If an incompatible version of PROJ is found in PROJ_LIB, it can
