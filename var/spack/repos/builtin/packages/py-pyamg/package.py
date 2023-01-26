@@ -22,10 +22,8 @@ class PyPyamg(PythonPackage):
 
     # Dependencies. A generic python dependency is added implicity by the
     # PythonPackage class.
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("py-pip", type="build", when="@4.2.0:")
+    depends_on("py-numpy@1.7:", type=("build", "run"))
+    depends_on("py-scipy@0.12:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build", when="@4.2.0:")
     depends_on("py-setuptools-scm@5:+toml", type="build", when="@4.2.0:")
     depends_on("py-pybind11@2.8.0:", type=("build"), when="@4.2.0:")
-    depends_on("py-wheel", type=("build"), when="@4.2.0:")
