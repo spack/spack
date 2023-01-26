@@ -19,25 +19,25 @@ class Discotec(CMakePackage):
 
     version("master", branch="master")
     version("third-level-advection", branch="third-level-advection")
+    version("spack", branch="spack-cmake")
 
-    variant("enableft", default=False, description="DisCoTec with algorithm-based fault tolerance")
+    variant("enableft", default=True, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")
     variant("timing", default=True, description="With high-res timers")
     variant("test", default=True, description="Build Boost tests")
-    variant("openmp", default=False, description="Parallelize with OpenMP")
+    variant("openmp", default=True, description="Parallelize with OpenMP")
     variant("hdf5", default=True, description="Interpolation output with HDF5")
     variant("vtk", default=False, description="Build with VTK support",when="third-level-advection")
     variant("lto", default=True, description="Build with link-time optimization")
     variant("build_type", default="Release", values=("Release","RelWithDebInfo", "Debug"), description="Build type for DisCoTec")
 
 
-    depends_on("python@3.7:", type=("build", "run"))
     depends_on("cmake@3.24.2:", type=("build"))
     depends_on("mpi", type=("build", "run"))
     depends_on("boost +test +serialization +filesystem +system +program_options", type=("build", "run"))
-    depends_on("highfive+mpi", when="+hdf5")
+    depends_on("glpk")
+    depends_on("highfive+mpi+boost+ipo", when="+hdf5")
     depends_on("vtk", when="+vtk")
-    depends_on("hdf5", when="+hdf5")
 
     def cmake_args(self):
         args = [
@@ -54,3 +54,4 @@ class Discotec(CMakePackage):
             args += "-DDISCOTEC_VTK={0}".format("ON" if "+vtk" in self.spec else "OFF"),
 
         return args
+
