@@ -6,6 +6,7 @@
 import os
 import re
 
+from spack.build_environment import get_effective_jobs
 from spack.package import *
 
 
@@ -215,7 +216,9 @@ class R(AutotoolsPackage):
 
         # Use the number of make_jobs set in spack. The make program will
         # determine how many jobs can actually be started.
-        env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
+        jobs = get_effective_jobs(make_jobs, parallel=self.parallel, supports_jobserver=True)
+        if jobs is not None:
+            env.append_flags("MAKEFLAGS", "-j{0}".format(make_jobs))
         env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
 
     def setup_dependent_run_environment(self, env, dependent_spec):

@@ -9,6 +9,7 @@ import sys
 
 import llnl.util.tty as tty
 
+from spack.build_environment import get_effective_jobs
 from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
@@ -310,7 +311,9 @@ class Qt(Package):
         return url
 
     def setup_build_environment(self, env):
-        env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
+        jobs = get_effective_jobs(make_jobs, parallel=self.parallel, supports_jobserver=True)
+        if jobs is not None:
+            env.append_flags("MAKEFLAGS", "-j{0}".format(jobs))
         if self.version >= Version("5.11"):
             # QDoc uses LLVM as of 5.11; remove the LLVM_INSTALL_DIR to
             # disable
