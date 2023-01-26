@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.build_systems import autotools, cmake
 
 
-class Proj(CMakePackage):
+class Proj(CMakePackage, AutotoolsPackage):
     """PROJ is a generic coordinate transformation software, that transforms
     geospatial coordinates from one coordinate reference system (CRS) to
     another. This includes cartographic projections as well as geodetic
@@ -87,12 +88,14 @@ class Proj(CMakePackage):
     depends_on("sqlite@3.11:", when="@6:")
     depends_on("libtiff@4.0:", when="@7:+tiff")
     depends_on("curl@7.29.0:", when="@7:+curl")
+    depends_on("pkgconfig@0.9.0:", type="build", when="@6: build_system=autotools")
+    depends_on("cmake@2.6.0:", type="build", when="build_system=cmake")
+    # Builds for Windows via CMake available only
+    # after this version - builds before exist
+    # for Windows but are targeted at VS2005
+    conflicts("platform=windows", when="@:5.0.0")
 
-    def cmake_args(self):
-        return [
-            self.define("PROJ_LIB", join_path(self.stage.source_path, "nad")),
-            self.define_from_variant("ENABLE_TIFF", "tiff"),
-        ]
+    build_system("autotools", conditional("cmake", when="@5.0.0:"), default="autotools")
 
     def setup_run_environment(self, env):
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
@@ -107,3 +110,36 @@ class Proj(CMakePackage):
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
+
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = [
+            self.define("PROJ_LIB", join_path(self.stage.source_path, "nad")),
+            self.define_from_variant("ENABLE_TIFF", "tiff"),
+            self.define_from_variant("ENABLE_CURL", "curl")
+        ]
+        if self.spec.satisfies("@6:"):
+            args.append(self.define("USE_EXTERNAL_GTEST", True))
+        return args
+
+
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
+    def configure_args(self):
+        args = ["PROJ_LIB={0}".format(join_path(self.stage.source_path, "nad"))]
+
+        if self.spec.satisfies("@6:"):
+            args.append("--with-external-gtest")
+
+        if self.spec.satisfies("@7:"):
+            if "+tiff" in self.spec:
+                args.append("--enable-tiff")
+            else:
+                args.append("--disable-tiff")
+
+            if "+curl" in self.spec:
+                args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
+            else:
+                args.append("--without-curl")
+
+        return args
