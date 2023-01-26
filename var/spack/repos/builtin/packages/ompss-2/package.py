@@ -24,11 +24,13 @@ class Ompss2(Package):
     version("2022.11", sha256="2df1a5c0f01523ebee49596ca0939b3edeae50e6bd76680cc8777d92583e5a1e")
     version("2021.11.1", sha256="9e0ee0c9f75cd558882465efc3d521c2fe93f1a6b50d4d9c8e614ab4eb3a9e6c")
 
-    depends_on("extrae")
+    variant("extrae", default=False, description="Build with Extrae instrumentation support")
+
     depends_on("hwloc")
     depends_on("sqlite")
     depends_on("python", type="build")
     depends_on("cmake", type="build")
+    depends_on("extrae", when="+extrae")
 
     resource(
         name="jemalloc",
@@ -102,17 +104,22 @@ class Ompss2(Package):
 
     def install_nanos6(self, spec, prefix):
         os.chdir(glob.glob("./nanos6-*").pop())
-        configure(
+
+        options = [
             "--prefix=%s" % prefix,
             "--with-jemalloc=%s" % prefix,
-            "--with-extrae=%s" % spec["extrae"].prefix,
             "--with-hwloc=%s" % spec["hwloc"].prefix,
             "--disable-stats-instrumentation",
             "--disable-verbose-instrumentation",
             "--disable-lint-instrumentation",
             "--disable-graph-instrumentation",
             "--without-papi",
-        )
+        ]
+
+        if "+extrae" in spec:
+            options.append("--with-extrae=%s" % spec["extrae"].prefix)
+
+        configure(*options)
 
         make()
         make("install")
