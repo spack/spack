@@ -38,7 +38,6 @@ class Gftl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
-    # Generate checksum with spack checksum gftl@x.y.z
     version("1.8.2", sha256="7ee9a1db62f6dd09e533516d7dc53fbc9c8c81464bb12f6eb558ad5d3bfd85ef")
     version("1.8.1", sha256="b8171ea69b108325816472ee47068618d709a3f563959142bc58ff38908a7210")
     version("1.8.0", sha256="e99def0a9a1b3031ceff22c416bee75e70558cf6b91ce4be70b0ad752dda26c6")
@@ -50,7 +49,7 @@ class Gftl(CMakePackage):
     version("1.5.5", sha256="67ff8210f08e9f2ee6ba23c8c26336f948420db5db7fc054c3a662e9017f18a3")
     version("1.5.4", sha256="4c53e932ba8d82616b65500f403a33a14957b9266b5e931e2448f1f005990750")
 
-    depends_on("cmake", type="build")
+    depends_on("cmake@3.12:", type="build")
     depends_on("m4", type="build")
 
     variant(
