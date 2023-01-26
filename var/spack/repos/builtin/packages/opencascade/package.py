@@ -110,7 +110,9 @@ class Opencascade(CMakePackage):
         if "+freeimage" in self.spec:
             args.append("-DUSE_FREEIMAGE=ON")
             args.append("-D3RDPARTY_FREEIMAGE_DIR=%s" % self.spec["freeimage"].prefix)
-            args.append("-D3RDPARTY_FREEIMAGE_INCLUDE_DIR=%s" % self.spec["freeimage"].prefix.include)
+            args.append(
+                "-D3RDPARTY_FREEIMAGE_INCLUDE_DIR=%s" % self.spec["freeimage"].prefix.include
+            )
         else:
             args.append("-DUSE_FREEIMAGE=OFF")
 
