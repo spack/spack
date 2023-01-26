@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 from spack.build_systems import autotools, cmake
+from spack.package import *
 
 
 class Proj(CMakePackage, AutotoolsPackage):
@@ -117,7 +117,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         args = [
             self.define("PROJ_LIB", join_path(self.stage.source_path, "nad")),
             self.define_from_variant("ENABLE_TIFF", "tiff"),
-            self.define_from_variant("ENABLE_CURL", "curl")
+            self.define_from_variant("ENABLE_CURL", "curl"),
         ]
         if self.spec.satisfies("@6:"):
             args.append(self.define("USE_EXTERNAL_GTEST", True))
