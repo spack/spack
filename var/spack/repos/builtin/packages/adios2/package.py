@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 from spack.package import *
 
@@ -96,20 +95,20 @@ class Adios2(CMakePackage, CudaPackage):
 
     depends_on("cmake@3.12.0:", type="build")
 
-    for plat in ["linux", "darwin", "cray"]:
-        depends_on("pkgconfig", type="build", when="platform=%s" % plat)
+    for _platform in ["linux", "darwin", "cray"]:
+        depends_on("pkgconfig", type="build", when="platform=%s" % _platform)
         variant(
             "pic",
             default=False,
             description="Build pic-enabled static libraries",
-            when="platform=%s" % plat,
+            when="platform=%s" % _platform,
         )
         # libffi and libfabric and not currently supported on Windows
         # see Paraview's superbuild handling of libfabric at
         # https://gitlab.kitware.com/paraview/paraview-superbuild/-/blob/master/projects/adios2.cmake#L3
-        depends_on("libffi", when="+sst platform=%s" % plat)  # optional in DILL
+        depends_on("libffi", when="+sst platform=%s" % _platform)  # optional in DILL
         depends_on(
-            "libfabric@1.6.0:", when="+sst platform=%s" % plat
+            "libfabric@1.6.0:", when="+sst platform=%s" % _platform
         )  # optional in EVPath and SST
         # depends_on('bison', when='+sst')     # optional in FFS, broken package
         # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
