@@ -36,6 +36,7 @@ class BaseEnv(BundlePackage):
     depends_on("nccmp", type="run")
 
     # Python
-    depends_on("python@3.7:")
+    depends_on("python@3.7:", type="run")
+    depends_on("py-pip", type="run")
 
     # There is no need for install() since there is no code.
