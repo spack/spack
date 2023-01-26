@@ -11,9 +11,7 @@ class PyPythonSotools(PythonPackage):
 
     pypi = "python-sotools/python-sotools-0.1.0.tar.gz"
 
-    version("0.1.0",
-            sha256=
-            "39a088f2ca384294e19a96a82d883feb729f0f2e5ae21d9785be357124ec61f2")
+    version("0.1.0", sha256="39a088f2ca384294e19a96a82d883feb729f0f2e5ae21d9785be357124ec61f2")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-pyelftools@0.26", type="run")
