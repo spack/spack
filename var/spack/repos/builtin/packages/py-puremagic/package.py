@@ -7,9 +7,8 @@ from spack.package import *
 
 
 class PyPuremagic(PythonPackage):
-    """puremagic is a pure python module that will identify a file based
-    off its magic numbers.
-    """
+    """puremagic is a pure python module that will identify a file based off its magic numbers."""
+
     homepage = "https://github.com/cdgriffith/puremagic"
     pypi = "puremagic/puremagic-1.10.tar.gz"
 

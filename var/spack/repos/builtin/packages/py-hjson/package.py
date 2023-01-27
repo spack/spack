@@ -6,8 +6,9 @@ from spack.package import *
 
 
 class PyHjson(PythonPackage):
-    """Hjson is an user interface for JSON. The Python implementation of Hjson is based on simplejson.
-    """
+    """Hjson is an user interface for JSON.
+    The Python implementation of Hjson is based on simplejson."""
+
     homepage = "https://github.com/hjson/hjson-py"
     pypi = "hjson/hjson-3.0.2.tar.gz"
 

@@ -11,6 +11,7 @@ class PyNexusforge(PythonPackage):
     extensible Python framework enabling non-expert users to create and
     manage knowledge graphs.
     """
+
     homepage = "https://github.com/BlueBrain/nexus-forge"
     pypi = "nexusforge/nexusforge-0.7.0.tar.gz"
 

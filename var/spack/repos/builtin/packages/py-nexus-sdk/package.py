@@ -7,8 +7,8 @@ from spack.package import *
 
 
 class PyNexusSdk(PythonPackage):
-    """A Python API to interface with Blue Brain Nexus REST API.
-    """
+    """A Python API to interface with Blue Brain Nexus REST API."""
+
     homepage = "https://github.com/BlueBrain/nexus-python-sdk"
     pypi = "nexus-sdk/nexus-sdk-0.3.2.tar.gz"
 
