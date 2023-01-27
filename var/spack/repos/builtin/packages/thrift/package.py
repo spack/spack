@@ -31,12 +31,12 @@ class Thrift(Package):
     version("0.9.3", sha256="b0740a070ac09adde04d43e852ce4c320564a292f26521c46b78e0641564969e")
 
     # Currently only support for c-family and python
-    variant("c", default=True, description="Build support for C-family languages")
     variant("pic", default=True, description="Build position independent code")
+    variant("c", default=True, description="Build support for C-family languages")
     variant("python", default=True, description="Build support for python")
+    variant("java", default=False, description="Build support for java")
 
     depends_on("pkgconfig", type="build")
-    depends_on("java")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -51,6 +51,9 @@ class Thrift(Package):
     depends_on("openssl")
 
     # Variant dependencies
+    depends_on("zlib", when="+c")
+    depends_on("libevent", when="+c")
+
     extends("python", when="+python")
     depends_on("py-setuptools", type=("build", "run"), when="+python")
     depends_on("py-six@1.7.2:", type=("build", "run"), when="@0.10.0:+python")
@@ -60,8 +63,7 @@ class Thrift(Package):
     depends_on("py-pure-sasl", type=("build", "run"), when="+python")
     depends_on("scons", type=("build", "run"), when="+python")
 
-    depends_on("zlib", when="+c")
-    depends_on("libevent", when="+c")
+    depends_on("java", when="+java")
 
     patch(
         "https://github.com/apache/thrift/pull/2511.patch?full_index=1",
@@ -87,12 +89,12 @@ class Thrift(Package):
         options.append("--with-c=%s" % ("yes" if "+c" in spec else "no"))
         options.append("--with-python=%s" % ("yes" if "+python" in spec else "no"))
         options.append("--with-java=%s" % ("yes" if "+java" in spec else "no"))
-        options.append("--with-go=%s" % ("yes" if "+go" in spec else "no"))
-        options.append("--with-lua=%s" % ("yes" if "+lua" in spec else "no"))
-        options.append("--with-php=%s" % ("yes" if "+php" in spec else "no"))
-        options.append("--with-kotlin=%s" % ("yes" if "+kotlin" in spec else "no"))
-        options.append("--with-ruby=%s" % ("yes" if "+ruby" in spec else "no"))
-        options.append("--with-qt4=%s" % ("yes" if "+qt4" in spec else "no"))
+        options.append("--with-go=no")
+        options.append("--with-lua=no")
+        options.append("--with-php=no")
+        options.append("--with-kotlin=no")
+        options.append("--with-ruby=no")
+        options.append("--with-qt4=no")
 
         configure(*options)
 
