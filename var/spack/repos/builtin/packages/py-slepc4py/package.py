@@ -36,7 +36,7 @@ class PySlepc4py(PythonPackage):
     patch("ldshared.patch", when="@:99")
     patch("ldshared-dev.patch", when="@main")
 
-    depends_on("py-cython", type="build", when="@main")
+    depends_on("py-cython@0.24:", type="build", when="@main")
     depends_on("py-setuptools", type="build")
 
     depends_on("py-petsc4py", type=("build", "run"))
