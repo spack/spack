@@ -40,23 +40,28 @@ class Sphng(MakefilePackage):
     depends_on("intel-oneapi-mpi", when="+mpi")
     depends_on("intel-oneapi-compilers")
 
-    # if "+mpi" in spec:
-    #     fc = spec["mpi"].mpifc
-    # else:
-    #     fc = os.environ["FC"]
-
     parallel=False
 
     def edit(self, spec, prefix):
-
-        self.cc = spack_cc if "~mpi" in spec else spec["mpi"].mpicc
-        self.cxx = spack_cxx if "~mpi" in spec else spec["mpi"].mpicxx
+    
         self.fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
+
+        env['PREFIX'] = prefix
+        env['SYSTEM'] = "SPACK"
+
+        env['FC'] = self.fc
+        env['OMPFLAG'] = self.compiler.openmp_flag
+        if self.compiler.name == 'intel':
+            env['FFLAGS'] = "-O3 -mavx2 -mfma -mcmodel=medium -warn uninitialized -warn truncated_source -warn interfaces -nogen-interfaces -DINCMPI"
+            env['DBLFLAG'] = "-r8"
+            env['DEBUGFLAG'] = "-check all -traceback -g -fpe0 -fp-stack-check -heap-arrays -O0"
+            env['ENDIANFLAGBIG'] = "-convert big_endian"
+            env['ENDIANFLAGLITTLE'] = "-convert little_endian"
 
     def build(self, spec, prefix):
 
-        make('mpi=yes openmp=yes gradhrk', f'FC={self.fc}', 'SYSTEM=dirac3-intel19')
+        make('mpi=yes openmp=yes gradhrk')
 
     def install(self, spec, prefix):
 
-        make('install', f'PREFIX={prefix}', f'FC={self.fc}', 'SYSTEM=dirac3-intel19')
+        make('install', f'PREFIX={prefix}')
