@@ -15,6 +15,8 @@ class Libblastrampoline(MakefilePackage):
 
     maintainers = ["haampie", "giordano"]
 
+    version("5.4.0", sha256="e1a2258b0ad31cc41e6e9b8ba36f5c239fd1a267f2657ef3d3f669cc5b811f6a")
+    version("5.3.0", sha256="95bca73f1567e2acd1110d0dfe5bb58fc86718555cd6eab89f0a769534df3b62")
     version("5.2.0", sha256="5af9ff9cec16087f57109082a362419fc49152034fa90772ebcabd882007fd95")
     version("5.1.1", sha256="cb5515512f6653538ce74653e46ccfba58c87b7dcb79b9655f7c3655e65498f0")
     version("5.1.0", sha256="55ac0c8f9cb91b2ed2db014be8394c9dadf3b5f26bd8af6dca9d6f20ca72b8fd")
