@@ -793,7 +793,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
     #         ^b
     #     a
     #         ^b
-    e = ev.create("test")
+    e = ev.create("test", with_view=False)
     e.add("mpileaks")
     e.add("libelf@0.8.10")  # so env has both root and dep libelf specs
     e.add("a")
@@ -829,14 +829,11 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         # Assert using --no-add with a spec not in the env fails
         inst_out = install("--no-add", "boost", fail_on_error=False, output=str)
 
-        assert "You can add it to the environment with 'spack add " in inst_out
+        assert "You can add specs to the environment with 'spack add " in inst_out
 
-        # Without --add, ensure that install fails if the spec matches more
-        # than one root
-        with pytest.raises(ev.SpackEnvironmentError) as err:
-            inst_out = install("a", output=str)
-
-        assert "a matches multiple specs in the env" in str(err)
+        # Without --add, ensure that two packages "a" get installed
+        inst_out = install("a", output=str)
+        assert len([x for x in e.all_specs() if x.installed and x.name == "a"]) == 2
 
         # Install an unambiguous dependency spec (that already exists as a dep
         # in the environment) and make sure it gets installed (w/ deps),
@@ -1177,6 +1174,6 @@ def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
     args = parser.parse_args(
         ["--cdash-upload-url", "https://blahblah/submit.php?project=debugging", "a"]
     )
-    _, specs = spack.cmd.install.specs_from_cli(args, {})
+    specs = spack.cmd.install.concrete_specs_from_cli(args, {})
     filename = spack.cmd.install.report_filename(args, specs)
     assert filename != "https://blahblah/submit.php?project=debugging"
