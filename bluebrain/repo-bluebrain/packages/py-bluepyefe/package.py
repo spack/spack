@@ -13,19 +13,17 @@ class PyBluepyefe(PythonPackage):
     pypi = "bluepyefe/bluepyefe-0.3.13.tar.gz"
     git = "https://github.com/BlueBrain/BluePyEfe.git"
 
-    version('2.1.25', sha256='8d43d7933f0f082627217cf998cb68c21130d971786c5c16cd17315b636a54cb')
-    version('0.3.13', sha256='e274780a34e802eae9ba146782f0b9b088734b38bdc2d6da936d79369306b726')
+    version("2.2.18", sha256="bfb50c6482433ec2ffb4b65b072d2778bd89ae50d92dd6830969222aabb30275")
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-efel', type=('build', 'run'))
-    depends_on('py-igor', type=('build', 'run'))
-    depends_on('py-jsonschema', type=('build', 'run'))
-    depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-neo', type=('build', 'run'))
+
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-neo', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-efel', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-sh', type=('build', 'run'))
+    depends_on('py-h5py', type=('build', 'run'))
+    depends_on('py-igor', type=('build', 'run'))
 
     def setup_run_environment(self, env):
         env.set('NEURON_INIT_MPI', "0")
