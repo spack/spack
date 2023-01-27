@@ -25,7 +25,8 @@ class Awscli(PythonPackage):
     depends_on("py-botocore@1.13.44", when="@1.16.308", type=("build", "run"))
     depends_on("py-botocore@1.12.169", when="@1.16.179", type=("build", "run"))
 
-    depends_on("py-colorama@0.2.5:0.4", type=("build", "run"))
+    depends_on("py-colorama@0.2.5:0.4.6", when="@1.27", type=("build", "run"))
+    depends_on("py-colorama@0.2.5:0.3.9", when="@1.16", type=("build", "run"))
 
     depends_on("py-docutils@0.10:0.16", when="@1.27", type=("build", "run"))
     depends_on("py-docutils@0.10:0.15", when="@1.16", type=("build", "run"))
@@ -33,11 +34,11 @@ class Awscli(PythonPackage):
     depends_on("py-pyyaml@3.10:5.4", when="@1.27", type=("build", "run"))
     depends_on("py-pyyaml@3.10:5.2", when="@1.16", type=("build", "run"))
 
-    depends_on("py-rsa@3.1.2:4.8.0", when="@1.27", type=("build", "run"))
+    depends_on("py-rsa@3.1.2:4.7.0", when="@1.27", type=("build", "run"))
     depends_on("py-rsa@3.1.2:3.5.0", when="@1.16", type=("build", "run"))
 
     depends_on("py-s3transfer@0.6.0:0.6", when="@1.27", type=("build", "run"))
     depends_on("py-s3transfer@0.2.0:0.2", when="@1.16", type=("build", "run"))
 
-    depends_on("py-mock@1.3.0:", type="test")
-    depends_on("py-nose", type="test")
+    depends_on("py-mock@1.3.0:", when="@1.16", type="test")
+    depends_on("py-nose", when="@1.16", type="test")
