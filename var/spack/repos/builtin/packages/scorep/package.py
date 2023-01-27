@@ -53,8 +53,8 @@ class Scorep(AutotoolsPackage):
 
     # SCOREP 8
     depends_on("otf2@3:", when="@8:")
-    depends_on("cubew@4.7:", when="@8:")
-    depends_on("cubelib@4.7:", when="@8:")
+    depends_on("cubew@4.8:", when="@8:")
+    depends_on("cubelib@4.8:", when="@8:")
     
     # SCOREP 7
     depends_on("otf2@2.3:2.3.99", when="@7:")
