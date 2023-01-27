@@ -311,7 +311,8 @@ class Qt(Package):
         return url
 
     def setup_build_environment(self, env):
-        env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
+        if not should_support_jobserver:
+            env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
         if self.version >= Version("5.11"):
             # QDoc uses LLVM as of 5.11; remove the LLVM_INSTALL_DIR to
             # disable

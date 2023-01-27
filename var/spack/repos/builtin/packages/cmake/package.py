@@ -9,6 +9,7 @@ import sys
 
 import spack.build_environment
 from spack.package import *
+from spack.util.environment import env_flag
 
 is_windows = sys.platform == "win32"
 
@@ -327,12 +328,9 @@ class Cmake(Package):
         if not sys.platform == "win32":
             args.append("--prefix={0}".format(self.prefix))
 
-            jobs = spack.build_environment.get_effective_jobs(
-                make_jobs,
-                parallel=self.parallel,
-                supports_jobserver=self.generator.supports_jobserver,
-            )
-            if jobs is not None:
+            jobs = 1 if env_flag(spack.build_environment.SPACK_NO_PARALLEL_MAKE) else make_jobs
+            jobserver = jobs > 1 and should_support_jobserver and self.generator.supports_jobserver
+            if not jobserver:
                 args.append("--parallel={0}".format(jobs))
 
             if "+ownlibs" in spec:

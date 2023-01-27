@@ -120,18 +120,9 @@ else:
 stat_suffix = "lib" if sys.platform == "win32" else "a"
 
 
-def jobserver_enabled():
+def jobserver_detected():
     """Returns true if a posix jobserver (make) is detected."""
     return "MAKEFLAGS" in os.environ and "--jobserver" in os.environ["MAKEFLAGS"]
-
-
-def get_effective_jobs(jobs, parallel=True, supports_jobserver=False):
-    """Return the number of jobs, or None if supports_jobserver and a jobserver is detected."""
-    if not parallel or jobs <= 1 or env_flag(SPACK_NO_PARALLEL_MAKE):
-        return 1
-    if supports_jobserver and jobserver_enabled():
-        return None
-    return jobs
 
 
 class MakeExecutable(Executable):
@@ -155,24 +146,23 @@ class MakeExecutable(Executable):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
-        parallel = kwargs.pop("parallel", True)
+        parallel = kwargs.pop("parallel", True) and not env_flag(SPACK_NO_PARALLEL_MAKE)
         jobs_env = kwargs.pop("jobs_env", None)
         jobs_env_supports_jobserver = kwargs.pop("jobs_env_supports_jobserver", False)
 
-        jobs = get_effective_jobs(
-            self.jobs, parallel=parallel, supports_jobserver=self.supports_jobserver
-        )
-        if jobs is not None:
+        # Note: `make` (no-j) will use jobserver if any. So it's simpler to just
+        # force `make -j1` for non-parallel.
+        jobs = self.jobs if parallel else 1
+        should_support_jobserver = jobs > 1 and jobserver_detected()
+
+        if not (should_support_jobserver and self.supports_jobserver):
             args = ("-j{0}".format(jobs),) + args
 
         if jobs_env:
             # Caller wants us to set an environment variable to
             # control the parallelism.
-            jobs_env_jobs = get_effective_jobs(
-                self.jobs, parallel=parallel, supports_jobserver=jobs_env_supports_jobserver
-            )
-            if jobs_env_jobs is not None:
-                kwargs["extra_env"] = {jobs_env: str(jobs_env_jobs)}
+            if not (should_support_jobserver and jobs_env_supports_jobserver):
+                kwargs["extra_env"] = {jobs_env: str(jobs)}
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
@@ -579,6 +569,7 @@ def set_module_variables_for_package(pkg):
 
     m = module
     m.make_jobs = jobs
+    m.should_support_jobserver = jobs > 1 and jobserver_detected()
 
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
