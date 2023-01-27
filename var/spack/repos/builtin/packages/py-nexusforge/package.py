@@ -35,4 +35,4 @@ class PyNexusforge(PythonPackage):
     depends_on("py-pyparsing@2.0.2:", type=("build", "run"))
     depends_on("py-owlrl@5.2.3:", type=("build", "run"))
     depends_on("py-elasticsearch-dsl@7.4.0", type=("build", "run"))
-    depends_on("py-scikit-learn", type="run")
+    depends_on("py-scikit-learn", when="+sklearn", type="run")
