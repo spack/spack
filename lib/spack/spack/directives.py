@@ -56,6 +56,7 @@ __all__ = [
     "conflicts",
     "depends_on",
     "extends",
+    "maintainers",
     "provides",
     "patch",
     "variant",
@@ -763,6 +764,22 @@ def build_system(*values, **kwargs):
         default=default,
         multi=False,
     )
+
+
+@directive(dicts=())
+def maintainers(*names: str):
+    """Add a new maintainer directive, to specify maintainers in a declarative way.
+
+    Args:
+        names: GitHub username for the maintainer
+    """
+
+    def _execute_maintainer(pkg):
+        maintainers_from_base = getattr(pkg, "maintainers", [])
+        # Here it is essential to copy, otherwise we might add to an empty list in the parent
+        pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
+
+    return _execute_maintainer
 
 
 class DirectiveError(spack.error.SpackError):
