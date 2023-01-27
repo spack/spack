@@ -17,7 +17,13 @@ class Montage(MakefilePackage):
 
     depends_on("freetype")
     depends_on("bzip2")
+    depends_on("libnsl")
     depends_on("libpng")
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies("%gcc@10:") and name.lower() == "cflags":
+            flags.append("-fcommon")
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         # not using autotools, just builds bin and lib in the source directory
