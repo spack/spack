@@ -6,8 +6,7 @@ from spack.package import *
 
 
 class PyPyshacl(PythonPackage):
-    """A Python validator for SHACL.
-    """
+    """A Python validator for SHACL."""
 
     homepage = "https://github.com/RDFLib/pySHACL"
     pypi = "pyshacl/pyshacl-0.17.2.tar.gz"

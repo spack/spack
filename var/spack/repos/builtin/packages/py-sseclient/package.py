@@ -10,6 +10,7 @@ class PySseclient(PythonPackage):
     """This is a Python client library for iterating over http Server
     Sent Event (SSE) streams
     """
+
     homepage = "https://github.com/btubbs/sseclient"
     pypi = "sseclient/sseclient-0.0.27.tar.gz"
 
