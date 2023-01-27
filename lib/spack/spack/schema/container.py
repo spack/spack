@@ -85,6 +85,15 @@ container_schema = {
         },
         "docker": {"type": "object", "additionalProperties": False, "default": {}},
     },
+    "deprecatedProperties": {
+        "properties": ["extra_instructions"],
+        "message": (
+            "container:extra_instructions has been deprecated and will be removed "
+            "in Spack v0.21. Set container:template appropriately to use custom Jinja2 "
+            "templates instead."
+        ),
+        "error": False,
+    },
 }
 
 properties = {"container": container_schema}
