@@ -70,7 +70,7 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
-    # maintainers = ["github_user1", "github_user2"]
+    # maintainers("github_user1", "github_user2")
 
 {versions}
 
