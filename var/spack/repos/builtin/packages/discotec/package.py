@@ -18,6 +18,7 @@ class Discotec(CMakePackage):
     maintainers = ["freifrauvonbleifrei", "pfluegdk"]
 
     version("main", branch="main")
+    version("spack", branch="spack-cmake")
 
     variant("enableft", default=True, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")
