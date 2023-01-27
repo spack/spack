@@ -39,6 +39,8 @@ EOF
 
 cp "$input_dir/"{compilers,mirrors,modules,packages}.yaml "$config_dir"
 
+sed -i -e 's@tcl: /gpfs/.*@tcl: \$user_cache_path/modules@g' "$config_dir/modules.yaml"
+
 cat <<EOF > "$config_dir/upstreams.yaml"
 upstreams:
   applications$suffix:
@@ -54,8 +56,6 @@ config:
     root: \$user_cache_path/software
     projections:
       all: install_{compiler.name}-{compiler.version}-{target}/{name}-{version}-{hash:6}
-  module_roots:
-    tcl: \$user_cache_path/modules
   source_cache: \$user_cache_path/sources
   environments:
     root: \$user_cache_path/environments
