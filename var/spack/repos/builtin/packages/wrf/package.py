@@ -79,6 +79,7 @@ class Wrf(Package):
     version("4.3.3", sha256="1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86")
     version("4.3.2", sha256="2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec")
     version("4.3.1", sha256="6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87")
+    version("4.2.2", sha256="7be2968c67c2175cd40b57118d9732eda5fdb0828edaa25baf57cc289da1a9b8")
     version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
     version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
     version(
@@ -143,8 +144,8 @@ class Wrf(Package):
     patch("patches/4.0/tirpc_detect.patch", when="@4.0")
     patch("patches/4.0/add_aarch64.patch", when="@4.0")
 
-    patch("patches/4.2/arch.Config.pl.patch", when="@4.2:")
-    patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
+    patch("patches/4.2/arch.Config.pl.patch", when="@4.2:4.2.1,4.3:4.3.2")
+    patch("patches/4.2/arch.configure.defaults.patch", when="@4.2:4.2.1")
     patch("patches/4.2/arch.conf_tokens.patch", when="@4.2:")
     patch("patches/4.2/arch.postamble.patch", when="@4.2")
     patch("patches/4.2/configure.patch", when="@4.2:4.3.3")
