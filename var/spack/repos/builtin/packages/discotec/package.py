@@ -17,9 +17,7 @@ class Discotec(CMakePackage):
     # notify when the package is updated.
     maintainers = ["freifrauvonbleifrei", "pfluegdk"]
 
-    version("master", branch="master")
-    version("third-level-advection", branch="third-level-advection")
-    version("spack", branch="spack-cmake")
+    version("main", branch="main")
 
     variant("enableft", default=True, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")
