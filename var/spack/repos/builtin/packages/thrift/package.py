@@ -22,6 +22,7 @@ class Thrift(Package):
     list_url = "http://archive.apache.org/dist/thrift/"
     list_depth = 1
 
+    version("0.17.0", sha256="b272c1788bb165d99521a2599b31b97fa69e5931d099015d91ae107a0b0cc58f")
     version("0.16.0", sha256="f460b5c1ca30d8918ff95ea3eb6291b3951cf518553566088f3f2be8981f6209")
     version("0.13.0", sha256="7ad348b88033af46ce49148097afe354d513c1fca7c607b59c33ebb6064b5179")
     version("0.12.0", sha256="c336099532b765a6815173f62df0ed897528a9d551837d627c1f87fadad90428")
@@ -89,6 +90,8 @@ class Thrift(Package):
         options.append("--with-go=%s" % ("yes" if "+go" in spec else "no"))
         options.append("--with-lua=%s" % ("yes" if "+lua" in spec else "no"))
         options.append("--with-php=%s" % ("yes" if "+php" in spec else "no"))
+        options.append("--with-kotlin=%s" % ("yes" if "+kotlin" in spec else "no"))
+        options.append("--with-ruby=%s" % ("yes" if "+ruby" in spec else "no"))
         options.append("--with-qt4=%s" % ("yes" if "+qt4" in spec else "no"))
 
         configure(*options)
