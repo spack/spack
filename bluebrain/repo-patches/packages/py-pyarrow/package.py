@@ -20,8 +20,19 @@ class PyPyarrow(BuiltinPyPyarrow):
         depends_on('arrow+cuda' + v, when='+cuda' + v)
         depends_on('arrow+orc' + v, when='+orc' + v)
 
-    def build_ext_args(self, spec, prefix):
-        args = BuiltinPyPyarrow.build_ext_args(self, spec, prefix)
+    def setup_build_environment(self, env):
+        args = self.install_options(self.spec, self.prefix)
+        for arg in args:
+            key = arg[2:]
+            if "=" in key:
+                key, val = key.split("=", 1)
+            else:
+                val = "1"
+            var = "PYARROW_" + key.replace("-", "_").upper()
+            env.set(var, val)
+
+    def install_options(self, spec, prefix):
+        args = BuiltinPyPyarrow.install_options(self, spec, prefix)
         if spec.satisfies('+dataset'):
             args.append('--with-dataset')
         return args
