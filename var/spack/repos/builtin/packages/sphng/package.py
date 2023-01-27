@@ -57,6 +57,16 @@ class Sphng(MakefilePackage):
             env['DEBUGFLAG'] = "-check all -traceback -g -fpe0 -fp-stack-check -heap-arrays -O0"
             env['ENDIANFLAGBIG'] = "-convert big_endian"
             env['ENDIANFLAGLITTLE'] = "-convert little_endian"
+        elif self.compiler.name == 'gcc':
+            env['FFLAGS'] = "-m64 -mcmodel=medium -O3 -I. -Wall -Wno-conversion -Wno-unused-dummy-argument -Wno-maybe-uninitialized -Warray-temporaries"
+            env['DBLFLAG'] = "-fdefault-real-8 -fdefault-double-8"
+            env['DEBUGFLAG'] = "-g"
+            env['ENDIANFLAGBIG'] = "-fconvert=big-endian"
+            env['ENDIANFLAGLITTLE'] = "-fconvert=little-endian"
+        else:
+            msg  = "The compiler you are building with, "
+            msg += "'{0}', is not supported by sphng yet."
+            raise InstallError(msg.format(self.compiler.name))
 
     def build(self, spec, prefix):
 
