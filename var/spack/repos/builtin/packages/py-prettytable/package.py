@@ -23,5 +23,5 @@ class PyPrettytable(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-wcwidth", type=("build", "run"), when="@2.4.0:")
-    depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@2: ^python@:3.7")
     depends_on("py-setuptools-scm", type="build", when="@2.4.0:")
