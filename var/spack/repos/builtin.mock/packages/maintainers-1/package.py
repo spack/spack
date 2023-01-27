@@ -12,6 +12,6 @@ class Maintainers1(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/maintainers-1.0.tar.gz"
 
-    maintainers = ["user1", "user2"]
+    maintainers("user1", "user2")
 
     version("1.0", "0123456789abcdef0123456789abcdef")

@@ -2259,7 +2259,7 @@ class SpecBuilder(object):
         assert len(dependencies) < 2, msg
 
         if not dependencies:
-            self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
+            self._specs[pkg].add_dependency_edge(self._specs[dep], deptypes=(type,))
         else:
             # TODO: This assumes that each solve unifies dependencies
             dependencies[0].add_type(type)

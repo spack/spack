@@ -19,11 +19,12 @@ class Loki(MakefilePackage):
     variant("shared", default=True, description="Build shared libraries")
 
     def flag_handler(self, name, flags):
-        iflags = []
         if name == "cxxflags":
             if self.spec.satisfies("%oneapi@2023.0.0:"):
-                iflags.append("-Wno-error=dynamic-exception-spec")
-        return (iflags, None, None)
+                flags.append("-Wno-error=dynamic-exception-spec")
+            if self.spec.satisfies("@0.1.7 %gcc@11:"):
+                flags.append("-std=c++14")
+        return (flags, None, None)
 
     def build(self, spec, prefix):
         if "+shared" in spec:
