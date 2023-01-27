@@ -18,7 +18,7 @@ class PyScipy(PythonPackage):
     pypi = "scipy/scipy-1.5.4.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
-    maintainers = ["adamjstewart", "rgommers"]
+    maintainers("adamjstewart", "rgommers")
 
     version("master", branch="master")
     version("1.10.0", sha256="c8b3cbc636a87a89b770c6afc999baa6bcbb01691b5ccbbc1b1791c7c0a07540")

@@ -16,7 +16,7 @@ class Palace(CMakePackage):
 
     root_cmakelists_dir = "palace"
 
-    maintainers = ["sebastiangrimberg"]
+    maintainers("sebastiangrimberg")
 
     version("develop", branch="main")
     version("0.11.0", tag="v0.11.0")

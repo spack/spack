@@ -15,7 +15,7 @@ class Shapeit4(MakefilePackage):
 
     version("4.1.3", sha256="d209731277b00bca1e3478b7e0a0cbe40fbe23826c3d640ad12e0dd6033cbbb8")
 
-    maintainers = ["ilbiondo"]
+    maintainers("ilbiondo")
 
     depends_on("htslib")
     depends_on("boost+exception+container+iostreams+program_options")

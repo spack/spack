@@ -20,7 +20,7 @@ class PyNumpy(PythonPackage):
     pypi = "numpy/numpy-1.23.0.tar.gz"
     git = "https://github.com/numpy/numpy.git"
 
-    maintainers = ["adamjstewart", "rgommers"]
+    maintainers("adamjstewart", "rgommers")
 
     version("main", branch="main")
     version("1.24.1", sha256="2386da9a471cc00a1f47845e27d916d5ec5346ae9696e01a8a34760858fe9dd2")

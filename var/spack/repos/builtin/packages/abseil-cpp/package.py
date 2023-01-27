@@ -12,7 +12,7 @@ class AbseilCpp(CMakePackage):
     homepage = "https://abseil.io/"
     url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz"
 
-    maintainers = ["jcftang"]
+    maintainers("jcftang")
     tags = ["windows"]
 
     version(

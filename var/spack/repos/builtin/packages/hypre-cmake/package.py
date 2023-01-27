@@ -17,7 +17,7 @@ class HypreCmake(CMakePackage, CudaPackage):
     url = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git = "https://github.com/hypre-space/hypre.git"
 
-    maintainers = ["ulrikeyang", "osborn9", "balay"]
+    maintainers("ulrikeyang", "osborn9", "balay")
 
     test_requires_compiler = True
 

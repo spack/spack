@@ -14,7 +14,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/cp2k/dbcsr/releases/download/v2.2.0/dbcsr-2.2.0.tar.gz"
     list_url = "https://github.com/cp2k/dbcsr/releases"
 
-    maintainers = ["dev-zero"]
+    maintainers("dev-zero")
 
     version("develop", branch="develop")
     version("2.5.0", sha256="91fda9b2502e5d0a2a6cdd5a73ef096253cc7e75bd01ba5189a4726ad86aef08")

@@ -17,7 +17,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     test_requires_compiler = True
 
-    maintainers = ["lucbv", "srajama1", "brian-kelley"]
+    maintainers("lucbv", "srajama1", "brian-kelley")
 
     # generate checksum for each release tarball with the following command
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz

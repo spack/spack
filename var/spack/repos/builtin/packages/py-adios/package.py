@@ -15,7 +15,7 @@ class PyAdios(PythonPackage):
     url = "https://github.com/ornladios/ADIOS/archive/v1.13.1.tar.gz"
     git = "https://github.com/ornladios/ADIOS.git"
 
-    maintainers = ["ax3l", "jychoi-hpc"]
+    maintainers("ax3l", "jychoi-hpc")
 
     version("develop", branch="master")
     version("1.13.1", sha256="b1c6949918f5e69f701cabfe5987c0b286793f1057d4690f04747852544e157b")

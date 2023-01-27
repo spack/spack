@@ -12,7 +12,7 @@ class Dust(Package):
     homepage = "https://github.com/bootandy/dust"
     url = "https://github.com/bootandy/dust/archive/v0.7.5.tar.gz"
 
-    maintainers = ["fangohr"]
+    maintainers("fangohr")
 
     version(
         "0.7.5",

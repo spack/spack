@@ -14,7 +14,7 @@ class Citcoms(AutotoolsPackage):
     url = "https://github.com/geodynamics/citcoms/releases/download/v3.3.1/CitcomS-3.3.1.tar.gz"
     git = "https://github.com/geodynamics/citcoms.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
     version("3.3.1", sha256="e3520e0a933e4699d31e86fe309b8c154ea6ecb0f42a1cf6f25e8d13d825a4b3")

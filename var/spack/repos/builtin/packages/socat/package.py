@@ -18,7 +18,7 @@ class Socat(AutotoolsPackage):
     homepage = "http://www.dest-unreach.org/socat/"
     url = "http://www.dest-unreach.org/socat/download/socat-1.7.4.4.tar.bz2"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version("1.7.4.4", sha256="fbd42bd2f0e54a3af6d01bdf15385384ab82dbc0e4f1a5e153b3e0be1b6380ac")
 

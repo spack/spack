@@ -23,14 +23,14 @@ class Hdf5(CMakePackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git = "https://github.com/HDFGroup/hdf5.git"
-    maintainers = [
+    maintainers(
         "lrknox",
         "brtnfld",
         "byrnHDF",
         "gheber",
         "hyoklee",
         "lkurz",
-    ]
+    )
 
     tags = ["e4s", "windows"]
     executables = ["^h5cc$", "^h5pcc$"]

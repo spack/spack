@@ -15,7 +15,7 @@ class RocmBandwidthTest(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
 

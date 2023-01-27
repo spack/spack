@@ -23,7 +23,7 @@ class Glib(Package):
     list_url = "https://download.gnome.org/sources/glib"
     list_depth = 1
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version("2.74.3", sha256="e9bc41ecd9690d9bc6a970cc7380119b828e5b6a4b16c393c638b3dc2b87cbcb")
     version("2.74.1", sha256="0ab981618d1db47845e56417b0d7c123f81a3427b2b9c93f5a46ff5bbb964964")

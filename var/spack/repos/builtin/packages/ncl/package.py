@@ -20,7 +20,7 @@ class Ncl(Package):
     git = "https://github.com/NCAR/ncl.git"
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
 
-    maintainers = ["vanderwb"]
+    maintainers("vanderwb")
 
     version("6.6.2", sha256="cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e")
     version("6.5.0", sha256="133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591")

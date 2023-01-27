@@ -9,7 +9,7 @@ from spack.package import *
 class IntelLlvm(CMakePackage):
     """Intel's version of the LLVM compiler."""
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://github.com/intel/llvm"
     git = "https://github.com/intel/llvm.git"

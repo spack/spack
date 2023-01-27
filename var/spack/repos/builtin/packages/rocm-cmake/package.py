@@ -16,7 +16,7 @@ class RocmCmake(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
 

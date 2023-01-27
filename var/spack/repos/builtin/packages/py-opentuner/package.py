@@ -12,7 +12,7 @@ class PyOpentuner(PythonPackage):
     homepage = "http://opentuner.org/"
     git = "https://github.com/jansel/opentuner.git"
 
-    maintainers = ["matthiasdiener"]
+    maintainers("matthiasdiener")
 
     version("0.8.7", commit="070c5ce")
     version("0.8.2", commit="8e720a2")

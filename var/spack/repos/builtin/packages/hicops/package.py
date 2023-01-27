@@ -15,7 +15,7 @@ class Hicops(CMakePackage):
 
     homepage = "https://hicops.github.io/index"
     git = "https://github.com/hicops/hicops.git"
-    maintainers = ["pcdslab", "mhaseeb123", "nessiecancode"]
+    maintainers("pcdslab", "mhaseeb123", "nessiecancode")
 
     version("release", branch="release")
     version("develop", branch="develop")

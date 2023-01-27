@@ -27,7 +27,7 @@ class Shellcheck(Package):
     homepage = "https://www.shellcheck.net"
     url = "https://github.com/koalaman/shellcheck/releases/download/v0.9.0/shellcheck-v0.9.0.linux.x86_64.tar.xz"
 
-    maintainers = ["aphedges"]
+    maintainers("aphedges")
 
     # The following installs the binaries for shellcheck. The reason for
     # installing binaries is that shellcheck is a Haskell package and the

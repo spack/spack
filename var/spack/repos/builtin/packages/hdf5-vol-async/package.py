@@ -12,7 +12,7 @@ class Hdf5VolAsync(CMakePackage):
     homepage = "https://hdf5-vol-async.readthedocs.io"
     git = "https://github.com/hpc-io/vol-async.git"
 
-    maintainers = ["hyoklee", "houjun", "jeanbez"]
+    maintainers("hyoklee", "houjun", "jeanbez")
 
     tags = ["e4s"]
 

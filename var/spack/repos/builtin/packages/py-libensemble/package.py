@@ -14,7 +14,7 @@ class PyLibensemble(PythonPackage):
     homepage = "https://libensemble.readthedocs.io"
     pypi = "libensemble/libensemble-0.9.3.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
-    maintainers = ["shuds13", "jlnav"]
+    maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
 

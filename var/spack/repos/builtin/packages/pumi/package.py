@@ -19,7 +19,7 @@ class Pumi(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/pumi"
     git = "https://github.com/SCOREC/core.git"
 
-    maintainers = ["cwsmith"]
+    maintainers("cwsmith")
 
     tags = ["e4s"]
 
