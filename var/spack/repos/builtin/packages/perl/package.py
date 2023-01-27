@@ -178,6 +178,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
         os.chmod("lib/perlbug.t", 0o644)
         filter_file("!/$B/", "! (/(?:$B|PATH)/)", "lib/perlbug.t")
+        # man1/man3 replacement fails for usernames ending in man1
+        os.chmod("Configure", 0o755)
+        filter_file(
+            r"$sed -e 's/man1/man3/g' -e 's/man\.1/man\.3/g'`",
+            r"$sed -e 's|/man1|/man3|g' -e 's|/man\.1|/man\.3|g'`",
+            "Configure",
+            string=True,
+        )
 
     @classmethod
     def determine_version(cls, exe):
