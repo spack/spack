@@ -22,6 +22,8 @@ class Thrift(Package):
     list_url = "http://archive.apache.org/dist/thrift/"
     list_depth = 1
 
+    maintainers = ["thomas-bouvier"]
+
     version("0.17.0", sha256="b272c1788bb165d99521a2599b31b97fa69e5931d099015d91ae107a0b0cc58f")
     version("0.16.0", sha256="f460b5c1ca30d8918ff95ea3eb6291b3951cf518553566088f3f2be8981f6209")
     version("0.13.0", sha256="7ad348b88033af46ce49148097afe354d513c1fca7c607b59c33ebb6064b5179")
@@ -30,11 +32,10 @@ class Thrift(Package):
     version("0.10.0", sha256="2289d02de6e8db04cbbabb921aeb62bfe3098c4c83f36eec6c31194301efa10b")
     version("0.9.3", sha256="b0740a070ac09adde04d43e852ce4c320564a292f26521c46b78e0641564969e")
 
-    # Currently only support for c-family and python
     variant("pic", default=True, description="Build position independent code")
     variant("c", default=True, description="Build support for C-family languages")
-    variant("python", default=True, description="Build support for python")
     variant("java", default=False, description="Build support for java")
+    variant("python", default=True, description="Build support for python")
 
     depends_on("pkgconfig", type="build")
     depends_on("autoconf", type="build")
@@ -54,6 +55,9 @@ class Thrift(Package):
     depends_on("zlib", when="+c")
     depends_on("libevent", when="+c")
 
+    depends_on("java@7:", when="+java")
+    depends_on("ant", when="+java")
+
     extends("python", when="+python")
     depends_on("py-setuptools", type=("build", "run"), when="+python")
     depends_on("py-six@1.7.2:", type=("build", "run"), when="@0.10.0:+python")
@@ -62,8 +66,6 @@ class Thrift(Package):
     depends_on("py-zope-interface", type=("build", "run"), when="+python")
     depends_on("py-pure-sasl", type=("build", "run"), when="+python")
     depends_on("scons", type=("build", "run"), when="+python")
-
-    depends_on("java", when="+java")
 
     patch(
         "https://github.com/apache/thrift/pull/2511.patch?full_index=1",
