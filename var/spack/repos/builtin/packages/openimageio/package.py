@@ -12,8 +12,9 @@ class Openimageio(CMakePackage):
     related classes, utilities, and applications."""
 
     homepage = "https://www.openimageio.org"
-    url = "https://github.com/OpenImageIO/oiio/archive/Release-1.8.15.tar.gz"
+    url = "https://github.com/OpenImageIO/oiio/archive/refs/tags/v1.8.15.tar.gz"
 
+    version("2.4.8.0", sha256="e8402851970d48c718917060fa79bb7d75a050316556337cd0d4f0d0f971c904")
     version("2.2.7.0", sha256="857ac83798d6d2bda5d4d11a90618ff19486da2e5a4c4ff022c5976b5746fe8c")
     version("1.8.15", sha256="4d5b4ed3f2daaed69989f53c0f9364dd87c82dc0a09807b5b6e9008e2426e86f")
 
@@ -28,13 +29,14 @@ class Openimageio(CMakePackage):
     depends_on("libtiff@4.0:", type=("build", "link"))
     depends_on("openexr@2.3:", type=("build", "link"))
     depends_on("libpng@1.6:", type=("build", "link"))
+    depends_on("libjpeg", type=("build", "link"))
 
     # Optional dependencies
     variant("ffmpeg", default=False, description="Support video frames")
-    depends_on("ffmpeg", when="+ffmpeg")
+    depends_on("ffmpeg@3.0:", when="+ffmpeg")
 
     variant("jpeg2k", default=False, description="Support for JPEG2000 format")
-    depends_on("openjpeg", when="+jpeg2k")
+    depends_on("openjpeg@2.0:", when="+jpeg2k")
 
     variant("python", default=False, description="Build python bindings")
     extends("python", when="+python")
@@ -51,4 +53,7 @@ class Openimageio(CMakePackage):
         args += ["-DUSE_OPENJPEG={0}".format("ON" if "+jpeg2k" in self.spec else "OFF")]
         args += ["-DUSE_PYTHON={0}".format("ON" if "+python" in self.spec else "OFF")]
         args += ["-DUSE_QT={0}".format("ON" if "+qt" in self.spec else "OFF")]
+        if "+python" in self.spec:
+            args += ["-DPYTHON_VERSION={0}".format(self.spec["python"].version)]
+        args += ["-Wno-deprecated-declarations"]
         return args
