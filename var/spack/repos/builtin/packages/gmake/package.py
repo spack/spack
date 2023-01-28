@@ -48,7 +48,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     )
 
     # Avoid symlinking GNUMakefile to GNUMakefile
-    build_directory = 'spack-build'
+    build_directory = "spack-build"
 
     # See https://savannah.gnu.org/bugs/?57962
     patch("findprog-in-ignore-directories.patch", when="@4.3")
