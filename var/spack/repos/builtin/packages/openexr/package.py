@@ -14,6 +14,7 @@ class Openexr(CMakePackage):
 
     # New versions should come from github now
     version("3.1.5", sha256="93925805c1fc4f8162b35f0ae109c4a75344e6decae5a240afdfce25f8a433ec")
+    version("2.4.3", sha256="017367529a21196905bcabc6f046f3033363d90115395196b9c1abd0ad80606a")
     version(
         "2.3.0",
         sha256="fd6cb3a87f8c1a233be17b94c74799e6241d50fc5efd4df75c7a4b9cf4e25ea6",
@@ -63,15 +64,15 @@ class Openexr(CMakePackage):
 
     variant("debug", default=False, description="Builds a debug version of the libraries")
 
-    depends_on("cmake@3.12:", when="@3:", type="build")
-    depends_on("pkgconfig", when="@:2", type="build")
+    depends_on("cmake@3.12:", when="@2.4:", type="build")
+    depends_on("pkgconfig", when="@:2.3", type="build")
     depends_on("imath", when="@3:")
     depends_on("ilmbase", when="@:2")
     depends_on("zlib")
 
     @property
     def build_directory(self):
-        if self.spec.satisfies("@3:"):
+        if self.spec.satisfies("@2.4:"):
             return super(Openexr, self).build_directory
         else:
             return "."
@@ -86,6 +87,6 @@ class Openexr(CMakePackage):
 
         return args
 
-    @when("@:2")
+    @when("@:2.3")
     def cmake(self, spec, prefix):
         configure(*self.configure_args())
