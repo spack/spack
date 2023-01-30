@@ -27,12 +27,18 @@ class Discotec(CMakePackage):
     variant("hdf5", default=True, description="Interpolation output with HDF5")
     variant("vtk", default=False, description="Build with VTK support")
     variant("lto", default=True, description="Build with link-time optimization")
-    variant("build_type", default="Release", values=("Release","RelWithDebInfo", "Debug"), description="Build type for DisCoTec")
-
+    variant(
+        "build_type",
+        default="Release",
+        values=("Release", "RelWithDebInfo", "Debug"),
+        description="Build type for DisCoTec",
+    )
 
     depends_on("cmake@3.24.2:", type=("build"))
     depends_on("mpi", type=("build", "run"))
-    depends_on("boost +test +serialization +filesystem +system +program_options", type=("build", "run"))
+    depends_on(
+        "boost +test +serialization +filesystem +system +program_options", type=("build", "run")
+    )
     depends_on("glpk")
     depends_on("highfive+mpi+boost+ipo", when="+hdf5")
     depends_on("vtk", when="+vtk")
@@ -52,4 +58,3 @@ class Discotec(CMakePackage):
         ]
 
         return args
-
