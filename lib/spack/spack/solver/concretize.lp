@@ -1122,7 +1122,6 @@ build_priority(Package, build_prio) :- attr("node", Package), not optimize_for_r
 % roots have depth 0.
 depth(Package, 0) :- attr("root", Package).
 
-
 %depth(Package, D+1) :- depth(Dependent, D), depends_on(Dependent, Package), D < max_depth.
 
 %parent_depth(Package, D) :-
