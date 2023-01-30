@@ -71,9 +71,11 @@ class Wrf(Package):
     maintainers = ["MichaelLaufer", "ptooley"]
     tags = ["windows"]
 
-    version("4.4.2",
+    version(
+        "4.4.2",
         sha256="5d6237f1500c44a33626362936ba0a4388360c5070d9d53262e5a950c586da85",
-        url="https://github.com/wrf-model/WRF/releases/download/v4.4.2/v4.4.2.tar.gz")
+        url="https://github.com/wrf-model/WRF/releases/download/v4.4.2/v4.4.2.tar.gz",
+    )
     version(
         "4.4",
         sha256="6b649e5ac5532f74d74ab913950b632777ce349d26ebfb7f0042b80f9f4ee83e",
