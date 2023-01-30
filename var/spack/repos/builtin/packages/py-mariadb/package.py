@@ -11,7 +11,10 @@ class PyMariadb(PythonPackage):
     homepage = "https://github.com/mariadb-corporation/mariadb-connector-python"
     pypi = "mariadb/mariadb-1.1.5.post3.tar.gz"
 
-    version("1.1.5.post3", sha256="f9336dd4cb3207e621933bb5221f33fac0d7184db64dc44c70531430f4ecdcee")
+    version(
+        "1.1.5.post3",
+        sha256="f9336dd4cb3207e621933bb5221f33fac0d7184db64dc44c70531430f4ecdcee",
+    )
     version(
         "1.0.10",
         sha256="79028ba6051173dad1ad0be7518389cab70239f92b4ff8b8813dae55c3f2c53d",
