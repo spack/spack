@@ -114,8 +114,6 @@ class Rocblas(CMakePackage):
     # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
     # gfx803,gfx900,gfx:xnack-,gfx908:xnack- are valid gpus for @4.1.0:4.2.0
     # gfx803 till gfx1030  are valid gpus for @4.3.0:
-    conflicts("amdgpu_target=gfx906", when="@4.0.1:")
-    conflicts("amdgpu_target=gfx908", when="@4.0.1:")
     conflicts("amdgpu_target=gfx906:xnack-", when="@:4.0.0")
     conflicts("amdgpu_target=gfx908:xnack-", when="@:4.0.0")
     conflicts("amdgpu_target=gfx90a:xnack+", when="@:4.2.1")
