@@ -454,6 +454,7 @@ def add_concretizer_args(subparser):
         help="when to reuse installed dependencies/buildcaches",
         default="when_possible",
     )
+    return subgroup
 
 
 def add_s3_connection_args(subparser, add_help):
