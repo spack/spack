@@ -26,6 +26,8 @@ spack:
       require: "intel-tbb"
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
+    boost:
+      variants: +python +filesystem +iostreams +system
     cuda:
       version: [11.7.0]
     elfutils:
@@ -70,6 +72,7 @@ spack:
   - bolt
   - bricks
   - butterflypack
+  - boost +python +filesystem +iostreams +system
   - cabana
   - caliper
   - chai ~benchmarks ~tests
