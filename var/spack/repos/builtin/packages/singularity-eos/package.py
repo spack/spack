@@ -131,7 +131,7 @@ class SingularityEos(CMakePackage, CudaPackage):
                 "SINGULARITY_TEST_STELLARCOLLAPSE2SPINER",
                 ("stellarcollapse" in self.spec.variants["build_extra"] and self.run_tests),
             ),
-            self.define("SINGULARITY_TEST_PYTHON", ("python" in self.spec and self.run_tests)),
+            self.define("SINGULARITY_TEST_PYTHON", ("+python" in self.spec and self.run_tests)),
             self.define("SINGULARITY_USE_HDF5", "^hdf5" in self.spec),
             self.define("SINGULARITY_USE_EOSPAC", "^eospac" in self.spec),
         ]
