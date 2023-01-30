@@ -17,7 +17,6 @@ class PyDocker(PythonPackage):
     version("5.0.3", sha256="d916a26b62970e7c2f554110ed6af04c7ccff8e9f81ad17d0d40c75637e227fb")
     version("4.2.1", sha256="380a20d38fbfaa872e96ee4d0d23ad9beb0f9ed57ff1c30653cbeb0c9c0964f2")
 
-    variant("tls", default=True, description="Required to use docker-py over TLS")
     variant("ssh", default=False, description="Required to use docker-py over SSH")
 
     depends_on("py-setuptools", type="build")
