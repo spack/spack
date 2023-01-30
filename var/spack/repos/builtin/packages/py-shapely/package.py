@@ -19,6 +19,7 @@ class PyShapely(PythonPackage):
     maintainers = ["adamjstewart"]
 
     version("main", branch="main")
+    version("2.0.1", sha256="66a6b1a3e72ece97fc85536a281476f9b7794de2e646ca8a4517e2e3c1446893")
     version("2.0.0", sha256="11f1b1231a6c04213fb1226c6968d1b1b3b369ec42d1e9655066af87631860ea")
     version("1.8.5", sha256="e82b6d60ecfb124120c88fe106a478596bbeab142116d7e7f64a364dac902a92")
     version("1.8.4", sha256="a195e51caafa218291f2cbaa3fef69fd3353c93ec4b65b2a4722c4cf40c3198c")
@@ -30,19 +31,19 @@ class PyShapely(PythonPackage):
     version("1.7.0", sha256="e21a9fe1a416463ff11ae037766fe410526c95700b9e545372475d2361cc951e")
     version("1.6.4", sha256="b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655")
 
-    depends_on("python@3.6:", when="@1.8:", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@1.7", type=("build", "link", "run"))
-    depends_on("python@2.6:", when="@:1.6", type=("build", "link", "run"))
-    depends_on("py-setuptools@61:", when="@2:", type="build")
-    depends_on("py-setuptools@:63", when="@:1", type="build")
+    # pyproject.toml
     depends_on("py-cython@0.29:0", when="@2:", type="build")
     depends_on("py-cython@0.29.24:2", when="@:1", type="build")
+    depends_on("py-setuptools@61:", when="@2:", type="build")
+    depends_on("py-setuptools@:63", when="@:1", type="build")
     depends_on("py-numpy@1.14:", when="@2:", type=("build", "link", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
-    depends_on("geos@3.5:", when="@2:")
-    depends_on("geos@3.3:", when="@:1")
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-cov", type="test")
+
+    # setup.py
+    depends_on("geos@3.5:", when="@2:")
+    depends_on("geos@3.3:", when="@:1")
 
     # https://github.com/shapely/shapely/pull/891
     patch(
