@@ -8,7 +8,7 @@ from spack.package import *
 
 class PyMatplotlibscalebar(PythonPackage):
     """Provides a new artist for matplotlib to display a scale bar,
-     aka micron bar."""
+    aka micron bar."""
 
     homepage = "https://github.com/ppinard/matplotlib-scalebar"
     pypi = "matplotlib-scalebar/matplotlib-scalebar-0.6.1.tar.gz"
