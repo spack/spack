@@ -98,6 +98,9 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     patch("intel-19-compile.patch", when="@3.1.1")
     patch("shared-rocm.patch", when="@5.1.1")
 
+    # https://github.com/pghysels/STRUMPACK/commit/e4b110b2d823c51a90575b77ec1531c699097a9f
+    patch("strumpack-7.0.1-mpich-hipcc.patch", when="@7.0.1 +rocm ^mpich")
+
     def cmake_args(self):
         spec = self.spec
 
