@@ -28,7 +28,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     variant("parquet", default=False, description="Build with Parquet support")
     variant("orc", default=False, description="Build with orc support")
-    variant('dataset', default=True, description="Build with Dataset support")
+    variant("dataset", default=True, description="Build with Dataset support")
 
     depends_on("cmake@3.0.0:", type="build")
     depends_on("pkgconfig", type="build")
@@ -72,7 +72,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
             env.set("PYARROW_WITH_CUDA", "1")
         if spec.satisfies("+orc"):
             env.set("PYARROW_WITH_ORC", "1")
-        if spec.satisfies('+dataset'):
+        if spec.satisfies("+dataset"):
             env.set("PYARROW_WITH_DATASET", "1")
 
     def install_options(self, spec, prefix):
@@ -83,6 +83,6 @@ class PyPyarrow(PythonPackage, CudaPackage):
             args.append("--with-cuda")
         if spec.satisfies("+orc"):
             args.append("--with-orc")
-        if spec.satisfies('+dataset'):
-            args.append('--with-dataset')
+        if spec.satisfies("+dataset"):
+            args.append("--with-dataset")
         return args
