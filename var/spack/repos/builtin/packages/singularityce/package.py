@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,12 +70,17 @@ class SingularityBase(MakefilePackage):
     def build_directory(self):
         return self.singularity_gopath_dir
 
+    # Allow overriding config options
+    @property
+    def config_options(self):
+        # Using conmon from spack
+        return ["--without-conmon"]
+
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
             confstring = "./mconfig --prefix=%s" % prefix
-            # Using conmon from spack
-            confstring += " --without-conmon"
+            confstring += " " + " ".join(self.config_options)
             if "~suid" in spec:
                 confstring += " --without-suid"
             if "~network" in spec:

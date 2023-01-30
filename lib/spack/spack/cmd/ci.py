@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -241,8 +241,9 @@ def ci_reindex(args):
     ci_mirrors = yaml_root["mirrors"]
     mirror_urls = [url for url in ci_mirrors.values()]
     remote_mirror_url = mirror_urls[0]
+    mirror = spack.mirror.Mirror(remote_mirror_url)
 
-    buildcache.update_index(remote_mirror_url, update_keys=True)
+    buildcache.update_index(mirror, update_keys=True)
 
 
 def ci_rebuild(args):
@@ -356,7 +357,7 @@ def ci_rebuild(args):
             # dependencies from previous stages available since we do not
             # allow pushing binaries to the remote mirror during PR pipelines.
             enable_artifacts_mirror = True
-            pipeline_mirror_url = "file://" + local_mirror_dir
+            pipeline_mirror_url = url_util.path_to_file_url(local_mirror_dir)
             mirror_msg = "artifact buildcache enabled, mirror url: {0}".format(pipeline_mirror_url)
             tty.debug(mirror_msg)
 
@@ -452,9 +453,8 @@ def ci_rebuild(args):
     # mirror now so it's used when we check for a hash match already
     # built for this spec.
     if pipeline_mirror_url:
-        spack.mirror.add(
-            spack_ci.TEMP_STORAGE_MIRROR_NAME, pipeline_mirror_url, cfg.default_modify_scope()
-        )
+        mirror = spack.mirror.Mirror(pipeline_mirror_url, name=spack_ci.TEMP_STORAGE_MIRROR_NAME)
+        spack.mirror.add(mirror, cfg.default_modify_scope())
         pipeline_mirrors.append(pipeline_mirror_url)
 
     # Check configured mirrors for a built spec with a matching hash
@@ -469,7 +469,10 @@ def ci_rebuild(args):
             # could be installed from either the override mirror or any other configured
             # mirror (e.g. remote_mirror_url which is defined in the environment or
             # pipeline_mirror_url), which is also what we want.
-            spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
+            spack.mirror.add(
+                spack.mirror.Mirror(remote_mirror_override, name="mirror_override"),
+                cfg.default_modify_scope(),
+            )
         pipeline_mirrors.append(remote_mirror_override)
 
     if spack_pipeline_type == "spack_pull_request":

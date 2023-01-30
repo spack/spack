@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -273,6 +273,14 @@ class Julia(MakefilePackage):
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
         options.append("USECLANG:={}".format("1" if "%clang" in spec else "0"))
+
+        options.extend(
+            [
+                "override CC:={0}".format(spack_cc),
+                "override CXX:={0}".format(spack_cxx),
+                "override FC:={0}".format(spack_fc),
+            ]
+        )
 
         # libm or openlibm?
         if spec.variants["openlibm"].value:

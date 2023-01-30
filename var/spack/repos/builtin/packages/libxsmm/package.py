@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -76,6 +76,11 @@ class Libxsmm(MakefilePackage):
         description="Max. JIT buffer size increased to 256 KiB",
     )
     depends_on("python", type="build")
+
+    # A recent `as` is needed to compile libxmss until version 1.17
+    # (<https://github.com/spack/spack/issues/28404>), but not afterwards
+    # (<https://github.com/spack/spack/pull/21671#issuecomment-779882282>).
+    depends_on("binutils+ld+gas@2.33:", type="build", when="@:1.17")
 
     @property
     def libs(self):

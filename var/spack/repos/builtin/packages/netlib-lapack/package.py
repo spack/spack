@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class NetlibLapack(CMakePackage):
 
     homepage = "https://www.netlib.org/lapack/"
     url = "https://www.netlib.org/lapack/lapack-3.5.0.tgz"
+    tags = ["windows"]
 
     version(
         "3.10.1",
@@ -203,7 +204,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # use F77 compiler if IBM XL
             args.extend(
                 [
-                    self.define("CMAKE_Fortran_COMPILER", self.compiler.f77),
+                    self.define("CMAKE_Fortran_COMPILER", self.pkg.compiler.f77),
                     self.define(
                         "CMAKE_Fortran_FLAGS",
                         " ".join(self.spec.compiler_flags["fflags"]) + " -O3 -qnohot",

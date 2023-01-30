@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,11 @@ import sys
 import pytest
 
 import spack.binary_distribution
+import spack.cmd.buildcache
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.util.url
 from spack.spec import Spec
 
 buildcache = spack.main.SpackCommand("buildcache")

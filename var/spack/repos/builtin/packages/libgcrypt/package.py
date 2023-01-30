@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,12 @@ class Libgcrypt(AutotoolsPackage):
     version("1.6.2", sha256="de084492a6b38cdb27b67eaf749ceba76bf7029f63a9c0c3c1b05c88c9885c4c")
 
     depends_on("libgpg-error@1.25:")
+
+    def flag_handler(self, name, flags):
+        # We should not inject optimization flags through the wrapper, because
+        # the jitter entropy code should never be compiled with optimization
+        # flags, and the build system ensures that
+        return (None, flags, None)
 
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled

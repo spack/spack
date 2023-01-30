@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -160,6 +160,8 @@ class Msvc(Compiler):
     def fc_version(cls, fc):
         # We're using intel for the Fortran compilers, which exist if
         # ONEAPI_ROOT is a meaningful variable
+        if not sys.platform == "win32":
+            return "unknown"
         fc_ver = cls.default_version(fc)
         avail_fc_version.add(fc_ver)
         fc_path[fc_ver] = fc

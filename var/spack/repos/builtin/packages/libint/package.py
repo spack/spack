@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,7 @@ class Libint(AutotoolsPackage):
     # Libint 2 dependencies
     # Fixme: Can maintainers please confirm that this is a required dependency
     depends_on(Boost.with_default_variants, when="@2:")
-    depends_on("gmp", when="@2:")
+    depends_on("gmp+cxx", when="@2:")
 
     for tvariant in TUNE_VARIANTS[1:]:
         conflicts(

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -105,5 +105,8 @@ class Fmt(CMakePackage):
         # Can't build docs without doxygen+python+virtualenv
         # and call to build "doc" target
         args.append("-DFMT_DOC=OFF")
+
+        # Don't build tests
+        args.append(self.define("FMT_TEST", self.run_tests))
 
         return args

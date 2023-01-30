@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html"
     )
 
+    version(
+        "2023.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19138/l_onemkl_p_2023.0.0.25398_offline.sh",
+        sha256="0d61188e91a57bdb575782eb47a05ae99ea8eebefee6b2dfe20c6708e16e9927",
+        expand=False,
+    )
     version(
         "2022.2.1",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19038/l_onemkl_p_2022.2.1.16993_offline.sh",
@@ -131,8 +137,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             env.append_path("__INTEL_POST_FFLAGS", flag, separator=" ")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("MKLROOT", self.component_prefix)
-        env.append_path("PKG_CONFIG_PATH", self.component_prefix.lib.pkgconfig)
+        # Only if environment modifications are desired (default is +envmods)
+        if "+envmods" in self.spec:
+            env.set("MKLROOT", self.component_prefix)
+            env.append_path("PKG_CONFIG_PATH", self.component_prefix.lib.pkgconfig)
 
     def _find_mkl_libs(self, shared):
         libs = []

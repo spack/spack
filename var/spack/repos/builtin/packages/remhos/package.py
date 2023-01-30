@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,4 +53,4 @@ class Remhos(MakefilePackage):
         mkdirp(prefix.bin)
         install("remhos", prefix.bin)
 
-    install_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks: List[str] = []

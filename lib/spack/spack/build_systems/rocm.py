@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -132,12 +132,13 @@ class ROCmPackage(PackageBase):
         "amdgpu_target",
         description="AMD GPU architecture",
         values=spack.variant.any_combination_of(*amdgpu_targets),
+        sticky=True,
         when="+rocm",
     )
 
     depends_on("llvm-amdgpu", when="+rocm")
     depends_on("hsa-rocr-dev", when="+rocm")
-    depends_on("hip", when="+rocm")
+    depends_on("hip +rocm", when="+rocm")
 
     conflicts("^blt@:0.3.6", when="+rocm")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,15 +33,14 @@ import spack.main
 import spack.mirror
 import spack.paths
 import spack.repo
-import spack.util.executable as exe
+import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.reporters.cdash import CDash
+from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
-from spack.util.pattern import Bunch
 
 JOB_RETRY_CONDITIONS = [
     "always",
@@ -486,7 +485,7 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     whether or not the stack was changed.  Returns True if the environment
     manifest changed between the provided revisions (or additionally if the
     `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
-    git = exe.which("git")
+    git = spack.util.git.git()
     if git:
         with fs.working_dir(spack.paths.prefix):
             git_log = git(
@@ -728,13 +727,19 @@ def generate_gitlab_ci_yaml(
         # --check-index-only, then the override mirror needs to be added to
         # the configured mirrors when bindist.update() is run, or else we
         # won't fetch its index and include in our local cache.
-        spack.mirror.add("ci_pr_mirror", remote_mirror_override, cfg.default_modify_scope())
+        spack.mirror.add(
+            spack.mirror.Mirror(remote_mirror_override, name="ci_pr_mirror"),
+            cfg.default_modify_scope(),
+        )
 
     shared_pr_mirror = None
     if spack_pipeline_type == "spack_pull_request":
         stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
         shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
-        spack.mirror.add("ci_shared_pr_mirror", shared_pr_mirror, cfg.default_modify_scope())
+        spack.mirror.add(
+            spack.mirror.Mirror(shared_pr_mirror, name="ci_shared_pr_mirror"),
+            cfg.default_modify_scope(),
+        )
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -1264,7 +1269,7 @@ def generate_gitlab_ci_yaml(
 
             final_job["stage"] = "stage-rebuild-index"
             final_job["script"] = [
-                "spack buildcache update-index --keys -d {0}".format(index_target_mirror)
+                "spack buildcache update-index --keys --mirror-url {0}".format(index_target_mirror)
             ]
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
@@ -1483,7 +1488,7 @@ def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
     hashes = env.all_hashes() if env else None
     matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
-    push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
+    push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
     spec_kwargs = {"include_root": True, "include_dependencies": False}
     kwargs = {"force": True, "allow_root": True, "unsigned": unsigned}
     bindist.push(matches, push_url, spec_kwargs, **kwargs)
@@ -1655,7 +1660,7 @@ def get_spack_info():
     entry, otherwise, return a string containing the spack version."""
     git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
-        git = exe.which("git")
+        git = spack.util.git.git()
         if git:
             with fs.working_dir(spack.paths.prefix):
                 git_log = git("log", "-1", output=str, error=os.devnull, fail_on_error=False)
@@ -1695,7 +1700,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     spack_git_path = spack.paths.prefix
 
-    git = exe.which("git")
+    git = spack.util.git.git()
     if not git:
         tty.error("reproduction of pipeline job requires git")
         return False
@@ -2358,10 +2363,13 @@ class CDashHandler(object):
             tty.warn(msg)
 
     def report_skipped(self, spec, directory_name, reason):
-        cli_args = self.args()
-        cli_args.extend(["package", [spec.name]])
-        it = iter(cli_args)
-        kv = {x.replace("--", "").replace("-", "_"): next(it) for x in it}
-
-        reporter = CDash(Bunch(**kv))
+        configuration = CDashConfiguration(
+            upload_url=self.upload_url,
+            packages=[spec.name],
+            build=self.build_name,
+            site=self.site,
+            buildstamp=self.build_stamp,
+            track=None,
+        )
+        reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)
