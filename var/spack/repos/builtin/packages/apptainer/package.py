@@ -33,6 +33,8 @@ class Apptainer(SingularityBase):
     version("1.1.3", sha256="c7bf7f4d5955e1868739627928238d02f94ca9fd0caf110b0243d65548427899")
     version("1.0.2", sha256="2d7a9d0a76d5574459d249c3415e21423980d9154ce85e8c34b0600782a7dfd3")
 
+    depends_on("go@1.17.5:", when="@1.1.0:")
+
     singularity_org = "apptainer"
     singularity_name = "apptainer"
     singularity_security_urls = (
