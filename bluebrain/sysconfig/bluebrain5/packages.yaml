@@ -1,4 +1,7 @@
 packages:
+  arrow:
+    # for interoperability with Spark
+    require: "+snappy"
   autoconf:
     version: [2.69]
     externals:
@@ -123,18 +126,6 @@ packages:
   python:
     variants: +tk
     version: [3.10.8]
-# py-numpy:
-#   version: [1.19.5]  # thanks, tensorflow!
-# py-setuptools:
-#   version: [57.4.0]  # last one to provide use_2to3, required by some software
-# py-six:
-#   version: [1.15.0]  # thanks, tensorflow!
-# py-tables:
-#   variants: +lzo     # leads to compile errors otherwise
-# py-tensorflow:
-#   version: [2.5.1]   # For Python 3.9 compatibility
-# py-tensorflow-addons:
-#   version: [0.13.0]  # Matches tensorflow
   qt:
     version: [5.14.2]
     variants: ~ssl~sql~tools

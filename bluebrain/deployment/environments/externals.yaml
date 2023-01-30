@@ -42,8 +42,7 @@ spack:
           - python
           - singularityce
           - snakemake
-         # BlueBrain TODO: re-enable and fix
-         #- stat
+          - stat
           - totalview
           - valgrind
           - virtualgl
@@ -119,8 +118,7 @@ spack:
     # - intel-mpi
     - intel-oneapi-mkl@2021.4.0
     - ispc
-   # causes trouble with llvm@11.0.1
-   #- julia@1.6  # As requested by Polina S.
+    - julia@1.6  # As requested by Polina S.
     - libxslt
     - libzmq+libsodium
     - likwid
