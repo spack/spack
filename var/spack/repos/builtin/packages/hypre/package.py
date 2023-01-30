@@ -14,9 +14,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     features parallel multigrid methods for both structured and
     unstructured grid problems."""
 
-    homepage = (
-        "https://computing.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods"
-    )
+    homepage = "https://llnl.gov/casc/hypre"
     url = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git = "https://github.com/hypre-space/hypre.git"
     tags = ["e4s", "radiuss"]
