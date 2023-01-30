@@ -10,7 +10,7 @@ class PyProtocGenSwagger(PythonPackage):
     """A python package for swagger annotation proto files."""
 
     homepage = "https://github.com/universe-proton/protoc-gen-swagger"
-    url      = "https://github.com/universe-proton/protoc-gen-swagger/archive/refs/tags/v0.1.0.tar.gz"
+    url = "https://github.com/universe-proton/protoc-gen-swagger/archive/refs/tags/v0.1.0.tar.gz"
 
     version("0.1.0", sha256="bf9593eec8e0cac31fef10bd558f2a69babbb2475c67291c1c2ca84763c73067")
 
