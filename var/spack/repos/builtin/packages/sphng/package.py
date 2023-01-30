@@ -33,21 +33,18 @@ class Sphng(MakefilePackage):
 
     version("v1.0.0", tag="v1.0.0")
 
-    variant("mpi", default=True, description="Enable MPI support")
-
     executables = [r"^sph_tree_rk_gradh$"]
 
-    depends_on("intel-oneapi-mpi", when="+mpi")
-    depends_on("intel-oneapi-compilers")
+    depends_on("mpi")
 
     parallel=False
 
     def edit(self, spec, prefix):
-    
+
         self.fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
 
         env['PREFIX'] = prefix
-        env['SYSTEM'] = "SPACK"
+        env['SYSTEM'] = "dirac3-intel19"
 
         env['FC'] = self.fc
         env['OMPFLAG'] = self.compiler.openmp_flag
@@ -74,4 +71,4 @@ class Sphng(MakefilePackage):
 
     def install(self, spec, prefix):
 
-        make('install', f'PREFIX={prefix}')
+        make('install')
