@@ -213,8 +213,6 @@ class NetcdfC(AutotoolsPackage):
         hdf5_hl = self.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
-        if hdf5_hl.satisfies("~shared"):
-            libs.append(hdf5_hl.libs.link_flags)
 
         if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")
