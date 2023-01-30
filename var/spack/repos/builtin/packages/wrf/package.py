@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,6 +69,7 @@ class Wrf(Package):
     homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
     url = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
+    tags = ["windows"]
 
     version(
         "4.4",
@@ -286,10 +287,16 @@ class Wrf(Package):
             config = FileFilter(join_path("arch", "configure.defaults"))
 
         if self.spec.satisfies("@3.9.1.1 %gcc"):
+            # Compiling with OpenMPI requires using `-DMPI2SUPPORT`.
+            other_flags = " -DMPI2SUPPORT" if self.spec.satisfies("^openmpi") else ""
             config.filter(
-                "^DM_FC.*mpif90 -f90=$(SFC)", "DM_FC = {0}".format(self.spec["mpi"].mpifc)
+                r"^DM_FC.*mpif90 -f90=\$\(SFC\)",
+                "DM_FC = {0}".format(self.spec["mpi"].mpifc) + other_flags,
             )
-            config.filter("^DM_CC.*mpicc -cc=$(SCC)", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
+            config.filter(
+                r"^DM_CC.*mpicc -cc=\$\(SCC\)",
+                "DM_CC = {0}".format(self.spec["mpi"].mpicc) + other_flags,
+            )
 
         if self.spec.satisfies("%aocc"):
             config.filter(

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import os.path
 import sys
 
-from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
@@ -22,8 +21,13 @@ class Jq(AutotoolsPackage):
     depends_on("oniguruma")
     depends_on("bison@3.0:", type="build")
 
-    if sys.platform == "darwin" and macos_version() >= Version("10.15"):
-        patch("builtinc.patch", when="@1.5:")
+    def configure_args(self):
+        # on darwin, required math functions like lgammaf_r are gated behind
+        # explicit reentrant flag
+        if sys.platform == "darwin":
+            return ["CPPFLAGS=-D_REENTRANT"]
+        else:
+            return []
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -743,7 +743,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                     ("cvode/cuda/cvAdvDiff_kry_cuda", [], "Test CVODE with CUDA", True)
                 )
 
-        if "+hip" in self.spec:
+        if "+rocm" in self.spec:
             smoke_tests.append(
                 ("nvector/hip/test_nvector_hip", ["10", "0", "0"], "Test HIP N_Vector", True)
             )

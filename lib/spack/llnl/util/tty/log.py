@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,12 +21,12 @@ import threading
 import traceback
 from contextlib import contextmanager
 from threading import Thread
-from types import ModuleType  # novm
-from typing import Optional  # novm
+from types import ModuleType
+from typing import Optional
 
 import llnl.util.tty as tty
 
-termios = None  # type: Optional[ModuleType]
+termios: Optional[ModuleType] = None
 try:
     import termios as term_mod
 

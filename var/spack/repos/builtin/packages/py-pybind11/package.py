@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -105,8 +105,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             python = self.spec["python"].command
             py_inc = python(
                 "-c",
-                "import pybind11 as py; "
-                + self.spec["python"].package.print_string("py.get_include()"),
+                "import pybind11 as py; print(py.get_include())",
                 output=str,
             ).strip()
             for inc in [py_inc, self.prefix.include]:

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -164,14 +164,13 @@ class Tau(Package):
             if compiler_path:
                 compiler_path = compiler_path + "/bin/"
         os.environ["PATH"] = ":".join([compiler_path, os.environ["PATH"]])
-
         compiler_options = [
-            "-c++=%s" % self.compiler.cxx_names[0],
-            "-cc=%s" % self.compiler.cc_names[0],
+            "-c++=%s" % os.path.basename(self.compiler.cxx),
+            "-cc=%s" % os.path.basename(self.compiler.cc),
         ]
 
         if "+fortran" in spec and self.compiler.fc:
-            compiler_options.append("-fortran=%s" % self.compiler.fc_names[0])
+            compiler_options.append("-fortran=%s" % os.path.basename(self.compiler.fc))
 
         ##########
 

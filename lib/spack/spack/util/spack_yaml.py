@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ import collections.abc
 import ctypes
 import io
 import re
-from typing import List  # novm
+from typing import List
 
 import ruamel.yaml as yaml
 from ruamel.yaml import RoundTripDumper, RoundTripLoader
@@ -225,7 +225,7 @@ def file_line(mark):
 #: This is nasty but YAML doesn't give us many ways to pass arguments --
 #: yaml.dump() takes a class (not an instance) and instantiates the dumper
 #: itself, so we can't just pass an instance
-_annotations = []  # type: List[str]
+_annotations: List[str] = []
 
 
 class LineAnnotationDumper(OrderedLineDumper):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,4 +37,11 @@ class ConditionalValuesInVariant(Package):
         "staging",
         values=any_combination_of(conditional("flexpath", "dataspaces", when="@1.73.0:")),
         description="Enable dataspaces and/or flexpath staging transports",
+    )
+
+    variant(
+        "foo",
+        default="foo",
+        values=(conditional("foo", when=True), conditional("bar", when=False)),
+        description="Variant with default condition false",
     )

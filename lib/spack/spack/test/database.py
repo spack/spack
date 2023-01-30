@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ except ImportError:
     _use_uuid = False
     pass
 
-from jsonschema import validate
+import jsonschema
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -456,7 +456,7 @@ def test_005_db_exists(database):
 
     with open(index_file) as fd:
         index_object = json.load(fd)
-        validate(index_object, schema)
+        jsonschema.validate(index_object, schema)
 
 
 def test_010_all_install_sanity(database):
@@ -719,13 +719,13 @@ def test_external_entries_in_db(mutable_database):
     assert not rec.spec.external_modules
 
     rec = mutable_database.get_record("externaltool")
-    assert rec.spec.external_path == os.sep + os.path.join("path", "to", "external_tool")
+    assert rec.spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record("externaltool")
-    assert rec.spec.external_path == os.sep + os.path.join("path", "to", "external_tool")
+    assert rec.spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
     assert not rec.spec.external_modules
     assert rec.explicit is True
 
@@ -750,7 +750,7 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.db._index_path, "r") as f:
         db_obj = json.loads(f.read())
 
-    validate(db_obj, schema)
+    jsonschema.validate(db_obj, schema)
 
     s = spack.spec.Spec("externaltool")
     s.concretize()

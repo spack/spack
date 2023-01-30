@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ import datetime
 import inspect
 import os.path
 import re
-from typing import Optional  # novm
+from typing import Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
@@ -588,7 +588,7 @@ class BaseFileLayout(object):
     """
 
     #: This needs to be redefined
-    extension = None  # type: Optional[str]
+    extension: Optional[str] = None
 
     def __init__(self, configuration):
         self.conf = configuration

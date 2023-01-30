@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Prmon(CMakePackage):
     depends_on("cmake@3.3:", type="build")
     depends_on("spdlog", when="@3.0.0:")
     depends_on("py-matplotlib", type="run", when="+plot")
+    depends_on("py-numpy", type="run", when="+plot")
+    depends_on("py-pandas", type="run", when="+plot")
 
     def cmake_args(self):
         args = [

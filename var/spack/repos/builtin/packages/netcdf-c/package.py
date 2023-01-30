@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -97,6 +97,10 @@ class NetcdfC(AutotoolsPackage):
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
     depends_on("curl@7.18.0:", when="+dap")
     # depends_on("curl@7.18.0:", when='+cdmremote')
+
+    # Need to include libxml2 when using DAP in 4.9.0 and newer to build
+    # https://github.com/Unidata/netcdf-c/commit/53464e89635a43b812b5fec5f7abb6ff34b9be63
+    depends_on("libxml2", when="@4.9.0:+dap")
 
     depends_on("parallel-netcdf", when="+parallel-netcdf")
 

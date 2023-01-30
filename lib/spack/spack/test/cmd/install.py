@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ import spack.package_base
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
+from spack.parser import SpecSyntaxError
 from spack.spec import CompilerSpec, Spec
 
 install = SpackCommand("install")
@@ -362,7 +363,7 @@ def test_install_conflicts(conflict_spec):
 )
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
-    with pytest.raises(SpackError, match="Unexpected token"):
+    with pytest.raises(SpecSyntaxError, match="unexpected tokens"):
         install(invalid_spec)
 
 

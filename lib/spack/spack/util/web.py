@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,10 @@ import shutil
 import ssl
 import sys
 import traceback
+import urllib.parse
 from html.parser import HTMLParser
 from urllib.error import URLError
-from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
+from urllib.request import HTTPSHandler, Request, build_opener
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -26,6 +27,8 @@ from llnl.util.filesystem import mkdirp, rename, working_dir
 import spack
 import spack.config
 import spack.error
+import spack.gcs_handler
+import spack.s3_handler
 import spack.url
 import spack.util.crypto
 import spack.util.gcs as gcs_util
@@ -36,36 +39,21 @@ from spack.util.executable import CommandNotFoundError, which
 from spack.util.path import convert_to_posix_path
 
 
-class BetterHTTPRedirectHandler(HTTPRedirectHandler):
-    """The same as HTTPRedirectHandler, except that it sticks to a HEAD
-    request on redirect. Somehow Python upgrades HEAD requests to GET
-    requests when following redirects, which makes no sense. This
-    handler makes Python's urllib compatible with ``curl -LI``"""
-
-    def redirect_request(self, old_request, fp, code, msg, headers, newurl):
-        new_request = super().redirect_request(old_request, fp, code, msg, headers, newurl)
-        if old_request.get_method() == "HEAD":
-            new_request.method = "HEAD"
-        return new_request
-
-
 def _urlopen():
-    # One opener when SSL is enabled
-    with_ssl = build_opener(
-        BetterHTTPRedirectHandler,
-        HTTPSHandler(context=ssl.create_default_context()),
-    )
+    s3 = spack.s3_handler.UrllibS3Handler()
+    gcs = spack.gcs_handler.GCSHandler()
 
-    # One opener when SSL is disabled
-    without_ssl = build_opener(
-        BetterHTTPRedirectHandler,
-        HTTPSHandler(context=ssl._create_unverified_context()),
-    )
+    # One opener with HTTPS ssl enabled
+    with_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl.create_default_context()))
+
+    # One opener with HTTPS ssl disabled
+    without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
 
     # And dynamically dispatch based on the config:verify_ssl.
-    def dispatch_open(*args, **kwargs):
+    def dispatch_open(fullurl, data=None, timeout=None):
         opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
-        return opener.open(*args, **kwargs)
+        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        return opener.open(fullurl, data, timeout)
 
     return dispatch_open
 
@@ -97,85 +85,40 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-def uses_ssl(parsed_url):
-    if parsed_url.scheme == "https":
-        return True
-
-    if parsed_url.scheme == "s3":
-        endpoint_url = os.environ.get("S3_ENDPOINT_URL")
-        if not endpoint_url:
-            return True
-
-        if url_util.parse(endpoint_url, scheme="https").scheme == "https":
-            return True
-
-    elif parsed_url.scheme == "gs":
-        tty.debug("(uses_ssl) GCS Blob is https")
-        return True
-
-    return False
-
-
 def read_from_url(url, accept_content_type=None):
-    url = url_util.parse(url)
+    if isinstance(url, str):
+        url = urllib.parse.urlparse(url)
 
     # Timeout in seconds for web requests
-    timeout = spack.config.get("config:connect_timeout", 10)
-
-    url_scheme = url.scheme
-    url = url_util.format(url)
-    if sys.platform == "win32" and url_scheme == "file":
-        url = convert_to_posix_path(url)
-    req = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
-
-    content_type = None
-    is_web_url = url_scheme in ("http", "https")
-    if accept_content_type and is_web_url:
-        # Make a HEAD request first to check the content type.  This lets
-        # us ignore tarballs and gigantic files.
-        # It would be nice to do this with the HTTP Accept header to avoid
-        # one round-trip.  However, most servers seem to ignore the header
-        # if you ask for a tarball with Accept: text/html.
-        req.get_method = lambda: "HEAD"
-        resp = urlopen(req, timeout=timeout)
-
-        content_type = get_header(resp.headers, "Content-type")
-
-    # Do the real GET request when we know it's just HTML.
-    req.get_method = lambda: "GET"
+    request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
     try:
-        response = urlopen(req, timeout=timeout)
+        response = urlopen(request)
     except URLError as err:
-        raise SpackWebError("Download failed: {ERROR}".format(ERROR=str(err)))
+        raise SpackWebError("Download failed: {}".format(str(err)))
 
-    if accept_content_type and not is_web_url:
-        content_type = get_header(response.headers, "Content-type")
+    if accept_content_type:
+        try:
+            content_type = get_header(response.headers, "Content-type")
+            reject_content_type = not content_type.startswith(accept_content_type)
+        except KeyError:
+            content_type = None
+            reject_content_type = True
 
-    reject_content_type = accept_content_type and (
-        content_type is None or not content_type.startswith(accept_content_type)
-    )
-
-    if reject_content_type:
-        tty.debug(
-            "ignoring page {0}{1}{2}".format(
-                url, " with content type " if content_type is not None else "", content_type or ""
-            )
-        )
-
-        return None, None, None
+        if reject_content_type:
+            msg = "ignoring page {}".format(url.geturl())
+            if content_type:
+                msg += " with content type {}".format(content_type)
+            tty.debug(msg)
+            return None, None, None
 
     return response.geturl(), response.headers, response
 
 
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
-    if sys.platform == "win32":
-        if remote_path[1] == ":":
-            remote_path = "file://" + remote_path
-    remote_url = url_util.parse(remote_path)
-
-    remote_file_path = url_util.local_file_path(remote_url)
-    if remote_file_path is not None:
+    remote_url = urllib.parse.urlparse(remote_path)
+    if remote_url.scheme == "file":
+        remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
         if keep_original:
             shutil.copy(local_file_path, remote_file_path)
@@ -201,9 +144,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         while remote_path.startswith("/"):
             remote_path = remote_path[1:]
 
-        s3 = s3_util.create_s3_session(
-            remote_url, connection=s3_util.get_mirror_connection(remote_url)
-        )
+        s3 = s3_util.get_s3_session(remote_url, method="push")
         s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
@@ -379,12 +320,6 @@ def url_exists(url, curl=None):
     Simple Storage Service (`s3`) URLs; otherwise, the configured fetch
     method defined by `config:url_fetch_method` is used.
 
-    If the method is `curl`, it also uses the following configuration option:
-
-        * config:verify_ssl (str): Perform SSL verification
-
-    Otherwise, `urllib` will be used.
-
     Arguments:
         url (str): URL whose existence is being checked
         curl (spack.util.executable.Executable or None): (optional) curl
@@ -393,35 +328,13 @@ def url_exists(url, curl=None):
     Returns (bool): True if it exists; False otherwise.
     """
     tty.debug("Checking existence of {0}".format(url))
-    url_result = url_util.parse(url)
+    url_result = urllib.parse.urlparse(url)
 
-    # Check if a local file
-    local_path = url_util.local_file_path(url_result)
-    if local_path:
-        return os.path.exists(local_path)
-
-    # Check if Amazon Simple Storage Service (S3) .. urllib-based fetch
-    if url_result.scheme == "s3":
-        # Check for URL-specific connection information
-        s3 = s3_util.create_s3_session(
-            url_result, connection=s3_util.get_mirror_connection(url_result)
-        )  # noqa: E501
-
-        try:
-            s3.head_object(Bucket=url_result.netloc, Key=url_result.path.lstrip("/"))
-            return True
-        except s3.ClientError as err:
-            if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
-                return False
-            raise
-
-    # Check if Google Storage .. urllib-based fetch
-    if url_result.scheme == "gs":
-        gcs = gcs_util.GCSBlob(url_result)
-        return gcs.exists()
-
-    # Otherwise, use the configured fetch method
-    if spack.config.get("config:url_fetch_method") == "curl":
+    # Use curl if configured to do so
+    use_curl = spack.config.get(
+        "config:url_fetch_method", "urllib"
+    ) == "curl" and url_result.scheme not in ("gs", "s3")
+    if use_curl:
         curl_exe = _curl(curl)
         if not curl_exe:
             return False
@@ -434,14 +347,13 @@ def url_exists(url, curl=None):
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
         return curl_exe.returncode == 0
 
-    # If we get here, then the only other fetch method option is urllib.
-    # We try a HEAD request and expect a 200 return code.
+    # Otherwise use urllib.
     try:
-        response = urlopen(
+        urlopen(
             Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
             timeout=spack.config.get("config:connect_timeout", 10),
         )
-        return response.status == 200
+        return True
     except URLError as e:
         tty.debug("Failure reading URL: " + str(e))
         return False
@@ -457,7 +369,7 @@ def _debug_print_delete_results(result):
 
 
 def remove_url(url, recursive=False):
-    url = url_util.parse(url)
+    url = urllib.parse.urlparse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
@@ -469,7 +381,7 @@ def remove_url(url, recursive=False):
 
     if url.scheme == "s3":
         # Try to find a mirror for potential connection information
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="push")
         bucket = url.netloc
         if recursive:
             # Because list_objects_v2 can only return up to 1000 items
@@ -566,9 +478,9 @@ def _iter_local_prefix(path):
 
 
 def list_url(url, recursive=False):
-    url = url_util.parse(url)
-
+    url = urllib.parse.urlparse(url)
     local_path = url_util.local_file_path(url)
+
     if local_path:
         if recursive:
             return list(_iter_local_prefix(local_path))
@@ -579,7 +491,7 @@ def list_url(url, recursive=False):
         ]
 
     if url.scheme == "s3":
-        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))
+        s3 = s3_util.get_s3_session(url, method="fetch")
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
@@ -697,7 +609,7 @@ def spider(root_urls, depth=0, concurrency=32):
 
     collect = current_depth < depth
     for root in root_urls:
-        root = url_util.parse(root)
+        root = urllib.parse.urlparse(root)
         spider_args.append((root, collect))
 
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
@@ -723,26 +635,6 @@ def spider(root_urls, depth=0, concurrency=32):
         tp.join()
 
     return pages, links
-
-
-def _open(req, *args, **kwargs):
-    global open
-    url = req
-    try:
-        url = url.get_full_url()
-    except AttributeError:
-        pass
-
-    if url_util.parse(url).scheme == "s3":
-        import spack.s3_handler
-
-        return spack.s3_handler.open(req, *args, **kwargs)
-    elif url_util.parse(url).scheme == "gs":
-        import spack.gcs_handler
-
-        return spack.gcs_handler.gcs_open(req, *args, **kwargs)
-
-    return open(req, *args, **kwargs)
 
 
 def find_versions_of_archive(
@@ -889,6 +781,36 @@ def get_header(headers, header_name):
             if unfuzz(header) == unfuzzed_header_name:
                 return value
         raise
+
+
+def parse_etag(header_value):
+    """Parse a strong etag from an ETag: <value> header value.
+    We don't allow for weakness indicators because it's unclear
+    what that means for cache invalidation."""
+    if header_value is None:
+        return None
+
+    # First follow rfc7232 section 2.3 mostly:
+    #  ETag       = entity-tag
+    #  entity-tag = [ weak ] opaque-tag
+    #  weak       = %x57.2F ; "W/", case-sensitive
+    #  opaque-tag = DQUOTE *etagc DQUOTE
+    #  etagc      = %x21 / %x23-7E / obs-text
+    #             ; VCHAR except double quotes, plus obs-text
+    # obs-text    = %x80-FF
+
+    # That means quotes are required.
+    valid = re.match(r'"([\x21\x23-\x7e\x80-\xFF]+)"$', header_value)
+    if valid:
+        return valid.group(1)
+
+    # However, not everybody adheres to the RFC (some servers send
+    # wrong etags, but also s3:// is simply a different standard).
+    # In that case, it's common that quotes are omitted, everything
+    # else stays the same.
+    valid = re.match(r"([\x21\x23-\x7e\x80-\xFF]+)$", header_value)
+
+    return valid.group(1) if valid else None
 
 
 class FetchError(spack.error.SpackError):

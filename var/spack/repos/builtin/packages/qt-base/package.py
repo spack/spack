@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class QtBase(CMakePackage):
     variant("gui", default=True, description="Build the Qt GUI module and dependencies.")
     variant("shared", default=True, description="Build shared libraries.")
     variant("sql", default=True, description="Build with SQL support.")
-    variant("network", default=True, description="Build with SSL support.")
+    variant("network", default=False, description="Build with SSL support.")
 
     # GUI-only dependencies
     variant(
@@ -81,6 +81,9 @@ class QtBase(CMakePackage):
     with when("+network"):
         depends_on("libproxy")
         depends_on("openssl")
+
+    # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
+    conflicts("%gcc@:7")
 
     @property
     def archive_files(self):

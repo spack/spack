@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,7 +62,7 @@ class PyNilearn(PythonPackage):
     # older py-nilearn versions use matplotlib.cm.revcmap which was deprecated
     # in py-matplotlib@3.4:
     depends_on("py-matplotlib@1.5.1:3.3", when="@:0.5 +plotting", type=("build", "run"))
-    depends_on("py-matplotlib@1.1.1:3.3", when="0.4.2 +plotting", type=("build", "run"))
+    depends_on("py-matplotlib@1.1.1:3.3", when="@0.4.2 +plotting", type=("build", "run"))
 
     @property
     def skip_modules(self):
