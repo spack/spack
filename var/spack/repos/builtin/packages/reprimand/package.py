@@ -48,10 +48,12 @@ class Reprimand(MesonPackage):
     def meson_args(self):
         args = []
         if self.spec.satisfies("@:1.4"):
-            args.extend([
-                "-Dbuild_documentation=false",
-                "-Dbuild_python_api={0}".format(str("+python" in self.spec).lower()),
-            ])
+            args.extend(
+                [
+                    "-Dbuild_documentation=false",
+                    "-Dbuild_python_api={0}".format(str("+python" in self.spec).lower()),
+                ]
+            )
         return args
 
     @property
