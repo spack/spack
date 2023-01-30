@@ -156,7 +156,8 @@ class Esmf(MakefilePackage):
                 version.dotted
             )
 
-    def edit(self, spec, prefix):
+    def setup_build_environment(self, env):
+        spec = self.spec
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
 
