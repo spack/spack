@@ -157,9 +157,7 @@ class Rocfft(CMakePackage):
     patch("0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch", when="@4.2.0:4.3.1")
     patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
     # Patch to add install prefix header location for sqlite for 5.4
-    patch(
-        "0001-fix-build-error-by-including-the-include-path-for-sqlite-5.4.0.patch", when="@5.4.0"
-    )
+    patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -211,7 +209,5 @@ class Rocfft(CMakePackage):
 
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
-        if self.spec.satisfies("@5.4.0:"):
-            args.append("-Dsqlite_INCLUDE_DIR={0}".format(self.spec["sqlite"].prefix.include))
 
         return args
