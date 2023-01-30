@@ -46,3 +46,18 @@ class Apptainer(SingularityBase):
     @property
     def config_options(self):
         return []
+
+    # Hijack the edit stage to run mconfig.
+    def edit(self, spec, prefix):
+        with working_dir(self.build_directory):
+            confstring = "./mconfig --prefix=%s" % prefix
+            if "~suid" in spec:
+                confstring += " --without-suid"
+            if "+suid" in spec and spec.satisfies("@1.1.0:"):
+                confstring += " --with-suid"            
+            if "~network" in spec:
+                confstring += " --without-network"
+            configure = Executable(confstring)
+            configure()
+
+    
