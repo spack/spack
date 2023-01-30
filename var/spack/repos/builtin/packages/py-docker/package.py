@@ -29,4 +29,5 @@ class PyDocker(PythonPackage):
     depends_on("py-packaging@14.0:", when="@6:", type=("build", "run"))
     depends_on("py-urllib3@1.26.0:", when="@6:", type=("build", "run"))
 
-    depends_on("py-paramiko@2.4.3:", when="+ssh", type=("build", "run"))
+    depends_on("py-paramiko@2.4.3:", when="@6:+ssh", type=("build", "run"))
+    depends_on("py-paramiko@2.4.2:", when="+ssh", type=("build", "run"))
