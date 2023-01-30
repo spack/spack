@@ -31,6 +31,12 @@ class Libgcrypt(AutotoolsPackage):
 
     depends_on("libgpg-error@1.25:")
 
+    def flag_handler(self, name, flags):
+        # We should not inject optimization flags through the wrapper, because
+        # the jitter entropy code should never be compiled with optimization
+        # flags, and the build system ensures that
+        return (None, flags, None)
+
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled
         # https://bugs.gnupg.org/gnupg/issue2056

@@ -102,13 +102,14 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
     conflicts("tracy-client@0.9:", when="@:0.9")
-    depends_on("whip+rocm", when="@0.9: +rocm")
-    depends_on("whip+cuda", when="@0.9: +cuda")
+    depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
+    depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
 
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
             depends_on(
-                "whip amdgpu_target={0}".format(val), when="@0.9: amdgpu_target={0}".format(val)
+                "whip@0.1: amdgpu_target={0}".format(val),
+                when="@0.9: amdgpu_target={0}".format(val),
             )
             depends_on(
                 "rocsolver amdgpu_target={0}".format(val),
@@ -120,7 +121,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     with when("+cuda"):
         for val in CudaPackage.cuda_arch_values:
-            depends_on("whip cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val))
+            depends_on(
+                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
+            )
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))

@@ -32,6 +32,7 @@ class Sparrow(CMakePackage):
     version(
         "3.0.0",
         sha256="70636871694c9363ae3fb2df5050bddb22667b71d875d5a7e9afd872f6a2b65d",
+        deprecated=True,
     )
 
     resource(

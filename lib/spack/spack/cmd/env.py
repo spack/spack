@@ -291,7 +291,11 @@ def env_create_setup_parser(subparser):
 
 def env_create(args):
     if args.with_view:
-        with_view = args.with_view
+        # Expand relative paths provided on the command line to the current working directory
+        # This way we interpret `spack env create --with-view ./view --dir ./env` as
+        # a view in $PWD/view, not $PWD/env/view. This is different from specifying a relative
+        # path in spack.yaml, which is resolved relative to the environment file.
+        with_view = os.path.abspath(args.with_view)
     elif args.without_view:
         with_view = False
     else:
