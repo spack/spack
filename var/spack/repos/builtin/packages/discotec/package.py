@@ -18,15 +18,14 @@ class Discotec(CMakePackage):
     maintainers = ["freifrauvonbleifrei", "pfluegdk"]
 
     version("main", branch="main")
-    version("spack", branch="spack-cmake")
 
-    variant("enableft", default=True, description="DisCoTec with algorithm-based fault tolerance")
+    variant("enableft", default=False, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")
     variant("timing", default=True, description="With high-res timers")
     variant("test", default=True, description="Build Boost tests")
-    variant("openmp", default=True, description="Parallelize with OpenMP")
+    variant("openmp", default=False, description="Parallelize with OpenMP")
     variant("hdf5", default=True, description="Interpolation output with HDF5")
-    variant("vtk", default=False, description="Build with VTK support",when="third-level-advection")
+    variant("vtk", default=False, description="Build with VTK support")
     variant("lto", default=True, description="Build with link-time optimization")
     variant("build_type", default="Release", values=("Release","RelWithDebInfo", "Debug"), description="Build type for DisCoTec")
 
@@ -47,10 +46,10 @@ class Discotec(CMakePackage):
             "-DDISCOTEC_TEST={0}".format("ON" if "+test" in self.spec else "OFF"),
             "-DDISCOTEC_OPENMP={0}".format("ON" if "+openmp" in self.spec else "OFF"),
             "-DDISCOTEC_HDF5={0}".format("ON" if "+hdf5" in self.spec else "OFF"),
+            "-DDISCOTEC_USE_HIGHFIVE={0}".format("ON" if "+hdf5" in self.spec else "OFF"),
             "-DDISCOTEC_USE_LTO={0}".format("ON" if "+lto" in self.spec else "OFF"),
+            "-DDISCOTEC_VTK={0}".format("ON" if "+vtk" in self.spec else "OFF"),
         ]
-        if self.spec.satisfies("@third-level-advection") :
-            args += "-DDISCOTEC_VTK={0}".format("ON" if "+vtk" in self.spec else "OFF"),
 
         return args
 
