@@ -20,47 +20,47 @@ class Scorep(AutotoolsPackage):
     version("7.1", sha256="98dea497982001fb82da3429ca55669b2917a0858c71abe2cfe7cd113381f1f7")
     version("7.0", sha256="68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996")
     version(
-        "6.0", 
-        sha256="5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8", 
+        "6.0",
+        sha256="5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8",
         deprecated="true"
     )
     version(
-        "5.0", 
-        sha256="0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1", 
+        "5.0",
+        sha256="0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1",
         deprecated="true"
     )
     version(
-        "4.1", 
-        sha256="7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63", 
+        "4.1",
+        sha256="7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63",
         deprecated="true"
     )
     version(
-        "4.0", 
-        sha256="c050525606965950ad9b35c14077b88571bcf9bfca08599279a3d8d1bb00e655", 
+        "4.0",
+        sha256="c050525606965950ad9b35c14077b88571bcf9bfca08599279a3d8d1bb00e655",
         deprecated="true"
     )
     version(
-        "3.1", 
-        sha256="49efe8a4e02afca752452809e1b21cba42e8ccb0a0772f936d4459d94e198540", 
+        "3.1",
+        sha256="49efe8a4e02afca752452809e1b21cba42e8ccb0a0772f936d4459d94e198540",
         deprecated="true"
     )
     version(
-        "3.0", 
-        sha256="c9e7fe0a8239b3bbbf7628eb15f7e90de9c36557818bf3d01aecce9fec2dc0be", 
+        "3.0",
+        sha256="c9e7fe0a8239b3bbbf7628eb15f7e90de9c36557818bf3d01aecce9fec2dc0be",
         deprecated="true"
     )
     version(
-        "2.0.2", 
-        sha256="d19498408781048f0e9039a1a245bce6b384f09fbe7d3643105b4e2981ecd610", 
+        "2.0.2",
+        sha256="d19498408781048f0e9039a1a245bce6b384f09fbe7d3643105b4e2981ecd610",
         deprecated="true"
     )
     version(
-        "1.4.2", 
-        sha256="d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac", 
+        "1.4.2",
+        sha256="d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac",
         deprecated="true")
     version(
-        "1.3", 
-        sha256="dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254", 
+        "1.3",
+        sha256="dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254",
         deprecated="true"
     )
 
