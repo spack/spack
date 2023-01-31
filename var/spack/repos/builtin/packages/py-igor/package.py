@@ -14,11 +14,6 @@ class PyIgor(PythonPackage):
 
     version("0.3", sha256="b04ac38c68fb81cf3167a9981dc5a20379112d40268bb72c5a8514dc8051abba")
 
-    def patch(self):
-        setupfile = FileFilter("setup.py")
-        setupfile.filter("distutils.core", "setuptools")
-
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy", type="run")
-    depends_on("py-nose", type="run")
-    depends_on("py-matplotlib", type="run")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
