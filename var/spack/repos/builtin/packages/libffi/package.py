@@ -37,6 +37,12 @@ class Libffi(AutotoolsPackage):
         # The headers are probably in self.prefix.lib but we search everywhere
         return find_headers("ffi", self.prefix, recursive=True)
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi@2023:"):
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
+
     def configure_args(self):
         args = []
         if self.spec.version >= Version("3.3"):
