@@ -61,7 +61,7 @@ spack:
 
   specs:
   - kokkos +rocm
-  - kokkos +cuda ^cuda@11.7
+  - kokkos +cuda +wrapper ^cuda@11.7
 
   mirrors: { "mirror": "s3://spack-binaries/develop/gpu-tests" }
 
