@@ -42,7 +42,8 @@ class NaluWind(CMakePackage, CudaPackage):
     )
     variant("openfast", default=False, description="Compile with OpenFAST support")
     variant("tioga", default=False, description="Compile with Tioga support")
-    variant("hypre", default=False, description="Compile with Hypre support")
+    variant("hypre", default=True, description="Compile with Hypre support")
+    variant("trilinos-solvers", default=True, description="Compile with Trilinos Solvers support")
     variant("catalyst", default=False, description="Compile with Catalyst support")
     variant("fftw", default=False, description="Compile with FFTW support")
     variant("boost", default=False, description="Enable Boost integration")
@@ -52,7 +53,7 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on("yaml-cpp@0.5.3:")
     depends_on(
         "trilinos@13:"
-        "+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost"
+        "+exodus+tpetra+zoltan+stk+boost"
         "~superlu-dist~superlu+hdf5+shards~hypre+gtest"
     )
     depends_on("trilinos~cuda~wrapper", when="~cuda")
@@ -62,6 +63,11 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on("openfast@2.6.0: +cxx", when="+openfast")
     depends_on("tioga@master:", when="+tioga")
     depends_on("hypre@2.18.2: ~int64+mpi~superlu-dist", when="+hypre")
+    depends_on("trilinos+muelu+belos+amesos2+ifpack2", when="+trilinos-solvers")
+    conflicts(
+        "~hypre~trilinos-solvers",
+        msg="nalu-wind: Must enable at least one of the linear-solvers: hypre or trilinos-solvers",
+    )
     depends_on("kokkos-nvcc-wrapper", type="build", when="+cuda")
     for _arch in CudaPackage.cuda_arch_values:
         depends_on(
@@ -105,6 +111,7 @@ class NaluWind(CMakePackage, CudaPackage):
         if "+hypre" in spec:
             args.append(self.define("HYPRE_DIR", spec["hypre"].prefix))
 
+        args.append(self.define_from_variant("ENABLE_TRILINOS_SOLVERS", "trilinos-solvers"))
         args.append(self.define_from_variant("ENABLE_PARAVIEW_CATALYST", "catalyst"))
         if "+catalyst" in spec:
             args.append(
