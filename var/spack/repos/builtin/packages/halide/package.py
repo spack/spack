@@ -67,8 +67,6 @@ class Halide(CMakePackage, PythonExtension):
             self.define("WITH_WABT", False),
         ]
         if "+python" in spec:
-            pyspec = str(spec["python"].version[:2])
-            prefix = spec.prefix
             args += [
                 self.define(
                     "Halide_INSTALL_PYTHONDIR",
