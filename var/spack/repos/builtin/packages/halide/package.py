@@ -39,7 +39,7 @@ class Halide(CMakePackage, PythonExtension):
     depends_on("libpng", type=("build", "link", "run"))
 
     depends_on("python@3.10:", type=("build", "link", "run"), when="+python")
-    #See https://github.com/halide/Halide/blob/main/requirements.txt
+    # See https://github.com/halide/Halide/blob/main/requirements.txt
     depends_on("py-pybind11@2.6.2:", type="build", when="+python")
     depends_on("py-setuptools@43:", type="build", when="+python")
     depends_on("py-scikit-build", type="build", when="+python")
