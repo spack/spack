@@ -21,9 +21,9 @@ class Reprimand(MesonPackage):
     maintainers = ["eschnett"]
 
     version("develop", git="https://github.com/wokast/RePrimAnd", branch="public")
-    version("1.5", sha256="0f1d65a170cad7bc071c58b747b2f0bdc1df77e4c56c152dfb6c93a9d1360f28")
-    version("1.4", sha256="7ddeb770b5b2e2826c5889a38427fa201bb6b9ff98b4ded291ea730ad0e61a42")
-    version("1.3", sha256="2b9d016f0d2d3d11082f049c2b80e57a8c3ea4d5e3875a863c7c485767475ee5")
+    version("1.5", sha256="bc71030c1ae337c3631cfc7e46270260b0663e4ad73129148bf443c9220afb86")
+    version("1.4", sha256="260730696175fa21d35d1a92df2c68b69243bb617083c82616efcb4720d557e8")
+    version("1.3", sha256="8e9f05b1f065a876d1405562285a9f64d1b31c4a436d5a6bb1f023212b40314e")
 
     # Add missing #include statments; see
     # <https://github.com/wokast/RePrimAnd/issues/3>
