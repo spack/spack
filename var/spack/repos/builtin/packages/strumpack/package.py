@@ -98,6 +98,9 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     patch("intel-19-compile.patch", when="@3.1.1")
     patch("shared-rocm.patch", when="@5.1.1")
 
+    # https://github.com/pghysels/STRUMPACK/commit/e4b110b2d823c51a90575b77ec1531c699097a9f
+    patch("strumpack-7.0.1-mpich-hipcc.patch", when="@7.0.1 +rocm ^mpich")
+
     def cmake_args(self):
         spec = self.spec
 
@@ -146,6 +149,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 args.append("-DCUDA_NVCC_FLAGS={0}".format(" ".join(self.cuda_flags(cuda_archs))))
 
         if "+rocm" in spec:
+            args.append("-DCMAKE_CXX_COMPILER={0}".format(spec["hip"].hipcc))
             args.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
             rocm_archs = spec.variants["amdgpu_target"].value
             hipcc_flags = []
