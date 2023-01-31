@@ -65,7 +65,7 @@ class Halide(CMakePackage, PythonExtension):
             self.define_from_variant("WITH_PYTHON_BINDINGS", "python"),
             self.define("WITH_WABT", False),
         ]
-        if "python" in spec:
+        if "+python" in spec:
             pyspec = str(spec["python"].version[:2])
             prefix = spec.prefix
             args += [
