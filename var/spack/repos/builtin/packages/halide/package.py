@@ -29,7 +29,7 @@ class Halide(CMakePackage, PythonExtension):
     extends("python", when="+python")
 
     _targets = " targets=arm,x86,nvptx,aarch64,hexagon,webassembly "
-    depends_on("cmake@3.24.3", type="build")
+    depends_on("cmake@3.22:", type="build")
     depends_on("ninja", type="build")
     depends_on(
         "llvm@14.0.0:14+clang+lld" + _targets + " build_type=Release",
