@@ -795,9 +795,6 @@ class Environment(object):
         else:
             self.views = {}
 
-        # Retrieve the current concretization strategy
-        configuration = config_dict(self.yaml)
-
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
 

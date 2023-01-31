@@ -48,7 +48,7 @@ def undevelop(parser, args):
     local_dev_specs = spack.config.get("develop", scope="env:" + env.name)
 
     if args.all:
-        remove_specs = dev_specs.keys()
+        remove_specs = local_dev_specs.keys()
     else:
         remove_specs = spack.cmd.parse_specs(args.specs)
 
