@@ -9,7 +9,7 @@ class PyBbaDataPush(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_nexus_push"
     git = "ssh://git@bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_nexus_push.git"
 
-    version('1.0.3', tag='v1.0.3')
+    version('1.0.4', tag='v1.0.4')
 
     depends_on('py-setuptools', type=('build', 'run'))
 

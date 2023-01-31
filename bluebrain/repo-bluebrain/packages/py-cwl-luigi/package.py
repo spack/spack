@@ -10,7 +10,7 @@ class PyCwlLuigi(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-luigi.git"
 
     version('develop', branch='main')
-    version('0.3.0', tag='cwl-luigi-v0.3.0')
+    version('0.3.1', tag='cwl-luigi-v0.3.1')
 
     depends_on('python@3.9:', type=('build', 'run'))
 

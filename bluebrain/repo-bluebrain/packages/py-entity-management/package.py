@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyEntityManagement(PythonPackage):
     homepage = 'https://bbpgitlab.epfl.ch/nse/entity-management'
     git = 'ssh://git@bbpgitlab.epfl.ch/nse/entity-management.git'
 
-    version('1.2.17', tag='entity-management-v1.2.17')
+    version('1.2.19', tag='entity-management-v1.2.19')
     version('0.1.12', tag='entity-management-v0.1.12')
 
     depends_on('py-setuptools', type=('build'))
