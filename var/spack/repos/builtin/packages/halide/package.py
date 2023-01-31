@@ -46,7 +46,7 @@ class Halide(CMakePackage, PythonExtension):
     depends_on("py-build", type="build", when="+python")
 
     depends_on("py-imageio", type="run", when="+python")
-    depends_on("py-pillow", type="run", when="+python")
+    depends_on("pil", type="run", when="+python")
     depends_on("py-scipy", type="run", when="+python")
     depends_on("py-numpy@1.0.0:", type="run", when="+python")
 
