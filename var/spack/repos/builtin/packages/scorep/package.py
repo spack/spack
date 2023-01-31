@@ -94,7 +94,9 @@ class Scorep(AutotoolsPackage):
     depends_on("libunwind", when="+unwind")
     depends_on("cuda@7:", when="@8.0:+cuda")
     depends_on("cuda", when="+cuda")
-    depends_on("rocm@4.2:", when="+rocm")
+    depends_on("hip@4.2:", when="+hip")
+    depends_on("rocprofiler-dev", when="+hip")
+    depends_on("rocm-smi-lib", when="+hip")
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
     # https://github.com/spack/spack/issues/1609
@@ -128,6 +130,10 @@ class Scorep(AutotoolsPackage):
 
         if "+unwind" in spec:
             config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
+        if "+cuda" in spec:
+            config_args.append("--with-libcuda=%s" % spec["cuda"].prefix)
+        if "+hip" in spec:
+            config_args.append("--with-rocm=%s" % spec["hip"].prefix)
 
         config_args += self.with_or_without("shmem")
         if not spec.satisfies("platform=cray"):
