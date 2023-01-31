@@ -28,7 +28,7 @@ class Halide(CMakePackage, PythonExtension):
     variant("tests", default=False, description="Build and Run Halide Tests and Apps.")
     extends("python", when="+python")
 
-    _targets = "targets=arm,x86,nvptx,aarch64,hexagon,webassembly"
+    _targets = " targets=arm,x86,nvptx,aarch64,hexagon,webassembly "
     depends_on("cmake@3.24.3", type="build")
     depends_on("ninja", type="build")
     depends_on(
