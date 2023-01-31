@@ -161,6 +161,7 @@ class Hip(CMakePackage):
             "5.2.3",
             "5.3.0",
             "5.3.3",
+            "5.4.0",
         ]:
             depends_on("hsakmt-roct@" + ver, when="@" + ver)
             depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
