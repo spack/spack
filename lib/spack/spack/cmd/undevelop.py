@@ -62,14 +62,13 @@ def undevelop(parser, args):
     spack.config.set("develop", local_dev_specs, scope="env:" + env.name)
 
     updated_all_dev_specs = spack.config.get("develop")
-    remaining_dev_specs = (
-        set(x.name for x in remove_specs) & set(updated_all_dev_specs.keys())
-    )
+    remaining_dev_specs = set(x.name for x in remove_specs) & set(updated_all_dev_specs.keys())
     for spec in remove_specs:
         if spec in remaining_dev_specs:
-            tty.msg("Undevelop: {0} is marked as develop outside the environment "
-                    " configuration; it must be updated manually"
-                    .format(spec.name))
+            tty.msg(
+                "Undevelop: {0} is marked as develop outside the environment "
+                " configuration; it must be updated manually".format(spec.name)
+            )
         else:
             tty.msg("Undevelop: removed {0}".format(spec.name))
 

@@ -126,9 +126,7 @@ def develop(parser, args):
     if spec.name in dev_specs:
         tty.msg(
             "Updating {0}:\n\told: {1}\n\tnew: {2}".format(
-                str(spec),
-                dev_specs[spec.name],
-                abspath
+                str(spec), dev_specs[spec.name], abspath
             )
         )
     else:
