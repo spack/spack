@@ -71,7 +71,7 @@ class Halide(CMakePackage, PythonExtension):
             args += [
                 self.define(
                     "Halide_INSTALL_PYTHONDIR",
-                    prefix + "/lib/python{0}/site-packages/".format(pyspec),
+                    python_platlib,
                 )
             ]
         return args
