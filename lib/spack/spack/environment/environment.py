@@ -676,12 +676,6 @@ class Environment(object):
                     self._set_user_specs_from_lockfile()
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml())
-
-                # Rewrite relative develop paths when initializing a new
-                # environment in a different location from the spack.yaml file.
-                if not keep_relative and hasattr(f, "name") and f.name.endswith(".yaml"):
-                    init_file_dir = os.path.abspath(os.path.dirname(f.name))
-                    self._rewrite_relative_paths_on_relocation(init_file_dir)
         else:
             with lk.ReadTransaction(self.txlock):
                 self._read()
@@ -705,7 +699,8 @@ class Environment(object):
         if init_file_dir == self.path:
             return
 
-        for name, entry in self.dev_specs.items():
+        dev_specs = spack.config.get("develop", {})
+        for name, entry in dev_specs.items():
             dev_path = entry["path"]
             expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
 
@@ -715,7 +710,9 @@ class Environment(object):
 
             tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
 
-            self.dev_specs[name]["path"] = expanded_path
+            dev_specs[name]["path"] = expanded_path
+
+        spack.config.set("develop", dev_specs)
 
     def _re_read(self):
         """Reinitialize the environment object if it has been written (this
@@ -804,14 +801,23 @@ class Environment(object):
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
 
+        with self:
+            self._set_dev_specs()
+
+    def _set_dev_specs(self):
         # Retrieve dev-build packages:
-        self.dev_specs = configuration.get("develop", {})
-        for name, entry in self.dev_specs.items():
+        self.dev_specs = {}
+        dev_config = spack.config.get("develop", {})
+        for name, entry in dev_config.items():
             # spec must include a concrete version
             assert Spec(entry["spec"]).version.concrete
+            local_entry = {"spec": str(entry["spec"])}
             # default path is the spec name
             if "path" not in entry:
-                self.dev_specs[name]["path"] = name
+                local_entry["path"] = name
+            else:
+                local_entry["path"] = entry["path"]
+            self.dev_specs[name] = local_entry
 
     @property
     def user_specs(self):
@@ -1189,72 +1195,6 @@ class Environment(object):
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
-
-    def develop(self, spec, path, clone=False):
-        """Add dev-build info for package
-
-        Args:
-            spec (spack.spec.Spec): Set constraints on development specs. Must include a
-                concrete version.
-            path (str): Path to find code for developer builds. Relative
-                paths will be resolved relative to the environment.
-            clone (bool): Clone the package code to the path.
-                If clone is False Spack will assume the code is already present
-                at ``path``.
-
-        Return:
-            (bool): True iff the environment was changed.
-        """
-        spec = spec.copy()  # defensive copy since we access cached attributes
-
-        if not spec.versions.concrete:
-            raise SpackEnvironmentError("Cannot develop spec %s without a concrete version" % spec)
-
-        for name, entry in self.dev_specs.items():
-            if name == spec.name:
-                e_spec = Spec(entry["spec"])
-                e_path = entry["path"]
-
-                if e_spec == spec:
-                    if path == e_path:
-                        tty.msg("Spec %s already configured for development" % spec)
-                        return False
-                    else:
-                        tty.msg("Updating development path for spec %s" % spec)
-                        break
-                else:
-                    msg = "Updating development spec for package "
-                    msg += "%s with path %s" % (spec.name, path)
-                    tty.msg(msg)
-                    break
-        else:
-            tty.msg("Configuring spec %s for development at path %s" % (spec, path))
-
-        if clone:
-            # "steal" the source code via staging API
-            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
-
-            # Stage, at the moment, requires a concrete Spec, since it needs the
-            # dag_hash for the stage dir name. Below though we ask for a stage
-            # to be created, to copy it afterwards somewhere else. It would be
-            # better if we can create the `source_path` directly into its final
-            # destination.
-            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
-            pkg_cls(spec).stage.steal_source(abspath)
-
-        # If it wasn't already in the list, append it
-        self.dev_specs[spec.name] = {"path": path, "spec": str(spec)}
-        return True
-
-    def undevelop(self, spec):
-        """Remove develop info for abstract spec ``spec``.
-
-        returns True on success, False if no entry existed."""
-        spec = Spec(spec)  # In case it's a spec object
-        if spec.name in self.dev_specs:
-            del self.dev_specs[spec.name]
-            return True
-        return False
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -2161,16 +2101,6 @@ class Environment(object):
         else:
             view = False
         yaml_dict["view"] = view
-
-        if self.dev_specs:
-            # Remove entries that are mirroring defaults
-            write_dev_specs = copy.deepcopy(self.dev_specs)
-            for name, entry in write_dev_specs.items():
-                if entry["path"] == name:
-                    del entry["path"]
-            yaml_dict["develop"] = write_dev_specs
-        else:
-            yaml_dict.pop("develop", None)
 
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident

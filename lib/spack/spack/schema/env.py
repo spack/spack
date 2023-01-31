@@ -66,21 +66,6 @@ schema = {
                         "default": [],
                         "items": {"type": "string"},
                     },
-                    "develop": {
-                        "type": "object",
-                        "default": {},
-                        "additionalProperties": False,
-                        "patternProperties": {
-                            r"\w[\w-]*": {
-                                "type": "object",
-                                "additionalProperties": False,
-                                "properties": {
-                                    "spec": {"type": "string"},
-                                    "path": {"type": "string"},
-                                },
-                            },
-                        },
-                    },
                     "definitions": {
                         "type": "array",
                         "default": [],

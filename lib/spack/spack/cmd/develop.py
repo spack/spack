@@ -36,6 +36,15 @@ def setup_parser(subparser):
         help="Clone the package even if the path already exists",
     )
 
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+    subparser.add_argument(
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        help="configuration scope to modify",
+    )
+
     subparser.add_argument(
         "-f", "--force", help="Remove any files or directories that block cloning source code"
     )
@@ -44,6 +53,8 @@ def setup_parser(subparser):
 
 
 def develop(parser, args):
+    # TODO: note that this command could technically proceed without an
+    # active env, but in that case would require absolute paths
     env = spack.cmd.require_active_env(cmd_name="develop")
 
     if not args.spec:
@@ -90,15 +101,48 @@ def develop(parser, args):
     if not clone and not os.path.exists(abspath):
         raise SpackError("Provided path %s does not exist" % abspath)
 
-    if clone and os.path.exists(abspath):
-        if args.force:
-            shutil.rmtree(abspath)
-        else:
-            msg = "Path %s already exists and cannot be cloned to." % abspath
-            msg += " Use `spack develop -f` to overwrite."
-            raise SpackError(msg)
+    if clone:
+        if os.path.exists(abspath):
+            if args.force:
+                shutil.rmtree(abspath)
+            else:
+                msg = "Path %s already exists and cannot be cloned to." % abspath
+                msg += " Use `spack develop -f` to overwrite."
+                raise SpackError(msg)
 
+        # Stage, at the moment, requires a concrete Spec, since it needs the
+        # dag_hash for the stage dir name. Below though we ask for a stage
+        # to be created, to copy it afterwards somewhere else. It would be
+        # better if we can create the `source_path` directly into its final
+        # destination.
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        pkg_cls(spec).stage.steal_source(abspath)
+
+    if not args.scope:
+        modify_scope = "env:{0}".format(env.name)
+    else:
+        modify_scope = args.scope
+    dev_specs = spack.config.get("develop", scope=modify_scope)
+    if spec.name in dev_specs:
+        tty.msg(
+            "Updating {0}:\n\told: {1}\n\tnew: {2}".format(
+                str(spec),
+                dev_specs[spec.name],
+                abspath
+            )
+        )
+    else:
+        tty.msg("New development spec: {0}".format(str(spec)))
+
+    entry = {
+        "spec": str(spec),
+    }
+    if path != spec.name:
+        entry["path"] = path
+    dev_specs[spec.name] = entry
+
+    spack.config.set("develop", dev_specs, modify_scope)
+
+    # Note: this is needed to force a re-read of the env
     with env.write_transaction():
-        changed = env.develop(spec, path, clone)
-        if changed:
-            env.write()
+        pass
