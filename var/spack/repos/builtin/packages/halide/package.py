@@ -13,8 +13,8 @@ class Halide(CMakePackage, PythonExtension):
     url = "https://github.com/halide/Halide/archive/refs/tags/v14.0.0.tar.gz"
     git = "https://github.com/halide/Halide.git"
     maintainers = ["wraith1995"]
-    version("14.0.0", sha256="f9fc9765217cbd10e3a3e3883a60fc8f2dbbeaac634b45c789577a8a87999a01")
     version("main", branch="main")
+    version("14.0.0", sha256="f9fc9765217cbd10e3a3e3883a60fc8f2dbbeaac634b45c789577a8a87999a01")
     variant(
         "build_type",
         default="Release",
