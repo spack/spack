@@ -373,13 +373,13 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm14-hwloc-ompd.patch", when="@14")
 
     # make libflags a list in openmp subproject when ~omp_as_runtime
-    patch("libomp-libflags-as-list.patch", when="@3.7:14")
+    patch("libomp-libflags-as-list.patch", when="@3.7:11.0.0,11.1:14")
 
     # Add missing include leading to build fail with clang
     patch(
         "https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1.patch?full_index=1",
         sha256="514926d661635de47972c7d403c9c4669235aa51e22e56d44676d2a2709179b6",
-        when="@8:11",
+        when="@8:11.0.0",
     )
 
     # fix detection of LLDB_PYTHON_EXE_RELATIVE_PATH
