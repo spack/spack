@@ -117,7 +117,8 @@ class SingularityEos(CMakePackage, CudaPackage):
             self.define_from_variant("SINGULARITY_BUILD_PYTHON", "python"),
             self.define("SINGULARITY_BUILD_TESTS", self.run_tests),
             self.define(
-                "SINGULARITY_BUILD_SESAME2SPINER", "sesame" in self.spec.variants["build_extra"].value
+                "SINGULARITY_BUILD_SESAME2SPINER",
+                "sesame" in self.spec.variants["build_extra"].value,
             ),
             self.define(
                 "SINGULARITY_TEST_SESAME",
