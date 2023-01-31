@@ -607,8 +607,11 @@ class Hip(CMakePackage):
                         print("{:=^80}".format("Configuring test for " + test_name))
                         if(os.path.exists(test_dir + "/CMakeLists.txt")):
                             self.run_test(cmake_bin, cc_options)
-                        else:
+                        elif(os.path.exists(test_dir + "/Makefile")):
                             print("CMakeLists.txt doesn't exist for this test, attempting to run Makefile")
+                        else:
+                            print("No CMakeLists.txt or Makefile found, skipping test")
+                            continue
                         print("Building test " + test_name)
                         make()
                         exe = os.popen("find . -maxdepth 1 -type f -executable").read()
