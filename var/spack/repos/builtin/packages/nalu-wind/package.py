@@ -65,7 +65,8 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on("hypre@2.18.2: ~int64+mpi~superlu-dist", when="+hypre")
     depends_on("trilinos+muelu+belos+amesos2+ifpack2", when="+trilinos-solvers")
     conflicts(
-        "~hypre~trilinos-solvers", msg="nalu-wind: Must enable at least one of the linear-solvers: hypre or trilinos-solvers"
+        "~hypre~trilinos-solvers",
+        msg="nalu-wind: Must enable at least one of the linear-solvers: hypre or trilinos-solvers"
     )
     depends_on("kokkos-nvcc-wrapper", type="build", when="+cuda")
     for _arch in CudaPackage.cuda_arch_values:
