@@ -8,6 +8,7 @@
 # The AutotoolsPackage causes zlib to fail to build with PGI
 import glob
 import os
+import re
 
 import spack.build_systems.generic
 import spack.build_systems.makefile
@@ -22,6 +23,7 @@ class Zlib(MakefilePackage, Package):
     homepage = "https://zlib.net"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
+    libraries = ["libz.so"]
 
     version("1.2.13", sha256="b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30")
     version(
@@ -55,6 +57,12 @@ class Zlib(MakefilePackage, Package):
 
     patch("w_patch.patch", when="@1.2.11%cce")
     patch("configure-cc.patch", when="@1.2.12")
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"lib\S*\.so\.(\d+\.\d+\.\d+)", lib)
+
+        return match.group(1) if match else None
 
     @property
     def libs(self):

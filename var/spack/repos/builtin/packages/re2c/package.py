@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import sys
 
 from spack.package import *
@@ -16,6 +17,7 @@ class Re2c(Package):
     homepage = "https://re2c.org/index.html"
     url = "https://github.com/skvadrik/re2c/releases/download/1.2.1/re2c-1.2.1.tar.xz"
     tags = ["windows"]
+    executables = ["^re2c$"]
 
     version("2.2", sha256="0fc45e4130a8a555d68e230d1795de0216dfe99096b61b28e67c86dfd7d86bda")
     version("2.1.1", sha256="036ee264fafd5423141ebd628890775aa9447a4c4068a6307385d7366fe711f8")
@@ -66,3 +68,9 @@ class Re2c(Package):
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
             self.make_tool("install")
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"re2c \S+", output)
+        return match.group(1) if match else None

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -17,6 +19,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "readline/readline-8.0.tar.gz"
+    libraries = ["libreadline.so"]
 
     version("8.2", sha256="3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35")
     version("8.1", sha256="f8ceb4ee131e3232226a17f51b164afc46cd0b9e6cef344be87c65962cb82b02")
@@ -69,3 +72,9 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
         if self.spec.satisfies("%nvhpc"):
             filter_file("${GCC+-Wno-parentheses}", "", "configure", string=True)
             filter_file("${GCC+-Wno-format-security}", "", "configure", string=True)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"lib\S*\.so\.(\d+\.\d+\.\d+)", lib)
+
+        return match.group(1) if match else None

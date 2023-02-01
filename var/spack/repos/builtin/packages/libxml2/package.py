@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
@@ -16,6 +19,7 @@ class Libxml2(AutotoolsPackage):
     homepage = "http://xmlsoft.org"
     url = "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz"
     list_url = "https://gitlab.gnome.org/GNOME/libxml2/-/releases"
+    libraries = ["libxml2.so"]
 
     def url_for_version(self, version):
         if version >= Version("2.9.13"):
@@ -162,3 +166,9 @@ class Libxml2(AutotoolsPackage):
 
         # Perform some cleanup
         fs.force_remove(test_filename)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"lib\S*\.so\.(\d+\.\d+\.\d+)", lib)
+
+        return match.group(1) if match else None

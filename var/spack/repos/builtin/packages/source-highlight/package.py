@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -15,6 +16,7 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/src-highlite/"
     gnu_mirror_path = "src-highlite/source-highlight-3.1.8.tar.gz"
     git = "https://git.savannah.gnu.org/git/src-highlite.git"
+    executables = ["^source-highlight$"]
 
     version("master", branch="master")
     version("3.1.9", sha256="3a7fd28378cb5416f8de2c9e77196ec915145d44e30ff4e0ee8beb3fe6211c91")
@@ -39,3 +41,9 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         args = ["--with-boost={0}".format(self.spec["boost"].prefix)]
         return args
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"GNU Source-highlight (\S+)", output)
+        return match.group(1) if match else None
