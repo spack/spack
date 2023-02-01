@@ -4,13 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from spack import fetch_strategy
-from spack import stage
-
+from spack import fetch_strategy, stage
 
 def test_fetchstrategy_bad_url_scheme():
     """Ensure that trying to make a fetch strategy from a URL with an
@@ -54,7 +52,7 @@ def test_archive_vcs_info(tmpdir, vcs, strategy, exclude_dir, archive_vcs_info):
         strategy_args["archive_vcs_info"] = True
 
     strategy = strategy(**strategy_args)
-    archive = os.sep.join([str(tmpdir), 'archive.tar.gz'])
+    archive = os.sep.join([str(tmpdir), "archive.tar.gz"])
 
     with stage.Stage(strategy):
         with patch("spack.fetch_strategy.which") as patched_which:
