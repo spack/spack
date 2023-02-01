@@ -138,3 +138,37 @@ class RocmSmiLib(CMakePackage):
             shutil.rmtree(self.prefix.rocm_smi)
             os.remove(join_path(self.prefix.bin, "rsmiBindings.py"))
             symlink("../bindings/rsmiBindings.py", join_path(self.prefix.bin, "rsmiBindings.py"))
+
+    test_src_dir = "tests/rocm_smi_test"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join(
+                [
+                    self.spec["rocm-smi-lib"].prefix,
+                ]
+            )
+            rocm_smi_lib_path = ";".join([self.spec["rocm-smi-lib"].prefix.lib])
+            cc_options = [
+                "-DCMAKE_PREFIX_PATH=" + prefixes,
+                "-DROCM_DIR=" + self.spec["rocm-smi-lib"].prefix,
+                ".",
+            ]
+            self.run_test(cmake_bin, cc_options)
+            make()
+            self.run_test("rsmitst64")
+            make("clean")
+
