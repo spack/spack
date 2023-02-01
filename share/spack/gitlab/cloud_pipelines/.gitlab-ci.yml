@@ -329,7 +329,6 @@ e4s-protected-build:
 .gpu-tests:
   variables:
     SPACK_CI_STACK_NAME: gpu-tests
-  allow_failure: True
 
 gpu-tests-pr-generate:
   extends: [ ".gpu-tests", ".pr-generate"]
