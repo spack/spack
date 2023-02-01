@@ -28,12 +28,12 @@ class Cubelib(AutotoolsPackage):
     version(
         "4.4.3",
         sha256="bcd4fa81a5ba37194e590a5d7c3e6c44b448f5e156a175837b77c21206847a8d",
-        deprecated="true"
+        deprecated="true",
     )
     version(
         "4.4.2",
         sha256="843335c7d238493f1b4cb8e07555ccfe99a3fa521bf162e9d8eaa6733aa1f949",
-        deprecated="true"
+        deprecated="true",
     )
     version(
         "4.4",
