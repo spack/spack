@@ -216,7 +216,7 @@ class R(AutotoolsPackage):
         # Use the number of make_jobs set in spack. The make program will
         # determine how many jobs can actually be started.
         if not should_support_jobserver:
-            env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
+            env.append_flags("MAKEFLAGS", "-j{0}".format(make_jobs))
         env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
