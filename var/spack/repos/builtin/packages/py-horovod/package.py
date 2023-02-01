@@ -222,7 +222,7 @@ class PyHorovod(PythonPackage, CudaPackage):
             env.set("HOROVOD_CMAKE", self.spec["cmake"].command.path)
 
         if not should_support_jobserver:
-            env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
+            env.append_flags("MAKEFLAGS", "-j{0}".format(make_jobs))
 
         # Frameworks
         if "frameworks=tensorflow" in self.spec:
