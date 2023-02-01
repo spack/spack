@@ -35,11 +35,11 @@ class Malt(CMakePackage):
     )
 
     # Dependencies
-    depends_on("node-js", when="+nodejs")
+    depends_on("node-js@18:", type=("build", "run"), when="+nodejs")
     depends_on("libelf")
     depends_on("libunwind")
-    depends_on("binutils")
-    depends_on("qt", "+qt")
+    depends_on("binutils", type="run")
+    depends_on("qt", when="+qt")
 
     # Gen urls
     def url_for_version(self, version):
