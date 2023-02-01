@@ -39,7 +39,8 @@ class Hdf5(CMakePackage):
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
-    version("develop-1.13", branch="develop")
+    version("develop-1.15", branch="develop")
+    version("develop-1.14", branch="hdf5_1_14")
     version("develop-1.12", branch="hdf5_1_12")
     version("develop-1.10", branch="hdf5_1_10")
     version("develop-1.8", branch="hdf5_1_8")
@@ -49,6 +50,11 @@ class Hdf5(CMakePackage):
     version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
 
     # Even versions are maintenance versions
+    version(
+        "1.14.0",
+        sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4",
+        preferred=True,
+    )
     version(
         "1.12.2",
         sha256="2a89af03d56ce7502dcae18232c241281ad1773561ec00c0f0e8ee2463910f14",
@@ -190,7 +196,7 @@ class Hdf5(CMakePackage):
         "api",
         default="default",
         description="Choose api compatibility for earlier version",
-        values=("default", "v114", "v112", "v110", "v18", "v16"),
+        values=("default", "v116", "v114", "v112", "v110", "v18", "v16"),
         multi=False,
     )
 
@@ -207,10 +213,28 @@ class Hdf5(CMakePackage):
     for plat in ["cray", "darwin", "linux"]:
         depends_on("pkgconfig", when="platform=%s" % plat, type="run")
 
+    conflicts("+mpi", "^mpich@4.0:4.0.3")
+    conflicts("api=v116", when="@1.6:1.14", msg="v116 is not compatible with this release")
+    conflicts(
+        "api=v116",
+        when="@develop-1.8:develop-1.14",
+        msg="v116 is not compatible with this release",
+    )
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
+    conflicts(
+        "api=v114",
+        when="@develop-1.8:develop-1.12",
+        msg="v114 is not compatible with this release",
+    )
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
+    conflicts(
+        "api=v112",
+        when="@develop-1.8:develop-1.10",
+        msg="v112 is not compatible with this release",
+    )
     conflicts("api=v110", when="@1.6:1.8", msg="v110 is not compatible with this release")
-    conflicts("api=v18", when="@1.6.0:1.6", msg="v18 is not compatible with this release")
+    conflicts("api=v110", when="@develop-1.8", msg="v110 is not compatible with this release")
+    conflicts("api=v18", when="@1.6", msg="v18 is not compatible with this release")
 
     # The Java wrappers cannot be built without shared libs.
     conflicts("+java", when="~shared")
@@ -286,6 +310,13 @@ class Hdf5(CMakePackage):
     # as well, we just apply it to all platforms.
     # See https://github.com/HDFGroup/hdf5/issues/1157
     patch("fortran-kinds-2.patch", when="@1.10.8,1.12.1")
+
+    # Patch needed for HDF5 1.14.0 where dependency on MPI::MPI_C was declared
+    # PUBLIC.  Dependent packages using the default hdf5 package but not
+    # expecting to use MPI then failed to configure because they did not call
+    # find_package(MPI).  This patch does that for them.  Later HDF5 versions
+    # will include the patch code changes.
+    patch("hdf5_1_14_0_config_find_mpi.patch", when="@1.14.0")
 
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
     # declared as intent(in) though it is modified by the invocation. As a
@@ -576,14 +607,14 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec and "platform=windows" not in spec:
-            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
-
-            if "+cxx" in self.spec:
-                args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
-
-            if "+fortran" in self.spec:
-                args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
+        if "+mpi" in spec:
+            args.extend(
+                [
+                    "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
+                    "-DMPI_C_COMPILER:PATH=%s" % spec["mpi"].mpicc,
+                    "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc,
+                ]
+            )
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
         if spec.satisfies("@1.10.8,1.13.0"):
