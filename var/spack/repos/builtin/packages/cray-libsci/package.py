@@ -33,6 +33,8 @@ class CrayLibsci(Package):
     provides("lapack")
     provides("scalapack", when="+mpi")
 
+    depends_on("mpi", when="+mpi")
+    
     canonical_names = {
         "gcc": "GNU",
         "cce": "CRAY",
