@@ -36,7 +36,13 @@ class JediEwokEnv(BundlePackage):
     depends_on("py-jinja2", type="run")
     depends_on("py-ruamel-yaml", type="run")
     depends_on("py-ruamel-yaml-clib", type="run")
+
+    # Workflow engines
     depends_on("ecflow", type="run")
+
+    # R2D2 mysql backend
+    depends_on("mysql", type="run")
+    depends_on("py-mysql-connector-python", type="run")
 
     depends_on("solo", when="+solo", type="run")
     depends_on("r2d2", when="+r2d2", type="run")
