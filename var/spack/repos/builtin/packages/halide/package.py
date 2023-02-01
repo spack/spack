@@ -51,7 +51,6 @@ class Halide(CMakePackage, PythonExtension):
     depends_on("py-numpy", type=("build", "run"), when="+python")
 
     def cmake_args(self):
-
         spec = self.spec
         llvm_config = Executable(spec["llvm"].prefix.bin.join("llvm-config"))
         llvmdir = llvm_config("--cmakedir", output=str)
