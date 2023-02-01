@@ -877,7 +877,7 @@ _spack_dev_build() {
 _spack_develop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -p --path --no-clone --clone -f --force"
+        SPACK_COMPREPLY="-h --help -p --path --no-clone --clone --scope -f --force"
     else
         _all_packages
     fi
@@ -1798,7 +1798,7 @@ _spack_tutorial() {
 _spack_undevelop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --all"
+        SPACK_COMPREPLY="-h --help -a --all --scope"
     else
         _all_packages
     fi
