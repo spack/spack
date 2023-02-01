@@ -22,6 +22,9 @@ class Fastqc(Package):
 
     patch("fastqc.patch", level=0)
 
+    def patch(self):
+        filter_file("/usr/bin/perl", self.spec["perl"].command.path, "fastqc", backup=False)
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.lib)
@@ -32,11 +35,3 @@ class Fastqc(Package):
             install_tree(d, join_path(prefix.lib, d))
         chmod = which("chmod")
         chmod("+x", prefix.bin.fastqc)
-
-    # In theory the 'run' dependency on 'jdk' above should take
-    # care of this for me. In practice, it does not.
-    def setup_run_environment(self, env):
-        """Add <prefix> to the path; the package has a script at the
-        top level.
-        """
-        env.prepend_path("PATH", self.spec["java"].prefix.bin)
