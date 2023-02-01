@@ -28,10 +28,10 @@ class Numaprof(CMakePackage):
     )
 
     # Dependencies
-    depends_on("python")
-    depends_on("intel-pin")
+    depends_on("python", type=("build", "run"))
+    depends_on("intel-pin", type=("build", "link", "run"))
     depends_on("numactl")
-    depends_on("py-pyqt5", "+qt")
+    depends_on("py-pyqt5", "+qt", type=("build", "run"))
 
     # Patches
     patch(
