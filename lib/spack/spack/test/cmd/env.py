@@ -49,6 +49,7 @@ concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+develop = SpackCommand("develop")
 
 sep = os.sep
 
@@ -706,7 +707,8 @@ spack:
         with e:
             e.concretize()
 
-    err = str(exc)
+    err = exc.value.message
+
     assert "missing include" in err
     assert "/no/such/directory" in err
     assert os.path.join("no", "such", "file.yaml") in err
@@ -1041,7 +1043,7 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
         add("mpileaks")
         install("--fake")
 
-    out = uninstall("mpileaks", fail_on_error=False)
+    out = uninstall("-y", "mpileaks", fail_on_error=False)
     assert uninstall.returncode == 1
     assert "used by the following environments" in out
 
@@ -2749,13 +2751,15 @@ def test_virtual_spec_concretize_together(tmpdir):
     assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
-def test_query_develop_specs():
+def test_query_develop_specs(tmpdir):
     """Test whether a spec is develop'ed or not"""
+    srcdir = tmpdir.ensure("here")
+
     env("create", "test")
     with ev.read("test") as e:
         e.add("mpich")
         e.add("mpileaks")
-        e.develop(Spec("mpich@1"), "here", clone=False)
+        develop("--no-clone", "-p", str(srcdir), "mpich@1")
 
         assert e.is_develop(Spec("mpich"))
         assert not e.is_develop(Spec("mpileaks"))

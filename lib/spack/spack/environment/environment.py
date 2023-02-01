@@ -700,6 +700,8 @@ class Environment(object):
             return
 
         dev_specs = spack.config.get("develop", {})
+        if not dev_specs:
+            return
         for name, entry in dev_specs.items():
             dev_path = entry["path"]
             expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
@@ -798,12 +800,14 @@ class Environment(object):
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
 
-        with self:
-            self._set_dev_specs()
+    @property
+    def dev_specs(self):
+        if not self._dev_specs:
+            self._dev_specs = self._read_dev_specs()
+        return self._dev_specs
 
-    def _set_dev_specs(self):
-        # Retrieve dev-build packages:
-        self.dev_specs = {}
+    def _read_dev_specs(self):
+        dev_specs = {}
         dev_config = spack.config.get("develop", {})
         for name, entry in dev_config.items():
             # spec must include a concrete version
@@ -814,7 +818,8 @@ class Environment(object):
                 local_entry["path"] = name
             else:
                 local_entry["path"] = entry["path"]
-            self.dev_specs[name] = local_entry
+            dev_specs[name] = local_entry
+        return dev_specs
 
     @property
     def user_specs(self):
@@ -838,7 +843,7 @@ class Environment(object):
                 environment.
         """
         self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
-        self.dev_specs = {}  # dev-build specs from yaml
+        self._dev_specs = {}
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
         self.specs_by_hash = {}  # concretized specs by hash
