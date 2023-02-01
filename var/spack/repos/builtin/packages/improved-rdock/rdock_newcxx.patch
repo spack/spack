@@ -1,0 +1,114 @@
+diff -u -r -N a/build/test/OccupancyTest.h b/build/test/OccupancyTest.h
+--- a/build/test/OccupancyTest.h	2017-02-17 17:29:25.000000000 +0900
++++ b/build/test/OccupancyTest.h	2021-02-01 19:23:53.921991677 +0900
+@@ -32,7 +32,11 @@
+ CPPUNIT_TEST_SUITE_END();
+ 
+ public:
++#if __cplusplus < 201103L
+   static const RbtDouble TINY = 1E-4;
++#else
++  static constexpr RbtDouble TINY = 1E-4;
++#endif
+   //TextFixture methods
+   void setUp();
+   void tearDown();
+diff -u -r -N a/build/test/RbtChromTest.h b/build/test/RbtChromTest.h
+--- a/build/test/RbtChromTest.h	2017-02-17 17:29:25.000000000 +0900
++++ b/build/test/RbtChromTest.h	2021-02-01 19:23:53.921991677 +0900
+@@ -68,7 +68,11 @@
+ CPPUNIT_TEST_SUITE_END();
+ 
+ public:
++#if __cplusplus < 201103L
+   static const RbtDouble TINY = 1E-4;
++#else
++  static constexpr RbtDouble TINY = 1E-4;
++#endif
+   //TextFixture methods
+   void setUp();
+   void tearDown();
+diff -u -r -N a/build/test/SearchTest.h b/build/test/SearchTest.h
+--- a/build/test/SearchTest.h	2017-02-17 17:29:25.000000000 +0900
++++ b/build/test/SearchTest.h	2021-02-01 19:23:53.921991677 +0900
+@@ -33,7 +33,11 @@
+ CPPUNIT_TEST_SUITE_END();
+ 
+ public:
++#if __cplusplus < 201103L
+   static const RbtDouble TINY = 1E-4;
++#else
++  static constexpr RbtDouble TINY = 1E-4;
++#endif
+   //TextFixture methods
+   void setUp();
+   void tearDown();
+diff -u -r -N a/import/simplex/src/NMSearch.cxx b/import/simplex/src/NMSearch.cxx
+--- a/import/simplex/src/NMSearch.cxx	2018-03-28 16:26:43.000000000 +0900
++++ b/import/simplex/src/NMSearch.cxx	2021-02-01 19:24:36.587991448 +0900
+@@ -391,7 +391,7 @@
+ 
+ #ifdef _VISUAL_STUDIO 
+ #else
+-	if (fp == NULL) {
++	if (!fp) {
+ 		cerr << "No Input Stream in ReadSimplexFile()!\n";
+ 		return; // There's no file handle!!
+ 	}
+diff -u -r -N a/import/tnt/include/tnt_sparse_matrix_csr.h b/import/tnt/include/tnt_sparse_matrix_csr.h
+--- a/import/tnt/include/tnt_sparse_matrix_csr.h	2014-05-05 19:18:06.000000000 +0900
++++ b/import/tnt/include/tnt_sparse_matrix_csr.h	2021-02-01 19:23:53.950991677 +0900
+@@ -49,8 +49,8 @@
+ 
+ private:
+ 	Array1D<T>    val_;       // data values (nz_ elements)
+-    Array1D<int>  rowptr_;    // row_ptr (dim_[0]+1 elements)
+-    Array1D<int>  colind_;    // col_ind  (nz_ elements)
++    Array1D<T>  rowptr_;    // row_ptr (dim_[0]+1 elements)
++    Array1D<T>  colind_;    // col_ind  (nz_ elements)
+ 
+     int dim1_;        // number of rows
+     int dim2_;        // number of cols
+diff -u -r -N a/include/RbtAromIdxSF.h b/include/RbtAromIdxSF.h
+--- a/include/RbtAromIdxSF.h	2016-12-28 17:16:27.000000000 +0900
++++ b/include/RbtAromIdxSF.h	2021-02-01 19:23:53.951991677 +0900
+@@ -68,7 +68,7 @@
+   //Generic scoring function params
+   struct f1prms {
+     RbtDouble R0,DRMin,DRMax,slope;
+-    f1prms::f1prms(RbtDouble R, RbtDouble DMin, RbtDouble DMax)
++    f1prms(RbtDouble R, RbtDouble DMin, RbtDouble DMax)
+       : R0(R),DRMin(DMin),DRMax(DMax),slope(1.0/(DMax-DMin)) {};
+   };
+ 
+diff -u -r -N a/include/RbtContainers.h b/include/RbtContainers.h
+--- a/include/RbtContainers.h	2018-03-28 18:25:19.000000000 +0900
++++ b/include/RbtContainers.h	2021-02-01 19:26:10.667990942 +0900
+@@ -37,6 +37,7 @@
+ 
+ #ifdef _VISUAL_STUDIO 
+ #else
++#if __cplusplus < 201103L
+ namespace std
+ {
+ 	template <class InputIterator, class OutputIterator, class Predicate>
+@@ -51,6 +52,7 @@
+ 	}
+ }
+ #endif
++#endif
+ 
+ // Container Typedefs
+ 	
+diff -u -r -N a/include/RbtPolarSF.h b/include/RbtPolarSF.h
+--- a/include/RbtPolarSF.h	2016-12-28 17:16:27.000000000 +0900
++++ b/include/RbtPolarSF.h	2021-02-01 19:23:53.951991677 +0900
+@@ -78,7 +78,7 @@
+   //Generic scoring function params
+   struct f1prms {
+     RbtDouble R0,DRMin,DRMax,slope;
+-    f1prms::f1prms(RbtDouble R, RbtDouble DMin, RbtDouble DMax)
++    f1prms(RbtDouble R, RbtDouble DMin, RbtDouble DMax)
+       : R0(R),DRMin(DMin),DRMax(DMax),slope(1.0/(DMax-DMin)) {};
+   };
+ 

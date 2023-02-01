@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDebugme(RPackage):
@@ -14,6 +14,6 @@ class RDebugme(RPackage):
 
     cran = "debugme"
 
-    version('1.1.0', sha256='4dae0e2450d6689a6eab560e36f8a7c63853abbab64994028220b8fd4b793ab1')
+    version("1.1.0", sha256="4dae0e2450d6689a6eab560e36f8a7c63853abbab64994028220b8fd4b793ab1")
 
-    depends_on('r-crayon', type=('build', 'run'))
+    depends_on("r-crayon", type=("build", "run"))

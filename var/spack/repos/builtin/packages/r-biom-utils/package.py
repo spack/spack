@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiomUtils(RPackage):
@@ -14,6 +14,6 @@ class RBiomUtils(RPackage):
 
     cran = "BIOM.utils"
 
-    version('0.9', sha256='e7024469fb38e275aa78fbfcce15b9a7661317f632a7e9b8124695e076839375')
+    version("0.9", sha256="e7024469fb38e275aa78fbfcce15b9a7661317f632a7e9b8124695e076839375")
 
-    depends_on('r@3:', type=('build', 'run'))
+    depends_on("r@3:", type=("build", "run"))

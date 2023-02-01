@@ -1,0 +1,14 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e5c4537..4596cb2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -62,6 +62,9 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
+   message("Using CPACK_PACKAGE_VERSION ${CPACK_PACKAGE_VERSION}")
+ endif()
+ 
++if( NOT CPACK_PACKAGING_INSTALL_PREFIX )
++  set( CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Package Installation path for OpenCL")
++endif()
+ #ROCM_PATH is needed to create symlink of libraries
+ if(NOT DEFINED ROCM_PATH)
+   string(REPLACE "/opencl" "" ROCM_PATH ${CPACK_PACKAGING_INSTALL_PREFIX})

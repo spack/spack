@@ -1,7 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+
+from spack.package import *
 
 
 class Opencv(CMakePackage, CudaPackage):
@@ -15,6 +19,8 @@ class Opencv(CMakePackage, CudaPackage):
     maintainers = ["bvanessen", "adamjstewart", "glennpj"]
 
     version("master", branch="master")
+    version("4.6.0", sha256="1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277")
+    version("4.5.5", sha256="a1cfdcf6619387ca9e232687504da996aaa9f7b5689986b8331ec02cb61d28ad")
     version(
         "4.5.4",
         sha256="c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d",
@@ -112,13 +118,15 @@ class Opencv(CMakePackage, CudaPackage):
         "4.5.1",
         "4.5.2",
         "4.5.4",
+        "4.5.5",
+        "4.6.0",
     ]
     for cv in contrib_vers:
         resource(
             name="contrib",
             git="https://github.com/opencv/opencv_contrib.git",
             tag="{0}".format(cv),
-            when="@{0}".format(cv),
+            when="@{0} +contrib".format(cv),
         )
 
     # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
@@ -136,7 +144,7 @@ class Opencv(CMakePackage, CudaPackage):
     patch("opencv3.4.12_clp_cmake.patch", when="@3.4.12")
     patch("opencv3.3_clp_cmake.patch", when="@:3.4.6")
 
-    patch("opencv3.4.4_cvv_cmake.patch", when="@3.4.4:")
+    patch("opencv3.4.4_cvv_cmake.patch", when="@3.4.4:4.5")
     patch("opencv3.3_cvv_cmake.patch", when="@:3.4.3")
 
     # OpenCV prebuilt apps (variants)
@@ -215,7 +223,6 @@ class Opencv(CMakePackage, CudaPackage):
         "objc_bindings_generator",
         "objdetect",
         "photo",
-        "python2",
         "python3",
         "python_bindings_generator",
         "python_tests",
@@ -233,10 +240,16 @@ class Opencv(CMakePackage, CudaPackage):
         "js_bindings_generator",
     ]
 
+    # Define the list of libraries objects that may be used
+    # to find an external installation and its variants
+    libraries = []
+
     # module variants
     for mod in modules:
         # At least one of these modules must be enabled to build OpenCV
         variant(mod, default=False, description="Include opencv_{0} module".format(mod))
+        lib = "libopencv_" + mod
+        libraries.append(lib)
 
     # module conflicts and dependencies
     with when("+calib3d"):
@@ -265,7 +278,7 @@ class Opencv(CMakePackage, CudaPackage):
     with when("+java"):
         conflicts("~imgproc")
         conflicts("~java_bindings_generator")
-        conflicts("~python2~python3")
+        conflicts("~python3")
 
     with when("+java_bindings_generator"):
         depends_on("java")
@@ -286,16 +299,7 @@ class Opencv(CMakePackage, CudaPackage):
     with when("+photo"):
         conflicts("~imgproc")
 
-    with when("+python2"):
-        conflicts("+python3")
-        conflicts("~python_bindings_generator")
-        depends_on("python@2.7:2.8", type=("build", "link", "run"))
-        depends_on("py-setuptools", type="build")
-        depends_on("py-numpy", type=("build", "run"))
-        extends("python", when="+python2")
-
     with when("+python3"):
-        conflicts("+python2")
         conflicts("~python_bindings_generator")
         depends_on("python@3.2:", type=("build", "link", "run"))
         depends_on("py-setuptools", type="build")
@@ -391,6 +395,7 @@ class Opencv(CMakePackage, CudaPackage):
             mod,
             default=False,
             description="Include opencv_{0} contrib module".format(mod),
+            when="+contrib",
         )
 
     # contrib module conflicts and dependencies
@@ -545,7 +550,7 @@ class Opencv(CMakePackage, CudaPackage):
         conflicts("~imgproc")
 
     with when("+matlab"):
-        conflicts("~python2~python3")
+        conflicts("~python3")
         depends_on("matlab")
         depends_on("py-jinja2")
 
@@ -780,6 +785,7 @@ class Opencv(CMakePackage, CudaPackage):
         description="Enable -ffast-math (not recommended for GCC 4.6.x)",
     )
     variant("nonfree", default=False, description="Enable non-free algorithms")
+    variant("contrib", default=True, description="Enable OpenCV contrib modules")
 
     # Required (dependencies)
     depends_on("cmake@3.5.1:", type="build")
@@ -799,6 +805,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on("cudnn@:6", when="@:3.3.0+cudnn")
     depends_on("eigen", when="+eigen")
     depends_on("ffmpeg+avresample", when="+ffmpeg")
+    depends_on("ffmpeg@:4+avresample", when="@:4.5+ffmpeg")
     depends_on("gdal", when="+gdal")
     depends_on("gtkplus", when="+gtk")
     depends_on("hpx", when="+hpx")
@@ -873,15 +880,61 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts("+win32ui", when="platform=linux", msg="Windows only")
     conflicts("+win32ui", when="platform=cray", msg="Windows only")
 
+    # https://github.com/opencv/opencv/wiki/ChangeLog#version460
+    conflicts("%gcc@12:", when="@:4.5")
+    conflicts("%clang@15:", when="@:4.5")
+
+    @classmethod
+    def determine_version(cls, lib):
+        ver = None
+        for ext in library_extensions:
+            pattern = None
+            if ext == "dylib":
+                # Darwin switches the order of the version compared to Linux
+                pattern = re.compile(r"lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s" % ext)
+            else:
+                pattern = re.compile(r"lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)" % ext)
+            match = pattern.search(lib)
+            if match:
+                ver = match.group(3)
+        return ver
+
+    @classmethod
+    def determine_variants(cls, libs, version_str):
+        variants = []
+        remaining_modules = set(Opencv.modules)
+        for lib in libs:
+            for ext in library_extensions:
+                pattern = None
+                if ext == "dylib":
+                    # Darwin switches the order of the version compared to Linux
+                    pattern = re.compile(r"lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s" % ext)
+                else:
+                    pattern = re.compile(r"lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)" % ext)
+                match = pattern.search(lib)
+                if match and not match.group(2) == "core":
+                    variants.append("+" + match.group(2))
+                    remaining_modules.remove(match.group(2))
+
+        # If libraries are not found, mark those variants as disabled
+        for mod in remaining_modules:
+            variants.append("~" + mod)
+
+        return " ".join(variants)
+
     def cmake_args(self):
         spec = self.spec
         args = [
-            self.define(
-                "OPENCV_EXTRA_MODULES_PATH",
-                join_path(self.stage.source_path, "opencv_contrib/modules"),
-            ),
             self.define("BUILD_opencv_core", "on"),
         ]
+
+        if self.spec.satisfies("+contrib"):
+            args.append(
+                self.define(
+                    "OPENCV_EXTRA_MODULES_PATH",
+                    join_path(self.stage.source_path, "opencv_contrib", "modules"),
+                )
+            )
 
         # OpenCV pre-built apps
         apps_list = []
@@ -918,9 +971,7 @@ class Opencv(CMakePackage, CudaPackage):
 
         # Optional 3rd party components
         for component in self.components:
-            args.append(
-                self.define_from_variant("WITH_" + component.upper(), component)
-            )
+            args.append(self.define_from_variant("WITH_" + component.upper(), component))
         for component in self.components_pending:
             args.append(self.define("WITH_" + component.upper(), "off"))
 
@@ -1023,9 +1074,7 @@ class Opencv(CMakePackage, CudaPackage):
                 [
                     self.define("Lept_LIBRARY", leptonica.libs[0]),
                     self.define("Tesseract_LIBRARY", tesseract.libs[0]),
-                    self.define(
-                        "Tesseract_INCLUDE_DIR", tesseract.headers.directories[0]
-                    ),
+                    self.define("Tesseract_INCLUDE_DIR", tesseract.headers.directories[0]),
                 ]
             )
 
@@ -1034,16 +1083,7 @@ class Opencv(CMakePackage, CudaPackage):
         python_lib = spec["python"].libs[0]
         python_include_dir = spec["python"].headers.directories[0]
 
-        if "+python2" in spec:
-            args.extend(
-                [
-                    self.define("PYTHON2_EXECUTABLE", python_exe),
-                    self.define("PYTHON2_LIBRARY", python_lib),
-                    self.define("PYTHON2_INCLUDE_DIR", python_include_dir),
-                    self.define("PYTHON3_EXECUTABLE", ""),
-                ]
-            )
-        elif "+python3" in spec:
+        if "+python3" in spec:
             args.extend(
                 [
                     self.define("PYTHON3_EXECUTABLE", python_exe),
@@ -1065,6 +1105,4 @@ class Opencv(CMakePackage, CudaPackage):
     @property
     def libs(self):
         shared = "+shared" in self.spec
-        return find_libraries(
-            "libopencv_*", root=self.prefix, shared=shared, recursive=True
-        )
+        return find_libraries("libopencv_*", root=self.prefix, shared=shared, recursive=True)

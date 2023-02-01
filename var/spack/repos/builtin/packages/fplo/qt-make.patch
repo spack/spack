@@ -1,0 +1,34 @@
+diff -ru a/FPLO22.00-62/XFBP_rel/XFBP/makefile b/FPLO22.00-62/XFBP_rel/XFBP/makefile
+--- a/FPLO22.00-62/XFBP_rel/XFBP/makefile	2022-08-29 18:10:09.672721299 -0500
++++ b/FPLO22.00-62/XFBP_rel/XFBP/makefile	2022-08-29 18:10:39.779667413 -0500
+@@ -1,7 +1,7 @@
+ MAKE=make
+ QMAKE4=qmake
+ QMAKE4=qmake-qt4
+-QMAKE5=qmake -qt=5
++QMAKE5=qmake
+ QTVERSION=5
+ #QMAKE=/usr/local/qt4.5/bin/qmake
+ #QMAKE=/opt/trolltech/QT-4.6.2/bin/qmake
+@@ -15,8 +15,8 @@
+ # The config program could be named python-config
+ # or python2.7-config or python3-config or similar.
+ # You might need to install python-dev or python3-dev or somthing like this.
+-PYTHON=python3
+-PYCONFIG=python3-config
++PYTHON=python
++PYCONFIG=python-config
+ 
+ PROJECT1=XFBP
+ PROJECT1PYTHON=XFBPWITHPYTHON
+diff -ru a/FPLO22.00-62/XFPLO_rel/XFPLO/makefile b/FPLO22.00-62/XFPLO_rel/XFPLO/makefile
+--- a/FPLO22.00-62/XFPLO_rel/XFPLO/makefile	2022-08-29 18:10:09.654721332 -0500
++++ b/FPLO22.00-62/XFPLO_rel/XFPLO/makefile	2022-08-29 18:10:58.263635879 -0500
+@@ -1,6 +1,6 @@
+ MAKE=make
+ QMAKE4=qmake-qt4
+-QMAKE5=qmake -qt=5
++QMAKE5=qmake
+ #QMAKE4=/usr/local/qt4.5/bin/qmake
+ #QMAKE4=/opt/trolltech/QT-4.6.2/bin/qmake
+ PROJECT1=XFPLO

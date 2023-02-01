@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _environments:
 
-============
-Environments
-============
+=========================
+Environments (spack.yaml)
+=========================
 
 An environment is used to group together a set of specs for the
 purpose of building, rebuilding and deploying in a coherent fashion.
@@ -233,8 +233,8 @@ packages will be listed as roots of the Environment.
 
 All of the Spack commands that act on the list of installed specs are
 Environment-sensitive in this way, including ``install``,
-``uninstall``, ``activate``, ``deactivate``, ``find``, ``extensions``,
-and more. In the :ref:`environment-configuration` section we will discuss
+``uninstall``, ``find``, ``extensions``, and more. In the
+:ref:`environment-configuration` section we will discuss
 Environment-sensitive commands further.
 
 ^^^^^^^^^^^^^^^^^^^^^
@@ -273,19 +273,9 @@ or
 Concretizing
 ^^^^^^^^^^^^
 
-Once some user specs have been added to an environment, they can be
-concretized. *By default specs are concretized separately*, one after
-the other. This mode of operation permits to deploy a full
-software stack where multiple configurations of the same package
-need to be installed alongside each other. Central installations done
-at HPC centers by system administrators or user support groups
-are a common case that fits in this behavior.
-Environments *can also be configured to concretize all
-the root specs in a self-consistent way* to ensure that
-each package in the environment comes with a single configuration. This
-mode of operation is usually what is required by software developers that
-want to deploy their development environment.
-
+Once some user specs have been added to an environment, they can be concretized.
+There are at the moment three different modes of operation to concretize an environment,
+which are explained in details in :ref:`environments_concretization_config`.
 Regardless of which mode of operation has been chosen, the following
 command will ensure all the root specs are concretized according to the
 constraints that are prescribed in the configuration:
@@ -349,6 +339,24 @@ If the Environment has been concretized, Spack will install the
 concretized specs. Otherwise, ``spack install`` will first concretize
 the Environment and then install the concretized specs.
 
+.. note::
+
+   Every ``spack install`` process builds one package at a time with multiple build
+   jobs, controlled by the ``-j`` flag and the ``config:build_jobs`` option
+   (see :ref:`build-jobs`). To speed up environment builds further, independent
+   packages can be installed in parallel by launching more Spack instances. For
+   example, the following will build at most four packages in parallel using
+   three background jobs: 
+
+   .. code-block:: console
+
+      [myenv]$ spack install & spack install & spack install & spack install
+
+   Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control
+   the number of parallel install processes. See :ref:`env-generate-depfile`
+   for details.
+
+
 As it installs, ``spack install`` creates symbolic links in the
 ``logs/`` directory in the Environment, allowing for easy inspection
 of build logs related to that environment. The ``spack install``
@@ -367,6 +375,30 @@ does not require you to specify the ``--no-add`` option to prevent the spec
 from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Developing Packages in a Spack Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack develop`` command allows one to develop Spack packages in
+an environment. It requires a spec containing a concrete version, and
+will configure Spack to install the package from local source. By
+default, it will also clone the package to a subdirectory in the
+environment. This package will have a special variant ``dev_path``
+set, and Spack will ensure the package and its dependents are rebuilt
+any time the environment is installed if the package's local source
+code has been modified. Spack ensures that all instances of a
+developed package in the environment are concretized to match the
+version (and other constraints) passed as the spec argument to the
+``spack develop`` command.
+
+For packages with ``git`` attributes, git branches, tags, and commits can
+also be used as valid concrete versions (see :ref:`version-specifier`).
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+the ``main`` branch of the package, and ``spack install`` will install from
+that git clone if ``foo`` is in the environment.
+Further development on ``foo`` can be tested by reinstalling the environment,
+and eventually committed and pushed to the upstream git repo.
 
 ^^^^^^^
 Loading
@@ -446,14 +478,21 @@ them to the Environment.
    spack:
      include:
      - relative/path/to/config.yaml
+     - https://github.com/path/to/raw/config/compilers.yaml
      - /absolute/path/to/packages.yaml
 
-Environments can include files with either relative or absolute
-paths. Inline configurations take precedence over included
-configurations, so you don't have to change shared configuration files
-to make small changes to an individual Environment. Included configs
-listed earlier will have higher precedence, as the included configs are
-applied in reverse order.
+Environments can include files or URLs. File paths can be relative or
+absolute. URLs include the path to the text for individual files or
+can be the path to a directory containing configuration files.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Configuration precedence
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inline configurations take precedence over included configurations, so
+you don't have to change shared configuration files to make small changes
+to an individual environment. Included configurations listed earlier will
+have higher precedence, as the included configs are applied in reverse order.
 
 -------------------------------
 Manually Editing the Specs List
@@ -475,33 +514,84 @@ Appending to this list in the yaml is identical to using the ``spack
 add`` command from the command line. However, there is more power
 available from the yaml file.
 
+.. _environments_concretization_config:
+
 ^^^^^^^^^^^^^^^^^^^
 Spec concretization
 ^^^^^^^^^^^^^^^^^^^
+An environment can be concretized in three different modes and the behavior active under
+any environment is determined by the ``concretizer:unify`` configuration option.
 
-Specs can be concretized separately or together, as already
-explained in :ref:`environments_concretization`. The behavior active
-under any environment is determined by the ``concretization`` property:
+The *default* mode is to unify all specs:
 
 .. code-block:: yaml
 
    spack:
        specs:
-         - ncview
-         - netcdf
-         - nco
-         - py-sphinx
-       concretization: together
+         - hdf5+mpi
+         - zlib@1.2.8
+       concretizer:
+         unify: true
 
-which can currently take either one of the two allowed values ``together`` or ``separately``
-(the default).
+This means that any package in the environment corresponds to a single concrete spec. In
+the above example, when ``hdf5`` depends down the line of ``zlib``, it is required to
+take ``zlib@1.2.8`` instead of a newer version. This mode of concretization is
+particularly useful when environment views are used: if every package occurs in
+only one flavor, it is usually possible to merge all install directories into a view.
+
+A downside of unified concretization is that it can be overly strict. For example, a
+concretization error would happen when both ``hdf5+mpi`` and ``hdf5~mpi`` are specified
+in an environment.
+
+The second mode is to *unify when possible*: this makes concretization of root specs
+more independendent. Instead of requiring reuse of dependencies across different root
+specs, it is only maximized:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - hdf5~mpi
+         - hdf5+mpi
+         - zlib@1.2.8
+       concretizer:
+         unify: when_possible
+
+This means that both ``hdf5`` installations will use ``zlib@1.2.8`` as a dependency even
+if newer versions of that library are available.
+
+The third mode of operation is to concretize root specs entirely independently by
+disabling unified concretization:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - hdf5~mpi
+         - hdf5+mpi
+         - zlib@1.2.8
+       concretizer:
+         unify: false
+
+In this example ``hdf5`` is concretized separately, and does not consider ``zlib@1.2.8``
+as a constraint or preference. Instead, it will take the latest possible version.
+
+The last two concretization options are typically useful for system administrators and
+user support groups providing a large software stack for their HPC center.
+
+.. note::
+
+   The ``concretizer:unify`` config option was introduced in Spack 0.18 to
+   replace the ``concretization`` property. For reference,
+   ``concretization: together`` is replaced by ``concretizer:unify:true``,
+   and ``concretization: separately`` is replaced by ``concretizer:unify:false``.
 
 .. admonition:: Re-concretization of user specs
 
-   When concretizing specs together the entire set of specs will be
+   When using *unified* concretization (when possible), the entire set of specs will be
    re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent. When instead the specs are concretized
-   separately only the new specs will be re-concretized after any addition.
+   the environment remains consistent / minimal. When instead unified concretization is
+   disabled, only the new specs will be concretized after any addition.
 
 ^^^^^^^^^^^^^
 Spec Matrices
@@ -539,31 +629,6 @@ The following two Environment manifests are identical:
 
 Spec matrices can be used to install swaths of software across various
 toolchains.
-
-The concretization logic for spec matrices differs slightly from the
-rest of Spack. If a variant or dependency constraint from a matrix is
-invalid, Spack will reject the constraint and try again without
-it. For example, the following two Environment manifests will produce
-the same specs:
-
-.. code-block:: yaml
-
-   spack:
-     specs:
-       - matrix:
-           - [zlib, libelf, hdf5+mpi]
-           - [^mvapich2@2.2, ^openmpi@3.1.0]
-
-   spack:
-     specs:
-       - zlib
-       - libelf
-       - hdf5+mpi ^mvapich2@2.2
-       - hdf5+mpi ^openmpi@3.1.0
-
-This allows one to create toolchains out of combinations of
-constraints and apply them somewhat indiscriminately to packages,
-without regard for the applicability of the constraint.
 
 ^^^^^^^^^^^^^^^^^^^^
 Spec List References
@@ -747,7 +812,7 @@ directories.
          select: [^mpi]
          exclude: ['%pgi@18.5']
          projections:
-           all: {name}/{version}-{compiler.name}
+           all: '{name}/{version}-{compiler.name}'
          link: all
          link_type: symlink
 
@@ -896,9 +961,6 @@ Variable            Paths
 PATH                bin
 MANPATH             man, share/man
 ACLOCAL_PATH        share/aclocal
-LD_LIBRARY_PATH     lib, lib64
-LIBRARY_PATH        lib, lib64
-CPATH               include
 PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========
@@ -910,3 +972,169 @@ environment.
 
 The ``spack env deactivate`` command will remove the default view of
 the environment from the user's path.
+
+
+.. _env-generate-depfile:
+
+
+------------------------------------------
+Generating Depfiles from Environments
+------------------------------------------
+
+Spack can generate ``Makefile``\s to make it easier to build multiple
+packages in an environment in parallel. Generated ``Makefile``\s expose
+targets that can be included in existing ``Makefile``\s, to allow
+other targets to depend on the environment installation.
+
+A typical workflow is as follows:
+
+.. code:: console
+
+   spack env create -d .
+   spack -e . add perl
+   spack -e . concretize
+   spack -e . env depfile -o Makefile
+   make -j64
+
+This generates a ``Makefile`` from a concretized environment in the
+current working directory, and ``make -j64`` installs the environment,
+exploiting parallelism across packages as much as possible. Spack
+respects the Make jobserver and forwards it to the build environment
+of packages, meaning that a single ``-j`` flag is enough to control the
+load, even when packages are built in parallel.
+
+By default the following phony convenience targets are available:
+
+- ``make all``: installs the environment (default target);
+- ``make clean``: cleans files used by make, but does not uninstall packages.
+
+.. tip::
+
+   GNU Make version 4.3 and above have great support for output synchronization
+   through the ``-O`` and ``--output-sync`` flags, which ensure that output is
+   printed orderly per package install. To get synchronized output with colors,
+   use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Specifying dependencies on generated ``make`` targets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An interesting question is how to include generated ``Makefile``\s in your own
+``Makefile``\s. This comes up when you want to install an environment that provides
+executables required in a command for a make target of your own.
+
+The example below shows how to accomplish this: the ``env`` target specifies
+the generated ``spack/env`` target as a prerequisite, meaning that the environment
+gets installed and is available for use in the ``env`` target.
+
+.. code:: Makefile
+
+   SPACK ?= spack
+
+   .PHONY: all clean env
+
+   all: env
+
+   spack.lock: spack.yaml
+   	$(SPACK) -e . concretize -f
+
+   env.mk: spack.lock
+   	$(SPACK) -e . env depfile -o $@ --make-prefix spack
+
+   env: spack/env
+   	$(info Environment installed!)
+
+   clean:
+   	rm -rf spack.lock env.mk spack/
+
+   ifeq (,$(filter clean,$(MAKECMDGOALS)))
+   include env.mk
+   endif
+
+This works as follows: when ``make`` is invoked, it first "remakes" the missing
+include ``env.mk`` as there is a target for it. This triggers concretization of
+the environment and makes spack output ``env.mk``. At that point the
+generated target ``spack/env`` becomes available through ``include env.mk``.
+
+As it is typically undesirable to remake ``env.mk`` as part of ``make clean``,
+the include is conditional.
+
+.. note::
+
+   When including generated ``Makefile``\s, it is important to use
+   the ``--make-prefix`` flag and use the non-phony target
+   ``<prefix>/env`` as prerequisite, instead of the phony target
+   ``<prefix>/all``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building a subset of the environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The generated ``Makefile``\s contain install targets for each spec, identified
+by ``<name>-<version>-<hash>``. This allows you to install only a subset of the
+packages in the environment. When packages are unique in the environment, it's
+enough to know the name and let tab-completion fill out the version and hash.
+
+The following phony targets are available: ``install/<spec>`` to install the
+spec with its dependencies, and ``install-deps/<spec>`` to *only* install
+its dependencies. This can be useful when certain flags should only apply to
+dependencies. Below we show a use case where a spec is installed with verbose
+output (``spack install --verbose``) while its dependencies are installed silently:
+
+.. code:: console
+
+   $ spack env depfile -o Makefile
+
+   # Install dependencies in parallel, only show a log on error.
+   $ make -j16 install-deps/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
+
+   # Install the root spec with verbose output.
+   $ make -j16 install/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--verbose
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding post-install hooks
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Another advanced use-case of generated ``Makefile``\s is running a post-install
+command for each package. These "hooks" could be anything from printing a
+post-install message, running tests, or pushing just-built binaries to a buildcache.
+
+This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS``
+variable. Assuming we have an active and concrete environment, we generate the
+associated ``Makefile`` with a prefix ``example``:
+
+.. code:: console
+
+   $ spack env depfile -o env.mk --make-prefix example
+
+And we now include it in a different ``Makefile``, in which we create a target
+``example/push/%`` with ``%`` referring to a package identifier. This target
+depends on the particular package installation. In this target we automatically
+have the target-specific ``HASH`` and ``SPEC`` variables at our disposal. They
+are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
+Finally, we have an entrypoint target ``push`` that will update the buildcache
+index once every package is pushed. Note how this target uses the generated
+``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
+
+.. code:: Makefile
+
+   SPACK ?= spack
+   BUILDCACHE_DIR = $(CURDIR)/tarballs
+   
+   .PHONY: all
+   
+   all: push
+   
+   include env.mk
+   
+   example/push/%: example/install/%
+   	@mkdir -p $(dir $@)
+   	$(info About to push $(SPEC) to a buildcache)
+   	$(SPACK) -e . buildcache create --allow-root --only=package --directory $(BUILDCACHE_DIR) /$(HASH)
+   	@touch $@
+   
+   push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
+   	$(info Updating the buildcache index)
+   	$(SPACK) -e . buildcache update-index --directory $(BUILDCACHE_DIR)
+   	$(info Done!)
+   	@touch $@

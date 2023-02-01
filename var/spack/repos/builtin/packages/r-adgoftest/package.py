@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAdgoftest(RPackage):
@@ -14,4 +14,4 @@ class RAdgoftest(RPackage):
 
     cran = "ADGofTest"
 
-    version('0.3', sha256='9cd9313954f6ecd82480d373f6c5371ca84ab33e3f5c39d972d35cfcf1096846')
+    version("0.3", sha256="9cd9313954f6ecd82480d373f6c5371ca84ab33e3f5c39d972d35cfcf1096846")

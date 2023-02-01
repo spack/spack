@@ -1,19 +1,22 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _intelpackage:
 
-------------
-IntelPackage
-------------
+-----
+Intel
+-----
 
 .. contents::
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Intel packages in Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is an earlier version of Intel software development tools and has
+now been replaced by Intel oneAPI Toolkits.
 
 Spack can install and use several software development products offered by Intel.
 Some of these are available under no-cost terms, others require a paid license.

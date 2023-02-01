@@ -1,10 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # See the Spack documentation for more information on packaging.
 
-from spack import *
+from spack.package import *
 
 
 class RXnomial(RPackage):
@@ -24,6 +24,6 @@ class RXnomial(RPackage):
 
     cran = "XNomial"
 
-    version('1.0.4', sha256='e6237f79d96f02bb30af1cf055ae9f70541abba34ce045a9d4359b5304189dd7')
+    version("1.0.4", sha256="e6237f79d96f02bb30af1cf055ae9f70541abba34ce045a9d4359b5304189dd7")
 
-    depends_on('r@2.14:', type=('build', 'run'))
+    depends_on("r@2.14:", type=("build", "run"))

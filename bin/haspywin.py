@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,13 +8,12 @@ import sys
 
 def getpywin():
     try:
-        import win32con  # noqa
+        import win32con  # noqa: F401
     except ImportError:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "-q", "install", "--upgrade", "pip"])
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "-q", "install", "pywin32"])
+        print("pyWin32 not installed but is required...\nInstalling via pip:")
+        subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "--upgrade", "pip"])
+        subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "pywin32"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     getpywin()

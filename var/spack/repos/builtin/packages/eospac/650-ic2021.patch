@@ -1,0 +1,17 @@
+--- a/Source/config/Makefile.-linux-gnu.hashes	2021-09-20 07:27:28.000000000 -0600
++++ b/Source/config/Makefile.-linux-gnu.hashes	2022-08-22 16:48:14.802081857 -0600
+@@ -336,6 +336,14 @@
+ $(call set,_F90-CPUINFO_COMP_FLAGS,ifort-20-haswell,       -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
+ $(call set,_F90-CPUINFO_COMP_FLAGS,ifort-20-knl,           -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
+ 
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx,         -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx2,        -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx512,      -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx512f,     -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx512pf,    -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-haswell,     -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-knl,         -qopenmp-simd -fp-speculation=safe $(AVX_FLAGS) -no-fma $(INTEL_DIAG_OPTIONS))
++
+ ###  Intel OneAPI Fortran:
+ $(call set,_F90-CPUINFO_COMP_FLAGS,ifx-2021-avx,           -qopenmp-simd -fp-speculation=safe -xAVX           -no-fma $(INTEL_DIAG_OPTIONS))
+ $(call set,_F90-CPUINFO_COMP_FLAGS,ifx-2021-avx2,          -qopenmp-simd -fp-speculation=safe -xCORE-AVX2     -no-fma $(INTEL_DIAG_OPTIONS))

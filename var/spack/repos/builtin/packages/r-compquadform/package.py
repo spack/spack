@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCompquadform(RPackage):
@@ -15,4 +15,4 @@ class RCompquadform(RPackage):
 
     cran = "CompQuadForm"
 
-    version('1.4.3', sha256='042fc56c800dd8f5f47a017e2efa832caf74f0602824abf7099898d9708660c4')
+    version("1.4.3", sha256="042fc56c800dd8f5f47a017e2efa832caf74f0602824abf7099898d9708660c4")

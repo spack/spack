@@ -1,0 +1,13 @@
+diff --git a/clients/gtest/logging_gtest.cpp b/clients/gtest/logging_gtest.cpp
+index e4f594af..e9d70f60 100644
+--- a/clients/gtest/logging_gtest.cpp
++++ b/clients/gtest/logging_gtest.cpp
+@@ -49,7 +49,7 @@ protected:
+         {
+             if(HasFailure() && std::getenv("ROCSOLVER_TEST_DEBUG"))
+                 fmt::print(stderr, "ROCSOLVER_TEST_DEBUG is set so {} was not removed.\n",
+-                           log_filepath);
++                           log_filepath.string());
+             else
+                 EXPECT_TRUE(fs::remove(log_filepath));
+         }

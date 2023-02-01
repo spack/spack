@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyFlawfinder(PythonPackage, SourceforgePackage):
@@ -12,7 +12,7 @@ class PyFlawfinder(PythonPackage, SourceforgePackage):
     homepage = "http://dwheeler.com/flawfinder/"
     sourceforge_mirror_path = "project/flawfinder/flawfinder-2.0.19.tar.gz"
 
-    version('2.0.19', sha256='fe550981d370abfa0a29671346cc0b038229a9bd90b239eab0f01f12212df618')
+    version("2.0.19", sha256="fe550981d370abfa0a29671346cc0b038229a9bd90b239eab0f01f12212df618")
 
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRcppziggurat(RPackage):
@@ -18,10 +18,10 @@ class RRcppziggurat(RPackage):
 
     cran = "RcppZiggurat"
 
-    version('0.1.6', sha256='9c78255ca476c945c05a564d1e4da363de714d890e0e27f3b252fd73c50eed71')
+    version("0.1.6", sha256="9c78255ca476c945c05a564d1e4da363de714d890e0e27f3b252fd73c50eed71")
 
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rcppgsl', type=('build', 'run'))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-rcppgsl", type=("build", "run"))
 
     # not listed as a dependency but needed
-    depends_on('gsl')
+    depends_on("gsl")

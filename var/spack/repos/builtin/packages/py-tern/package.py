@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyTern(PythonPackage):
@@ -12,11 +12,11 @@ class PyTern(PythonPackage):
     of Materials (SBoM) for containers.
     """
 
-    pypi     = "tern/tern-2.8.0.tar.gz"
-    git      = "https://github.com/tern-tools/tern.git"
+    pypi = "tern/tern-2.8.0.tar.gz"
+    git = "https://github.com/tern-tools/tern.git"
 
-    version('main', branch='main')
+    version("main", branch="main")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-pip', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")
+    depends_on("py-pip", type="build")
