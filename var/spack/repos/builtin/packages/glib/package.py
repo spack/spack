@@ -126,6 +126,7 @@ class Glib(Package):
     depends_on("perl", type=("build", "run"))
     depends_on("python", type=("build", "run"), when="@2.53.4:")
     depends_on("pcre2", when="@2.73.2:")
+    depends_on("pcre2@10.34:", when="@2.74:")
     depends_on("pcre+utf", when="@2.48:2.73.1")
     depends_on("uuid", when="+libmount")
     depends_on("util-linux", when="+libmount")
