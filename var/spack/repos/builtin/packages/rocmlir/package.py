@@ -9,8 +9,8 @@ from spack.package import *
 
 class Rocmlir(CMakePackage):
     """This is the repository for a MLIR-based convolution and GEMM kernel generator
-       targetting AMD hardware. This generator is mainly used from MIOpen and MIGraphX,
-       but it can be used on a standalone basis."""
+    targetting AMD hardware. This generator is mainly used from MIOpen and MIGraphX,
+    but it can be used on a standalone basis."""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocMLIR"
     git = "https://github.com/ROCmSoftwarePlatform/rocMLIR.git"
@@ -26,6 +26,7 @@ class Rocmlir(CMakePackage):
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
+
     def patch(self):
         if self.spec.satisfies("@5.3.0:"):
             filter_file(
@@ -62,6 +63,6 @@ class Rocmlir(CMakePackage):
             ),
             self.define("CMAKE_C_COMPILER", "{0}/bin/clang".format(spec["llvm-amdgpu"].prefix)),
             self.define("HIP_PATH", spec["hip"].prefix),
-            self.define("BUILD_FAT_LIBROCKCOMPILER", "ON")
+            self.define("BUILD_FAT_LIBROCKCOMPILER", "ON"),
         ]
         return args

@@ -226,7 +226,6 @@ class RocmOpencl(CMakePackage):
         return (flags, None, None)
 
     def cmake_args(self):
-
         args = ["-DUSE_COMGR_LIBRARY=yes"]
         if self.spec.satisfies("@:4.3.0"):
             "-DROCclr_DIR={0}".format(self.spec["hip-rocclr"].prefix),
