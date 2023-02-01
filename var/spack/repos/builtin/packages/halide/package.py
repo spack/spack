@@ -53,8 +53,8 @@ class Halide(CMakePackage, PythonExtension):
     def cmake_args(self):
 
         spec = self.spec
-        llvmdir = spec["llvm"].prefix.lib + "/cmake/llvm"
-
+        llvm_config = Executable(spec["llvm"].prefix.bin.join("llvm-config"))
+        llvmdir = llvm_config("--cmakedir", output=str)
         args = [
             self.define("Python3_EXECUTABLE", spec["python"].command.path),
             self.define("PYBIND11_USE_FETCHCONTENT", False),
