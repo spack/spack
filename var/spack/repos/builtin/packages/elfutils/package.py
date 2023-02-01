@@ -5,6 +5,7 @@
 
 import glob
 import os.path
+import re
 
 from spack.package import *
 
@@ -21,6 +22,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     sourceware_mirror_path = "elfutils/0.179/elfutils-0.179.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
+    executables = ["^eu-objdump$"]
 
     maintainers = ["mwkrentel"]
 
@@ -148,3 +150,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     @property
     def libs(self):
         return find_libraries("libelf", self.prefix, recursive=True)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"eu-objdump \(elfutils\) (\S+)", output)
+        return match.group(1) if match else None
