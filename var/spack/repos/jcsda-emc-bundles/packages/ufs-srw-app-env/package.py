@@ -25,7 +25,7 @@ class UfsSrwAppEnv(BundlePackage):
     depends_on("netcdf-fortran")
     depends_on("parallelio")
     depends_on("esmf")
-    depends_on("fms@2022.01")
+    depends_on("fms@2022.04")
     depends_on("bacio")
     depends_on("crtm@2.4.0")
     depends_on("g2")
@@ -40,7 +40,9 @@ class UfsSrwAppEnv(BundlePackage):
     depends_on("nemsiogfs")
     depends_on("sfcio")
     depends_on("sigio")
+    depends_on("wrf-io")
     depends_on("w3emc")
     depends_on("wgrib2")
+    depends_on("gsi-ncdiag")
 
     # There is no need for install() since there is no code.
