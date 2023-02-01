@@ -33,6 +33,7 @@ class JediEwokEnv(BundlePackage):
     depends_on("jedi-base-env +python", type="run")
     depends_on("py-boto3", type="run")
     depends_on("py-cartopy", type="run")
+    depends_on("py-gitpython", type="run")
     depends_on("py-jinja2", type="run")
     depends_on("py-ruamel-yaml", type="run")
     depends_on("py-ruamel-yaml-clib", type="run")
