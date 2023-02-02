@@ -51,10 +51,10 @@ class Discotec(CMakePackage):
             "-DDISCOTEC_TIMING={0}".format("ON" if "+timing" in self.spec else "OFF"),
             "-DDISCOTEC_TEST={0}".format("ON" if "+test" in self.spec else "OFF"),
             "-DDISCOTEC_OPENMP={0}".format("ON" if "+openmp" in self.spec else "OFF"),
-            "-DDISCOTEC_HDF5={0}".format("ON" if "+hdf5" in self.spec else "OFF"),
+            "-DDISCOTEC_USE_HDF5={0}".format("ON" if "+hdf5" in self.spec else "OFF"),
             "-DDISCOTEC_USE_HIGHFIVE={0}".format("ON" if "+hdf5" in self.spec else "OFF"),
             "-DDISCOTEC_USE_LTO={0}".format("ON" if "+lto" in self.spec else "OFF"),
-            "-DDISCOTEC_VTK={0}".format("ON" if "+vtk" in self.spec else "OFF"),
+            "-DDISCOTEC_USE_VTK={0}".format("ON" if "+vtk" in self.spec else "OFF"),
         ]
 
         return args
