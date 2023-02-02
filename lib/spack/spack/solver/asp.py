@@ -1590,7 +1590,7 @@ class SpackSolverSetup(object):
 
         return clauses
 
-    def build_version_dict(self, possible_pkgs):
+    def build_version_dict(self):
         """Declare any versions in specs not declared in packages."""
         self.declared_versions = collections.defaultdict(list)
         self.possible_versions = collections.defaultdict(set)
@@ -1598,7 +1598,7 @@ class SpackSolverSetup(object):
 
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
-        for pkg_name in possible_pkgs:
+        for pkg_name in self.pkgs:
             pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
@@ -1969,11 +1969,11 @@ class SpackSolverSetup(object):
         for pkg, variant, value in self.variant_values_from_specs:
             self.gen.fact(fn.variant_possible_value(pkg, variant, value))
 
-    def _facts_from_concrete_spec(self, spec, possible):
+    def _facts_from_concrete_spec(self, spec):
         # tell the solver about any installed packages that could
         # be dependencies (don't tell it about the others)
         h = spec.dag_hash()
-        if spec.name in possible and h not in self.seen_hashes:
+        if spec.name in self.pkgs and h not in self.seen_hashes:
             self.reusable_and_possible[h] = spec
             try:
                 # Only consider installed packages for repo we know
@@ -2003,12 +2003,12 @@ class SpackSolverSetup(object):
             # add the hash to the one seen so far
             self.seen_hashes.add(h)
 
-    def define_concrete_input_specs(self, specs, possible):
+    def define_concrete_input_specs(self, specs):
         # any concrete specs in the input spec list
         for input_spec in specs:
             for spec in input_spec.traverse():
                 if spec.concrete:
-                    self._facts_from_concrete_spec(spec, possible)
+                    self._facts_from_concrete_spec(spec)
 
     def setup(self, driver, specs, reuse=None):
         """Generate an ASP program with relevant constraints for specs.
@@ -2029,19 +2029,27 @@ class SpackSolverSetup(object):
 
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
-        possible = spack.package_base.possible_dependencies(
-            *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
+        self.pkgs = set(
+            spack.package_base.possible_dependencies(
+                *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
+            )
+        )
+
+        # TODO GBB: This only gets packages that can only appear as pure build deps,
+        # need to rethink it to get packages that can appear as link/run or as pure build deps
+        self.build_pkgs = self.pkgs - set(
+            spack.package_base.possible_dependencies(
+                *specs, virtuals=self.possible_virtuals, deptype=("link", "run")
+            )
         )
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
             missing_deps = [
-                str(d) for d in spec.traverse() if d.name not in possible and not d.virtual
+                str(d) for d in spec.traverse() if d.name not in self.pkgs and not d.virtual
             ]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
-
-        self.pkgs = set(possible)
 
         # driver is used by all the functions below to add facts and
         # rules to generate an ASP program.
@@ -2066,18 +2074,19 @@ class SpackSolverSetup(object):
         self.possible_compilers = self.generate_possible_compilers(specs)
 
         # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible)
+        self.build_version_dict()
         self.add_concrete_versions_from_specs(specs, version_provenance.spec)
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         self.gen.h1("Concrete input spec definitions")
-        self.define_concrete_input_specs(specs, possible)
+        self.define_concrete_input_specs(specs)
 
         if reuse:
+            # TODO GBB: somehow make build-only deps reusable
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
-                self._facts_from_concrete_spec(reusable_spec, possible)
+                self._facts_from_concrete_spec(reusable_spec)
 
         self.gen.h1("General Constraints")
         self.available_compilers()
@@ -2089,16 +2098,16 @@ class SpackSolverSetup(object):
         self.os_defaults(specs + dev_specs)
         self.target_defaults(specs + dev_specs)
 
-        self.virtual_providers()
-        self.provider_defaults()
-        self.provider_requirements()
-        self.external_packages()
+        self.virtual_providers()  # TODO GBB: maybe
+        self.provider_defaults()  # TODO GBB: maybe
+        self.provider_requirements()  # TODO GBB: need a way to get the mangled names into requirements
+        self.external_packages()  # TODO GBB: need to get the mangled names into the possible_external clauses
         self.flag_defaults()
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
             self.gen.h2("Package rules: %s" % pkg)
-            self.pkg_rules(pkg, tests=self.tests)
+            self.pkg_rules(pkg, tests=self.tests)  # TODO GBB: need to use mangled names
             self.gen.h2("Package preferences: %s" % pkg)
             self.preferred_variants(pkg)
             self.target_preferences(pkg)

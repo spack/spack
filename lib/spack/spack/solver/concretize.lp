@@ -240,7 +240,22 @@ do_not_impose(ID) :-
 % They're only triggered if the associated dependnecy condition holds.
 attr("depends_on", Package, Dependency, Type)
  :- dependency_holds(Package, Dependency, Type),
+    Type != "build",
     not virtual(Dependency).
+
+attr("depends_on", Package, Dependency, "build")
+ :- dependency_holds(Package, Dependency, "build"),
+    dependency_holds(Package, Dependency, Type),
+    Type != "build",
+    not virtual(Dependency).
+
+1 { attr("depends_on", Package, DepMangled, "build") : package_supplier(Dependency, DepMangled) } 1
+ :- dependency_holds(Package, Dependency, "build"),
+    not dependency_holds(Package, Dependency, "link"),
+    not dependency_holds(Package, Dependency, "run"),
+    not virtual(Dependency).
+
+package_supplier(Package, Package) :- node(Package).
 
 % every root must be a node
 attr("node", Package) :- attr("root", Package).
@@ -285,12 +300,32 @@ error(0, Msg) :- attr("node", Package),
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
+fn.name_mangled(name, 2)
+
+package_attr((Name, N), A1, ...) :- package_attr(Name, A1, ...), name_mangled(name, M, N)
+name_mangled(name, M, N) :- name_mangled(name, M), N=0..M.
+
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 attr("depends_on", Package, Provider, Type)
   :- dependency_holds(Package, Virtual, Type),
+     Type != "build",
      provider(Provider, Virtual),
      not external(Package).
+
+attr("depends_on", Package, Provider, "build")
+  :- dependency_holds(Package, Virtual, "build"),
+     dependency_holds(Package, Virtual, Type),
+     Type != "build",
+     provider(Provider, Virtual),
+     not external(Package).
+
+1 { attr("depends_on", Package, ProviderMangled, "build") : package_supplier(Provider, ProviderMangled) } 1
+ :- dependency_holds(Package, Virtual, "build"),
+    not dependency_holds(Package, Virtual, "link"),
+    not dependency_holds(Package, Virtual, "run"),
+    provider(Provider, Virtual),
+    not external(Package).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
 attr("virtual_node", Virtual)
