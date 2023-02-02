@@ -60,8 +60,9 @@ spack:
       version: [21.3.8]
 
   specs:
-  - kokkos +rocm
-  - kokkos +cuda +wrapper ^cuda@11.7
+  - kokkos +rocm amdgpu_target=gfx90a
+  - kokkos +wrapper +cuda cuda_arch=80 ^cuda@11.7
+  - raja +cuda cuda_arch=80 ^cuda@11.7
 
   mirrors: { "mirror": "s3://spack-binaries/develop/gpu-tests" }
 
@@ -107,6 +108,13 @@ spack:
 
       - match:
         - kokkos +cuda cuda_arch=80
+        runner-attributes:
+          tags: [ "cuda-11.7", "a100" ]
+          variables:
+            CI_JOB_SIZE: large
+
+      - match:
+        - raja +cuda cuda_arch=80
         runner-attributes:
           tags: [ "cuda-11.7", "a100" ]
           variables:
