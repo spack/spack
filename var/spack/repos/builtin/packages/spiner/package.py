@@ -14,7 +14,7 @@ class Spiner(CMakePackage, CudaPackage):
     url = "https://github.com/lanl/spiner/archive/refs/tags/1.4.0.tar.gz"
     git = "https://github.com/lanl/spiner.git"
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("main", branch="main")
     version("1.6.0", sha256="afa5526d87c78c1165ead06c09c5c2b9e4a913687443e5adff7b709ea4dd7edf")

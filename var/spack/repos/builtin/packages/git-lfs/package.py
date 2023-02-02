@@ -22,7 +22,7 @@ class GitLfs(MakefilePackage):
 
     executables = ["^git-lfs$"]
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     version("3.1.2", sha256="5c9bc449068d0104ea124c25f596af16da85e7b5bf256bc544d8ce5f4fe231f2")
     version("2.13.3", sha256="f8bd7a06e61e47417eb54c3a0db809ea864a9322629b5544b78661edab17b950")

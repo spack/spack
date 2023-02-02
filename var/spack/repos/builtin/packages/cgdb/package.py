@@ -9,7 +9,7 @@ from spack.package import *
 class Cgdb(AutotoolsPackage):
     """A curses front-end to GDB"""
 
-    maintainers = ["tuxfan"]
+    maintainers("tuxfan")
     homepage = "https://cgdb.github.io"
     url = "https://cgdb.me/files/cgdb-0.7.1.tar.gz"
     git = "https://github.com/cgdb/cgdb.git"

@@ -14,7 +14,7 @@ class PyTransformers(PythonPackage):
     homepage = "https://github.com/huggingface/transformers"
     pypi = "transformers/transformers-2.8.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("4.24.0", sha256="486f353a8e594002e48be0e2aba723d96eda839e63bfe274702a4b5eda85559b")
     version("4.6.1", sha256="83dbff763b7e7dc57cbef1a6b849655d4fcab6bffdd955c5e8bea12a4f76dc10")

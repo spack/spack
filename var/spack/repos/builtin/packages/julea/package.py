@@ -17,7 +17,7 @@ class Julea(MesonPackage):
     git = "https://github.com/wr-hamburg/julea.git"
 
     tags = ["HPC", "I/O", "storage"]
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version("master", branch="master")
 

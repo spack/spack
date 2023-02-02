@@ -12,7 +12,7 @@ class Mpilander(CMakePackage):
     homepage = "https://github.com/MPILander/MPILander"
     git = "https://github.com/MPILander/MPILander.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="master")
 

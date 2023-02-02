@@ -29,7 +29,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     url = "https://gasnet.lbl.gov/EX/GASNet-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/gasnet.git"
 
-    maintainers = ["PHHargrove", "bonachea"]
+    maintainers("PHHargrove", "bonachea")
 
     tags = ["e4s", "ecp"]
 

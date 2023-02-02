@@ -15,7 +15,7 @@ class Proj(AutotoolsPackage):
     homepage = "https://proj.org/"
     url = "https://download.osgeo.org/proj/proj-7.2.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.

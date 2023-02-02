@@ -16,7 +16,7 @@ class Sio(CMakePackage):
     homepage = "https://github.com/iLCSoft/SIO"
     git = "https://github.com/iLCSoft/SIO.git"
 
-    maintainers = ["vvolkl", "tmadlener"]
+    maintainers("vvolkl", "tmadlener")
 
     version("master", branch="master")
     version("0.1", sha256="0407c0daeae53660c0562f9302a220f72ab51547050cd9fe9113b995804ab4b4")

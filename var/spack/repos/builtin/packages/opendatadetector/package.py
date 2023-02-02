@@ -13,7 +13,7 @@ class Opendatadetector(CMakePackage):
     homepage = "https://gitlab.cern.ch/acts/OpenDataDetector.git"
     git = "https://gitlab.cern.ch/acts/OpenDataDetector.git"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     tags = ["hep"]
 

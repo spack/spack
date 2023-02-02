@@ -17,7 +17,7 @@ class QtDeclarative(CMakePackage):
     url = "https://github.com/qt/qtdeclarative/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtdeclarative/tags"
 
-    maintainers = ["wdconinc", "sethrj"]
+    maintainers("wdconinc", "sethrj")
 
     version("6.3.2", sha256="140a3c4973d56d79abf5fea9ae5cf13b3ef7693ed1d826b263802926a4ba84b6")
     version("6.3.1", sha256="1606723c2cc150c9b7339fd33ca5e2ca00d6e738e119c52a1d37ca12d3329ba9")

@@ -18,7 +18,7 @@ class E3smKernels(MakefilePackage):
     url = "https://github.com/E3SM-Project/codesign-kernels/archive/refs/tags/v1.0.tar.gz"
     git = "https://github.com/E3SM-Project/codesign-kernels.git"
 
-    maintainers = ["sarats", "philipwjones"]
+    maintainers("sarats", "philipwjones")
 
     version("master", branch="master")
     version("1.0", sha256="358249785ba9f95616feecbb6f37f7694646568499c11b2094c9233999c6cc95")

@@ -13,7 +13,7 @@ class Fdupes(AutotoolsPackage):
     homepage = "https://github.com/adrianlopezroche/fdupes"
     url = "https://github.com/adrianlopezroche/fdupes/releases/download/v2.1.2/fdupes-2.1.2.tar.gz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version("2.1.2", sha256="cd5cb53b6d898cf20f19b57b81114a5b263cc1149cd0da3104578b083b2837bd")
 

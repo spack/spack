@@ -15,7 +15,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Package information
     homepage = "https://www.qmcpack.org/"
     git = "https://github.com/QMCPACK/qmcpack.git"
-    maintainers = ["ye-luo"]
+    maintainers("ye-luo")
     tags = ["ecp", "ecp-apps"]
 
     # This download method is untrusted, and is not recommended by the

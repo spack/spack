@@ -19,7 +19,7 @@ class PyDgl(CMakePackage, PythonExtension):
     homepage = "https://www.dgl.ai/"
     git = "https://github.com/dmlc/dgl.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
     version("0.4.3", tag="0.4.3", submodules=True)

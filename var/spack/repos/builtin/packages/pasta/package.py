@@ -13,7 +13,7 @@ class Pasta(PythonPackage):
 
     homepage = "https://github.com/smirarab/pasta"
     git = "https://github.com/smirarab/pasta"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("1.9.0", commit="370ae2d21ef461bcb2cef7c20cb5a4a1db7ff99d")
 

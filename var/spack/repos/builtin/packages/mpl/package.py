@@ -12,7 +12,7 @@ class Mpl(CMakePackage):
     homepage = "https://rabauke.github.io/mpl/html/"
     git = "https://github.com/rabauke/mpl.git"
     url = "https://github.com/rabauke/mpl/archive/refs/tags/v0.2.1.tar.gz"
-    maintainers = ["rabauke"]
+    maintainers("rabauke")
 
     version("develop", branch="master")
     version("0.2.1", tag="v0.2.1")

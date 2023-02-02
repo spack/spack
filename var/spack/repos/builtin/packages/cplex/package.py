@@ -18,7 +18,7 @@ class Cplex(Package):
     homepage = "https://www.ibm.com/products/ilog-cplex-optimization-studio"
     manual_download = True
 
-    maintainers = ["robgics"]
+    maintainers("robgics")
 
     version(
         "12.10.0", "cd530eb9c6d446bd18b5dc5a3d61070bfad92c3efd6565d2d8e31a2acfb496f7", expand=False

@@ -19,7 +19,7 @@ class Pdftk(MakefilePackage):
     # https://sources.debian.org/src/pdftk/
     # http://archive.ubuntu.com/ubuntu/pool/universe/p/pdftk/pdftk_2.02.orig.tar.gz
 
-    maintainers = ["citibeth"]
+    maintainers("citibeth")
 
     version("2.02", sha256="118f6a25fd3acaafb58824dce6f97cdc07e56050e666b90e4c4ef426ea37b8c1")
 

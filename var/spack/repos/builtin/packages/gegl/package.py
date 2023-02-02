@@ -16,7 +16,7 @@ class Gegl(MesonPackage):
     homepage = "https://gegl.org/"
     url = "https://download.gimp.org/gegl/0.4/gegl-0.4.40.tar.xz"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     version("0.4.40", sha256="cdde80d15a49dab9a614ef98f804c8ce6e4cfe1339a3c240c34f3fb45436b85d")
     version("0.4.38", sha256="e4a33c8430a5042fba8439b595348e71870f0d95fbf885ff553f9020c1bed750")

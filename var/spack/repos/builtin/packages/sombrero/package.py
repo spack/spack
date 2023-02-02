@@ -36,7 +36,7 @@ class Sombrero(MakefilePackage):
 
     depends_on("mpi")
 
-    maintainers = ["mmesiti", "edbennett"]
+    maintainers("mmesiti", "edbennett")
 
     def edit(self, spec, prefix):
         # Make the `sombrero.sh` driver relocatable

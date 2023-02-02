@@ -19,7 +19,7 @@ class Orca(Package):
 
     homepage = "https://cec.mpg.de"
     url = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
-    maintainers = ["snehring"]
+    maintainers("snehring")
     manual_download = True
 
     version(

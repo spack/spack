@@ -11,7 +11,7 @@ class Libcint(CMakePackage):
 
     homepage = "https://github.com/sunqm/libcint"
     url = "https://github.com/sunqm/libcint/archive/v3.0.4.tar.gz"
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions

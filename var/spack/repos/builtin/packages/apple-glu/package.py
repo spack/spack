@@ -12,7 +12,7 @@ class AppleGlu(Package):
 
     homepage = ""
 
-    maintainers = ["aphecetche"]
+    maintainers("aphecetche")
 
     has_code = False
 

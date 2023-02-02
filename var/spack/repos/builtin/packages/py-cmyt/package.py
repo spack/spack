@@ -14,7 +14,7 @@ class PyCmyt(PythonPackage):
     pypi = "cmyt/cmyt-1.0.4.tar.gz"
     git = "https://github.com/yt-project/cmyt.git"
 
-    maintainers = ["charmoniumq"]
+    maintainers("charmoniumq")
 
     version("main", branch="main")
 

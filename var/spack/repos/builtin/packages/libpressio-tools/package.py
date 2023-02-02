@@ -13,7 +13,7 @@ class LibpressioTools(CMakePackage):
     url = "https://github.com/robertu94/pressio-tools/archive/refs/tags/0.0.15.tar.gz"
     git = "https://github.com/robertu94/pressio-tools"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
     tags = ["e4s"]
 
     version("master", branch="master")

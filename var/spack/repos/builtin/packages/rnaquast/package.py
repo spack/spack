@@ -19,7 +19,7 @@ class Rnaquast(Package):
     homepage = "https://github.com/ablab/rnaquast"
     url = "https://github.com/ablab/rnaquast/archive/refs/tags/v2.2.0.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("2.2.0", sha256="117dff9d9c382ba74b7b0ff24bc7b95b9ca6aa701ebf8afd22943aa54e382334")
 

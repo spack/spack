@@ -14,7 +14,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gettext/"
     gnu_mirror_path = "gettext/gettext-0.20.1.tar.xz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     executables = [r"^gettext$"]
 

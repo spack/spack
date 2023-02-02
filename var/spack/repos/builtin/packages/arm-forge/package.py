@@ -17,7 +17,7 @@ class ArmForge(Package):
     through to complex parallel HPC codes with MPI, OpenMP, threads or CUDA."""
 
     homepage = "https://www.arm.com/products/development-tools/server-and-hpc/forge"
-    maintainers = ["NickRF"]
+    maintainers("NickRF")
 
     # TODO: this mess should be fixed as soon as a way to parametrize/constrain
     #       versions (and checksums) based on the target platform shows up

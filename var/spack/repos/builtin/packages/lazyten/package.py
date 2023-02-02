@@ -15,7 +15,7 @@ class Lazyten(CMakePackage):
     url = "https://github.com/lazyten/lazyten/archive/v0.4.1.tar.gz"
     git = "https://github.com/lazyten/lazyten.git"
 
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions

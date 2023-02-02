@@ -238,7 +238,7 @@ class HasManyMetadataAttributes:
     url = "https://example.com/foo.tar.gz"
     git = "https://example.com/foo/bar.git"
 
-    maintainers = ["alice", "bob"]
+    maintainers("alice", "bob")
     tags = ["foo", "bar", "baz"]
 
     depends_on("foo")

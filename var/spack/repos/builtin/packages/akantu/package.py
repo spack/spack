@@ -19,7 +19,7 @@ class Akantu(CMakePackage):
     url = "https://gitlab.com/akantu/akantu/-/archive/v3.0.0/akantu-v3.0.0.tar.gz"
     git = "https://gitlab.com/akantu/akantu.git"
 
-    maintainers = ["nrichart"]
+    maintainers("nrichart")
 
     version("master", branch="master")
     version("3.0.0", sha256="7e8f64e25956eba44def1b2d891f6db8ba824e4a82ff0d51d6b585b60ab465db")

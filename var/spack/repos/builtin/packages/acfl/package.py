@@ -126,7 +126,7 @@ class Acfl(Package):
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/arm-allinea-studio"
     url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-20.04_aarch64.tar"
 
-    maintainers = ["annop-w"]
+    maintainers("annop-w")
 
     # Build Versions: establish OS for URL
     acfl_os = get_os()

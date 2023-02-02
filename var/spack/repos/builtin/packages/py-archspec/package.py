@@ -13,7 +13,7 @@ class PyArchspec(PythonPackage):
     homepage = "https://archspec.readthedocs.io/en/latest/"
     pypi = "archspec/archspec-0.1.1.tar.gz"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("0.1.3", sha256="a1aa7abde4d4ce38d115dfd572584906fa8e192e3272b8897e7b4fa1213ec27c")
     version("0.1.2", sha256="8bb998370f0dc3e509d57c13724ab4109d761fd74af20da26fbe513b0fe01c46")

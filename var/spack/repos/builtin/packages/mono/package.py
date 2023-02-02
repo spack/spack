@@ -15,7 +15,7 @@ class Mono(AutotoolsPackage):
 
     homepage = "https://www.mono-project.com/"
     url = "https://download.mono-project.com/sources/mono/mono-5.0.1.1.tar.bz2"
-    maintainers = ["grospelliergilles"]
+    maintainers("grospelliergilles")
 
     # /usr/share/.mono/keypairs needs to exist or be able to be
     # created, e.g. https://github.com/gentoo/dotnet/issues/6

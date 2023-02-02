@@ -15,7 +15,7 @@ class Rocminfo(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="master")
 

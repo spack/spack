@@ -16,7 +16,7 @@ class Opencarp(CMakePackage):
     homepage = "https://www.opencarp.org"
     git = "https://git.opencarp.org/openCARP/openCARP.git"
 
-    maintainers = ["MarieHouillon"]
+    maintainers("MarieHouillon")
 
     version("12.0", commit="a34c11af", submodules=False, no_cache=True, preferred=True)
     version("11.0", commit="fd8419d5", submodules=False, no_cache=True)

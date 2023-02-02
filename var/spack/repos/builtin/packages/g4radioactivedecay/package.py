@@ -15,7 +15,7 @@ class G4radioactivedecay(Package):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
     # Only versions relevant to Geant4 releases built by spack are added
     version("5.6", sha256="3886077c9c8e5a98783e6718e1c32567899eeb2dbb33e402d4476bc2fe4f0df1")

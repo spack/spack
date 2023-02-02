@@ -15,7 +15,7 @@ class PyUproot4(PythonPackage):
     git = "https://github.com/scikit-hep/uproot4"
     url = "https://github.com/scikit-hep/uproot4/archive/0.0.27.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     tags = ["hep"]
 

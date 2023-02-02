@@ -24,7 +24,7 @@ class GaussianView(Package):
     homepage = "https://gaussian.com/gaussview6/"
     manual_download = True
 
-    maintainers = ["antoniokaust", "dev-zero"]
+    maintainers("antoniokaust", "dev-zero")
 
     version(
         "6.1.6",

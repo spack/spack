@@ -16,7 +16,7 @@ class Reprimand(MesonPackage):
     homepage = "https://wokast.github.io/RePrimAnd/index.html"
     url = "https://github.com/wokast/RePrimAnd/archive/refs/tags/v1.3.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("develop", git="https://github.com/wokast/RePrimAnd", branch="public")
     version("1.4", sha256="260730696175fa21d35d1a92df2c68b69243bb617083c82616efcb4720d557e8")

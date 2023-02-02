@@ -17,7 +17,7 @@ class Grass(AutotoolsPackage):
     list_url = "https://grass.osgeo.org/download/software/sources/"
     git = "https://github.com/OSGeo/grass.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("8.2.0", sha256="621c3304a563be19c0220ae28f931a5e9ba74a53218c5556cd3f7fbfcca33a80")

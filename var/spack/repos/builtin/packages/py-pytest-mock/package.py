@@ -12,7 +12,7 @@ class PyPytestMock(PythonPackage):
     homepage = "https://github.com/pytest-dev/pytest-mock"
     pypi = "pytest-mock/pytest-mock-1.11.1.tar.gz"
 
-    maintainers = ["thomas-bouvier"]
+    maintainers("thomas-bouvier")
 
     version("3.10.0", sha256="fbbdb085ef7c252a326fd8cdcac0aa3b1333d8811f131bdcc701002e1be7ed4f")
     version("1.11.1", sha256="f1ab8aefe795204efe7a015900296d1719e7bf0f4a0558d71e8599da1d1309d0")

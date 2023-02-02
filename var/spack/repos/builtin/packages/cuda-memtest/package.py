@@ -18,7 +18,7 @@ class CudaMemtest(CMakePackage):
     homepage = "https://github.com/ComputationalRadiationPhysics/cuda_memtest"
     git = "https://github.com/ComputationalRadiationPhysics/cuda_memtest.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("master", branch="dev")
 

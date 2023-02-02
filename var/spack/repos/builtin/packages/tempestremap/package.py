@@ -18,7 +18,7 @@ class Tempestremap(AutotoolsPackage):
     homepage = "https://github.com/ClimateGlobalChange/tempestremap"
     url = "https://github.com/ClimateGlobalChange/tempestremap/archive/v2.0.5.tar.gz"
 
-    maintainers = ["iulian787", "vijaysm", "paullric"]
+    maintainers("iulian787", "vijaysm", "paullric")
 
     version("2.0.5", sha256="8618f5cbde450922efa1d77e67b062c557788b0cf4304adca30237afe3ade887")
     version("2.0.4", sha256="8349eeb604e97b13d2ecde8626a69e579a7af70ad0e8a6925a8bb4306a4963a4")

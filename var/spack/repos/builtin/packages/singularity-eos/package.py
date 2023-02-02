@@ -16,7 +16,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     git = "https://github.com/lanl/singularity-eos.git"
     url = "https://github.com/lanl/singularity-eos/archive/refs/tags/release-1.6.1.tar.gz"
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("main", branch="main")
     version("1.6.2", sha256="9c85fca679139a40cc9c72fcaeeca78a407cc1ca184734785236042de364b942")

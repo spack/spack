@@ -12,7 +12,7 @@ class Bart(MakefilePackage, CudaPackage):
     homepage = "https://mrirecon.github.io/bart/"
     url = "https://github.com/mrirecon/bart/archive/v0.5.00.tar.gz"
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     version("0.7.00", sha256="a16afc4b632c703d95b5c34e47acd82fafc19f51f9aff442373eecfef08bfc41")
     version("0.6.00", sha256="dbbd33d1e3ed3324fe21f90a3b62cb51765fe369f21df100b46a32004928f18d")

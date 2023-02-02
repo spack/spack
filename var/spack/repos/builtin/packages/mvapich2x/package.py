@@ -23,7 +23,7 @@ class Mvapich2x(AutotoolsPackage):
     homepage = "https://mvapich.cse.ohio-state.edu"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
 
-    maintainers = ["natshineman", "harisubramoni", "ndcontini"]
+    maintainers("natshineman", "harisubramoni", "ndcontini")
 
     version(
         "2.3",

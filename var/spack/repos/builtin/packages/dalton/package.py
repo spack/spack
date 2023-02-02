@@ -15,7 +15,7 @@ class Dalton(CMakePackage):
     homepage = "https://daltonprogram.org"
     git = "https://gitlab.com/dalton/dalton.git"
 
-    maintainers = ["foeroyingur"]
+    maintainers("foeroyingur")
 
     version("master", branch="master", submodules=True)
     version("2020.0", tag="2020.0", submodules=True)

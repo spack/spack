@@ -12,7 +12,7 @@ class PyDatacube(PythonPackage):
     homepage = "https://github.com/opendatacube/datacube-core"
     pypi = "datacube/datacube-1.8.3.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("1.8.3", sha256="d1e1a49c615fdaebf6e6008da7f925bc09e9d7bf94f259a1c596d266d1c36649")
 

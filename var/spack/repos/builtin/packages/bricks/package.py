@@ -19,7 +19,7 @@ class Bricks(CMakePackage):
     test_requires_compiler = True
 
     # List of GitHub accounts to notify when the package is updated.
-    maintainers = ["ztuowen", "drhansj"]
+    maintainers("ztuowen", "drhansj")
 
     version("r0.1", branch="r0.1")
 

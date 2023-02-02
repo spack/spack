@@ -14,7 +14,7 @@ class Genfit(CMakePackage):
     url = "https://github.com/GenFit/GenFit/archive/02-00-00.tar.gz"
     git = "https://github.com/GenFit/GenFit.git"
 
-    maintainers = ["mirguest"]
+    maintainers("mirguest")
 
     tags = ["hep"]
 

@@ -16,7 +16,7 @@ class HipRocclr(CMakePackage):
     git = "https://github.com/ROCm-Developer-Tools/ROCclr.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
 
     def url_for_version(self, version):
         # Fix up a typo in the 3.5.0 release.

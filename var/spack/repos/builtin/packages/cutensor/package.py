@@ -24,7 +24,7 @@ class Cutensor(Package):
 
     homepage = "https://developer.nvidia.com/cutensor"
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
     url = "cutensor"
 
     for ver, packages in _versions.items():

@@ -20,7 +20,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/ORNL/TASMANIAN.git"
 
     tags = ["e4s"]
-    maintainers = ["mkstoyanov"]
+    maintainers("mkstoyanov")
 
     version("develop", branch="master")
 

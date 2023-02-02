@@ -18,7 +18,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     homepage = "http://www.mfem.org"
     git = "https://github.com/mfem/mfem.git"
 
-    maintainers = ["v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86"]
+    maintainers("v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86")
 
     test_requires_compiler = True
 

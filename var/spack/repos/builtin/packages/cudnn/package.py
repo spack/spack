@@ -240,7 +240,7 @@ class Cudnn(Package):
     #     https://developer.nvidia.com/rdp/cudnn-archive
     # Note that download links don't work from command line,
     # need to use modified URLs like in url_for_version.
-    maintainers = ["adamjstewart", "bvanessen"]
+    maintainers("adamjstewart", "bvanessen")
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())

@@ -18,7 +18,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
     url = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libroctracer64"]
 
     version("5.3.3", sha256="f2cb1e6bb69ea1a628c04f984741f781ae1d8498dc58e15795bb03015f924d13")

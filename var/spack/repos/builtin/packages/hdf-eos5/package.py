@@ -52,7 +52,7 @@ class HdfEos5(AutotoolsPackage):
 
     conflicts("~static", when="~shared", msg="At least one of +static or +shared must be set")
 
-    maintainers = ["payerle"]
+    maintainers("payerle")
 
     # Build dependencies
     depends_on("hdf5+hl")

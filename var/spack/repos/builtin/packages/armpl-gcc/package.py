@@ -145,7 +145,7 @@ class ArmplGcc(Package):
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
     url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-1/ubuntu-20/arm-performance-libraries_22.1_Ubuntu-20.04_gcc-11.2.tar"
 
-    maintainers = ["annop-w"]
+    maintainers("annop-w")
 
     for ver, packages in _versions.items():
         key = "{0}".format(get_os())

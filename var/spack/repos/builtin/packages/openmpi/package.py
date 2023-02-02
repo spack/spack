@@ -32,7 +32,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    maintainers = ["hppritcha", "naughtont3"]
+    maintainers("hppritcha", "naughtont3")
 
     executables = ["^ompi_info$"]
 

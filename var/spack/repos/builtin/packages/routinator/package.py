@@ -12,7 +12,7 @@ class Routinator(Package):
     homepage = "https://nlnetlabs.nl/projects/rpki/about/"
     url = "https://github.com/NLnetLabs/routinator/archive/refs/tags/v0.11.2.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     version(
         "0.11.2",

@@ -51,7 +51,7 @@ class Visit(CMakePackage):
 
     tags = ["radiuss"]
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
 
     extendable = True
 

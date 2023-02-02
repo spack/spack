@@ -21,7 +21,7 @@ class Truchas(CMakePackage):
     url = "https://gitlab.com/truchas/truchas/-/archive/22.04.1/truchas-22.04.1.tar.bz2"
     git = "https://gitlab.com/truchas/truchas.git"
 
-    maintainers = ["pbrady"]
+    maintainers("pbrady")
 
     version("develop", branch="master")
     version("22.04.1", sha256="ed2000f27ee5c4bd3024063a374023878c61e8a3c76c37542fffd341d1226dc1")

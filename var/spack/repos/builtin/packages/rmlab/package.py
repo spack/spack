@@ -12,7 +12,7 @@ class Rmlab(CMakePackage):
     homepage = "https://github.com/ax3l/lines-are-beautiful"
     git = "https://github.com/ax3l/lines-are-beautiful.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="develop")
 

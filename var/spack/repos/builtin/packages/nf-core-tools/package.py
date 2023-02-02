@@ -12,7 +12,7 @@ class NfCoreTools(PythonPackage):
 
     homepage = "https://nf-co.re/tools"
     pypi = "nf-core/nf-core-2.7.1.tar.gz"
-    maintainers = ["marcodelapierre"]
+    maintainers("marcodelapierre")
 
     version("2.7.2", sha256="585be3908b9b93ee9263b99dd779818d48d51f6e7f44a42aa79e626617e7af48")
     version("2.7.1", sha256="90de62390314ef3141cee700667f017aa65c0346e40704a0f70d0662abcfb0db")

@@ -12,7 +12,7 @@ class H5bench(CMakePackage):
     homepage = "https://github.com/hpc-io/h5bench"
     git = "https://github.com/hpc-io/h5bench.git"
 
-    maintainers = ["jeanbez", "sbyna"]
+    maintainers("jeanbez", "sbyna")
 
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)

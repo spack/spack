@@ -9,7 +9,7 @@ from spack.package import *
 class Charliecloud(AutotoolsPackage):
     """Lightweight user-defined software stacks for HPC."""
 
-    maintainers = ["j-ogas", "reidpr"]
+    maintainers("j-ogas", "reidpr")
     homepage = "https://hpc.github.io/charliecloud"
     url = "https://github.com/hpc/charliecloud/releases/download/v0.18/charliecloud-0.18.tar.gz"
     git = "https://github.com/hpc/charliecloud.git"

@@ -36,7 +36,7 @@ class Pythia6(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["gartung", "chissg"]
+    maintainers("gartung", "chissg")
 
     version(
         "6.4.28",

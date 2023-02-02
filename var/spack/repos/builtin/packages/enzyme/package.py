@@ -19,7 +19,7 @@ class Enzyme(CMakePackage):
     list_url = "https://github.com/wsmoses/Enzyme/releases"
     git = "https://github.com/wsmoses/Enzyme"
 
-    maintainers = ["wsmoses", "vchuravy", "tgymnich"]
+    maintainers("wsmoses", "vchuravy", "tgymnich")
 
     root_cmakelists_dir = "enzyme"
 

@@ -14,7 +14,7 @@ class Spath(CMakePackage):
     git = "https://github.com/ecp-veloc/spath.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
     version("0.2.0", sha256="2de8a25547b53ef064664d79b543141bc3020219f40ff0e1076f676e13a9e77a")

@@ -13,7 +13,7 @@ class Krims(CMakePackage):
     url = "https://github.com/lazyten/krims/archive/v0.2.1.tar.gz"
     git = "https://github.com/lazyten/krims.git"
 
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions

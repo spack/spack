@@ -14,7 +14,7 @@ class Trexio(AutotoolsPackage):
     url = "https://github.com/TREX-CoE/trexio/releases/download/v2.2.0/trexio-2.2.0.tar.gz"
 
     # notify when the package is updated.
-    maintainers = ["q-posev", "scemama"]
+    maintainers("q-posev", "scemama")
 
     version("master", branch="master")
     version("2.2.0", sha256="e6340c424fcea18ae0b643a5707e16005c7576ee21a5aac679fbc132d70b36d9")

@@ -14,7 +14,7 @@ class FenicsUfcx(CMakePackage):
     homepage = "https://github.com/FEniCS/ffcx"
     git = "https://github.com/FEniCS/ffcx.git"
     url = "https://github.com/FEniCS/ffcx/archive/v0.4.2.tar.gz"
-    maintainers = ["ma595", "jhale"]
+    maintainers("ma595", "jhale")
 
     version("main", branch="main")
     version(

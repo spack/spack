@@ -16,7 +16,7 @@ class Adios2(CMakePackage, CudaPackage):
     url = "https://github.com/ornladios/ADIOS2/archive/v2.8.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
 
-    maintainers = ["ax3l", "chuckatkins", "vicentebolea", "williamfgc"]
+    maintainers("ax3l", "chuckatkins", "vicentebolea", "williamfgc")
 
     tags = ["e4s"]
 

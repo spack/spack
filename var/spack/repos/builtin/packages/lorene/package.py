@@ -21,7 +21,7 @@ class Lorene(MakefilePackage):
     homepage = "https://lorene.obspm.fr/index.html"
     cvs = ":pserver:anonymous:anonymous@octane.obspm.fr:/cvsroot%module=Lorene"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("2021.4.22", date="2021-04-22")
 

@@ -18,7 +18,7 @@ class Spack(Package):
     homepage = "https://spack.io/"
     git = "https://github.com/spack/spack.git"
     url = "https://github.com/spack/spack/releases/download/v0.16.2/spack-0.16.2.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("develop", branch="develop")
     version("0.18.1", sha256="d1491374ce280653ee0bc48cd80527d06860b886af8b0d4a7cf1d0a2309191b7")

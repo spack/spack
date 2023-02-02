@@ -16,7 +16,7 @@ class OmeModel(CMakePackage):
     url = "https://gitlab.com/codelibre/ome/ome-model/-/archive/v6.0.0/ome-model-v6.0.0.tar.gz"
     git = "https://gitlab.com/codelibre/ome/ome-model.git"
 
-    maintainers = ["omsai"]
+    maintainers("omsai")
 
     version("master", branch="master")
     version("6.0.0", sha256="d6644ff722411d3a8ac9f26a49c1afda30e4d4102e37b31593d2a9fdc8f96700")

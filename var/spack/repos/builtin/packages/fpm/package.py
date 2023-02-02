@@ -21,7 +21,7 @@ class Fpm(Package):
     homepage = "https://github.com/fortran-lang/fpm"
     url = "https://github.com/fortran-lang/fpm/releases/download/v0.4.0/fpm-0.4.0.zip"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("0.7.0", "536dec7d4502221734683b15e6ff64a6ab3f9910df122d18f851c9a68711f91f")
     version("0.6.0", "365516f66b116a112746af043e8eccb3d854d6feb1fad0507c570433dacbf7be")

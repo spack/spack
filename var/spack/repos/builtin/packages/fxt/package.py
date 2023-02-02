@@ -19,7 +19,7 @@ class Fxt(AutotoolsPackage):
     homepage = "http://savannah.nongnu.org/projects/fkt"
     url = "http://download.savannah.nongnu.org/releases/fkt/fxt-0.3.14.tar.gz"
 
-    maintainers = ["nfurmento", "sthibaul"]
+    maintainers("nfurmento", "sthibaul")
 
     version("0.3.14", sha256="317d8d93175cd9f27ec43b8390b6d29dc66114f06aa74f2329847d49baaaebf2")
     version("0.3.5", sha256="3c0b33c82a01c4fb710c53ee9fc2c803314beba6fb60c397e13e874811e34a22")

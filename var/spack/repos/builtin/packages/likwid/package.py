@@ -22,7 +22,7 @@ class Likwid(Package):
     homepage = "https://hpc.fau.de/research/tools/likwid/"
     url = "https://github.com/RRZE-HPC/likwid/archive/v5.0.0.tar.gz"
     git = "https://github.com/RRZE-HPC/likwid.git"
-    maintainers = ["TomTheBear"]
+    maintainers("TomTheBear")
 
     version("5.2.2", sha256="7dda6af722e04a6c40536fc9f89766ce10f595a8569b29e80563767a6a8f940e")
     version("5.2.1", sha256="1b8e668da117f24302a344596336eca2c69d2bc2f49fa228ca41ea0688f6cbc2")

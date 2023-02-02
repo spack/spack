@@ -16,7 +16,7 @@ class DxtExplorer(PythonPackage):
     git = "https://github.com/hpc-io/dxt-explorer"
     pypi = "dxt-explorer/dxt-explorer-0.3.tar.gz"
 
-    maintainers = ["jeanbez", "sbyna"]
+    maintainers("jeanbez", "sbyna")
 
     version("develop", branch="develop")
 

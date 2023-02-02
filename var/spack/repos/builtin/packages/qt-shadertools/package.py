@@ -19,7 +19,7 @@ class QtShadertools(CMakePackage):
     url = "https://github.com/qt/qtshadertools/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtshadertools/tags"
 
-    maintainers = ["wdconinc", "sethrj"]
+    maintainers("wdconinc", "sethrj")
 
     version("6.3.2", sha256="ec73303e6c91cddae402b1ac0d18a0d35619f348785514be30cec2791cd63faa")
     version("6.3.1", sha256="1b8b18b6ece4d92d0bf60a3b2a9924b45c369968cc77217796434ac7c5c6628f")

@@ -19,10 +19,7 @@ class Genie(Package):
 
     tags = ["neutrino", "hep"]
 
-    maintainers = [
-        # maintainer of this recipe, not affiliated with the GENIE collaboration
-        "davehadley",
-    ]
+    maintainers("davehadley")
 
     version("master", branch="master")
     version("3.0.6", sha256="ab56ea85d0c1d09029254365bfe75a1427effa717389753b9e0c1b6c2eaa5eaf")

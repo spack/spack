@@ -13,7 +13,7 @@ class PyTfdlpack(CMakePackage, PythonExtension):
     homepage = "https://github.com/VoVAllen/tf-dlpack"
     git = "https://github.com/VoVAllen/tf-dlpack.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
     version("0.1.1", tag="v0.1.1", submodules=True)

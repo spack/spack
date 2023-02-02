@@ -13,7 +13,7 @@ class PikaAlgorithms(CMakePackage):
     homepage = "https://github.com/pika-org/pika-algorithms/"
     url = "https://github.com/pika-org/pika-algorithms/archive/0.0.0.tar.gz"
     git = "https://github.com/pika-org/pika-algorithms.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
+    maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
     version("0.1.0", sha256="64da008897dfa7373155595c46d2ce6b97a8a3cb5bea33ae7f2d1ff359f0d9b6")
     version("main", branch="main")

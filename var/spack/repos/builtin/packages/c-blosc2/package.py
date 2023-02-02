@@ -14,7 +14,7 @@ class CBlosc2(CMakePackage):
     url = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.0.1.tar.gz"
     git = "https://github.com/Blosc/c-blosc2.git"
 
-    maintainers = ["ax3l", "robert-mijakovic"]
+    maintainers("ax3l", "robert-mijakovic")
 
     version("develop", branch="master")
     version("2.2.0", sha256="66f9977de26d6bc9ea1c0e623d873c3225e4fff709aa09b3335fd09d41d57c0e")

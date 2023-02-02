@@ -22,7 +22,7 @@ class Charmpp(Package):
     url = "https://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
     git = "https://github.com/UIUC-PPL/charm.git"
 
-    maintainers = ["matthiasdiener"]
+    maintainers("matthiasdiener")
 
     version("main", branch="main")
 

@@ -19,7 +19,7 @@ class GridlabD(AutotoolsPackage):
     homepage = "https://www.gridlabd.org/"
     git = "https://github.com/gridlab-d/gridlab-d"
 
-    maintainers = ["0t1s1", "yee29", "afisher1"]
+    maintainers("0t1s1", "yee29", "afisher1")
 
     # Using only develop as other branches and releases did not build properly.
     version("develop", branch="develop")

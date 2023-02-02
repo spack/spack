@@ -22,7 +22,7 @@ class RReproducible(RPackage):
 
     cran = "reproducible"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.2.10", sha256="fcee3aeb9d38c561c95df8663614ff0ed91a871719730766171b4ed19c82f729")
     version("1.2.8", sha256="6f453016404f6a2a235cb4d951a29aa7394dc3bd0b9cfc338dc85fb3d5045dd5")

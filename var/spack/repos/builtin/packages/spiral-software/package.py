@@ -15,7 +15,7 @@ class SpiralSoftware(CMakePackage):
     url = "https://github.com/spiral-software/spiral-software/archive/refs/tags/8.4.0.tar.gz"
     git = "https://github.com/spiral-software/spiral-software.git"
 
-    maintainers = ["spiralgen"]
+    maintainers("spiralgen")
 
     version("develop", branch="develop")
     version("master", branch="master")

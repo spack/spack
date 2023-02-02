@@ -30,7 +30,7 @@ class Tfel(CMakePackage):
     homepage = "http://tfel.sourceforge.net"
     url = "https://github.com/thelfer/tfel/archive/TFEL-4.0.tar.gz"
     git = "https://github.com/thelfer/tfel.git"
-    maintainers = ["thelfer"]
+    maintainers("thelfer")
 
     # development branches
     version("master", branch="master")

@@ -15,7 +15,7 @@ class Mivisionx(CMakePackage):
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git"
     url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-5.2.0.tar.gz"
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     tags = ["rocm"]
 
     def url_for_version(self, version):

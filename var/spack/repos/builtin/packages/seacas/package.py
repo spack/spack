@@ -27,7 +27,7 @@ class Seacas(CMakePackage):
     homepage = "https://sandialabs.github.io/seacas/"
     git = "https://github.com/sandialabs/seacas.git"
     url = "https://github.com/sandialabs/seacas/archive/v2019-08-20.tar.gz"
-    maintainers = ["gsjaardema"]
+    maintainers("gsjaardema")
 
     # ###################### Versions ##########################
     version("master", branch="master")

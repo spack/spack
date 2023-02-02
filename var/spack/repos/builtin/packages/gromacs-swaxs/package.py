@@ -13,7 +13,7 @@ class GromacsSwaxs(Gromacs):
     homepage = "https://biophys.uni-saarland.de/swaxs.html"
     url = "https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2019.swaxs-0.1/gromacs-swaxs-release-2019.swaxs-0.1.tar.bz2"
     git = "https://gitlab.com/cbjh/gromacs-swaxs.git"
-    maintainers = ["w8jcik"]
+    maintainers("w8jcik")
 
     version(
         "2021.5-0.4",

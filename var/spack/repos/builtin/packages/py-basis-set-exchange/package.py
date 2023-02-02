@@ -12,7 +12,7 @@ class PyBasisSetExchange(PythonPackage):
     homepage = "https://www.basissetexchange.org"
     url = "https://github.com/MolSSI-BSE/basis_set_exchange/archive/v0.8.12.tar.gz"
 
-    maintainers = ["bennybp", "scemama"]
+    maintainers("bennybp", "scemama")
 
     version("0.8.12", sha256="41f0242e2c11392c511d3308c0345e14b0eb3344686d865bdfcb48257910fc0d")
     version("0.8.11", sha256="dbd4cf9382d97b79a3143c6b2086d1d24562bd13e0ab0d18fc0423b9ee877b9b")

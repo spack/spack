@@ -15,7 +15,7 @@ class Bamutil(MakefilePackage):
     homepage = "https://genome.sph.umich.edu/wiki/BamUtil"
     url = "https://github.com/statgen/bamUtil/archive/refs/tags/v1.0.15.tar.gz"
     git = "https://github.com/statgen/bamUtil.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("1.0.15", sha256="24ac4bdb81eded6e33f60dba85ec3d32ebdb06d42f75df775c2632bbfbd8cce9")
     version(

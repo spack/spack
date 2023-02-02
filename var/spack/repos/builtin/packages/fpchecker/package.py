@@ -16,7 +16,7 @@ class Fpchecker(CMakePackage):
     url = "https://github.com/LLNL/FPChecker/archive/refs/tags/v0.3.4.tar.gz"
     git = "https://github.com/LLNL/FPChecker.git"
 
-    maintainers = ["ilagunap"]
+    maintainers("ilagunap")
 
     version("master", branch="master")
     version("0.3.5", sha256="ed7277318af8e0a22b05c5655c9acc99e1d3036af41095ec2f1b1ada4d6e90f6")

@@ -27,7 +27,7 @@ class Tauola(AutotoolsPackage):
         description="Use the specified C++ standard when building.",
     )
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     depends_on("hepmc", when="+hepmc")
     depends_on("hepmc3", when="+hepmc3")

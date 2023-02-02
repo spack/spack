@@ -20,7 +20,7 @@ class Ispc(CMakePackage):
     homepage = "https://ispc.github.io"
     url = "https://github.com/ispc/ispc/tarball/v1.14.1"
     git = "https://github.com/ispc/ispc"
-    maintainers = ["aumuell"]
+    maintainers("aumuell")
 
     executables = ["^ispc$"]
 

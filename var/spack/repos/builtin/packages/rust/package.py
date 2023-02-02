@@ -23,7 +23,7 @@ class Rust(Package):
     url = "https://static.rust-lang.org/dist/rustc-1.42.0-src.tar.gz"
     git = "https://github.com/rust-lang/rust.git"
 
-    maintainers = ["AndrewGaspar"]
+    maintainers("AndrewGaspar")
 
     phases = ["configure", "build", "install"]
 

@@ -14,7 +14,7 @@ class Fd(Package):
 
     version("8.4.0", sha256="d0c2fc7ddbe74e3fd88bf5bb02e0f69078ee6d2aeea3d8df42f508543c9db05d")
 
-    maintainers = ["ashermancinelli"]
+    maintainers("ashermancinelli")
 
     depends_on("rust")
 

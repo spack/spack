@@ -12,7 +12,7 @@ class PyPythonSwiftclient(PythonPackage):
     homepage = "https://docs.openstack.org/python-swiftclient"
     pypi = "python-swiftclient/python-swiftclient-3.9.0.tar.gz"
 
-    maintainers = ["ajkotobi"]
+    maintainers("ajkotobi")
 
     version("3.12.0", sha256="313b444a14d0f9b628cbf3e8c52f2c4271658f9e8a33d4222851c2e4f0f7b7a0")
     version("3.11.1", sha256="06919d59676d3e215f4da4f3f930d71880dda3528289842b25199509df712411")

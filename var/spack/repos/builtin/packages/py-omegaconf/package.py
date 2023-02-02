@@ -15,7 +15,7 @@ class PyOmegaconf(PythonPackage):
     homepage = "https://github.com/omry/omegaconf"
     pypi = "omegaconf/omegaconf-2.3.0.tar.gz"
 
-    maintainers = ["calebrob6"]
+    maintainers("calebrob6")
 
     version("2.3.0", sha256="d5d4b6d29955cc50ad50c46dc269bcd92c6e00f5f90d23ab5fee7bfca4ba4cc7")
     version("2.1.0", sha256="a08aec03a63c66449b550b85d70238f4dee9c6c4a0541d6a98845dcfeb12439d")

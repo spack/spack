@@ -16,7 +16,7 @@ class Collier(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("1.2.5", sha256="3ec58a975ff0c3b1ca870bc38973476c923ff78fd3dd5850e296037852b94a8b")
     version("1.2.4", sha256="92ae8f61461b232fbd47a6d8e832e1a726d504f9390b7edc49a68fceedff8857")

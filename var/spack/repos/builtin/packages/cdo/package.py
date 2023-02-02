@@ -18,7 +18,7 @@ class Cdo(AutotoolsPackage):
     url = "https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz"
     list_url = "https://code.mpimet.mpg.de/projects/cdo/files"
 
-    maintainers = ["skosukhin", "Try2Code"]
+    maintainers("skosukhin", "Try2Code")
 
     version(
         "2.1.1",

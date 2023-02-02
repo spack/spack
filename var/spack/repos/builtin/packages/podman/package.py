@@ -11,7 +11,7 @@ class Podman(Package):
 
     homepage = "https://podman.io"
     url = "https://github.com/containers/podman/archive/refs/tags/v4.3.1.tar.gz"
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
 
     version("4.3.1", sha256="455c29c4ee78cd6365e5d46e20dd31a5ce4e6e1752db6774253d76bd3ca78813")
     version("3.4.7", sha256="4af6606dd072fe946960680611ba65201be435b43edbfc5cc635b2a01a899e6e")

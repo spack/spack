@@ -14,7 +14,7 @@ class PyParsl(PythonPackage):
     homepage = "https://github.com/Parsl/parsl"
     url = "https://github.com/Parsl/parsl/archive/refs/tags/1.1.0.tar.gz"
 
-    maintainers = ["hategan"]
+    maintainers("hategan")
 
     version("1.1.0", sha256="6a623d3550329f028775950d23a2cafcb0f82b199f15940180410604aa5d102c")
 

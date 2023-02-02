@@ -19,7 +19,7 @@ class NetcdfFortran(AutotoolsPackage):
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
     url = "https://downloads.unidata.ucar.edu/netcdf-fortran/4.5.4/netcdf-fortran-4.5.4.tar.gz"
 
-    maintainers = ["skosukhin", "WardF"]
+    maintainers("skosukhin", "WardF")
 
     version("4.6.0", sha256="198bff6534cc85a121adc9e12f1c4bc53406c403bda331775a1291509e7b2f23")
     version("4.5.4", sha256="0a19b26a2b6e29fab5d29d7d7e08c24e87712d09a5cafeea90e16e0a2ab86b81")

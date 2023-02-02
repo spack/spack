@@ -11,7 +11,7 @@ class Eve(CMakePackage):
 
     homepage = "https://jfalcou.github.io/eve/"
     url = "https://github.com/jfalcou/eve/archive/refs/tags/v2022.09.0.tar.gz"
-    maintainers = ["jfalcou"]
+    maintainers("jfalcou")
     git = "https://github.com/jfalcou/eve.git"
 
     version("main", branch="main")

@@ -13,7 +13,7 @@ class PySagaPython(PythonPackage):
     homepage = "https://radical-cybertools.github.io"
     pypi = "saga-python/saga-python-0.41.3.tar.gz"
 
-    maintainers = ["andre-merzky"]
+    maintainers("andre-merzky")
 
     version(
         "0.41.3",

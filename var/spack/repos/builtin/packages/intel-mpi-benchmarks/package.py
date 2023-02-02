@@ -19,7 +19,7 @@ class IntelMpiBenchmarks(MakefilePackage):
 
     homepage = "https://software.intel.com/en-us/articles/intel-mpi-benchmarks"
     url = "https://github.com/intel/mpi-benchmarks/archive/IMB-v2021.3.tar.gz"
-    maintainers = ["carsonwoods"]
+    maintainers("carsonwoods")
 
     version("2021.3", sha256="9b58a4a7eef7c0c877513152340948402fd87cb06270d2d81308dc2ef740f4c7")
     version("2021.2", sha256="ade3bfe18b4313a31fc09f0bf038e0a6c169c4145089bfc6f1f827687b81be6a")

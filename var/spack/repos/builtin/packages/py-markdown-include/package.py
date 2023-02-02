@@ -13,7 +13,7 @@ class PyMarkdownInclude(PythonPackage):
 
     pypi = "markdown-include/markdown-include-0.6.0.tar.gz"
 
-    maintainers = ["wscullin"]
+    maintainers("wscullin")
 
     version("0.6.0", sha256="6f5d680e36f7780c7f0f61dca53ca581bd50d1b56137ddcd6353efafa0c3e4a2")
 

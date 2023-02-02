@@ -15,7 +15,7 @@ class Mumax(MakefilePackage, CudaPackage):
     homepage = "https://mumax.github.io"
     url = "https://github.com/mumax/3/archive/v3.10.tar.gz"
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     version(
         "3.10",

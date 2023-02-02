@@ -16,7 +16,7 @@ class XxdStandalone(MakefilePackage):
     homepage = "https://www.vim.org/"
     url = "https://github.com/vim/vim/archive/v8.2.1201.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
     build_targets = ["-C", os.path.join("src", "xxd")]
 
     provides("xxd")

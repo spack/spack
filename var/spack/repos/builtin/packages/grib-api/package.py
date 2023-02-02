@@ -17,7 +17,7 @@ class GribApi(CMakePackage):
     url = "https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.17.0-Source.tar.gz?api=v2"
     list_url = "https://software.ecmwf.int/wiki/display/GRIB/Releases"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version(
         "1.24.0",

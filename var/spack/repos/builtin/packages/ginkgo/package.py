@@ -16,7 +16,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://ginkgo-project.github.io/"
     git = "https://github.com/ginkgo-project/ginkgo.git"
 
-    maintainers = ["tcojean", "hartwiganzt"]
+    maintainers("tcojean", "hartwiganzt")
 
     tags = ["e4s"]
 

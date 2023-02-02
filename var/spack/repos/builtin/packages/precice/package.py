@@ -16,7 +16,7 @@ class Precice(CMakePackage):
     homepage = "https://precice.org/"
     git = "https://github.com/precice/precice.git"
     url = "https://github.com/precice/precice/archive/v1.2.0.tar.gz"
-    maintainers = ["fsimonis", "MakisH"]
+    maintainers("fsimonis", "MakisH")
 
     tags = ["e4s"]
 

@@ -13,7 +13,7 @@ class Catch2(CMakePackage):
     homepage = "https://github.com/catchorg/Catch2"
     url = "https://github.com/catchorg/Catch2/archive/v2.9.1.tar.gz"
     git = "https://github.com/catchorg/Catch2.git"
-    maintainers = ["ax3l", "AndrewGaspar"]
+    maintainers("ax3l", "AndrewGaspar")
 
     # In-Development
     version("develop", branch="devel")

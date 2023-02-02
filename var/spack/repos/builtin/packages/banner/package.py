@@ -15,7 +15,7 @@ class Banner(AutotoolsPackage):
     homepage = "https://github.com/pronovic/banner"
     url = "https://github.com/pronovic/banner/archive/refs/tags/BANNER_V1.3.5.tar.gz"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("1.3.5", sha256="fb21c42620a0a668334b5732a6216b23b3990ca5d87cf3b15f0689dc617e7fdc")
 

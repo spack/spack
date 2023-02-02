@@ -17,7 +17,7 @@ class PyTorchgeo(PythonPackage):
     pypi = "torchgeo/torchgeo-0.1.0.tar.gz"
     git = "https://github.com/microsoft/torchgeo.git"
 
-    maintainers = ["adamjstewart", "calebrob6"]
+    maintainers("adamjstewart", "calebrob6")
 
     version("main", branch="main")
     version("0.4.0", sha256="a0812487205aa2db7bc92119d896ae4bf4f1014e6fdc0ce0f75bcb24fada6613")

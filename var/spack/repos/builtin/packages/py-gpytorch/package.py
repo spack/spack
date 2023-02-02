@@ -15,7 +15,7 @@ class PyGpytorch(PythonPackage):
     homepage = "https://gpytorch.ai/"
     pypi = "gpytorch/gpytorch-1.2.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("1.9.0", sha256="a0608184c18a1f518d6a102473427abf00f5351421e12a934530953f6887b34b")
     version("1.8.1", sha256="fe8e412a73a2b07027e30c65c61323de15ebcef439f5bd21200cf26551fd0e30")

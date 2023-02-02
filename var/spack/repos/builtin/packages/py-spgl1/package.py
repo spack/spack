@@ -18,7 +18,7 @@ class PySpgl1(PythonPackage):
     pypi = "spgl1/spgl1-0.0.2.tar.gz"
     git = "https://github.com/drrelyea/spgl1.git"
 
-    maintainers = ["archxlith"]
+    maintainers("archxlith")
 
     version("master", branch="master")
     version("0.0.2", sha256="a2a524724097bad18dd88a306dbcc99124c6c46ffcbb1a96d6ba6dd6fe2f7404")

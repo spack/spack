@@ -18,7 +18,7 @@ class Xpmem(AutotoolsPackage):
     url = "https://github.com/hjelmn/xpmem/archive/v2.6.3.tar.gz"
     git = "https://github.com/hjelmn/xpmem.git"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("master", branch="master")
 

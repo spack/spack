@@ -12,7 +12,7 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
     homepage = "https://amrex-codes.github.io/amrex/"
     git = "https://github.com/AMReX-Codes/pyamrex.git"
 
-    maintainers = ["ax3l", "RTSandberg", "sayerhs", "WeiqunZhang"]
+    maintainers("ax3l", "RTSandberg", "sayerhs", "WeiqunZhang")
 
     version("develop", branch="development")
 

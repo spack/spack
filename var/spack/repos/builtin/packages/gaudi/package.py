@@ -34,7 +34,7 @@ class Gaudi(CMakePackage):
     version("33.0", sha256="76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8")
     version("32.2", sha256="e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e")
 
-    maintainers = ["drbenmorgan", "vvolkl"]
+    maintainers("drbenmorgan", "vvolkl")
 
     variant("aida", default=False, description="Build AIDA interfaces support")
     variant("cppunit", default=False, description="Build with CppUnit unit testing")

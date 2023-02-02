@@ -13,7 +13,7 @@ class Whip(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/eth-cscs/whip/"
     url = "https://github.com/eth-cscs/whip/archive/0.0.0.tar.gz"
     git = "https://github.com/eth-cscs/whip.git"
-    maintainers = ["msimberg", "rasolca"]
+    maintainers("msimberg", "rasolca")
 
     version("main", branch="main")
     version("0.1.0", sha256="5d557794f4afc8332fc660948a342f69e22bc9e5d575ffb3e3944cf526db5ec9")

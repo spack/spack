@@ -19,7 +19,7 @@ class PyOpenmc(PythonPackage):
     homepage = "https://docs.openmc.org/"
     url = "https://github.com/openmc-dev/openmc/tarball/v0.13.2"
     git = "https://github.com/openmc-dev/openmc.git"
-    maintainers = ["paulromano"]
+    maintainers("paulromano")
 
     version("develop", branch="develop")
     version("master", branch="master")

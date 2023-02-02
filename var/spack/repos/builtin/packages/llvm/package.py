@@ -26,7 +26,7 @@ class Llvm(CMakePackage, CudaPackage):
     url = "https://github.com/llvm/llvm-project/archive/llvmorg-7.1.0.tar.gz"
     list_url = "https://releases.llvm.org/download.html"
     git = "https://github.com/llvm/llvm-project"
-    maintainers = ["trws", "haampie"]
+    maintainers("trws", "haampie")
 
     tags = ["e4s"]
 

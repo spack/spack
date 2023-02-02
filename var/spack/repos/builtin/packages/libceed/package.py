@@ -12,7 +12,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/CEED/libCEED"
     git = "https://github.com/CEED/libCEED.git"
 
-    maintainers = ["jedbrown", "v-dobrev", "tzanio", "jeremylt"]
+    maintainers("jedbrown", "v-dobrev", "tzanio", "jeremylt")
 
     version("develop", branch="main")
     version("0.11.0", tag="v0.11.0")

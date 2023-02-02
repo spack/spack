@@ -14,7 +14,7 @@ class Mrchem(CMakePackage):
     homepage = "https://mrchem.readthedocs.io/en/latest/"
     url = "https://github.com/MRChemSoft/mrchem/archive/v1.0.0.tar.gz"
 
-    maintainers = ["robertodr", "stigrj", "ilfreddy"]
+    maintainers("robertodr", "stigrj", "ilfreddy")
 
     version("1.0.0", sha256="9cdda4d30b2baabb26400742f78ef8f3fc50a54f5218c8b6071b0cbfbed746c3")
     version("0.2.2", sha256="7519cc104c7df51eea8902c225aac6ecce2ac4ff30765145e502342d5bf3d96b")

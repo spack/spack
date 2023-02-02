@@ -18,7 +18,7 @@ class Gpi2(AutotoolsPackage):
     url = "https://github.com/cc-hpc-itwm/GPI-2/archive/refs/tags/v1.5.1.tar.gz"
     git = "https://github.com/cc-hpc-itwm/GPI-2.git"
 
-    maintainers = ["robert-mijakovic", "acastanedam", "mzeyen1985"]
+    maintainers("robert-mijakovic", "acastanedam", "mzeyen1985")
 
     version("develop", branch="next")
     version("master", branch="master")

@@ -17,7 +17,7 @@ class HsakmtRoct(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "renjithravindrankannath"]
+    maintainers("srekolam", "arjun-raj-kuppala", "renjithravindrankannath")
 
     version("master", branch="master")
 

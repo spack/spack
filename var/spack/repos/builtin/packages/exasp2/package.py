@@ -25,7 +25,7 @@ class Exasp2(MakefilePackage):
     url = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
     git = "https://github.com/ECP-copa/ExaSP2.git"
 
-    maintainers = ["junghans"]
+    maintainers("junghans")
 
     tags = ["proxy-app", "ecp-proxy-app"]
 

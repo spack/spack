@@ -12,7 +12,7 @@ class Xtb(MesonPackage):
     homepage = "https://xtb-docs.readthedocs.org"
     url = "https://github.com/grimme-lab/xtb/releases/download/v6.5.1/xtb-6.5.1-source.tar.xz"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("6.5.1", sha256="0922205cc224fe79e28f3d75be4e10c03efa8f3f666aedec8346fed82b272cad")
     version("6.5.0", sha256="5f780656bf7b440a8e1f753a9a877401a7d497fb3160762f48bdefc8a9914976")

@@ -15,7 +15,7 @@ class RocmOpencl(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libOpenCL"]
 
     def url_for_version(self, version):

@@ -13,7 +13,7 @@ class PyOpenpmdViewer(PythonPackage):
     git = "https://github.com/openPMD/openPMD-viewer.git"
     pypi = "openPMD-viewer/openPMD-viewer-1.2.0.tar.gz"
 
-    maintainers = ["RemiLehe", "ax3l"]
+    maintainers("RemiLehe", "ax3l")
 
     version("1.4.0", sha256="53b4c10a508a012b9609f079a1d419aaeac769852117c676faf43e6cd9369f8b")
     version("1.3.0", sha256="236c065a37881fcb7603efde0bf2d61acc355a8acc595bebc3d6b9d03251b081")

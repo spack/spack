@@ -11,7 +11,7 @@ from spack.package import *
 class Apex(CMakePackage):
     """Autonomic Performance Environment for eXascale (APEX)."""
 
-    maintainers = ["khuck"]
+    maintainers("khuck")
     homepage = "https://uo-oaciss.github.io/apex"
     url = "https://github.com/UO-OACISS/apex/archive/v2.3.1.tar.gz"
     git = "https://github.com/UO-OACISS/apex"

@@ -47,7 +47,8 @@ class Frontistr(FrontistrBase):
 
     homepage = "https://www.frontistr.com/"
     git = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
-    maintainers = ["hiroshi.okuda", "kgoto", "morita", "inagaki", "michioga"]
+
+    maintainers("hiroshi.okuda", "kgoto", "morita", "inagaki", "michioga")
 
     version("5.3", tag="v5.3")
     version("5.2", tag="v5.2")

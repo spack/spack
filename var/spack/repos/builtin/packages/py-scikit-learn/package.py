@@ -13,7 +13,7 @@ class PyScikitLearn(PythonPackage):
     pypi = "scikit-learn/scikit-learn-0.24.0.tar.gz"
     git = "https://github.com/scikit-learn/scikit-learn.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("1.2.1", sha256="fbf8a5c893c9b4b99bcc7ed8fb3e8500957a113f4101860386d06635520f7cfb")

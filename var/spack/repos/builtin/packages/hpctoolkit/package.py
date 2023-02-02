@@ -20,7 +20,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     homepage = "http://hpctoolkit.org"
     git = "https://gitlab.com/hpctoolkit/hpctoolkit.git"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     tags = ["e4s"]
 

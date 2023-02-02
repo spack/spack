@@ -16,7 +16,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://ceed.exascaleproject.org"
 
-    maintainers = ["jedbrown", "v-dobrev", "tzanio"]
+    maintainers("jedbrown", "v-dobrev", "tzanio")
 
     version("5.0.0")
     version("4.0.0")

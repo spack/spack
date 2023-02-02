@@ -15,7 +15,7 @@ class Vala(AutotoolsPackage):
     homepage = "https://gitlab.gnome.org/GNOME/vala"
     url = "https://download.gnome.org/sources/vala/0.48/vala-0.48.25.tar.xz"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     version("0.48.25", sha256="50cb3c5eccddc7fd4368bfa96414a556045e79d2b15a68918c727b8c83b18a24")
     version("0.48.24", sha256="3649ef84573b6865fc3470640ee603720099eb915b39faad19b7498de1a7df24")

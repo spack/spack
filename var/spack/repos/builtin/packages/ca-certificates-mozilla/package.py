@@ -12,7 +12,7 @@ class CaCertificatesMozilla(Package):
     homepage = "https://curl.se/docs/caextract.html"
     url = "https://curl.se/ca/cacert-2021-04-13.pem"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version(
         "2023-01-10",

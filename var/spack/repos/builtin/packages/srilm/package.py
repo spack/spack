@@ -19,7 +19,7 @@ class Srilm(MakefilePackage):
     url = "file://{0}/srilm-1.7.3.tar.gz".format(os.getcwd())
     manual_download = True
 
-    maintainers = ["RemiLacroix-IDRIS"]
+    maintainers("RemiLacroix-IDRIS")
 
     version("1.7.3", sha256="01eaf12d0f35b96d2b28ad0d41c9f915dd22b534a7abde3fbb9e35fb6c19200e")
 

@@ -68,7 +68,7 @@ class Wrf(Package):
 
     homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
     url = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
-    maintainers = ["MichaelLaufer", "ptooley"]
+    maintainers("MichaelLaufer", "ptooley")
     tags = ["windows"]
 
     version(

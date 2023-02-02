@@ -10,7 +10,7 @@ class PyDatrie(PythonPackage):
     """Super-fast, efficiently stored Trie for Python (2.x and 3.x). Uses libdatrie."""
 
     pypi = "datrie/datrie-0.8.2.tar.gz"
-    maintainers = ["marcusboden"]
+    maintainers("marcusboden")
 
     version("0.8.2", "525b08f638d5cf6115df6ccd818e5a01298cd230b2dac91c8ff2e6499d18765d")
 

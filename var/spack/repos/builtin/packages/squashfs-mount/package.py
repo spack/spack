@@ -13,7 +13,7 @@ class SquashfsMount(MakefilePackage):
     homepage = "https://github.com/eth-cscs/squashfs-mount"
     url = "https://github.com/eth-cscs/squashfs-mount/archive/refs/tags/v0.1.0.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("0.1.0", sha256="37841ede7a7486d437fd06ae13e432560f81806f69addc72cfc8e564c8727bc6")
 

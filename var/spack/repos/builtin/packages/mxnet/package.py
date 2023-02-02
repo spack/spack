@@ -15,7 +15,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     list_url = "https://mxnet.apache.org/get_started/download"
     git = "https://github.com/apache/incubator-mxnet.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
     version("1.master", branch="v1.x", submodules=True)

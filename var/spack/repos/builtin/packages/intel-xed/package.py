@@ -15,7 +15,7 @@ class IntelXed(Package):
 
     homepage = "https://intelxed.github.io/"
     git = "https://github.com/intelxed/xed.git"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     mbuild_git = "https://github.com/intelxed/mbuild.git"
 

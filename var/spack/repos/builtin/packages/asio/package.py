@@ -14,7 +14,7 @@ class Asio(AutotoolsPackage):
     homepage = "https://think-async.com/Asio/"
     url = "https://github.com/chriskohlhoff/asio/archive/asio-1-18-2.tar.gz"
     git = "https://github.com/chriskohlhoff/asio.git"
-    maintainers = ["msimberg"]
+    maintainers("msimberg")
 
     version("1.21.0", sha256="5d2d2dcb7bfb39bff941cabbfc8c27ee322a495470bf0f3a7c5238648cf5e6a9")
     version("1.20.0", sha256="34a8f07be6f54e3753874d46ecfa9b7ab7051c4e3f67103c52a33dfddaea48e6")

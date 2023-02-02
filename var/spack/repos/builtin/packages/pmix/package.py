@@ -33,7 +33,7 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.org"
     url = "https://github.com/pmix/pmix/releases/download/v3.1.3/pmix-3.1.3.tar.bz2"
     git = "https://github.com/openpmix/openpmix.git"
-    maintainers = ["rhc54"]
+    maintainers("rhc54")
 
     version("master", branch="master")
     version("4.1.2", sha256="670d3a02b39fb2126fe8084174cf03c484e027b5921b5c98a851108134e2597a")

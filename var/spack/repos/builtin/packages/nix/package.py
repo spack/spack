@@ -16,7 +16,7 @@ class Nix(AutotoolsPackage):
 
     homepage = "https://nixos.org/nix"
     url = "https://github.com/NixOS/nix/archive/2.3.15.zip"
-    maintainers = ["charmoniumq"]
+    maintainers("charmoniumq")
 
     version("2.3.15", sha256="7bf04e47960e7895655ad40461f2cf8038b97e98165672db7a7ac1990fc77a22")
     version("2.2.1", sha256="b591664dd1b04a8f197407d445799ece41140a3117bcbdf8e3c5e94cd3f59854")

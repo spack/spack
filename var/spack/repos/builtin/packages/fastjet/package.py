@@ -21,7 +21,7 @@ class Fastjet(AutotoolsPackage):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan", "vvolkl"]
+    maintainers("drbenmorgan", "vvolkl")
 
     version("3.4.0", sha256="ee07c8747c8ead86d88de4a9e4e8d1e9e7d7614973f5631ba8297f7a02478b91")
     version("3.3.4", sha256="432b51401e1335697c9248519ce3737809808fc1f6d1644bfae948716dddfc03")

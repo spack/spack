@@ -14,7 +14,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/bash/"
     gnu_mirror_path = "bash/bash-5.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("5.2", sha256="a139c166df7ff4471c5e0733051642ee5556c1cc8a4a78f145583c5c81ab32fb")
     version("5.1", sha256="cc012bc860406dcf42f64431bcd3d2fa7560c02915a601aba9cd597a39329baa")

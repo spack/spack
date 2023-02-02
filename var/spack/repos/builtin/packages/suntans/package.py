@@ -14,7 +14,7 @@ class Suntans(MakefilePackage):
     homepage = "https://github.com/ofringer/suntans"
     url = "https://github.com/ofringer/suntans/archive/master.zip"
 
-    maintainers = ["ofringer", "zyaj", "mrayson", "jadelson", "lhxone"]
+    maintainers("ofringer", "zyaj", "mrayson", "jadelson", "lhxone")
 
     version("3.1", "9b5d0dee5502a5650e37bf72f64b1124be86c084e7408aa517c214ddb25e36de")
 

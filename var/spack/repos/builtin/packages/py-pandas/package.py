@@ -15,7 +15,7 @@ class PyPandas(PythonPackage):
     homepage = "https://pandas.pydata.org/"
     pypi = "pandas/pandas-1.2.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("1.5.3", sha256="74a3fd7e5a7ec052f183273dc7b0acd3a863edf7520f5d3a1765c04ffdb3b0b1")
     version("1.5.2", sha256="220b98d15cee0b2cd839a6358bd1f273d0356bf964c1a1aeb32d47db0215488b")

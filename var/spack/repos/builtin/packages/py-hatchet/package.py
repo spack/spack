@@ -14,7 +14,7 @@ class PyHatchet(PythonPackage):
     url = "https://github.com/hatchet/hatchet/archive/v1.0.0.tar.gz"
     tags = ["radiuss"]
 
-    maintainers = ["slabasan", "bhatele", "tgamblin"]
+    maintainers("slabasan", "bhatele", "tgamblin")
 
     version("1.3.0", sha256="d77d071fc37863fdc9abc3fd9ea1088904cd98c6980a014a31e44595d2deac5e")
     version("1.2.0", sha256="1d5f80abfa69d1a379dff7263908c5c915023f18f26d50b639556e2f43ac755e")

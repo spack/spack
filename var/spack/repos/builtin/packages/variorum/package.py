@@ -15,7 +15,7 @@ class Variorum(CMakePackage):
     git = "https://github.com/llnl/variorum.git"
     url = "https://github.com/llnl/variorum/archive/v0.1.0.tar.gz"
 
-    maintainers = ["slabasan", "rountree"]
+    maintainers("slabasan", "rountree")
 
     version("0.6.0", sha256="c0928a0e6901808ee50142d1034de15edc2c90d7d1b9fbce43757226e7c04306")
     version("0.5.0", sha256="de331762e7945ee882d08454ff9c66436e2b6f87f761d2b31c6ab3028723bfed")

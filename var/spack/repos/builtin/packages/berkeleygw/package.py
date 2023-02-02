@@ -14,7 +14,7 @@ class Berkeleygw(MakefilePackage):
 
     homepage = "https://berkeleygw.org"
 
-    maintainers = ["migueldiascosta"]
+    maintainers("migueldiascosta")
 
     version(
         "3.0.1",

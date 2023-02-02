@@ -15,7 +15,7 @@ class Qgis(CMakePackage):
     homepage = "https://qgis.org"
     url = "https://qgis.org/downloads/qgis-3.8.1.tar.bz2"
 
-    maintainers = ["adamjstewart", "Sinan81"]
+    maintainers("adamjstewart", "Sinan81")
 
     version("3.22.0", sha256="cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b")
     version("3.18.2", sha256="1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d")

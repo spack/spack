@@ -23,7 +23,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     tags = ["ecp", "ecp-apps"]
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("develop", branch="develop")
     version("20221103", sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e")

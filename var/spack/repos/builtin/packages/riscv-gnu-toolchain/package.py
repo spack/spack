@@ -15,7 +15,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     homepage = "https://spack-tutorial.readthedocs.io/"
     git = "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
 
-    maintainers = ["wanlinwang"]
+    maintainers("wanlinwang")
 
     version("develop", branch="master", submodules=True)
     version("2022.08.08", tag="2022.08.08", submodules=True)

@@ -13,7 +13,7 @@ class PyFortranLanguageServer(PythonPackage):
     homepage = "https://github.com/hansec/fortran-language-server"
     url = "https://github.com/hansec/fortran-language-server/archive/v1.11.1.tar.gz"
 
-    maintainers = ["AndrewGaspar"]
+    maintainers("AndrewGaspar")
 
     version("1.12.0", sha256="5cda6341b1d2365cce3d80ba40043346c5dcbd0b35f636bfa57cb34df789ff17")
     version("1.11.1", sha256="8f03782dd992d6652a3f2d349115fdad3aa3464fee3fafbbc4f8ecf780166e3c")

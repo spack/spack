@@ -12,7 +12,7 @@ class FenicsBasix(CMakePackage):
     homepage = "https://github.com/FEniCS/basix"
     url = "https://github.com/FEniCS/basix/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/basix.git"
-    maintainers = ["mscroggs", "chrisrichardson", "garth-wells", "jhale"]
+    maintainers("mscroggs", "chrisrichardson", "garth-wells", "jhale")
 
     version("main", branch="main")
     version("0.5.1", sha256="69133476ac35f0bd0deccb480676030378c341d7dfb2adaca22cd16b7e1dc1cb")

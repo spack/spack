@@ -16,7 +16,7 @@ class Amrvis(MakefilePackage):
     homepage = "https://github.com/AMReX-Codes/Amrvis"
     git = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    maintainers = ["etpalmer63"]
+    maintainers("etpalmer63")
 
     version("main", tag="main")
 

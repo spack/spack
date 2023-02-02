@@ -18,7 +18,7 @@ class RRequire(RPackage):
 
     cran = "Require"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.1.4", sha256="1657dacff807ec8865892fce4d55cec9e31affafd90cb44ab59b704d29575a8c")
     version("0.1.2", sha256="c045c1cc69f6d6248306d88f6399699b9f86134a71b631e35b9101901593af1b")

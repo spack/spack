@@ -12,7 +12,7 @@ class Shtools(MakefilePackage):
     homepage = "https://shtools.github.io/SHTOOLS/"
     url = "https://github.com/SHTOOLS/SHTOOLS/archive/v4.5.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("4.9.1", sha256="5c22064f9daf6e9aa08cace182146993aa6b25a6ea593d92572c59f4013d53c2")
     version("4.8", sha256="c36fc86810017e544abbfb12f8ddf6f101a1ac8b89856a76d7d9801ffc8dac44")

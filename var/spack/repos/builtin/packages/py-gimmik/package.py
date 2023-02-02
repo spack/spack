@@ -15,7 +15,7 @@ class PyGimmik(PythonPackage):
     homepage = "https://github.com/PyFR/GiMMiK"
     pypi = "gimmik/gimmik-2.2.tar.gz"
 
-    maintainers = ["MichaelLaufer"]
+    maintainers("MichaelLaufer")
 
     version("3.0", sha256="45c2da7acff3201b7796ba731e4be7f3b4f39469ff1f1bc0ddf4f19c4a6af010")
     version("2.3", sha256="c019c85316bcf0d5e84de9b7d10127355dfe8037c0e37f1880a9819ce92b74e1")

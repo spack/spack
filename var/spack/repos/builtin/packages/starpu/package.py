@@ -28,7 +28,7 @@ class Starpu(AutotoolsPackage):
     url = "https://files.inria.fr/starpu/starpu-1.3.10/starpu-1.3.10.tar.gz"
     git = "https://gitlab.inria.fr/starpu/starpu.git"
 
-    maintainers = ["nfurmento", "sthibaul"]
+    maintainers("nfurmento", "sthibaul")
 
     version("1.3.10", sha256="757cd9a54f53751d37364965ac36102461a85df3a50b776447ac0acc0e1e2612")
     version("1.3.9", sha256="73adf2a5d25b04023132cfb1a8d9293b356354af7d1134e876122a205128d241")

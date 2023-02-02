@@ -44,7 +44,7 @@ class Hpcviewer(Package):
     """
 
     homepage = "http://hpctoolkit.org"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     darwin_sha = {
         ("2023.01", "aarch64"): "97af564945799652cf3efc46146297ebc0f7ebe44258876a6995cbdb5b469990",

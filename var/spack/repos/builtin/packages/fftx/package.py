@@ -15,7 +15,7 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/spiral-software/fftx/archive/refs/tags/1.0.3.tar.gz"
     git = "https://github.com/spiral-software/fftx.git"
 
-    maintainers = ["spiralgen"]
+    maintainers("spiralgen")
 
     version("develop", branch="develop")
     version("main", branch="main")

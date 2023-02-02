@@ -19,7 +19,7 @@ class Intel(IntelPackage):
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
     # Robert Cohn
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     depends_on("patchelf", type="build")
 

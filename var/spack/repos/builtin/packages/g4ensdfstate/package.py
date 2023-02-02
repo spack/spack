@@ -15,7 +15,7 @@ class G4ensdfstate(Package):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
     # Only versions relevant to Geant4 releases built by spack are added
     version("2.3", sha256="9444c5e0820791abd3ccaace105b0e47790fadce286e11149834e79c4a8e9203")

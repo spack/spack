@@ -16,7 +16,7 @@ class Drishti(PythonPackage):
     git = "https://github.com/hpc-io/drishti"
     pypi = "drishti-io/drishti-io-0.4.tar.gz"
 
-    maintainers = ["jeanbez", "sbyna"]
+    maintainers("jeanbez", "sbyna")
 
     version("master", branch="master")
 

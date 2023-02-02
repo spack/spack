@@ -13,7 +13,7 @@ class DamaskGrid(CMakePackage):
     homepage = "https://damask.mpie.de"
     url = "https://damask.mpie.de/download/damask-3.0.0.tar.xz"
 
-    maintainers = ["MarDiehl"]
+    maintainers("MarDiehl")
 
     version(
         "3.0.0-alpha7", sha256="442b06b824441293e72ff91b211a555c5d497aedf62be1c4332c426558b848a4"

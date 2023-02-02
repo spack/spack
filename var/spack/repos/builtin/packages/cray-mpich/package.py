@@ -16,7 +16,7 @@ class CrayMpich(Package):
     homepage = "https://docs.nersc.gov/development/compilers/wrappers/"
     has_code = False  # Skip attempts to fetch source that is not available
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("8.1.7")
     version("8.1.0")

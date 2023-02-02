@@ -21,7 +21,7 @@ class Hypar(AutotoolsPackage):
     url = "https://bitbucket.org/deboghosh/hypar/get/v4.1.tar.gz"
     git = "https://bitbucket.org/deboghosh/hypar.git"
 
-    maintainers = ["debog"]
+    maintainers("debog")
 
     tags = ["proxy-app", "ecp-proxy-app"]
 

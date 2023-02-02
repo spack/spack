@@ -13,7 +13,7 @@ class Busco(PythonPackage):
     homepage = "https://busco.ezlab.org/"
     url = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
     git = "https://gitlab.com/ezlab/busco.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("5.4.3", sha256="8b92dcc32691f7c1629aaaa7bd54f96073273ba7de5a3a8586fe552c51a9d36a")
     version("4.1.3", sha256="08ded26aeb4f6aef791cd88524c3c00792a054c7672ea05219f468d495e7b072")

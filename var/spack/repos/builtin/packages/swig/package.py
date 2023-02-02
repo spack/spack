@@ -21,7 +21,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     homepage = "http://www.swig.org"
     sourceforge_mirror_path = "swig/swig-3.0.12.tar.gz"
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     tags = ["e4s", "build-tools"]
 

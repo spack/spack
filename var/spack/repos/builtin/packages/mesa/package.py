@@ -13,7 +13,7 @@ class Mesa(MesonPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers = ["chuckatkins", "v-dobrev"]
+    maintainers("chuckatkins", "v-dobrev")
 
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"

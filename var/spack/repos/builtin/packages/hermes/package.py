@@ -14,7 +14,7 @@ class Hermes(CMakePackage):
     homepage = "http://www.cs.iit.edu/~scs/assets/projects/Hermes/Hermes.html"
     git = "https://github.com/HDFGroup/hermes.git"
 
-    maintainers = ["hyoklee"]
+    maintainers("hyoklee")
 
     version("master", branch="master")
     version(

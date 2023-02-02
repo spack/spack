@@ -16,7 +16,7 @@ class Helics(CMakePackage):
     url = "https://github.com/GMLC-TDC/HELICS/releases/download/v2.4.1/Helics-v2.4.1-source.tar.gz"
     git = "https://github.com/GMLC-TDC/HELICS.git"
 
-    maintainers = ["nightlark"]
+    maintainers("nightlark")
 
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)

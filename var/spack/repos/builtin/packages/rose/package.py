@@ -16,7 +16,7 @@ class Rose(AutotoolsPackage):
     url = "https://github.com/rose-compiler/rose/archive/v0.9.13.0.zip"
     git = "https://github.com/rose-compiler/rose.git"
 
-    maintainers = ["pinnown"]
+    maintainers("pinnown")
 
     # --------------------------------------------------------------------------
     # ROSE Versions

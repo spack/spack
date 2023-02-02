@@ -12,7 +12,7 @@ class Cosma(CMakePackage):
     Distributed Communication-Optimal Matrix-Matrix Multiplication Library
     """
 
-    maintainers = ["haampie", "kabicm", "teonnik"]
+    maintainers("haampie", "kabicm", "teonnik")
     homepage = "https://github.com/eth-cscs/COSMA"
     url = "https://github.com/eth-cscs/COSMA/releases/download/v2.5.1/COSMA-v2.5.1.tar.gz"
     git = "https://github.com/eth-cscs/COSMA.git"

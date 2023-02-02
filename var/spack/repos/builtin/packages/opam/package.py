@@ -16,7 +16,7 @@ class Opam(AutotoolsPackage):
     homepage = "https://opam.ocaml.org/"
     url = "https://github.com/ocaml/opam/releases/download/1.2.2/opam-full-1.2.2.tar.gz"
 
-    maintainers = ["scemama"]
+    maintainers("scemama")
 
     version("2.0.6", sha256="7c4bff5e5f3628ad00c53ee1b044ced8128ffdcfbb7582f8773fb433e12e07f4")
     version("2.0.5", sha256="776c7e64d6e24c2ef1efd1e6a71d36e007645efae94eaf860c05c1929effc76f")

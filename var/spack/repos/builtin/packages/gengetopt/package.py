@@ -12,7 +12,7 @@ class Gengetopt(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/gengetopt/gengetopt.html"
     url = "ftp://ftp.gnu.org/gnu/gengetopt/gengetopt-2.23.tar.xz"
 
-    maintainers = ["rblake-llnl"]
+    maintainers("rblake-llnl")
 
     version("2.23", sha256="b941aec9011864978dd7fdeb052b1943535824169d2aa2b0e7eae9ab807584ac")
     version("2.22.6", sha256="30b05a88604d71ef2a42a2ef26cd26df242b41f5b011ad03083143a31d9b01f7")

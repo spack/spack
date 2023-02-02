@@ -15,7 +15,7 @@ class PyParam(PythonPackage):
     homepage = "https://param.holoviz.org/"
     pypi = "param/param-1.12.0.tar.gz"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("1.12.0", sha256="35d0281c8e3beb6dd469f46ff0b917752a54bed94d1b0c567346c76d0ff59c4a")
 

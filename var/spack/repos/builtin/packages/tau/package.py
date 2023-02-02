@@ -18,7 +18,7 @@ class Tau(Package):
     Java, Python.
     """
 
-    maintainers = ["wspear", "eugeneswalker", "khuck", "sameershende"]
+    maintainers("wspear", "eugeneswalker", "khuck", "sameershende")
     homepage = "https://www.cs.uoregon.edu/research/tau"
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git = "https://github.com/UO-OACISS/tau2"

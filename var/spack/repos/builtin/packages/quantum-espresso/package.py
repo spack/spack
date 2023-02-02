@@ -18,7 +18,7 @@ class QuantumEspresso(CMakePackage, Package):
     url = "https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz"
     git = "https://gitlab.com/QEF/q-e.git"
 
-    maintainers = ["ye-luo", "danielecesarini", "bellenlau"]
+    maintainers("ye-luo", "danielecesarini", "bellenlau")
 
     build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
 

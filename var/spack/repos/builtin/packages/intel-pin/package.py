@@ -14,7 +14,7 @@ class IntelPin(Package):
     dynamic program analysis tools."""
 
     homepage = "http://www.pintool.org"
-    maintainers = ["matthiasdiener"]
+    maintainers("matthiasdiener")
 
     version(
         "3.15",

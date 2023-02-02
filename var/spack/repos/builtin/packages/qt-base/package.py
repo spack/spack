@@ -20,7 +20,7 @@ class QtBase(CMakePackage):
     url = "https://github.com/qt/qtbase/archive/refs/tags/v6.3.1.tar.gz"
     list_url = "https://github.com/qt/qtbase/tags"
 
-    maintainers = ["wdconinc", "sethrj"]
+    maintainers("wdconinc", "sethrj")
 
     version("6.3.2", sha256="95b78830a99f417ff34ee784ab78f5eeb7bb12adb16d137c3026434c44a904dd")
     version("6.3.1", sha256="4393e8cea0c58b1e0e901735fcffad141261576a0fa414ed6309910ac3d49df9")

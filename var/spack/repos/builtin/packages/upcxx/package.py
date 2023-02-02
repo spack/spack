@@ -38,7 +38,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     Access (RMA) and Remote Procedure Call (RPC)."""
 
     homepage = "https://upcxx.lbl.gov"
-    maintainers = ["bonachea"]
+    maintainers("bonachea")
     url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/upcxx.git"
 

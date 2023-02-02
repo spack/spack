@@ -18,7 +18,7 @@ class PyGffutils(PythonPackage):
     homepage = "https://github.com/daler/gffutils"
     pypi = "gffutils/gffutils-0.10.1.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.10.1", sha256="a8fc39006d7aa353147238160640e2210b168f7849cb99896be3fc9441e351cb")
 

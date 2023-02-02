@@ -17,7 +17,7 @@ class PyQsymm(PythonPackage):
 
     # Add a list of GitHub accounts to notify when the
     # package is updated
-    maintainers = ["payerle"]
+    maintainers("payerle")
 
     version("1.2.7", sha256="9af92a30c3f72883c744d4717e4ec30c8b48121e208c10553e8e0e428fe43bbc")
 

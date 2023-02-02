@@ -15,7 +15,7 @@ class PyTensorflowHub(Package):
     homepage = "https://github.com/tensorflow/hub"
     url = "https://github.com/tensorflow/hub/archive/refs/tags/v0.12.0.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     version("0.12.0", sha256="b192ef3a9a6cbeaee46142d64b47b979828dbf41fc56d48c6587e08f6b596446")
     version("0.11.0", sha256="4715a4212b45531a7c25ada7207d850467d1b5480f1940f16623f8770ad64df4")

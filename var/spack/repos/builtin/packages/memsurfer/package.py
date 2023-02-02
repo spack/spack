@@ -13,7 +13,7 @@ class Memsurfer(PythonPackage):
 
     homepage = "https://github.com/LLNL/MemSurfer"
     git = "https://github.com/LLNL/MemSurfer.git"
-    maintainers = ["bhatiaharsh"]
+    maintainers("bhatiaharsh")
 
     version("1.0", tag="v1.0", submodules=True)
     version("master", branch="master", submodules=True)

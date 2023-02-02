@@ -13,7 +13,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
     git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
-    maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
+    maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
     version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)

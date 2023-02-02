@@ -13,7 +13,7 @@ class Ccls(CMakePackage):
     git = "https://github.com/MaskRay/ccls.git"
     url = "https://github.com/MaskRay/ccls/archive/0.20201025.tar.gz"
 
-    maintainers = ["jacobmerson"]
+    maintainers("jacobmerson")
 
     version(
         "0.20210330", sha256="28c228f49dfc0f23cb5d581b7de35792648f32c39f4ca35f68ff8c9cb5ce56c2"

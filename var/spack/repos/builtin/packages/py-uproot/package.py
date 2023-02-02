@@ -19,7 +19,7 @@ class PyUproot(PythonPackage):
     homepage = "https://github.com/scikit-hep/uproot4"
     pypi = "uproot/uproot-4.0.6.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     tags = ["hep"]
 

@@ -13,7 +13,7 @@ class PyWandb(PythonPackage):
     homepage = "https://github.com/wandb/wandb"
     pypi = "wandb/wandb-0.13.9.tar.gz"
 
-    maintainers = ["thomas-bouvier"]
+    maintainers("thomas-bouvier")
 
     version("0.13.9", sha256="0a17365ce1f18306ce7a7f16b943094fac7284bb85f4e52c0685705602f9e307")
     version(

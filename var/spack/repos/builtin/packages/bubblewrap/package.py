@@ -13,7 +13,7 @@ class Bubblewrap(AutotoolsPackage):
     url = (
         "https://github.com/containers/bubblewrap/releases/download/v0.3.0/bubblewrap-0.3.0.tar.xz"
     )
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("0.7.0", sha256="764ab7100bd037ea53d440d362e099d7a425966bc62d1f00ab26b8fbb882a9dc")
     version("0.6.2", sha256="8a0ec802d1b3e956c5bb0a40a81c9ce0b055a31bf30a8efa547433603b8af20b")

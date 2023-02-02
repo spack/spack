@@ -15,7 +15,7 @@ class Pflotran(AutotoolsPackage):
     homepage = "https://www.pflotran.org"
     git = "https://bitbucket.org/pflotran/pflotran.git"
 
-    maintainers = ["ghammond86", "balay"]
+    maintainers("ghammond86", "balay")
 
     version("develop")
     version("4.0.1", commit="fd351a49b687e27f46eae92e9259156eea74897d")  # tag v4.0.1

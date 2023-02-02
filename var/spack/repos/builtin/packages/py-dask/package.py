@@ -12,7 +12,7 @@ class PyDask(PythonPackage):
     homepage = "https://github.com/dask/dask/"
     pypi = "dask/dask-1.1.0.tar.gz"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("2022.10.2", sha256="42cb43f601709575fa46ce09e74bea83fdd464187024f56954e09d9b428ceaab")
     version("2021.6.2", sha256="8588fcd1a42224b7cfcd2ebc8ad616734abb6b1a4517efd52d89c7dd66eb91f8")

@@ -59,7 +59,7 @@ class Openssh(AutotoolsPackage):
     depends_on("py-twisted", type="test")
     depends_on("libxcrypt", type="link")
 
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
     executables = [
         "^ssh$",
         "^scp$",

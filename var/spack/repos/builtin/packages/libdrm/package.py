@@ -14,7 +14,7 @@ class Libdrm(Package):
     url = "https://dri.freedesktop.org/libdrm/libdrm-2.4.101.tar.xz"
     list_url = "https://dri.freedesktop.org/libdrm/"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("2.4.110", sha256="eecee4c4b47ed6d6ce1a9be3d6d92102548ea35e442282216d47d05293cf9737")
     version("2.4.109", sha256="629352e08c1fe84862ca046598d8a08ce14d26ab25ee1f4704f993d074cb7f26")

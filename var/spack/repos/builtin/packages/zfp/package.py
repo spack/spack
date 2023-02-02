@@ -20,7 +20,7 @@ class Zfp(CMakePackage, CudaPackage):
     homepage = "https://zfp.llnl.gov"
     url = "https://github.com/LLNL/zfp/releases/download/1.0.0/zfp-1.0.0.tar.gz"
     git = "https://github.com/LLNL/zfp.git"
-    maintainers = ["lindstro", "GarrettDMorrison"]
+    maintainers("lindstro", "GarrettDMorrison")
     tags = ["radiuss", "e4s"]
 
     # Versions

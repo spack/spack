@@ -13,10 +13,7 @@ class PyXtb(PythonPackage):
     pypi = "xtb/xtb-22.1.tar.gz"
     git = "https://github.com/grimme-lab/xtb-python.git"
 
-    maintainers = [
-        *PythonPackage.maintainers,
-        "awvwgk",
-    ]
+    maintainers("awvwgk")
 
     version("22.1", "7a59e7b783fc6e8b7328f55211de681e535a83991b07c4bab73494063f5e9018")
 

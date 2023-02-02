@@ -13,7 +13,7 @@ class AperturePhotometry(Package):
 
     homepage = "http://www.aperturephotometry.org/"
     url = "https://web.ipac.caltech.edu/staff/laher/apt/APT_v2.8.4.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("3.0.2", "8ac430079825ba274567fb998dd693bb6f99490f5b896d4746178ba796bfdead")
     version("2.8.4", "28ae136c708a3ebcb83632230e119a03ca1a65499006ab69dc76e21b4921f465")

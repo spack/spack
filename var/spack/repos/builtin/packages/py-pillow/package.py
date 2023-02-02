@@ -9,7 +9,7 @@ from spack.package import *
 class PyPillowBase(PythonPackage):
     """Base class for Pillow and its fork Pillow-SIMD."""
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     provides("pil")
 

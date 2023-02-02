@@ -15,7 +15,7 @@ class Mpibind(AutotoolsPackage):
     homepage = "https://github.com/LLNL/mpibind"
     git = "https://github.com/LLNL/mpibind.git"
 
-    maintainers = ["eleon"]
+    maintainers("eleon")
 
     # This package uses 'git describe --tags' to get the
     # package version in Autotools' AC_INIT, thus

@@ -14,7 +14,7 @@ class Libfms(CMakePackage):
 
     tags = ["FEM", "Meshes", "Fields", "High-order", "I/O", "Data-exchange"]
 
-    maintainers = ["v-dobrev", "tzanio", "cwsmith"]
+    maintainers("v-dobrev", "tzanio", "cwsmith")
 
     version("develop", branch="master")
     version("0.2.0", tag="v0.2")

@@ -14,7 +14,7 @@ class RQs(RPackage):
 
     cran = "qs"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.25.4", sha256="92c49206a9c1c66dbd95f12efc3a57acb728e1f8387b549c437519fb2b98a533")
     version("0.25.3", sha256="51adf6a112c19f78ceeefa55acf800c7e6bf2664e7d9cea9d932abb24f22be6b")

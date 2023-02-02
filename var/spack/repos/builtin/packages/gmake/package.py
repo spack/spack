@@ -16,7 +16,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     # Stable releases
     version("4.4", sha256="581f4d4e872da74b3941c874215898a7d35802f03732bdccee1d4a7979105d18")

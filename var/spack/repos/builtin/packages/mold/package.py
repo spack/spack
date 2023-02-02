@@ -12,7 +12,7 @@ class Mold(CMakePackage):
     homepage = "https://github.com/rui314/mold"
     url = "https://github.com/rui314/mold/archive/refs/heads/release/1.7.1.zip"
 
-    maintainers = ["jabcross"]
+    maintainers("jabcross")
 
     version("1.7.1", sha256="e155f647c4c8555697f2d9544ba2f93a67023c4fff21b5b56aa3157700e14364")
 

@@ -16,7 +16,7 @@ class Migraphx(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
     version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")

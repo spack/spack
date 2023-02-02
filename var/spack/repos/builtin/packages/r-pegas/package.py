@@ -18,7 +18,7 @@ class RPegas(RPackage):
 
     cran = "pegas"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.1", sha256="87ba91a819496dfc3abdcc792ff853a6d49caae6335598a24c23e8851505ed59")
     version("0.14", sha256="7df90e6c4a69e8dbed2b3f68b18f1975182475bf6f86d4159256b52fd5332053")

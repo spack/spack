@@ -12,7 +12,7 @@ class Direnv(Package):
     homepage = "https://direnv.net/"
     url = "https://github.com/direnv/direnv/archive/v2.11.3.tar.gz"
 
-    maintainers = ["acastanedam", "alecbcs"]
+    maintainers("acastanedam", "alecbcs")
 
     version("2.32.2", sha256="352b3a65e8945d13caba92e13e5666e1854d41749aca2e230938ac6c64fa8ef9")
     version("2.32.1", sha256="dc7df9a9e253e1124748aa74da94bf2b96f5a61d581c60d52d3f8e8dc86ecfde")

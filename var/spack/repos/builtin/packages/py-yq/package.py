@@ -12,7 +12,7 @@ class PyYq(PythonPackage):
     homepage = "https://github.com/kislyuk/yq"
     pypi = "yq/yq-2.12.2.tar.gz"
 
-    maintainers = ["qwertos"]
+    maintainers("qwertos")
 
     version("2.12.2", sha256="2f156d0724b61487ac8752ed4eaa702a5737b804d5afa46fa55866951cd106d2")
 

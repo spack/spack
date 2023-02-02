@@ -13,7 +13,7 @@ class PyTorchtext(PythonPackage):
     homepage = "https://github.com/pytorch/text"
     git = "https://github.com/pytorch/text.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("main", branch="main", submodules=True)
     version("0.14.1", tag="v0.14.1", submodules=True)

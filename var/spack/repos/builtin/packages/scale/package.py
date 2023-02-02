@@ -18,7 +18,7 @@ class Scale(MakefilePackage):
     homepage = "https://scale.riken.jp/"
     url = "https://scale.riken.jp/archives/scale-5.4.4.tar.gz"
 
-    maintainers = ["t-yamaura"]
+    maintainers("t-yamaura")
 
     version(
         "5.4.4",

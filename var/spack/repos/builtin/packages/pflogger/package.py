@@ -14,7 +14,7 @@ class Pflogger(CMakePackage):
     url = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger/archive/refs/tags/v1.6.1.tar.gz"
     git = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger.git"
 
-    maintainers = ["mathomp4", "tclune"]
+    maintainers("mathomp4", "tclune")
 
     version("develop", branch="develop")
     version("main", branch="main")

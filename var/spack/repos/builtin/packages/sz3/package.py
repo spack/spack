@@ -12,7 +12,7 @@ class Sz3(CMakePackage):
     homepage = "https://github.com/szcompressor/SZ3"
     git = "https://github.com/szcompressor/SZ3"
 
-    maintainers = ["disheng222"]
+    maintainers("disheng222")
     tags = ["e4s"]
 
     version("master")

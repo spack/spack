@@ -13,7 +13,7 @@ class Prophecy4f(MakefilePackage):
     homepage = "https://prophecy4f.hepforge.org/"
     url = "https://prophecy4f.hepforge.org/downloads/?f=Prophecy4f-3.0.2.tar.gz"
 
-    maintainers = ["haralmha", "vvolkl"]
+    maintainers("haralmha", "vvolkl")
 
     tags = ["hep"]
 

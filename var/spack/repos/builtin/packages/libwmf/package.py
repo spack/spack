@@ -13,7 +13,7 @@ class Libwmf(AutotoolsPackage):
     homepage = "https://github.com/caolanm/libwmf"
     url = "https://github.com/caolanm/libwmf/archive/refs/tags/v0.2.12.tar.gz"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     parallel = False
 

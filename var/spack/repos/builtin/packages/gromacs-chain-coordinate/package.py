@@ -16,7 +16,7 @@ class GromacsChainCoordinate(Gromacs):
     homepage = "https://gitlab.com/cbjh/gromacs-chain-coordinate/-/blob/main/README.md"
     url = "https://gitlab.com/cbjh/gromacs-chain-coordinate/-/archive/release-2021.chaincoord-0.2/gromacs-chain-coordinate-release-2021.chaincoord-0.2.tar.bz2"
     git = "https://gitlab.com/cbjh/gromacs-chain-coordinate.git"
-    maintainers = ["w8jcik"]
+    maintainers("w8jcik")
 
     version("main", branch="main")
 

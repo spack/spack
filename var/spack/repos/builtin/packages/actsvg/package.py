@@ -16,7 +16,7 @@ class Actsvg(CMakePackage):
     list_url = "https://github.com/acts-project/actsvg/releases"
     git = "https://github.com/acts-project/actsvg.git"
 
-    maintainers = ["HadrienG2", "wdconinc"]
+    maintainers("HadrienG2", "wdconinc")
 
     version("0.4.26", sha256="a1dfad15b616cac8191a355c1a87544571c36349400e3de56b9e5be6fa73714c")
 

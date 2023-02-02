@@ -24,7 +24,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
-    maintainers = ["pghysels"]
+    maintainers("pghysels")
 
     test_requires_compiler = True
 

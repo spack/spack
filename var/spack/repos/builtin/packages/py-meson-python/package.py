@@ -12,7 +12,7 @@ class PyMesonPython(PythonPackage):
     homepage = "https://github.com/mesonbuild/meson-python"
     pypi = "meson_python/meson_python-0.7.0.tar.gz"
 
-    maintainers = ["eli-schwartz", "adamjstewart", "rgommers"]
+    maintainers("eli-schwartz", "adamjstewart", "rgommers")
 
     version("0.12.0", sha256="8cb159a8093a2e73cfa897f8092ec93b74e3842f94dff7fde381c6fe0e0b064d")
     version("0.11.0", sha256="110258837c2ffe762f5f855c7ea5385f1edd44074e93a0f317ffefc7aab42b09")
