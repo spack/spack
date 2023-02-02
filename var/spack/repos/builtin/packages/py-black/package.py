@@ -17,6 +17,7 @@ class PyBlack(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("23.1.0", sha256="b0bd97bea8903f5a2ba7219257a44e3f1f9d00073d6cc1add68f0beec69692ac")
     version("22.12.0", sha256="229351e5a18ca30f447bf724d007f890f97e13af070bb6ad4c0a441cd7596a2f")
     version("22.10.0", sha256="f513588da599943e0cde4e32cc9879e825d58720d6557062d1098c5ad80080e1")
     version("22.8.0", sha256="792f7eb540ba9a17e8656538701d3eb1afcb134e3b45b71f20b25c77a8db7e6e")
@@ -45,6 +46,7 @@ class PyBlack(PythonPackage):
     depends_on("python@3.7:", when="@22.10:", type=("build", "run"))
     depends_on("py-click@8:", type=("build", "run"))
     depends_on("py-mypy-extensions@0.4.3:", type=("build", "run"))
+    depends_on("py-packaging@22:", when="@23.1:", type=("build", "run"))
     depends_on("py-pathspec@0.9:", type=("build", "run"))
     depends_on("py-platformdirs@2:", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="@22.8: ^python@:3.10", type=("build", "run"))
