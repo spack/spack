@@ -23,9 +23,11 @@ class PyMinkowskiengine(PythonPackage, CudaPackage):
     depends_on("py-pybind11", type=("build", "run"))
 
     def patch(self):
-        filter_file(r"CC_FLAGS \+= ARGS",
-                    "CC_FLAGS += ARGS + ['-I{}']".format(self.spec["py-pybind11"].prefix.include),
-                    "setup.py")
+        filter_file(
+            r"CC_FLAGS \+= ARGS",
+            "CC_FLAGS += ARGS + ['-I{}']".format(self.spec["py-pybind11"].prefix.include),
+            "setup.py",
+        )
 
     def install_options(self, spec, prefix):
         options = []
