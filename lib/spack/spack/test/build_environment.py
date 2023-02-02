@@ -501,6 +501,14 @@ def test_build_jobs_defaults():
     )
 
 
+def test_build_jobs_spack_no_parallel_make(working_env):
+    os.environ["SPACK_NO_PARALLEL_MAKE"] = "1"
+    assert (
+        determine_number_of_jobs(parallel=True, command_line=10, config_default=10, max_cpus=10)
+        == 1
+    )
+
+
 def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_module_cmd):
     """Test that on CRAY platform 'module unload' is not called if the 'dirty'
     option is on.
