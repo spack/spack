@@ -566,6 +566,9 @@ def stringify(sym):
     if isinstance(sym, (list, tuple)):
         return tuple(stringify(a) for a in sym)
 
+    if str(sym.type) == "Function":  # TODO GBB: Find appropriate test for this
+        return tuple(stringify(a) for a in sym.arguments)
+
     if clingo_cffi:
         # Clingo w/ CFFI will throw an exception on failure
         try:
@@ -2112,6 +2115,10 @@ class SpackSolverSetup(object):
             self.preferred_variants(pkg)
             self.target_preferences(pkg)
 
+        self.gen.h1("Package Alternates")
+        for pkg in sorted(self.build_pkgs):
+            self.gen.fact(fn.name_mangled(pkg, 2))
+            
         # Inject dev_path from environment
         for ds in dev_specs:
             self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
@@ -2185,8 +2192,10 @@ class SpecBuilder(object):
             self._specs[pkg] = self._hash_lookup[h]
 
     def node(self, pkg):
+        print(pkg)
+        name = pkg[0] if isinstance(pkg, tuple) else pkg
         if pkg not in self._specs:
-            self._specs[pkg] = spack.spec.Spec(pkg)
+            self._specs[pkg] = spack.spec.Spec(name)
 
     def _arch(self, pkg):
         arch = self._specs[pkg].architecture
@@ -2379,7 +2388,8 @@ class SpecBuilder(object):
             # predicates on virtual packages.
             if name != "error":
                 pkg = args[0]
-                if spack.repo.path.is_virtual(pkg):
+                pkg_name = pkg[0] if isinstance(pkg, tuple) else pkg
+                if spack.repo.path.is_virtual(pkg_name):
                     continue
 
                 # if we've already gotten a concrete spec for this pkg,

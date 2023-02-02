@@ -40,6 +40,166 @@ attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_
 #defined literal/5.
 #defined literal/6.
 
+%--------------------------------------------------
+% Map package attributes to mangled names
+%--------------------------------------------------
+
+%package_attr((Name, N), A1)             :- package_attr(Name, A1), name_mangled(name, M, N)
+%package_attr((Name, N), A1, A2)         :- package_attr(Name, A1, A2), name_mangled(name, M, N)
+%package_attr((Name, N), A1, A2, A3)     :- package_attr(Name, A1, A2, A3), name_mangled(name, M, N)
+%package_attr((Name, N), A1, A2, A3, A4) :- package_attr(Name, A1, A2, A3, A4), name_mangled(name, M, N)
+
+package_alternate(Name, (Name, N)) :- name_mangled(Name, M), N=0..M.
+
+version_declared((Package, N), Version, Weight, Origin)
+ :- version_declared(Package, Version, Weight, Origin),
+    package_alternate(Package, (Package, N)).
+
+version_equivalent((Package, N), Version, RefVersion)
+ :- version_equivalent(Package, Version, RefVersion),
+    package_alternate(Package, (Package, N)).
+
+deprecated_version((Package, N), Version)
+ :- deprecated_version(Package, Version),
+    package_alternate(Package, (Package, N)).
+
+conflict((Package, N), (Trigger, N), (Constraint, N), Msg)
+ :- conflict(Package, Trigger, Constraint, Msg),
+    package_alternate(Package, (Package, N)).
+
+node_compiler_preference((Package, N), Compiler, CompilerVersion, Weight)
+ :- node_compiler_preference(Package, Compiler, CompilerVersion, Weight),
+    package_alternate(Package, (Package, N)).
+
+variant((Package, N), Variant)
+ :- variant(Package, Variant),
+    package_alternate(Package, (Package, N)).
+
+variant_condition((Condition, N), (Package, N), Variant)
+ :- variant_condition(Condition, Package, Variant),
+    package_alternate(Package, (Package, N)).
+
+variant_single_value((Package, N), Name)
+ :- variant_single_value(Package, Name),
+    package_alternate(Package, (Package, N)). 
+
+variant_default_value_from_package_py((Package, N), Variant, Value)
+ :- variant_default_value_from_package_py(Package, Variant, Value),
+    package_alternate(Package, (Package, N)).
+
+variant_value_from_disjoint_sets((Package, N), Variant, Value, SetID)
+ :- variant_value_from_disjoint_sets(Package, Variant, Value, SetID),
+    package_alternate(Package, (Package, N)).
+
+variant_possible_value((Package, N), Variant, Value)
+ :- variant_possible_value(Package, Variant, Value),
+    package_alternate(Package, (Package, N)).
+
+variant_sticky((Package, N), Variant)
+ :- variant_sticky(Package, Variant),
+    package_alternate(Package, (Package, N)).
+
+pkg_provider_preference((Package, N), Virtual, Provider, Weight)
+ :- pkg_provider_preference(Package, Virtual, Provider, Weight),
+    package_alternate(Package, (Package, N)).
+
+condition((Condition, N))
+ :- condition(Condition),
+    condition_requirement((Condition, N), _, _).
+condition((Condition, N))
+ :- condition(Condition),
+    condition_requirement((Condition, N), _, _, _).
+condition((Condition, N))
+ :- condition(Condition),
+    condition_requirement((Condition, N), _, _, _, _).
+condition((Condition, N))
+ :- condition(Condition),
+    condition_requirement((Condition, N), _, _, _, _).
+
+condition_requirement((Condition, N), Name, (Package, N))
+ :- condition_requirement(Condition, Name, Package),
+    package_alternate(Package, (Package, N)).
+condition_requirement((Condition, N), Name, (Package, N), A2)
+ :- condition_requirement(Condition, Name, Package, A2),
+    package_alternate(Package, (Package, N)).
+condition_requirement((Condition, N), Name, (Package, N), A2, A3)
+ :- condition_requirement(Condition, Name, Package, A2, A3),
+    package_alternate(Package, (Package, N)).
+condition_requirement((Condition, N), Name, (Package, N), A2, A3, A4)
+ :- condition_requirement(Condition, Name, Package, A2, A3, A4),
+    package_alternate(Package, (Package, N)).
+
+imposed_constraint((Condition, N), Name, (Package, N))
+ :- imposed_constraint(Condition, Name, Package),
+    package_alternate(Package, (Package, N)).
+imposed_constraint((Condition, N), Name, (Package, N), A2)
+ :- imposed_constraint(Condition, Name, Package, A2),
+    package_alternate(Package, (Package, N)).
+imposed_constraint((Condition, N), Name, (Package, N), A2, A3)
+ :- imposed_constraint(Condition, Name, Package, A2, A3),
+    package_alternate(Package, (Package, N)).
+imposed_constraint((Condition, N), Name, (Package, N), A2, A3, A4)
+ :- imposed_constraint(Condition, Name, Package, A2, A3, A4),
+    package_alternate(Package, (Package, N)).
+
+possible_provider((Package, N), Virtual)
+ :- possible_provider(Package, Virtual),
+    package_alternate(Package, (Package, N)).
+
+provider_condition((Condition, N), (Package, N), Virtual)
+ :- provider_condition(Condition, Package, Virtual),
+    package_alternate(Package, (Package, N)).
+
+dependency_condition((Condition, N), (Package, N), Dependency)
+ :- dependency_condition(Condition, Package, Dependency),
+    package_alternate(Package, (Package, N)).
+
+dependency_type((Condition, N), Type)
+ :- dependency_condition((Condition, N), (_, N), _),
+    dependency_type(Condition, Type).
+
+% Do we need one for default_provider_preference?
+
+requirement_group((Package, N), RGroupID)
+ :- requirement_group(Package, RGroupID),
+    package_alternate(Package, (Package, N)).
+
+requirement_policy((Package, N), RGroupID, Policy)
+ :- requirement_policy(Package, RGroupID, Policy),
+    package_alternate(Package, (Package, N)).
+
+requirement_group_member((MemberID, N), (Package, N), RGroupID)
+ :- requirement_group_member(MemberID, Package, RGroupID),
+    package_alternate(Package, (Package, N)).
+
+requirement_has_weight((MemberID, N), Weight)
+ :- requirement_has_weight(MemberID, Weight),
+    requirement_group_member((MemberID, N), (_, N), _).
+
+buildable_false((Package, N))
+ :- buildable_false(Package),
+    package_alternate(Package, (Package, N)).
+
+possible_external((Condition, N), (Package, N), Index)
+ :- possible_external(Condition, Package, Index),
+    package_alternate(Package, (Package, N)).
+
+variant_default_value_from_packages_yaml((Package, N), Variant, Value)
+ :- variant_default_value_from_packages_yaml(Package, Variant, Value),
+    package_alternate(Package, (Package, N)).
+
+target_weight((Package, N), Target, Weight)
+ :- target_weight(Package, Target, Weight),
+    package_alternate(Package, (Package, N)).
+
+version_satisfies((Package, N), Constraint, Version)
+ :- version_satisfies(Package, Constraint, Version),
+    package_alternate(Package, (Package, N)).
+
+installed_hash((Package, N), Hash)
+ :- installed_hash(Package, Hash),
+    package_alternate(Package, (Package, N)).
+
 %-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
@@ -134,18 +294,21 @@ possible_version_weight(Package, Weight)
 % versions, virtual nodes with version constraints require this rule to be
 % able to choose versions
 { attr("version", Package, Version) : version_satisfies(Package, Constraint, Version) }
-  :- attr("node_version_satisfies", Package, Constraint).
+  :- attr("node_version_satisfies", Package, Constraint),
+     attr("node", Package).
 
 % If there is at least a version that satisfy the constraint, impose a lower
 % bound on the choice rule to avoid false positives with the error below
 1 { attr("version", Package, Version) : version_satisfies(Package, Constraint, Version) }
   :- attr("node_version_satisfies", Package, Constraint),
-     version_satisfies(Package, Constraint, _).
+     version_satisfies(Package, Constraint, _),
+     attr("node", Package).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(1, "No valid version for '{0}' satisfies '@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", Package, Constraint),
+     attr("node", Package),
      C = #count{ Version : attr("version", Package, Version), version_satisfies(Package, Constraint, Version)},
      C < 1.
 
@@ -249,13 +412,13 @@ attr("depends_on", Package, Dependency, "build")
     Type != "build",
     not virtual(Dependency).
 
-1 { attr("depends_on", Package, DepMangled, "build") : package_supplier(Dependency, DepMangled) } 1
+1 { attr("depends_on", Package, DepMangled, "build") : package_alternate(Dependency, DepMangled) } 1
  :- dependency_holds(Package, Dependency, "build"),
     not dependency_holds(Package, Dependency, "link"),
     not dependency_holds(Package, Dependency, "run"),
     not virtual(Dependency).
 
-package_supplier(Package, Package) :- node(Package).
+package_alternate(Package, Package) :- attr("node", Package).
 
 % every root must be a node
 attr("node", Package) :- attr("root", Package).
@@ -300,11 +463,6 @@ error(0, Msg) :- attr("node", Package),
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
-fn.name_mangled(name, 2)
-
-package_attr((Name, N), A1, ...) :- package_attr(Name, A1, ...), name_mangled(name, M, N)
-name_mangled(name, M, N) :- name_mangled(name, M), N=0..M.
-
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 attr("depends_on", Package, Provider, Type)
@@ -320,7 +478,7 @@ attr("depends_on", Package, Provider, "build")
      provider(Provider, Virtual),
      not external(Package).
 
-1 { attr("depends_on", Package, ProviderMangled, "build") : package_supplier(Provider, ProviderMangled) } 1
+1 { attr("depends_on", Package, ProviderMangled, "build") : package_alternate(Provider, ProviderMangled) } 1
  :- dependency_holds(Package, Virtual, "build"),
     not dependency_holds(Package, Virtual, "link"),
     not dependency_holds(Package, Virtual, "run"),
