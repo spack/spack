@@ -15,6 +15,7 @@ class PikaAlgorithms(CMakePackage):
     git = "https://github.com/pika-org/pika-algorithms.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.1.1", sha256="4aae88ac19864fd278bbdb49ae56348014c3d0d4b49a46ab3b9ba8a180f745f6")
     version("0.1.0", sha256="64da008897dfa7373155595c46d2ce6b97a8a3cb5bea33ae7f2d1ff359f0d9b6")
     version("main", branch="main")
 
@@ -41,6 +42,7 @@ class PikaAlgorithms(CMakePackage):
     depends_on("boost@1.71:")
     depends_on("fmt@9:")
     depends_on("pika@0.11:")
+    depends_on("pika@0.11", when="@0.1.0")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
