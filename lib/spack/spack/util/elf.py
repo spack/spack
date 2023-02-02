@@ -128,6 +128,10 @@ class ElfFile(object):
         "dt_soname_str",
     ]
 
+    is_64_bit: bool
+    is_little_endian: bool
+    elf_hdr: ElfHeader
+
     def __init__(self):
         self.dt_needed_strtab_offsets = []
         self.has_soname = False
