@@ -33,8 +33,6 @@ def setup_parser(subparser):
     # User can only choose one
     subparser.add_argument(
         "--scope",
-        choices=scopes,
-        metavar=scopes_metavar,
         help="configuration scope to read/modify",
     )
 
@@ -119,6 +117,10 @@ def _get_scope_and_section(args):
     section = getattr(args, "section", None)
     path = getattr(args, "path", None)
 
+    adhoc_scope = spack.config.scope_from_path(scope)
+    if adhoc_scope:
+        scope = adhoc_scope
+
     # w/no args and an active environment, point to env manifest
     if not section and not scope:
         env = ev.active_environment()
@@ -148,9 +150,12 @@ def config_get(args):
 
     if section is not None:
         spack.config.config.print_section(section)
+    elif scope:
+        if isinstance(scope, spack.config.ConfigScope):
+            config_file = scope.path
+        elif scope.startswith("env:"):
+            config_file = spack.config.config.get_config_filename(scope, section)
 
-    elif scope and scope.startswith("env:"):
-        config_file = spack.config.config.get_config_filename(scope, section)
         if os.path.exists(config_file):
             with open(config_file) as f:
                 print(f.read())

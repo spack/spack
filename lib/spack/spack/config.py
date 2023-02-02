@@ -120,6 +120,52 @@ def first_existing(dictionary, keys):
         raise KeyError("None of %s is in dict!" % str(keys))
 
 
+def scope_from_path(fpath):
+    """Given a path to a file, create a scope object. This can be used to
+       directly edit scopes that are not otherwise tracked in the current
+       configuration.
+
+       Note this function is for taking a scope option provided from the
+       command line, and inferring whether it is referring to a file.
+       For that to be unambiguous, we require that it be absolute:
+       scopes can use '/' but not refer to files, but no scope names
+       begin with a '/' (or a Windows drive letter and '\')
+    """
+    if not fpath:
+        return None
+    if not os.path.isabs(fpath):
+        tty.debug(
+            "{0} is not an absolute path: skip direct construction of scope"
+            .format(fpath)
+        )
+        return None
+
+    if os.path.isdir(fpath):
+        return ConfigScope('<adhoc>', fpath)
+    elif os.path.isfile(fpath):
+        schema = None
+        config_key = None
+        for test_schema in [spack.schema.env.schema, spack.schema.merged.schema]:
+            try:
+                data = spack.config.read_config_file(fpath, schema=test_schema)
+                for test_key in ["env", "spack"]:
+                    if test_key in data:
+                        config_key = [test_key]
+                        break
+                schema = test_schema
+                break
+            except:
+                pass
+
+        if not schema:
+            raise spack.config.ConfigFileError(
+                "{0} does not follow a known single-file schema"
+                .format(fpath)
+            )
+
+        return SingleFileScope('<adhoc>', fpath, schema, yaml_path=config_key)
+
+
 class ConfigScope(object):
     """This class represents a configuration scope.
 
@@ -475,6 +521,9 @@ class Configuration(object):
         if scope is None:
             # default to the scope with highest precedence.
             return self.highest_precedence_scope()
+
+        elif isinstance(scope, ConfigScope):
+            return scope
 
         elif scope in self.scopes:
             return self.scopes[scope]
