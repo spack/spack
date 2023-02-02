@@ -12,6 +12,7 @@ class PyPackaging(PythonPackage):
     homepage = "https://github.com/pypa/packaging"
     pypi = "packaging/packaging-19.2.tar.gz"
 
+    version("23.0", sha256="b6ad297f8907de0fa2fe1ccbd26fdaf387f5f47c7275fedf8cce89f99446cf97")
     version("21.3", sha256="dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb")
     version("21.0", sha256="7dc96269f53a4ccec5c0670940a4281106dd0bb343f47b7471f779df49c2fbe7")
     version("20.9", sha256="5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5")
@@ -21,13 +22,13 @@ class PyPackaging(PythonPackage):
     version("17.1", sha256="f019b770dd64e585a99714f1fd5e01c7a8f11b45635aa953fd41c689a657375b")
     version("16.8", sha256="5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e")
 
-    depends_on("python@3.6:", when="@21:", type=("build", "run"))
-    depends_on("python@2.7:2,3.4:", type=("build", "run"))
-    depends_on("py-setuptools@40.8.0:", when="@20.8:", type="build")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-flit-core@3.3:", when="@22:", type="build")
 
-    depends_on("py-pyparsing@2.0.2:3.0.4,3.0.6:", when="@21.3:", type=("build", "run"))
+    # Historical dependencies
+    depends_on("py-setuptools@40.8.0:", when="@20.8:21", type="build")
+    depends_on("py-setuptools", when="@:20.7", type="build")
+    depends_on("py-pyparsing@2.0.2:3.0.4,3.0.6:", when="@21.3:21", type=("build", "run"))
     depends_on("py-pyparsing@2.0.2:2", when="@21.1:21.2", type=("build", "run"))
-    depends_on("py-pyparsing@2.0.2:", type=("build", "run"))
+    depends_on("py-pyparsing@2.0.2:", when="@:21.0", type=("build", "run"))
     depends_on("py-six", when="@:20.7", type=("build", "run"))
     depends_on("py-attrs", when="@19.1", type=("build", "run"))
