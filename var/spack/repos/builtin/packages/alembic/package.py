@@ -15,6 +15,7 @@ class Alembic(CMakePackage):
     homepage = "https://www.alembic.io"
     url = "https://github.com/alembic/alembic/archive/1.7.16.tar.gz"
 
+    version("1.8.4", sha256="e0fe1e16e6ec9a699b5f016f9e0ed31a384a008cfd9184f31253e2e096b1afda")
     version("1.7.16", sha256="2529586c89459af34d27a36ab114ad1d43dafd44061e65cfcfc73b7457379e7c")
 
     variant("python", default=False, description="Python support")

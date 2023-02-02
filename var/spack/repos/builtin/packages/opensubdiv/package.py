@@ -42,6 +42,20 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on("libxrandr")
     depends_on("libxcursor")
     depends_on("libxinerama")
+    # 1 error found in build log:
+    #      40    -- Looking for remove
+    #      41    -- Looking for remove - found
+    #      42    -- Looking for shmat
+    #      43    -- Looking for shmat - found
+    #      44    -- Looking for IceConnectionNumber in ICE
+    #      45    -- Looking for IceConnectionNumber in ICE - found
+    #   >> 46    CMake Error at cmake/FindGLFW.cmake:162 (message):
+    #      47      xf86vmode library not found - required for GLFW
+    #      48    Call Stack (most recent call first):
+    #      49      CMakeLists.txt:349 (find_package)
+    #      50
+    #      51
+    #      52    -- Configuring incomplete, errors occurred!
     depends_on("libxxf86vm")
     depends_on("llvm-openmp", when="+openmp")
 
