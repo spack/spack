@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import inspect
 import os
 from typing import Optional, Tuple
 
@@ -10,10 +11,8 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.builder
-from spack.build_environment import SPACK_NO_PARALLEL_MAKE, determine_number_of_jobs
 from spack.directives import build_system, extends, maintainers
 from spack.package_base import PackageBase
-from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
 
 
@@ -78,7 +77,6 @@ class RacketBuilder(spack.builder.Builder):
         """Install everything from build directory."""
         raco = Executable("raco")
         with fs.working_dir(self.build_directory):
-            parallel = self.pkg.parallel and (not env_flag(SPACK_NO_PARALLEL_MAKE))
             args = [
                 "pkg",
                 "install",
@@ -92,7 +90,7 @@ class RacketBuilder(spack.builder.Builder):
                 "--copy",
                 "-i",
                 "-j",
-                str(determine_number_of_jobs(parallel)),
+                str(inspect.getmodule(self.pkg).make_jobs),
                 "--",
                 os.getcwd(),
             ]
