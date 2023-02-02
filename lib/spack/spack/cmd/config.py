@@ -27,9 +27,6 @@ level = "long"
 
 
 def setup_parser(subparser):
-    scopes = spack.config.scopes()
-    scopes_metavar = spack.config.scopes_metavar
-
     # User can only choose one
     subparser.add_argument(
         "--scope",

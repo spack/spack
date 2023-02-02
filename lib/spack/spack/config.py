@@ -151,7 +151,7 @@ def scope_from_path(fpath):
                         break
                 schema = test_schema
                 break
-            except:
+            except (spack.config.ConfigError, yaml.YAMLError):
                 pass
 
         if not schema:
