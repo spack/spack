@@ -13,6 +13,7 @@ import shutil
 import stat
 import sys
 import tempfile
+from pathlib import Path
 from typing import Callable, Dict, Iterable, Optional, Set
 
 import llnl.string
@@ -53,6 +54,33 @@ _source_path_subdir = "spack-src"
 
 # The temporary stage name prefix.
 stage_prefix = "spack-stage-"
+
+is_windows = sys.platform == "win32"
+
+
+def check_path_length_and_warn(path):
+    if not isinstance(path, Path):
+        path = Path(path)
+    for sub_path in path.iterdir():
+        if sub_path.is_dir():
+            check_path_length_and_warn(sub_path)
+        else:
+            path_len = len(str(sub_path))
+            if path_len >= 260:
+                tty.warn(
+                    """File %s with file path length %i exceeds 260 character
+                    limit by %i characters. This WILL cause issues with the
+                    MSVC compiler, consider using external build stages."""
+                    % (str(sub_path), path_len, path_len - 260)
+                )
+            elif (260 - path_len) < 40:
+                tty.warn(
+                    """File %s with file path length %i is within %i characters
+                    of 260 character file path length limitations of MSVC compiler,
+                    this may result in issues during compilation.
+                    Consider using an external build stage."""
+                    % (str(sub_path), path_len, 260 - path_len)
+                )
 
 
 def compute_stage_name(spec):
@@ -655,6 +683,8 @@ class Stage(LockableStagingDir):
         if not self.expanded:
             self.fetcher.expand()
             tty.debug("Created stage in {0}".format(self.path))
+            if is_windows and spack.config.get("windows_warn_long_paths", False):
+                check_path_length_and_warn()
         else:
             tty.debug("Already staged {0} in {1}".format(self.name, self.path))
 
