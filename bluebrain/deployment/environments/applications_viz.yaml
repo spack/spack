@@ -13,4 +13,4 @@ spack:
     - brayns
     - py-brayns
     - brion +python
-   #- ultraliser ^hdf5~mpi
+    - ultraliser ^hdf5~mpi

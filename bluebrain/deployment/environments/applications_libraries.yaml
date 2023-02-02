@@ -32,7 +32,7 @@ spack:
   specs:
     - boost+python
     - caliper+cuda cuda_arch=70
-   #- gmsh+metis+mpi+oce+openmp+shared
+    - gmsh+metis+mpi+oce+openmp+shared
     - hdf5+mpi
     - highfive+mpi
     - hypre+int64+mpi

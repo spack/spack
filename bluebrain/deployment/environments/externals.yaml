@@ -106,8 +106,7 @@ spack:
     - git-lfs
     - glew
     - gmake  # Used to parallelize Spack deployment builds
-   # BlueBrain TODO: why do we try to build 4.7.1?
-   #- gmsh+metis~mpi+oce+openmp+shared
+    - gmsh+metis~mpi+oce+openmp+shared
     - graphviz
     - hdf5~mpi@1.10.7
     - help2man
