@@ -6,20 +6,16 @@
 from spack.package import *
 
 
-class PyGetorganelle(PythonPackage):
+class Getorganelle(PythonPackage):
     """Organelle Genome Assembly Toolkit (Chloroplast/Mitocondrial/ITS)"""
 
     homepage = "https://github.com/Kinggerm/GetOrganelle"
     url = "https://github.com/Kinggerm/GetOrganelle/archive/refs/tags/1.7.5.0.tar.gz"
 
-    maintainers("dorton21")
+    maintainers = ["snehring"]
 
-    # renamed to getorganelle
-    version(
-        "1.7.5.0",
-        sha256="c498196737726cb4c0158f23037bf301a069f5028ece729bb4d09c7d915df93d",
-        deprecated=True,
-    )
+    version("1.7.7.0", sha256="dd351b5cd33688adfcd8bff9794ae0cc0ce01a572dac2bcf6c9d7db77b3e4883")
+    version("1.7.5.0", sha256="c498196737726cb4c0158f23037bf301a069f5028ece729bb4d09c7d915df93d")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.16.4:", type=("build", "run"))
