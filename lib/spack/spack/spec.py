@@ -1464,6 +1464,24 @@ class Spec:
         """
         return [d for d in self._dependencies.select(child=name, depflag=depflag)]
 
+    @property
+    def edge_attributes(self) -> str:
+        """Helper method to print edge attributes in spec literals"""
+        edges = self.edges_from_dependents()
+        if not edges:
+            return ""
+
+        union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
+        for edge in edges:
+            union.update_deptypes(edge.depflag)
+            union.update_virtuals(edge.virtuals)
+        deptypes_str = f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}" if union.depflag else ""
+        virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
+        if not deptypes_str and not virtuals_str:
+            return ""
+        result = f"{deptypes_str} {virtuals_str}".strip()
+        return f"[{result}]"
+
     def dependencies(self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL):
         """Return a list of direct dependencies (nodes in the DAG).
 
@@ -4490,17 +4508,27 @@ class Spec:
         return str(path_ctor(*output_path_components))
 
     def __str__(self):
-        sorted_nodes = [self] + sorted(
+        root_str = [self.format()]
+        sorted_dependencies = sorted(
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
-        return " ^".join(d.format() for d in sorted_nodes).strip()
+        sorted_dependencies = [
+            d.format("{edge_attributes} " + DISPLAY_FORMAT) for d in sorted_dependencies
+        ]
+        spec_str = " ^".join(root_str + sorted_dependencies)
+        return spec_str.strip()
 
     @property
     def colored_str(self):
-        sorted_nodes = [self] + sorted(
+        root_str = [self.cformat()]
+        sorted_dependencies = sorted(
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
-        return " ^".join(d.cformat() for d in sorted_nodes).strip()
+        sorted_dependencies = [
+            d.cformat("{edge_attributes} " + DISPLAY_FORMAT) for d in sorted_dependencies
+        ]
+        spec_str = " ^".join(root_str + sorted_dependencies)
+        return spec_str.strip()
 
     def install_status(self):
         """Helper for tree to print DB install status."""

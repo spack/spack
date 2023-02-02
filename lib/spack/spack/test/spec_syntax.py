@@ -531,6 +531,26 @@ def specfile_for(default_mock_concretization):
             "@:0.4%nvhpc",
         ),
         (
+            "^[virtuals=mpi] openmpi",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="virtuals=mpi"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
+            ],
+            "^[virtuals=mpi] openmpi",
+        ),
+        (
+            "^[deptypes=link,build] zlib",
+            [
+                Token(TokenType.START_EDGE_PROPERTIES, value="^["),
+                Token(TokenType.KEY_VALUE_PAIR, value="deptypes=link,build"),
+                Token(TokenType.END_EDGE_PROPERTIES, value="]"),
+                Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="zlib"),
+            ],
+            "^[deptypes=build,link] zlib",
+        ),
+        (
             "zlib@git.foo/bar",
             [
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, "zlib"),
@@ -923,6 +943,9 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x platform=test platform=test", spack.spec.DuplicateArchitectureError),
         ("x os=fe platform=test target=fe os=fe", spack.spec.DuplicateArchitectureError),
         ("x target=be platform=test os=be os=fe", spack.spec.DuplicateArchitectureError),
+        ("^[@foo] zlib", spack.parser.SpecParsingError),
+        # TODO: Remove this as soon as use variants are added and we can parse custom attributes
+        ("^[foo=bar] zlib", spack.parser.SpecParsingError),
     ],
 )
 def test_error_conditions(text, exc_cls):
