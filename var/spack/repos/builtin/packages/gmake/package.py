@@ -6,7 +6,7 @@
 import os
 import re
 
-from spack.build_environment import MakeExecutable, determine_number_of_jobs
+from spack.build_environment import MakeExecutable
 from spack.package import *
 
 
@@ -80,9 +80,5 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
             os.symlink("make", prefix.bin.gmake)
 
     def setup_dependent_package(self, module, dspec):
-        module.make = MakeExecutable(
-            self.spec.prefix.bin.make, determine_number_of_jobs(parallel=dspec.package.parallel)
-        )
-        module.gmake = MakeExecutable(
-            self.spec.prefix.bin.gmake, determine_number_of_jobs(parallel=dspec.package.parallel)
-        )
+        module.make = MakeExecutable(self.spec.prefix.bin.make, module.make_jobs)
+        module.gmake = MakeExecutable(self.spec.prefix.bin.gmake, module.make_jobs)
