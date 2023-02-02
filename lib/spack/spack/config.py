@@ -122,26 +122,23 @@ def first_existing(dictionary, keys):
 
 def scope_from_path(fpath):
     """Given a path to a file, create a scope object. This can be used to
-       directly edit scopes that are not otherwise tracked in the current
-       configuration.
+    directly edit scopes that are not otherwise tracked in the current
+    configuration.
 
-       Note this function is for taking a scope option provided from the
-       command line, and inferring whether it is referring to a file.
-       For that to be unambiguous, we require that it be absolute:
-       scopes can use '/' but not refer to files, but no scope names
-       begin with a '/' (or a Windows drive letter and '\')
+    Note this function is for taking a scope option provided from the
+    command line, and inferring whether it is referring to a file.
+    For that to be unambiguous, we require that it be absolute:
+    scopes can use '/' but not refer to files, but no scope names
+    begin with a '/' (or a Windows drive letter and '\')
     """
     if not fpath:
         return None
     if not os.path.isabs(fpath):
-        tty.debug(
-            "{0} is not an absolute path: skip direct construction of scope"
-            .format(fpath)
-        )
+        tty.debug("{0} is not an absolute path: skip direct construction of scope".format(fpath))
         return None
 
     if os.path.isdir(fpath):
-        return ConfigScope('<adhoc>', fpath)
+        return ConfigScope("<adhoc>", fpath)
     elif os.path.isfile(fpath):
         schema = None
         config_key = None
@@ -159,11 +156,10 @@ def scope_from_path(fpath):
 
         if not schema:
             raise spack.config.ConfigFileError(
-                "{0} does not follow a known single-file schema"
-                .format(fpath)
+                "{0} does not follow a known single-file schema".format(fpath)
             )
 
-        return SingleFileScope('<adhoc>', fpath, schema, yaml_path=config_key)
+        return SingleFileScope("<adhoc>", fpath, schema, yaml_path=config_key)
 
 
 class ConfigScope(object):
