@@ -10,13 +10,13 @@ class Hdf5VolExternalPassthrough(CMakePackage):
     """Package for HDF5 external pass-through VOL."""
 
     homepage = "https://sdm.lbl.gov/"
-    url = "https://github.com/hpc-io/vol-external-passthrough/archive/refs/tags/v1.0.tar.gz"
+    url = "https://github.com/hpc-io/vol-external-passthrough/archive/refs/tags/v1.1.tar.gz"
     git = "https://github.com/hpc-io/vol-external-passthrough.git"
     maintainers("hyoklee")
 
     version("develop", branch="develop")
-    version("1.0", sha256="99a06d1c31451f8f0c8c10fec112410cda1f951f0eda1bd0ca999d6b35cf7740")
-    depends_on("hdf5@1.13.0:")
+    version("1.1", sha256="9f1a7fba4958fe0f46b4451253b9b1d7a4cfb30a0ce4183f5f756ceaddbbf2c3")
+    depends_on("hdf5@1.14.0:")
 
     def cmake_args(self):
         args = [
