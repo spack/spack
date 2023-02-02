@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from collections import namedtuple
+import re
+from struct import pack
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
@@ -13,10 +14,7 @@ from llnl.util.lang import elide_list
 import spack.bootstrap
 import spack.config
 import spack.relocate
-from spack.util.elf import ElfFile, ElfParsingError, parse_elf
-from spack.util.executable import Executable
-
-ModifyElfAction = namedtuple("ModifyElfAction", "path set_soname replace_needed")
+from spack.util.elf import ELF_CONSTANTS, ElfFile, ElfParsingError, parse_elf
 
 
 def get_elf(filepath):
@@ -71,6 +69,8 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         # Set of (ino, dev) pairs (excluded by symlinks).
         self.excluded_through_symlink = set()
 
+        self.rpath_colons = re.compile(b":+")
+
     def visit_file(self, root, rel_path, depth):
         # Check if excluded
         basename = os.path.basename(rel_path)
@@ -90,40 +90,22 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         if elf is None:
             return
 
-        # Our definition of a shared library for ELF requires:
-        # 1. a dynamic section,
-        # 2. a soname OR lack of interpreter.
-        # The problem is that PIE objects (default on Ubuntu) are
-        # ET_DYN too, and not all shared libraries have a soname...
-        # no interpreter is typically the best indicator then.
-        is_library = elf.has_pt_dynamic and (elf.has_soname or not elf.has_pt_interp)
+        # We move the soname into dedicated space in the rpaths
+        if not (elf.has_pt_dynamic and elf.has_soname and elf.has_rpath):
+            return
 
-        # Resolve rpaths inside the spec's own prefix, and replace by absolute paths.
-        replace_needed = []
-        if elf.has_rpath and elf.has_needed:
-            try:
-                needed_libs = [s.decode("utf-8") for s in elf.dt_needed_strs]
-                rpaths_in_spec_prefix = list(
-                    filter(
-                        lambda p: os.path.normpath(p).startswith(root),
-                        elf.dt_rpath_str.decode("utf-8").split(":"),
-                    )
-                )
+        short_rpath = b":".join(filter(None, re.split(self.rpath_colons, elf.dt_rpath_str)))
 
-                for needed in needed_libs:
-                    resolved = resolve_lib(elf, rpaths_in_spec_prefix, needed)
-                    if resolved:
-                        replace_needed.append((needed, resolved))
-            except UnicodeDecodeError:
-                # We simply skip if we can't decode rpath & needed as UTF-8,
-                # even though in principle it would be better to stick to
-                # binary mode, since paths and filenames are just a sequence
-                # of bytes without encoding.
-                pass
+        # We need to write a trailing \0 for the *rpath*, so subtract one byte.
+        space_for_soname = len(elf.dt_rpath_str) - len(short_rpath) - 1
 
-        self._actions[identifier] = ModifyElfAction(
-            path=rel_path, set_soname=is_library, replace_needed=replace_needed
-        )
+        # Does it fit?
+        filepath_bytes = filepath.encode("utf-8")
+
+        if space_for_soname < len(filepath_bytes):
+            return
+
+        self._actions[identifier] = (filepath, short_rpath, elf)
 
     def visit_symlinked_file(self, root, rel_path, depth):
         # We don't need to follow the symlink and parse the file, since we will hit
@@ -163,45 +145,42 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         return list(self._actions.values())
 
 
-def apply_actions(patchelf, root, actions):
+def apply_actions(root, actions):
     """Run the actions (set soname, replace needed)
     for the executables and libraries we have detected
     in a prefix."""
-    modified = []
-    for rel_path, set_soname, replace_needed in actions:
-        args = []
-        filepath = os.path.join(root, rel_path)
+    for path, short_rpath, elf in actions:
+        elf: ElfFile
 
-        if set_soname:
-            args.extend(["--set-soname", os.path.normpath(filepath)])
+        with open(path, "rb+") as f:
+            # Shorten the rpath and put the soname right after it
+            f.seek(elf.pt_dynamic_strtab_offset + elf.rpath_strtab_offset)
+            f.write(short_rpath)
+            f.write(b"\0")
+            f.write(path.encode("utf-8"))
+            f.write(b"\0")
 
-        for old_needed, new_needed in replace_needed:
-            args.extend(["--replace-needed", old_needed, new_needed])
-
-        # Nothing to do.
-        if not args:
-            continue
-
-        # Positional arg: file we're modifying.
-        args.append(filepath)
-
-        output = patchelf(*args, output=str, error=str, fail_on_error=False)
-        if patchelf.returncode == 0:
-            modified.append(rel_path)
-        else:
-            # Note: treat as warning to avoid (long) builds to fail post-install.
-            tty.warn("patchelf: failed to modify {}: {}".format(filepath, output.strip()))
-    return modified
+            # Now move to the location where the soname is specified
+            # and write the new offset
+            dynamic_array_fmt = elf.byte_order + ("qQ" if elf.is_64_bit else "lL")
+            f.seek(elf.dt_soname_offset)
+            f.write(
+                pack(
+                    dynamic_array_fmt,
+                    ELF_CONSTANTS.DT_SONAME,
+                    elf.rpath_strtab_offset + len(short_rpath) + 1,
+                )
+            )
 
 
-def absolutify_sonames(prefix, exclude_list, patchelf):
+def absolutify_sonames(prefix, exclude_list):
     # Locate all shared libraries in the prefix dir of the spec, excluding
     # the ones set in the non_bindable_shared_objects property.
     visitor = SharedLibrariesVisitor(exclude_list)
     visit_directory_tree(prefix, visitor)
 
     # Patch all sonames.
-    return apply_actions(patchelf, prefix, visitor.actions)
+    return apply_actions(prefix, visitor.actions)
 
 
 def post_install(spec):
@@ -221,13 +200,7 @@ def post_install(spec):
     if spack.bootstrap.is_bootstrapping():
         return
 
-    # Should failing to locate patchelf be a hard error?
-    patchelf_path = spack.relocate._patchelf()
-    if not patchelf_path:
-        return
-    patchelf = Executable(patchelf_path)
-
-    modified = absolutify_sonames(spec.prefix, spec.package.non_bindable_shared_objects, patchelf)
+    modified = absolutify_sonames(spec.prefix, spec.package.non_bindable_shared_objects)
 
     if not modified:
         return
