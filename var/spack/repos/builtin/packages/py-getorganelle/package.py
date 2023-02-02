@@ -12,7 +12,7 @@ class PyGetorganelle(PythonPackage):
     homepage = "https://github.com/Kinggerm/GetOrganelle"
     url = "https://github.com/Kinggerm/GetOrganelle/archive/refs/tags/1.7.5.0.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.7.5.0", sha256="c498196737726cb4c0158f23037bf301a069f5028ece729bb4d09c7d915df93d")
 

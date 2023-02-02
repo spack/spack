@@ -12,7 +12,7 @@ class Hdf5VolExternalPassthrough(CMakePackage):
     homepage = "https://sdm.lbl.gov/"
     url = "https://github.com/hpc-io/vol-external-passthrough/archive/refs/tags/v1.0.tar.gz"
     git = "https://github.com/hpc-io/vol-external-passthrough.git"
-    maintainers = ["hyoklee"]
+    maintainers("hyoklee")
 
     version("develop", branch="develop")
     version("1.0", sha256="99a06d1c31451f8f0c8c10fec112410cda1f951f0eda1bd0ca999d6b35cf7740")

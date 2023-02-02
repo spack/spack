@@ -12,7 +12,7 @@ class PyPytorchLightning(PythonPackage):
     homepage = "https://github.com/PyTorchLightning/pytorch-lightning"
     pypi = "pytorch-lightning/pytorch-lightning-1.2.10.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("1.9.0", sha256="5b75fe936d16ef86dae22ea1cb0a73db281605cade682c0ef44e6508a99a0b37")
     version("1.8.6", sha256="c4af783579a1528e07f40dd9bd0128c162bbbcf74fe1ce4292fec63fa7e76ada")

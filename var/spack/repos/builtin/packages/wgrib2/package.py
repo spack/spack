@@ -15,12 +15,12 @@ class Wgrib2(MakefilePackage):
     homepage = "https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2"
     url = "https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz.v2.0.8"
 
-    maintainers = [
+    maintainers(
         "t-brown",
         "AlexanderRichert-NOAA",
         "Hang-Lei-NOAA",
         "edwardhartnett",
-    ]
+    )
 
     version(
         "3.1.1",

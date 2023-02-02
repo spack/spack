@@ -65,7 +65,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     homepage = "https://ecp-data-vis-sdk.github.io/"
 
     tags = ["ecp"]
-    maintainers = ["kwryankrattiger", "svenevs"]
+    maintainers("kwryankrattiger", "svenevs")
 
     version("1.0")
 

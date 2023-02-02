@@ -18,7 +18,7 @@ class PyKosh(PythonPackage):
     url = "https://github.com/LLNL/kosh/archive/refs/tags/v2.0.tar.gz"
 
     # notify when the package is updated.
-    maintainers = ["doutriaux1"]
+    maintainers("doutriaux1")
 
     version("2.2", sha256="3c79c3b7e7b64018ec5987dd7148886a6c619a28cda6f84e61a57439c9f3d7a3")
     version("2.1", sha256="597ed5beb4c3c3675b4af15ee7bfb60a463d5bda2222cd927061737ed073d562")

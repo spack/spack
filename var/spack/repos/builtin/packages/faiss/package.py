@@ -22,7 +22,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     homepage = "https://github.com/facebookresearch/faiss"
     url = "https://github.com/facebookresearch/faiss/archive/v1.6.3.tar.gz"
 
-    maintainers = ["bhatiaharsh", "rblake-llnl", "lpottier"]
+    maintainers("bhatiaharsh", "rblake-llnl", "lpottier")
 
     build_system(
         conditional("cmake", when="@1.7:"), conditional("autotools", when="@:1.6"), default="cmake"

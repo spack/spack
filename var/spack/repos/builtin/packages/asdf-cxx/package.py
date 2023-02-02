@@ -12,7 +12,7 @@ class AsdfCxx(CMakePackage):
     homepage = "https://github.com/eschnett/asdf-cxx"
     url = "https://github.com/eschnett/asdf-cxx/archive/version/1.0.0.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("7.2.1", sha256="40864f4f27d3ce8acb5169b57211ce6ac3805f0a6de9c1dfd5f994f4a5beccda")
     version("7.2.0", sha256="faded85d44288afb83f13634d2139adee07e06f7ea60960c6f2ef8d898c0aa09")

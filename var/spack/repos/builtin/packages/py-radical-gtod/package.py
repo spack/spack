@@ -16,7 +16,7 @@ class PyRadicalGtod(PythonPackage):
     git = "https://github.com/radical-cybertools/radical.gtod.git"
     pypi = "radical.gtod/radical.gtod-1.20.0.tar.gz"
 
-    maintainers = ["andre-merzky"]
+    maintainers("andre-merzky")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="8d0846de7a5d094146c01fbb7c137f343e4da06af51efafeba79dd3fdfe421dc")

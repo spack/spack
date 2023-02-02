@@ -11,7 +11,7 @@ class Eztrace(Package):
     of HPC applications."""
 
     homepage = "https://gitlab.com/eztrace"
-    maintainers = ["trahay"]
+    maintainers("trahay")
     git = "https://gitlab.com/eztrace/eztrace.git"
 
     version("master", branch="master")

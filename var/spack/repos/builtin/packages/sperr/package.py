@@ -24,7 +24,7 @@ class Sperr(CMakePackage):
     variant("zstd", description="use Zstd for more compression", default=True)
     variant("openmp", description="use openmp for acceleration", default=True)
 
-    maintainers = ["shaomeng", "robertu94"]
+    maintainers("shaomeng", "robertu94")
 
     def cmake_args(self):
         # ensure the compiler supports OpenMP if it is used

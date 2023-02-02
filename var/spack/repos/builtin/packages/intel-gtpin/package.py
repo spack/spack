@@ -34,7 +34,7 @@ class IntelGtpin(Package):
     homepage = "https://www.intel.com/content/www/us/en/developer/articles/tool/gtpin.html"
     url = "https://downloadmirror.intel.com/730598/external-release-gtpin-3.0-linux.tar.xz"
 
-    maintainers = ["rashawnlk"]
+    maintainers("rashawnlk")
 
     version(
         "3.0",

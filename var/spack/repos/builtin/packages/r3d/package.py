@@ -13,7 +13,7 @@ class R3d(CMakePackage):
     homepage = "https://github.com/devonmpowell/r3d"
     git = "https://github.com/devonmpowell/r3d.git"
 
-    maintainers = ["raovgarimella", "gaber"]
+    maintainers("raovgarimella", "gaber")
 
     version("master", branch="master")
     version("2021-03-16", commit="5978a3f9cc145a52eecbf89c44d7fd2166b4c778")

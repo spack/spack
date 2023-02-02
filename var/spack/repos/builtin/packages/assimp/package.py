@@ -14,7 +14,7 @@ class Assimp(CMakePackage):
     url = "https://github.com/assimp/assimp/archive/v4.0.1.tar.gz"
     git = "https://github.com/assimp/assimp.git"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("master", branch="master")
     version("5.2.4", sha256="6a4ff75dc727821f75ef529cea1c4fc0a7b5fc2e0a0b2ff2f6b7993fe6cb54ba")

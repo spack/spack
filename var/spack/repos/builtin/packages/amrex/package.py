@@ -21,7 +21,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["ecp", "e4s"]
 
-    maintainers = ["WeiqunZhang", "asalmgren", "etpalmer63"]
+    maintainers("WeiqunZhang", "asalmgren", "etpalmer63")
 
     version("develop", branch="development")
     version("23.02", sha256="f443c5eb4b89f4a74bf0e1b8a5943da18ab81cdc76aff12e8282ca43ffd06412")

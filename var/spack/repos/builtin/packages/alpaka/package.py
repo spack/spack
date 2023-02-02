@@ -14,7 +14,7 @@ class Alpaka(CMakePackage, CudaPackage):
     url = "https://github.com/alpaka-group/alpaka/archive/refs/tags/0.6.0.tar.gz"
     git = "https://github.com/alpaka-group/alpaka.git"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("develop", branch="develop")
     version("0.8.0", sha256="e01bc377a7657d9a3e0c5f8d3f83dffbd7d0b830283c59efcbc1fb98cf88de43")

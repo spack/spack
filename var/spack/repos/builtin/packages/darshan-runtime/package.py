@@ -19,7 +19,7 @@ class DarshanRuntime(AutotoolsPackage):
     url = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git = "https://github.com/darshan-hpc/darshan.git"
 
-    maintainers = ["shanedsnyder", "carns"]
+    maintainers("shanedsnyder", "carns")
 
     tags = ["e4s"]
     test_requires_compiler = True

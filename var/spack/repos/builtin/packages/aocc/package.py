@@ -31,7 +31,7 @@ class Aocc(Package):
     family = "compiler"
     homepage = "https://developer.amd.com/amd-aocc/"
 
-    maintainers = ["amd-toolchain-support"]
+    maintainers("amd-toolchain-support")
 
     version(
         ver="4.0.0",

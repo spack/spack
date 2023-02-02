@@ -14,7 +14,7 @@ class RocmClangOcl(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     version("master", branch="master")
 
     version("5.3.3", sha256="549d5bf37507f67c5277abdeed4ec40b5d0edbfbb72907c685444c26b9ce6f8a")

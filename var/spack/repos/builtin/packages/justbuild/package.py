@@ -19,7 +19,7 @@ class Justbuild(Package):
 
     executables = ["^just$"]
 
-    maintainers = ["asartori86"]
+    maintainers("asartori86")
 
     version("master", branch="master")
     version("1.0.0", tag="v1.0.0")

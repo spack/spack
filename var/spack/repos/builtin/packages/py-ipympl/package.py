@@ -11,7 +11,7 @@ class PyIpympl(PythonPackage):
 
     homepage = "https://github.com/matplotlib/ipympl"
     pypi = "ipympl/ipympl-0.8.8.tar.gz"
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("0.8.8", sha256="5bf5d780b07fafe7924922ac6b2f3abd22721f341e5e196b3b82737dfbd0e1c9")
 

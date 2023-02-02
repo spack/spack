@@ -11,7 +11,7 @@ class PyToposort(PythonPackage):
 
     pypi = "toposort/toposort-1.6.tar.gz"
 
-    maintainers = ["marcusboden"]
+    maintainers("marcusboden")
 
     version("1.6", "a7428f56ef844f5055bb9e9e44b343983773ae6dce0fe5b101e08e27ffbd50ac")
 

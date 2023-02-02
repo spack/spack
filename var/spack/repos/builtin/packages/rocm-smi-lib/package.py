@@ -20,7 +20,7 @@ class RocmSmiLib(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
