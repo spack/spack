@@ -399,6 +399,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("hdf5", when="+h5md")
     depends_on("jpeg", when="+jpeg")
     depends_on("kim-api", when="+kim")
+    depends_on("curl", when="@20190329:+kim")
     depends_on("libpng", when="+png")
     depends_on("ffmpeg", when="+ffmpeg")
     depends_on("kokkos+deprecated_code+shared@3.0.00", when="@20200303+kokkos")
