@@ -1902,6 +1902,14 @@ class SpackSolverSetup:
                 clauses.append(fn.attr("package_hash", spec.name, spec._package_hash))
             clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
 
+        if not body:
+            edges = spec.edges_from_dependents()
+            virtuals = [
+                x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])
+            ]
+            for virtual in virtuals:
+                clauses.append(fn.attr("provider_set", spec.name, virtual))
+
         # add all clauses from dependencies
         if transitive:
             # TODO: Eventually distinguish 2 deps on the same pkg (build and link)

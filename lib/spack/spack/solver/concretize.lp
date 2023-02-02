@@ -476,6 +476,11 @@ error(1, Msg)
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
+% If the provider is set from the command line, use it
+% FIXME: provider(Provider, Virtual) :- attr("provider_set", Provider, Virtual).
+% FIXME: possible_provider_weight(Provider, Virtual, 0, "Set on the command line") :- attr("provider_set", Provider, Virtual).
+
+
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 node_depends_on_virtual(PackageNode, Virtual, Type)
@@ -500,6 +505,15 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
+
+% FIXME:
+% error(100, "'{0}' cannot be a provider for the '{1}' virtual", Package, Virtual)
+%   :-  attr("provider_set", Package, Virtual),
+%       not possible_provider(Package, Virtual).
+%
+% error(100, "'{0}' cannot be a provider for the '{1}' virtual", Package, Virtual)
+%   :-  attr("provider_set", Package, Virtual),
+%       not virtual_condition_holds(Package, Virtual).
 
 error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
