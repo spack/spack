@@ -44,7 +44,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant(
         "malloc",
-        default="tcmalloc",
+        default="mimalloc",
         description="Define which allocator will be linked in",
         values=("system", "jemalloc", "mimalloc", "tbbmalloc", "tcmalloc"),
     )
