@@ -19,7 +19,7 @@ class PyMinkowskiengine(PythonPackage, CudaPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-pybind11", type="link")
-    
+
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-torch", type=("build", "run"))
 
