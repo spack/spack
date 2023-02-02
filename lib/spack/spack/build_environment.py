@@ -536,7 +536,7 @@ def determine_number_of_jobs(
         max_cpus (int or None): maximum number of CPUs available. When None, this
             value is automatically determined.
     """
-    if not parallel:
+    if not parallel or env_flag(SPACK_NO_PARALLEL_MAKE):
         return 1
 
     if command_line is None and "command_line" in spack.config.scopes():
