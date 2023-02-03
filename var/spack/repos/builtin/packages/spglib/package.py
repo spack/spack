@@ -11,6 +11,8 @@ class Spglib(CMakePackage):
 
     homepage = "https://atztogo.github.io/spglib/"
 
+    maintainers("rmeli")
+
     patch("fix_cmake_install.patch", when="@:1.10.3")
     # patch by Krishnendu Ghosh
     patch("fix_cpp.patch", when="@:1.10.3")
