@@ -247,6 +247,13 @@ class Rocblas(CMakePackage):
             ver = None
         return ver
 
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        targets = set()
+        for exe in exes:
+            targets |= ROCmPackage.determine_amdgpu_targets(exe)
+        return "amdgpu_target={}".format(",".join(sorted(list(targets))))
+
     def cmake_args(self):
         args = [
             self.define("BUILD_CLIENTS_TESTS", self.run_tests and "@4.2.0:" in self.spec),

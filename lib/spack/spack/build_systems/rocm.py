@@ -75,6 +75,9 @@
 #    does not like its directory structure.
 #
 
+import re
+import struct
+
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.package_base import PackageBase
@@ -153,6 +156,29 @@ class ROCmPackage(PackageBase):
     def hip_flags(amdgpu_target):
         archs = ",".join(amdgpu_target)
         return "--amdgpu-target={0}".format(archs)
+
+    @classmethod
+    def determine_amdgpu_targets(cls, exe):
+        targets = set()
+        with open(exe, mode="rb") as f:
+            data = f.read()
+        # https://clang.llvm.org/docs/ClangOffloadBundler.html#bundled-binary-file-layout
+        for match in re.finditer(b"__CLANG_OFFLOAD_BUNDLE__", data):
+            bstart = match.end()
+            try:
+                (ecount,) = struct.unpack("=q", data[bstart : bstart + 8])
+                estart = bstart + 8
+                for e in range(ecount):
+                    (cooffset, cosize, ilen) = struct.unpack("=qqq", data[estart : estart + 24])
+                    istart = estart + 24
+                    entryid = data[istart : istart + ilen]
+                    components = entryid.split(b"--")
+                    if len(components) == 2:
+                        targets.add(str(components[1], encoding="utf-8"))
+                    estart = istart + ilen
+            except (struct.error, UnicodeError):
+                break
+        return targets
 
     # HIP version vs Architecture
 
