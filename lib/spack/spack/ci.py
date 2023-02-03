@@ -1663,7 +1663,10 @@ def copy_files_to_artifacts(src, artifacts_dir):
     try:
         fs.copy(src, artifacts_dir)
     except Exception as err:
-        tty.warn(f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to: {err}")
+        msg = ("Unable to copy files ({0}) to artifacts {1} due to " "exception: {2}").format(
+            src, artifacts_dir, str(err)
+        )
+        tty.warn(msg)
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
@@ -2109,7 +2112,8 @@ def process_command(name, commands, repro_dir):
         fd.write("#!/bin/sh\n\n")
         fd.write("\n# spack {0} command\n".format(name))
         fd.write("set -e\n")
-        fd.write("set -x\n")
+        if os.environ.get("SPACK_VERBOSE_SCRIPT"):
+            fd.write("set -x\n")
         fd.write(full_command)
         fd.write("\n")
 

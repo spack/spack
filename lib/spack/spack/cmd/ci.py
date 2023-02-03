@@ -558,6 +558,7 @@ def ci_rebuild(args):
             env.path,
             "bootstrap",
             "now",
+            "--dev",
         ],
         [
             SPACK_COMMAND,
