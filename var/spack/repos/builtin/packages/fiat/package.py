@@ -17,9 +17,8 @@ class Fiat(CMakePackage):
     maintainers = ["climbfuji"]
 
     version("main", branch="main", no_cache=True)
-    # Defined for spack use only
-    version("1.1.0", commit="9398e04fd5d00887b9598151abfa31c388e605d5")
-    version("1.0.0", commit="1295120464c3905e5edcbb887e4921686653eab8")
+    version("1.1.0", sha256="58354e60d29a1b710bfcea9b87a72c0d89c39182cb2c9523ead76a142c695f82")
+    version("1.0.0", sha256="45afe86117142831fdd61771cf59f31131f2b97f52a2bd04ac5eae9b2ab746b8")
 
     variant(
         "build_type",
