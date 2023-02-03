@@ -18,7 +18,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     maintainers = ["mlxd", "AmintorDusko"]
 
     version("develop", branch="master")
-    version("0.28.2", branch="8de49f6743485ac703ff4f02da891994508cdadef5086b686b34c0d6865aa200")
+    version("0.28.2", sha256="c9b3afed0585681ccaf4df09fb12f2b7f09a8a1ba97a9b979139fe4a24509f31")
     version("0.28.1", sha256="038bc11ec913c3b90dd056bd0b134920db0ec5ff6f6a0bb94db6eaa687ce6618")
     version("0.28.0", sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
 
