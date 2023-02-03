@@ -94,6 +94,7 @@ class Relion(CMakePackage, CudaPackage):
     # - Gctf
     # - ResMap
     patch("0002-Simple-patch-to-fix-intel-mkl-linking.patch", when="@:3.1.1 os=ubuntu18.04")
+    patch("0003-Repair-DoublePrec_CPU-OFF-build-as-reported-by-Filip.patch", when="@4.0.0")
 
     def cmake_args(self):
         args = [
