@@ -24,7 +24,7 @@ class PyPackaging(PythonPackage):
 
     depends_on("py-flit-core@3.3:", when="@22:", type="build")
 
-    depends_on("python@3.7:", when="@22:")
+    depends_on("python@3.7:", when="@22:", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-setuptools@40.8.0:", when="@20.8:21", type="build")
