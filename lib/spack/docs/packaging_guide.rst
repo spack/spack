@@ -2974,6 +2974,34 @@ The ``provides("mpi")`` call tells Spack that the ``mpich`` package
 can be used to satisfy the dependency of any package that
 ``depends_on("mpi")``.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Providing multiple virtuals simultaneously
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Packages can provide more than one virtual dependency. Sometimes, due to implementation details,
+there are subsets of those virtuals that need to be provided together by the same package.
+
+A well-known example is, for instance, ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single library
+called ``libopenblas``. A package needing ``lapack`` and ``blas`` can either use ``openblas`` as a provider of both, or
+not use ``openblas`` at all.
+
+To express this constraint in a package, the two virtual dependencies must be listed in the same ``provides`` directive:
+
+.. code-block:: python
+
+   provides('blas', 'lapack')
+
+This makes it impossible to select ``openblas`` as a provider for one of the two
+virtual dependencies and not for the other. Any request to do so results in an
+error message:
+
+.. code-block:: console
+
+   $ spack spec netlib-scalapack  ^[virtuals=lapack] openblas ^[virtuals=blas] atlas
+   ==> Error: concretization failed for the following reasons:
+
+      1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
+
 ^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
 ^^^^^^^^^^^^^^^^^^^^
