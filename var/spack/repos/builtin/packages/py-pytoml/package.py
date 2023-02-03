@@ -12,6 +12,7 @@ class PyPytoml(Package, PythonExtension):
     Deprecated: use py-toml instead."""
 
     homepage = "https://github.com/avakar/pytoml"
+    # Must be installed from wheel to avoid circular dependency on build
     url = "https://files.pythonhosted.org/packages/py2.py3/p/pytoml/pytoml-0.1.21-py2.py3-none-any.whl"
     list_url = "https://pypi.org/simple/pytoml/"
 

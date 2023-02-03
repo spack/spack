@@ -12,6 +12,7 @@ class PyInstaller(Package, PythonExtension):
     """A library for installing Python wheels."""
 
     homepage = "https://github.com/pradyunsg/installer"
+    # Must be installed from wheel to avoid circular dependency on build
     url = "https://files.pythonhosted.org/packages/py3/i/installer/installer-0.6.0-py3-none-any.whl"
     list_url = "https://pypi.org/simple/installer/"
 

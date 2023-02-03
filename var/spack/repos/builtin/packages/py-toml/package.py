@@ -10,6 +10,7 @@ class PyToml(Package, PythonExtension):
     """Python Library for Tom's Obvious, Minimal Language."""
 
     homepage = "https://github.com/uiri/toml.git"
+    # Must be installed from wheel to avoid circular dependency on build
     url = "https://files.pythonhosted.org/packages/py2.py3/t/toml/toml-0.10.2-py2.py3-none-any.whl"
     list_url = "https://pypi.org/simple/toml/"
 
