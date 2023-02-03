@@ -71,16 +71,14 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
         return match.group(1) if match else None
 
 
-class RunAfter(object):
+class AutotoolsBuilder(AutotoolsBuilder):
+    def configure_args(self):
+        return self.enable_or_disable("libs")
+
     @run_after("install")
     def darwin_fix(self):
         if self.spec.satisfies("platform=darwin"):
             fix_darwin_install_name(self.prefix.lib)
-
-
-class AutotoolsBuilder(AutotoolsBuilder):
-    def configure_args(self):
-        return self.enable_or_disable("libs")
 
 
 class MSBuildBuilder(MSBuildBuilder):
