@@ -13,10 +13,16 @@ class PyInstaller(Package, PythonExtension):
 
     homepage = "https://github.com/pradyunsg/installer"
     # Must be installed from wheel to avoid circular dependency on build
-    url = "https://files.pythonhosted.org/packages/py3/i/installer/installer-0.6.0-py3-none-any.whl"
+    url = (
+        "https://files.pythonhosted.org/packages/py3/i/installer/installer-0.6.0-py3-none-any.whl"
+    )
     list_url = "https://pypi.org/simple/installer/"
 
-    version("0.6.0", sha256="ae7c62d1d6158b5c096419102ad0d01fdccebf857e784cee57f94165635fe038", expand=False)
+    version(
+        "0.6.0",
+        sha256="ae7c62d1d6158b5c096419102ad0d01fdccebf857e784cee57f94165635fe038",
+        expand=False,
+    )
 
     extends("python")
 

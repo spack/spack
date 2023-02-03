@@ -16,7 +16,11 @@ class PyPytoml(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py2.py3/p/pytoml/pytoml-0.1.21-py2.py3-none-any.whl"
     list_url = "https://pypi.org/simple/pytoml/"
 
-    version("0.1.21", sha256="57a21e6347049f73bfb62011ff34cd72774c031b9828cb628a752225136dfc33", expand=False)
+    version(
+        "0.1.21",
+        sha256="57a21e6347049f73bfb62011ff34cd72774c031b9828cb628a752225136dfc33",
+        expand=False,
+    )
 
     extends("python")
     depends_on("py-installer", type="build")

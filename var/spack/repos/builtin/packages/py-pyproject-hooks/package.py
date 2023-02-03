@@ -14,7 +14,11 @@ class PyPyprojectHooks(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py3/p/pyproject_hooks/pyproject_hooks-1.0.0-py3-none-any.whl"
     list_url = "https://pypi.org/simple/pyproject_hooks/"
 
-    version("1.0.0", sha256="283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8", expand=False)
+    version(
+        "1.0.0",
+        sha256="283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8",
+        expand=False,
+    )
 
     extends("python")
     depends_on("py-installer", type="build")

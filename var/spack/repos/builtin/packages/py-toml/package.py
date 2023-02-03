@@ -14,8 +14,16 @@ class PyToml(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py2.py3/t/toml/toml-0.10.2-py2.py3-none-any.whl"
     list_url = "https://pypi.org/simple/toml/"
 
-    version("0.10.2", sha256="806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", expand=False)
-    version("0.10.0", sha256="235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e", expand=False)
+    version(
+        "0.10.2",
+        sha256="806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b",
+        expand=False,
+    )
+    version(
+        "0.10.0",
+        sha256="235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e",
+        expand=False,
+    )
 
     extends("python")
     depends_on("py-installer", type="build")
