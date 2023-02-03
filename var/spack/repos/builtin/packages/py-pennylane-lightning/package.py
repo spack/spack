@@ -28,7 +28,11 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("kokkos", default=False, description="Build with Kokkos support")
     variant("verbose", default=False, description="Build with full verbosity")
-    variant("dispatcher", default=False, description="Build with AVX2/AVX512 gate automatic dispatching support")
+    variant(
+        "dispatcher",
+        default=False,
+        description="Build with AVX2/AVX512 gate automatic dispatching support",
+    )
 
     variant("cpptests", default=False, description="Build CPP tests")
     variant("cppbenchmarks", default=False, description="Build CPP benchmark examples")
@@ -58,6 +62,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     depends_on("py-pybind11", type=("build"), when="+python")
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     build_directory = "build"
@@ -92,7 +97,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def build(self, pkg, spec, prefix):
         super().build(pkg, spec, prefix)
         if self.spec.variants["python"].value:
-            cm_args = ";".join([s[2:] for s in self.cmake_args() if s[2:] not in ["BUILD_TESTS:BOOL=ON", "BUILD_BENCHMARKS:BOOL=ON"]])
+            cm_args = ";".join(
+                [
+                    s[2:]
+                    for s in self.cmake_args()
+                    if s[2:] not in ["BUILD_TESTS:BOOL=ON", "BUILD_BENCHMARKS:BOOL=ON"]
+                ]
+            )
             args = ["-i", f"--define={cm_args}"]
             build_ext = Executable(f"{self.spec['python'].command.path}" + " setup.py build_ext")
             build_ext(*args)
@@ -102,10 +113,12 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             pip_args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*pip_args)
         super().install(pkg, spec, prefix)
-            
+
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_lightning_build(self):
         with working_dir(self.stage.source_path):
-            pl_runner = Executable(join_path(self.prefix, "bin", "pennylane_lightning_test_runner"))
+            pl_runner = Executable(
+                join_path(self.prefix, "bin", "pennylane_lightning_test_runner")
+            )
             pl_runner()

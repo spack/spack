@@ -9,6 +9,7 @@ from spack.package import *
 
 class PyPennylane(PythonPackage):
     """PennyLane is a Python quantum machine learning library by Xanadu Inc."""
+
     homepage = "https://docs.pennylane.ai/"
     git = "https://github.com/PennyLaneAI/pennylane.git"
     pypi = "PennyLane/PennyLane-0.28.0.tar.gz"
@@ -21,7 +22,7 @@ class PyPennylane(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-semantic-version@2.7:", type=("build", "run"))
-    depends_on("py-pip", type="build" )
+    depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
 
     depends_on("py-appdirs", type="run")
@@ -46,9 +47,8 @@ class PyPennylane(PythonPackage):
     @on_package_attributes(run_tests=True)
     def install_test(self):
         with working_dir("tests"):
-            pl_dev_test = Executable(join_path(self.prefix, 'bin', 'pl-device-test'))
+            pl_dev_test = Executable(join_path(self.prefix, "bin", "pl-device-test"))
             pl_dev_test("--device", "default.qubit", "--shots", "None", "--skip-ops")
             pl_dev_test("--device", "default.qubit", "--shots", "10000", "--skip-ops")
             pl_dev_test("--device", "lightning.qubit", "--shots", "None", "--skip-ops")
             pl_dev_test("--device", "lightning.qubit", "--shots", "10000", "--skip-ops")
-
