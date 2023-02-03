@@ -280,6 +280,28 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
+def _print_test_log(pkg, verbose):
+    """Output test log file information.
+
+    Args:
+        pkg (spack.package.PackageBase): package of interest
+        verbose (bool): True if the test log contents are to be printed
+    """
+    log = pkg.install_test_install_log_path
+    if not os.path.isfile(log):
+        log = pkg.test_install_log if hasattr(pkg, "test_install_log") else None
+        if not (log and os.path.isfile(log)):
+            tty.debug("There is no test log file (staged or installed)")
+            return
+
+    if verbose:
+        with open(log, "r") as f:
+            for ln in f.readlines():
+                print(ln.strip("\n"))
+
+    print("\nSee test results at:\n  {0}".format(log))
+
+
 def _print_timer(pre, pkg_id, timer):
     phases = ["{}: {}.".format(p.capitalize(), _hms(timer.duration(p))) for p in timer.phases]
     phases.append("Total: {}".format(_hms(timer.duration())))
@@ -1945,6 +1967,7 @@ class BuildProcessInstaller(object):
             spack.hooks.post_install(self.pkg.spec)
 
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
+        _print_test_log(self.pkg, self.verbose)
         _print_installed_pkg(self.pkg.prefix)
 
         # Send final status that install is successful
