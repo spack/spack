@@ -124,9 +124,14 @@ class ElfFile(object):
         "dt_needed_strs",
         # dt soname
         "has_soname",
-        "dt_soname_strtab_offset",
+        "dt_soname_offset",
+        "soname_strtab_offset",
         "dt_soname_str",
     ]
+
+    is_64_bit: bool
+    is_little_endian: bool
+    elf_hdr: ElfHeader
 
     def __init__(self):
         self.dt_needed_strtab_offsets = []
@@ -334,7 +339,8 @@ def parse_pt_dynamic(f, elf):
             elf.dt_needed_strtab_offsets.append(val)
         elif tag == ELF_CONSTANTS.DT_SONAME:
             elf.has_soname = True
-            elf.dt_soname_strtab_offset = val
+            elf.dt_soname_offset = current_offset
+            elf.soname_strtab_offset = val
         current_offset += dynamic_array_size
 
     # No rpath/runpath, that happens.
@@ -359,7 +365,7 @@ def parse_pt_dynamic(f, elf):
         )
 
     if elf.has_soname:
-        elf.dt_soname_str = parse_c_string(string_table, elf.dt_soname_strtab_offset)
+        elf.dt_soname_str = parse_c_string(string_table, elf.soname_strtab_offset)
 
     if elf.has_rpath:
         elf.dt_rpath_str = parse_c_string(string_table, elf.rpath_strtab_offset)

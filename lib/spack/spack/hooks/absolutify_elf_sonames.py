@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
+from struct import pack
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
@@ -12,24 +14,42 @@ from llnl.util.lang import elide_list
 import spack.bootstrap
 import spack.config
 import spack.relocate
-from spack.util.elf import ElfParsingError, parse_elf
-from spack.util.executable import Executable
+from spack.util.elf import ELF_CONSTANTS, ElfFile, ElfParsingError, parse_elf
 
 
-def is_shared_library_elf(filepath):
-    """Return true if filepath is most a shared library.
-    Our definition of a shared library for ELF requires:
-    1. a dynamic section,
-    2. a soname OR lack of interpreter.
-    The problem is that PIE objects (default on Ubuntu) are
-    ET_DYN too, and not all shared libraries have a soname...
-    no interpreter is typically the best indicator then."""
+def get_elf(filepath):
     try:
         with open(filepath, "rb") as f:
-            elf = parse_elf(f, interpreter=True, dynamic_section=True)
-            return elf.has_pt_dynamic and (elf.has_soname or not elf.has_pt_interp)
+            return parse_elf(f, interpreter=True, dynamic_section=True)
     except (IOError, OSError, ElfParsingError):
-        return False
+        return None
+
+
+def library_is_compatible(parent: ElfFile, child: ElfFile):
+    """Check whether the library has the same architecture as the parent
+    that may use it. This check avoids picking up e.g. 32 bit libs when
+    the parent is a 64 bit elf file."""
+    return (
+        parent.is_64_bit == child.is_64_bit
+        and parent.is_little_endian == child.is_little_endian
+        and parent.elf_hdr.e_machine == child.elf_hdr.e_machine
+    )
+
+
+def resolve_lib(parent: ElfFile, rpaths, lib):
+    # If there's a / in
+    if "/" in lib:
+        return None
+    for rpath in rpaths:
+        library_path = os.path.join(rpath, lib)
+        try:
+            with open(library_path, "rb") as f:
+                child = parse_elf(f, interpreter=False, dynamic_section=False)
+                if library_is_compatible(parent, child):
+                    return library_path
+        except (OSError, ElfParsingError):
+            continue
+    return None
 
 
 class SharedLibrariesVisitor(BaseDirectoryVisitor):
@@ -41,12 +61,15 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         # List of file and directory names to be excluded
         self.exclude_list = frozenset(exclude_list)
 
-        # Map from (ino, dev) -> path. We need 1 path per file, if there are hardlinks,
-        # we don't need to store the path multiple times.
-        self.libraries = dict()
+        # Map from (ino, dev) -> [path, new_soname, ]. We need 1 path per file,
+        # if there are hardlinks, we don't need to store the path multiple
+        # times.
+        self._actions = dict()
 
         # Set of (ino, dev) pairs (excluded by symlinks).
         self.excluded_through_symlink = set()
+
+        self.rpath_colons = re.compile(b":+")
 
     def visit_file(self, root, rel_path, depth):
         # Check if excluded
@@ -59,12 +82,30 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         identifier = (s.st_ino, s.st_dev)
 
         # We're hitting a hardlink or symlink of an excluded lib, no need to parse.
-        if identifier in self.libraries or identifier in self.excluded_through_symlink:
+        if identifier in self._actions or identifier in self.excluded_through_symlink:
             return
 
         # Register the file if it's a shared lib that needs to be patched.
-        if is_shared_library_elf(filepath):
-            self.libraries[identifier] = rel_path
+        elf = get_elf(filepath)
+        if elf is None:
+            return
+
+        # We move the soname into dedicated space in the rpaths
+        if not (elf.has_pt_dynamic and elf.has_soname and elf.has_rpath):
+            return
+
+        short_rpath = b":".join(filter(None, re.split(self.rpath_colons, elf.dt_rpath_str)))
+
+        # We need to write a trailing \0 for the *rpath*, so subtract one byte.
+        space_for_soname = len(elf.dt_rpath_str) - len(short_rpath) - 1
+
+        # Does it fit?
+        filepath_bytes = filepath.encode("utf-8")
+
+        if space_for_soname < len(filepath_bytes):
+            return
+
+        self._actions[identifier] = (filepath, short_rpath, elf)
 
     def visit_symlinked_file(self, root, rel_path, depth):
         # We don't need to follow the symlink and parse the file, since we will hit
@@ -95,41 +136,51 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
         # everywhere.
         return False
 
-    def get_shared_libraries_relative_paths(self):
-        """Get the libraries that should be patched, with the excluded libraries
-        removed."""
+    @property
+    def actions(self):
+        """Get the actions."""
         for identifier in self.excluded_through_symlink:
-            self.libraries.pop(identifier, None)
+            self._actions.pop(identifier, None)
 
-        return [rel_path for rel_path in self.libraries.values()]
-
-
-def patch_sonames(patchelf, root, rel_paths):
-    """Set the soname to the file's own path for a list of
-    given shared libraries."""
-    fixed = []
-    for rel_path in rel_paths:
-        filepath = os.path.join(root, rel_path)
-        normalized = os.path.normpath(filepath)
-        args = ["--set-soname", normalized, normalized]
-        output = patchelf(*args, output=str, error=str, fail_on_error=False)
-        if patchelf.returncode == 0:
-            fixed.append(rel_path)
-        else:
-            # Note: treat as warning to avoid (long) builds to fail post-install.
-            tty.warn("patchelf: failed to set soname of {}: {}".format(normalized, output.strip()))
-    return fixed
+        return list(self._actions.values())
 
 
-def find_and_patch_sonames(prefix, exclude_list, patchelf):
+def apply_actions(root, actions):
+    """Run the actions (set soname, replace needed)
+    for the executables and libraries we have detected
+    in a prefix."""
+    for path, short_rpath, elf in actions:
+        elf: ElfFile
+
+        with open(path, "rb+") as f:
+            # Shorten the rpath and put the soname right after it
+            f.seek(elf.pt_dynamic_strtab_offset + elf.rpath_strtab_offset)
+            f.write(short_rpath)
+            f.write(b"\0")
+            f.write(path.encode("utf-8"))
+            f.write(b"\0")
+
+            # Now move to the location where the soname is specified
+            # and write the new offset
+            dynamic_array_fmt = elf.byte_order + ("qQ" if elf.is_64_bit else "lL")
+            f.seek(elf.dt_soname_offset)
+            f.write(
+                pack(
+                    dynamic_array_fmt,
+                    ELF_CONSTANTS.DT_SONAME,
+                    elf.rpath_strtab_offset + len(short_rpath) + 1,
+                )
+            )
+
+
+def absolutify_sonames(prefix, exclude_list):
     # Locate all shared libraries in the prefix dir of the spec, excluding
     # the ones set in the non_bindable_shared_objects property.
     visitor = SharedLibrariesVisitor(exclude_list)
     visit_directory_tree(prefix, visitor)
 
     # Patch all sonames.
-    relative_paths = visitor.get_shared_libraries_relative_paths()
-    return patch_sonames(patchelf, prefix, relative_paths)
+    return apply_actions(prefix, visitor.actions)
 
 
 def post_install(spec):
@@ -149,23 +200,17 @@ def post_install(spec):
     if spack.bootstrap.is_bootstrapping():
         return
 
-    # Should failing to locate patchelf be a hard error?
-    patchelf_path = spack.relocate._patchelf()
-    if not patchelf_path:
-        return
-    patchelf = Executable(patchelf_path)
+    modified = absolutify_sonames(spec.prefix, spec.package.non_bindable_shared_objects)
 
-    fixes = find_and_patch_sonames(spec.prefix, spec.package.non_bindable_shared_objects, patchelf)
-
-    if not fixes:
+    if not modified:
         return
 
     # Unfortunately this does not end up in the build logs.
     tty.info(
         "{}: Patched {} {}: {}".format(
             spec.name,
-            len(fixes),
-            "soname" if len(fixes) == 1 else "sonames",
-            ", ".join(elide_list(fixes, max_num=5)),
+            len(modified),
+            "binary" if len(modified) == 1 else "binaries",
+            ", ".join(elide_list(modified, max_num=5)),
         )
     )
