@@ -6,27 +6,38 @@
 from spack.package import *
 
 
-class PyAttrs(PythonPackage):
+class PyAttrs(Package, PythonExtension):
     """Classes Without Boilerplate"""
 
     homepage = "https://attrs.org/"
-    pypi = "attrs/attrs-20.3.0.tar.gz"
+    # Must be installed from wheel to avoid circular dependency on build
+    url = "https://files.pythonhosted.org/packages/py2/a/attrs/attrs-22.2.0-py3-none-any.whl"
+    list_url = "https://pypi.org/simple/attrs/"
     git = "https://github.com/python-attrs/attrs"
 
-    version("22.1.0", sha256="29adc2665447e5191d0e7c568fde78b21f9672d344281d0c6e1ab085429b22b6")
-    version("21.4.0", sha256="626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd")
-    version("21.2.0", sha256="ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb")
-    version("20.3.0", sha256="832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700")
-    version("20.2.0", sha256="26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594")
-    version("20.1.0", sha256="0ef97238856430dcf9228e07f316aefc17e8939fc8507e18c6501b761ef1a42a")
-    version("19.3.0", sha256="f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72")
-    version("19.2.0", sha256="f913492e1663d3c36f502e5e9ba6cd13cf19d7fab50aa13239e420fef95e1396")
-    version("19.1.0", sha256="f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399")
-    version("18.1.0", sha256="e0d0eb91441a3b53dab4d9b743eafc1ac44476296a2053b6ca3af0b139faf87b")
-    version("16.3.0", sha256="80203177723e36f3bbe15aa8553da6e80d47bfe53647220ccaa9ad7a5e473ccc")
+    version("22.2.0", sha256="29e95c7f6778868dbd49170f98f8818f78f3dc5e0e37c0b1f474e3561b240836", expand=False)
+    version("22.1.0", sha256="86efa402f67bf2df34f51a335487cf46b1ec130d02b8d39fd248abfd30da551c", expand=False)
+    version("21.4.0", sha256="2d27e3784d7a565d36ab851fe94887c5eccd6a463168875832a1be79c82828b4", expand=False)
+    version("21.2.0", sha256="149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1", expand=False)
+    version("20.3.0", sha256="31b2eced602aa8423c2aea9c76a724617ed67cf9513173fd3a4f03e3a929c7e6", expand=False)
+    version("20.2.0", sha256="fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc", expand=False)
+    version("20.1.0", sha256="2867b7b9f8326499ab5b0e2d12801fa5c98842d2cbd22b35112ae04bf85b4dff", expand=False)
+    version("19.3.0", sha256="08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c", expand=False)
+    version("19.2.0", sha256="ec20e7a4825331c1b5ebf261d111e16fa9612c1f7a5e1f884f12bd53a664dfd2", expand=False)
+    version("19.1.0", sha256="69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79", expand=False)
+    version("18.1.0", sha256="4b90b09eeeb9b88c35bc642cbac057e45a5fd85367b985bd2809c62b7b939265", expand=False)
+    version("16.3.0", sha256="c59426b15b45e39a7bc408eb6ba7e7188d9532764f873cc691199ddd975c97ef", expand=False)
 
-    depends_on("python@3.5:", when="@22.1.0:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@21.2.0:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools@40.6.0:", when="@19.1.0:", type="build")
-    depends_on("py-setuptools", type="build")
+    extends("python")
+    depends_on("py-installer", type="build")
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/{0}/a/attrs/attrs-{1}-{0}-none-any.whl"
+        if version >= Version("22.2"):
+            language = "py3"
+        else:
+            language = "py2.py3"
+        return url.format(language, version)
+
+    def install(self, spec, prefix):
+        installer("--prefix", prefix, self.stage.archive_file)

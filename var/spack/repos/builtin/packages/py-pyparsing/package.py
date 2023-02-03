@@ -6,26 +6,33 @@
 from spack.package import *
 
 
-class PyPyparsing(PythonPackage):
-    """A Python Parsing Module."""
+class PyPyparsing(Package, PythonExtension):
+    """Python parsing module."""
 
     homepage = "https://pyparsing-docs.readthedocs.io/en/latest/"
-    pypi = "pyparsing/pyparsing-2.4.2.tar.gz"
-
-    version("3.0.9", sha256="2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb")
-    version("3.0.6", sha256="d9bdec0013ef1eb5a84ab39a3b3868911598afa494f5faa038647101504e2b81")
-    version("2.4.7", sha256="c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1")
-    version("2.4.2", sha256="6f98a7b9397e206d78cc01df10131398f1c8b8510a2f4d97d9abd82e1aacdd80")
-    version("2.4.0", sha256="1873c03321fc118f4e9746baf201ff990ceb915f433f23b395f5580d1840cb2a")
-    version("2.3.1", sha256="66c9268862641abcac4a96ba74506e594c884e3f57690a696d21ad8210ed667a")
-    version("2.2.0", sha256="0832bcf47acd283788593e7a0f542407bd9550a55a8a8435214a1960e04bcb04")
-    version("2.1.10", sha256="811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188")
-    version("2.0.3", sha256="06e729e1cbf5274703b1f47b6135ed8335999d547f9d8cf048b210fb8ebf844f")
-
-    depends_on("python@3.6.8:", when="@3.0.9:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3:", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", when="@:3.0.8", type="build")
-    depends_on("py-flit-core@3.2:3", when="@3.0.9:", type="build")
+    # Must be installed from wheel to avoid circular dependency on build
+    url = "https://files.pythonhosted.org/packages/py3/p/pyparsing/pyparsing-3.0.9-py3-none-any.whl"
+    list_url = "https://pypi.org/simple/pyparsing/"
 
     import_modules = ["pyparsing"]
+
+    version("3.0.9", sha256="5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc", expand=False)
+    version("3.0.6", sha256="04ff808a5b90911829c55c4e26f75fa5ca8a2f5f36aa3a51f68e27033341d3e4", expand=False)
+    version("2.4.7", sha256="ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b", expand=False)
+    version("2.4.2", sha256="d9338df12903bbf5d65a0e4e87c2161968b10d2e489652bb47001d82a9b028b4", expand=False)
+    version("2.4.0", sha256="9b6323ef4ab914af344ba97510e966d64ba91055d6b9afa6b30799340e89cc03", expand=False)
+    version("2.3.1", sha256="f6c5ef0d7480ad048c054c37632c67fca55299990fff127850181659eea33fc3", expand=False)
+
+    extends("python")
+    depends_on("py-installer", type="build")
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/{0}/p/pyparsing/pyparsing-{1}-{0}-none-any.whl"
+        if version >= Version("3"):
+            language = "py3"
+        else:
+            language = "py2.py3"
+        return url.format(language, version)
+
+    def install(self, spec, prefix):
+        installer("--prefix", prefix, self.stage.archive_file)

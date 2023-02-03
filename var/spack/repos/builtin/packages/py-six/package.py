@@ -6,20 +6,25 @@
 from spack.package import *
 
 
-class PySix(PythonPackage):
+class PySix(Package, PythonExtension):
     """Python 2 and 3 compatibility utilities."""
 
-    pypi = "six/six-1.11.0.tar.gz"
+    homepage = "https://github.com/benjaminp/six"
+    # Must be installed from wheel to avoid circular dependency on build
+    url = "https://files.pythonhosted.org/packages/py2.py3/s/six/six-1.16.0-py2.py3-none-any.whl"
+    list_url = "https://pypi.org/simple/six/"
 
-    version("1.16.0", sha256="1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926")
-    version("1.15.0", sha256="30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259")
-    version("1.14.0", sha256="236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a")
-    version("1.12.0", sha256="d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73")
-    version("1.11.0", sha256="70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9")
-    version("1.10.0", sha256="105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a")
-    version("1.9.0", sha256="e24052411fc4fbd1f672635537c3fc2330d9481b18c0317695b46259512c91d5")
-    version("1.8.0", sha256="047bbbba41bac37c444c75ddfdf0573dd6e2f1fbd824e6247bb26fa7d8fa3830")
+    version("1.16.0", sha256="8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254", expand=False)
+    version("1.15.0", sha256="8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced", expand=False)
+    version("1.14.0", sha256="8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c", expand=False)
+    version("1.12.0", sha256="3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", expand=False)
+    version("1.11.0", sha256="832dc0e10feb1aa2c68dcc57dbb658f1c7e65b9b61af69048abc87a2db00a0eb", expand=False)
+    version("1.10.0", sha256="0ff78c403d9bccf5a425a6d31a12aa6b47f1c21ca4dc2573a7e2f32a97335eb1", expand=False)
+    version("1.9.0", sha256="418a93c397a7edab23e5588dbc067ac74a723edb3d541bd4936f79476e7645da", expand=False)
+    version("1.8.0", sha256="facfe0c7cceafd49e8f7e472111294566605fdfddc23011da06cc3a4601c9f7d", expand=False)
 
-    extends("python", ignore=r"bin/pytest")
-    depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    extends("python")
+    depends_on("py-installer", type="build")
+
+    def install(self, spec, prefix):
+        installer("--prefix", prefix, self.stage.archive_file)
