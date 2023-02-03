@@ -29,5 +29,3 @@ class PyNetpyne(PythonPackage):
     depends_on("py-bokeh", type=("build", "run"))
     depends_on("py-schema", type=("build", "run"))
     depends_on("py-lfpykit", type=("build", "run"))
-
-    depends_on("python@3.7")
