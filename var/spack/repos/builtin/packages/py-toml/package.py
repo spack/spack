@@ -6,17 +6,18 @@
 from spack.package import *
 
 
-class PyToml(PythonPackage):
-    """A Python library for parsing and creating TOML configuration files.
-    For more information on the TOML standard, see
-    https://github.com/toml-lang/toml.git"""
+class PyToml(Package, PythonExtension):
+    """Python Library for Tom's Obvious, Minimal Language."""
 
     homepage = "https://github.com/uiri/toml.git"
-    url = "https://github.com/uiri/toml/archive/0.10.2.tar.gz"
+    url = "https://files.pythonhosted.org/packages/py2.py3/t/toml/toml-0.10.2-py2.py3-none-any.whl"
+    list_url = "https://pypi.org/simple/toml/"
 
-    version("0.10.2", sha256="71d4039bbdec91e3e7591ec5d6c943c58f9a2d17e5f6783acdc378f743fcdd2a")
-    version("0.10.0", sha256="c3821b94be15da61d631bfff45b5c58074f01149792182e68f8690829cabfcf6")
-    version("0.9.3", sha256="633a90ecb1f5665b58f0c94153fcf519313ef53e1de0eac90929cd6b6a014235")
+    version("0.10.2", sha256="806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", expand=False)
+    version("0.10.0", sha256="235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e", expand=False)
 
-    depends_on("py-setuptools", type="build")
-    depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
+    extends("python")
+    depends_on("py-installer", type="build")
+
+    def install(self, spec, prefix):
+        installer("--prefix", prefix, self.stage.archive_file)

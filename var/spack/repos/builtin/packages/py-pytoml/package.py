@@ -6,14 +6,19 @@
 from spack.package import *
 
 
-class PyPytoml(PythonPackage):
+class PyPytoml(Package, PythonExtension):
     """A parser for TOML-0.4.0.
 
     Deprecated: use py-toml instead."""
 
     homepage = "https://github.com/avakar/pytoml"
-    pypi = "pytoml/pytoml-0.1.21.tar.gz"
+    url = "https://files.pythonhosted.org/packages/py2.py3/p/pytoml/pytoml-0.1.21-py2.py3-none-any.whl"
+    list_url = "https://pypi.org/simple/pytoml/"
 
-    version("0.1.21", sha256="8eecf7c8d0adcff3b375b09fe403407aa9b645c499e5ab8cac670ac4a35f61e7")
+    version("0.1.21", sha256="57a21e6347049f73bfb62011ff34cd72774c031b9828cb628a752225136dfc33", expand=False)
 
-    depends_on("py-setuptools", type="build")
+    extends("python")
+    depends_on("py-installer", type="build")
+
+    def install(self, spec, prefix):
+        installer("--prefix", prefix, self.stage.archive_file)
