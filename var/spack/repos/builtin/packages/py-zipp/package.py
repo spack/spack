@@ -6,22 +6,18 @@
 from spack.package import *
 
 
-class PyZipp(PythonPackage):
+class PyZipp(Package, PythonExtension):
     """Backport of pathlib-compatible object wrapper for zip files."""
 
     homepage = "https://github.com/jaraco/zipp"
-    pypi = "zipp/zipp-0.6.0.tar.gz"
+    # Must be installed from wheel to avoid circular dependency on build
+    url = "https://files.pythonhosted.org/packages/py3/z/zipp/zipp-3.12.0-py3-none-any.whl"
+    list_url = "https://pypi.org/simple/zipp/"
 
-    version("3.8.1", sha256="05b45f1ee8f807d0cc928485ca40a07cb491cf092ff587c0df9cb1fd154848d2")
-    version("3.6.0", sha256="71c644c5369f4a6e07636f0aa966270449561fcea2e3d6747b8d23efaa9d7832")
-    version("0.6.0", sha256="3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e")
-    version("0.5.1", sha256="ca943a7e809cc12257001ccfb99e3563da9af99d52f261725e96dfe0f9275bc3")
+    version("3.12.0", sha256="9eb0a4c5feab9b08871db0d672745b53450d7f26992fd1e4653aa43345e97b86", expand=False)
 
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("python@3.6:", type=("build", "run"), when="@2.0.0:")
-    depends_on("python@3.7:", type=("build", "run"), when="@3.8.1:")
-    depends_on("py-setuptools@34.4:", type="build", when="@0.3.3:")
-    depends_on("py-setuptools@56:", type="build", when="@3.5.1:")
-    depends_on("py-setuptools-scm@1.15.0:", type="build")
-    depends_on("py-setuptools-scm@3.4.1: +toml", type="build", when="@2.0.1:")
-    depends_on("py-more-itertools", type=("build", "run"), when="@0.6.0:2.1.0")
+    extends("python")
+    depends_on("py-installer", type="build")
+
+    def install(self, spec, prefix):
+        installer("--prefix", prefix, self.stage.archive_file)

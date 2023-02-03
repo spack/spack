@@ -6,24 +6,21 @@
 from spack.package import *
 
 
-class PyTomli(PythonPackage):
-    """Tomli is a Python library for parsing TOML.
-
-    Tomli is fully compatible with TOML v1.0.0."""
+class PyTomli(Package, PythonExtension):
+    """Tomli is a Python library for parsing TOML. Tomli is fully compatible with TOML v1.0.0."""
 
     homepage = "https://github.com/hukkin/tomli"
-    pypi = "tomli/tomli-2.0.1.tar.gz"
+    # Must be installed from wheel to avoid circular dependency on build
+    url = "https://files.pythonhosted.org/packages/py3/t/tomli/tomli-2.0.1-py3-none-any.whl"
+    list_url = "https://pypi.org/simple/tomli/"
     git = "https://github.com/hukkin/tomli.git"
 
     maintainers("charmoniumq")
 
-    version("2.0.1", sha256="de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f")
-    version("1.2.2", sha256="c6ce0015eb38820eaf32b5db832dbc26deb3dd427bd5f6556cf0acac2c214fee")
-    version("1.2.1", sha256="a5b75cb6f3968abb47af1b40c1819dc519ea82bcc065776a866e8d74c5ca9442")
+    version("2.0.1", sha256="939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc", expand=False)
 
-    # https://github.com/hukkin/tomli/blob/2.0.1/pyproject.toml#L2
-    depends_on("py-flit-core@3.2:3", type="build")
+    extends("python")
+    depends_on("py-installer", type="build")
 
-    # https://github.com/hukkin/tomli/blob/2.0.1/pyproject.toml#L13
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("python@3.7:", type=("build", "run"), when="@2.0.1:")
+    def install(self, spec, prefix):
+        installer("--prefix", prefix, self.stage.archive_file)

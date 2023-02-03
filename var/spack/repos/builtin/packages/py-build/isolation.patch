@@ -1,10 +1,10 @@
---- a/src/build/env.py	2021-09-16 16:20:01.000000000 -0500
-+++ b/src/build/env.py	2022-01-23 15:08:26.000000000 -0600
-@@ -254,6 +254,7 @@
-     """
-     import venv
- 
-+    os.environ.pop('PYTHONPATH', None)
-     venv.EnvBuilder(with_pip=True, symlinks=_fs_supports_symlink()).create(path)
-     executable, script_dir, purelib = _find_executable_and_scripts(path)
- 
+--- a/src/build/env.py	2023-01-11 14:09:08.000000000 -0600
++++ b/src/build/env.py	2023-02-03 12:04:04.000000000 -0600
+@@ -269,6 +269,7 @@
+         with warnings.catch_warnings():
+             if sys.version_info[:3] == (3, 11, 0):
+                 warnings.filterwarnings('ignore', 'check_home argument is deprecated and ignored.', DeprecationWarning)
++            os.environ.pop('PYTHONPATH', None)
+             venv.EnvBuilder(with_pip=True, symlinks=symlinks).create(path)
+     except subprocess.CalledProcessError as exc:
+         raise build.FailedProcessError(exc, 'Failed to create venv. Maybe try installing virtualenv.') from None
