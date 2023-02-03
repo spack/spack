@@ -165,7 +165,7 @@ class Rdc(CMakePackage):
                 "{0}/lib".format(self.spec["rocm-smi-lib"].prefix),
                 "CMakeLists.txt",
                 string=True,
-            )  
+            )
 
     @classmethod
     def determine_version(cls, lib):
