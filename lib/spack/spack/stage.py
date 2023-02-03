@@ -683,7 +683,7 @@ class Stage(LockableStagingDir):
         if not self.expanded:
             self.fetcher.expand()
             tty.debug("Created stage in {0}".format(self.path))
-            if is_windows and spack.config.get("windows_warn_long_paths", False):
+            if is_windows and spack.config.get("config:windows_warn_long_paths", False):
                 check_path_length_and_warn()
         else:
             tty.debug("Already staged {0} in {1}".format(self.name, self.path))
