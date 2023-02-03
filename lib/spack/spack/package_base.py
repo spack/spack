@@ -2351,7 +2351,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             self.stage.destroy()
         else:
             # delete build artifacts for develop specs
-            spack_build_files = glob.glob(os.path.join(self.stage.path,"spack-build-*"))
+            spack_build_files = glob.glob(os.path.join(self.stage.path, "spack-build-*"))
             for f in spack_build_files:
                 if os.path.isdir(f):
                     shutil.rmtree(f)
