@@ -1006,6 +1006,103 @@ class TestSpecSemantics:
         assert new_spec.compiler_flags["cflags"] == ["-O2"]
         assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
 
+    @pytest.mark.parametrize(
+        "spec_str,specs_in_dag",
+        [
+            ("hdf5 ^[virtuals=mpi] mpich", [("mpich", "mpich"), ("mpi", "mpich")]),
+            # Try different combinations with packages that provides a
+            # disjoint set of virtual dependencies
+            (
+                "netlib-scalapack ^mpich ^openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^[virtuals=mpi] mpich ^openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^mpich ^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^[virtuals=mpi] mpich ^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "mpich"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            # Test that we can mix dependencies that provide an overlapping
+            # sets of virtual dependencies
+            (
+                "netlib-scalapack ^[virtuals=mpi] intel-parallel-studio "
+                "^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "intel-parallel-studio"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^[virtuals=mpi] intel-parallel-studio ^openblas-with-lapack",
+                [
+                    ("mpi", "intel-parallel-studio"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            (
+                "netlib-scalapack ^intel-parallel-studio ^[virtuals=lapack] openblas-with-lapack",
+                [
+                    ("mpi", "intel-parallel-studio"),
+                    ("lapack", "openblas-with-lapack"),
+                    ("blas", "openblas-with-lapack"),
+                ],
+            ),
+            # Test that we can bind more than one virtual to the same provider
+            (
+                "netlib-scalapack ^[virtuals=lapack,blas] openblas-with-lapack",
+                [("lapack", "openblas-with-lapack"), ("blas", "openblas-with-lapack")],
+            ),
+        ],
+    )
+    def test_virtual_deps_bindings(self, default_mock_concretization, spec_str, specs_in_dag):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Use case not supported by the original concretizer")
+
+        s = default_mock_concretization(spec_str)
+        for label, expected in specs_in_dag:
+            assert label in s
+            assert s[label].satisfies(expected), label
+
+    @pytest.mark.parametrize(
+        "spec_str",
+        [
+            # openblas-with-lapack needs to provide blas and lapack together
+            "netlib-scalapack ^[virtuals=blas] intel-parallel-studio ^openblas-with-lapack",
+            # intel-* provides blas and lapack together, openblas can provide blas only
+            "netlib-scalapack ^[virtuals=lapack] intel-parallel-studio ^openblas",
+        ],
+    )
+    def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Use case not supported by the original concretizer")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            Spec(spec_str).concretized()
+
 
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",

@@ -4099,9 +4099,7 @@ class Spec:
         """
         query_parameters = name.split(":")
         if len(query_parameters) > 2:
-            msg = "key has more than one ':' symbol."
-            msg += " At most one is admitted."
-            raise KeyError(msg)
+            raise KeyError("key has more than one ':' symbol. At most one is admitted.")
 
         name, query_parameters = query_parameters[0], query_parameters[1:]
         if query_parameters:
@@ -4126,11 +4124,17 @@ class Spec:
                 itertools.chain(
                     # Regular specs
                     (x for x in order() if x.name == name),
+                    (
+                        x
+                        for x in order()
+                        if (not x.virtual)
+                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
+                    ),
                     (x for x in order() if (not x.virtual) and x.package.provides(name)),
                 )
             )
         except StopIteration:
-            raise KeyError("No spec with name %s in %s" % (name, self))
+            raise KeyError(f"No spec with name {name} in {self}")
 
         if self._concrete:
             return SpecBuildInterface(value, name, query_parameters)
@@ -4513,7 +4517,7 @@ class Spec:
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
         sorted_dependencies = [
-            d.format("{edge_attributes} " + DISPLAY_FORMAT) for d in sorted_dependencies
+            d.format("{edge_attributes} " + DEFAULT_FORMAT) for d in sorted_dependencies
         ]
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()

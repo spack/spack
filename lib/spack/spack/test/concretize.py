@@ -1838,7 +1838,8 @@ class TestConcretize:
         # If we concretize with --reuse it is not, since "mpich~debug" was already installed
         with spack.config.override("concretizer:reuse", True):
             s = Spec("mpich").concretized()
-            assert s.satisfies("~debug")
+            assert s.installed
+            assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
