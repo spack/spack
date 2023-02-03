@@ -10,7 +10,6 @@ spack:
             exclude_env_vars: ['CPATH', 'LIBRARY_PATH']
         include:
           - gcc
-          - intel
           - intel-oneapi-compilers
   packages:
     all:
@@ -20,5 +19,4 @@ spack:
   specs:
     - gcc@9.4.0
     - gcc@12.2.0
-    - intel@20.0.4
     - intel-oneapi-compilers@2022.2.1
