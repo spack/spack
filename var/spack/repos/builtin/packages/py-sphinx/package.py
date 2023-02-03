@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PySphinx(PythonPackage):
     homepage = "https://www.sphinx-doc.org/en/master/"
     pypi = "Sphinx/Sphinx-3.2.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("6.0.0", sha256="58c140ecd9aa0abbc8ff6da48a266648eac9e5bfc8e49576efd2979bf46f5961")
 

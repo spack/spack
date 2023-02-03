@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Eve(CMakePackage):
 
     homepage = "https://jfalcou.github.io/eve/"
     url = "https://github.com/jfalcou/eve/archive/refs/tags/v2022.09.0.tar.gz"
-    maintainers = ["jfalcou"]
+    maintainers("jfalcou")
     git = "https://github.com/jfalcou/eve.git"
 
     version("main", branch="main")

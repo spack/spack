@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Ferret(Package):
     homepage = "https://ferret.pmel.noaa.gov/Ferret/home"
     url = "https://github.com/NOAA-PMEL/Ferret/archive/v7.6.0.tar.gz"
 
-    maintainers = ["RemiLacroix-IDRIS"]
+    maintainers("RemiLacroix-IDRIS")
 
     version("7.6.0", sha256="69832d740bd44c9eadd198a5de4d96c4c01ae90ae28c2c3414c1bb9f43e475d1")
     version("7.5.0", sha256="2a038c547e6e80e6bd0645a374c3247360cf8c94ea56f6f3444b533257eb16db")

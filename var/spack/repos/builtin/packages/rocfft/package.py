@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Rocfft(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
 
     version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")

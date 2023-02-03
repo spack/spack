@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Gnupg(AutotoolsPackage):
     homepage = "https://gnupg.org/index.html"
     url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.3.4.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("2.4.0", sha256="1d79158dd01d992431dd2e3facb89fdac97127f89784ea2cb610c600fb0c1483")
     version("2.3.8", sha256="540b7a40e57da261fb10ef521a282e0021532a80fd023e75fb71757e8a4969ed")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Mlirmiopen(CMakePackage):
     git = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam"]
+    maintainers("srekolam")
 
     version("5.3.3", sha256="e9aa407df775d00fdb9404689f69ac755575188f8b25c6bd0fa9599928c5c57f")
     version("5.3.0", sha256="e8471a13cb39d33adff34730d3162adaa5d20f9544d61a6a94b39b9b5762ad6d")

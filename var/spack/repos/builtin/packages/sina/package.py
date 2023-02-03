@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class Sina(CachedCMakePackage):
     homepage = "https://github.com/LLNL/Sina"
     url = "https://github.com/LLNL/Sina/releases/download/v1.10.0/sina-cpp-1.10.0.tar.gz"
 
-    maintainers = [
+    maintainers(
         "estebanpauli",
         "HaluskaR",
         "murray55",
-    ]
+    )
 
     version("1.11.0", sha256="a080f6583101696a6354940f00646ef892e1b2f8fc3f1b1907ba1c3ade6d4b47")
     version("1.10.0", sha256="b34379ce8cc5eca5a0f16893053fac75be14c2109d1beed4c6d48e11f9b281c7")

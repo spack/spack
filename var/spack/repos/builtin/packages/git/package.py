@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Git(AutotoolsPackage):
 
     homepage = "http://git-scm.com"
     url = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
-    maintainers = ["jennfshr"]
+    maintainers("jennfshr")
 
     tags = ["build-tools"]
 
@@ -26,25 +26,46 @@ class Git(AutotoolsPackage):
     # Every new git release comes with a corresponding manpage resource:
     # https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
-    version("2.38.1", sha256="620ed3df572a34e782a2be4c7d958d443469b2665eac4ae33f27da554d88b270")
-    version("2.37.4", sha256="a638c9bf9e45e8d48592076266adaa9b7aa272a99ee2aee2e166a649a9ba8a03")
+    version("2.39.1", sha256="ae8d3427e4ccd677abc931f16183c0ec953e3bfcd866493601351e04a2b97398")
+    version("2.38.3", sha256="ba8f1c56763cfde0433657b045629a4c55047c243eb3091d39dea6f281c8d8e1")
+    version("2.37.5", sha256="5c11f90652afee6c77ef7ddfc672facd4bc6f2596d9627df2f1780664b058b9a")
     version("2.36.3", sha256="0c831b88b0534f08051d1287505dfe45c367108ee043de6f1c0502711a7aa3a6")
-    version("2.35.5", sha256="2cca63fe7bebb5b4bf8efea7b46b12bb89c16ff9711b6b6d845928501d00d0a3")
-    version("2.34.5", sha256="26831c5e48a8c2bf6a4fede1b38e1e51ffd6dad85952cf69ac520ebd81a5ae82")
-    version("2.33.5", sha256="d061ed97f890befaef18b4aad80a37b40db90bcf24113c42765fee157a69c7de")
-    version("2.32.4", sha256="4c791b8e1d96948c9772efc21373ab9b3187af42cdebc3bcbb1a06d794d4e494")
-    version("2.31.5", sha256="2d4197660322937cc44cab5742deef727ba519ef7405455e33100912e3b019f2")
-    version("2.30.6", sha256="a6130b38843a5c80e80fb4f7ac4864d361cbf103d262b64e267264e49440d24a")
+    version("2.35.6", sha256="6bd51e0487028543ba40fe3d5b33bd124526a7f7109824aa7f022e79edf93bd1")
+    version("2.34.6", sha256="01c0ae4161a07ffeb89cfb8bda564eb2dcb83b45b678cf2930cdbdd8e81784d0")
+    version("2.33.6", sha256="76f6a64a198bec38e83044f97fb5a2dfa8404091df5a905404615d2a4c5ebfb7")
+    version("2.32.5", sha256="9982e17209cf4a385ce4a6167863cdd29f68e425d4249aac186434dc3536fe5f")
+    version("2.31.6", sha256="73971208dccdd6d87639abe50ee3405421ec4ba05dec9f8aa90b4e7f1985e15c")
+    version("2.30.7", sha256="c98bf38a296f23ad5619a097df928044b31859df8f89b3ae5a8ea109d3ebd88e")
 
     # Deprecated versions
+    version(
+        "2.38.1",
+        sha256="620ed3df572a34e782a2be4c7d958d443469b2665eac4ae33f27da554d88b270",
+        deprecated=True,
+    )
     version(
         "2.37.0",
         sha256="fc3ffe6c65c1f7c681a1ce6bb91703866e432c762731d4b57c566d696f6d62c3",
         deprecated=True,
     )
     version(
+        "2.37.4",
+        sha256="a638c9bf9e45e8d48592076266adaa9b7aa272a99ee2aee2e166a649a9ba8a03",
+        deprecated=True,
+    )
+    version(
+        "2.36.4",
+        sha256="8b99bd166d904103eccf90b7a9681247a1fb7eba82a72aba70625d9eb95c3db4",
+        deprecated=True,
+    )
+    version(
         "2.36.1",
         sha256="37d936fd17c81aa9ddd3dba4e56e88a45fa534ad0ba946454e8ce818760c6a2c",
+        deprecated=True,
+    )
+    version(
+        "2.35.5",
+        sha256="2cca63fe7bebb5b4bf8efea7b46b12bb89c16ff9711b6b6d845928501d00d0a3",
         deprecated=True,
     )
     version(
@@ -63,6 +84,11 @@ class Git(AutotoolsPackage):
         deprecated=True,
     )
     version(
+        "2.34.5",
+        sha256="26831c5e48a8c2bf6a4fede1b38e1e51ffd6dad85952cf69ac520ebd81a5ae82",
+        deprecated=True,
+    )
+    version(
         "2.34.1",
         sha256="fc4eb5ecb9299db91cdd156c06cdeb41833f53adc5631ddf8c0cb13eaa2911c1",
         deprecated=True,
@@ -70,6 +96,11 @@ class Git(AutotoolsPackage):
     version(
         "2.34.0",
         sha256="0ce6222bfd31938b29360150286b51c77c643fa97740b1d35b6d1ceef8b0ecd7",
+        deprecated=True,
+    )
+    version(
+        "2.33.5",
+        sha256="d061ed97f890befaef18b4aad80a37b40db90bcf24113c42765fee157a69c7de",
         deprecated=True,
     )
     version(
@@ -83,8 +114,18 @@ class Git(AutotoolsPackage):
         deprecated=True,
     )
     version(
+        "2.32.4",
+        sha256="4c791b8e1d96948c9772efc21373ab9b3187af42cdebc3bcbb1a06d794d4e494",
+        deprecated=True,
+    )
+    version(
         "2.32.0",
         sha256="6038f06d396ba9dab2eee541c7db6e7f9f847f181ec62f3d8441893f8c469398",
+        deprecated=True,
+    )
+    version(
+        "2.31.5",
+        sha256="2d4197660322937cc44cab5742deef727ba519ef7405455e33100912e3b019f2",
         deprecated=True,
     )
     version(
@@ -95,6 +136,11 @@ class Git(AutotoolsPackage):
     version(
         "2.31.0",
         sha256="bc6168777883562569144d536e8a855b12d25d46870d95188a3064260d7784ee",
+        deprecated=True,
+    )
+    version(
+        "2.30.6",
+        sha256="a6130b38843a5c80e80fb4f7ac4864d361cbf103d262b64e267264e49440d24a",
         deprecated=True,
     )
     version(
@@ -279,26 +325,36 @@ class Git(AutotoolsPackage):
     )
 
     for (_version, _sha256_manpage) in {
+        "2.39.1": "b2d1b2c6cba2343934792c4409a370a8c684add1b3c0f9b757e71189b1a2e80e",
+        "2.38.3": "9e5c924f6f1c961e09d1a8926c2775a158a0375a3311205d7a6176a3ed522272",
         "2.38.1": "fcb27484406b64419a9f9890e95ef29af08e1f911d9d368546eddc59a18e245d",
+        "2.37.5": "9fab559197891fc1b499cb57513effce7462383f861ac6a7791a46f5348dd7fe",
         "2.37.4": "06ed920949e717f3ab13c98327ee63cae5e3020ac657d14513ef8f843109b638",
         "2.37.0": "69386ab0dcdbc8398ebb97487733166033f1c7711b02b8861b1ae8f4f46e6e4e",
+        "2.36.3": "c5f5385c2b46270a8ce062a9c510bfa4288d9cca54efe0dff48a12ca969cfc6f",
         "2.36.6": "c5f5385c2b46270a8ce062a9c510bfa4288d9cca54efe0dff48a12ca969cfc6f",
         "2.36.1": "3fcd315976f06b54b0abb9c14d38c3d484f431ea4de70a706cc5dddc1799f4f7",
+        "2.35.6": "5e44e05a97f49d7a170a7303f795063b19bc78560acd7458274882f19b631187",
         "2.35.5": "6cbd4d2185c7a757db21f873973fa1efb81069d8b8b8cc350ca6735cb98f45c5",
         "2.35.2": "86e153bdd96edd8462cb7a5c57be1b2b670b033c18272b0aa2e6a102acce50be",
         "2.35.1": "d90da8b28fe0088519e0dc3c9f4bc85e429c7d6ccbaadcfe94aed47fb9c95504",
         "2.35.0": "c0408a1c944c8e481d7f507bd90a7ee43c34617a1a7af2d76a1898dcf44fa430",
+        "2.34.6": "70c784ced9c5ccbd4137d676b032e2ccffeea8aef3094626c2b44d6c843547df",
         "2.34.5": "897941be5b223b9d32217adb64ea8747db2ba57be5f68be598c44d747d1061b2",
         "2.34.1": "220f1ed68582caeddf79c4db15e4eaa4808ec01fd11889e19232f0a74d7f31b0",
         "2.34.0": "fe66a69244def488306c3e05c1362ea53d8626d2a7e57cd7311df2dab1ef8356",
+        "2.33.6": "d7b9170dc7d6f461e00731cf5cf6e4b589e90c8d4eac440fd3e8b5e3d11f0b8f",
         "2.33.5": "34648ede9ac2869190083ee826065c36165e54d9e2906b10680261b243d89890",
         "2.33.1": "292b08ca1b79422ff478a6221980099c5e3c0a38aba39d952063eedb68e27d93",
         "2.33.0": "ba9cd0f29a3632a3b78f8ed2389f0780aa6e8fcbe258259d7c584920d19ed1f7",
+        "2.32.5": "99b236824f1677e15b21514e310d7a0954586d031ffc3a873a4e2138ed073f15",
         "2.32.4": "fa73d0eac384e594efdd4c21343545e407267ab64e970a6b395c7f1874ddb0bf",
         "2.32.0": "b5533c40ea1688231c0e2df51cc0d1c0272e17fe78a45ba6e60cb8f61fa4a53c",
+        "2.31.6": "2e2f921d8ef8a839e05ba3a1cea8f864a49b04648378bf0253213a5d4f1642fe",
         "2.31.5": "18850fc8f1c34e51a0a98b9f974b8356a5d63a53c96fb9fe3dc2880ee84746ab",
         "2.31.1": "d330498aaaea6928b0abbbbb896f6f605efd8d35f23cbbb2de38c87a737d4543",
         "2.31.0": "a51b760c36be19113756839a9110b328a09abfff0d57f1c93ddac3974ccbc238",
+        "2.30.7": "4fc6063c229453de244a88c71f688a2508f30b80ebd47353cc68d730ea1b82aa",
         "2.30.6": "6c20ab10be233e8ff7838351fa5210e972c08005ec541a5241f626cfd4adebfe",
         "2.30.1": "db323e1b242e9d0337363b1e538c8b879e4c46eedbf94d3bee9e65dab6d49138",
         "2.30.0": "e23035ae232c9a5eda57db258bc3b7f1c1060cfd66920f92c7d388b6439773a6",

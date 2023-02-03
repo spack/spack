@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Libksba(AutotoolsPackage):
     homepage = "https://gnupg.org/software/libksba/index.html"
     url = "https://gnupg.org/ftp/gcrypt/libksba/libksba-1.3.5.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("1.6.3", sha256="3f72c68db30971ebbf14367527719423f0a4d5f8103fc9f4a1c01a9fa440de5c")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class TomlF(MesonPackage):
     url = "https://github.com/toml-f/toml-f/releases/download/v0.3.1/toml-f-0.3.1.tar.xz"
     git = "https://github.com/toml-f/toml-f.git"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("main", branch="main")
     version("0.3.1", "7f40f60c8d9ffbb1b99fb051a3e6682c7dd04d7479aa1cf770eff8174b02544f")

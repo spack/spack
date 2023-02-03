@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class SimpleDftd3(MesonPackage):
     url = "https://github.com/dftd3/simple-dftd3/releases/download/v0.7.0/s-dftd3-0.7.0-source.tar.xz"
     git = "https://github.com/dftd3/simple-dftd3.git"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("main", branch="main")
     version("0.7.0", "5390b20102474a3c37240f38226f3a54a809b34bcb910317bdd109b8c2865f4e")

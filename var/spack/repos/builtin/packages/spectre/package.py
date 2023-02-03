@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Spectre(CMakePackage):
     url = "https://github.com/sxs-collaboration/spectre/archive/v2021.12.15.tar.gz"
     git = "https://github.com/sxs-collaboration/spectre.git"
 
-    maintainers = ["nilsvu"]
+    maintainers("nilsvu")
 
     generator = "Ninja"
 

@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import shutil
 
 import llnl.util.tty as tty
@@ -22,22 +23,24 @@ class Hdf5(CMakePackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git = "https://github.com/HDFGroup/hdf5.git"
-    maintainers = [
+    maintainers(
         "lrknox",
         "brtnfld",
         "byrnHDF",
         "gheber",
         "hyoklee",
         "lkurz",
-    ]
+    )
 
-    tags = ["e4s"]
+    tags = ["e4s", "windows"]
+    executables = ["^h5cc$", "^h5pcc$"]
 
     test_requires_compiler = True
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
-    version("develop-1.13", branch="develop")
+    version("develop-1.15", branch="develop")
+    version("develop-1.14", branch="hdf5_1_14")
     version("develop-1.12", branch="hdf5_1_12")
     version("develop-1.10", branch="hdf5_1_10")
     version("develop-1.8", branch="hdf5_1_8")
@@ -47,6 +50,11 @@ class Hdf5(CMakePackage):
     version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
 
     # Even versions are maintenance versions
+    version(
+        "1.14.0",
+        sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4",
+        preferred=True,
+    )
     version(
         "1.12.2",
         sha256="2a89af03d56ce7502dcae18232c241281ad1773561ec00c0f0e8ee2463910f14",
@@ -188,14 +196,13 @@ class Hdf5(CMakePackage):
         "api",
         default="default",
         description="Choose api compatibility for earlier version",
-        values=("default", "v114", "v112", "v110", "v18", "v16"),
+        values=("default", "v116", "v114", "v112", "v110", "v18", "v16"),
         multi=False,
     )
 
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.18:", type="build", when="@1.13:")
 
-    depends_on("msmpi", when="+mpi platform=windows")
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
@@ -206,10 +213,28 @@ class Hdf5(CMakePackage):
     for plat in ["cray", "darwin", "linux"]:
         depends_on("pkgconfig", when="platform=%s" % plat, type="run")
 
+    conflicts("+mpi", "^mpich@4.0:4.0.3")
+    conflicts("api=v116", when="@1.6:1.14", msg="v116 is not compatible with this release")
+    conflicts(
+        "api=v116",
+        when="@develop-1.8:develop-1.14",
+        msg="v116 is not compatible with this release",
+    )
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
+    conflicts(
+        "api=v114",
+        when="@develop-1.8:develop-1.12",
+        msg="v114 is not compatible with this release",
+    )
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
+    conflicts(
+        "api=v112",
+        when="@develop-1.8:develop-1.10",
+        msg="v112 is not compatible with this release",
+    )
     conflicts("api=v110", when="@1.6:1.8", msg="v110 is not compatible with this release")
-    conflicts("api=v18", when="@1.6.0:1.6", msg="v18 is not compatible with this release")
+    conflicts("api=v110", when="@develop-1.8", msg="v110 is not compatible with this release")
+    conflicts("api=v18", when="@1.6", msg="v18 is not compatible with this release")
 
     # The Java wrappers cannot be built without shared libs.
     conflicts("+java", when="~shared")
@@ -286,6 +311,13 @@ class Hdf5(CMakePackage):
     # See https://github.com/HDFGroup/hdf5/issues/1157
     patch("fortran-kinds-2.patch", when="@1.10.8,1.12.1")
 
+    # Patch needed for HDF5 1.14.0 where dependency on MPI::MPI_C was declared
+    # PUBLIC.  Dependent packages using the default hdf5 package but not
+    # expecting to use MPI then failed to configure because they did not call
+    # find_package(MPI).  This patch does that for them.  Later HDF5 versions
+    # will include the patch code changes.
+    patch("hdf5_1_14_0_config_find_mpi.patch", when="@1.14.0")
+
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
     # declared as intent(in) though it is modified by the invocation. As a
     # result, aggressive compilers such as Fujitsu's may do a wrong
@@ -341,6 +373,8 @@ class Hdf5(CMakePackage):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
                 cmake_flags.append(self.compiler.cc_pic_flag)
+            if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
+                cmake_flags.append("-Wno-error=int-conversion")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
@@ -452,6 +486,79 @@ class Hdf5(CMakePackage):
 
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("-showconfig", output=str, error=str)
+        match = re.search(r"HDF5 Version: (\d+\.\d+\.\d+)(\D*\S*)", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def is_enabled(text):
+            if text in set(["t", "true", "enabled", "yes", "1"]):
+                return True
+            return False
+
+        results = []
+        for exe in exes:
+            variants = []
+            output = Executable(exe)("-showconfig", output=str, error=os.devnull)
+            match = re.search(r"High-level library: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+hl")
+            else:
+                variants.append("~hl")
+
+            match = re.search(r"Parallel HDF5: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+mpi")
+            else:
+                variants.append("~mpi")
+
+            match = re.search(r"C\+\+: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+cxx")
+            else:
+                variants.append("~cxx")
+
+            match = re.search(r"Fortran: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+fortran")
+            else:
+                variants.append("~fortran")
+
+            match = re.search(r"Java: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+java")
+            else:
+                variants.append("~java")
+
+            match = re.search(r"Threadsafety: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+threadsafe")
+            else:
+                variants.append("~threadsafe")
+
+            match = re.search(r"Build HDF5 Tools: (\S+)", output)
+            if match and is_enabled(match.group(1)):
+                variants.append("+tools")
+            else:
+                variants.append("~tools")
+
+            match = re.search(r"I/O filters \(external\): \S*(szip\(encoder\))\S*", output)
+            if match:
+                variants.append("+szip")
+            else:
+                variants.append("~szip")
+
+            match = re.search(r"Default API mapping: (\S+)", output)
+            if match and match.group(1) in set(["v114", "v112", "v110", "v18", "v16"]):
+                variants.append("api={0}".format(match.group(1)))
+
+            results.append(" ".join(variants))
+
+        return results
+
     @when("@:1.8.21,1.10.0:1.10.5+szip")
     def setup_build_environment(self, env):
         env.set("SZIP_INSTALL", self.spec["szip"].prefix)
@@ -500,14 +607,14 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec and "platform=windows" not in spec:
-            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
-
-            if "+cxx" in self.spec:
-                args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
-
-            if "+fortran" in self.spec:
-                args.append(self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
+        if "+mpi" in spec:
+            args.extend(
+                [
+                    "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
+                    "-DMPI_C_COMPILER:PATH=%s" % spec["mpi"].mpicc,
+                    "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc,
+                ]
+            )
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
         if spec.satisfies("@1.10.8,1.13.0"):

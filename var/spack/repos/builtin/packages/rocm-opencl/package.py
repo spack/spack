@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RocmOpencl(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libOpenCL"]
 
     def url_for_version(self, version):
@@ -235,6 +235,7 @@ class RocmOpencl(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib),
         env.set("OCL_ICD_VENDORS", self.prefix.vendors + "/")
 
     @run_after("install")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Fpart(AutotoolsPackage):
     url = "https://github.com/martymac/fpart/archive/refs/tags/fpart-1.5.1.tar.gz"
     git = "https://github.com/martymac/fpart.git"
 
-    maintainers = ["drkrynstrng"]
+    maintainers("drkrynstrng")
 
     version("master", branch="master")
     version("1.5.1", sha256="c353a28f48e4c08f597304cb4ebb88b382f66b7fabfc8d0328ccbb0ceae9220c")

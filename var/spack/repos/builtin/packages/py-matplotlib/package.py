@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://matplotlib.org/"
     pypi = "matplotlib/matplotlib-3.3.2.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
     import_modules = [
         "mpl_toolkits.axes_grid1",
         "mpl_toolkits.axes_grid",

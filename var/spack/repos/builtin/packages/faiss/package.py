@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     homepage = "https://github.com/facebookresearch/faiss"
     url = "https://github.com/facebookresearch/faiss/archive/v1.6.3.tar.gz"
 
-    maintainers = ["bhatiaharsh", "rblake-llnl", "lpottier"]
+    maintainers("bhatiaharsh", "rblake-llnl", "lpottier")
 
     build_system(
         conditional("cmake", when="@1.7:"), conditional("autotools", when="@:1.6"), default="cmake"

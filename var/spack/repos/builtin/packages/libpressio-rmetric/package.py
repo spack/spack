@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class LibpressioRmetric(CMakePackage):
     git = "https://github.com/robertu94/libpressio-rmetric"
     homepage = git
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("master", branch="master")
     # note versions <= 0.0.3 do not build with spack

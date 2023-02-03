@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyRadicalSaga(PythonPackage):
     git = "https://github.com/radical-cybertools/radical.saga.git"
     pypi = "radical.saga/radical.saga-1.20.0.tar.gz"
 
-    maintainers = ["andre-merzky"]
+    maintainers("andre-merzky")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="d85f3ed564d9eaf3ead2aa349c854e944ca459492ebf88542404106fce4204ab")

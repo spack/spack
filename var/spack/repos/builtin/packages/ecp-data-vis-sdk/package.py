@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,7 +65,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     homepage = "https://ecp-data-vis-sdk.github.io/"
 
     tags = ["ecp"]
-    maintainers = ["kwryankrattiger", "svenevs"]
+    maintainers("kwryankrattiger", "svenevs")
 
     version("1.0")
 

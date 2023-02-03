@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Grass(AutotoolsPackage):
     list_url = "https://grass.osgeo.org/download/software/sources/"
     git = "https://github.com/OSGeo/grass.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("8.2.0", sha256="621c3304a563be19c0220ae28f931a5e9ba74a53218c5556cd3f7fbfcca33a80")

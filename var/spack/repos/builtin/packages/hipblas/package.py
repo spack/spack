@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Hipblas(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhipblas"]
 
     version("develop", branch="develop")

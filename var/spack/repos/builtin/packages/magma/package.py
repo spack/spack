@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://icl.cs.utk.edu/magma/"
     git = "https://bitbucket.org/icl/magma"
     url = "https://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
-    maintainers = ["stomov", "luszczek", "G-Ragghianti"]
+    maintainers("stomov", "luszczek", "G-Ragghianti")
 
     tags = ["e4s"]
 

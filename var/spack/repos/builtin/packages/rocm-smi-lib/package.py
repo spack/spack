@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class RocmSmiLib(CMakePackage):
     url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
@@ -117,7 +117,11 @@ class RocmSmiLib(CMakePackage):
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
 
     def cmake_args(self):
-        return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),
+        ]
+        return args
 
     @classmethod
     def determine_version(cls, lib):

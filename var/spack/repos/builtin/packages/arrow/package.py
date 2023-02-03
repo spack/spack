@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -101,19 +101,19 @@ class Arrow(CMakePackage, CudaPackage):
             r"(include_directories\()SYSTEM ", r"\1", "cpp/cmake_modules/ThirdpartyToolchain.cmake"
         )
 
-        filter_file(
-            r'set\(ARROW_LLVM_VERSIONS "10" "9" "8" "7"\)',
-            'set(ARROW_LLVM_VERSIONS "11" "10" "9" "8" "7")',
-            "cpp/CMakeLists.txt",
-            when="@:2.0.0",
-        )
-
-        filter_file(
-            r"#include <llvm/Support/DynamicLibrary\.h>",
-            r"#include <llvm/Support/DynamicLibrary.h>" + "\n" + r"#include <llvm/Support/Host.h>",
-            "cpp/src/gandiva/engine.cc",
-            when="@2.0.0",
-        )
+        if self.spec.satisfies("@:2.0.0"):
+            filter_file(
+                r'set\(ARROW_LLVM_VERSIONS "10" "9" "8" "7"\)',
+                'set(ARROW_LLVM_VERSIONS "11" "10" "9" "8" "7")',
+                "cpp/CMakeLists.txt",
+            )
+            filter_file(
+                r"#include <llvm/Support/DynamicLibrary\.h>",
+                r"#include <llvm/Support/DynamicLibrary.h>"
+                + "\n"
+                + r"#include <llvm/Support/Host.h>",
+                "cpp/src/gandiva/engine.cc",
+            )
 
     def cmake_args(self):
         args = ["-DARROW_DEPENDENCY_SOURCE=SYSTEM", "-DARROW_NO_DEPRECATED_API=ON"]

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class EpicsCaGateway(MakefilePackage):
     homepage = "https://epics.anl.gov/extensions/gateway/"
     url = "https://github.com/epics-extensions/ca-gateway/archive/refs/tags/v2.1.3.tar.gz"
 
-    maintainers = ["glenn-horton-smith"]
+    maintainers("glenn-horton-smith")
 
     version("2.1.3", sha256="f6e9dba46951a168d3208fc57054138759d56ebd8a7c07b496e8f5b8a56027d7")
 

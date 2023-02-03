@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class PyPybind11(CMakePackage, PythonExtension):
     url = "https://github.com/pybind/pybind11/archive/refs/tags/v2.10.1.tar.gz"
     git = "https://github.com/pybind/pybind11.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("master", branch="master")
     version("2.10.1", sha256="111014b516b625083bef701df7880f78c2243835abdb263065b6b59b960b6bad")

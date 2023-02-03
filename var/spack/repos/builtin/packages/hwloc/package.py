@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     git = "https://github.com/open-mpi/hwloc.git"
 
-    maintainers = ["bgoglin"]
+    maintainers("bgoglin")
     executables = ["^hwloc-bind$"]
 
     version("master", branch="master")

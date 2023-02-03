@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Mash(AutotoolsPackage):
     homepage = "https://mash.readthedocs.org/"
     url = "https://github.com/marbl/Mash/archive/refs/tags/v2.3.tar.gz"
 
-    maintainers = ["marcusboden"]
+    maintainers("marcusboden")
 
     version("2.3", sha256="f96cf7305e010012c3debed966ac83ceecac0351dbbfeaa6cd7ad7f068d87fe1")
 

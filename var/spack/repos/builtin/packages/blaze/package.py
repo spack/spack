@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Blaze(CMakePackage):
     url = "https://bitbucket.org/blaze-lib/blaze/downloads/blaze-3.8.tar.gz"
     git = "https://bitbucket.org/blaze-lib/blaze.git"
 
-    maintainers = ["nilsvu"]
+    maintainers("nilsvu")
 
     version("master", branch="master")
     version("3.8", sha256="dfaae1a3a9fea0b3cc92e78c9858dcc6c93301d59f67de5d388a3a41c8a629ae")

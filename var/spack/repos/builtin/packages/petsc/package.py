@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     homepage = "https://www.mcs.anl.gov/petsc/index.html"
     url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
-    maintainers = ["balay", "barrysmith", "jedbrown"]
+    maintainers("balay", "barrysmith", "jedbrown")
 
     tags = ["e4s"]
 
@@ -205,7 +205,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("rocprim", when="+rocm")
 
     # Build dependencies
-    depends_on("python@2.6:2.8,3.4:", type="build")
+    depends_on("python@2.6:2.8,3.4:3.8", when="@:3.13", type="build")
+    depends_on("python@2.6:2.8,3.4:", when="@3.14:3.17", type="build")
+    depends_on("python@3.4:", when="@3.18:", type="build")
 
     # Other dependencies
     depends_on("metis@5:~int64+real64", when="@:3.7+metis~int64+double")

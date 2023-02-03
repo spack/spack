@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyH5py(PythonPackage):
     homepage = "https://www.h5py.org/"
     pypi = "h5py/h5py-3.3.0.tar.gz"
     git = "https://github.com/h5py/h5py.git"
-    maintainers = ["bryanherman", "takluyver"]
+    maintainers("bryanherman", "takluyver")
 
     version("master", branch="master")
     version("3.7.0", sha256="3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3")
@@ -37,6 +37,7 @@ class PyH5py(PythonPackage):
     variant("mpi", default=True, description="Build with MPI support")
 
     # Python versions
+    depends_on("python@:3.9", type=("build", "run"), when="@:2.8")
     depends_on("python@3.6:", type=("build", "run"), when="@3:3.1")
     depends_on("python@3.7:", type=("build", "run"), when="@3.2:")
 
@@ -60,7 +61,7 @@ class PyH5py(PythonPackage):
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
     depends_on("hdf5@1.8.4:1.11 +hl", when="@:2")
-    depends_on("hdf5@1.8.4: +hl", when="@3:")
+    depends_on("hdf5@1.8.4:1.12 +hl", when="@3:")
 
     # MPI dependencies
     depends_on("hdf5+mpi", when="+mpi")

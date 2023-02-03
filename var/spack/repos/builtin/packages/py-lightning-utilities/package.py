@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyLightningUtilities(PythonPackage):
     homepage = "https://github.com/Lightning-AI/utilities"
     pypi = "lightning-utilities/lightning-utilities-0.4.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.5.0", sha256="01ef5b7fd50a8b54b849d8621720a65c36c91b374933a8384fb2be3d86cfa8f1")
     version("0.4.2", sha256="dc6696ab180117f7e97b5488dac1d77765ab891022f7521a97a39e10d362bdb8")

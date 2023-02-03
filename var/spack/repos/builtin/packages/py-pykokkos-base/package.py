@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyPykokkosBase(CMakePackage, PythonExtension):
 
     homepage = "https://github.com/kokkos/pykokkos-base.git"
     git = "https://github.com/kokkos/pykokkos-base.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
 
     version("main", branch="main", submodules=False)
     version("0.0.5", commit="45f6e892c007ab124fabb3a545f4744537eafb55", submodules=False)

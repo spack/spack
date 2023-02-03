@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class PyDgl(CMakePackage, PythonExtension):
     homepage = "https://www.dgl.ai/"
     git = "https://github.com/dmlc/dgl.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
     version("0.4.3", tag="0.4.3", submodules=True)

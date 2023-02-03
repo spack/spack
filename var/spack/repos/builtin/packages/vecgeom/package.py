@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan", "sethrj"]
+    maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master")
     version("1.2.1", sha256="2b47f0d23f6d25ca4fc0601b93a98167bbfb4b8aa6a1bba16d0391569e99e6f0")

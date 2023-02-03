@@ -14,7 +14,7 @@ class RabbitmqC(CMakePackage):
     url = "https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.11.0.tar.gz"
     git = "https://github.com/alanxz/rabbitmq-c.git"
 
-    maintainers = ["lpottier"]
+    maintainers("lpottier")
 
     version("0.11.0", sha256="437d45e0e35c18cf3e59bcfe5dfe37566547eb121e69fca64b98f5d2c1c2d424")
 

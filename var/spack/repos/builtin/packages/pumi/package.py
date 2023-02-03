@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Pumi(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/pumi"
     git = "https://github.com/SCOREC/core.git"
 
-    maintainers = ["cwsmith"]
+    maintainers("cwsmith")
 
     tags = ["e4s"]
 
