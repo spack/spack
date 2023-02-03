@@ -51,6 +51,7 @@ def install_kwargs_from_args(args):
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
         "keep_stage": args.keep_stage,
+        "cmake_stage": args.cmake_external_stage,
         "restage": not args.dont_restage,
         "install_source": args.install_source,
         "verbose": args.verbose or args.install_verbose,
@@ -114,7 +115,13 @@ the dependencies""",
         action="store_true",
         help="if a partial install is detected, don't delete prior state",
     )
-
+    subparser.add_argument(
+        "--cmake-external-stage",
+        action="store",
+        dest="cmake_external_stage",
+        help="""Path to root directory where CMake should build relevant
+                projects external to Spack's stage (no impact on non Windows systems)""",
+    )
     cache_group = subparser.add_mutually_exclusive_group()
     cache_group.add_argument(
         "--use-cache",

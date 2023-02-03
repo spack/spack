@@ -372,7 +372,12 @@ class CMakeBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Full-path to the directory to use when building the package."""
-        return os.path.join(self.pkg.stage.path, self.build_dirname)
+        stage_path = (
+            os.path.join(self.pkg.stage.path, self.build_dirname)
+            if not self.pkg.spec.dag_hash(7) in spack.stage.CMakeBuildStage.dispatch
+            else spack.stage.CMakeBuildStage.dispatch[self.pkg.spec.dag_hash(7)]
+        )
+        return stage_path
 
     def cmake_args(self):
         """List of all the arguments that must be passed to cmake, except:

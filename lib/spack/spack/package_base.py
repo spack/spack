@@ -57,7 +57,13 @@ import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
+from spack.stage import (
+    CMakeBuildStage,
+    ResourceStage,
+    Stage,
+    StageComposite,
+    stage_prefix,
+)
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
@@ -1033,6 +1039,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         return stage
 
+    def _make_cmake_build_stage(self):
+        root_stage_name = "{0}{1}-{2}-{3}".format(
+            stage_prefix, self.spec.name, self.spec.version, self.spec.dag_hash()
+        )
+        stage = CMakeBuildStage(self.spec.dag_hash(7), root_stage_name, root=self.cmake_stage_dir)
+        return stage
+
     def _make_stage(self):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
@@ -1053,6 +1066,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
             # Append the item to the composite
             composite_stage.append(stage)
+
+        # if we're building a CMake package on Windows
+        # and the user set the requsite config option, setup a
+        # custom CMake build stage to relocate the cmake build dir to
+        # add here to take advantage of stage cleanup
+        if (
+            is_windows
+            and self.spec.variants["build_system"].value == "cmake"
+            and spack.config.get("config:cmake_ext_build", False)
+        ):
+            composite_stage.append(self._make_cmake_build_stage())
 
         return composite_stage
 
@@ -1654,6 +1678,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         b32_hash = b32_hash.decode("utf-8")
 
         return b32_hash
+
+    @property
+    def cmake_stage_dir(self):
+        if not getattr(self, "_cmake_build_stage", False):
+            return ""
+        return self._cmake_build_stage
+
+    @cmake_stage_dir.setter
+    def cmake_stage_dir(self, val):
+        self._cmake_build_stage = val
 
     @property
     def cmake_prefix_paths(self):

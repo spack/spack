@@ -14,6 +14,8 @@ import shutil
 import stat
 import sys
 import tempfile
+import time
+from pathlib import Path
 from typing import Dict
 
 import llnl.util.lang
@@ -28,6 +30,7 @@ from llnl.util.filesystem import (
     partition_path,
     remove_linked_tree,
 )
+from llnl.util.symlink import symlink
 
 import spack.caches
 import spack.config
@@ -723,6 +726,191 @@ class ResourceStage(Stage):
                     install_tree(src, destination_path)
                 else:
                     install(src, destination_path)
+
+
+class CMakeBuildStage:
+    """Interface abstracting a CMake build tree at a location outside
+    of a Spack stage directory but still managed by Spack.
+
+    CMake's build tree can be located arbitrarily on a filesystem independent
+    from a source directory. This class relocates that build directory out of the
+    stage and to a path under a Users home directory or to a location of a users chosing set
+    either by config or the command line via the --cmake-build-dir cl argument
+    to the install command.
+    Interactions with the stage expecting an in stage build tree will work as normal
+    as this class serves to obfucscate the external stage and allow for all stage behavior
+    to perform as normal.
+    The external build tree is given the same lifespan as its stage dir, is spun up when the stage
+    spins up, and destroyed when the stage is destroyed. After the build and installation are done,
+    the build tree is first relocated to what would be its proper place in the stage.
+    and a symlink is placed in place of the build tree pointing at the external directory
+
+    Note: This is not, nor should it be, used on *nix platforms and is intended as a solution to
+    reduce file path lengths on Windows during compilation/linking. This class should be removed
+    when MSVC fully supports the LongPath feature on Windows.
+    """
+
+    dispatch: Dict[str, str] = {}
+
+    def __init__(self, hash, name, root=None, keep=False):
+        # Users can override external cmake build dir, default is %USERPROFILE%
+        # overrides can come from command line or config, command line will override all
+        self._hash = hash
+        self._path = Path(get_stage_root(), name)
+        self._remote_stage = None
+        self.keep = keep
+        if not root:
+            fallback_path = Path(os.environ["USERPROFILE"], ".sp-stage")
+            self._root = Path(spack.config.get("config:cmake_ext_build_stage_dir", fallback_path))
+
+    def __enter__(self):
+        self.create()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.destroy()
+
+    def _establish_context_link(self):
+        symlink(str(self._remote_stage), str(self._path / ("spack-build-%s" % self._hash)))
+
+    def _remove_context_link(self):
+        Path(self._path, "spack-build-%s" % self._hash).unlink()
+
+    def _rebuild_remote_stage(self):
+        full_subdir = Path(CMakeBuildStage.dispatch[self._hash])
+        if not full_subdir.exists():
+            try:
+                full_subdir.mkdir()
+            except FileExistsError:
+                full_subdir = self._setup_remote_build_stage()
+        return full_subdir
+
+    def _setup_remote_build_stage(self):
+        # try to create root if it doesn't exist
+        self._root.mkdir(parents=True, exist_ok=True)
+        sub_dir = self._compute_next_open_subdir()
+        full_subdir = self._root / sub_dir
+        try:
+            full_subdir.mkdir()
+        except FileExistsError:
+            # another process must have created the same directory as us
+            # try again
+            return self._setup_remote_build_stage()
+        CMakeBuildStage.dispatch[self._hash] = str(full_subdir)
+        return full_subdir
+
+    def _compute_next_open_subdir(self, last=None):
+        def inc(c):
+            curr = ord(c[-1])
+            over = curr // 122
+            if over:
+                return (inc(c[:-1]) if len(c[:-1]) else "a") + "a"
+            return c[:-1] + chr(curr + 1)
+
+        sort_key = lambda x: (len(x.name), x.name)
+        current_ext_stages = list(Path(self._root).iterdir())
+        if not current_ext_stages:
+            # no currently extant external stages, start enumerating with 'a'
+            return "a"
+        last = sorted(current_ext_stages, key=sort_key)[-1]
+        return inc(last.name)
+
+    def _return_to_stage(self):
+        """Copy external build tree back to stage in normal CMake build dir location"""
+        dest = Path(self._path, "spack-build-%s" % self._hash)
+        install_tree(str(self._remote_stage), str(dest))
+
+    def _teardown_remote_stage(self):
+        """Destroy external build tree if not keep-stage
+        Otherwise this is kept as usual"""
+
+        def teardown(pth: Path):
+            for sub_item in pth.iterdir():
+                if sub_item.is_dir():
+                    teardown(sub_item)
+                else:
+                    sub_item.unlink()
+            pth.rmdir()
+
+        if self._remote_stage:
+            teardown(self._remote_stage)
+
+    def _reclaim_remote_stage(self):
+        # another Spack process or build has taken this directory
+        # the cmake build will not work from a different dir
+        # so wait until we can take it - try five times
+        # waiting a little longer each time.
+        # This will cause a hang but this should only be called if we're trying
+        # to rebuild a pre-existing stage, so we need to get the previous
+        # build dir or CMake will error
+        ii = 0
+        while self._remote_stage.exists() and ii < 5:
+            time.sleep(0.5)
+            ii += 1
+        if ii == 5:
+            raise StageError(
+                "Could not re-create external CMake stage, one exists for this package already"
+            )
+        self._remote_stage.mkdir()
+
+    def destroy(self):
+        # copy back to stage may fail in event of error, make sure we clean up the
+        # associated external build dir in that event unless we're keeping the
+        # parent stage on cleanup
+        # If remote stage is not set, we never created one, package is already
+        # installed and we should do nothing here
+        if self._remote_stage:
+            try:
+                self._remove_context_link()
+                self._return_to_stage()
+            finally:
+                self._teardown_remote_stage()
+
+    def restage(self):
+        if self._hash in CMakeBuildStage.dispatch:
+            self._remote_stage = Path(CMakeBuildStage.dispatch[self._hash])
+            if self._remote_stage.exists():
+                self._reclaim_remote_stage()
+        else:
+            self.create()
+
+    def create(self):
+        if not self.created:
+            try:
+                self._remote_stage = self._setup_remote_build_stage()
+                self._establish_context_link()
+            except Exception:
+                self._teardown_remote_stage()
+                raise
+
+    def steal_source(self, dest):
+        if not self._remote_stage:
+            self.create()
+
+        self._path = Path(dest)
+
+    @property
+    def created(self):
+        return bool(self._remote_stage) and self._remote_stage.exists()
+
+    @property
+    def managed_by_spack(self):
+        return True
+
+    def fetch(self, mirror_only=False, err_msg=None):
+        pass
+
+    def cache_local(self):
+        pass
+
+    def cache_mirror(self):
+        pass
+
+    def check(self):
+        pass
+
+    def expand_archive(self):
+        pass
 
 
 class StageComposite(pattern.Composite):
