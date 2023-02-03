@@ -12,14 +12,15 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     homepage = "https://docs.pennylane.ai/projects/lightning"
     git = "https://github.com/PennyLaneAI/pennylane-lightning.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.0.tar.gz"
-    tag = "v0.28.0"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.2.tar.gz"
+    tag = "v0.28.2"
 
-    maintainers = ["mlxd, AmintorDusko"]
+    maintainers = ["mlxd", "AmintorDusko"]
 
     version("develop", branch="master")
-    version("0.28.0", sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
+    version("0.28.2", branch="8de49f6743485ac703ff4f02da891994508cdadef5086b686b34c0d6865aa200")
     version("0.28.1", sha256="038bc11ec913c3b90dd056bd0b134920db0ec5ff6f6a0bb94db6eaa687ce6618")
+    version("0.28.0", sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
 
     variant("python", default=True, description="Build with Python support")
     variant("native", default=False, description="Build natively for given hardware")
@@ -27,6 +28,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("kokkos", default=False, description="Build with Kokkos support")
     variant("verbose", default=False, description="Build with full verbosity")
+    variant("dispatcher", default=False, description="Build with AVX2/AVX512 gate automatic dispatching support")
 
     variant("cpptests", default=False, description="Build CPP tests")
     variant("cppbenchmarks", default=False, description="Build CPP benchmark examples")
@@ -38,11 +40,11 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
 
-    extends("python")
+    extends("python", when="+python")
 
     # hard dependencies
     depends_on("cmake@3.21.0:3.24.0", type="build")  # 3.21-3.24
-    depends_on("ninja", type="build")
+    depends_on("ninja", type=("run", "build"))
 
     # variant defined dependencies
     depends_on("blas", when="+blas")
@@ -57,17 +59,8 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
 
-
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    build_targets = ["runner", "test"]
-    phases = ("cmake", "build", "build_ext", "install")
     build_directory = "build"
-
-    def __init__(self, spec):
-        super().__init__(spec)
-        if not self.spec.variants["cpptests"].value:
-            self.build_targets = []
-            self.phases = ("build_ext", "install")
 
     def cmake_args(self):
         """
@@ -82,6 +75,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("BUILD_TESTS", "cpptests"),
             self.define_from_variant("BUILD_BENCHMARKS", "cppbenchmarks"),
             self.define_from_variant("ENABLE_PYTHON", "python"),
+            self.define_from_variant("ENABLE_GATE_DISPATCHER", "dispatcher"),
         ]
 
         if self.spec.variants["kokkos"].value:
@@ -95,18 +89,23 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         return args
 
-    def build_ext(self, pkg, spec, prefix):
+    def build(self, pkg, spec, prefix):
+        super().build(pkg, spec, prefix)
         if self.spec.variants["python"].value:
-            cm_args = ";".join([s[2:] for s in self.cmake_args()])
+            cm_args = ";".join([s[2:] for s in self.cmake_args() if s[2:] not in ["BUILD_TESTS:BOOL=ON", "BUILD_BENCHMARKS:BOOL=ON"]])
             args = ["-i", f"--define={cm_args}"]
             build_ext = Executable(f"{self.spec['python'].command.path}" + " setup.py build_ext")
             build_ext(*args)
-        else:
-            print("Nothing to build: Python disabled")
 
     def install(self, pkg, spec, prefix):
         if self.spec.variants["python"].value:
             pip_args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*pip_args)
-        else:
-            print("Nothing to install: Python disabled")
+        super().install(pkg, spec, prefix)
+            
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def test_lightning_build(self):
+        with working_dir(self.stage.source_path):
+            pl_runner = Executable(join_path(self.prefix, "bin", "pennylane_lightning_test_runner"))
+            pl_runner()
