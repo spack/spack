@@ -43,7 +43,9 @@ class Msmpi(Package):
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
-
+        # MSMPI does not vendor compiler wrappers, instead arguments should
+        # be manually supplied to compiler by consuming package
+        # Note: This is not typical of MPI installations
         spec.mpicc = spack_cc
         spec.mpicxx = spack_cxx
         spec.mpifc = spack_fc
