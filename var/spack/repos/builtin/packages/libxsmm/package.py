@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Libxsmm(MakefilePackage):
     url = "https://github.com/hfp/libxsmm/archive/1.17.tar.gz"
     git = "https://github.com/hfp/libxsmm.git"
 
-    maintainers = ["hfp"]
+    maintainers("hfp")
 
     version("main", branch="main")
     version("1.17", sha256="8b642127880e92e8a75400125307724635ecdf4020ca4481e5efe7640451bb92")

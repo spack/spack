@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Gcta(CMakePackage):
     homepage = "https://github.com/jianyangqt/gcta"
     url = "https://github.com/jianyangqt/gcta/archive/refs/tags/v1.91.2.tar.gz"
     git = "https://github.com/jianyangqt/gcta.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("1.94.0beta", commit="746e3975ddb463fc7bd15b03c6cc64b023eca497", submodules=True)
     version("1.91.2", sha256="0609d0fba856599a2acc66adefe87725304117acc226360ec2aabf8a0ac64e85")

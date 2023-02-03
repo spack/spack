@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Capnproto(AutotoolsPackage):
     url = "https://github.com/capnproto/capnproto/archive/refs/tags/v0.8.0.tar.gz"
     git = "https://github.com/capnproto/capnproto"
 
-    maintainers = ["alexrobomind"]
+    maintainers("alexrobomind")
 
     version("master", branch="master")
 

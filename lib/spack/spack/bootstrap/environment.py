@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -171,7 +171,7 @@ def mypy_root_spec():
 
 def black_root_spec():
     """Return the root spec used to bootstrap black"""
-    return _root_spec("py-black")
+    return _root_spec("py-black@:22.12.0")
 
 
 def flake8_root_spec():

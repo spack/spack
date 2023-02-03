@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,9 @@ class Pfunit(CMakePackage):
     url = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/releases/download/v4.6.1/pFUnit-v4.6.1.tar"
     git = "https://github.com/Goddard-Fortran-Ecosystem/pFUnit.git"
 
-    maintainers = ["mathomp4", "tclune"]
+    maintainers("mathomp4", "tclune")
 
+    version("4.6.2", sha256="fd302a1f7a131b38e18bc31ede69a216e580c640152e5e313f5a1e084669a950")
     version("4.6.1", sha256="19de22ff0542ca900aaf2957407f24d7dadaccd993ea210beaf22032d3095add")
     version("4.6.0", sha256="7c768ea3a2d16d8ef6229b25bd7756721c24a18db779c7422afde0e3e2248d72")
     version("4.5.0", sha256="ae0ed4541f2f4ec7b1d06eed532a49cb4c666394ab92b233911f92ce50f76743")
@@ -53,11 +54,15 @@ class Pfunit(CMakePackage):
     variant("esmf", default=False, description="Enable esmf support")
     variant("docs", default=False, description="Build docs")
 
+    # The maximum rank of an array in the Fortran 2008 standard is 15
+    max_rank = 15
+    allowed_array_ranks = tuple(str(i) for i in range(1, max_rank + 1))
+
     variant(
         "max_array_rank",
-        values=int,
         default=5,
-        description="Max number of Fortran dimensions of array asserts",
+        values=allowed_array_ranks,
+        description="Max rank for assertion overloads (higher values may be slower to build)",
     )
 
     variant(
@@ -71,7 +76,16 @@ class Pfunit(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("esmf", when="+esmf")
     depends_on("m4", when="@4.1.5:", type="build")
-    depends_on("fargparse")
+    depends_on("fargparse", when="@4:")
+    depends_on("cmake@3.12:", type="build")
+
+    # CMake 3.25.0 has an issue with pFUnit
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/24203
+    conflicts(
+        "^cmake@3.25.0",
+        when="@4.0.0:",
+        msg="CMake 3.25.0 has a bug with pFUnit. Please use an older or newer version.",
+    )
 
     conflicts(
         "%gcc@:8.3.9",

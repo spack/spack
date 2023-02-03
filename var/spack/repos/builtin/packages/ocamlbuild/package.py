@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Ocamlbuild(MakefilePackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["scemama", "cessenat"]
+    maintainers("scemama", "cessenat")
 
     # Add proper versions here.
     version("master", branch="master")

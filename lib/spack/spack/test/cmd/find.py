@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,6 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 
 base32_alphabet = "abcdefghijklmnopqrstuvwxyz234567"
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.fixture(scope="module")
@@ -131,15 +129,28 @@ def test_namespaces_shown_correctly(database):
 
 @pytest.mark.db
 def test_find_cli_output_format(database, mock_tty_stdout):
+    # Currently logging on Windows detaches stdout
+    # from the terminal so we miss some output during tests
+    # TODO: (johnwparent): Once logging is amended on Windows,
+    # restore this test
     out = find("zmpi")
-    assert out.endswith(
-        dedent(
-            """\
-    zmpi@1.0
-    ==> 1 installed package
-    """
+    if not sys.platform == "win32":
+        assert out.endswith(
+            dedent(
+                """\
+      zmpi@1.0
+      ==> 1 installed package
+      """
+            )
         )
-    )
+    else:
+        assert out.endswith(
+            dedent(
+                """\
+      zmpi@1.0
+      """
+            )
+        )
 
 
 def _check_json_output(spec_list):
@@ -349,6 +360,7 @@ def test_find_command_basic_usage(database):
     assert "mpileaks" in output
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
     mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config

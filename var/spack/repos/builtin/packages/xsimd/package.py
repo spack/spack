@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xsimd(CMakePackage):
     url = "https://github.com/QuantStack/xsimd/archive/3.1.0.tar.gz"
     git = "https://github.com/QuantStack/xsimd.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="master")
     version("8.1.0", sha256="d52551360d37709675237d2a0418e28f70995b5b7cdad7c674626bcfbbf48328")

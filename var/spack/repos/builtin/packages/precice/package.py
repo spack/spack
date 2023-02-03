@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Precice(CMakePackage):
     homepage = "https://precice.org/"
     git = "https://github.com/precice/precice.git"
     url = "https://github.com/precice/precice/archive/v1.2.0.tar.gz"
-    maintainers = ["fsimonis", "MakisH"]
+    maintainers("fsimonis", "MakisH")
 
     tags = ["e4s"]
 

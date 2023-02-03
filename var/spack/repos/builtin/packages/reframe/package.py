@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Reframe(Package):
     git = "https://github.com/eth-cscs/reframe.git"
 
     # notify when the package is updated.
-    maintainers = ["victorusu", "vkarak"]
+    maintainers("victorusu", "vkarak")
 
     version("master", branch="master")
     version("4.0.1", sha256="1680b8f0dd405dcf98be23473570595a424cbee830b2dbb665459e2974723f6f")

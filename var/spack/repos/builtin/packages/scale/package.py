@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Scale(MakefilePackage):
     homepage = "https://scale.riken.jp/"
     url = "https://scale.riken.jp/archives/scale-5.4.4.tar.gz"
 
-    maintainers = ["t-yamaura"]
+    maintainers("t-yamaura")
 
     version(
         "5.4.4",

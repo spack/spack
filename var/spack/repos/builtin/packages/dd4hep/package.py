@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Dd4hep(CMakePackage):
     url = "https://github.com/AIDASoft/DD4hep/archive/v01-12-01.tar.gz"
     git = "https://github.com/AIDASoft/DD4hep.git"
 
-    maintainers = ["vvolkl", "drbenmorgan"]
+    maintainers("vvolkl", "drbenmorgan")
 
     tags = ["hep"]
 

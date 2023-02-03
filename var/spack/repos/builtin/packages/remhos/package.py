@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Remhos(MakefilePackage):
     url = "https://github.com/CEED/Remhos/archive/v1.0.tar.gz"
     git = "https://github.com/CEED/Remhos.git"
 
-    maintainers = ["v-dobrev", "tzanio", "vladotomov"]
+    maintainers("v-dobrev", "tzanio", "vladotomov")
 
     version("develop", branch="master")
     version("1.0", sha256="e60464a867fe5b1fd694fbb37bb51773723427f071c0ae26852a2804c08bbb32")
@@ -53,4 +53,4 @@ class Remhos(MakefilePackage):
         mkdirp(prefix.bin)
         install("remhos", prefix.bin)
 
-    install_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks: List[str] = []

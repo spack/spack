@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyMypy(PythonPackage):
     homepage = "http://www.mypy-lang.org/"
     pypi = "mypy/mypy-0.740.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.991", sha256="3c0165ba8f354a6d9881809ef29f1a9318a236a6d81c690094c5df32107bde06")
     version("0.990", sha256="72382cb609142dba3f04140d016c94b4092bc7b4d98ca718740dc989e5271b8d")
