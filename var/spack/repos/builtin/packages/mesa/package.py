@@ -158,7 +158,7 @@ class Mesa(MesonPackage):
     # in order to move on with ROCm 5.3.0 and ROCm 5.4.0.
     # The revised patch was part of https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/17518/diffs.
 
-    patch("disable-gallivm-coroutine-for-libllvm15-updated.patch", when="@22.1.2: ^libllvm@15:")
+    patch("0001-disable-gallivm-coroutine-for-libllvm15.patch", when="@22.1.2: ^libllvm@15:")
 
     # Explicitly use the llvm-config tool
     def patch(self):

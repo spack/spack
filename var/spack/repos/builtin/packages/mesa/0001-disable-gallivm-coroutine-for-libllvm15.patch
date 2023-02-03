@@ -1,3 +1,13 @@
+From ae9611b4cf3ee3395f0e6a94073120b87ba7c520 Mon Sep 17 00:00:00 2001
+From: sreenivasa murthy kolam <sreenivasamurthy.kolam@amd.com>
+Date: Tue, 24 Jan 2023 17:13:36 -0800
+Subject: [PATCH] Updating patch w.r.t llvm 5.4.0
+
+---
+ src/gallium/auxiliary/gallivm/lp_bld.h      | 51 +++++++++++++-
+ src/gallium/auxiliary/gallivm/lp_bld_arit.c | 78 ++++++---------------
+ 2 files changed, 70 insertions(+), 59 deletions(-)
+
 diff --git a/src/gallium/auxiliary/gallivm/lp_bld.h b/src/gallium/auxiliary/gallivm/lp_bld.h
 index 9144428..e1f6200 100644
 --- a/src/gallium/auxiliary/gallivm/lp_bld.h
@@ -191,3 +201,6 @@ index 9cff016..1dba199 100644
  
     /*
      * We don't use RCPPS because:
+-- 
+2.22.0
+
