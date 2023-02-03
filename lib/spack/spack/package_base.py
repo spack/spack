@@ -2344,10 +2344,19 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def do_clean(self):
         """Removes the package's build stage and source tarball."""
-        for patch in self.spec.patches:
-            patch.clean()
+        if self.stage.managed_by_spack:
+            for patch in self.spec.patches:
+                patch.clean()
 
-        self.stage.destroy()
+            self.stage.destroy()
+        else:
+            # delete build artifacts for develop specs
+            spack_build_files = glob.glob(os.path.join(self.stage.path,"spack-build-*"))
+            for f in spack_build_files:
+                if os.path.isdir(f):
+                    shutil.rmtree(f)
+                elif os.path.isfile(f):
+                    os.remove(f)
 
     @classmethod
     def format_doc(cls, **kwargs):
