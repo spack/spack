@@ -16,5 +16,5 @@ class Regiodesics(CMakePackage):
     version('develop')
     version('0.1.3', tag='0.1.3')
 
-    depends_on('boost@1.70.0:')
+    depends_on('boost+program_options+system@1.70.0:')
     depends_on('openscenegraph')
