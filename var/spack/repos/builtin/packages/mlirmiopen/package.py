@@ -15,7 +15,7 @@ class Mlirmiopen(CMakePackage):
     git = "https://github.com/ROCmSoftwarePlatform/llvm-project-mlir.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam"]
+    maintainers("srekolam")
 
     version("5.4.0", sha256="3823f455ee392118c3281e27d45fa0e5381f3c4070eb4e06ba13bc6b34a90a60")
     version("5.3.3", sha256="e9aa407df775d00fdb9404689f69ac755575188f8b25c6bd0fa9599928c5c57f")

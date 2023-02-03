@@ -17,7 +17,7 @@ class PyRasterio(PythonPackage):
     pypi = "rasterio/rasterio-1.1.8.tar.gz"
     git = "https://github.com/rasterio/rasterio.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("1.3.5", sha256="92358c3d4d5d6f3c7cd2812c8832d5175abce02b11bc101ac9548ff07163e8e2")

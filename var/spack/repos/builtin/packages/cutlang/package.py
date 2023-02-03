@@ -14,7 +14,7 @@ class Cutlang(Package):
 
     homepage = "https://github.com/unelg/CutLang"
     url = "https://github.com/unelg/CutLang/archive/refs/tags/v2.12.10.tar.gz"
-    maintainers = ["unelg", "ssekmen", "sabrivatansever"]
+    maintainers("unelg", "ssekmen", "sabrivatansever")
 
     version(
         "2.12.10",

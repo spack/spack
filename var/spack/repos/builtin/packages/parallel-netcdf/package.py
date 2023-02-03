@@ -19,7 +19,7 @@ class ParallelNetcdf(AutotoolsPackage):
     url = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     tags = ["e4s"]
 

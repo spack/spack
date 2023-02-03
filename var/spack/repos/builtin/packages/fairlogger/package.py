@@ -15,7 +15,7 @@ class Fairlogger(CMakePackage):
     homepage = "https://github.com/FairRootGroup/FairLogger"
     url = "https://github.com/FairRootGroup/FairLogger/archive/v1.2.0.tar.gz"
     git = "https://github.com/FairRootGroup/FairLogger.git"
-    maintainers = ["dennisklein", "ChristianTackeGSI"]
+    maintainers("dennisklein", "ChristianTackeGSI")
     # generator = 'Ninja'
 
     version("develop", branch="dev", get_full_repo=True)

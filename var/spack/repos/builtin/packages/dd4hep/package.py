@@ -19,7 +19,7 @@ class Dd4hep(CMakePackage):
     url = "https://github.com/AIDASoft/DD4hep/archive/v01-12-01.tar.gz"
     git = "https://github.com/AIDASoft/DD4hep.git"
 
-    maintainers = ["vvolkl", "drbenmorgan"]
+    maintainers("vvolkl", "drbenmorgan")
 
     tags = ["hep"]
 

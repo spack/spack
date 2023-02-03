@@ -19,7 +19,7 @@ class Bohrium(CMakePackage, CudaPackage):
     url = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
     git = "https://github.com/bh107/bohrium.git"
 
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions

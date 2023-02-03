@@ -14,7 +14,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     tags = ["build-tools", "core-packages"]
 

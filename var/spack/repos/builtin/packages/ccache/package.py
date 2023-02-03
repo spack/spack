@@ -15,7 +15,7 @@ class Ccache(CMakePackage):
 
     homepage = "https://ccache.dev/"
     url = "https://github.com/ccache/ccache/releases/download/v4.2.1/ccache-4.2.1.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     tags = ["build-tools"]
 

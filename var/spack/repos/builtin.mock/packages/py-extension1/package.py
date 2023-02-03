@@ -13,7 +13,7 @@ class PyExtension1(PythonPackage):
     homepage = "http://www.example.com"
     url = "http://www.example.com/extension1-1.0.tar.gz"
 
-    maintainers = ["user1", "user2"]
+    maintainers("user1", "user2")
 
     version("1.0", "00000000000000000000000000000110")
     version("2.0", "00000000000000000000000000000120")

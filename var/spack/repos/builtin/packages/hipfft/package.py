@@ -19,7 +19,7 @@ class Hipfft(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["renjithravindrankannath", "srekolam"]
+    maintainers("renjithravindrankannath", "srekolam")
 
     version("master", branch="master")
 

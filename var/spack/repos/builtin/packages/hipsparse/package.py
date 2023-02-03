@@ -17,7 +17,7 @@ class Hipsparse(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhipsparse"]
 
     version("5.4.0", sha256="47420d38483c8124813b744971e428a0352c83d9b62a5a50f74ffa8f9b785b20")

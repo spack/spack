@@ -17,7 +17,7 @@ class MiopenOpencl(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
     version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")

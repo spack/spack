@@ -17,7 +17,7 @@ class Srcml(CMakePackage):
     homepage = "https://github.com/srcML/srcML"
     url = "https://github.com/srcML/srcML/archive/refs/tags/v1.0.0.tar.gz"
 
-    maintainers = ["meyersbs"]
+    maintainers("meyersbs")
 
     version("1.0.0", sha256="3ddf33271c3b3953d5e3ecbb14c4f925fc0e609a81250d921d3516537dcffae2")
 

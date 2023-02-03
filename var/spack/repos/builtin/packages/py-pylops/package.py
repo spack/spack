@@ -17,7 +17,7 @@ class PyPylops(PythonPackage):
     pypi = "pylops/pylops-1.12.0.tar.gz"
     git = "https://github.com/PyLops/pylops.git"
 
-    maintainers = ["archxlith"]
+    maintainers("archxlith")
 
     version("master", branch="master")
     version("1.12.0", sha256="0e9caef46bbef9691acd133cb9b6d13e19510e8682aaa8f4eb15d9bd9ff9ebb6")

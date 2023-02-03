@@ -19,7 +19,7 @@ class Idl(Package):
     manual_download = True
     url = "file://{0}/idl8.7-linux.tar.gz".format(os.getcwd())
 
-    maintainers = ["francinelapid"]
+    maintainers("francinelapid")
 
     license_required = True
 

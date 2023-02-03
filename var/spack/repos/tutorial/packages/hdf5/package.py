@@ -23,7 +23,7 @@ class Hdf5(CMakePackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git = "https://github.com/HDFGroup/hdf5.git"
-    maintainers = [
+    maintainers(
         "lrknox",
         "brtnfld",
         "byrnHDF",
@@ -33,7 +33,7 @@ class Hdf5(CMakePackage):
         "hyoklee",
         "lkurz",
         "soumagne",
-    ]
+    )
 
     test_requires_compiler = True
 

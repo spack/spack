@@ -14,7 +14,7 @@ class Irep(CMakePackage):
     homepage = "https://irep.readthedocs.io/"
     url = "https://github.com/LLNL/irep/archive/refs/tags/v1.0.0.tar.gz"
 
-    maintainers = ["tomstitt", "kennyweiss"]
+    maintainers("tomstitt", "kennyweiss")
 
     version("1.0.0", "b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4")
 

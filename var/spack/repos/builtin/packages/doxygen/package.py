@@ -44,7 +44,7 @@ class Doxygen(CMakePackage):
 
     executables = ["doxygen"]
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     def url_for_version(self, version):
         url = "https://github.com/doxygen/doxygen/archive/refs/tags/Release_{0}.tar.gz"

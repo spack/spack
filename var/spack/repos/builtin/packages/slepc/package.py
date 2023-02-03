@@ -16,7 +16,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     url = "https://slepc.upv.es/download/distrib/slepc-3.17.1.tar.gz"
     git = "https://gitlab.com/slepc/slepc.git"
 
-    maintainers = ["joseeroman", "balay"]
+    maintainers("joseeroman", "balay")
 
     tags = ["e4s"]
     test_requires_compiler = True

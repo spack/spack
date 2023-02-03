@@ -23,7 +23,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     list_depth = 1
     git = "https://gitlab.kitware.com/paraview/paraview.git"
 
-    maintainers = ["danlipsa", "vicentebolea", "kwryankrattiger"]
+    maintainers("danlipsa", "vicentebolea", "kwryankrattiger")
     tags = ["e4s"]
 
     version("master", branch="master", submodules=True)
@@ -270,8 +270,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
-    patch("vtk-xdmf2-hdf51.13.1.patch", when="@5.10.0:5.10 +hdf5")
-    patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10: +hdf5")
+    patch("vtk-xdmf2-hdf51.13.1.patch", when="@5.10.0:5.10")
+    patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10:")
 
     @property
     def generator(self):

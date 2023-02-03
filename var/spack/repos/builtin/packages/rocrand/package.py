@@ -19,7 +19,7 @@ class Rocrand(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocrand"]
 
     version("5.4.0", sha256="0f6a0279b8b5a6dfbe32b45e1598218fe804fee36170d5c1f7b161c600544ef2")

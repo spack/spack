@@ -19,7 +19,7 @@ class Plasma(CMakePackage):
     homepage = "https://github.com/icl-utk-edu/plasma/"
     url = "https://github.com/icl-utk-edu/plasma/releases/download/21.8.29/plasma-21.8.29.tar.gz"
     git = "https://github.com/icl-utk-edu/plasma"
-    maintainers = ["luszczek"]
+    maintainers("luszczek")
 
     tags = ["e4s"]
 

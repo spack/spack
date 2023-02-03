@@ -12,7 +12,7 @@ class Antimony(CMakePackage):
     homepage = "http://antimony.sourceforge.net/"
     url = "antimony"
 
-    maintainers = ["rblake-llnl"]
+    maintainers("rblake-llnl")
 
     version("2.8", sha256="7e3e38706c074b72e241ac56ef4ce23e87ef8c718c70f29b2207f1847c43770f")
     version("2.7", sha256="7ad181cac632282ae77ced09388dd92db87ea4683eed8c45f2b43861ae2acad4")

@@ -18,7 +18,7 @@ class GftlShared(CMakePackage):
     )
     git = "https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared.git"
 
-    maintainers = ["mathomp4", "tclune"]
+    maintainers("mathomp4", "tclune")
 
     version("main", branch="main")
 

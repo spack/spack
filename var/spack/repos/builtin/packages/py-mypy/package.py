@@ -12,7 +12,7 @@ class PyMypy(PythonPackage):
     homepage = "http://www.mypy-lang.org/"
     pypi = "mypy/mypy-0.740.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.991", sha256="3c0165ba8f354a6d9881809ef29f1a9318a236a6d81c690094c5df32107bde06")
     version("0.990", sha256="72382cb609142dba3f04140d016c94b4092bc7b4d98ca718740dc989e5271b8d")

@@ -12,7 +12,7 @@ class Restic(Package):
     homepage = "https://restic.net"
     url = "https://github.com/restic/restic/releases/download/v0.12.1/restic-0.12.1.tar.gz"
 
-    maintainers = ["alecbcs"]
+    maintainers("alecbcs")
 
     version("0.15.0", sha256="85a6408cfb0798dab52335bcb00ac32066376c32daaa75461d43081499bc7de8")
     version("0.14.0", sha256="78cdd8994908ebe7923188395734bb3cdc9101477e4163c67e7cc3b8fd3b4bd6")

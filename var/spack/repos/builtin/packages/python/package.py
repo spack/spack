@@ -37,7 +37,7 @@ class Python(Package):
     list_depth = 1
     tags = ["windows"]
 
-    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "pradyunsg"]
+    maintainers("adamjstewart", "skosukhin", "scheibelp", "pradyunsg")
 
     phases = ["configure", "build", "install"]
 

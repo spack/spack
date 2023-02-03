@@ -12,7 +12,7 @@ class Libbacktrace(AutotoolsPackage):
 
     homepage = "https://github.com/ianlancetaylor/libbacktrace"
     git = "https://github.com/ianlancetaylor/libbacktrace.git"
-    maintainers = ["trahay"]
+    maintainers("trahay")
 
     version("master", branch="master")
     version("2020-02-19", commit="ca0de0517f3be44fedf5a2c01cfaf6437d4cae68")
