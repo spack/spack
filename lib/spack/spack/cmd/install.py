@@ -260,7 +260,7 @@ def default_log_file(spec):
 
 def report_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
     """Return the filename to be used for reporting to JUnit or CDash format."""
-    result = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
+    result = args.log_file or default_log_file(specs[0])
     return result
 
 
