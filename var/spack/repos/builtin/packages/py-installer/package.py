@@ -12,7 +12,9 @@ class PyInstaller(Package, PythonExtension):
     """A library for installing Python wheels."""
 
     homepage = "https://github.com/pypa/installer"
-    url = "https://files.pythonhosted.org/packages/py3/i/installer/installer-0.6.0-py3-none-any.whl"
+    url = (
+        "https://files.pythonhosted.org/packages/py3/i/installer/installer-0.6.0-py3-none-any.whl"
+    )
     list_url = "https://pypi.org/simple/installer/"
 
     version(
