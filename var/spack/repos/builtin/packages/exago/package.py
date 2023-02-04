@@ -112,7 +112,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop@0.3.99:", when="@0.99:+hiop")
     depends_on("hiop@0.5.1:", when="@1.1.0:+hiop")
     depends_on("hiop@0.5.3:", when="@1.3.0:+hiop")
-    depends_on("hiop@0.7.0:", when="@1.5.0:+hiop")
+    depends_on("hiop@0.7.0:0.7.1", when="@1.5.0:+hiop")
 
     depends_on("hiop~mpi", when="+hiop~mpi")
     depends_on("hiop+mpi", when="+hiop+mpi")
