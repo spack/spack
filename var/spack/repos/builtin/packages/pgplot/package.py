@@ -20,7 +20,7 @@ class Pgplot(MakefilePackage):
     homepage = "https://sites.astro.caltech.edu/~tjp/pgplot/"
     url = "ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version(
         "5.2.2",

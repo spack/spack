@@ -15,7 +15,7 @@ class Mrcpp(CMakePackage):
     homepage = "https://mrcpp.readthedocs.io/en/latest/"
     url = "https://github.com/MRChemSoft/mrcpp/archive/v1.3.6.tar.gz"
 
-    maintainers = ["robertodr", "stigrj", "ilfreddy"]
+    maintainers("robertodr", "stigrj", "ilfreddy")
 
     version("1.3.6", sha256="2502e71f086a8bb5ea635d0c6b86e7ff60220a45583e96a08b3cfe7c9db4cecf")
     version("1.3.5", sha256="3072cf60db6fa1e621bc6e6dfb6d35f9367a44d9d312a4b8c455894769140aed")

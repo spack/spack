@@ -20,7 +20,7 @@ class Moab(AutotoolsPackage):
     git = "https://bitbucket.org/fathomteam/moab.git"
     url = "https://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
-    maintainers = ["vijaysm", "iulian787"]
+    maintainers("vijaysm", "iulian787")
 
     version("develop", branch="develop")
     version("master", branch="master")

@@ -13,7 +13,7 @@ class PyFiona(PythonPackage):
     pypi = "Fiona/Fiona-1.8.18.tar.gz"
     git = "https://github.com/Toblerity/Fiona.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("1.9.0", sha256="6e487cbfba5a849fbdf06e45169fd7e1f1662f44f3d717ab4b946046b2457eae")

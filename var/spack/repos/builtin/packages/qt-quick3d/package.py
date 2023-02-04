@@ -17,7 +17,7 @@ class QtQuick3d(CMakePackage):
     url = "https://github.com/qt/qtquick3d/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtquick3d/tags"
 
-    maintainers = ["wdconinc", "sethrj"]
+    maintainers("wdconinc", "sethrj")
 
     version("6.3.2", sha256="a3ec81393f1cd45eb18ee3d47582998679eef141b856bdd2baa2d41f019a0eea")
     version("6.3.1", sha256="79f0813ff776dc2aa07a8513ecd9d550dd8d449dc8fcd834fb0c9b22ea4a1893")

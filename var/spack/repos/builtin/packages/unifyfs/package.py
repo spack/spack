@@ -17,7 +17,7 @@ class Unifyfs(AutotoolsPackage):
     homepage = "https://github.com/LLNL/UnifyFS"
     git = "https://github.com/LLNL/UnifyFS.git"
     url = "https://github.com/LLNL/UnifyFS/releases/download/v0.9.2/unifyfs-0.9.2.tar.gz"
-    maintainers = ["CamStan"]
+    maintainers("CamStan")
 
     tags = ["e4s"]
 

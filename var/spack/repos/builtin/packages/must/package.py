@@ -17,7 +17,7 @@ class Must(CMakePackage):
     homepage = "https://www.i12.rwth-aachen.de/go/id/nrbe"
     url = "https://hpc.rwth-aachen.de/must/files/MUST-v1.8.0-rc1.tar.gz"
 
-    maintainers = ["jgalarowicz", "dmont"]
+    maintainers("jgalarowicz", "dmont")
 
     version(
         "1.8.0-rc1",

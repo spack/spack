@@ -13,7 +13,7 @@ class PyExhale(PythonPackage):
     homepage = "https://github.com/svenevs/exhale"
     pypi = "exhale/exhale-0.3.6.tar.gz"
 
-    maintainers = ["svenevs"]
+    maintainers("svenevs")
 
     version("0.3.6", sha256="ab41be313e1236bd4386e4696fb35f37ce8103c2059cf8d1f083da5411bb74d7")
 

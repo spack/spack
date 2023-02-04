@@ -13,7 +13,7 @@ class Rclone(Package):
     homepage = "https://rclone.org"
     url = "https://github.com/rclone/rclone/releases/download/v1.57.0/rclone-v1.57.0.tar.gz"
 
-    maintainers = ["alecbcs"]
+    maintainers("alecbcs")
 
     version("1.61.1", sha256="34b5f52047741c7bbf54572c02cc9998489c4736a753af3c99255296b1af125d")
     version("1.59.1", sha256="db3860e4549af28d87aa83f2035a57c5d081b179e40d4c828db19c3c3545831e")

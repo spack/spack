@@ -12,7 +12,7 @@ class PyDarshan(PythonPackage):
     homepage = "https://www.mcs.anl.gov/research/projects/darshan"
     pypi = "darshan/darshan-3.4.0.1.tar.gz"
 
-    maintainers = ["jeanbez", "shanedsnyder"]
+    maintainers("jeanbez", "shanedsnyder")
 
     version(
         "3.4.2.0",

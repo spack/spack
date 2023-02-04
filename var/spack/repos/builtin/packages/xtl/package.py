@@ -13,7 +13,7 @@ class Xtl(CMakePackage):
     url = "https://github.com/QuantStack/xtl/archive/0.3.4.tar.gz"
     git = "https://github.com/QuantStack/xtl.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="master")
     version("0.7.4", sha256="3c88be0e696b64150c4de7a70f9f09c00a335186b0b0b409771ef9f56bca7d9a")

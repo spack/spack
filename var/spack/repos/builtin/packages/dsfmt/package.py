@@ -12,7 +12,7 @@ class Dsfmt(MakefilePackage):
     homepage = "http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/SFMT/"
     url = "https://github.com/MersenneTwister-Lab/dSFMT/archive/v2.2.4.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     # This package does not have a target to build a library nor a make install target,
     # so we add it for them.

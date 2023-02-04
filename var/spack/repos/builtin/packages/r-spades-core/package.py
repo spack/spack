@@ -21,7 +21,7 @@ class RSpadesCore(RPackage):
 
     cran = "SpaDES.core"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.1.0", sha256="67af4f3f153b75a0865fde2457c5d951c2f2184d07c557879b7a8c43a6e7ad66")
     version("1.0.10", sha256="05e20f7d9aeef9ba68e50e993ef3027b8c85afc5e3f83f5ecaee9d1a7873e379")

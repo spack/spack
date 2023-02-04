@@ -31,7 +31,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     list_depth = 1
     keep_werror = "all"
 
-    maintainers = ["michaelkuhn", "alalazo"]
+    maintainers("michaelkuhn", "alalazo")
 
     version("master", branch="master")
 

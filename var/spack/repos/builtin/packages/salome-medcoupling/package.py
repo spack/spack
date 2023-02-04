@@ -13,7 +13,7 @@ class SalomeMedcoupling(CMakePackage):
     """salome-medcoupling is a part of SALOME platform to manipulate meshes and
     fields in memory, and use salome-med format for files."""
 
-    maintainers = ["franciskloss"]
+    maintainers("franciskloss")
 
     homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/developer/index.html"
     git = "https://git.salome-platform.org/gitpub/tools/medcoupling.git"

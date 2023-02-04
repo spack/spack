@@ -13,7 +13,7 @@ class Libmonitor(AutotoolsPackage):
 
     homepage = "https://github.com/HPCToolkit/libmonitor"
     git = "https://github.com/HPCToolkit/libmonitor.git"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     version("master", branch="master")
     version("2022.09.02", commit="4ae16dab0ba5fbda0ffe28df523613ea22cb85ae")

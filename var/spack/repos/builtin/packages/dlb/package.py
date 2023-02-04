@@ -17,7 +17,7 @@ class Dlb(AutotoolsPackage):
     url = "https://pm.bsc.es/ftp/dlb/releases/dlb-3.2.tar.gz"
     git = "https://github.com/bsc-pm/dlb.git"
 
-    maintainers = ["vlopezh"]
+    maintainers("vlopezh")
 
     version("main", branch="main")
     version("3.2", sha256="b1c65ce3179b5275cfdf0bf921c0565a4a3ebcfdab72d7cef014957c17136c7e")

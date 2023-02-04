@@ -20,7 +20,7 @@ class Warpx(CMakePackage):
     url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/23.01.tar.gz"
     git = "https://github.com/ECP-WarpX/WarpX.git"
 
-    maintainers = ["ax3l", "dpgrote", "MaxThevenet", "RemiLehe"]
+    maintainers("ax3l", "dpgrote", "MaxThevenet", "RemiLehe")
     tags = ["e4s", "ecp"]
 
     # NOTE: if you update the versions here, also see py-warpx

@@ -28,7 +28,7 @@ class ScineSparrow(CMakePackage):
     url = "https://github.com/qcscine/sparrow/archive/refs/tags/3.1.0.tar.gz"
     git = "https://github.com/qcscine/sparrow.git"
 
-    maintainers = ["frobnitzem"]
+    maintainers("frobnitzem")
 
     version("master", branch="master")
     version("3.1.0", "91412de0f2670a1735c4ca76406db5bea04236eeac0bc1f93ccfe18104aa7ce4")

@@ -291,7 +291,7 @@ class Nvhpc(Package):
 
     homepage = "https://developer.nvidia.com/hpc-sdk"
 
-    maintainers = ["samcmill"]
+    maintainers("samcmill")
     tags = ["e4s"]
 
     for ver, packages in _versions.items():

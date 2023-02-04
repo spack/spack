@@ -15,7 +15,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/celeritas-project/celeritas"
     url = "https://github.com/celeritas-project/celeritas/releases/download/v0.1.0/celeritas-0.1.0.tar.gz"
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     version("0.2.0", sha256="12af28fda0e482a9eba89781b4ead445cf6f170bc1b8d88cc814e49b1ec09e9f")
     version("0.1.4", sha256="ea82a03fc750a2a805f87afd9ac944109dd7537edb5c0c370f93d332d4cd47db")

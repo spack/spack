@@ -12,7 +12,7 @@ class Lcgenv(Package):
     homepage = "https://gitlab.cern.ch/GENSER/lcgenv"
     url = "https://gitlab.cern.ch/GENSER/lcgenv/-/archive/v1.3.19/lcgenv-v1.3.19.tar.gz"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("1.3.19", sha256="b091743705cf84ff5de60487f2f73cbf9d10676577cd1d99bbde00d3616d0751")
 

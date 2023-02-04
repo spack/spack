@@ -16,7 +16,7 @@ class IbmJava(Package):
     (and even current) versions may not be available."""
 
     homepage = "https://developer.ibm.com/javasdk/"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     # Note: IBM is fairly aggressive about taking down old versions,
     # so we may need to update this frequently.  Also, old revs may

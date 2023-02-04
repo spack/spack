@@ -10,7 +10,7 @@ from spack.package import *
 class IntelMpi(IntelPackage):
     """Intel MPI. This package has been replaced by intel-oneapi-mpi."""
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 

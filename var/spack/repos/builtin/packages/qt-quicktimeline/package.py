@@ -14,7 +14,7 @@ class QtQuicktimeline(CMakePackage):
     url = "https://github.com/qt/qtquicktimeline/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtquicktimeline/tags"
 
-    maintainers = ["wdconinc", "sethrj"]
+    maintainers("wdconinc", "sethrj")
 
     version("6.3.2", sha256="ca6e53a92b022b49098c15f2cc5897953644de8477310696542a03bbbe5666aa")
     version("6.3.1", sha256="ba1e808d4c0fce899c235942df34ae5d349632f61a302d14feeae7465cf1f197")

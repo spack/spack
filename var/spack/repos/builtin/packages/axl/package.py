@@ -22,7 +22,7 @@ class Axl(CMakePackage):
     git = "https://github.com/ecp-veloc/axl.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
     version("0.7.1", sha256="526a055c072c85cc989beca656717e06b128f148fda8eb19d1d9b43a3325b399")

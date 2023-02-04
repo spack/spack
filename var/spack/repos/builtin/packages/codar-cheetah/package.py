@@ -11,7 +11,7 @@ class CodarCheetah(PythonPackage):
     The CODAR Experiment Harness for Exascale science applications.
     """
 
-    maintainers = ["kshitij-v-mehta"]
+    maintainers("kshitij-v-mehta")
 
     homepage = "https://github.com/CODARcode/cheetah"
     url = "https://github.com/CODARcode/cheetah/archive/v1.1.0.tar.gz"
