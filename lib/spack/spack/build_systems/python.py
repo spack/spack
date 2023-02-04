@@ -377,6 +377,8 @@ class PythonPipBuilder(BaseBuilder):
             "--ignore-installed",
             # Use env vars like PYTHONPATH
             "--no-build-isolation",
+            # Fail if dependencies are missing
+            "--check-build-dependencies",
             # Don't warn that prefix.bin is not in PATH
             "--no-warn-script-location",
             # Ignore the PyPI package index
