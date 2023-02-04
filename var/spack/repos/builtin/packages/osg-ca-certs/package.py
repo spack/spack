@@ -33,12 +33,15 @@ class OsgCaCerts(Package):
 
         version(
             _version,
-            url=_osg_base_url.format(osg_version = release["osg_version"], igtf_version = release["igtf_version"]),
-            sha256=release["osg_sha256"])
+            url=_osg_base_url.format(
+                osg_version=release["osg_version"], igtf_version=release["igtf_version"]
+            ),
+            sha256=release["osg_sha256"],
+        )
 
         resource(
-            name="igtf-{igtf_version}".format(igtf_version = release["igtf_version"]),
-            url=_igtf_base_url.format(igtf_version = release["igtf_version"]),
+            name="igtf-{igtf_version}".format(igtf_version=release["igtf_version"]),
+            url=_igtf_base_url.format(igtf_version=release["igtf_version"]),
             sha256=release["igtf_sha256"],
             when="@{0}".format(_version),
         )
@@ -63,6 +66,8 @@ class OsgCaCerts(Package):
         env.set("X509_CERT_DIR", join_path(self.prefix, "certificates"))
 
     def install(self, spec, prefix):
-        copy_tree("letsencrypt-certificates-master/letsencrypt-certificates", "letsencrypt-certificates")
+        copy_tree(
+            "letsencrypt-certificates-master/letsencrypt-certificates", "letsencrypt-certificates"
+        )
         Executable(join_path(self.stage.source_path, "build-certificates-dir.sh"))()
         install_tree("certificates", join_path(prefix, "certificates"))
