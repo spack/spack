@@ -142,7 +142,7 @@ class Zoltan(AutotoolsPackage):
                 ]
             )
             if "+fortran" in spec:
-                config_args.extend( ["FC={0}".format(spec["mpi"].mpifc)] )
+                config_args.extend(["FC={0}".format(spec["mpi"].mpifc)])
 
         config_fcflags = config_cflags[:]
         if spec.satisfies("%gcc@10:+fortran"):
