@@ -7,7 +7,6 @@ import argparse
 import os
 import shutil
 import sys
-import textwrap
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -348,21 +347,6 @@ def install_specs_outside_environment(specs, install_kwargs):
     builder.install()
 
 
-def print_cdash_help():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(
-            """\
-environment variables:
-SPACK_CDASH_AUTH_TOKEN
-                    authentication token to present to CDash
-                    """
-        ),
-    )
-    arguments.add_cdash_args(parser, True)
-    parser.print_help()
-
-
 def install_all_specs_from_active_environment(
     install_kwargs, only_concrete, cli_test_arg, reporter_factory
 ):
@@ -496,7 +480,7 @@ def install(parser, args):
     tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
-        print_cdash_help()
+        spack.cmd.common.arguments.print_cdash_help()
         return
 
     if args.no_checksum:
@@ -504,6 +488,8 @@ def install(parser, args):
 
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
+
+    spack.cmd.common.arguments.sanitize_reporter_options(args)
 
     def reporter_factory(specs):
         if args.log_format is None:
