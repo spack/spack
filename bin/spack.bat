@@ -83,6 +83,16 @@ if defined _sp_flags (
         exit /B 0
     )
 )
+if not defined _sp_subcommand (
+   if not defined _sp_args (
+      if not defined _sp_flags (
+         python "%spack%" --help
+         exit /B 0
+      )
+   )
+)
+
+
 :: pass parsed variables outside of local scope. Need to do
 :: this because delayedexpansion can only be set by setlocal
 echo %_sp_flags%>flags
@@ -144,10 +154,11 @@ goto :end_switch
 
 :case_env
 :: If no args or args contain --bat or -h/--help: just execute.
-set args_no_quote=%_sp_args:"=%
 if NOT defined _sp_args (
     goto :default_case
-)else if NOT "%args_no_quote%"=="%args_no_quote:--help=%" (
+)
+set args_no_quote=%_sp_args:"=%
+if NOT "%args_no_quote%"=="%args_no_quote:--help=%" (
     goto :default_case
 ) else if NOT "%args_no_quote%"=="%args_no_quote: -h=%" (
     goto :default_case
