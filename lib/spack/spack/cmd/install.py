@@ -7,7 +7,6 @@ import argparse
 import os
 import shutil
 import sys
-import textwrap
 from typing import List
 
 import llnl.util.filesystem as fs
@@ -260,7 +259,7 @@ def default_log_file(spec):
 
 def report_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
     """Return the filename to be used for reporting to JUnit or CDash format."""
-    result = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
+    result = args.log_file or default_log_file(specs[0])
     return result
 
 
@@ -346,21 +345,6 @@ def install_specs_outside_environment(specs, install_kwargs):
     installs = [(concrete.package, install_kwargs) for _, concrete in specs]
     builder = PackageInstaller(installs)
     builder.install()
-
-
-def print_cdash_help():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(
-            """\
-environment variables:
-SPACK_CDASH_AUTH_TOKEN
-                    authentication token to present to CDash
-                    """
-        ),
-    )
-    arguments.add_cdash_args(parser, True)
-    parser.print_help()
 
 
 def install_all_specs_from_active_environment(
@@ -496,7 +480,7 @@ def install(parser, args):
     tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
-        print_cdash_help()
+        spack.cmd.common.arguments.print_cdash_help()
         return
 
     if args.no_checksum:
@@ -504,6 +488,8 @@ def install(parser, args):
 
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
+
+    spack.cmd.common.arguments.sanitize_reporter_options(args)
 
     def reporter_factory(specs):
         if args.log_format is None:

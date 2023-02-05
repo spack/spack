@@ -11,7 +11,6 @@ import os
 import re
 import shutil
 import sys
-import textwrap
 
 from llnl.util import lang, tty
 from llnl.util.tty import colify
@@ -171,19 +170,10 @@ def test_run(args):
 
     # cdash help option
     if args.help_cdash:
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=textwrap.dedent(
-                """\
-environment variables:
-  SPACK_CDASH_AUTH_TOKEN
-                        authentication token to present to CDash
-                        """
-            ),
-        )
-        arguments.add_cdash_args(parser, True)
-        parser.print_help()
+        arguments.print_cdash_help()
         return
+
+    arguments.sanitize_reporter_options(args)
 
     # set config option for fail-fast
     if args.fail_fast:
