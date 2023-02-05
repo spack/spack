@@ -96,7 +96,7 @@ class QtBase(CMakePackage):
             for filename in ["CMakeCache.txt", "config.summary"]
         ]
 
-    def remove_vendor_deps(vendor_dir, vendor_deps_to_remove):
+    def remove_vendor_deps(self, vendor_dir, vendor_deps_to_remove):
         with working_dir(vendor_dir):
             for dep in os.listdir():
                 if os.path.isdir(dep):
@@ -105,7 +105,7 @@ class QtBase(CMakePackage):
 
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_avoid = [
+        vendor_deps_to_remove = [
             "double-conversion",
             "freetype",
             "harfbuzz-ng",
@@ -113,12 +113,7 @@ class QtBase(CMakePackage):
             "libpng",
             "libpsl",
         ]
-        remove_vendor_deps(vendor_dir, vendor_deps_to_remove)
-        #with working_dir(vendor_dir):
-        #    for dep in os.listdir():
-        #        if os.path.isdir(dep):
-        #            if dep in vendor_deps_to_avoid:
-        #                shutil.rmtree(dep)
+        self.remove_vendor_deps(vendor_dir, vendor_deps_to_remove)
 
     def cmake_args(self):
         spec = self.spec
