@@ -8,6 +8,7 @@ import os
 import shutil
 
 from spack.package import *
+from spack.pkg.builtin.qt_base import QtBase
 
 
 class QtQuick3d(CMakePackage):
@@ -19,6 +20,7 @@ class QtQuick3d(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.4.2", sha256="940145615fe3c4c8fb346c5bfc10f94fc7a4005c8c187886e0f3088ea0ce0778")
     version("6.4.1", sha256="67daeed69b9e7b3da516c6205e737fdba30a267978c1fb9d34723a6dc5588585")
     version("6.4.0", sha256="37987536da151b7c2cddabfde734759ebe6173708d32cb85aa008e151751270e")
     version("6.3.2", sha256="a3ec81393f1cd45eb18ee3d47582998679eef141b856bdd2baa2d41f019a0eea")
@@ -43,21 +45,18 @@ class QtQuick3d(CMakePackage):
     depends_on("python", when="@5.7.0:", type="build")
 
     depends_on("assimp@5.0.1:")
+    depends_on("embree", when="@6.4:")
 
-    _versions = ["6.4.1", "6.4.0", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
-    for v in _versions:
+    for _v in QtBase.versions:
+        v = str(_v)
         depends_on("qt-base@" + v, when="@" + v)
-        depends_on("qt-declarative@" + v, when="@" + v)
+        depends_on("qt-declarative@" + str(v), when="@" + v)
         depends_on("qt-quicktimeline@" + v, when="@" + v)
 
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_keep = ["xatlas", "embree", "tinyexr"]
-        with working_dir(vendor_dir):
-            for dep in os.listdir():
-                if os.path.isdir(dep):
-                    if dep not in vendor_deps_to_keep:
-                        shutil.rmtree(dep)
+        vendor_deps_to_remove = ["assimp", "embree"]
+        QtBase.remove_vendor_deps(vendor_dir, vendor_deps_to_remove)
 
     def cmake_args(self):
         args = [

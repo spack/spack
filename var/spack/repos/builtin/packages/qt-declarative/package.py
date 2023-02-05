@@ -8,6 +8,7 @@ import os
 import shutil
 
 from spack.package import *
+from spack.pkg.builtin.qt_base import QtBase
 
 
 class QtDeclarative(CMakePackage):
@@ -19,6 +20,7 @@ class QtDeclarative(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.4.2", sha256="dec3599b55f75cff044cc6384fa2f7e9505f8a48af1b4c185c2789e2dafabda6")
     version("6.4.1", sha256="23b5c91e98ec2b8a4118a3d3ace0c2e61b355cc8f2ccb87d189708b69446f917")
     version("6.4.0", sha256="daf7b97be51451af5afa35e1c0421fb8964003852088b0293c144a12bd664cd1")
     version("6.3.2", sha256="140a3c4973d56d79abf5fea9ae5cf13b3ef7693ed1d826b263802926a4ba84b6")
@@ -42,8 +44,8 @@ class QtDeclarative(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("python", when="@5.7.0:", type="build")
 
-    _versions = ["6.4.1", "6.4.0", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
-    for v in _versions:
+    for _v in QtBase.versions:
+        v = str(_v)
         depends_on("qt-base@" + v, when="@" + v)
         depends_on("qt-shadertools@" + v, when="@" + v)
 

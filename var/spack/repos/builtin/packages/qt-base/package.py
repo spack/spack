@@ -22,6 +22,7 @@ class QtBase(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.4.2", sha256="c138ae734cfcde7a92a7efd97a902e53f3cd2c2f89606dfc482d0756f60cdc23")
     version("6.4.1", sha256="0ef6db6b3e1074e03dcae7e689144af66fd51b95a6efe949d40281cc43e6fecf")
     version("6.4.0", sha256="fbc462816bf5b87d521e9f69cebe0ce331de2258396e0932fa580283f07fce0c")
     version("6.3.2", sha256="95b78830a99f417ff34ee784ab78f5eeb7bb12adb16d137c3026434c44a904dd")
@@ -95,29 +96,29 @@ class QtBase(CMakePackage):
             for filename in ["CMakeCache.txt", "config.summary"]
         ]
 
-    def patch(self):
-        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_keep = [
-            "blake2",
-            "easing",
-            "forkfd",
-            "freebsd",
-            "icc",
-            "libpsl",
-            "md4",
-            "md4c",
-            "md5",
-            "rfc6234",
-            "sha1",
-            "sha3",
-            "tinycbor",
-            "VulkanMemoryAllocator",
-        ]
+    def remove_vendor_deps(vendor_dir, vendor_deps_to_remove):
         with working_dir(vendor_dir):
             for dep in os.listdir():
                 if os.path.isdir(dep):
-                    if dep not in vendor_deps_to_keep:
+                    if dep in vendor_deps_to_remove:
                         shutil.rmtree(dep)
+
+    def patch(self):
+        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
+        vendor_deps_to_avoid = [
+            "double-conversion",
+            "freetype",
+            "harfbuzz-ng",
+            "libjpeg",
+            "libpng",
+            "libpsl",
+        ]
+        remove_vendor_deps(vendor_dir, vendor_deps_to_remove)
+        #with working_dir(vendor_dir):
+        #    for dep in os.listdir():
+        #        if os.path.isdir(dep):
+        #            if dep in vendor_deps_to_avoid:
+        #                shutil.rmtree(dep)
 
     def cmake_args(self):
         spec = self.spec

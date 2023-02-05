@@ -5,6 +5,7 @@
 
 
 from spack.package import *
+from spack.pkg.builtin.qt_base import QtBase
 
 
 class QtQuicktimeline(CMakePackage):
@@ -16,6 +17,7 @@ class QtQuicktimeline(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.4.2", sha256="af7449bf5954d2309081d6d65af7fd31cb11a5f8dc5f414163120d582f82353f")
     version("6.4.1", sha256="20450687941e6e12e1adf428114776c304d14447d61a4e8b08050c7c18463ee7")
     version("6.4.0", sha256="b5f88beaa726032141fab91b84bc3b268f6213518301c4ddcfa7d116fd08bdab")
     version("6.3.2", sha256="ca6e53a92b022b49098c15f2cc5897953644de8477310696542a03bbbe5666aa")
@@ -31,8 +33,8 @@ class QtQuicktimeline(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("python", when="@5.7.0:", type="build")
 
-    _versions = ["6.4.1", "6.4.0", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
-    for v in _versions:
+    for _v in QtBase.versions:
+        v = str(_v)
         depends_on("qt-base@" + v, when="@" + v)
         depends_on("qt-declarative@" + v, when="@" + v)
 

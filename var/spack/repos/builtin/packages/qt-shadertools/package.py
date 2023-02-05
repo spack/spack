@@ -8,6 +8,7 @@ import os
 import shutil
 
 from spack.package import *
+from spack.pkg.builtin.qt_base import QtBase
 
 
 class QtShadertools(CMakePackage):
@@ -21,6 +22,7 @@ class QtShadertools(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.4.2", sha256="7f29a78769f454fe529595acb693aa67812e80d894162ddad3f0444f65a22268")
     version("6.4.1", sha256="d325724c4ed79c759ac8cbbca5f9fd4b0e6e8d61a9ac58921cb1dac75c104687")
     version("6.4.0", sha256="51bf312965bd673193221cd49019f504feb79c0bf0ff01d6a6ca5c8d15f9d7c1")
     version("6.3.2", sha256="ec73303e6c91cddae402b1ac0d18a0d35619f348785514be30cec2791cd63faa")
@@ -44,15 +46,11 @@ class QtShadertools(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("python", when="@5.7.0:", type="build")
 
-    _versions = ["6.4.1", "6.4.0", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
-    for v in _versions:
+    for _v in QtBase.versions:
+        v = str(_v)
         depends_on("qt-base@" + v, when="@" + v)
 
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_keep = ["glslang", "patches", "SPIRV-Cross"]
-        with working_dir(vendor_dir):
-            for dep in os.listdir():
-                if os.path.isdir(dep):
-                    if dep not in vendor_deps_to_keep:
-                        shutil.rmtree(dep)
+        vendor_deps_to_remove = []
+        QtBase.remove_verdor_deps(vendor_dir, vendor_deps_to_remove)
