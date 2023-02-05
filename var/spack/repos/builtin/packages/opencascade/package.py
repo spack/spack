@@ -80,7 +80,7 @@ class Opencascade(CMakePackage):
         "modeling_data",
         default=True,
         description="Build Modeling Data module",
-        when="foundation_classes",
+        when="+foundation_classes",
     )
     variant(
         "modeling_algorithms",
