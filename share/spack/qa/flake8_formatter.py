@@ -47,7 +47,7 @@ class SpackFormatter(Pylint):
         self.error_seen = False
         super().__init__(options)
 
-    def after_init(self):  # type: () -> None
+    def after_init(self) -> None:
         """Overriding to keep format string from being unset in Default"""
         pass
 
@@ -60,7 +60,7 @@ class SpackFormatter(Pylint):
                 for code, pat_arr in errors.items():
                     self.spack_errors[code].extend(pat_arr)
 
-    def handle(self, error):  # type: (Violation) -> None
+    def handle(self, error: Violation) -> None:
         """Handle an error reported by Flake8.
 
         This defaults to calling :meth:`format`, :meth:`show_source`, and
@@ -70,8 +70,6 @@ class SpackFormatter(Pylint):
         :param error:
             This will be an instance of
             :class:`~flake8.style_guide.Violation`.
-        :type error:
-            flake8.style_guide.Violation
         """
 
         # print(error.code)
