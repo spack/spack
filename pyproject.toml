@@ -84,6 +84,7 @@ extend-exclude = '''
 skip_magic_trailing_comma = true
 
 [tool.isort]
+line_length = 99
 profile = "black"
 sections = [
   "FUTURE",
