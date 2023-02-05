@@ -130,11 +130,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
 
-    build_system(
-        "autotools",
-        conditional("nmake", when="platform=windows"),
-        default="autotools",
-    )
+    build_system("autotools", conditional("nmake", when="platform=windows"), default="autotools")
 
     @classmethod
     def determine_version(cls, exe):
@@ -189,13 +185,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         # Make gnutls / openssl decide what certs are trusted.
         # TODO: certs for other tls options.
         if spec.satisfies("tls=gnutls") or spec.satisfies("tls=openssl"):
-            args.extend(
-                [
-                    "--without-ca-bundle",
-                    "--without-ca-path",
-                    "--with-ca-fallback",
-                ]
-            )
+            args.extend(["--without-ca-bundle", "--without-ca-path", "--with-ca-fallback"])
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
         # We always disable it explicitly, but the flag is gone in newer

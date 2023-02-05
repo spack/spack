@@ -33,12 +33,7 @@ section = "admin"
 level = "long"
 
 # Arguments for display_specs when we find ambiguity
-display_args = {
-    "long": True,
-    "show_flags": True,
-    "variants": True,
-    "indent": 4,
-}
+display_args = {"long": True, "show_flags": True, "variants": True, "indent": 4}
 
 
 def setup_parser(sp):

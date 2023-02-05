@@ -43,11 +43,7 @@ class Eagle(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-        bins = [
-            "eagle",
-            "eagle-rc",
-            "eagle-nm",
-        ]
+        bins = ["eagle", "eagle-rc", "eagle-nm"]
 
         for b in bins:
             install(b, prefix.bin)

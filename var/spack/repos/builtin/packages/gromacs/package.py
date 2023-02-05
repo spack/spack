@@ -326,7 +326,6 @@ class Gromacs(CMakePackage):
                 )
 
     def cmake_args(self):
-
         options = []
 
         if "+mpi" in self.spec:

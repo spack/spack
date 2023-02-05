@@ -793,7 +793,7 @@ def _config():
     configuration_paths = [
         # Default configuration scope is the lowest-level scope. These are
         # versioned with Spack and can be overridden by systems, sites or users
-        configuration_defaults_path,
+        configuration_defaults_path
     ]
 
     disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
@@ -801,15 +801,11 @@ def _config():
     # System configuration is per machine.
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
-        configuration_paths.append(
-            ("system", spack.paths.system_config_path),
-        )
+        configuration_paths.append(("system", spack.paths.system_config_path))
 
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
-    configuration_paths.append(
-        ("site", os.path.join(spack.paths.etc_path)),
-    )
+    configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
 
     # User configuration can override both spack defaults and site config
     # This is disabled if user asks for no local configuration.

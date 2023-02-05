@@ -463,10 +463,7 @@ class Openblas(MakefilePackage):
 
     @property
     def install_targets(self):
-        make_args = [
-            "install",
-            "PREFIX={0}".format(self.prefix),
-        ]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")

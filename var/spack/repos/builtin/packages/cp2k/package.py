@@ -301,16 +301,8 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0]
 
         optimization_flags = {
-            "gcc": [
-                "-O2",
-                "-funroll-loops",
-                "-ftree-vectorize",
-            ],
-            "intel": [
-                "-O2",
-                "-pc64",
-                "-unroll",
-            ],
+            "gcc": ["-O2", "-funroll-loops", "-ftree-vectorize"],
+            "intel": ["-O2", "-pc64", "-unroll"],
             "pgi": ["-fast"],
             "nvhpc": ["-fast"],
             "cce": ["-O2"],
@@ -319,10 +311,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         }
 
         dflags = ["-DNDEBUG"]
-        cppflags = [
-            "-D__FFTW3",
-            "-I{0}".format(fftw_header_dir),
-        ]
+        cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
 
         # CP2K requires MPI 3 starting at version 2023.1
         # and __MPI_VERSION is not supported anymore.
@@ -347,12 +336,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         if "%intel" in spec:
             cflags.append("-fp-model precise")
             cxxflags.append("-fp-model precise")
-            fcflags += [
-                "-fp-model precise",
-                "-heap-arrays 64",
-                "-g",
-                "-traceback",
-            ]
+            fcflags += ["-fp-model precise", "-heap-arrays 64", "-g", "-traceback"]
         elif "%gcc" in spec:
             fcflags += [
                 "-ffree-form",
@@ -360,10 +344,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 "-ggdb",  # make sure we get proper Fortran backtraces
             ]
         elif "%aocc" in spec:
-            fcflags += [
-                "-ffree-form",
-                "-Mbackslash",
-            ]
+            fcflags += ["-ffree-form", "-Mbackslash"]
         elif "%pgi" in spec or "%nvhpc" in spec:
             fcflags += ["-Mfreeform", "-Mextend"]
         elif "%cce" in spec:
@@ -411,13 +392,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         # Intel
         if "%intel" in spec:
-            cppflags.extend(
-                [
-                    "-D__INTEL",
-                    "-D__HAS_ISO_C_BINDING",
-                    "-D__USE_CP2K_TRACE",
-                ]
-            )
+            cppflags.extend(["-D__INTEL", "-D__HAS_ISO_C_BINDING", "-D__USE_CP2K_TRACE"])
             fcflags.extend(["-diag-disable 8290,8291,10010,10212,11060", "-free", "-fpp"])
 
         # FFTW, LAPACK, BLAS
@@ -478,10 +453,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             cppflags += ["-D__LIBINT"]
 
             if "@:6.9" in spec:
-                cppflags += [
-                    "-D__LIBINT_MAX_AM=6",
-                    "-D__LIBDERIV_MAX_AM1=5",
-                ]
+                cppflags += ["-D__LIBINT_MAX_AM=6", "-D__LIBDERIV_MAX_AM1=5"]
 
                 # libint-1.x.y has to be linked statically to work around
                 # inconsistencies in its Fortran interface definition
@@ -593,11 +565,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
                 acc_compiler_var = "OFFLOAD_CC"
                 acc_flags_var = "OFFLOAD_FLAGS"
-                cppflags += [
-                    "-D__DBCSR_ACC",
-                    "-D__GRID_CUDA",
-                    "-DOFFLOAD_TARGET=cuda",
-                ]
+                cppflags += ["-D__DBCSR_ACC", "-D__GRID_CUDA", "-DOFFLOAD_TARGET=cuda"]
                 libs += ["-lcublas"]
 
                 if spec.satisfies("+cuda_fft"):
@@ -624,12 +592,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             cuda_arch = spec.variants["cuda_arch"].value[0]
             if cuda_arch:
-                gpuver = {
-                    "35": "K40",
-                    "37": "K80",
-                    "60": "P100",
-                    "70": "V100",
-                }[cuda_arch]
+                gpuver = {"35": "K40", "37": "K80", "60": "P100", "70": "V100"}[cuda_arch]
 
                 if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
                     gpuver = "K20X"
@@ -649,12 +612,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                     "The file LIBSMM_PATH pointed to does not "
                     "exist. Note that it must be absolute path."
                 )
-            cppflags.extend(
-                [
-                    "-D__HAS_smm_dnn",
-                    "-D__HAS_smm_vec",
-                ]
-            )
+            cppflags.extend(["-D__HAS_smm_dnn", "-D__HAS_smm_vec"])
             libs.append("-lsmm")
 
         elif "smm=libxsmm" in spec:

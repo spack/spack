@@ -340,15 +340,7 @@ class DocbookXml(Package):
         )
 
         # map all versions to current version
-        dtversions = [
-            "4.1",
-            "4.1.1",
-            "4.1.2",
-            "4.2",
-            "4.3",
-            "4.4",
-            "4.5",
-        ]
+        dtversions = ["4.1", "4.1.1", "4.1.2", "4.2", "4.3", "4.4", "4.5"]
         for dtversion in dtversions:
             xmlcatalog(
                 "--noout",

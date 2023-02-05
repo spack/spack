@@ -17,14 +17,9 @@ pattern_exemptions = {
     # exemptions applied only to package.py files.
     r"package.py$": {
         # Allow 'from spack.package import *' in packages, but no other wildcards
-        "F403": [
-            r"^from spack.package import \*$",
-            r"^from spack.package_defs import \*$",
-        ],
+        "F403": [r"^from spack.package import \*$", r"^from spack.package_defs import \*$"],
         # Exempt '@when' decorated functions from redefinition errors.
-        "F811": [
-            r"^\s*@when\(.*\)",
-        ],
+        "F811": [r"^\s*@when\(.*\)"],
     },
     # exemptions applied to all files.
     r".py$": {

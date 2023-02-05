@@ -34,9 +34,6 @@ class Autodiff(CMakePackage):
         args = [
             self.define("AUTODIFF_BUILD_TESTS", self.run_tests),
             self.define_from_variant("AUTODIFF_BUILD_PYTHON", "python"),
-            self.define_from_variant(
-                "AUTODIFF_BUILD_EXAMPLES",
-                "examples",
-            ),
+            self.define_from_variant("AUTODIFF_BUILD_EXAMPLES", "examples"),
         ]
         return args

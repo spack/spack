@@ -81,6 +81,7 @@ extend-exclude = '''
   | ^opt/
 )/
 '''
+skip_magic_trailing_comma = true
 
 [tool.isort]
 profile = "black"
