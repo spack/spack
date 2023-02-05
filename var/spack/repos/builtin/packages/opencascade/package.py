@@ -76,13 +76,36 @@ class Opencascade(CMakePackage):
 
     # Modules, per DAG at https://dev.opencascade.org/doc/refman/html/
     variant("foundation_classes", default=True, description="Build Foundation Classes module")
-    variant("modeling_data", default=True, description="Build Modeling Data module", when="foundation_classes")
-    variant("modeling_algorithms", default=True, description="Build Modeling Algorithms module", when="+modeling_data")
-    variant("visualization", default=True, description="Bulid Visualization module", when="+modeling_algorithms")
     variant(
-        "application_framework", default=True, description="Build Application Framework module", when="+visualization"
+        "modeling_data",
+        default=True,
+        description="Build Modeling Data module",
+        when="foundation_classes",
     )
-    variant("data_exchange", default=True, description="Build Data Exchange module", when="+application_framework")
+    variant(
+        "modeling_algorithms",
+        default=True,
+        description="Build Modeling Algorithms module",
+        when="+modeling_data",
+    )
+    variant(
+        "visualization",
+        default=True,
+        description="Bulid Visualization module",
+        when="+modeling_algorithms",
+    )
+    variant(
+        "application_framework",
+        default=True,
+        description="Build Application Framework module",
+        when="+visualization",
+    )
+    variant(
+        "data_exchange",
+        default=True,
+        description="Build Data Exchange module",
+        when="+application_framework",
+    )
     variant("draw", default=True, description="Build Draw module", when="+data_exchange")
 
     # 3rd party
