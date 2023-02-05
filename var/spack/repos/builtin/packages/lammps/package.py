@@ -234,6 +234,7 @@ class Lammps(CMakePackage, CudaPackage):
         "mliap",
         "ml-hdnnp",
         "ml-iap",
+        "ml-rann",
         "ml-snap",
         "molecule",
         "mpiio",
@@ -280,6 +281,7 @@ class Lammps(CMakePackage, CudaPackage):
         "user-plumed",
         "user-ptm",
         "user-qtb",
+        "user-rann",
         "user-reaction",
         "user-reaxc",
         "user-sdpd",
@@ -741,6 +743,17 @@ class Lammps(CMakePackage, CudaPackage):
         msg="+user-qtb was removed after @20210527, use +qtb instead",
     )
     conflicts("+qtb", when="@:20210527", msg="+qtb only added @20210702, use +user-qtb instead")
+    conflicts(
+        "+user-rann", when="@:20210514", msg="+user-rann was introduced in version @20210527"
+    )
+    conflicts(
+        "+user-rann",
+        when="@20210702:",
+        msg="+user-rann was removed after @20210527, use +ml-rann instead",
+    )
+    conflicts(
+        "+ml-rann", when="@:20210527", msg="+ml-rann only added @20210702, use +user-rann instead"
+    )
     conflicts(
         "+user-reaction",
         when="@20210702:",
