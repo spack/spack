@@ -12,9 +12,7 @@ class Maeparser(CMakePackage):
     homepage = "https://github.com/schrodinger/maeparser"
     url = "https://github.com/schrodinger/maeparser/archive/refs/tags/v1.3.0.tar.gz"
 
-    maintainers = [
-        "RMeli",
-    ]
+    maintainers("RMeli")
 
     version("1.3.0", sha256="fa8f9336de1e5d1cabec29a6da04547b1fb040bb32ba511ff30b4a14097c751c")
 
