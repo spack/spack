@@ -84,7 +84,6 @@ class Pumi(CMakePackage):
             "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
             "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
             self.define_from_variant("PUMI_FORTRAN_INTERFACE", "fortran"),
             "-DMDS_ID_TYPE=%s" % ("long" if "+int64" in spec else "int"),
             "-DSKIP_SIMMETRIX_VERSION_CHECK=%s"
@@ -92,6 +91,8 @@ class Pumi(CMakePackage):
             self.define_from_variant("IS_TESTING", "testing"),
             "-DMESHES=%s" % join_path(self.stage.source_path, "pumi-meshes"),
         ]
+        if spec.satisfies("fortran"):
+            args += ["-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc]
         if spec.satisfies("@2.2.3"):
             args += ["-DCMAKE_CXX_STANDARD=11"]
         if self.spec.satisfies("simmodsuite=base"):
