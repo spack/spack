@@ -22,17 +22,20 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     version("0.28.1", sha256="038bc11ec913c3b90dd056bd0b134920db0ec5ff6f6a0bb94db6eaa687ce6618")
     version("0.28.0", sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
 
-    variant("python", default=True, description="Build with Python support")
-    variant("native", default=False, description="Build natively for given hardware")
-    variant("blas", default=False, description="Build with BLAS support")
-    variant("openmp", default=False, description="Build with OpenMP support")
-    variant("kokkos", default=False, description="Build with Kokkos support")
-    variant("verbose", default=False, description="Build with full verbosity")
+    patch("v0.28-spack_support.patch", when='@0.28.0:0.28.2', sha256="430078f3da285a10bd2d3a14bbdc41c7e8825be12ba713b6ca5dfca3fcc23d88")
+
+    variant("blas", default=True, description="Build with BLAS support")
     variant(
         "dispatcher",
-        default=False,
+        default=True,
         description="Build with AVX2/AVX512 gate automatic dispatching support",
     )
+    variant("kokkos", default=True, description="Build with Kokkos support")
+    variant("openmp", default=True, description="Build with OpenMP support")
+    variant("python", default=True, description="Build with Python support")
+
+    variant("native", default=False, description="Build natively for given hardware")
+    variant("verbose", default=False, description="Build with full verbosity")
 
     variant("cpptests", default=False, description="Build CPP tests")
     variant("cppbenchmarks", default=False, description="Build CPP benchmark examples")
