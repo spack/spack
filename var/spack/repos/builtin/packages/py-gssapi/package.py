@@ -15,9 +15,9 @@ class PyGssapi(PythonPackage):
 
     maintainers("wdconinc")
 
+    version("1.8.2", sha256="b78e0a021cc91158660e4c5cc9263e07c719346c35a9c0f66725e914b235c89a")
+
     depends_on("py-cython@0.29.29:2", type="build")
     depends_on("py-setuptools@40.6.0:", type="build")
 
     depends_on("py-decorator")
-
-    version("1.8.2", sha256="b78e0a021cc91158660e4c5cc9263e07c719346c35a9c0f66725e914b235c89a")
