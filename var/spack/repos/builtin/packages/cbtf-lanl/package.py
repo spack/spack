@@ -13,7 +13,12 @@ class CbtfLanl(CMakePackage):
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
 
+    maintainers = ["jgalarowicz"]
+
     version("develop", branch="master")
+    version("1.9.4.1", branch="1.9.4.1")
+    version("1.9.4", branch="1.9.4")
+    version("1.9.3", branch="1.9.3")
 
     variant(
         "build_type",
@@ -30,20 +35,25 @@ class CbtfLanl(CMakePackage):
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+lwthreads", when="@develop")
+    depends_on("mrnet@5.0.1-3+lwthreads", when="@1.9.3:9999")
 
     # For Xerces-C
     depends_on("xerces-c")
 
     # For CBTF
     depends_on("cbtf@develop", when="@develop")
+    depends_on("cbtf@1.9.3:9999", when="@1.9.3:9999")
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when="@develop+runtime")
+    depends_on("cbtf@1.9.3:9999+runtime", when="@1.9.3:9999+runtime")
 
     # For CBTF-KRELL
     depends_on("cbtf-krell@develop", when="@develop")
+    depends_on("cbtf-krell@1.9.3:9999", when="@1.9.3:9999")
 
     depends_on("cbtf-krell@develop+runtime", when="@develop+runtime")
+    depends_on("cbtf-krell@1.9.3:9999+runtime", when="@1.9.3:9999+runtime")
 
     parallel = False
 
