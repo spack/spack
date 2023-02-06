@@ -17,7 +17,7 @@ class PyHtgettoken(PythonPackage):
     list_url = "https://github.com/fermitools/htgettoken/releases/"
     git = "https://github.com/fermitools/htgettoken.git"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("1.16-33-g3788bb4", commit="3788bb4733e5e8f856cee51566df9a36cbfe097d")
     version("1.16-20-g8b72f48", commit="8b72f4800ef99923dac99dbe0756a26266a27886")

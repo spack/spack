@@ -13,7 +13,7 @@ class PyGssapi(PythonPackage):
     homepage = "https://github.com/pythongssapi/python-gssapi"
     pypi = "gssapi/gssapi-1.8.2.tar.gz"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     depends_on("py-cython@0.29.29:2", type="build")
     depends_on("py-setuptools@40.6.0:", type="build")
