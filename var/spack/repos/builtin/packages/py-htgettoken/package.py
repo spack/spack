@@ -18,9 +18,11 @@ class PyHtgettoken(PythonPackage):
 
     maintainers("wdconinc")
 
+    # The following versions refer to setuptools-buildable commits after 1.16;
+    # they are special reproducible version numbers from `git describe`
     version("1.16-33-g3788bb4", commit="3788bb4733e5e8f856cee51566df9a36cbfe097d")
     version("1.16-20-g8b72f48", commit="8b72f4800ef99923dac99dbe0756a26266a27886")
-    # Older versions do not have a python build system
+    # Older versions do not have a python build system but included for completeness
     version(
         "1.16",
         sha256="984fd4746082086356d968b4db536f7b35d30e65a6589fa357caa3266cb98268",
