@@ -63,6 +63,7 @@ class Amdlibflame(LibflameBase):
     provides("flame@5.2", when="@2:")
 
     depends_on("python+pythoncmd", type="build")
+    depends_on("gmake@4:", when="@3.0.1,3.1:", type="build")
 
     @property
     def lapack_libs(self):
