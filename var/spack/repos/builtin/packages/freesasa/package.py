@@ -12,9 +12,7 @@ class Freesasa(AutotoolsPackage):
     homepage = "http://freesasa.github.io"
     url = "https://github.com/mittinatten/freesasa/archive/refs/tags/2.1.2.tar.gz"
     git = "https://github.com/mittinatten/freesasa.git"
-    maintainers = [
-        "RMeli",
-    ]
+    maintainers("RMeli")
 
     version("2.1.2", tag="2.1.2", branch="master", submodules=True)
 
