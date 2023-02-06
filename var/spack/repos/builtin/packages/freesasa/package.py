@@ -10,7 +10,7 @@ class Freesasa(AutotoolsPackage):
     """C-library for calculating Solvent Accessible Surface Areas"""
 
     homepage = "http://freesasa.github.io"
-    url = "https://github.com/mittinatten/freesasa/archive/refs/tags/2.1.2.tar.gz"
+    url = "https://github.com/mittinatten/freesasa/releases/download/2.1.2/freesasa-2.1.2.zip"
     git = "https://github.com/mittinatten/freesasa.git"
     maintainers("RMeli")
 
