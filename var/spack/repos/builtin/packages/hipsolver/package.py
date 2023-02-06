@@ -27,6 +27,7 @@ class Hipsolver(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.4.0", sha256="d53d81c55b458ba5e6ea0ec6bd24bcc79ab06789730391da82d8c33b936339d9")
     version("5.3.3", sha256="f5a487a1c7225ab748996ac4d837ac7ab26b43618c4ed97a124f8fac1d67786e")
     version("5.3.0", sha256="6e920a59ddeefd52c9a6d164c33bc097726529e1ede3c417c711697956655b15")
     version("5.2.3", sha256="a57d883fdd09c6c7f9856fcfcabee6fa7ff9beed33d2f1a465bf28d38ea6f364")
@@ -84,6 +85,7 @@ class Hipsolver(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)

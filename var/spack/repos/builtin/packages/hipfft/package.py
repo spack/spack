@@ -16,13 +16,14 @@ class Hipfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
     git = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("renjithravindrankannath", "srekolam")
 
     version("master", branch="master")
 
+    version("5.4.0", sha256="d0a8e790182928b3d19774b8db1eece9b881a422f6a7055c051b12739fded624")
     version("5.3.3", sha256="fd1662cd5b1e1bce9db53b320c0fe614179cd196251efc2ef3365d38922b5cdc")
     version("5.3.0", sha256="ebbe2009b86b688809b6b4d5c3929fc589db455218d54a37790f21339147c5df")
     version("5.2.3", sha256="10be731fe91ede5e9f254f6eb3bc00b4dbeab449477f3cac03de358a7d0a6fa1")
@@ -96,6 +97,7 @@ class Hipfft(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
