@@ -142,7 +142,6 @@ class Mysql(CMakePackage):
     @classmethod
     def determine_version(cls, exe):
         return Executable(exe)("--version", output=str, error=str)
-        #return version_string.lstrip("qplugininfo").strip()
 
     @property
     def command(self):
