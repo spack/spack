@@ -35,4 +35,3 @@ class Dpmjet(MakefilePackage):
         install_tree("bin", prefix.bin)
         install_tree("lib", prefix.lib)
         install_tree("include", prefix.include)
-        pass
