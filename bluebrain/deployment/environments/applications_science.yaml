@@ -9,6 +9,7 @@ spack:
           - py-atldld
           - py-atlinter
           - py-bba-datafetch
+          - py-bba-data-push
           - py-bba-webexporter
           - py-bglibpy
           - py-bluepyefe
@@ -50,6 +51,7 @@ spack:
     - py-atldld
     - py-atlinter
     - py-bba-datafetch
+    - py-bba-data-push
     - py-bba-webexporter
     - py-bglibpy
     - py-bluepyefe

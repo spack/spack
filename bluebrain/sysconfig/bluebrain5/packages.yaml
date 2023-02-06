@@ -95,7 +95,7 @@ packages:
     require: "%intel"
       # - one_of: ["%intel", "%nvhpc"]
   omega-h:
-    variants: +kokkos
+    variants: ~kokkos~trilinos
   opencv:
     variants: ~gtk~vtk
   openssh:

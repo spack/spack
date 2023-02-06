@@ -17,6 +17,8 @@ class Touchdetector(CMakePackage):
     submodules = True
 
     version('develop', branch='main')
+    version('5.7.4', tag='5.7.4')
+    version('5.7.1', tag='5.7.1')
     version('5.7.0', tag='5.7.0')
     version('5.6.1', tag='5.6.1')
     version('5.6.0', tag='5.6.0')
@@ -49,7 +51,8 @@ class Touchdetector(CMakePackage):
     depends_on('catch2@2', when='@5.0.2:')
     depends_on('eigen', when='@4.5:')
     depends_on('fmt@:5.999', when='@4.5:')
-    depends_on('morpho-kit', when='@5.2:')
+    depends_on('morpho-kit@0.3.5:', when='@5.7.5:')
+    depends_on('morpho-kit', when='@5.2:5.7.4')
     depends_on('mpi')
     depends_on('pugixml', when='@4.5:')
     depends_on('random123', when='@5.3.3:')
@@ -102,7 +105,7 @@ class Touchdetector(CMakePackage):
                 self.define('CMAKE_CXX_COMPILER', self.spec['mpi'].mpicxx),
             ]
 
-        if self.spec.satisfies('@5.7.0'):
+        if self.spec.satisfies('@5.7.0:'):
             use_tests = self.spec.satisfies('@develop') or '+test' in self.spec
             args += [
                 self.define_from_variant('ENABLE_CALIPER', 'caliper'),

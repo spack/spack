@@ -90,8 +90,6 @@ class SimModel(Package):
             )
             include_flag += " -I " + str(self.spec[dep].prefix.include)
 
-        if '+profile' in self.spec:
-            include_flag += ' -DENABLE_TAU_PROFILER'
         output_dir = os.path.basename(self.spec["neuron"].package.archdir)
         include_flag_raw = include_flag
         link_flag_raw = link_flag
@@ -136,7 +134,7 @@ class SimModel(Package):
         nrnivmodl_params = self._nrnivmodlcore_params(include_flag, link_flag)
         with working_dir('build_' + self.mech_name, create=True):
             force_symlink(mods_location, 'mod')
-            which('nrnivmodl-core')(*(nrnivmodl_params + ['mod']))
+            self.nrnivmodl_core_exe(*(nrnivmodl_params + ['mod']))
             output_dir = os.path.basename(self.spec["neuron"].package.archdir)
             mechlib = find_libraries('libcorenrnmech_ext*',
                                      output_dir)

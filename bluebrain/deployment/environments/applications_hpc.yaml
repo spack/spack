@@ -51,6 +51,7 @@ spack:
     - neurodamus-neocortex+ngv+metabolism+caliper
     - neurodamus-thalamus+coreneuron+caliper
     - neuron+coreneuron+debug build_type=Debug
+    - neuron%intel+coreneuron build_type=FastDebug
     - nmodl
     - parquet-converters
     - py-neurodamus+all_deps

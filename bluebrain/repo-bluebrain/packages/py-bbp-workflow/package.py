@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-workflow'
     git = 'ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git'
 
-    version('3.1.0', tag='bbp-workflow-v3.1.0')
+    version('3.1.13', tag='bbp-workflow-v3.1.13')
 
     depends_on('py-setuptools', type=('build'))
 
@@ -20,11 +20,13 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-dask+diagnostics@2021.6.2', type='run')
     depends_on('py-distributed@2021.6.2', type='run')
     depends_on('py-luigi', type='run')
+    depends_on('py-jsonschema', type='run')
     depends_on('py-luigi-tools', type='run')
     depends_on('py-sh', type='run')
     depends_on('py-matplotlib', type='run')
     depends_on('py-bluepy', type='run')
     depends_on('py-bluepy-configfile', type='run')
+    depends_on('py-bluepysnap', type='run')
     depends_on('py-voxcell', type='run')
     depends_on('py-entity-management', type='run')
     depends_on('py-xarray@0.18.2', type='run')
@@ -34,6 +36,9 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-neo', type='run')
     depends_on('py-pyarrow+parquet', type='run')
     depends_on('py-click', type='run')
+    depends_on('py-cwl-luigi', type='run')
+    depends_on('py-cwl-registry', type='run')
+    depends_on('py-brayns', type='run')
 
     # extra deps to include in the module
     # depend on a version with BBP ca root patch

@@ -1,0 +1,42 @@
+name: Commit message validation
+
+on:
+  pull_request:
+
+jobs:
+  validate-commit-messages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Validate commit messages
+        id: commit-message-validator
+        continue-on-error: true
+        run: |
+          echo "Deepening shallow clone to ${{ github.event.pull_request.commits }} commits"
+          echo "PR number is ${{ github.event.pull_request.number }}"
+          git fetch --deepen=$((${{ github.event.pull_request.commits }} - 1))
+          pip install gitpython
+          python ./.github/workflows/validate-commit-message.py --title "${{ github.event.pull_request.title }}" || true
+
+      - name: Show output
+        run: |
+          echo "Output: ${{ steps.commit-message-validator.outputs.faulty-commits }}"
+
+      - name: Add comment to PR
+        if: ${{ steps.commit-message-validator.outputs.faulty-commits == 'true' }}
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: faulty_commits.txt
+          reactions: eyes, confused, rocket
+
+      - name: Fail the action
+        if: ${{ steps.commit-message-validator.outputs.faulty-commits == 'true' }}
+        run: |
+          echo "Faulty commit messages found - failing"
+          exit 1

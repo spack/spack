@@ -37,8 +37,8 @@ spack:
     - highfive+mpi
     - hypre+int64+mpi
     - metis+int64
-    - neuron+mpi~debug%intel
-    - omega-h+gmsh+kokkos
+    - neuron+mpi
+    - omega-h+gmsh
     - petsc~int64+mpi
     - petsc+int64+mpi
     - py-cgal-pybind
