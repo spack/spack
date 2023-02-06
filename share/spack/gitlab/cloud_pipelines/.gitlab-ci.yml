@@ -361,6 +361,45 @@ gpu-tests-protected-build:
       job: gpu-tests-protected-generate
 
 ########################################
+# GPU Testing for Power Pipeline
+########################################
+.gpu-tests-power:
+  variables:
+    SPACK_CI_STACK_NAME: gpu-tests-power
+
+gpu-tests-power-pr-generate:
+  extends: [ ".gpu-tests-power", ".pr-generate" ]
+  image: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
+  tags: ["spack", "large", "ppc64le", "public"]
+
+gpu-tests-power-protected-generate:
+  extends: [ ".gpu-tests-power", ".protected-generate" ]
+  image: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
+  tags: ["spack", "large", "ppc64le", "protected"]
+
+gpu-tests-power-pr-build:
+  extends: [ ".gpu-tests-power", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: gpu-tests-power-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: gpu-tests-power-pr-generate
+
+gpu-tests-power-protected-build:
+  extends: [ ".gpu-tests-power", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: gpu-tests-power-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: gpu-tests-power-protected-generate
+
+########################################
 # E4S OneAPI Pipeline
 ########################################
 .e4s-oneapi:
