@@ -16,12 +16,13 @@ class Rocrand(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocrand"]
 
+    version("5.4.0", sha256="0f6a0279b8b5a6dfbe32b45e1598218fe804fee36170d5c1f7b161c600544ef2")
     version("5.3.3", sha256="b0aae79dce7f6f9ef76ad2594745fe1f589a7b675b22f35b4d2369e7d5e1985a")
     version("develop", branch="develop")
     version("master", branch="master")
@@ -125,6 +126,7 @@ class Rocrand(CMakePackage):
 
     # Add hiprand sources thru the below
     for d_version, d_commit in [
+        ("5.4.0", "125d691d3bcc6de5f5d63cf5f5a993c636251208"),
         ("5.3.3", "12e2f070337945318295c330bf69c6c060928b9e"),
         ("5.3.0", "12e2f070337945318295c330bf69c6c060928b9e"),
         ("5.2.3", "12e2f070337945318295c330bf69c6c060928b9e"),
@@ -180,6 +182,7 @@ class Rocrand(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
