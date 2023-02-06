@@ -20,4 +20,4 @@ class PyGssapi(PythonPackage):
     depends_on("py-cython@0.29.29:2", type="build")
     depends_on("py-setuptools@40.6.0:", type="build")
 
-    depends_on("py-decorator")
+    depends_on("py-decorator", type=("build", "run"))

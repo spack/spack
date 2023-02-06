@@ -29,11 +29,11 @@ class PyHtgettoken(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@30.3:", type="build")
 
-    depends_on("py-gssapi", type="run")
-    depends_on("py-paramiko", type="run")
-    depends_on("py-urllib3", type="run")
+    depends_on("py-gssapi", type=("build", "run"))
+    depends_on("py-paramiko", type=("build", "run"))
+    depends_on("py-urllib3", type=("build", "run"))
 
     def setup_run_environment(self, env):
         if env.get("XDG_RUNTIME_DIR") and env.get("UID"):
