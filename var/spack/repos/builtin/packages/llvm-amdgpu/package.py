@@ -17,6 +17,7 @@ class LlvmAmdgpu(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
     url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
+    generator = "Ninja"
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
@@ -140,6 +141,8 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("z3", type="link")
     depends_on("zlib", type="link")
     depends_on("ncurses+termlib", type="link")
+    depends_on("ninja", type="build")
+    depends_on("pkgconfig", type="build")
 
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"), when="+openmp")
@@ -210,24 +213,30 @@ class LlvmAmdgpu(CMakePackage):
 
     def cmake_args(self):
         llvm_projects = ["clang", "lld", "clang-tools-extra", "compiler-rt"]
+        llvm_runtimes = []
         args = []
         if self.spec.satisfies("@4.3.0:"):
             args = [
                 self.define("LLVM_ENABLE_Z3_SOLVER", "OFF"),
                 self.define("LLLVM_ENABLE_ZLIB", "ON"),
                 self.define("CLANG_DEFAULT_LINKER", "lld"),
+                self.define("LIBCXX_ENABLE_SHARED", "OFF"),
+                self.define("LIBCXX_ENABLE_STATIC", "ON"),
+                self.define("LIBCXX_INSTALL_LIBRARY", "OFF"),
+                self.define("LIBCXX_INSTALL_HEADERS", "OFF"),
+                self.define("LIBCXXABI_ENABLE_SHARED", "OFF"),
+                self.define("LIBCXXABI_ENABLE_STATIC", "ON"),
+                self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"),
             ]
         if self.spec.satisfies("@4.3.0:4.5.2"):
             llvm_projects.append("libcxx")
             llvm_projects.append("libcxxabi")
-            args.append(self.define("LIBCXX_ENABLE_SHARED", "OFF"))
-            args.append(self.define("LIBCXX_ENABLE_STATIC", "ON"))
-            args.append(self.define("LIBCXX_INSTALL_LIBRARY", "OFF"))
-            args.append(self.define("LIBCXX_INSTALL_HEADERS", "OFF"))
-            args.append(self.define("LIBCXXABI_ENABLE_SHARED", "OFF"))
-            args.append(self.define("LIBCXXABI_ENABLE_STATIC", "ON"))
-            args.append(self.define("LIBCXXABI_INSTALL_STATIC_LIBRARY", "OFF"))
-
+        if self.spec.satisfies("@5.0.0:"):
+            llvm_runtimes.append("libcxx")
+            llvm_runtimes.append("libcxxabi")
+            args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;X86"))
+            args.append(self.define("LLVM_AMDGPU_ALLOW_NPI_TARGETS", "ON"))
+            args.extend([self.define("LLVM_ENABLE_RUNTIMES", ";".join(llvm_runtimes))])
         if "+openmp" in self.spec:
             llvm_projects.append("openmp")
 
@@ -256,7 +265,7 @@ class LlvmAmdgpu(CMakePackage):
 
         if "+link_llvm_dylib" in self.spec:
             args.append("-DLLVM_LINK_LLVM_DYLIB:Bool=ON")
-            args.append("-DDCLANG_LINK_CLANG_DYLIB:Bool=ON")
+            args.append("-DCLANG_LINK_CLANG_DYLIB:Bool=ON")
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":
@@ -268,7 +277,7 @@ class LlvmAmdgpu(CMakePackage):
     def post_install(self):
         # TODO:Enabling LLVM_ENABLE_RUNTIMES for libcxx,libcxxabi did not build.
         # bootstraping the libcxx with the just built clang
-        if self.spec.satisfies("@4.5.0:5.2"):
+        if self.spec.satisfies("@4.5.0:4.5.2"):
             spec = self.spec
             define = self.define
             libcxxdir = "build-bootstrapped-libcxx"
