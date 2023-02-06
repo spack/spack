@@ -158,8 +158,7 @@ def develop(parser, args):
     # Note: if we modify a config file used by another environment, the other
     # environment may not be consistent
     if env:
-        tty.debug("Updating develop config for {0} transactionally"
-                  .format(env.name))
+        tty.debug("Updating develop config for {0} transactionally".format(env.name))
         with env.write_transaction():
             _update_config(spec, path, abspath, modify_scope)
     else:
