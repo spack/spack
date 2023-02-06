@@ -39,6 +39,11 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
     patch("0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch", when="@5.0.0")
     patch("0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch", when="@5.0.0")
+    patch(
+        "https://raw.githubusercontent.com/cp2k/cp2k/d9e473979eaef93bf16d7abafb9f21845af16eb8/tools/toolchain/scripts/stage3/libxc-6.0.0_mgga_xc_b97mv.patch",
+        sha256="938113a697ee14988ccff153e1a8287fdb78072adc4f388a0af434261082fee5",
+        when="@6.0.0",
+    )
 
     patch("nvhpc-configure.patch", when="%nvhpc")
     patch("nvhpc-libtool.patch", when="@develop %nvhpc")
