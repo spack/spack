@@ -17,9 +17,9 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers = [
+    maintainers(
         "rscohn2",
-    ]
+    )
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
 

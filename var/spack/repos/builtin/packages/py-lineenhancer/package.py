@@ -12,7 +12,7 @@ class PyLineenhancer(PythonPackage):
     homepage = "https://github.com/MPI-Dortmund/LineEnhancer"
     pypi = "lineenhancer/lineenhancer-1.0.8.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.0.8", sha256="a1c7f2556110135d7298b0002674b669b8bbf23f94d63e3e3db8f17f2fd3efbe")
 

@@ -14,7 +14,7 @@ class PyColorcet(PythonPackage):
     homepage = "https://colorcet.holoviz.org/index.html"
     pypi = "colorcet/colorcet-3.0.0.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("3.0.0", sha256="21c522346a7aa81a603729f2996c22ac3f7822f4c8c303c59761e27d2dfcf3db")
 

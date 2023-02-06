@@ -15,7 +15,7 @@ class Blt(Package):
     git = "https://github.com/LLNL/blt.git"
     tags = ["radiuss"]
 
-    maintainers = ["white238", "davidbeckingsale"]
+    maintainers("white238", "davidbeckingsale")
 
     version("develop", branch="develop")
     version("main", branch="main")

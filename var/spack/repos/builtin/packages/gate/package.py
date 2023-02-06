@@ -26,7 +26,7 @@ class Gate(CMakePackage):
     homepage = "http://opengatecollaboration.org/"
     url = "https://github.com/OpenGATE/Gate/archive/v9.0.tar.gz"
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     version("9.1", sha256="aaab874198500b81d45b27cc6d6a51e72cca9519910b893a5c85c8e6d3ffa4fc")
     version("9.0", sha256="8354f392facc0b7ae2ddf0eed61cc43136195b198ba399df25e874886b8b69cb")

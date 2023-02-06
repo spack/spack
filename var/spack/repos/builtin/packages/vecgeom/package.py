@@ -17,7 +17,7 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan", "sethrj"]
+    maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master")
     version("1.2.1", sha256="2b47f0d23f6d25ca4fc0601b93a98167bbfb4b8aa6a1bba16d0391569e99e6f0")

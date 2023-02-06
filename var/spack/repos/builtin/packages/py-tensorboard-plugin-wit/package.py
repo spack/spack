@@ -21,7 +21,7 @@ class PyTensorboardPluginWit(PythonPackage):
     # Spack supports separate concretization of build deps.
     url = "https://pypi.io/packages/py3/t/tensorboard_plugin_wit/tensorboard_plugin_wit-1.8.0-py3-none-any.whl"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     version(
         "1.8.1",

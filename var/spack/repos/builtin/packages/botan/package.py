@@ -12,7 +12,7 @@ class Botan(MakefilePackage):
     homepage = "https://botan.randombit.net/"
     url = "https://botan.randombit.net/releases/Botan-2.13.0.tar.xz"
 
-    maintainers = ["aumuell"]
+    maintainers("aumuell")
 
     version("2.19.1", sha256="e26e00cfefda64082afdd540d3c537924f645d6a674afed2cd171005deff5560")
     version("2.19.0", sha256="240d9e56e6acb91ef4cf06a8a1c6c0f101c61d40cf48cccf139faef821d7040b")

@@ -17,7 +17,7 @@ class ProcessInProcess(Package):
     homepage = "https://github.com/procinproc/procinproc.github.io"
     git = "https://github.com/procinproc/PiP.git"
 
-    maintainers = ["ahori"]
+    maintainers("ahori")
 
     conflicts("platform=darwin", msg="Darwin is not supported.")
     conflicts("platform=windows", msg="Windows is not supported.")

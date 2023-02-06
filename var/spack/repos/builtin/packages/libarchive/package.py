@@ -12,7 +12,7 @@ class Libarchive(AutotoolsPackage):
 
     homepage = "https://www.libarchive.org"
     url = "https://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("3.5.2", sha256="5f245bd5176bc5f67428eb0aa497e09979264a153a074d35416521a5b8e86189")
     version("3.5.1", sha256="9015d109ec00bb9ae1a384b172bf2fc1dff41e2c66e5a9eeddf933af9db37f5a")

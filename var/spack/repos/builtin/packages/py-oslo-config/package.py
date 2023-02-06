@@ -15,7 +15,7 @@ class PyOsloConfig(PythonPackage):
     homepage = "https://docs.openstack.org/oslo.config/"
     pypi = "oslo.config/oslo.config-8.7.1.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("8.7.1", sha256="a0c346d778cdc8870ab945e438bea251b5f45fae05d6d99dfe4953cca2277b60")
 

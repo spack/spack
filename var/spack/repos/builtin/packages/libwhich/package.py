@@ -15,7 +15,7 @@ class Libwhich(Package):
     url = "https://github.com/vtjnash/libwhich/archive/refs/tags/v1.1.0.tar.gz"
     git = "https://github.com/vtjnash/libwhich.git"
 
-    maintainers = ["dmageeLANL"]
+    maintainers("dmageeLANL")
 
     version("master", branch="master")
     version("1.1.0", sha256="f1c30bf7396859ad437a5db74e9e328fb4b4e1379457121e28a3524b1e3a0b3f")

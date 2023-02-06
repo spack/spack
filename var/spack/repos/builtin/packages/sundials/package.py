@@ -21,7 +21,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
     test_requires_compiler = True
 
-    maintainers = ["balos1", "cswoodward", "gardner48"]
+    maintainers("balos1", "cswoodward", "gardner48")
 
     # ==========================================================================
     # Versions

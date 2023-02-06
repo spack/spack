@@ -20,7 +20,7 @@ class PyYt(PythonPackage):
     git = "https://github.com/yt-project/yt.git"
     pypi = "yt/yt-4.1.2.tar.gz"
 
-    maintainers = ["charmoniumq"]
+    maintainers("charmoniumq")
 
     version("4.1.2", sha256="0ae03288b067721baad14c016f253dc791cd444a1f2dd5d804cf91da622a0c76")
     version("3.6.1", sha256="be454f9d05dcbe0623328b4df43a1bfd1f0925e516be97399710452931a19bb0")

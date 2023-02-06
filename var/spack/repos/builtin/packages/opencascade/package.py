@@ -17,7 +17,7 @@ class Opencascade(CMakePackage):
     url = "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
     git = "https://git.dev.opencascade.org/repos/occt.git"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version(
         "7.7.0",

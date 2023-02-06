@@ -14,7 +14,7 @@ class Geant4Data(BundlePackage):
 
     homepage = "http://geant4.cern.ch"
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
     tags = ["hep"]
 

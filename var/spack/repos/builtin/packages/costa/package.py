@@ -13,11 +13,11 @@ class Costa(CMakePackage):
     Based on the paper: https://arxiv.org/abs/2106.06601
     """
 
-    maintainers = [
+    maintainers(
         "haampie",
         "kabicm",
         "RMeli",
-    ]
+    )
     homepage = "https://github.com/eth-cscs/COSTA"
     git = "https://github.com/eth-cscs/COSTA.git"
 

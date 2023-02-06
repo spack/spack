@@ -20,7 +20,7 @@ class Rocsparse(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.3.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocsparse"]
 
     amdgpu_targets = ROCmPackage.amdgpu_targets

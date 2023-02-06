@@ -11,7 +11,7 @@ class FuseOverlayfs(AutotoolsPackage):
 
     homepage = "https://github.com/containers/fuse-overlayfs"
     url = "https://github.com/containers/fuse-overlayfs/archive/v1.1.2.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("1.7.1", sha256="fe2c076aed7b8669e7970301a99c0b197759b611035d8199de4c0add7d2fb2b4")
     version("1.7", sha256="e4d9a794d270e237a38e7ced95af95ad15268e0584eab981ed7c7b3758b95995")
