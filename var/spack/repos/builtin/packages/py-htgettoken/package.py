@@ -14,7 +14,6 @@ class PyHtgettoken(PythonPackage):
 
     # htgettoken is not available on PyPi
     url = "https://github.com/fermitools/htgettoken/archive/refs/tags/v1.16.tar.gz"
-    list_url = "https://github.com/fermitools/htgettoken/releases/"
     git = "https://github.com/fermitools/htgettoken.git"
 
     maintainers("wdconinc")
