@@ -67,10 +67,7 @@ class QtPackage(CMakePackage):
                 qt_prefix_path.append(self.spec[dep.name].prefix)
 
         # Now append all qt-* dependency prefixex into a prefix path
-        args.append(
-            self.define(
-                "QT_ADDITIONAL_PACKAGES_PREFIX_PATH",
-                ":".join(qt_prefix_path)))
+        args.append(self.define("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", ":".join(qt_prefix_path)))
 
         return args
 
@@ -81,7 +78,7 @@ class QtPackage(CMakePackage):
         # Copy to package-name-prefixed file to avoid clashes in views
         with working_dir(self.build_directory):
             copy("config.summary", self.name + ".config.summary")
-            install(self.name +  ".config.summary", self.prefix)
+            install(self.name + ".config.summary", self.prefix)
 
         # Warn users that this config summary is only for info purpose,
         # and should not be relied upon for downstream parsing.
