@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Openfast(CMakePackage):
     homepage = "https://openfast.readthedocs.io/en/latest/"
     git = "https://github.com/OpenFAST/openfast.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     version("develop", branch="dev")
     version("master", branch="main")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -258,7 +258,7 @@ class Openfoam(Package):
     in 2004.
     """
 
-    maintainers = ["olesenm"]
+    maintainers("olesenm")
     homepage = "https://www.openfoam.com/"
     url = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git = "https://develop.openfoam.com/Development/openfoam.git"
@@ -374,7 +374,7 @@ class Openfoam(Package):
     depends_on("parmgridgen", when="+mgridgen", type="build")
     depends_on("zoltan", when="+zoltan")
     depends_on("vtk", when="+vtk")
-    depends_on("adios2", when="@1912:")
+    depends_on("adios2~fortran", when="@1912:")
 
     # For OpenFOAM plugins and run-time post-processing this should just be
     # 'paraview+plugins' but that resolves poorly.
@@ -385,6 +385,9 @@ class Openfoam(Package):
     depends_on("paraview@5.4:", when="@1706:+paraview")
     # 1612 plugins need older paraview
     depends_on("paraview@:5.0.1", when="@1612+paraview")
+
+    # Icx only support from v2106 onwards
+    conflicts("%oneapi", when="@:2012", msg="OneAPI compiler not supported. Try v2106 or greater.")
 
     # General patches
     common = ["spack-Allwmake", "README-spack"]

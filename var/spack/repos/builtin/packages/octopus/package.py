@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     url = "https://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
     git = "https://gitlab.com/octopus-code/octopus"
 
-    maintainers = ["fangohr", "RemiLacroix-IDRIS"]
+    maintainers("fangohr", "RemiLacroix-IDRIS")
 
     version("12.1", sha256="e2214e958f1e9631dbe6bf020c39f1fe4d71ab0b6118ea9bd8dc38f6d7a7959a")
     version("12.0", sha256="70beaf08573d394a766f10346a708219b355ad725642126065d12596afbc0dcc")

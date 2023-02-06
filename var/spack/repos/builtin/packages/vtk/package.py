@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,19 +15,15 @@ class Vtk(CMakePackage):
     available software system for 3D computer graphics, image
     processing and visualization."""
 
-    homepage = "http://www.vtk.org"
+    homepage = "https://www.vtk.org"
     url = "https://www.vtk.org/files/release/9.0/VTK-9.0.0.tar.gz"
-    list_url = "http://www.vtk.org/download/"
+    list_url = "https://www.vtk.org/download/"
 
-    maintainers = ["chuckatkins", "danlipsa"]
+    maintainers("chuckatkins", "danlipsa")
 
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
     version("9.1.0", sha256="8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96")
-    version(
-        "9.0.3",
-        sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a",
-        preferred=True,
-    )
+    version("9.0.3", sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a")
     version("9.0.1", sha256="1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7")
     version("9.0.0", sha256="15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715")
     version("8.2.0", sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb")
@@ -58,6 +54,10 @@ class Vtk(CMakePackage):
         when="@9:9.0",
         sha256="0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d",
     )
+
+    # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
+    patch("xdmf2-hdf51.13.2.patch", when="@9:9.2 +xdmf")
 
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
@@ -148,6 +148,7 @@ class Vtk(CMakePackage):
     depends_on("cgns@4.1.1:~mpi", when="@9.1: ~mpi")
     depends_on("seacas@2021-05-12:+mpi", when="@9.1: +mpi")
     depends_on("seacas@2021-05-12:~mpi", when="@9.1: ~mpi")
+    depends_on("nlohmann-json", when="@9.2:")
 
     # For finding Fujitsu-MPI wrapper commands
     patch("find_fujitsu_mpi.patch", when="@:8.2.0%fj")
@@ -158,6 +159,12 @@ class Vtk(CMakePackage):
         "https://gitlab.kitware.com/vtk/vtk/uploads/c6fa799a1a028b8f8a728a40d26d3fec/vtk-freetype-2.10.3-replace-FT_CALLBACK_DEF.patch",
         sha256="eefda851f844e8a1dfb4ebd8a9ff92d2b78efc57f205774052c5f4c049cc886a",
         when="@:9.0.1 ^freetype@2.10.3:",
+    )
+
+    patch(
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/5a1c96e12e9b4a660d326be3bed115a2ceadb573.patch",
+        sha256="65175731c080961f85d779d613ac1f6bce89783745e54e864edec7637b03b18a",
+        when="@9.1",
     )
 
     def url_for_version(self, version):
@@ -226,6 +233,8 @@ class Vtk(CMakePackage):
                         "-DVTK_MODULE_USE_EXTERNAL_VTK_fmt:BOOL=OFF",
                     ]
                 )
+            if spec.satisfies("@9.2:"):
+                cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
 
         # Some variable names have changed
         if spec.satisfies("@8.2.0"):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Onednn(CMakePackage):
     url = "https://github.com/oneapi-src/oneDNN/archive/v1.7.tar.gz"
     git = "https://github.com/oneapi-src/oneDNN.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
     version("2.5.2", sha256="11d50235afa03571dc70bb6d96a98bfb5d9b53e8c00cc2bfbde78588bd01f6a3")

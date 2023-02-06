@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class SstMacro(AutotoolsPackage):
     git = "https://github.com/sstsimulator/sst-macro.git"
     url = "https://github.com/sstsimulator/sst-macro/releases/download/v11.0.0_Final/sstmacro-11.0.0.tar.gz"
 
-    maintainers = ["jjwilke"]
+    maintainers("jjwilke")
 
     version("11.0.0", sha256="30367baed670b5b501320a068671556c9071286a0f0c478f9994a30d8fe5bdea")
     version("10.1.0", sha256="e15d99ce58d282fdff849af6de267746a4c89f3b8c5ab6c1e1e7b53a01127e73")

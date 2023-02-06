@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,12 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     features parallel multigrid methods for both structured and
     unstructured grid problems."""
 
-    homepage = (
-        "https://computing.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods"
-    )
+    homepage = "https://llnl.gov/casc/hypre"
     url = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git = "https://github.com/hypre-space/hypre.git"
     tags = ["e4s", "radiuss"]
 
-    maintainers = ["ulrikeyang", "osborn9", "balay"]
+    maintainers("ulrikeyang", "osborn9", "balay")
 
     test_requires_compiler = True
 
@@ -75,6 +73,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("fortran", default=True, description="Enables fortran bindings")
     variant("gptune", default=False, description="Add the GPTune hookup code")
     variant("umpire", default=False, description="Enable Umpire support")
+    variant("sycl", default=False, description="Enable SYCL support")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -110,6 +109,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             when="+umpire+rocm amdgpu_target={0}".format(gfx),
         )
 
+    # Uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
+    depends_on("cuda@:11", when="+cuda")
+
     # Conflicts
     conflicts("+cuda", when="+int64")
     conflicts("+rocm", when="+int64")
@@ -135,6 +137,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # Option added in v2.21.0
     conflicts("+umpire", when="@:2.20")
+
+    # Option added in v2.24.0
+    conflicts("+sycl", when="@:2.23")
 
     configure_directory = "src"
 
@@ -266,6 +271,15 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                     "--disable-rocsparse",
                 ]
             )
+
+        if "+sycl" in spec:
+            configure_args.append("--with-scyl")
+            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError(
+                    "Hypre's SYCL GPU Backend requires DPC++ (dpcpp)"
+                    + " or the oneAPI CXX (icpx) compiler."
+                )
 
         if "+unified-memory" in spec:
             configure_args.append("--enable-unified-memory")

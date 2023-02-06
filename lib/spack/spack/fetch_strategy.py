@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,7 @@ import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto as crypto
+import spack.util.git
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -92,6 +93,22 @@ def _ensure_one_stage_entry(stage_path):
     stage_entries = os.listdir(stage_path)
     assert len(stage_entries) == 1
     return os.path.join(stage_path, stage_entries[0])
+
+
+def _filesummary(path, print_bytes=16):
+    try:
+        n = print_bytes
+        with open(path, "rb") as f:
+            size = os.fstat(f.fileno()).st_size
+            if size <= 2 * n:
+                short_contents = f.read(2 * n)
+            else:
+                short_contents = f.read(n)
+                f.seek(-n, 2)
+                short_contents += b"..." + f.read(n)
+        return size, short_contents
+    except OSError:
+        return 0, b""
 
 
 def fetcher(cls):
@@ -499,9 +516,14 @@ class URLFetchStrategy(FetchStrategy):
 
         checker = crypto.Checker(self.digest)
         if not checker.check(self.archive_file):
+            # On failure, provide some information about the file size and
+            # contents, so that we can quickly see what the issue is (redirect
+            # was not followed, empty file, text instead of binary, ...)
+            size, contents = _filesummary(self.archive_file)
             raise ChecksumError(
-                "%s checksum failed for %s" % (checker.hash_name, self.archive_file),
-                "Expected %s but got %s" % (self.digest, checker.sum),
+                f"{checker.hash_name} checksum failed for {self.archive_file}",
+                f"Expected {self.digest} but got {checker.sum}. "
+                f"File size = {size} bytes. Contents = {contents!r}",
             )
 
     @_needs_stage
@@ -765,7 +787,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     @property
     def git(self):
         if not self._git:
-            self._git = which("git", required=True)
+            self._git = spack.util.git.git()
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt

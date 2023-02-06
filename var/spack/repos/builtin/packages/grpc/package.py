@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack.package import *
 class Grpc(CMakePackage):
     """A high performance, open-source universal RPC framework."""
 
-    maintainers = ["nazavode"]
+    maintainers("nazavode")
 
     homepage = "https://grpc.io"
     url = "https://github.com/grpc/grpc/archive/v1.39.0.tar.gz"

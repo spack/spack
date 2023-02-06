@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Chaparral(CMakePackage):
     homepage = "https://gitlab.com/truchas/tpl-forks/chaparral"
     git = "https://gitlab.com/truchas/tpl-forks/chaparral.git"
 
-    maintainers = ["pbrady"]
+    maintainers("pbrady")
 
     version("develop", branch="truchas")
     version("2020-08-28", commit="c8a190bb74ef33ad8b2f7b67d20590f393fde32a", preferred=True)

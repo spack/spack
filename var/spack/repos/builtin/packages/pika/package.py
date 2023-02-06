@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
     git = "https://github.com/pika-org/pika.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
+    maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
     version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
     version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
@@ -84,7 +84,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependencies
     depends_on("boost@1.71:")
-    depends_on("fmt@0.9:", when="@0.11:")
+    depends_on("fmt@9:", when="@0.11:")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -102,12 +102,32 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
     conflicts("tracy-client@0.9:", when="@:0.9")
-    depends_on("whip+rocm", when="@0.9: +rocm")
-    depends_on("whip+cuda", when="@0.9: +cuda")
+    depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
+    depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    with when("+rocm"):
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on(
+                "whip@0.1: amdgpu_target={0}".format(val),
+                when="@0.9: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocsolver amdgpu_target={0}".format(val),
+                when="@0.5: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
+            )
+
+    with when("+cuda"):
+        for val in CudaPackage.cuda_arch_values:
+            depends_on(
+                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
+            )
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
+        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented

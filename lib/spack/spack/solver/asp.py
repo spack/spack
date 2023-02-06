@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -2245,6 +2245,12 @@ class SpecBuilder(object):
         )
         self._specs[pkg].extra_attributes = spec_info.get("extra_attributes", {})
 
+        # If this is an extension, update the dependencies to include the extendee
+        package = self._specs[pkg].package_class(self._specs[pkg])
+        extendee_spec = package.extendee_spec
+        if extendee_spec:
+            package.update_external_dependencies(self._specs.get(extendee_spec.name, None))
+
     def depends_on(self, pkg, dep, type):
         dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
 
@@ -2253,7 +2259,7 @@ class SpecBuilder(object):
         assert len(dependencies) < 2, msg
 
         if not dependencies:
-            self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
+            self._specs[pkg].add_dependency_edge(self._specs[dep], deptypes=(type,))
         else:
             # TODO: This assumes that each solve unifies dependencies
             dependencies[0].add_type(type)
@@ -2311,17 +2317,28 @@ class SpecBuilder(object):
 
     @staticmethod
     def sort_fn(function_tuple):
+        """Ensure attributes are evaluated in the correct order.
+
+        hash attributes are handled first, since they imply entire concrete specs
+        node attributes are handled next, since they instantiate nodes
+        node_compiler attributes are handled next to ensure they come before node_compiler_version
+        external_spec_selected attributes are handled last, so that external extensions can find
+        the concrete specs on which they depend because all nodes are fully constructed before we
+        consider which ones are external.
+        """
         name = function_tuple[0]
         if name == "hash":
-            return (-4, 0)
+            return (-5, 0)
         elif name == "node":
-            return (-3, 0)
+            return (-4, 0)
         elif name == "node_compiler":
-            return (-2, 0)
+            return (-3, 0)
         elif name == "node_flag":
-            return (-1, 0)
+            return (-2, 0)
+        elif name == "external_spec_selected":
+            return (0, 0)  # note out of order so this goes last
         else:
-            return (0, 0)
+            return (-1, 0)
 
     def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
@@ -2404,12 +2421,6 @@ class SpecBuilder(object):
             for spec in root.traverse():
                 if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_git_lookup(spec.fullname)
-
-        # Add synthetic edges for externals that are extensions
-        for root in self._specs.values():
-            for dep in root.traverse():
-                if dep.external:
-                    dep.package.update_external_dependencies()
 
         return self._specs
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,15 @@ class Opencascade(CMakePackage):
 
     homepage = "https://www.opencascade.com"
     url = "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
+    git = "https://git.dev.opencascade.org/repos/occt.git"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
+    version(
+        "7.7.0",
+        extension="tar.gz",
+        sha256="075ca1dddd9646fcf331a809904925055747a951a6afd07a463369b9b441b445",
+    )
     version(
         "7.6.3",
         extension="tar.gz",
@@ -54,6 +60,13 @@ class Opencascade(CMakePackage):
         sha256="655da7717dac3460a22a6a7ee68860c1da56da2fec9c380d8ac0ac0349d67676",
     )
 
+    # fix for numeric_limits in gcc-12; applies cleanly to all older versions
+    patch(
+        "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=patch;h=2a8c5ad46cfef8114b13c3a33dcd88a81e522c1e",
+        sha256="bd0d7463259f469f8fc06a2b11eec7b0c89882aeea2f8c8647cf750c44b3e656",
+        when="@:7.7.0",
+    )
+
     variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
     variant("vtk", default=False, description="Enable VTK support")
     variant("freeimage", default=False, description="Build with FreeImage")
@@ -83,7 +96,7 @@ class Opencascade(CMakePackage):
 
         if "+tbb" in self.spec:
             args.append("-DUSE_TBB=ON")
-            args.append("-D3RDPARTY_VTK_DIR=%s" % self.spec["intel-tbb"].prefix)
+            args.append("-D3RDPARTY_TBB_DIR=%s" % self.spec["intel-tbb"].prefix)
         else:
             args.append("-DUSE_TBB=OFF")
 
@@ -97,6 +110,9 @@ class Opencascade(CMakePackage):
         if "+freeimage" in self.spec:
             args.append("-DUSE_FREEIMAGE=ON")
             args.append("-D3RDPARTY_FREEIMAGE_DIR=%s" % self.spec["freeimage"].prefix)
+            args.append(
+                "-D3RDPARTY_FREEIMAGE_INCLUDE_DIR=%s" % self.spec["freeimage"].prefix.include
+            )
         else:
             args.append("-DUSE_FREEIMAGE=OFF")
 
