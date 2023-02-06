@@ -35,10 +35,7 @@ class Freesasa(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if "~json" in self.spec:
-            args.append("--disable-json")
-        if "~xml" in self.spec:
-            args.append("--disable-xml")
-        if "~threads" in self.spec:
-            args.append("--disable-threads")
+        args.extend(self.enable_or_disable("json"))
+        args.extend(self.enable_or_disable("xml"))
+        args.extend(self.enable_or_disable("threads"))
         return args
