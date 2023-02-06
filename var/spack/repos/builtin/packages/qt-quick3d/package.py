@@ -4,21 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-import shutil
-
 from spack.package import *
-from spack.pkg.builtin.qt_base import QtBase
+from spack.pkg.builtin.qt_base import QtBase, QtPackage
 
 
-class QtQuick3d(CMakePackage):
+class QtQuick3d(QtPackage):
     """A new module and API for defining 3D content in Qt Quick."""
 
-    homepage = "https://www.qt.io"
-    url = "https://github.com/qt/qtquick3d/archive/refs/tags/v6.2.3.tar.gz"
-    list_url = "https://github.com/qt/qtquick3d/tags"
-
-    maintainers = ["wdconinc", "sethrj"]
+    url = QtPackage.get_url(__qualname__)
+    list_url = QtPackage.get_list_url(__qualname__)
 
     version("6.4.2", sha256="940145615fe3c4c8fb346c5bfc10f94fc7a4005c8c187886e0f3088ea0ce0778")
     version("6.4.1", sha256="67daeed69b9e7b3da516c6205e737fdba30a267978c1fb9d34723a6dc5588585")
@@ -29,39 +23,19 @@ class QtQuick3d(CMakePackage):
     version("6.2.4", sha256="7292ed4373a92913c6811f2faa5191f0426f84bd93a3f6eb7d54b62626b56db5")
     version("6.2.3", sha256="35d06edbdd83b7d781b70e0bada18911fa9b774b6403589d5b21813a73584d80")
 
-    generator = "Ninja"
-
-    # Changing default to Release for typical use in HPC contexts
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo", "MinSizeRel"),
-        description="CMake build type",
-    )
-
-    depends_on("cmake@3.16:", type="build")
-    depends_on("ninja", type="build")
-    depends_on("pkgconfig", type="build")
-    depends_on("python", when="@5.7.0:", type="build")
-
     depends_on("assimp@5.0.1:")
     depends_on("embree", when="@6.4:")
+
+    vendor_deps_to_remove = ["assimp", "embree"]
 
     for _v in QtBase.versions:
         v = str(_v)
         depends_on("qt-base@" + v, when="@" + v)
-        depends_on("qt-declarative@" + str(v), when="@" + v)
+        depends_on("qt-declarative@" + v, when="@" + v)
         depends_on("qt-quicktimeline@" + v, when="@" + v)
 
-    def patch(self):
-        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_remove = ["assimp", "embree"]
-        QtBase.remove_vendor_deps(vendor_dir, vendor_deps_to_remove)
-
     def cmake_args(self):
-        args = [
-            # Qt components typically install cmake config files in a single prefix
-            self.define("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", self.spec["qt-declarative"].prefix),
+        args = super().cmake_args() + [
             self.define("FEATURE_quick3d_assimp", True),
             self.define("FEATURE_system_assimp", True),
         ]

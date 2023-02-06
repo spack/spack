@@ -4,21 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-import shutil
-
 from spack.package import *
-from spack.pkg.builtin.qt_base import QtBase
+from spack.pkg.builtin.qt_base import QtBase, QtPackage
 
 
-class QtDeclarative(CMakePackage):
+class QtDeclarative(QtPackage):
     """Qt Declarative (Quick 2)."""
 
-    homepage = "https://www.qt.io"
-    url = "https://github.com/qt/qtdeclarative/archive/refs/tags/v6.2.3.tar.gz"
-    list_url = "https://github.com/qt/qtdeclarative/tags"
-
-    maintainers = ["wdconinc", "sethrj"]
+    url = QtPackage.get_url(__qualname__)
+    list_url = QtPackage.get_list_url(__qualname__)
 
     version("6.4.2", sha256="dec3599b55f75cff044cc6384fa2f7e9505f8a48af1b4c185c2789e2dafabda6")
     version("6.4.1", sha256="23b5c91e98ec2b8a4118a3d3ace0c2e61b355cc8f2ccb87d189708b69446f917")
@@ -29,31 +23,10 @@ class QtDeclarative(CMakePackage):
     version("6.2.4", sha256="cd939d99c37e7723268804b9516e32f8dd64b985d847469c78b66b5f4481c548")
     version("6.2.3", sha256="eda82abfe685a6ab5664e4268954622ccd05cc9ec8fb16eaa453c54900591baf")
 
-    generator = "Ninja"
-
-    # Changing default to Release for typical use in HPC contexts
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo", "MinSizeRel"),
-        description="CMake build type",
-    )
-
-    depends_on("cmake@3.16:", type="build")
-    depends_on("ninja", type="build")
-    depends_on("pkgconfig", type="build")
-    depends_on("python", when="@5.7.0:", type="build")
+    # Testing requires +network
+    depends_on("qt-base +network", type="test")
 
     for _v in QtBase.versions:
         v = str(_v)
         depends_on("qt-base@" + v, when="@" + v)
         depends_on("qt-shadertools@" + v, when="@" + v)
-
-    def patch(self):
-        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_keep = ["masm"]
-        with working_dir(vendor_dir):
-            for dep in os.listdir():
-                if os.path.isdir(dep):
-                    if dep not in vendor_deps_to_keep:
-                        shutil.rmtree(dep)

@@ -4,23 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-import shutil
-
 from spack.package import *
-from spack.pkg.builtin.qt_base import QtBase
+from spack.pkg.builtin.qt_base import QtBase, QtPackage
 
 
-class QtShadertools(CMakePackage):
+class QtShadertools(QtPackage):
     """APIs and tools in this module provide the producer functionality for the
     shader pipeline that allows Qt Quick to operate on Vulkan, Metal, and
     Direct3D, in addition to OpenGL."""
 
-    homepage = "https://www.qt.io"
-    url = "https://github.com/qt/qtshadertools/archive/refs/tags/v6.2.3.tar.gz"
-    list_url = "https://github.com/qt/qtshadertools/tags"
-
-    maintainers = ["wdconinc", "sethrj"]
+    url = QtPackage.get_url(__qualname__)
+    list_url = QtPackage.get_list_url(__qualname__)
 
     version("6.4.2", sha256="7f29a78769f454fe529595acb693aa67812e80d894162ddad3f0444f65a22268")
     version("6.4.1", sha256="d325724c4ed79c759ac8cbbca5f9fd4b0e6e8d61a9ac58921cb1dac75c104687")
@@ -31,26 +25,8 @@ class QtShadertools(CMakePackage):
     version("6.2.4", sha256="c3332d91e0894086634d5f8d40638439e6e3653a3a185e1b5f5d23ae3b9f51a1")
     version("6.2.3", sha256="658c4acc2925e57d35bbd38cdf49c08297555ed7d632f9e86bfef76e6d861562")
 
-    generator = "Ninja"
-
-    # Changing default to Release for typical use in HPC contexts
-    variant(
-        "build_type",
-        default="Release",
-        values=("Release", "Debug", "RelWithDebInfo", "MinSizeRel"),
-        description="CMake build type",
-    )
-
-    depends_on("cmake@3.16:", type="build")
-    depends_on("ninja", type="build")
-    depends_on("pkgconfig", type="build")
-    depends_on("python", when="@5.7.0:", type="build")
+    depends_on("qt-base +gui")
 
     for _v in QtBase.versions:
         v = str(_v)
         depends_on("qt-base@" + v, when="@" + v)
-
-    def patch(self):
-        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
-        vendor_deps_to_remove = []
-        QtBase.remove_verdor_deps(vendor_dir, vendor_deps_to_remove)
