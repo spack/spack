@@ -13,7 +13,7 @@ class Rmgdft(CMakePackage):
 
     homepage = "http://www.rmgdft.org/"
     git = "https://github.com/RMGDFT/rmgdft.git"
-    maintainers = ["elbriggs"]
+    maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
     version("5.0.1", tag="v5.0.1")

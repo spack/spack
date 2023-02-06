@@ -15,7 +15,7 @@ class AwsOfiNccl(AutotoolsPackage):
     git = "https://github.com/aws/aws-ofi-nccl.git"
     url = "https://github.com/aws/aws-ofi-nccl.git"
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("master", branch="master", default=True)
 

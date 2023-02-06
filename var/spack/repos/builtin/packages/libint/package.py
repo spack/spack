@@ -29,7 +29,7 @@ class Libint(AutotoolsPackage):
     homepage = "https://github.com/evaleev/libint"
     url = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
 
-    maintainers = ["dev-zero"]
+    maintainers("dev-zero")
 
     version("2.6.0", sha256="4ae47e8f0b5632c3d2a956469a7920896708e9f0e396ec10071b8181e4c8d9fa")
     version("2.4.2", sha256="86dff38065e69a3a51d15cfdc638f766044cb87e5c6682d960c14f9847e2eac3")

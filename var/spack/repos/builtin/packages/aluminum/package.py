@@ -22,7 +22,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Aluminum.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("master", branch="master")
     version("1.0.0-lbann", tag="v1.0.0-lbann")

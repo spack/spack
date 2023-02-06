@@ -16,7 +16,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     # Stable releases
     version("4.4", sha256="581f4d4e872da74b3941c874215898a7d35802f03732bdccee1d4a7979105d18")
@@ -46,6 +46,9 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
         sha256="ca60bd9c1a1b35bc0dc58b6a4a19d5c2651f7a94a4b22b2c5ea001a1ca7a8a7f",
         when="@:4.2.1",
     )
+
+    # Avoid symlinking GNUMakefile to GNUMakefile
+    build_directory = "spack-build"
 
     # See https://savannah.gnu.org/bugs/?57962
     patch("findprog-in-ignore-directories.patch", when="@4.3")

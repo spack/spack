@@ -16,7 +16,7 @@ class PyMatplotlib(PythonPackage):
     homepage = "https://matplotlib.org/"
     pypi = "matplotlib/matplotlib-3.3.2.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
     import_modules = [
         "mpl_toolkits.axes_grid1",
         "mpl_toolkits.axes_grid",

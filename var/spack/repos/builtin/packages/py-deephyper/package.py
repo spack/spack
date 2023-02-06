@@ -15,7 +15,7 @@ class PyDeephyper(PythonPackage):
     pypi = "deephyper/deephyper-0.4.2.tar.gz"
     git = "https://github.com/deephyper/deephyper.git"
 
-    maintainers = ["mdorier", "Deathn0t"]
+    maintainers("mdorier", "Deathn0t")
 
     version("master", branch="master")
     version("0.4.2", sha256="ee1811a22b08eff3c9098f63fbbb37f7c8703e2f878f2bdf2ec35a978512867f")

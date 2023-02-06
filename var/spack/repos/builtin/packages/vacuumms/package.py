@@ -20,7 +20,7 @@ class Vacuumms(CMakePackage):
     url = "https://github.com/frankwillmore/VACUUMMS/archive/refs/tags/v1.0.0.tar.gz"
     git = "https://github.com/frankwillmore/VACUUMMS.git"
 
-    maintainers = ["frankwillmore"]
+    maintainers("frankwillmore")
 
     version("master", branch="master")
     version("1.1.1", tag="v1.1.1")

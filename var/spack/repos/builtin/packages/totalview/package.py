@@ -20,7 +20,7 @@ class Totalview(Package):
     be downloaded as a resource."""
 
     homepage = "https://totalview.io"
-    maintainers = ["dshrader", "petertea"]
+    maintainers("dshrader", "petertea")
     manual_download = True
     license_required = True
     license_comment = "#"

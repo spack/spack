@@ -14,7 +14,7 @@ class Timemory(CMakePackage, PythonExtension):
 
     homepage = "https://timemory.readthedocs.io/en/latest/"
     git = "https://github.com/NERSC/timemory.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
 
     version("master", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)

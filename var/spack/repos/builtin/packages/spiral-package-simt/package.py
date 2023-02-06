@@ -14,7 +14,7 @@ class SpiralPackageSimt(Package):
     url = "https://github.com/spiral-software/spiral-package-simt/archive/refs/tags/1.0.0.tar.gz"
     git = "https://github.com/spiral-software/spiral-package-simt.git"
 
-    maintainers = ["spiralgen"]
+    maintainers("spiralgen")
     extends("spiral-software")
 
     version("develop", branch="develop")

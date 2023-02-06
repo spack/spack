@@ -12,7 +12,7 @@ class PyMetpy(PythonPackage):
 
     homepage = "https://github.com/Unidata/MetPy"
     pypi = "MetPy/MetPy-1.0.1.tar.gz"
-    maintainers = ["dopplershift"]
+    maintainers("dopplershift")
 
     # Importing 'metpy.io' results in downloads, so skip it.
     # https://github.com/Unidata/MetPy/issues/1888

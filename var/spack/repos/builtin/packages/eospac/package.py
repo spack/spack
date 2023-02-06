@@ -14,7 +14,7 @@ class Eospac(Package):
 
     homepage = "https://laws.lanl.gov/projects/data/eos.html"
     list_url = "https://laws.lanl.gov/projects/data/eos/eospacReleases.php"
-    maintainers = ["KineticTheory"]
+    maintainers("KineticTheory")
 
     # - An EOSPAC release labeled "beta" doesn't always imply that the release
     #   is less suitable for production.  According to the current EOSPAC

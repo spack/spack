@@ -14,7 +14,7 @@ class Sqlcipher(AutotoolsPackage):
     url = "https://github.com/sqlcipher/sqlcipher/archive/v4.4.1.tar.gz"
     git = "https://github.com/sqlcipher/sqlcipher.git"
 
-    maintainers = ["rmsds"]
+    maintainers("rmsds")
 
     version("4.4.1", sha256="a36ed7c879a5e9af1054942201c75fc56f1db22e46bf6c2bbae3975dfeb6782d")
     version("4.4.0", sha256="0924b2ae1079717954498bda78a30de20ce2a6083076b16214a711567821d148")

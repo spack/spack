@@ -12,7 +12,7 @@ class BlastPlus(AutotoolsPackage):
     homepage = "https://blast.ncbi.nlm.nih.gov/"
     url = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-src.tar.gz"
 
-    maintainers = ["weijianwen"]
+    maintainers("weijianwen")
 
     version("2.13.0", sha256="89553714d133daf28c477f83d333794b3c62e4148408c072a1b4620e5ec4feb2")
     version("2.12.0", sha256="fda3c9c9d488cad6c1880a98a236d842bcf3610e3e702af61f7a48cf0a714b88")

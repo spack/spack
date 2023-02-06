@@ -19,7 +19,7 @@ class VotcaCsg(CMakePackage):
     homepage = "https://www.votca.org"
     url = "https://github.com/votca/csg/tarball/v1.4"
     git = "https://github.com/votca/csg.git"
-    maintainers = ["junghans"]
+    maintainers("junghans")
 
     version("stable", branch="stable", deprecated=True)
     version(

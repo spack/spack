@@ -13,7 +13,7 @@ class OpenpmdApi(CMakePackage):
     url = "https://github.com/openPMD/openPMD-api/archive/0.14.2.tar.gz"
     git = "https://github.com/openPMD/openPMD-api.git"
 
-    maintainers = ["ax3l", "franzpoeschel"]
+    maintainers("ax3l", "franzpoeschel")
 
     tags = ["e4s"]
 

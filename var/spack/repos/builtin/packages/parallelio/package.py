@@ -15,7 +15,7 @@ class Parallelio(CMakePackage):
     url = "https://github.com/NCAR/ParallelIO/archive/pio2_5_8.tar.gz"
     git = "https://github.com/NCAR/ParallelIO.git"
 
-    maintainers = ["jedwards4b"]
+    maintainers("jedwards4b")
 
     version("2.5.9", sha256="e5dbc153d8637111de3a51a9655660bf15367d55842de78240dcfc024380553d")
     version("2.5.8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")

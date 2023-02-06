@@ -19,7 +19,7 @@ class Parsec(CMakePackage, CudaPackage):
     git = "https://github.com/icldisco/parsec.git"
     url = "https://github.com/ICLDisco/parsec/archive/refs/tags/parsec-3.0.2012.tar.gz"
     list_url = "https://github.com/ICLDisco/parsec/tags"
-    maintainers = ["abouteiller", "bosilca", "herault"]
+    maintainers("abouteiller", "bosilca", "herault")
     tags = ["e4s"]
 
     test_requires_compiler = True

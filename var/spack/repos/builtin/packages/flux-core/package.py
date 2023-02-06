@@ -17,7 +17,7 @@ class FluxCore(AutotoolsPackage):
     git = "https://github.com/flux-framework/flux-core.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["grondo"]
+    maintainers("grondo")
 
     version("master", branch="master")
     version("0.46.1", sha256="a7873fd49889c11f12e62d59eb992d4a089ddfde8566789f79eca1dfae1a5ffa")
@@ -136,6 +136,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-six@1.9:", when="@:0.24", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-jsonschema@2.3:", type=("build", "run"))
+    depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")

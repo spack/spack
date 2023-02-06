@@ -12,7 +12,7 @@ class Sepp(Package):
     homepage = "https://github.com/smirarab/sepp"
 
     url = "https://github.com/smirarab/sepp/archive/refs/tags/4.5.1.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("4.5.1", sha256="51e052569ae89f586a1a94c804f09fe1b7910a3ffff7664e2005f18c7d3f717b")
 
