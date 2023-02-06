@@ -7,8 +7,10 @@ from spack.package import *
 
 
 class Reprimand(MesonPackage):
-    """RePrimAnd is a support library for numerical simulations of general
-    relativistic magnetohydrodynamics. If provides methods for recovering
+    """RePrimAnd: Recovery of Primitives And EOS framework
+
+    RePrimAnd is a support library for numerical simulations of general
+    relativistic magnetohydrodynamics. It provides methods for recovering
     primitive variables like pressure and velocity from the variables evolved
     in quasi-conservative formulations. Further, it provides a general
     framework for handling matter equations of state."""
@@ -19,6 +21,7 @@ class Reprimand(MesonPackage):
     maintainers("eschnett")
 
     version("develop", git="https://github.com/wokast/RePrimAnd", branch="public")
+    version("1.5", sha256="bc71030c1ae337c3631cfc7e46270260b0663e4ad73129148bf443c9220afb86")
     version("1.4", sha256="260730696175fa21d35d1a92df2c68b69243bb617083c82616efcb4720d557e8")
     version("1.3", sha256="8e9f05b1f065a876d1405562285a9f64d1b31c4a436d5a6bb1f023212b40314e")
 
@@ -43,10 +46,14 @@ class Reprimand(MesonPackage):
         env.set("BOOST_ROOT", self.spec["boost"].prefix)
 
     def meson_args(self):
-        args = [
-            "-Dbuild_documentation=false",
-            "-Dbuild_python_api={0}".format(str("+python" in self.spec).lower()),
-        ]
+        args = []
+        if self.spec.satisfies("@:1.4"):
+            args.extend(
+                [
+                    "-Dbuild_documentation=false",
+                    "-Dbuild_python_api={0}".format(str("+python" in self.spec).lower()),
+                ]
+            )
         return args
 
     @property
