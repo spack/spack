@@ -52,12 +52,30 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def develop(parser, args):
-    # TODO: note that this command could technically proceed without an
-    # active env, but in that case would require absolute paths
-    env = spack.cmd.require_active_env(cmd_name="develop")
+def _update_config(spec, path, abspath, modify_scope):
+    dev_specs = spack.config.get("develop", scope=modify_scope)
+    if spec.name in dev_specs:
+        tty.msg(
+            "Updating develop spec {0}:\n\told: {1}\n\tnew: {2}".format(
+                str(spec), dev_specs[spec.name], abspath
+            )
+        )
+    else:
+        tty.msg("New development spec: {0}".format(str(spec)))
 
+    entry = {
+        "spec": str(spec),
+    }
+    if path != spec.name:
+        entry["path"] = path
+    dev_specs[spec.name] = entry
+
+    spack.config.set("develop", dev_specs, modify_scope)
+
+
+def develop(parser, args):
     if not args.spec:
+        env = spack.cmd.require_active_env(cmd_name="develop")
         if args.clone is False:
             raise SpackError("No spec provided to spack develop command")
 
@@ -89,9 +107,18 @@ def develop(parser, args):
     if not spec.versions.concrete:
         raise SpackError("Packages to develop must have a concrete version")
 
-    # default path is relative path to spec.name
+    # If "spack develop" specifies an absolute path, a scope, and a spec, then
+    # an active environment is not required.
+    env = None
+
+    # If user does not specify --path, we choose to create a directory in the
+    # active environment's directory, named after the spec
     path = args.path or spec.name
-    abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
+    if not os.path.isabs(path):
+        env = spack.cmd.require_active_env(cmd_name="develop")
+        abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
+    else:
+        abspath = path
 
     # clone default: only if the path doesn't exist
     clone = args.clone
@@ -119,28 +146,21 @@ def develop(parser, args):
         pkg_cls(spec).stage.steal_source(abspath)
 
     if not args.scope:
+        env = spack.cmd.require_active_env(cmd_name="develop")
         modify_scope = "env:{0}".format(env.name)
     else:
+        # TODO: if we do not specify an absolute path, and do specify a scope
+        # associated with a different environment (e.g. as an absolute path),
+        # then we would be telling another env to develop a spec with a path
+        # in *this* env, which is not likely to be something anyone would want
         modify_scope = args.scope
-    dev_specs = spack.config.get("develop", scope=modify_scope)
-    if spec.name in dev_specs:
-        tty.msg(
-            "Updating {0}:\n\told: {1}\n\tnew: {2}".format(
-                str(spec), dev_specs[spec.name], abspath
-            )
-        )
+
+    # Note: if we modify a config file used by another environment, the other
+    # environment may not be consistent
+    if env:
+        tty.debug("Updating develop config for {0} transactionally"
+                  .format(env.name))
+        with env.write_transaction():
+            update_config(spec, path, abspath, modify_scope)
     else:
-        tty.msg("New development spec: {0}".format(str(spec)))
-
-    entry = {
-        "spec": str(spec),
-    }
-    if path != spec.name:
-        entry["path"] = path
-    dev_specs[spec.name] = entry
-
-    spack.config.set("develop", dev_specs, modify_scope)
-
-    # Note: this is needed to force a re-read of the env
-    with env.write_transaction():
-        pass
+        update_config(spec, path, abspath, modify_scope)
