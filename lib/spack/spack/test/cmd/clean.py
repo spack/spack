@@ -11,6 +11,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.caches
+import spack.environment as ev
 import spack.main
 import spack.package_base
 import spack.stage
@@ -109,3 +110,35 @@ def test_remove_python_cache(tmpdir, monkeypatch):
 
     for d in [source_dir, var_dir]:
         _check_files(d)
+
+def test_remove_build_artifacts_from_develop_build(mock_packages, tmpdir):
+    env_def = r"""spack:
+  specs:
+  - mpich@1.0
+  view: False
+  develop:
+    mpich:
+      spec: mpich@1.0"""
+    with tmpdir.as_cwd():
+        with open('spack.yaml', 'w') as syaml:
+            syaml.write(env_def)
+
+        # create a fake build directory
+        build_dir = 'mpich/spack-build-abcdefg'
+        os.makedirs(build_dir)
+
+        # create  a fake build log
+        build_log = os.path.join("mpich", "spack-build-out.txt")
+        open(build_log, "w").close()
+
+        e = ev.Environment('.')
+        ev.activate(e)
+
+        # pre-clean state
+        assert ev.active_environment
+        assert os.path.isdir(build_dir)
+        assert os.path.isfile(build_log)
+        clean('mpich')
+        # post clean state
+        assert not os.path.isdir(build_dir)
+        assert not os.path.isfile(build_log)
