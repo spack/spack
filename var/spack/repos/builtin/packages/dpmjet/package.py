@@ -29,7 +29,6 @@ class Dpmjet(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
         makefile.filter(r"install: \$\(pylib\)", "install:")
-        pass
 
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
