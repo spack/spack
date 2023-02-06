@@ -32,9 +32,15 @@ class IntelGtpin(Package):
     """
 
     homepage = "https://www.intel.com/content/www/us/en/developer/articles/tool/gtpin.html"
-    url = "https://downloadmirror.intel.com/730598/external-release-gtpin-3.0-linux.tar.xz"
+    url = "https://downloadmirror.intel.com/762747/external-release-gtpin-3.2.2-linux.tar.xz"
 
     maintainers("rashawnlk")
+
+    version(
+        "3.2.2",
+        sha256="6c51b08451935ed8c86778d197e2ff36d4b91883f41292968ff413b53ac8910a",
+        url="https://downloadmirror.intel.com/762747/external-release-gtpin-3.2.2-linux.tar.xz",
+    )
 
     version(
         "3.0",
