@@ -17,6 +17,7 @@ class Assimp(CMakePackage):
     maintainers("wdconinc")
 
     version("master", branch="master")
+    version("5.2.5", sha256="b5219e63ae31d895d60d98001ee5bb809fb2c7b2de1e7f78ceeb600063641e1a")
     version("5.2.4", sha256="6a4ff75dc727821f75ef529cea1c4fc0a7b5fc2e0a0b2ff2f6b7993fe6cb54ba")
     version("5.2.3", sha256="b20fc41af171f6d8f1f45d4621f18e6934ab7264e71c37cd72fd9832509af2a8")
     version("5.2.2", sha256="ad76c5d86c380af65a9d9f64e8fc57af692ffd80a90f613dfc6bd945d0b80bb4")
