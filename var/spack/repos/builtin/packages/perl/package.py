@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
+    tags = ["windows"]
 
     executables = [r"^perl(-?\d+.*)?$"]
 
@@ -159,10 +160,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # having it in core increases the "energy of activation" for doing
     # things cleanly.
     variant("cpanm", default=True, description="Optionally install cpanm with the core packages.")
-
     variant("shared", default=True, description="Build a shared libperl.so library")
-
     variant("threads", default=True, description="Build perl with threads support")
+    variant("open", default=True, description="Support open.pm")
 
     resource(
         name="cpanm",
@@ -211,6 +211,16 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 variants += "+cpanm"
             else:
                 variants += "~cpanm"
+            # this is just to detect incomplete installs
+            # normally perl installs open.pm
+            perl(
+                "-e",
+                "use open OUT => qw(:raw)",
+                output=os.devnull,
+                error=os.devnull,
+                fail_on_error=False,
+            )
+            variants += "+open" if perl.returncode == 0 else "~open"
             return variants
 
     # On a lustre filesystem, patch may fail when files

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     homepage = "http://www.swig.org"
     sourceforge_mirror_path = "swig/swig-3.0.12.tar.gz"
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     tags = ["e4s", "build-tools"]
 

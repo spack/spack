@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Sperr(CMakePackage):
     variant("zstd", description="use Zstd for more compression", default=True)
     variant("openmp", description="use openmp for acceleration", default=True)
 
-    maintainers = ["shaomeng", "robertu94"]
+    maintainers("shaomeng", "robertu94")
 
     def cmake_args(self):
         # ensure the compiler supports OpenMP if it is used

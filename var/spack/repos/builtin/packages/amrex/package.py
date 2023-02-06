@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,16 +14,17 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url = "https://github.com/AMReX-Codes/amrex/releases/download/23.01/amrex-23.01.tar.gz"
+    url = "https://github.com/AMReX-Codes/amrex/releases/download/23.02/amrex-23.02.tar.gz"
     git = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True
 
     tags = ["ecp", "e4s"]
 
-    maintainers = ["WeiqunZhang", "asalmgren", "etpalmer63"]
+    maintainers("WeiqunZhang", "asalmgren", "etpalmer63")
 
     version("develop", branch="development")
+    version("23.02", sha256="f443c5eb4b89f4a74bf0e1b8a5943da18ab81cdc76aff12e8282ca43ffd06412")
     version("23.01", sha256="3b1770653a7c6d3e6167bc3cce98cbf838962102c510d1f872ab08f1115933b7")
     version("22.12", sha256="7b11e547e70bdd6f4b36682708a755d173eaecd8738536306d4217df4dd1be3d")
     version("22.11", sha256="8be9d5c6934d73b98c71c9c67ca7113f18794268f257333591d9b2449d7410c4")

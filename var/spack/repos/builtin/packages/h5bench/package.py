@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class H5bench(CMakePackage):
     homepage = "https://github.com/hpc-io/h5bench"
     git = "https://github.com/hpc-io/h5bench.git"
 
-    maintainers = ["jeanbez", "sbyna"]
+    maintainers("jeanbez", "sbyna")
 
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)

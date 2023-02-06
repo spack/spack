@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     tags = ["ecp", "ecp-apps"]
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("develop", branch="develop")
     version("20221103", sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e")
@@ -232,6 +232,7 @@ class Lammps(CMakePackage, CudaPackage):
         "meam",
         "misc",
         "mliap",
+        "ml-hdnnp",
         "ml-iap",
         "ml-snap",
         "molecule",
@@ -262,6 +263,7 @@ class Lammps(CMakePackage, CudaPackage):
         "user-eff",
         "user-fep",
         "user-h5md",
+        "user-hdnnp",
         "user-intel",
         "user-lb",
         "user-manifold",
@@ -397,6 +399,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("hdf5", when="+h5md")
     depends_on("jpeg", when="+jpeg")
     depends_on("kim-api", when="+kim")
+    depends_on("curl", when="@20190329:+kim")
     depends_on("libpng", when="+png")
     depends_on("ffmpeg", when="+ffmpeg")
     depends_on("kokkos+deprecated_code+shared@3.0.00", when="@20200303+kokkos")
@@ -412,6 +415,9 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("py-numpy", when="+mliap+python")
     depends_on("py-numpy", when="+ml-iap+python")
     depends_on("py-setuptools", when="@20220217:+python", type="build")
+    depends_on("n2p2@2.1.4:", when="+user-hdnnp")
+    depends_on("n2p2@2.1.4:", when="+ml-hdnnp")
+    depends_on("n2p2+shared", when="+lib ^n2p2")
 
     conflicts("+cuda", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
@@ -603,6 +609,19 @@ class Lammps(CMakePackage, CudaPackage):
         msg="+user-h5md was removed after @20210527, use +h5md instead",
     )
     conflicts("+h5md", when="@:20210527", msg="+h5md only added @20210702, use +user-h5md instead")
+    conflicts(
+        "+user-hdnnp", when="@:20210514", msg="+user-hdnnp was introduced in version @20210527"
+    )
+    conflicts(
+        "+user-hdnnp",
+        when="@20210702:",
+        msg="+user-hdnnp was removed after @20210527, use +ml-hdnnp instead",
+    )
+    conflicts(
+        "+ml-hdnnp",
+        when="@:20210527",
+        msg="+ml-hdnnp only added @20210702, use +user-hdnnp instead",
+    )
     conflicts(
         "+user-intel",
         when="@20210702:",
@@ -909,6 +928,12 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append("-DFFT=MKL")
             if "^amdfftw" in spec:
                 args.append(self.define("FFT", "FFTW3"))
+            if "^armpl-gcc" in spec:
+                args.append(self.define("FFT", "FFTW3"))
+                args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
+                args.append(
+                    self.define("FFTW3_INCLUDE_DIR", self.spec["fftw-api"].headers.directories[0])
+                )
             if "^cray-fftw" in spec:
                 args.append("-DFFT=FFTW3")
             # Using the -DFFT_SINGLE setting trades off a little accuracy
@@ -932,6 +957,9 @@ class Lammps(CMakePackage, CudaPackage):
         if "+user-smd" in spec or "+machdyn" in spec:
             args.append("-DDOWNLOAD_EIGEN3=no")
             args.append("-DEIGEN3_INCLUDE_DIR={0}".format(self.spec["eigen"].prefix.include))
+        if "+user-hdnnp" in spec or "+ml-hdnnp" in spec:
+            args.append("-DDOWNLOAD_N2P2=no")
+            args.append("-DN2P2_DIR={0}".format(self.spec["n2p2"].prefix))
 
         return args
 

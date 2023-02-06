@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Adios(AutotoolsPackage):
     url = "https://github.com/ornladios/ADIOS/archive/v1.12.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS.git"
 
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     version("develop", branch="master")
     version("1.13.1", sha256="b1c6949918f5e69f701cabfe5987c0b286793f1057d4690f04747852544e157b")

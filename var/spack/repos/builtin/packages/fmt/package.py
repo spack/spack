@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Fmt(CMakePackage):
 
     homepage = "https://fmt.dev/"
     url = "https://github.com/fmtlib/fmt/releases/download/7.1.3/fmt-7.1.3.zip"
-    maintainers = ["msimberg"]
+    maintainers("msimberg")
 
     version("9.1.0", sha256="cceb4cb9366e18a5742128cb3524ce5f50e88b476f1e54737a47ffdf4df4c996")
     version("9.0.0", sha256="fc96dd2d2fdf2bded630787adba892c23cb9e35c6fd3273c136b0c57d4651ad6")

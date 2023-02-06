@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,12 @@ class Wgrib2(MakefilePackage):
     homepage = "https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2"
     url = "https://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz.v2.0.8"
 
-    maintainers = [
+    maintainers(
         "t-brown",
         "AlexanderRichert-NOAA",
         "Hang-Lei-NOAA",
         "edwardhartnett",
-    ]
+    )
 
     version(
         "3.1.1",

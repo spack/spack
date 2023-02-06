@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Mesa(MesonPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers = ["chuckatkins", "v-dobrev"]
+    maintainers("chuckatkins", "v-dobrev")
 
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
@@ -118,6 +118,7 @@ class Mesa(MesonPackage):
         depends_on("libllvm@6:")
         depends_on("libllvm@:11", when="@:20")
         depends_on("libllvm@:12", when="@:21")
+
     depends_on("libx11", when="+glx")
     depends_on("libxcb", when="+glx")
     depends_on("libxext", when="+glx")
@@ -202,8 +203,10 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
             "-Dbuild-tests=false",
             "-Dglvnd=false",
         ]
-        if spec.satisfies("@:22.2"):
+        # gallium-xvmc was removed in @main and @2.23:
+        if self.spec.satisfies("@:22.2"):
             args.append("-Dgallium-xvmc=disabled")
+
         args_platforms = []
         args_gallium_drivers = ["swrast"]
         args_dri_drivers = []

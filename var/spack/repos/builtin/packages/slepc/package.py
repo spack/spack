@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,13 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     url = "https://slepc.upv.es/download/distrib/slepc-3.17.1.tar.gz"
     git = "https://gitlab.com/slepc/slepc.git"
 
-    maintainers = ["joseeroman", "balay"]
+    maintainers("joseeroman", "balay")
 
     tags = ["e4s"]
     test_requires_compiler = True
 
     version("main", branch="main")
+    version("3.18.2", sha256="5bd90a755934e702ab1fdb3320b9fe75ab5fc28c93d364248ea86a372fbe6a62")
     version("3.18.1", sha256="f6e6e16d8399c3f94d187da9d4bfdfca160de50ebda7d63f6fa8ef417597e9b4")
     version("3.18.0", sha256="18af535d979a646363df01f407c75f0e3b0dd97b3fdeb20dca25b30cd89239ee")
     version("3.17.2", sha256="f784cca83a14156631d6e0f5726ca0778e259e1fe40c927607d5fb12d958d705")

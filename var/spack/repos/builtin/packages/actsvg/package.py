@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Actsvg(CMakePackage):
     list_url = "https://github.com/acts-project/actsvg/releases"
     git = "https://github.com/acts-project/actsvg.git"
 
-    maintainers = ["HadrienG2", "wdconinc"]
+    maintainers("HadrienG2", "wdconinc")
 
     version("0.4.26", sha256="a1dfad15b616cac8191a355c1a87544571c36349400e3de56b9e5be6fa73714c")
 
