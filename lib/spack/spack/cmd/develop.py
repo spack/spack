@@ -161,6 +161,6 @@ def develop(parser, args):
         tty.debug("Updating develop config for {0} transactionally"
                   .format(env.name))
         with env.write_transaction():
-            update_config(spec, path, abspath, modify_scope)
+            _update_config(spec, path, abspath, modify_scope)
     else:
-        update_config(spec, path, abspath, modify_scope)
+        _update_config(spec, path, abspath, modify_scope)
