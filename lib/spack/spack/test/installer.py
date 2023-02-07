@@ -1333,3 +1333,64 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.db.get_record(pkg).explicit == is_explicit
+
+
+@pytest.mark.parametrize(
+    "installed,staged,verbose",
+    [
+        (False, False, False),  # no output file available
+        (False, True, False),  # staged log file, don't print contents
+        (False, True, True),  # staged log file, print contents
+        (True, False, True),  # install log file, print contents
+    ],
+)
+def test_print_test_log(
+    tmpdir,
+    mock_packages,
+    install_mockery,
+    capsys,
+    monkeypatch,
+    installed,
+    staged,
+    verbose,
+):
+    pkg = "py-test-callback"
+    content = """
+    ==> Testing package {0}-2.0-a1b2c3d
+    ==> [2023-01-26-17:06:29.021298] RUN-TESTS: install-time tests [test]
+    ==> [2023-01-26-17:06:29.123456] Detected the following modules: ['something']
+    ==> [2023-01-26-17:06:29.123800test: test_imports_something: checking import of something
+    """.format(
+        pkg
+    )
+
+    def write_outputs(pkg):
+        if installed:
+            log = pkg.install_test_install_log_path
+            fs.mkdirp(os.path.dirname(log))
+        elif staged:
+            pkg.test_install_log = fs.join_path(tmpdir, "test_install_log.txt")
+            log = pkg.test_install_log
+        else:
+            return
+
+        with open(log, "w") as f:
+            f.write("{0}\n".format(content))
+
+    expected = []
+    if verbose:
+        expected.extend(["Testing package {0}".format(pkg), "RUN-TESTS: install-time tests"])
+    if installed or staged:
+        expected.append("See test results")
+    else:
+        monkeypatch.setattr(tty, "_debug", 1)
+        expected.append("There is no test log file")
+
+    s = spack.spec.Spec(pkg).concretized()
+    write_outputs(s.package)
+
+    inst._print_test_log(s.package, verbose)
+    captured = str(capsys.readouterr())
+
+    for e in expected:
+        assert e in captured, "Expected {0} to be printed".format(e)

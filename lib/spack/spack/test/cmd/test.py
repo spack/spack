@@ -233,6 +233,7 @@ def test_test_list_all(mock_packages):
             "printing-package",
             "py-extension1",
             "py-extension2",
+            "py-test-callback",
             "simple-standalone-test",
             "test-error",
             "test-fail",
