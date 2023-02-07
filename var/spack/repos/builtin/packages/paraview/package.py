@@ -274,7 +274,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10:")
 
     # Fix VTK to work with external freetype using CONFIG mode for find_package
-    patch("FindFreeType.cmake.patch", when="@5.10.1:")
+    patch("FindFreetype.cmake.patch", when="@5.10.1:")
 
     @property
     def generator(self):
