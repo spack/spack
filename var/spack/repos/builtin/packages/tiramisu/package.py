@@ -49,7 +49,7 @@ class Tiramisu(CMakePackage, PythonExtension):
         spec = self.spec
         llvmdir = spec["llvm"].prefix.bin
         args = [
-            self.define("HALIDE_LIB_DIRECTORY", spec["halide"].prefix.lib),
+            self.define("HALIDE_LIB_DIRECTORY", spec["halide"].libs.directories[0]),
             self.define("LLVM_CONFIG_BIN", llvmdir),
             self.define("HALIDE_SOURCE_DIRECTORY", spec["halide"].prefix),
             self.define("ISL_INCLUDE_DIRECTORY", spec["isl"].prefix.include),
