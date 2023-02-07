@@ -60,9 +60,11 @@ spack:
   specs:
   - kokkos +rocm amdgpu_target=gfx90a
   - kokkos +wrapper +cuda cuda_arch=80 ^cuda@11.7.1
-  - kokkos +wrapper +cuda cuda_arch=80 ^cuda@12.0.0
   - raja +cuda cuda_arch=80 ^cuda@11.7.1
   - raja +cuda cuda_arch=80 ^cuda@12.0.0
+
+  # FAILURES
+  # - kokkos +wrapper +cuda cuda_arch=80 ^cuda@12.0.0     # https://github.com/spack/spack/issues/35378
 
   mirrors: { "mirror": "s3://spack-binaries/develop/gpu-tests" }
 
