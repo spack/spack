@@ -1,0 +1,206 @@
+From ae9611b4cf3ee3395f0e6a94073120b87ba7c520 Mon Sep 17 00:00:00 2001
+From: sreenivasa murthy kolam <sreenivasamurthy.kolam@amd.com>
+Date: Tue, 24 Jan 2023 17:13:36 -0800
+Subject: [PATCH] Updating patch w.r.t llvm 5.4.0
+
+---
+ src/gallium/auxiliary/gallivm/lp_bld.h      | 51 +++++++++++++-
+ src/gallium/auxiliary/gallivm/lp_bld_arit.c | 78 ++++++---------------
+ 2 files changed, 70 insertions(+), 59 deletions(-)
+
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld.h b/src/gallium/auxiliary/gallivm/lp_bld.h
+index 9144428..e1f6200 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld.h
++++ b/src/gallium/auxiliary/gallivm/lp_bld.h
+@@ -81,10 +81,59 @@
+ #define LLVMInsertBasicBlock ILLEGAL_LLVM_FUNCTION
+ #define LLVMCreateBuilder ILLEGAL_LLVM_FUNCTION
+ 
+-#if LLVM_VERSION_MAJOR >= 8
++#if LLVM_VERSION_MAJOR >= 15
++#define GALLIVM_HAVE_CORO 0
++#define GALLIVM_USE_NEW_PASS 1
++#elif LLVM_VERSION_MAJOR >= 8
+ #define GALLIVM_HAVE_CORO 1
++#define GALLIVM_USE_NEW_PASS 0
+ #else
+ #define GALLIVM_HAVE_CORO 0
++#define GALLIVM_USE_NEW_PASS 0
+ #endif
+ 
++#define GALLIVM_COROUTINES (GALLIVM_HAVE_CORO || GALLIVM_USE_NEW_PASS)
++
++/* LLVM is transitioning to "opaque pointers", and as such deprecates
++ * LLVMBuildGEP, LLVMBuildCall, LLVMBuildLoad, replacing them with
++ * LLVMBuildGEP2, LLVMBuildCall2, LLVMBuildLoad2 respectivelly.
++ * These new functions were added in LLVM 8.0; so for LLVM before 8.0 we
++ * simply forward to the non-opaque-pointer variants.
++ */
++#if LLVM_VERSION_MAJOR < 8
++
++static inline LLVMValueRef
++LLVMBuildGEP2(LLVMBuilderRef B, LLVMTypeRef Ty,
++              LLVMValueRef Pointer, LLVMValueRef *Indices,
++              unsigned NumIndices, const char *Name)
++{
++   return LLVMBuildGEP(B, Pointer, Indices, NumIndices, Name);
++}
++
++static inline LLVMValueRef
++LLVMBuildInBoundsGEP2(LLVMBuilderRef B, LLVMTypeRef Ty,
++                      LLVMValueRef Pointer, LLVMValueRef *Indices,
++                      unsigned NumIndices, const char *Name)
++{
++   return LLVMBuildInBoundsGEP(B, Pointer, Indices, NumIndices, Name);
++}
++
++static inline LLVMValueRef
++LLVMBuildLoad2(LLVMBuilderRef B, LLVMTypeRef Ty,
++               LLVMValueRef PointerVal, const char *Name)
++{
++  LLVMValueRef val = LLVMBuildLoad(B, PointerVal, Name);
++  return LLVMTypeOf(val) == Ty ? val : LLVMBuildBitCast(B, val, Ty, Name);
++}
++
++static inline LLVMValueRef
++LLVMBuildCall2(LLVMBuilderRef B, LLVMTypeRef Ty, LLVMValueRef Fn,
++               LLVMValueRef *Args, unsigned NumArgs,
++               const char *Name)
++{
++   return LLVMBuildCall(B, Fn, Args, NumArgs, Name);
++}
++
++#endif /* LLVM_VERSION_MAJOR < 8 */
++
+ #endif /* LP_BLD_H */
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_arit.c b/src/gallium/auxiliary/gallivm/lp_bld_arit.c
+index 9cff016..1dba199 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_arit.c
++++ b/src/gallium/auxiliary/gallivm/lp_bld_arit.c
+@@ -391,16 +391,11 @@ lp_build_comp(struct lp_build_context *bld,
+          return LLVMBuildNot(builder, a, "");
+    }
+ 
+-   if(LLVMIsConstant(a))
+-      if (type.floating)
+-          return LLVMConstFSub(bld->one, a);
+-      else
+-          return LLVMConstSub(bld->one, a);
++
++   if (type.floating)
++      return LLVMBuildFSub(builder, bld->one, a, "");
+    else
+-      if (type.floating)
+-         return LLVMBuildFSub(builder, bld->one, a, "");
+-      else
+-         return LLVMBuildSub(builder, bld->one, a, "");
++     return LLVMBuildSub(builder, bld->one, a, "");
+ }
+ 
+ 
+@@ -479,16 +474,10 @@ lp_build_add(struct lp_build_context *bld,
+       }
+    }
+ 
+-   if(LLVMIsConstant(a) && LLVMIsConstant(b))
+-      if (type.floating)
+-         res = LLVMConstFAdd(a, b);
+-      else
+-         res = LLVMConstAdd(a, b);
++   if (type.floating)
++      res = LLVMBuildFAdd(builder, a, b, "");
+    else
+-      if (type.floating)
+-         res = LLVMBuildFAdd(builder, a, b, "");
+-      else
+-         res = LLVMBuildAdd(builder, a, b, "");
++      res = LLVMBuildAdd(builder, a, b, "");
+ 
+    /* clamp to ceiling of 1.0 */
+    if(bld->type.norm && (bld->type.floating || bld->type.fixed))
+@@ -815,16 +804,10 @@ lp_build_sub(struct lp_build_context *bld,
+       }
+    }
+ 
+-   if(LLVMIsConstant(a) && LLVMIsConstant(b))
+-      if (type.floating)
+-         res = LLVMConstFSub(a, b);
+-      else
+-         res = LLVMConstSub(a, b);
++   if (type.floating)
++      res = LLVMBuildFSub(builder, a, b, "");
+    else
+-      if (type.floating)
+-         res = LLVMBuildFSub(builder, a, b, "");
+-      else
+-         res = LLVMBuildSub(builder, a, b, "");
++      res = LLVMBuildSub(builder, a, b, "");
+ 
+    if(bld->type.norm && (bld->type.floating || bld->type.fixed))
+       res = lp_build_max_simple(bld, res, bld->zero, GALLIVM_NAN_RETURN_OTHER_SECOND_NONNAN);
+@@ -980,29 +963,16 @@ lp_build_mul(struct lp_build_context *bld,
+    else
+       shift = NULL;
+ 
+-   if(LLVMIsConstant(a) && LLVMIsConstant(b)) {
+-      if (type.floating)
+-         res = LLVMConstFMul(a, b);
+-      else
+-         res = LLVMConstMul(a, b);
+-      if(shift) {
+-         if(type.sign)
+-            res = LLVMConstAShr(res, shift);
+-         else
+-            res = LLVMConstLShr(res, shift);
+-      }
+-   }
+-   else {
+-      if (type.floating)
+-         res = LLVMBuildFMul(builder, a, b, "");
++   if (type.floating)
++      res = LLVMBuildFMul(builder, a, b, "");
++   else
++      res = LLVMBuildMul(builder, a, b, "");
++   if (shift) {
++      if (type.sign)
++         res = LLVMBuildAShr(builder, res, shift, "");
+       else
+-         res = LLVMBuildMul(builder, a, b, "");
+-      if(shift) {
+-         if(type.sign)
+-            res = LLVMBuildAShr(builder, res, shift, "");
+-         else
+-            res = LLVMBuildLShr(builder, res, shift, "");
+-      }
++         res = LLVMBuildLShr(builder, res, shift, "");
++
+    }
+ 
+    return res;
+@@ -1288,14 +1258,6 @@ lp_build_div(struct lp_build_context *bld,
+    if(a == bld->undef || b == bld->undef)
+       return bld->undef;
+ 
+-   if(LLVMIsConstant(a) && LLVMIsConstant(b)) {
+-      if (type.floating)
+-         return LLVMConstFDiv(a, b);
+-      else if (type.sign)
+-         return LLVMConstSDiv(a, b);
+-      else
+-         return LLVMConstUDiv(a, b);
+-   }
+ 
+    /* fast rcp is disabled (just uses div), so makes no sense to try that */
+    if(FALSE &&
+@@ -2646,7 +2608,7 @@ lp_build_rcp(struct lp_build_context *bld,
+    assert(type.floating);
+ 
+    if(LLVMIsConstant(a))
+-      return LLVMConstFDiv(bld->one, a);
++      return LLVMBuildFDiv(builder, bld->one, a, "");
+ 
+    /*
+     * We don't use RCPPS because:
+-- 
+2.22.0
+

@@ -136,6 +136,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-six@1.9:", when="@:0.24", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-jsonschema@2.3:", type=("build", "run"))
+    depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")

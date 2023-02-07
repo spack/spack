@@ -12,13 +12,14 @@ class RocmDeviceLibs(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
     git = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="amd-stg-open")
 
+    version("5.4.0", sha256="d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951")
     version("5.3.3", sha256="963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768")
     version("5.3.0", sha256="f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c")
     version("5.2.3", sha256="16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a")
@@ -138,6 +139,7 @@ class RocmDeviceLibs(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
         "master",
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
