@@ -1,3 +1,28 @@
+# v0.19.1 (2023-02-07)
+
+### Spack Bugfixes
+
+* `buildcache create`: make "file exists" less verbose (#35019)
+* `spack mirror create`: don't change paths to urls (#34992)
+* Improve error message for requirements (#33988)
+* uninstall: fix accidental cubic complexity (#34005)
+* scons: fix signature for `install_args` (#34481)
+* Fix `combine_phase_logs` text encoding issues (#34657)
+* Use a module-like object to propagate changes in the MRO, when setting build env (#34059)
+* PackageBase should not define builder legacy attributes (#33942)
+* Forward lookup of the "run_tests" attribute (#34531)
+* Bugfix for timers (#33917, #33900)
+* Fix path handling in prefix inspections (#35318)
+* Fix libtool filter for Fujitsu compilers (#34916)
+* Bug fix for duplicate rpath errors on macOS when creating build caches (#34375)
+* FileCache: delete the new cache file on exception (#34623)
+* Propagate exceptions from Spack python console (#34547)
+* Tests: Fix a bug/typo in a `config_values.py` fixture (#33886)
+* Various CI fixes (#33953, #34560, #34560)
+* Docs: remove monitors and analyzers, typos (#34358, #33926)
+* bump release version for tutorial command (#33859)
+
+
 # v0.19.0 (2022-11-11)
 
 `v0.19.0` is a major feature release.
