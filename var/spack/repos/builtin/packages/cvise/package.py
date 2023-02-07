@@ -15,10 +15,8 @@ class Cvise(CMakePackage):
     git = "https://github.com/marxin/cvise.git"
     maintainers = ["olupton"]
 
-    version("develop", branch="master")
+    version("master", branch="master")
     version("2.7.0", tag="v2.7.0")
-    version("2.4.0", tag="v2.4.0")
-    version("2.3.0", tag="v2.3.0")
 
     variant("pytest", default=False, description="Add py-pytest as dependency")
     variant("colordiff", default=False, description="Add colordiff support")
