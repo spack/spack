@@ -102,15 +102,12 @@ endlocal
 set /p _sp_subcommand=<subcmd
 set /p _sp_flags=<flags
 set /p _sp_args=<args
-set str_subcommand=%_sp_subcommand:"='%
-set str_flags=%_sp_flags:"='%
-set str_args=%_sp_args:"='%
-if "%str_subcommand%"=="ECHO is off." (set "_sp_subcommand=")
-if "%str_subcommand%"=="ECHO is on." (set "_sp_subcommand=")
-if "%str_flags%"=="ECHO is off." (set "_sp_flags=")
-if "%str_flags%"=="ECHO is on." (set "_sp_flags=")
-if "%str_args%"=="ECHO is off." (set "_sp_args=")
-if "%str_args%"=="ECHO is on." (set "_sp_args=")
+if "%_sp_subcommand%"=="ECHO is off." (set "_sp_subcommand=")
+if "%_sp_subcommand%"=="ECHO is on." (set "_sp_subcommand=")
+if "%_sp_flags%"=="ECHO is off." (set "_sp_flags=")
+if "%_sp_flags%"=="ECHO is on." (set "_sp_flags=")
+if "%_sp_args%"=="ECHO is off." (set "_sp_args=")
+if "%_sp_args%"=="ECHO is on." (set "_sp_args=")
 del subcmd
 del flags
 del args
