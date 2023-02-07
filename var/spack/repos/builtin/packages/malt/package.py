@@ -31,7 +31,7 @@ class Malt(CMakePackage):
         "qt",
         default=False,
         when="+nodejs",
-        description="Build the viewer nodejs + QT web toolkit (requires NodeJs too)",
+        description="Build the viewer based on NodeJS + QT web toolkit (requires NodeJS too)",
     )
 
     # Dependencies
