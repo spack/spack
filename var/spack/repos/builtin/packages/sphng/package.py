@@ -31,7 +31,8 @@ class Sphng(MakefilePackage):
 
     maintainers = ["TomMelt"]
 
-    version("v1.0.0", tag="v1.0.0")
+    version("v1.0.0", branch="update-makefile")
+    # version("v1.0.0", tag="v1.0.0")
 
     executables = [r"^sph_tree_rk_gradh$"]
 
@@ -44,7 +45,9 @@ class Sphng(MakefilePackage):
         self.fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
 
         env['PREFIX'] = prefix
-        env['SYSTEM'] = "dirac3-intel19"
+        env['SYSTEM'] = "SPACK"
+        env['mpi'] = 'yes'
+        env['openmp'] = 'yes'
 
         env['FC'] = self.fc
         env['OMPFLAG'] = self.compiler.openmp_flag
@@ -67,7 +70,7 @@ class Sphng(MakefilePackage):
 
     def build(self, spec, prefix):
 
-        make('mpi=yes openmp=yes gradhrk')
+        make('gradhrk')
 
     def install(self, spec, prefix):
 
