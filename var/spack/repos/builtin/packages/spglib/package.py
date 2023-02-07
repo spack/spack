@@ -10,6 +10,7 @@ class Spglib(CMakePackage):
     """C library for finding and handling crystal symmetries."""
 
     homepage = "https://atztogo.github.io/spglib/"
+    url = "https://github.com/spglib/spglib/archive/v2.0.2.tar.gz"
 
     maintainers("RMeli")
 
@@ -53,9 +54,3 @@ class Spglib(CMakePackage):
 
     def cmake_args(self):
         return [self.define_from_variant("USE_OMP", "openmp")]
-
-    def url_for_version(self, version):
-        if version <= Version("1.16.1"):
-            return f"https://github.com/atztogo/spglib/archive/v{version}.tar.gz"
-        else:
-            return f"https://github.com/spglib/spglib/archive/refs/tags/v{version}.tar.gz"
