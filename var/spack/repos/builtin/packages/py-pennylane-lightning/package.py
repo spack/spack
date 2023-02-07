@@ -22,7 +22,11 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     version("0.28.1", sha256="038bc11ec913c3b90dd056bd0b134920db0ec5ff6f6a0bb94db6eaa687ce6618")
     version("0.28.0", sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18")
 
-    patch("v0.28-spack_support.patch", when='@0.28.0:0.28.2', sha256="430078f3da285a10bd2d3a14bbdc41c7e8825be12ba713b6ca5dfca3fcc23d88")
+    patch(
+        "v0.28-spack_support.patch",
+        when="@0.28.0:0.28.2",
+        sha256="430078f3da285a10bd2d3a14bbdc41c7e8825be12ba713b6ca5dfca3fcc23d88",
+    )
 
     variant("blas", default=True, description="Build with BLAS support")
     variant(
