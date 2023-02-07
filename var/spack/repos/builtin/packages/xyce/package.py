@@ -25,6 +25,7 @@ class Xyce(CMakePackage):
     maintainers("kuberry")
 
     version("master", branch="master")
+    version("7.6.0", "fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
     version("7.5.0", "854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
     version("7.4.0", "2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
     version("7.3.0", "43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446")
@@ -126,6 +127,12 @@ class Xyce(CMakePackage):
 
         # HDF5
         depends_on("hdf5~shared", when="^hdf5")
+
+    patch(
+        "https://github.com/xyce/xyce/commit/40dbc0e0341a5cf9a7fa82a87313869dc284fdd9.patch?full_index=1",
+        sha256="3c32faeeea0bb29be44ec20e414670c9fd375f9ed921a7f6e9fd3de02c28859d",
+        when="@:7.5 +shared",
+    )
 
     def cmake_args(self):
         spec = self.spec
