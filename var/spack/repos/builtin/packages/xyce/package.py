@@ -131,7 +131,7 @@ class Xyce(CMakePackage):
     patch(
         "https://github.com/xyce/xyce/commit/40dbc0e0341a5cf9a7fa82a87313869dc284fdd9.patch?full_index=1",
         sha256="3c32faeeea0bb29be44ec20e414670c9fd375f9ed921a7f6e9fd3de02c28859d",
-        when="@:7.5 +shared",
+        when="@7.3:7.5 +shared",
     )
 
     def cmake_args(self):
@@ -142,7 +142,7 @@ class Xyce(CMakePackage):
         if "+mpi" in spec:
             options.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
         else:
-            options.append(self.define("CMAKE_CXX_COMPILER", self.compiler.cxx))
+            options.append(self.define("CMAKE_CXX_COMPILER", spack_cxx))
 
         options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         options.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
