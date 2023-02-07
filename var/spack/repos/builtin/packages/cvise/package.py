@@ -13,7 +13,7 @@ class Cvise(CMakePackage):
     homepage = "https://github.com/marxin/cvise"
     url = "https://github.com/marxin/cvise"
     git = "https://github.com/marxin/cvise.git"
-    maintainers = ["olupton"]
+    maintainers("olupton")
 
     version("master", branch="master")
     version("2.7.0", tag="v2.7.0")
