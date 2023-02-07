@@ -28,8 +28,6 @@ spack:
       variants: +ld +gold +headers +libiberty ~nls
     boost:
       variants: +python +filesystem +iostreams +system
-    cuda:
-      version: [11.7.0]
     elfutils:
       variants: +bzip2 ~nls +xz
     hdf5:
@@ -61,8 +59,10 @@ spack:
 
   specs:
   - kokkos +rocm amdgpu_target=gfx90a
-  - kokkos +wrapper +cuda cuda_arch=80 ^cuda@11.7
-  - raja +cuda cuda_arch=80 ^cuda@11.7
+  - kokkos +wrapper +cuda cuda_arch=80 ^cuda@11.7.1
+  - kokkos +wrapper +cuda cuda_arch=80 ^cuda@12.0.0
+  - raja +cuda cuda_arch=80 ^cuda@11.7.1
+  - raja +cuda cuda_arch=80 ^cuda@12.0.0
 
   mirrors: { "mirror": "s3://spack-binaries/develop/gpu-tests" }
 
@@ -107,16 +107,18 @@ spack:
             CI_JOB_SIZE: large
 
       - match:
-        - kokkos +cuda cuda_arch=80
+        - kokkos +cuda cuda_arch=80 ^cuda@11.7.1
+        - raja +cuda cuda_arch=80 ^cuda@11.7.1
         runner-attributes:
-          tags: [ "cuda-11.7", "a100" ]
+          tags: [ "nvidia-515.65.01", "cuda-11.7", "a100" ]
           variables:
             CI_JOB_SIZE: large
 
       - match:
-        - raja +cuda cuda_arch=80
+        - kokkos +cuda cuda_arch=80 ^cuda@12.0.0
+        - raja +cuda cuda_arch=80 ^cuda@12.0.0
         runner-attributes:
-          tags: [ "cuda-11.7", "a100" ]
+          tags: [ "nvidia-525.85.12", "cuda-12.0", "a100" ]
           variables:
             CI_JOB_SIZE: large
 
