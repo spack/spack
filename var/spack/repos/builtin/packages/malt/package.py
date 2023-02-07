@@ -40,13 +40,3 @@ class Malt(CMakePackage):
     depends_on("libunwind")
     depends_on("binutils", type="run")
     depends_on("qt", when="+qt")
-
-    # Gen urls
-    def url_for_version(self, version):
-        url_fmt = "https://github.com/memtt/malt/archive/v{0}.tar.gz"
-        return url_fmt.format(version)
-
-    # Generate build command
-    def cmake_args(self):
-        args = []
-        return args
