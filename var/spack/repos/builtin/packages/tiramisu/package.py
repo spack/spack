@@ -6,7 +6,7 @@ import llnl.util.filesystem as fs
 from spack.package import *
 
 
-class Tiramisu(CMakePackage, PythonExtension):
+class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
     """Tiramisu is a polyhedral compiler for dense and sparse deep learning
     and data parallel algorithms.It provides a simple C++ API for expressing
     algorithms and how these algorithms should be optimized by the compiler."""
@@ -23,7 +23,6 @@ class Tiramisu(CMakePackage, PythonExtension):
     version("2023-2-3", commit="73a9cec72e08d4dfe5e8c66da33139008124a4fa")
 
     variant("python", default=True, description="Install python bindings.")
-    variant("cuda", default=False, description="Enable Cuda Code Generation.")
     extends("python", when="+python")
     variant(
         "debug",
@@ -38,12 +37,10 @@ class Tiramisu(CMakePackage, PythonExtension):
 
     depends_on("halide@14.0.0", type=("build", "link", "run"))
     depends_on("isl", type=("build", "link", "run"))
-    depends_on("cuda", when="+cuda", type=("build", "link", "run"))
-
     depends_on("python@3.8:", type=("build", "link", "run"), when="+python")
-    depends_on("py-pybind11@2.6.2:", type=("build", "link", "run"), when="+python")
+    depends_on("py-pybind11@2.6.2:", type="build", when="+python")
     depends_on("py-numpy", type=("build", "run"), when="+python")
-    depends_on("py-cython", type=("run"), when="+python")
+    depends_on("py-cython", type="run", when="+python")
 
     def cmake_args(self):
         spec = self.spec
