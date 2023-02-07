@@ -21,6 +21,7 @@ class Cvise(CMakePackage):
     version("2.3.0", tag="v2.3.0")
 
     variant("pytest", default=False, description="Add py-pytest as dependency")
+    variant("colordiff", default=False, description="Add colordiff support")
 
     depends_on("cmake", type="build")
     depends_on("flex", type=("build", "run"))
@@ -30,12 +31,9 @@ class Cvise(CMakePackage):
     depends_on("py-chardet", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
     depends_on("unifdef", type=("build", "run"))
-    depends_on("py-pytest", when="+pytest", type=("build", "run"))
 
-    # depends_on("colordiff", type=("build", "run"))
-    # depends_on("libxml2", type=("build", "run"))
-    # depends_on("ncurses", type=("build", "run"))  # this is an llvm dependency really
-    # depends_on("zlib", type=("build", "run"))
+    depends_on("py-pytest", when="+pytest", type=("build", "run"))
+    depends_on("colordiff", when="+colordiff", type=("build", "run"))
 
     def cmake_args(self):
         return ["-DPYTHON_EXECUTABLE=" + self.spec["python"].command.path]
