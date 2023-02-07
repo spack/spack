@@ -33,7 +33,7 @@ class Tiramisu(CMakePackage, PythonExtension):
         values=("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
     )
 
-    depends_on("cmake@3.24:", type="build")
+    depends_on("cmake@3.5:", type="build")
     depends_on("ninja", type="build")
 
     depends_on("halide@14.0.0", type=("build", "link", "run"))
