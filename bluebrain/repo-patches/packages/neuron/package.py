@@ -118,26 +118,6 @@ class Neuron(CMakePackage):
     depends_on("coreneuron+legacy-unit+caliper", when="@:8.99+coreneuron+legacy-unit+caliper")
     depends_on("coreneuron~legacy-unit+caliper", when="@:8.99+coreneuron~legacy-unit+caliper")
 
-    # TODO: if +debug variant is used (e.g. in CIs), we have to make sure
-    # coreneuron with Debug build is used. This can be removed when we
-    # remove +debug variant from this recipe.
-    depends_on("coreneuron build_type=Debug", when="@:8.99+coreneuron+debug")
-
-    # dependencies from coreneuron package
-    depends_on('python', type=('build', 'run'))
-    depends_on('boost', when='@8.99:+tests+coreneuron')
-    depends_on('cuda', when='@8.99:+gpu')
-    depends_on('flex@2.6:', type='build', when='+nmodl')
-    depends_on('nmodl@0.4.0:', when='@8.99:+nmodl')
-    depends_on('reportinglib', when='@8.99:+report+coreneuron')
-    depends_on('libsonata-report', when='@8.99:+report+coreneuron')
-
-    # dependency on coreneuron via submodule
-    depends_on("coreneuron+legacy-unit~caliper", when="@:8.99+coreneuron+legacy-unit~caliper")
-    depends_on("coreneuron~legacy-unit~caliper", when="@:8.99+coreneuron~legacy-unit~caliper")
-    depends_on("coreneuron+legacy-unit+caliper", when="@:8.99+coreneuron+legacy-unit+caliper")
-    depends_on("coreneuron~legacy-unit+caliper", when="@:8.99+coreneuron~legacy-unit+caliper")
-
     # dependencies from coreneuron package
     depends_on('python', type=('build', 'run'))
     depends_on('boost', when='@8.99:+tests+coreneuron')

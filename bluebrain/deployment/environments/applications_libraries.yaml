@@ -9,7 +9,7 @@ spack:
           - gmsh
           - hdf5+mpi
           - highfive+mpi
-          - neuron+mpi~debug
+          - neuron+mpi
           - omega-h
           - petsc+int64+mpi
           - py-cgal-pybind

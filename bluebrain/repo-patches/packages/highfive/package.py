@@ -61,7 +61,7 @@ class Highfive(CMakePackage):
 
     # Enables the `PageBufferSize` property list also when building against pHDF5.
     patch('remove-page-buffer-phdf5-check_v2.6.2.patch', when="+page_buffer_patch+mpi",
-          sha256="72a74f603bc957a9069c8e20abe28f303c4cab36d5d0e23bdcd6c6636fefe1f0")
+          sha256="7d9f63114902af0e5de9b4a1192e1de72ce384bdf401e7efbf434fb5f52d0ef7")
 
     def cmake_args(self):
         return [
