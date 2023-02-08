@@ -763,6 +763,20 @@ class PyclingoDriver(object):
             for _, msg, args in errors:
                 self.handle_error(msg, *args)
 
+            providers = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "provider")]
+            possible_providers = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "possible_provider")]
+            virtual_condition_holds = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "virtual_condition_holds")]
+            provider_condition = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "provider_condition")]
+
+            for p in providers:
+                print("provider", p)
+            for pp in possible_providers:
+                print("possible_provider", p)
+            for vch in virtual_condition_holds:
+                print("virtual_condition_holds", vch)
+            for vc in provider_condition:
+                print("virtual_condition", vc)
+            
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
             answers = builder.build_specs(spec_attrs)
@@ -784,7 +798,7 @@ class PyclingoDriver(object):
             for sym in best_model:
                 if sym.name not in ("attr", "error", "opt_criterion"):
                     tty.debug(
-                        "UNKNOWN SYMBOL: %s(%s)" % (sym.name, ", ".join(stringify(sym.arguments)))
+                        "UNKNOWN SYMBOL: %s%s" % (sym.name, stringify(sym.arguments))
                     )
 
         elif cores:
@@ -2085,7 +2099,6 @@ class SpackSolverSetup(object):
         self.define_concrete_input_specs(specs)
 
         if reuse:
-            # TODO GBB: somehow make build-only deps reusable
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
@@ -2101,23 +2114,23 @@ class SpackSolverSetup(object):
         self.os_defaults(specs + dev_specs)
         self.target_defaults(specs + dev_specs)
 
-        self.virtual_providers()  # TODO GBB: maybe
-        self.provider_defaults()  # TODO GBB: maybe
-        self.provider_requirements()  # TODO GBB: need a way to get the mangled names into requirements
-        self.external_packages()  # TODO GBB: need to get the mangled names into the possible_external clauses
+        self.virtual_providers()
+        self.provider_defaults()
+        self.provider_requirements()
+        self.external_packages()
         self.flag_defaults()
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
             self.gen.h2("Package rules: %s" % pkg)
-            self.pkg_rules(pkg, tests=self.tests)  # TODO GBB: need to use mangled names
+            self.pkg_rules(pkg, tests=self.tests)
             self.gen.h2("Package preferences: %s" % pkg)
             self.preferred_variants(pkg)
             self.target_preferences(pkg)
 
         self.gen.h1("Package Alternates")
-        for pkg in sorted(self.build_pkgs):
-            self.gen.fact(fn.name_mangled(pkg, 2))
+        for pkg in sorted(self.pkgs):  # TODO GBB: Can we cleverly reduce the size of this?
+            self.gen.fact(fn.name_mangled(pkg, 3))
             
         # Inject dev_path from environment
         for ds in dev_specs:

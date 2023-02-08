@@ -49,7 +49,8 @@ attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_
 %package_attr((Name, N), A1, A2, A3)     :- package_attr(Name, A1, A2, A3), name_mangled(name, M, N)
 %package_attr((Name, N), A1, A2, A3, A4) :- package_attr(Name, A1, A2, A3, A4), name_mangled(name, M, N)
 
-package_alternate(Name, (Name, N)) :- name_mangled(Name, M), N=0..M.
+package_alternate(Name, (Name, N)) :- name_mangled(Name, M), N=1..M.
+package_alternate(Package, Package) :- name_mangled(Package, _).  %TODO GBB: stand in for "name exists"
 
 version_declared((Package, N), Version, Weight, Origin)
  :- version_declared(Package, Version, Weight, Origin),
@@ -417,8 +418,6 @@ attr("depends_on", Package, Dependency, "build")
     not dependency_holds(Package, Dependency, "link"),
     not dependency_holds(Package, Dependency, "run"),
     not virtual(Dependency).
-
-package_alternate(Package, Package) :- attr("node", Package).
 
 % every root must be a node
 attr("node", Package) :- attr("root", Package).
@@ -1324,6 +1323,9 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 0@100: #true }.
 #minimize { 1@100,Package : build(Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
+
+#minimize { 0@99: #true }.
+#minimize { PSID@99,Package : attr("node", (Package, PSID)) }.
 
 % A condition group specifies one or more specs that must be satisfied.
 % Specs declared first are preferred, so we assign increasing weights and

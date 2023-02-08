@@ -26,3 +26,7 @@
 #show error/7.
 
 % debug
+#show provider/2.
+#show virtual_condition_holds/2.
+#show provider_condition/3.
+#show possible_provider/2.

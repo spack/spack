@@ -48,6 +48,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     conflicts("abi=6", when="@:5.9", msg="6 is not compatible with this release")
 
     depends_on("pkgconfig", type="build")
+    depends_on("pkgconf@1.8.0", type="build")
 
     patch("patch_gcc_5.txt", when="@6.0%gcc@5.0:")
     patch("sed_pgi.patch", when="@:6.0")
