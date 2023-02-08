@@ -19,7 +19,7 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
     generator = "Ninja"
 
     version("master", branch="master")
-    version("2023-2-3", commit="73a9cec72e08d4dfe5e8c66da33139008124a4fa")
+    version("2023-2-8", commit="2cd0c43cc1656bfa43cfb6e81d06f770cbf7251e")
 
     variant("python", default=True, description="Install python bindings.")
     extends("python", when="+python")
