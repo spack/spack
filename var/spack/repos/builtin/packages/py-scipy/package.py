@@ -198,10 +198,10 @@ class PyScipy(PythonPackage):
             lapack += "-dynamic-lp64-seq"
 
         return {
-            "blas": blas,
-            "lapack": lapack,
-            "debug": False,
-            "optimization": 2,
+            "setup-args=-Dblas": blas,
+            "setup-args=-Dlapack": lapack,
+            "setup-args=-Ddebug": False,
+            "setup-args=-Doptimization": 2,
         }
 
     @run_after("install")
