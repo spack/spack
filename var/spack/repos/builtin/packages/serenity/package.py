@@ -112,6 +112,37 @@ class Serenity(CMakePackage):
             string=True,
         )
 
+        if self.spec["lapack"].libs.names[0].startswith("mkl"):
+
+            filter_file(
+                "# Find libraries",
+                "# Find libraries\n"
+                "list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES .so .so.1 .so.2)"
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
+            filter_file(
+                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core.so libmkl_core.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
+            filter_file(
+                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2.so libmkl_avx2.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
+            filter_file(
+                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2.so libmkl_vml_avx2.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "cmake/FindMKL.cmake",
+                string=True,
+            )
+
     def cmake_args(self):
         args = [
             self.define("SERENITY_BUILD_TESTS", self.run_tests),
