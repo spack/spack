@@ -459,6 +459,31 @@ specification. The operations available to modify the environment are ``set``, `
          prepend_path: # Similar for append|remove_path
            LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
+Finally, if you intend to cross-compile for a different system architecture,
+you can specify the ``target``. For example, to set up an ``aarch64`` cross-compiler on an ``x86_64`` host:
+
+.. code-block:: yaml
+
+   compilers:
+   - compiler:
+       spec: gcc@9.4.0
+       paths:
+         cc: /usr/bin/aarch64-linux-gnu-gcc-9
+         cxx: /usr/bin/aarch64-linux-gnu-g++-9
+         f77: /usr/bin/aarch64-linux-gnu-gfortran-9
+         fc: /usr/bin/aarch64-linux-gnu-gfortran-9
+       flags: {}
+       operating_system: ubuntu20.04
+       target: aarch64
+       modules: []
+       environment: {}
+       extra_rpaths: []
+
+You might also need to adjust the concretizer setting to allow building for a
+different architecture than the host architecture using
+``spack config add concretizer:targets:host_compatible:false``
+
+.. _build-your-oen-compiler:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
