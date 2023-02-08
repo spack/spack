@@ -10,7 +10,7 @@ class PyChemfiles(CMakePackage):
     """Python interface to chemfiles"""
 
     homepage = "http://chemfiles.org/chemfiles.py/latest/"
-    url = "https://github.com/chemfiles/chemfiles.py/archive/refs/tags/0.10.3.tar.gz" 
+    url = "https://github.com/chemfiles/chemfiles.py/archive/refs/tags/0.10.3.tar.gz"
 
     maintainers("RMeli")
 
