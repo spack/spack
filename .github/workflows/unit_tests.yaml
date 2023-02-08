@@ -162,7 +162,6 @@ jobs:
           useradd spack-test
           chown -R spack-test .
     - name: remove-extension
-      shell: runuser -u spack-test -- bash {0}
       run: |
           echo AJWR1
           ls -l /__w/spack/spack
