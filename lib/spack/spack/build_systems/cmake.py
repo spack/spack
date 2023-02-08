@@ -129,7 +129,6 @@ class CMakePackage(spack.package_base.PackageBase):
                     os.remove(log)
 
 
-
 @spack.builder.builder("cmake")
 class CMakeBuilder(BaseBuilder):
     """The cmake builder encodes the default way of building software with CMake. IT
