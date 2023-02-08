@@ -133,7 +133,7 @@ class UfsWeatherModel(CMakePackage):
         depends_on("gftl-shared")
     depends_on("mapl+debug", when="+debug ^mapl")
 
-    conflicts("%gcc:8", when="@develop")
+    conflicts("%gcc@:8", when="@develop")
 
     def setup_build_environment(self, env):
         spec = self.spec
