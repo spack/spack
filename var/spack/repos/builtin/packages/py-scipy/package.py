@@ -52,10 +52,6 @@ class PyScipy(PythonPackage):
     version("1.2.1", sha256="e085d1babcb419bbe58e2e805ac61924dac4ca45a07c9fa081144739e500aa3c")
     version("1.1.0", sha256="878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1")
 
-    # TODO: remove once pip build supports BLAS/LAPACK specification
-    # https://github.com/mesonbuild/meson-python/pull/167
-    depends_on("py-build", when="@1.9:", type="build")
-
     depends_on("py-meson-python@0.11", when="@1.10:", type="build")
     depends_on("py-meson-python@0.9:", when="@1.9.2:1.9", type="build")
     depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
@@ -189,10 +185,8 @@ class PyScipy(PythonPackage):
         if self.spec.satisfies("@:1.8"):
             self.spec["py-numpy"].package.setup_build_environment(env)
 
-    # TODO: remove once pip build supports BLAS/LAPACK specification
-    # https://github.com/mesonbuild/meson-python/pull/167
     @when("@1.9:")
-    def install(self, spec, prefix):
+    def config_settings(self, spec, prefix):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
         if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
@@ -206,29 +200,12 @@ class PyScipy(PythonPackage):
         if lapack == "armpl":
             lapack += "-dynamic-lp64-seq"
 
-        args = [
-            "setup",
-            "build",
-            "-Dblas=" + blas,
-            "-Dlapack=" + lapack,
-            "--prefix=" + join_path(os.getcwd(), "build-install"),
-            "-Ddebug=false",
-            "-Doptimization=2",
-        ]
-        meson = which("meson")
-        meson(*args)
-        args = [
-            "-m",
-            "build",
-            "--wheel",
-            "-Cbuilddir=build",
-            "--no-isolation",
-            "--skip-dependency-check",
-            ".",
-        ]
-        python(*args)
-        args = std_pip_args + ["--prefix=" + prefix, glob.glob(join_path("dist", "scipy*.whl"))[0]]
-        pip(*args)
+        return {
+            "blas": blas,
+            "lapack": lapack,
+            "debug": False,
+            "optimization": 2,
+        }
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
