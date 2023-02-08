@@ -7,6 +7,7 @@ import inspect
 import os
 import platform
 import re
+import shutil
 import sys
 from typing import List, Tuple
 
@@ -123,7 +124,7 @@ class CMakePackage(spack.package_base.PackageBase):
             build_dir = self.builder.build_directory
             logs = self.phase_log_files
             if os.path.isdir(build_dir):
-                shtuil.rmtree(build_dir)
+                shutil.rmtree(build_dir)
             for log in logs:
                 if os.path.isfile(log):
                     os.remove(log)

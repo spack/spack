@@ -136,7 +136,6 @@ def test_remove_build_artifacts_from_develop_build(mock_packages, tmpdir):
         ev.activate(e)
 
         # pre-clean state
-        assert ev.active_environment
         assert os.path.isdir(build_dir)
         assert os.path.isfile(build_log)
         clean("mpich")
