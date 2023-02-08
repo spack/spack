@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import llnl.util.filesystem as fs
 from spack.package import *
 
 
@@ -64,16 +63,14 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
             ]
         return args
 
-    def build(self, pkg, spec):
-        """Make the build targets"""
-        cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
-        with fs.working_dir(self.build_directory):
-            cmake(*(["--build", ".", "--target", "tiramisu", "--verbose"]))
-            if "+python" in self.spec:
-                cmake(*(["--build", ".", "--target", "Tiramisu_Python", "--verbose"]))
+    @property
+    def build_directory(self):
+        build_directory = join_path(self.stage.source_path, "build")
+        return build_directory
 
-    def install(self, pkg, spec, prefix=None):
-        """Make the install targets"""
-        cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
-        with fs.working_dir(self.build_directory):
-            cmake(*["--install", ".", "--verbose"])
+    @property
+    def build_targets(self):
+        if "+python" in self.spec:
+            return ["tiramisu", "Tiramisu_Python"]
+        else:
+            return ["tiramisu"]
