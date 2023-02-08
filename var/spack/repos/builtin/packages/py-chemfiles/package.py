@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyChemfiles(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """Python interface to chemfiles"""
 
     homepage = "http://chemfiles.org/chemfiles.py/latest/"
     url = "https://files.pythonhosted.org/packages/40/ed/ad8fc9ac327b791bc20a8daf2b1ce3e83b45bed640575b6ac04ec02723ce/chemfiles-0.10.3.tar.gz"
