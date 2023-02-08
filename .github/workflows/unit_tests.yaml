@@ -170,6 +170,15 @@ jobs:
       run: |
           source share/spack/setup-env.sh
           spack -d bootstrap now --dev
+          echo AJWR
+          mkdir -p /__w/spack/spack/opt/spack/gpg
+          echo whoami: $(whoami)
+          ls -ld /__w/spack
+          ls -ld /__w/spack/spack
+          ls -ld /__w/spack/spack/opt
+          ls -ld /__w/spack/spack/opt/spack
+          ls -ld /__w/spack/spack/opt/spack/gpg
+          echo AJWRend
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
