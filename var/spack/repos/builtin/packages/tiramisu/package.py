@@ -64,11 +64,6 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
         return args
 
     @property
-    def build_directory(self):
-        build_directory = join_path(self.stage.source_path, "build")
-        return build_directory
-
-    @property
     def build_targets(self):
         if "+python" in self.spec:
             return ["tiramisu", "Tiramisu_Python"]
