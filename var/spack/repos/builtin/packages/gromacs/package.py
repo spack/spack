@@ -142,6 +142,11 @@ class Gromacs(CMakePackage):
         when="+cp2k",
         msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
     )
+    conflicts(
+        "%intel",
+        when="@2022:",
+        msg="GROMACS %intel support was removed in version 2022",
+    )
 
     depends_on("mpi", when="+mpi")
 
