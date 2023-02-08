@@ -14,7 +14,7 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
     url = "https://github.com/Tiramisu-Compiler/tiramisu"
     git = "https://github.com/Tiramisu-Compiler/tiramisu.git"
 
-    maintainers = ["wraith1995"]
+    maintainers("wraith1995")
 
     generator = "Ninja"
 
