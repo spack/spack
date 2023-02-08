@@ -11,6 +11,7 @@ class PyChemfiles(CMakePackage):
 
     homepage = "http://chemfiles.org/chemfiles.py/latest/"
     url = "https://github.com/chemfiles/chemfiles.py/archive/refs/tags/0.10.3.tar.gz" 
+
     maintainers("RMeli")
 
     version("0.10.3", sha256="0e12837a332e6c1c950e82e339b17cd8fbf29a28bae8399a664b818c056786a9")
