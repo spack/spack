@@ -35,6 +35,9 @@ class PyDocutils(PythonPackage):
     depends_on("python@2.4:", when="@:0.13", type=("build", "run"))
     depends_on("py-setuptools", when="@0.15:", type="build")
 
+    # Uses 2to3
+    depends_on("py-setuptools@:57", when="@0.15", type="build")
+
     # Includes "longintrepr.h" instead of Python.h
     conflicts("^python@3.11:", when="@:0.15")
 
