@@ -161,7 +161,9 @@ jobs:
           . .github/workflows/setup_git.sh
           useradd spack-test
           chown -R spack-test .
+          find -maxdepth 2 | xargs ls -ld
     - name: remove-extension
+      shell: runuser -u spack-test -- bash {0}
       run: |
           source share/spack/setup-env.sh
           spack config --scope=defaults rm "config:extensions"
