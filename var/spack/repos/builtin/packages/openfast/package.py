@@ -12,7 +12,7 @@ class Openfast(CMakePackage):
     homepage = "https://openfast.readthedocs.io/en/latest/"
     git = "https://github.com/OpenFAST/openfast.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     version("develop", branch="dev")
     version("master", branch="main")

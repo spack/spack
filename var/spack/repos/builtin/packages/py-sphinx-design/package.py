@@ -12,7 +12,7 @@ class PySphinxDesign(PythonPackage):
     homepage = "https://sphinx-design.readthedocs.io"
     pypi = "sphinx-design/sphinx_design-0.3.0.tar.gz"
 
-    maintainers = ["ax3l", "adamjstewart"]
+    maintainers("ax3l", "adamjstewart")
 
     version("0.3.0", sha256="7183fa1fae55b37ef01bda5125a21ee841f5bbcbf59a35382be598180c4cefba")
 

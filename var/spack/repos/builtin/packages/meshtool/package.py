@@ -12,7 +12,7 @@ class Meshtool(MakefilePackage):
     homepage = "https://bitbucket.org/aneic/meshtool/"
     git = "https://bitbucket.org/aneic/meshtool.git"
 
-    maintainers = ["MarieHouillon"]
+    maintainers("MarieHouillon")
 
     version("master", branch="master", preferred=True)
     # Version to use with openCARP releases

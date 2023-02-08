@@ -15,7 +15,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     homepage = "http://www.pyfr.org/"
     pypi = "pyfr/pyfr-1.13.0.tar.gz"
     git = "https://github.com/PyFR/PyFR/"
-    maintainers = ["MichaelLaufer"]
+    maintainers("MichaelLaufer")
 
     # git branches
     version("develop", branch="develop")

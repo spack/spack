@@ -15,7 +15,7 @@ class PyPyprecice(PythonPackage):
     homepage = "https://precice.org"
     git = "https://github.com/precice/python-bindings.git"
     url = "https://github.com/precice/python-bindings/archive/v2.4.0.0.tar.gz"
-    maintainers = ["ajaust", "BenjaminRodenberg", "IshaanDesai"]
+    maintainers("ajaust", "BenjaminRodenberg", "IshaanDesai")
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")

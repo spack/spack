@@ -12,7 +12,7 @@ class Goshimmer(Package):
     homepage = "https://github.com/iotaledger/goshimmer"
     url = "https://github.com/iotaledger/goshimmer/archive/refs/tags/v0.8.0.tar.gz"
 
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
 
     version("0.8.0", "ec515deebf0dd35ff76cd98addae9cfcbf4758ab9eb72eb0f6ff4654f2658980")
 

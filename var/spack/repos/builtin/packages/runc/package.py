@@ -11,7 +11,7 @@ class Runc(MakefilePackage):
 
     homepage = "https://github.com/opencontainers/runc"
     url = "https://github.com/opencontainers/runc/releases/download/v1.0.2/runc.tar.xz"
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
 
     version("1.1.4", sha256="9f5972715dffb0b2371e4d678c1206cc8c4ec5eb80f2d48755d150bac49be35b")
     version("1.0.2", sha256="740acb49e33eaf4958b5109c85363c1d3900f242d4cab47fbdbefa6f8f3c6909")

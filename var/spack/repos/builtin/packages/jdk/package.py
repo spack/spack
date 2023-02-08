@@ -19,7 +19,7 @@ class Jdk(Package):
 
     homepage = "https://www.oracle.com/technetwork/java/javase/downloads/index.html"
 
-    maintainers = ["justintoo"]
+    maintainers("justintoo")
 
     # Oracle requires that you accept their License Agreement in order
     # to access the Java packages in download.oracle.com. In order to

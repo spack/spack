@@ -19,7 +19,7 @@ class Xgboost(CMakePackage, CudaPackage):
     homepage = "https://xgboost.ai/"
     git = "https://github.com/dmlc/xgboost.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
     version("1.6.2", tag="v1.6.2", submodules=True)

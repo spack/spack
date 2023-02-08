@@ -18,7 +18,7 @@ class PyPycompadre(PythonPackage):
     homepage = "https://github.com/SNLComputation/compadre"
     git = "https://github.com/SNLComputation/compadre.git"
     url = "https://github.com/SNLComputation/compadre/archive/v1.3.0.tar.gz"
-    maintainers = ["kuberry"]
+    maintainers("kuberry")
 
     version("master", branch="master", preferred=True)
 

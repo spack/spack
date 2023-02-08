@@ -19,7 +19,7 @@ class Occa(Package):
     homepage = "https://libocca.org"
     git = "https://github.com/libocca/occa.git"
 
-    maintainers = ["v-dobrev", "dmed256"]
+    maintainers("v-dobrev", "dmed256")
 
     version("develop")
     version("1.2.0", tag="v1.2.0", commit="18379073b6497f677a20bfeced95b511f82c3355")

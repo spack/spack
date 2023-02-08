@@ -13,7 +13,7 @@ class Keepassxc(CMakePackage):
     url = "https://github.com/keepassxreboot/keepassxc/releases/download/2.6.4/keepassxc-2.6.4-src.tar.xz"
     git = "https://github.com/keepassxreboot/keepassxc.git"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("master", branch="master")
     version("2.7.1", sha256="6001ba626c35c316dbda6de35736f012a2264f95139fcb4a094b8eb49b15d3e7")

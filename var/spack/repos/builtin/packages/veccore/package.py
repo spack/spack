@@ -17,7 +17,7 @@ class Veccore(CMakePackage):
     url = "https://github.com/root-project/veccore/archive/refs/tags/v0.8.0.tar.gz"
     git = "https://github.com/root-project/veccore.git"
 
-    maintainers = ["drbenmorgan", "sethrj"]
+    maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master")
     version("0.8.0", sha256="2f8e49f2b609bf15a776026fbec899b3d5d4ba30f033d4fdac4b07a5220a4fd3")

@@ -12,7 +12,7 @@ class PyGoogleApitools(PythonPackage):
     homepage = "https://github.com/google/apitools"
     pypi = "google-apitools/google-apitools-0.5.32.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.5.32", sha256="c3763e52289f61e21c41d5531e20fbda9cc8484a088b8686fd460770db8bad13")
 

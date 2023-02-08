@@ -15,7 +15,7 @@ class Gptune(CMakePackage):
     homepage = "https://gptune.lbl.gov/"
     url = "https://github.com/gptune/GPTune/archive/refs/tags/3.0.0.tar.gz"
     git = "https://github.com/gptune/GPTune.git"
-    maintainers = ["liuyangzhuan"]
+    maintainers("liuyangzhuan")
 
     version("master", branch="master")
     version("3.0.0", sha256="e19bfc3033fff11ff8c20cae65b88b7ca005d2c4e4db047f9f23226126ec92fa")

@@ -12,7 +12,7 @@ class TracyClient(CMakePackage):
 
     homepage = "https://github.com/wolfpld/tracy"
     url = "https://github.com/wolfpld/tracy/archive/v0.0.0.tar.gz"
-    maintainers = ["msimberg"]
+    maintainers("msimberg")
 
     version("master", git="https://github.com/wolfpld/tracy.git", branch="master")
     version("0.9", sha256="93a91544e3d88f3bc4c405bad3dbc916ba951cdaadd5fcec1139af6fa56e6bfc")

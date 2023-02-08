@@ -18,7 +18,7 @@ class EclipseGcjParser(Package):
     # Official download found at (see ecj-4.8M4.jar and ecjsrc-4.8M4.jar)
     # http://download.eclipse.org/eclipse/downloads/drops4/S-4.8M4-201712062000/
 
-    maintainers = ["citibeth"]
+    maintainers("citibeth")
 
     # The server is sometimes a bit slow to respond
     fetch_options = {"timeout": 60}

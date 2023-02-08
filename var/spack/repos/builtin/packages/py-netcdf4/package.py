@@ -12,7 +12,7 @@ class PyNetcdf4(PythonPackage):
     homepage = "https://github.com/Unidata/netcdf4-python"
     pypi = "netCDF4/netCDF4-1.2.7.tar.gz"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("1.5.8", sha256="ca3d468f4812c0999df86e3f428851fb0c17ac34ce0827115c246b0b690e4e84")
     version("1.5.3", sha256="2a3ca855848f4bbf07fac366da77a681fcead18c0a8813d91d46302f562dc3be")
