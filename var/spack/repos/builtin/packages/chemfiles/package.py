@@ -1,0 +1,27 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class Chemfiles(CMakePackage):
+    """Chemfiles is a library providing a simple and format agnostic interface for
+    reading and writing computational chemistry files: trajectories, configurations,
+    and topologies."""
+
+    homepage = "https://chemfiles.org"
+    url = "https://github.com/chemfiles/chemfiles/archive/refs/tags/0.10.2.tar.gz"
+
+    maintainers("RMeli")
+
+    version("0.10.2", sha256="2e3b58167f25d561ab19ae06acdc02f26b5640bd6c85e0a5b10fedfec59f5285")
+
+    variant("shared", default=False, description="Build shared libraries")
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+        ]
+        return args
