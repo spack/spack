@@ -204,6 +204,11 @@ class Openblas(MakefilePackage):
         msg="FPCSR consistency only applies to multithreading",
     )
 
+    # Intel 18 throws this error with 0.3.19 (and later?)
+    #   >> 12986    ../libopenblas_haswell-r0.3.19.so: undefined reference to `xerbla_'
+    #   >> 12987    make[1]: *** [../libopenblas_haswell-r0.3.19.so] Error 1
+    conflicts("%intel@18", when="@0.3.19:")
+
     conflicts("threads=pthreads", when="~locking", msg="Pthread support requires +locking")
     conflicts("threads=openmp", when="%apple-clang", msg="Apple's clang does not support OpenMP")
     conflicts(
