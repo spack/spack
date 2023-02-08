@@ -72,16 +72,3 @@ class Matlab(Package):
         # Full path required
         input_file = join_path(self.stage.source_path, "spack_installer_input.txt")
         subprocess.call(["./install", "-inputFile", input_file])
-
-    @run_after("install")
-    def post_install(self):
-        # Fix broken link
-        with working_dir(self.spec.prefix.bin.glnxa64):
-            os.unlink("libSDL2.so")
-            os.symlink("libSDL2-2.0.so.0.2.1", "libSDL2.so")
-
-        # Fix to random exceptions when changing display settings
-        # https://www.mathworks.com/matlabcentral/answers/373897-external-monitor-throws-java-exception
-        java_opts = os.path.join(self.spec.prefix.bin.glnxa64, "java.opts")
-        with open(java_opts, "w") as out:
-            out.write("-Dsun.java2d.xrender=false\n")

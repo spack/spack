@@ -38,6 +38,12 @@ class Mathematica(Package):
         expand=False,
     )
 
+    version(
+        "13.1.0",
+        expand=False,
+    )
+
+
     # Licensing
     license_required = True
     license_comment = "#"
