@@ -24,7 +24,7 @@ class Serenity(CMakePackage):
     depends_on("cmake@3.12:", type="build")
     depends_on("boost")
     depends_on("eigen@3:")
-    depends_on("googletest@1.8.1:", type="test")
+    depends_on("googletest@1.8.1:", type="build")
     depends_on("hdf5@1.10.1:")
     depends_on("lapack", when="+lapack")
     depends_on("libecpint")
@@ -47,20 +47,19 @@ class Serenity(CMakePackage):
             string=True,
         )
 
-        if self.run_tests:
-            filter_file(
-                "find_package(GTest 1.8.1 QUIET)",
-                "find_package(GTest REQUIRED)",
-                "cmake/ImportGTest.cmake",
-                string=True,
-            )
+        filter_file(
+            "find_package(GTest 1.8.1 QUIET)",
+            "find_package(GTest REQUIRED)",
+            "cmake/ImportGTest.cmake",
+            string=True,
+        )
 
-            filter_file(
-                "find_package(GMock 1.8.1 QUIET)",
-                "return()",
-                "cmake/ImportGTest.cmake",
-                string=True,
-            )
+        filter_file(
+            "find_package(GMock 1.8.1 QUIET)",
+            "return()",
+            "cmake/ImportGTest.cmake",
+            string=True,
+        )
 
         filter_file(
             "function(import_libecpint)",
