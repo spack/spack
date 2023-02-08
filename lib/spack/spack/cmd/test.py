@@ -236,7 +236,7 @@ def test_list(args):
     tagged = set(spack.repo.path.packages_with_tags(*args.tag)) if args.tag else set()
 
     def has_test_and_tags(pkg_class):
-        return spack.package_base.has_test_method(pkg_class) and (
+        return spack.install_test.test_functions(pkg_class) and (
             not args.tag or pkg_class.name in tagged
         )
 

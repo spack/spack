@@ -182,3 +182,32 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
     with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
         spack.install_test.get_test_suite(name)
     assert "many suites named" in str(exc_info)
+
+
+@pytest.mark.parametrize(
+    "virtuals,names",
+    [
+        (False, False),
+        (False, True),
+        (True, False),
+        (True, True),
+    ],
+)
+def test_test_functions(mock_packages, install_mockery, virtuals, names):
+    spec = spack.spec.Spec("printing-package").concretized()
+    expected = "printing-package.test" if names else "test"
+
+    def check_results(fns):
+        tests = fns if names else [f.__name__ for f in fns]
+        assert len(tests) == 1, "expecting only one test function"
+        assert tests[0] == expected
+
+    fns = spack.install_test.test_functions(spec.package, add_virtuals=virtuals, names=names)
+    check_results(fns)
+
+    fns = spack.install_test.test_functions(
+        spec.package.__class__,
+        add_virtuals=virtuals,
+        names=names,
+    )
+    check_results(fns)

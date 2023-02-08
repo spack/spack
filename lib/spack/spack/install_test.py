@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import base64
 import hashlib
+import inspect
 import os
 import re
 import shutil
@@ -108,6 +109,101 @@ def get_test_suite(name):
     if not names:
         return None
     return names[0]
+
+
+def package_class(spec):
+    """Return the spec's package class.
+
+    Args:
+        spec (spack.spec.Spec): spec instance
+    """
+    try:
+        cls = spec.package.__class__
+    except AssertionError:
+        try:
+            cls = spec.package_class
+        except spack.repo.UnknownPackageError as e:
+            tty.debug("{0}: Cannot retrieve class: {1}".format(spec.name, str(e)))
+            return None
+    except spack.repo.UnknownPackageError as e:
+        tty.debug("{0}: Cannot retrieve class: {1}".format(spec.name, str(e)))
+        return None
+
+    return cls
+
+
+def test_functions(spec_or_pkg, add_virtuals=False, names=False):
+    """Grab all non-pass-only test functions (names) associated with the spec or package.
+
+    Args:
+        spec_or_pkg (spack.spec.Spec or spack.package_base.PackageBase): spec or
+            package (class)
+        add_virtuals (bool): True will add any test methods of provided virtuals
+            when a package is provided
+        names (bool): True results in the return of test function names
+
+    Returns: list of test functions or function names
+
+    Raises: ValueError:
+    """
+    if isinstance(spec_or_pkg, spack.spec.Spec):
+        spec = spec_or_pkg
+        cls = package_class(spec)
+        if not cls:
+            tty.debug("Skipping {0}: no package class found".format(spec.name))
+            return []
+    elif isinstance(spec_or_pkg, spack.package_base.PackageBase):
+        pkg = spec_or_pkg
+        cls = pkg.__class__
+        if add_virtuals:
+            methods = []
+            v_names = virtuals(pkg)
+            test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
+            for spec in test_specs:
+                methods.extend(test_functions(spec, names=names))
+            return methods
+
+    elif inspect.isclass(spec_or_pkg):
+        cls = spec_or_pkg
+
+    else:
+        raise ValueError("Cannot retrieve test methods for {0}".format(spec_or_pkg))
+
+    methods = inspect.getmembers(cls, predicate=lambda x: inspect.isfunction(x))
+    if not methods:
+        return []
+
+    tests = []
+    for name, test_fn in methods:
+        if not name == "test":
+            continue
+
+        source = (inspect.getsource(test_fn)).splitlines()[1:]
+        lines = (ln.strip() for ln in source)
+        statements = [ln for ln in lines if not ln.startswith("#")]
+        empty = len(statements) > 0 and statements[0] == "pass"
+        if not empty:
+            tests.append("{0}.{1}".format(cls.name.lower(), name) if names else test_fn)
+    return tests
+
+
+def virtuals(pkg):
+    """Return a list of unique virtuals for the package.
+
+    Args:
+        pkg (spack.package_base.PackageBase): package whose virtuals
+    """
+    # provides virtuals have to be deduped by name
+    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
+
+    # hack for compilers that are not dependencies (yet)
+    # TODO: this all eventually goes away
+    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
+    if pkg.name in c_names:
+        v_names.extend(["c", "cxx", "fortran"])
+    if pkg.spec.satisfies("llvm+clang"):
+        v_names.extend(["c", "cxx"])
+    return v_names
 
 
 def write_test_suite_file(suite):

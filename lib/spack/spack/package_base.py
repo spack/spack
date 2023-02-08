@@ -25,7 +25,6 @@ import sys
 import textwrap
 import time
 import traceback
-import types
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
@@ -55,7 +54,13 @@ import spack.util.environment
 import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
-from spack.install_test import TestFailure, TestSuite
+from spack.install_test import (
+    TestFailure,
+    TestSuite,
+    package_class,
+    test_functions,
+    virtuals,
+)
 from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
@@ -110,6 +115,11 @@ def deprecated_version(pkg, version):
             return True
 
     return False
+
+
+def package_directory(cls):
+    """Returns the path to the package class directory."""
+    return os.path.abspath(os.path.dirname(cls.module.__file__))
 
 
 def preferred_version(pkg):
@@ -788,7 +798,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(cls.module.__file__))
+        return package_directory(cls)
 
     @classproperty
     def module(cls):
@@ -2436,7 +2446,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
             if "test" in method_names:
-                _copy_cached_test_files(builder.pkg, builder.pkg.spec)
+                copy_test_files(builder.pkg, builder.pkg.spec)
 
             for name in method_names:
                 try:
@@ -2485,7 +2495,7 @@ def print_test_message(logger, msg, verbose):
         tty.msg(msg)
 
 
-def _copy_cached_test_files(pkg, spec):
+def copy_test_files(pkg, spec):
     """Copy any cached stand-alone test-related files."""
 
     # copy installed test sources cache into test cache dir
@@ -2496,7 +2506,13 @@ def _copy_cached_test_files(pkg, spec):
             fsys.install_tree(cache_source, cache_dir)
 
     # copy test data into test data dir
-    data_source = Prefix(spec.package.package_dir).test
+    pkg_cls = package_class(spec)
+    if not pkg_cls:
+        tty.debug("{0}: skipping test data copy since no package class found".format(spec.name))
+        return
+
+    package_dir = package_directory(pkg_cls)
+    data_source = Prefix(package_dir).test
     data_dir = pkg.test_suite.current_test_data_dir
     if os.path.isdir(data_source) and not os.path.exists(data_dir):
         # We assume data dir is used read-only
@@ -2517,18 +2533,8 @@ def test_process(pkg, kwargs):
             print_test_message(logger, "Skipped not installed package", verbose)
             return
 
-        # run test methods from the package and all virtuals it
-        # provides virtuals have to be deduped by name
-        v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
-
-        # hack for compilers that are not dependencies (yet)
-        # TODO: this all eventually goes away
-        c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
-        if pkg.name in c_names:
-            v_names.extend(["c", "cxx", "fortran"])
-        if pkg.spec.satisfies("llvm+clang"):
-            v_names.extend(["c", "cxx"])
-
+        # run test methods from the package and all virtuals it provides
+        v_names = virtuals(pkg)
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
 
         ran_actual_test_function = False
@@ -2536,29 +2542,20 @@ def test_process(pkg, kwargs):
             with fsys.working_dir(pkg.test_suite.test_dir_for_spec(pkg.spec)):
                 for spec in test_specs:
                     pkg.test_suite.current_test_spec = spec
-                    # Fail gracefully if a virtual has no package/tests
-                    try:
-                        spec_pkg = spec.package
-                    except spack.repo.UnknownPackageError:
+
+                    # grab test functions associated with the spec, which may be
+                    # a virtual spec
+                    tests = test_functions(spec, add_virtuals=False, names=False)
+                    # There should be only one test function per spec using the
+                    # current test syntax
+                    if len(tests) != 1:
                         continue
+                    test_fn = tests[0]
 
-                    _copy_cached_test_files(pkg, spec)
+                    # copy custom and cached test files to the test stage dir
+                    copy_test_files(pkg, spec)
 
-                    # grab the function for each method so we can call
-                    # it with the package
-                    test_fn = spec_pkg.__class__.test
-                    if not isinstance(test_fn, types.FunctionType):
-                        test_fn = test_fn.__func__
-
-                    # Skip any test methods consisting solely of 'pass'
-                    # since they do not contribute to package testing.
-                    source = (inspect.getsource(test_fn)).splitlines()[1:]
-                    lines = (ln.strip() for ln in source)
-                    statements = [ln for ln in lines if not ln.startswith("#")]
-                    if len(statements) > 0 and statements[0] == "pass":
-                        continue
-
-                    # Run the tests
+                    # Run the test function
                     ran_actual_test_function = True
                     context = logger.force_echo if verbose else nullcontext
                     with context():

@@ -1065,12 +1065,17 @@ class Repo(object):
 
         # Install patch files needed by the package.
         fs.mkdirp(path)
-        for patch in itertools.chain.from_iterable(spec.package.patches.values()):
-            if patch.path:
-                if os.path.exists(patch.path):
-                    fs.install(patch.path, path)
-                else:
-                    tty.warn("Patch file did not exist: %s" % patch.path)
+        try:
+            for patch in itertools.chain.from_iterable(spec.package.patches.values()):
+
+                if patch.path:
+                    if os.path.exists(patch.path):
+                        fs.install(patch.path, path)
+                    else:
+                        tty.warn("Patch file did not exist: %s" % patch.path)
+        except AssertionError:
+            # virtual specs won't have a package to install
+            pass
 
         # Install the package.py file itself.
         fs.install(self.filename_for_package_name(spec.name), path)
