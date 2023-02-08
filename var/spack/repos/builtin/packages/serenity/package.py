@@ -25,7 +25,7 @@ class Serenity(CMakePackage):
     depends_on("boost")
     depends_on("eigen@3:")
     depends_on("googletest@1.8.1:", type="build")
-    depends_on("hdf5@1.10.1:")
+    depends_on("hdf5+hl+cxx@1.10.1:1.12.2")
     depends_on("lapack", when="+lapack")
     depends_on("libecpint")
     depends_on("libxc@5.0.0")
@@ -134,6 +134,8 @@ class Serenity(CMakePackage):
             self.define("BOOST_INCLUDE_DIR", self.spec["boost"].headers.directories[0]),
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
+            self.define("HDF5_LIBRARY_DIR", self.spec["hdf5"].libs.directories[0]),
+            self.define("HDF5_INCLUDE_DIR", self.spec["hdf5"].headers.directories[0]),
         ]
         if "+python" in self.spec:
             args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
