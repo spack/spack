@@ -10,7 +10,7 @@ class PyGmshInterop(PythonPackage):
     """Interoperability between Python and Gmsh"""
 
     homepage = "https://documen.tician.de/gmsh_interop"
-    pypi = "gmesh_interop/gmesh_interop-2021.1.1.tar.gz"
+    pypi = "gmsh_interop/gmsh_interop-2021.1.1.tar.gz"
     git = "https://github.com/inducer/gmsh_interop.git"
 
     maintainers("cgcgcg")
