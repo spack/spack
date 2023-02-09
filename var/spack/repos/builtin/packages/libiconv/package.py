@@ -32,6 +32,11 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
 
     conflicts("@1.14", when="%gcc@5:")
 
+    # Version 1.16 fails building with Intel 18 with
+    #   iconv_no_i18n.o: In function `main':
+    #   /path/to/spack-src/src/./iconv.c:1008: undefined reference to `libiconvlist'
+    conflicts("@1.16", when="%intel@18")
+
     def configure_args(self):
         args = ["--enable-extra-encodings"]
 
