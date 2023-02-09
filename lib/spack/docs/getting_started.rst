@@ -483,7 +483,7 @@ You might also need to adjust the concretizer setting to allow building for a
 different architecture than the host architecture using
 ``spack config add concretizer:targets:host_compatible:false``
 
-.. _build-your-oen-compiler:
+.. _build-your-own-compiler:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
