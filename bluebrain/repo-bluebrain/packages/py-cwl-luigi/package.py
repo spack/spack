@@ -16,11 +16,11 @@ class PyCwlLuigi(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on("py-click@8.0.0:", type=('build', 'run'))
-    depends_on('py-jsonschema@3.2.0:', type=('build', 'run'))
-    depends_on('py-luigi', type=('build', 'run'))
-    depends_on('py-pyyaml', type=('build', 'run'))
-    depends_on('py-cwl-registry', type=('build', 'run'))
+    depends_on("py-click@8.0:", type=('build', 'run'))
+    depends_on('py-jsonschema@3.0:', type=('build', 'run'))
+    depends_on('py-luigi@3.0:', type=('build', 'run'))
+    depends_on('py-pyyaml@6.0:', type=('build', 'run'))
+    depends_on('py-nexusforge@0.8.0:', type=('build', 'run'))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
