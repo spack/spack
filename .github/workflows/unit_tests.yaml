@@ -162,15 +162,10 @@ jobs:
           useradd spack-test
           chown -R spack-test .
     - name: remove-extension
+      shell: runuser -u spack-test -- bash {0}
       run: |
-          echo AJWR1
-          ls -l /__w/spack/spack
           source share/spack/setup-env.sh
-          echo AJWR2
-          ls -l /__w/spack/spack
           spack config --scope=defaults rm "config:extensions"
-          echo AJWR3
-          ls -l /__w/spack/spack
     - name: Run unit tests
       shell: runuser -u spack-test -- bash {0}
       run: |
