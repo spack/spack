@@ -48,6 +48,7 @@ class Charmpp(Package):
     # Patch for AOCC
     patch("charm_6.7.1_aocc.patch", when="@6.7.1 %aocc", level=1)
     patch("charm_6.8.2_aocc.patch", when="@6.8.2 %aocc", level=3)
+    patch("charm_6.10_aocc.patch", when="@6.10.0:6.10.2 %aocc")
 
     # support Fujitsu compiler
     patch("fj.patch", when="%fj")
@@ -98,7 +99,6 @@ class Charmpp(Package):
     variant("omp", default=False, description="Support for the integrated LLVM OpenMP runtime")
     variant("pthreads", default=False, description="Compile with pthreads Converse threads")
     variant("cuda", default=False, description="Enable CUDA toolkit")
-
     variant("shared", default=True, description="Enable shared link support")
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
@@ -271,6 +271,13 @@ class Charmpp(Package):
 
         if "@:6.8.2 %aocc" not in spec:
             options.append(os.path.basename(self.compiler.fc))
+
+        if "cxxflags" in self.compiler.flags:
+            for arg in self.compiler.flags["cxxflags"]:
+                if arg.startswith("-I"):
+                    options.append("--incdir={}".format(arg[2:]))
+                if arg.startswith("-L"):
+                    options.append("--libdir={}".format(arg[2:]))
 
         options.append("-j%d" % make_jobs)
         options.append("--destination=%s" % builddir)

@@ -1,0 +1,49 @@
+diff -aur a/src/arch/mpi-linux-x86_64/cc-mpicxx.sh b/src/arch/mpi-linux-x86_64/cc-mpicxx.sh
+--- a/src/arch/mpi-linux-x86_64/cc-mpicxx.sh	2020-08-05 05:13:21.000000000 +0000
++++ b/src/arch/mpi-linux-x86_64/cc-mpicxx.sh	2023-02-09 17:02:01.782662750 +0000
+@@ -15,6 +15,7 @@
+ CMK_REAL_COMPILER=`$MPICXX -show 2>/dev/null | cut -d' ' -f1 `
+ case "${CMK_REAL_COMPILER##*/}" in
+ gcc|g++|gcc-*|g++-*)   CMK_AMD64="-m64 -fPIC" ;;
++clang++)  CMK_AMD64="-m64 -fPIC" ;;
+ icpc)  CMK_AMD64="-m64";;
+ pgCC)  CMK_AMD64="-DCMK_FIND_FIRST_OF_PREDICATE=1 --no_using_std " ;;
+ FCC)   CMK_AMD64="-Kfast -DCMK_FIND_FIRST_OF_PREDICATE=1 --variadic_macros";;
+diff -aur a/src/arch/mpi-linux-x86_64/conv-mach.sh b/src/arch/mpi-linux-x86_64/conv-mach.sh
+--- a/src/arch/mpi-linux-x86_64/conv-mach.sh	2020-08-05 05:13:21.000000000 +0000
++++ b/src/arch/mpi-linux-x86_64/conv-mach.sh	2023-02-09 17:02:01.782662750 +0000
+@@ -3,6 +3,7 @@
+ CMK_GCC64='-fPIC'
+ 
+ case "$CMK_REAL_COMPILER" in
++clang++) CMK_AMD64_CC="$CMK_GCC64"; CMK_AMD64_CXX="$CMK_GCC64" ;;
+ g++) CMK_AMD64_CC="$CMK_GCC64"; CMK_AMD64_CXX="$CMK_GCC64" ;;
+ pgCC)  CMK_AMD64_CC='-fPIC'; CMK_AMD64_CXX='-fPIC -DCMK_FIND_FIRST_OF_PREDICATE=1 --no_using_std ' ;;
+ charmc)  echo "Error> charmc can not call AMPI's mpicxx/mpiCC wrapper! Please fix your PATH."; exit 1 ;;
+@@ -17,10 +18,10 @@
+ #CMK_SYSLIBS="-lmpich"
+ CMK_LD_LIBRARY_PATH="-Wl,-rpath,$CHARMLIBSO/"
+ 
+-CMK_NATIVE_CC='gcc'
+-CMK_NATIVE_LD='gcc'
+-CMK_NATIVE_CXX='g++'
+-CMK_NATIVE_LDXX='g++'
++CMK_NATIVE_CC='clang'
++CMK_NATIVE_LD='clang'
++CMK_NATIVE_CXX='clang++'
++CMK_NATIVE_LDXX='clang++'
+ CMK_NATIVE_LIBS=''
+ 
+ CMK_NATIVE_CC_FLAGS="$CMK_GCC64 "
+diff -aur a/src/QuickThreads/Makefile b/src/QuickThreads/Makefile
+--- a/src/QuickThreads/Makefile	2020-08-05 05:13:21.000000000 +0000
++++ b/src/QuickThreads/Makefile	2023-02-09 17:02:01.782662750 +0000
+@@ -1,5 +1,5 @@
+ 
+-CC=gcc -I. -O2
++CC=clang -I. -O2
+ 
+ all: qt stp testpgm
+ 
+Only in b/src/scripts: Makefile.orig
+Only in b/tests/charm++/megatest: Makefile.orig
