@@ -22,7 +22,7 @@ class Xyce(CMakePackage):
     homepage = "https://xyce.sandia.gov"
     git = "https://github.com/Xyce/Xyce.git"
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
-    maintainers("kuberry")
+    maintainers("kuberry", "tbird2001")
 
     version("master", branch="master")
     version("7.6.0", "fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
