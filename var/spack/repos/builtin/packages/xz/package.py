@@ -97,10 +97,6 @@ class MSBuildBuilder(MSBuildBuilder):
         newest_compiler = max(compiler_dirs, key=get_file_string_number)
         return os.path.join(win_dir, newest_compiler)
 
-    @property
-    def toolchain_version(self):
-        return "v" + self.pkg.compiler.platform_toolset_ver
-
     def is_64bit(self):
         return platform.machine().endswith("64")
 
