@@ -16,7 +16,7 @@ class Malt(CMakePackage):
     # Project infos
     homepage = "https://memtt.github.io/malt"
     url = "https://github.com/memtt/malt/archive/v1.2.1.tar.gz"
-    maintainers = ["svalat"]
+    maintainers("svalat")
 
     # Versions
     version("1.2.1", sha256="0e4c0743561f9fcc04dc83457386167a9851fc9289765f8b4f9390384ae3618a")
