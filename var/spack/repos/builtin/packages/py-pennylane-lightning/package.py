@@ -15,9 +15,14 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.2.tar.gz"
     tag = "v0.28.2"
 
-    maintainers = ["mlxd", "AmintorDusko"]
+    maintainers("mlxd", "AmintorDusko")
 
-    version("develop", branch="master")
+    version("master", branch="master")
+    version(
+        "0.28.0",
+        sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18",
+        deprecated=True,
+    )  # on Spack v0.19.0
     version("0.28.2", sha256="c9b3afed0585681ccaf4df09fb12f2b7f09a8a1ba97a9b979139fe4a24509f31")
 
     patch(
@@ -52,7 +57,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     extends("python", when="+python")
 
     # hard dependencies
-    depends_on("cmake@3.21.0:3.24.0", type="build")  # 3.21-3.24
+    depends_on("cmake@3.21:3.24,3.25.2:", type="build")
     depends_on("ninja", type=("run", "build"))
 
     # variant defined dependencies
