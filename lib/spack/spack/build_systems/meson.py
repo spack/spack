@@ -33,7 +33,7 @@ class MesonPackage(spack.package_base.PackageBase):
     with when("build_system=meson"):
         variant(
             "buildtype",
-            default="debugoptimized",
+            default="release",
             description="Meson build type",
             values=("plain", "debug", "debugoptimized", "release", "minsize"),
         )
