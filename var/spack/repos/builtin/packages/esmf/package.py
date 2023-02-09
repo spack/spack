@@ -96,6 +96,9 @@ class Esmf(MakefilePackage):
     # https://earthsystemmodeling.org/docs/release/latest/ESMF_usrdoc/node10.html#SECTION000105000000000000000
     variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
     variant("esmf_os", default="auto", description="Override for ESMF_OS variable")
+    # Set the 'snapshot' variant any time a beta snapshot is used in order to obtain
+    # correct module name behavior for MAPL.
+    variant("snapshot", default="none", description="Named variant for snapshots versions (e.g., 'b09')")
 
     # Required dependencies
     depends_on("zlib")
