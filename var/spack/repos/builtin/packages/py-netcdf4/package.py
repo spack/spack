@@ -14,6 +14,7 @@ class PyNetcdf4(PythonPackage):
 
     maintainers("skosukhin")
 
+    version("1.6.2", sha256="0382b02ff6a288419f6ffec85dec40f451f41b8755547154c575ddd9f0f4ae53")
     version("1.5.8", sha256="ca3d468f4812c0999df86e3f428851fb0c17ac34ce0827115c246b0b690e4e84")
     version("1.5.3", sha256="2a3ca855848f4bbf07fac366da77a681fcead18c0a8813d91d46302f562dc3be")
     version("1.4.2", sha256="b934af350459cf9041bcdf5472e2aa56ed7321c018d918e9f325ec9a1f9d1a30")
@@ -24,7 +25,8 @@ class PyNetcdf4(PythonPackage):
     depends_on("python@2.7,3.5:", when="@1.5.2:1.5.3", type=("build", "link", "run"))
     depends_on("python@3.6:", when="@1.5.4:", type=("build", "link", "run"))
 
-    depends_on("py-setuptools@18:", type="build")
+    depends_on("py-setuptools@18:", when="@1.4.2:1.5.8", type="build")
+    depends_on("py-setuptools@41.2:", when="@1.6.2:", type="build")
     depends_on("py-cython@0.19:", type="build")
 
     depends_on("py-numpy@1.7:", type=("build", "link", "run"))
