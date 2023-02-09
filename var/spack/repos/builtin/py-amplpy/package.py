@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,3 +22,4 @@ class PyAmplpy(PythonPackage):
 
     depends_on("py-future@0.15.0:", type=("build", "run"))
     depends_on("py-ampltools@0.4.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
