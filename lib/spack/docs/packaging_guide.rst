@@ -2435,28 +2435,23 @@ relationships between packages.
 Version ranges
 ^^^^^^^^^^^^^^
 
-Although some packages require a specific version for their dependencies, most
-can be built with a range of versions. The simplest way to construct a range is
-to use a partial version number. If all of the packages are versioned with three
-numbers, ``x.y.z``, then ``x.y`` can match any version beginning with ``x.y.``
-(the third version number is a free variable). This is different from previous
-versions of Spack where ``x.y`` only match exactly ``x.y``, which might not even
-exist.
-
-One can specify looser ranges by writing two versions separated by a colon. The
-left-hand version is the first acceptable version, while the right-hand version
-is the last acceptable version. If either version is partially specified, then the
-unspecified digits are interpreted to make the range as loose as possible. For
-example, if you are writing a package for a legacy Python module that only works
-with Python 2.4.x through 2.6.x, this would look like:
+Although some packages require a specific version for their dependencies,
+most can be built with a range of versions. For example, if you are
+writing a package for a legacy Python module that only works with Python
+2.4 through 2.6, this would look like:
 
 .. code-block:: python
 
    depends_on("python@2.4:2.6")
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
-greater than or equal to ``2.4`` and lesser than or equal to any ``2.6.x``. If
-you want to specify that a package works with any version of Python 3 (or
+greater than or equal to ``2.4`` and up to and including any ``2.6.x``.
+
+Note that while Python is versioned with three digis, like ``2.4.0``, we can
+omit the trailing digits if we only care about the initial ones. For example,
+the version ``2.4.0`` will get matched by the spec ``@2.4:2.6``.
+
+If you want to specify that a package works with any version of Python 3 (or
 higher), this would look like:
 
 .. code-block:: python
@@ -2471,7 +2466,24 @@ requires Python 2, you can similarly leave out the lower bound:
    depends_on("python@:2")
 
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
-``@:3`` means "up to and including any 3.x.y version".
+``@:3`` means "up to and including any 3.x version".
+
+If we require Python 3 exactly, we can simply write:
+
+.. code-block:: python
+
+   depends_on('python@3')
+
+since we don't care about the latter digits. Among equivalent specs,
+usually the most succinct is preferred.
+
+Note that if a version part is alphabetic, it is considered to precede
+numeric versions, and it is compared to other alphabetic sequences using
+dictionary order, unless it is a special name, so:
+
+.. code-block:: text
+
+   a < z < zz < 0 < 9 == 09 < 99 < stable < main < develop
 
 You can also simply write
 
