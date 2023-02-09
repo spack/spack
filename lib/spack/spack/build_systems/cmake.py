@@ -55,7 +55,7 @@ class CMakePackage(spack.package_base.PackageBase):
         # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
         variant(
             "build_type",
-            default="RelWithDebInfo",
+            default="Release",
             description="CMake build type",
             values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
         )
