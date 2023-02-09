@@ -419,3 +419,58 @@ env:
             output = install()
 
     assert "Installing %s" % test_spec in output
+
+
+def test_dev_build_rebuild_dependent_delayed(
+    tmpdir, mock_packages, install_mockery, mutable_mock_env_path, mock_fetch
+):
+    """Install X->Y; change Y; perform "spack install Y" (not rebuilding X);
+       and then do "spack install". In this case, The final command should
+       reinstall X. This makes sure we don't lose track of when dependents
+       should be reinstalled.
+    """
+    # setup dev-build-test-install package for dev build
+    build_dir = tmpdir.mkdir("build")
+    spec = spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % build_dir)
+    spec.concretize()
+
+    def reset_string():
+        with build_dir.as_cwd():
+            with open(spec.package.filename, "w") as f:
+                f.write(spec.package.original_string)
+
+    reset_string()
+
+    # setup environment
+    envdir = tmpdir.mkdir("env")
+    with envdir.as_cwd():
+        with open("spack.yaml", "w") as f:
+            f.write(
+                """\
+env:
+  specs:
+  - dependent-of-dev-build@0.0.0
+
+  develop:
+    dev-build-test-install:
+      spec: dev-build-test-install@0.0.0
+      path: {0}
+"""
+                .format(build_dir)
+            )
+
+        env("create", "test", "./spack.yaml")
+        with ev.read("test"):
+            install()
+
+            reset_string()  # so the package will accept rebuilds
+
+            fs.touch(os.path.join(str(build_dir), "test"))
+            # Here we reinstall only the dependency
+            install("dev-build-test-install")
+
+            # At this point, the dependent should be reinstalled too, because
+            # there is a more-recent version of the dependency
+            output = install()
+
+    assert "Installing %s" % test_spec in output
