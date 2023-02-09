@@ -14,6 +14,4 @@ class PyFlaky(PythonPackage):
 
     version("3.7.0", sha256="3ad100780721a1911f57a165809b7ea265a7863305acb66708220820caf8aa0d")
 
-    depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type=("build"))
-    depends_on("py-tox", type=("test"))
