@@ -763,20 +763,6 @@ class PyclingoDriver(object):
             for _, msg, args in errors:
                 self.handle_error(msg, *args)
 
-            providers = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "provider")]
-            possible_providers = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "possible_provider")]
-            virtual_condition_holds = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "virtual_condition_holds")]
-            provider_condition = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "provider_condition")]
-
-            for p in providers:
-                print("provider", p)
-            for pp in possible_providers:
-                print("possible_provider", p)
-            for vch in virtual_condition_holds:
-                print("virtual_condition_holds", vch)
-            for vc in provider_condition:
-                print("virtual_condition", vc)
-            
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
             answers = builder.build_specs(spec_attrs)

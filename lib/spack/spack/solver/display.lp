@@ -30,3 +30,11 @@
 #show virtual_condition_holds/2.
 #show provider_condition/3.
 #show possible_provider/2.
+#show dependency_condition/3.
+#show condition_holds/1.
+#show condition_requirement/3.
+#show condition_requirement/4.
+#show condition_requirement/5.
+#show condition_requirement/6.
+#show dependency_holds/3.
+#show dependency_type/2.

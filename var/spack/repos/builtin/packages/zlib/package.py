@@ -57,6 +57,7 @@ class Zlib(MakefilePackage, Package):
     patch("configure-cc.patch", when="@1.2.12")
 
     depends_on("pkgconf@:1.7", type="build")
+#    depends_on("pkgconfig", type="build")
 
     @property
     def libs(self):

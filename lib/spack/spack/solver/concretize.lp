@@ -1325,7 +1325,7 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 #defined optimize_for_reuse/0.
 
 #minimize { 0@99: #true }.
-#minimize { PSID@99,Package : attr("node", (Package, PSID)) }.
+#minimize { PSID@99,Package,PSID : attr("node", (Package, PSID)) }.
 
 % A condition group specifies one or more specs that must be satisfied.
 % Specs declared first are preferred, so we assign increasing weights and
