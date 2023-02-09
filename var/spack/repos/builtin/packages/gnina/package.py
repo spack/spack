@@ -6,8 +6,9 @@
 from spack.package import *
 import os
 
+
 class Gnina(CMakePackage, CudaPackage):
-    """gnina (pronounced NEE-na) is a molecular docking program with integrated support 
+    """gnina (pronounced NEE-na) is a molecular docking program with integrated support
     for scoring and optimizing ligands using convolutional neural networks."""
 
     homepage = "https://github.com/gnina/gnina"
@@ -16,9 +17,9 @@ class Gnina(CMakePackage, CudaPackage):
 
     maintainers("RMeli")
 
-    version('master',  branch='master')
-    
-    depends_on("git", type="build") # libmolgrid
+    version("master", branch="master")
+
+    depends_on("git", type="build")  # libmolgrid
 
     _boost = "boost" + "".join(
         [
@@ -66,6 +67,6 @@ class Gnina(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         args = [
-                "-DBLAS=Open", # Use OpenBLAS instead of Atlas' BLAS
-            ]
+            "-DBLAS=Open",  # Use OpenBLAS instead of Atlas' BLAS
+        ]
         return args

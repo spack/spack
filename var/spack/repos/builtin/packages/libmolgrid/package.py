@@ -23,8 +23,9 @@
 from spack.package import *
 import os
 
+
 class Libmolgrid(CMakePackage):
-    """libmolgrid is a library to generate tensors from molecular data, with properties 
+    """libmolgrid is a library to generate tensors from molecular data, with properties
     that make its output particularly suited to machine learning."""
 
     homepage = "https://gnina.github.io/libmolgrid/"
@@ -38,7 +39,7 @@ class Libmolgrid(CMakePackage):
     depends_on("boost +regex +test +program_options +system +filesystem +iostreams +python")
     depends_on("openbabel@3:~gui~cairo")
     depends_on("cuda@11")
-    
+
     depends_on("python")
     depends_on("py-numpy")
     depends_on("py-pytest")
@@ -50,5 +51,5 @@ class Libmolgrid(CMakePackage):
         args = [
             "-DOPENBABEL3_INCLUDE_DIR=" + ob_incl,
             "-DOPENBABEL3_LIBRARIES=" + ob_libs,
-            ]
+        ]
         return args
