@@ -2474,8 +2474,9 @@ If we require Python 3 exactly, we can simply write:
 
    depends_on('python@3')
 
-since we don't care about the latter digits. Among equivalent specs,
-usually the most succinct is preferred.
+since we don't care about the latter digits. You can think of this as a
+short-hand for ``@3:3``. Among equivalent specs, usually the most succinct is
+preferred.
 
 Note that if a version part is alphabetic, it is considered to precede
 numeric versions, and it is compared to other alphabetic sequences using
