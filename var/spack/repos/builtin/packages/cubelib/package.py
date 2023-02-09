@@ -12,12 +12,34 @@ class Cubelib(AutotoolsPackage):
     homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
     url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubelib-4.4.tar.gz"
 
+    version("4.8", sha256="171c93ac5afd6bc74c50a9a58efdaf8589ff5cc1e5bd773ebdfb2347b77e2f68")
+    version("4.7", sha256="e44352c80a25a49b0fa0748792ccc9f1be31300a96c32de982b92477a8740938")
     version("4.6", sha256="36eaffa7688db8b9304c9e48ca5dc4edc2cb66538aaf48657b9b5ccd7979385b")
-    version("4.5", sha256="98f66837b4a834b1aacbcd4480a242d7a8c4a1b8dd44e02e836b8c7a4f0ffd98")
-    version("4.4.4", sha256="adb8216ee3b7701383884417374e7ff946edb30e56640307c65465187dca7512")
-    version("4.4.3", sha256="bcd4fa81a5ba37194e590a5d7c3e6c44b448f5e156a175837b77c21206847a8d")
-    version("4.4.2", sha256="843335c7d238493f1b4cb8e07555ccfe99a3fa521bf162e9d8eaa6733aa1f949")
-    version("4.4", sha256="77548e1732fa5e82b13cc8465c8a21349bf42b45a382217d2e70d18576741d5c")
+    version(
+        "4.5",
+        sha256="98f66837b4a834b1aacbcd4480a242d7a8c4a1b8dd44e02e836b8c7a4f0ffd98",
+        deprecated="true",
+    )
+    version(
+        "4.4.4",
+        sha256="adb8216ee3b7701383884417374e7ff946edb30e56640307c65465187dca7512",
+        deprecated="true",
+    )
+    version(
+        "4.4.3",
+        sha256="bcd4fa81a5ba37194e590a5d7c3e6c44b448f5e156a175837b77c21206847a8d",
+        deprecated="true",
+    )
+    version(
+        "4.4.2",
+        sha256="843335c7d238493f1b4cb8e07555ccfe99a3fa521bf162e9d8eaa6733aa1f949",
+        deprecated="true",
+    )
+    version(
+        "4.4",
+        sha256="77548e1732fa5e82b13cc8465c8a21349bf42b45a382217d2e70d18576741d5c",
+        deprecated="true",
+    )
 
     depends_on("pkgconfig", type="build")
     depends_on("zlib")
