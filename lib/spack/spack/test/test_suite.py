@@ -211,3 +211,20 @@ def test_test_functions(mock_packages, install_mockery, virtuals, names):
         names=names,
     )
     check_results(fns)
+
+
+def test_test_package_class_unknown(mock_packages):
+    """Ensure expected result for existing mock virtual spec with no package."""
+    vspec = spack.spec.Spec("something")
+    assert not spack.install_test.package_class(vspec), "Expected UnknownPackageError"
+
+
+def test_test_functions_error_or_none(mock_packages):
+    """Ensure expected results when test_functions called with incorrect values."""
+    flag = spack.spec.CompilerFlag("cflags")
+    with pytest.raises(ValueError):
+        _ = spack.install_test.test_functions(flag)
+
+    assert not spack.install_test.test_functions(
+        flag.__class__
+    ), "Expected no test methods for a class that doesn't have any"

@@ -150,3 +150,15 @@ def test_repo_path_handles_package_removal(tmpdir, mock_packages):
     with spack.repo.use_repositories(builder.root, override=False) as repos:
         r = repos.repo_for_pkg("c")
         assert r.namespace == "builtin.mock"
+
+
+def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages):
+    # Start with a package-less virtual
+    vspec = spack.spec.Spec("something")
+    with pytest.raises(OSError):
+        mutable_mock_repo.dump_provenance(vspec, tmpdir)
+
+    # Now with a virtual with a package
+    vspec = spack.spec.Spec("externalvirtual")
+    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"

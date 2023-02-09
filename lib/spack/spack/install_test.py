@@ -170,9 +170,6 @@ def test_functions(spec_or_pkg, add_virtuals=False, names=False):
         raise ValueError("Cannot retrieve test methods for {0}".format(spec_or_pkg))
 
     methods = inspect.getmembers(cls, predicate=lambda x: inspect.isfunction(x))
-    if not methods:
-        return []
-
     tests = []
     for name, test_fn in methods:
         if not name == "test":
