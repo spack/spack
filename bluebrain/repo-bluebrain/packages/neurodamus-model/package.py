@@ -17,7 +17,7 @@ from .sim_model import SimModel, copy_all, make_link
 _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"
 _BUILD_NEURODAMUS_FNAME = "build_neurodamus.sh"
 PYNEURODAMUS_DEFAULT_V = PyNeurodamus.LATEST_STABLE
-COMMON_DEFAULT_V = "2.6.4"
+COMMON_DEFAULT_V = "2.6.5"
 
 
 def version_from_model_core_dep(model_v, core_v):
