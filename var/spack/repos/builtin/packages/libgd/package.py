@@ -36,6 +36,7 @@ class Libgd(AutotoolsPackage):
     depends_on("jpeg")
     depends_on("libtiff")
     depends_on("fontconfig")
+    depends_on("libx11")
 
     def patch(self):
         p = self.spec["jpeg"].libs.search_flags
