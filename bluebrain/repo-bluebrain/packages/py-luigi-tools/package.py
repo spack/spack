@@ -15,6 +15,7 @@ class PyLuigiTools(PythonPackage):
     version('0.2.1', sha256='901fa0ee119b52f4b78cf54dc72c07e93288237b86f14fd473f8dfe2fd28ffa4')
 
     depends_on('py-setuptools', type=('build'))
+    depends_on('py-setuptools-scm', type=('build'))
 
     depends_on('py-luigi', type='run')
     depends_on('py-jsonschema', type='run')
