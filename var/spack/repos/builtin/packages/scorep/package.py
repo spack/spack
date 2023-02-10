@@ -14,18 +14,56 @@ class Scorep(AutotoolsPackage):
 
     homepage = "https://www.vi-hps.org/projects/score-p"
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
+    maintainers = ["wrwilliams"]
 
+    version("8.0", sha256="4c0f34f20999f92ebe6ca1ff706d0846b8ce6cd537ffbedb49dfaef0faa66311")
     version("7.1", sha256="98dea497982001fb82da3429ca55669b2917a0858c71abe2cfe7cd113381f1f7")
     version("7.0", sha256="68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996")
-    version("6.0", sha256="5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8")
-    version("5.0", sha256="0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1")
-    version("4.1", sha256="7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63")
-    version("4.0", sha256="c050525606965950ad9b35c14077b88571bcf9bfca08599279a3d8d1bb00e655")
-    version("3.1", sha256="49efe8a4e02afca752452809e1b21cba42e8ccb0a0772f936d4459d94e198540")
-    version("3.0", sha256="c9e7fe0a8239b3bbbf7628eb15f7e90de9c36557818bf3d01aecce9fec2dc0be")
-    version("2.0.2", sha256="d19498408781048f0e9039a1a245bce6b384f09fbe7d3643105b4e2981ecd610")
-    version("1.4.2", sha256="d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac")
-    version("1.3", sha256="dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254")
+    version(
+        "6.0",
+        sha256="5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8",
+        deprecated="true",
+    )
+    version(
+        "5.0",
+        sha256="0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1",
+        deprecated="true",
+    )
+    version(
+        "4.1",
+        sha256="7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63",
+        deprecated="true",
+    )
+    version(
+        "4.0",
+        sha256="c050525606965950ad9b35c14077b88571bcf9bfca08599279a3d8d1bb00e655",
+        deprecated="true",
+    )
+    version(
+        "3.1",
+        sha256="49efe8a4e02afca752452809e1b21cba42e8ccb0a0772f936d4459d94e198540",
+        deprecated="true",
+    )
+    version(
+        "3.0",
+        sha256="c9e7fe0a8239b3bbbf7628eb15f7e90de9c36557818bf3d01aecce9fec2dc0be",
+        deprecated="true",
+    )
+    version(
+        "2.0.2",
+        sha256="d19498408781048f0e9039a1a245bce6b384f09fbe7d3643105b4e2981ecd610",
+        deprecated="true",
+    )
+    version(
+        "1.4.2",
+        sha256="d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac",
+        deprecated="true",
+    )
+    version(
+        "1.3",
+        sha256="dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254",
+        deprecated="true",
+    )
 
     def url_for_version(self, version):
         if version < Version("7.0"):
@@ -45,11 +83,16 @@ class Scorep(AutotoolsPackage):
     variant("pdt", default=False, description="Enable PDT")
     variant("shmem", default=False, description="Enable shmem tracing")
     variant("unwind", default=False, description="Enable sampling via libunwind and lib wrapping")
-
+    variant("cuda", default=False, description="Enable CUDA support")
+    variant("hip", default=False, description="Enable ROCm/HIP support", when="@8.0:")
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
 
+    # SCOREP 8
+    depends_on("otf2@3:", when="@8:")
+    depends_on("cubew@4.8:", when="@8:")
+    depends_on("cubelib@4.8:", when="@8:")
     # SCOREP 7
     depends_on("otf2@2.3:2.3.99", when="@7:")
     depends_on("cubew@4.6:", when="@7:")
@@ -78,12 +121,17 @@ class Scorep(AutotoolsPackage):
     depends_on("opari2@1.1.4", when="@1.3")
     depends_on("cube@4.2.3", when="@1.3")
 
+    depends_on("mpi@2.2:", when="@7.0:+mpi")
     depends_on("mpi", when="+mpi")
     depends_on("papi", when="+papi")
     depends_on("pdt", when="+pdt")
     depends_on("llvm", when="+unwind")
     depends_on("libunwind", when="+unwind")
-
+    depends_on("cuda@7:", when="@8.0:+cuda")
+    depends_on("cuda", when="+cuda")
+    depends_on("hip@4.2:", when="+hip")
+    depends_on("rocprofiler-dev", when="+hip")
+    depends_on("rocm-smi-lib", when="+hip")
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
     # https://github.com/spack/spack/issues/1609
@@ -117,6 +165,10 @@ class Scorep(AutotoolsPackage):
 
         if "+unwind" in spec:
             config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
+        if "+cuda" in spec:
+            config_args.append("--with-libcuda=%s" % spec["cuda"].prefix)
+        if "+hip" in spec:
+            config_args.append("--with-rocm=%s" % spec["hip"].prefix)
 
         config_args += self.with_or_without("shmem")
         if not spec.satisfies("platform=cray"):
