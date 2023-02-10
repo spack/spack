@@ -114,6 +114,11 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples"])
 
+    def mpi_launcher(self):
+        if self.spec["mpi"].satisfies("+pmi") and self.spec["slurm"]:
+            return which("srun", path=self.spec["slurm"].prefix.bin)
+        return which("mpirun", "mpiexec", path=self.spec["mpi"].prefix.bin)
+
     def test(self):
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
             print("Skipping: stand-alone tests")
@@ -129,7 +134,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()
             test_args = ["-n", "4", "./ex05_blas"]
-            mpi_path = self.spec["mpi"].prefix.bin
-            mpiexe_f = which("srun", "mpirun", "mpiexec", path=mpi_path)
-            self.run_test(mpiexe_f.command, test_args, purpose="SLATE smoke test")
+            launcher = self.mpi_launcher()
+            if not(launcher):
+                raise RuntimeError("Cannot run tests due to absence of MPI launcher")
+            self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
             make("clean")
+
