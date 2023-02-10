@@ -93,8 +93,6 @@ class Proj(CMakePackage, AutotoolsPackage):
 
     build_system("autotools", conditional("cmake", when="@5.0.0:"), default="cmake")
 
-
-class Setup:
     def setup_run_environment(self, env):
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
         # If an incompatible version of PROJ is found in PROJ_LIB, it can
@@ -103,11 +101,13 @@ class Setup:
         # * https://rasterio.readthedocs.io/en/latest/faq.html
         env.set("PROJ_LIB", self.prefix.share.proj)
 
+
+class Setup:
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
+        self.pkg.setup_run_environment(env)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
+        self.pkg.setup_run_environment(env)
 
 
 class CMakeBuilder(cmake.CMakeBuilder, Setup):
