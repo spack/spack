@@ -156,10 +156,7 @@ class MiopenOpencl(CMakePackage):
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
         depends_on("mlirmiopen@" + ver, when="@" + ver)
 
-    for ver in [
-        "5.4.0",
-        "5.4.3",
-    ]:
+    for ver in ["5.4.0", "5.4.3"]:
         depends_on("nlohmann-json", type="link")
         depends_on("rocblas", type="link")
         depends_on("rocmlir@" + ver, when="@" + ver)
