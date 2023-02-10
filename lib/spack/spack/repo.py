@@ -1356,7 +1356,18 @@ class Repo(object):
         try:
             module = importlib.import_module(fullname)
         except ImportError:
-            raise UnknownPackageError(pkg_name)
+            # BlueBrain: when pushing packages upstream, we delete them from our own
+            # repositories. But references to our repositories remain in the database of
+            # the continuous deployment, 
+            if self.namespace in ("patches", "bluebrain"):
+                fullname = "spack.pkg.builtin.{0}".format(pkg_name)
+                try:
+                    module = importlib.import_module(fullname)
+                    tty.warn("using package {0}.{1} from builtin packages".format(self.namespace, pkg_name))
+                except ImportError:
+                    raise UnknownPackageError(fullname)
+            else:
+                raise UnknownPackageError(fullname)
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
