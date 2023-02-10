@@ -426,9 +426,9 @@ def test_dev_build_rebuild_dependent_delayed(
     tmpdir, mock_packages, install_mockery, mutable_mock_env_path, mock_fetch
 ):
     """Install X->Y; change Y; perform "spack install Y" (not rebuilding X);
-       and then do "spack install". In this case, The final command should
-       reinstall X. This makes sure we don't lose track of when dependents
-       should be reinstalled.
+    and then do "spack install". In this case, The final command should
+    reinstall X. This makes sure we don't lose track of when dependents
+    should be reinstalled.
     """
     # setup dev-build-test-install package for dev build
     build_dir = tmpdir.mkdir("build")
@@ -456,8 +456,9 @@ env:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: {0}
-"""
-                .format(build_dir)
+""".format(
+                    build_dir
+                )
             )
 
         env("create", "test", "./spack.yaml")
@@ -467,7 +468,7 @@ env:
             reset_string()  # so the package will accept rebuilds
 
             # We are using real time, here, so make sure it advances
-            time.sleep(.1)
+            time.sleep(0.1)
             fs.touch(os.path.join(str(build_dir), "test"))
             # Here we reinstall only the dependency
             install("dev-build-test-install")
