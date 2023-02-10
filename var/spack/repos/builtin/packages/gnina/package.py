@@ -19,8 +19,6 @@ class Gnina(CMakePackage, CudaPackage):
 
     version("master", branch="master")
 
-    depends_on("git", type="build")  # libmolgrid
-
     _boost = "boost" + "".join(
         [
             "+atomic",
@@ -57,7 +55,7 @@ class Gnina(CMakePackage, CudaPackage):
     depends_on("libmolgrid")
 
     depends_on("openbabel@3:~gui~cairo~maeparser~coordgen")
-    depends_on("rdkit")
+    #depends_on("rdkit")
 
     depends_on("python", type="build")
     depends_on("py-numpy", type="build")
