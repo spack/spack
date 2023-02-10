@@ -141,6 +141,11 @@ class NetcdfC(AutotoolsPackage):
     conflicts("+parallel-netcdf", when="@:4.0")
     conflicts("+hdf4", when="@:4.0")
 
+    conflicts("+dap", when="+fismahigh")
+    conflicts("+byterange", when="+fismahigh")
+    conflicts("+nczarr", when="+fismahigh")
+
+
     filter_compiler_wrappers("nc-config", relative_root="bin")
 
     @property
