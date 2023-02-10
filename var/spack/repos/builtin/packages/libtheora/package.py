@@ -5,7 +5,6 @@
 
 import glob
 import os
-import platform
 import sys
 
 from spack.build_systems.autotools import AutotoolsBuilder
@@ -70,7 +69,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
 class MSBuildBuilder(MSBuildBuilder):
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in self.pkg.spec.target.family
 
     def setup_build_environment(self, env):
         spec = self.pkg.spec
@@ -105,11 +104,14 @@ class MSBuildBuilder(MSBuildBuilder):
         super().build(pkg, spec, prefix)
 
     def install(self, pkg, spec, prefix):
-        if not os.path.isdir(prefix.lib):
-            mkdirp(prefix.lib)
+        mkdirp(prefix.lib)
         libs_to_install = glob.glob(
             os.path.join(self.build_directory, "**", "*.lib"), recursive=True
         )
+        if self.pkg.spec.satisfies("~static"):
+            libs_to_install.extend(
+                glob.glob(os.path.join(self.build_directory, "**", "*.dll"), recursive=True)
+            )
         for library in libs_to_install:
             install(library, prefix.lib)
         rename(

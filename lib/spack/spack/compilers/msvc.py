@@ -124,7 +124,8 @@ class Msvc(Compiler):
         """Cl toolset version"""
         return Version(
             re.search(
-                Msvc.version_regex, spack.compiler.get_compiler_version_output(self.cc, version_arg=None)
+                Msvc.version_regex,
+                spack.compiler.get_compiler_version_output(self.cc, version_arg=None),
             ).group(1)
         )
 
