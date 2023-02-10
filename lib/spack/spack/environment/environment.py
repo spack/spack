@@ -347,14 +347,30 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
     if not any(spec.satisfies(c) for c in ("dev_path=*", "^dev_path=*")):
         return False
 
+    _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+    root_install_time = record.installation_time
+
     # If any dep needs overwrite, or any dep is missing and is a dev build then
     # overwrite this package
-    if any(
-        ((not dep.installed) and dep.satisfies("dev_path=*"))
-        or _spec_needs_overwrite(dep, changed_dev_specs)
-        for dep in spec.traverse(root=False)
-    ):
-        return True
+    for dep in spec.traverse(root=False):
+        if (not dep.installed) and dep.satisfies("dev_path=*"):
+            return True
+        elif _spec_needs_overwrite(dep, changed_dev_specs):
+            return True
+        else:
+            if dep.installed:
+                _, record = spack.store.db.query_by_spec_hash(dep.dag_hash())
+                dep_install_time = record.installation_time
+                msg = ("<---------- {0}/{1}/{2}/{3}".format(
+                    str(spec.name), str(root_install_time),
+                    str(dep.name), str(dep_install_time)
+                ))
+                if root_install_time < dep_install_time:
+                    return True
+                elif spec.name == 'dependent-of-dev-build':
+                    raise Exception(msg)
+
+    return False
 
 
 def _error_on_nonempty_view_dir(new_root):

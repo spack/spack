@@ -463,14 +463,32 @@ env:
         with ev.read("test"):
             install()
 
-            reset_string()  # so the package will accept rebuilds
+            s1, = spack.store.db.query("dependent-of-dev-build")
+            _, r1 = spack.store.db.query_by_spec_hash(s1.dag_hash())
+            _, r2 = spack.store.db.query_by_spec_hash(s1["dev-build-test-install"].dag_hash())
+            print("<------- {0} -- {1}".format(
+                str(r1.installation_time),
+                str(r2.installation_time)
+            ))
 
+            reset_string()  # so the package will accept rebuilds
+            import time
+            time.sleep(1)
             fs.touch(os.path.join(str(build_dir), "test"))
+            time.sleep(1)
             # Here we reinstall only the dependency
             install("dev-build-test-install")
+
+            s1, = spack.store.db.query("dependent-of-dev-build")
+            _, r1 = spack.store.db.query_by_spec_hash(s1.dag_hash())
+            _, r2 = spack.store.db.query_by_spec_hash(s1["dev-build-test-install"].dag_hash())
+            print("<------- {0} -- {1}".format(
+                str(r1.installation_time),
+                str(r2.installation_time)
+            ))
 
             # At this point, the dependent should be reinstalled too, because
             # there is a more-recent version of the dependency
             output = install()
 
-    assert "Installing %s" % test_spec in output
+    assert "Installing dependent-of-dev-build" in output
