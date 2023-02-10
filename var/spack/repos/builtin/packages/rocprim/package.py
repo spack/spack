@@ -11,11 +11,12 @@ class Rocprim(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.4.0", sha256="1740dca11c70ed350995331c292f7e3cb86273614e4a5ce9f0ea64dea5364318")
     version("5.3.3", sha256="21a6b352ad3f5b2b7d05a5ed55e612feb3c5c19d34fdb8f80260b6d25af18b2d")
     version("5.3.0", sha256="4885bd662b038c6e9f058a756fd838203dbd00227bfef6adaf31496010b100e4")
     version("5.2.3", sha256="502f49cf3190f4ac20d0a6b19eb2d0786bb3c5661329940378081f1678aa8e82")
@@ -130,6 +131,7 @@ class Rocprim(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
