@@ -361,14 +361,8 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
             if dep.installed:
                 _, record = spack.store.db.query_by_spec_hash(dep.dag_hash())
                 dep_install_time = record.installation_time
-                msg = ("<---------- {0}/{1}/{2}/{3}".format(
-                    str(spec.name), str(root_install_time),
-                    str(dep.name), str(dep_install_time)
-                ))
                 if root_install_time < dep_install_time:
                     return True
-                elif spec.name == 'dependent-of-dev-build':
-                    raise Exception(msg)
 
     return False
 
