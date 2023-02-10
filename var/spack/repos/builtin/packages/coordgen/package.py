@@ -25,8 +25,8 @@ class Coordgen(CMakePackage):
 
     def cmake_args(self):
         args = [
-                self.define_from_variant("COORDGEN_BUILD_EXAMPLE", "example"),
-                self.define_from_variant("COORDGEN_USE_MAEPARSER", "maeparser"),
-                self.define_from_variant("COORDGEN_BUILD_SHARED_LIBS", "shared"),
-                ]
+            self.define_from_variant("COORDGEN_BUILD_EXAMPLE", "example"),
+            self.define_from_variant("COORDGEN_USE_MAEPARSER", "maeparser"),
+            self.define_from_variant("COORDGEN_BUILD_SHARED_LIBS", "shared"),
+        ]
         return args
