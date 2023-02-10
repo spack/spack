@@ -34,6 +34,8 @@ class Trove(MakefilePackage):
     version("v1.0.0", branch="update-makefile")
     # version("v1.0.0", tag="v1.0.0")
 
+    executables = [r"^j-trove.x$"]
+
     depends_on("mpi")
     depends_on("intel-oneapi-mkl")
 
@@ -52,11 +54,11 @@ class Trove(MakefilePackage):
             msg  = "The compiler you are building with, "
             msg += "'{0}', is not supported by sphng yet."
             raise InstallError(msg.format(self.compiler.name))
-        env['LAPACK'] = "-mkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64"
+        env['LAPACK'] = "-qmkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64"
 
     def build(self, spec, prefix):
 
-        make()
+        make('goal')
 
     def install(self, spec, prefix):
 
