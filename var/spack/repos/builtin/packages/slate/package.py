@@ -139,4 +139,3 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
                 raise RuntimeError("Cannot run tests due to absence of MPI launcher")
             self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
             make("clean")
-
