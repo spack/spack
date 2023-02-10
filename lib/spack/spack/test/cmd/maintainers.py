@@ -78,9 +78,11 @@ def test_all_by_user(mock_packages, capfd):
         out = split(maintainers("--all", "--by-user"))
     assert out == [
         "adamjstewart:",
-        "py-extension1",
+        "py-extension1,",
+        "py-extension2",
         "pradyunsg:",
-        "py-extension1",
+        "py-extension1,",
+        "py-extension2",
         "user0:",
         "maintainers-3",
         "user1:",
