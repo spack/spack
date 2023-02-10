@@ -615,6 +615,8 @@ class BaseFileLayout(object):
         to console to use it. This implementation fits the needs of most
         non-hierarchical layouts.
         """
+        if self.spec.external_modules:
+            return self.spec.external_modules[0]
         projection = proj.get_projection(self.conf.projections, self.spec)
         if not projection:
             projection = self.conf.default_projections["all"]
