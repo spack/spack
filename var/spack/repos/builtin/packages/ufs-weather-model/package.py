@@ -21,7 +21,7 @@ class UfsWeatherModel(CMakePackage):
 
     maintainers("t-brown", "AlexanderRichert-NOAA")
 
-    version("develop", branch="develop", submodules=True, commit="ea0b6e4")
+    version("develop", branch="develop", submodules=True)
     version("2.0.0", tag="ufs-v2.0.0", submodules=True)
     version("1.1.0", tag="ufs-v1.1.0", submodules=True)
 
