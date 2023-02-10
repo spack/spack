@@ -85,6 +85,8 @@ class Touchdetector(CMakePackage):
                         'touchdetector/DistributedTouchDetector.cxx')
 
     def cmake_args(self):
+        args = []
+
         if self.spec.satisfies('@:5.6.1'):
             args += [
                 self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc),
