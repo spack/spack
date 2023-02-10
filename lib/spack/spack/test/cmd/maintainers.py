@@ -59,6 +59,9 @@ def test_all(mock_packages, capfd):
         "pradyunsg,",
         "user1,",
         "user2",
+        "py-extension2:",
+        "adamjstewart,",
+        "pradyunsg",
     ]
 
     with capfd.disabled():
