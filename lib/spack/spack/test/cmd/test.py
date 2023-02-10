@@ -248,15 +248,6 @@ def test_test_list(mock_packages, mock_archive, mock_fetch, install_mockery_muta
     assert pkg_with_tests in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-def test_has_test_method_fails(capsys):
-    with pytest.raises(SystemExit):
-        spack.package_base.has_test_method("printing-package")
-
-    captured = capsys.readouterr()[1]
-    assert "is not a class" in captured
-
-
 def test_read_old_results(mock_packages, mock_test_stage):
     """Take test data generated before the switch to full hash everywhere
     and make sure we can still read it in"""

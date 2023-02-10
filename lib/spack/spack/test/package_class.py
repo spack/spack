@@ -192,3 +192,14 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
 
     # Perform a little cleanup
     shutil.rmtree(os.path.dirname(source_path))
+
+
+def test_package_copy_test_files_fails(mock_packages, ensure_debug, capsys):
+    vspec = spack.spec.Spec("something")
+
+    # Package shouldn't be needed since shouldn't reach the code to determine
+    # the test destination directory.
+    spack.package_base.copy_test_files(None, vspec)
+    out = capsys.readouterr()
+    assert "skipping test data copy" in out[1]
+    assert "no package class found" in out[1]

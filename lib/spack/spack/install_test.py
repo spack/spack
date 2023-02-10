@@ -123,11 +123,8 @@ def package_class(spec):
         try:
             cls = spec.package_class
         except spack.repo.UnknownPackageError as e:
-            tty.debug("{0}: Cannot retrieve class: {1}".format(spec.name, str(e)))
+            tty.debug("{0}: Cannot retrieve class from spec: {1}".format(spec.name, str(e)))
             return None
-    except spack.repo.UnknownPackageError as e:
-        tty.debug("{0}: Cannot retrieve class: {1}".format(spec.name, str(e)))
-        return None
 
     return cls
 
@@ -188,7 +185,7 @@ def virtuals(pkg):
     """Return a list of unique virtuals for the package.
 
     Args:
-        pkg (spack.package_base.PackageBase): package whose virtuals
+        pkg (spack.package_base.PackageBase): package of interest
     """
     # provides virtuals have to be deduped by name
     v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))

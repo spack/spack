@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import os
 import sys
 
@@ -213,10 +214,14 @@ def test_test_functions(mock_packages, install_mockery, virtuals, names):
     check_results(fns)
 
 
-def test_test_package_class_unknown(mock_packages):
+def test_test_package_class_unknown(mock_packages, ensure_debug, capsys):
     """Ensure expected result for existing mock virtual spec with no package."""
     vspec = spack.spec.Spec("something")
-    assert not spack.install_test.package_class(vspec), "Expected UnknownPackageError"
+    cls = spack.install_test.package_class(vspec)
+    out = capsys.readouterr()
+    assert not cls, "Expected the package-less virtual spec to not have a package"
+    assert "Cannot retrieve class from spec" in out[1]
+    assert "not found" in out[1]
 
 
 def test_test_functions_error_or_none(mock_packages):
@@ -228,3 +233,27 @@ def test_test_functions_error_or_none(mock_packages):
     assert not spack.install_test.test_functions(
         flag.__class__
     ), "Expected no test methods for a class that doesn't have any"
+
+
+# TODO: This test should go away when compilers as dependencies is supported
+def test_test_virtuals():
+    # This is an unrealistic case but it is set up to retrieve all possible
+    # virtual names in a single call.
+    def satisfies(spec):
+        return True
+
+    # Ensure spec will pick up the llvm+clang virtual compiler package names.
+    VirtualSpec = collections.namedtuple("VirtualSpec", ["name", "satisfies"])
+    vspec = VirtualSpec("llvm", satisfies)
+
+    # Ensure the package name is in the list that provides c, cxx, and fortran
+    # to pick up the three associated compilers and that virtuals provided will
+    # be deduped.
+    MyPackage = collections.namedtuple("MyPackage", ["name", "spec", "virtuals_provided"])
+    pkg = MyPackage("gcc", vspec, [vspec, vspec])
+
+    # This check assumes the method will not provide a unique set of
+    # compilers
+    v_names = spack.install_test.virtuals(pkg)
+    for name, number in [("c", 2), ("cxx", 2), ("fortran", 1), ("llvm", 1)]:
+        assert v_names.count(name) == number, "Expected {0} of '{1}'".format(number, name)
