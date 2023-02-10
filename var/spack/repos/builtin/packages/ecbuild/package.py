@@ -26,7 +26,7 @@ class Ecbuild(CMakePackage):
     # Some of the installed scripts require running Perl:
     depends_on("perl", type=("build", "run"))
 
-    variant("fismahigh", default=False, description="Apply patches for FISMA-high compliance")
+    variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
 
     @when("+fismahigh")
     def patch(self):
