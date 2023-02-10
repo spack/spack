@@ -77,7 +77,7 @@ class MSBuildBuilder(BaseBuilder):
         Override this method to select a specific version of the toolchain or change
         selection heuristics.
         Default is whatever version of msvc has been selected by concretization"""
-        return self.compiler.msvc_version
+        return "v" + self.pkg.compiler.platform_toolset_ver
 
     @property
     def std_msbuild_args(self):
