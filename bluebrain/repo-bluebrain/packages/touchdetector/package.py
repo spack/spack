@@ -34,11 +34,7 @@ class Touchdetector(CMakePackage):
     version('5.1.0', tag='5.1.0')
     version('5.0.1', tag='5.0.1')
     version('5.0.0', tag='5.0.0')
-    version('4.4.2', tag='4.4.2')
-    version('4.4.1', tag='4.4.1')
-    version('4.3.3', tag='4.3.3')
 
-    variant('openmp', default=False, description='Enables OpenMP support')
     variant('caliper', default=True, description='Enables profiling with Caliper')
     variant('asan', default=False, description='Enables AdressSanitizer')
     variant('ubsan', default=False, description='Enables UndefinedBehaviourSanitizer')
@@ -72,15 +68,9 @@ class Touchdetector(CMakePackage):
     #    https://www.boost.org/users/history/version_1_79_0.html
     conflicts('boost@1.79.0', when='@:5.6.1')
 
-    # Old dependencies
-    depends_on('hpctools~openmp', when='~openmp@:4.4')
-    depends_on('hpctools+openmp', when='+openmp@:4.4')
-    depends_on('libxml2', when='@:4.4')
-    depends_on('zlib', when='@:4.4')
-
-    depends_on('morphio@2.0.8:', when='@4.5:5.1')
+    depends_on('morphio@2.0.8:', when='@:5.1')
     depends_on('mvdtool@2.1.0:', when='@5.1.1:5.5.999')
-    depends_on('mvdtool@1.5.1:2.0.0', when='@4.5:5.1')
+    depends_on('mvdtool@1.5.1:2.0.0', when='@:5.1')
 
     depends_on('highfive+mpi', when='@5.3.0:5.6.1')
     depends_on('boost@1.50:', when='@:5.6.1')
@@ -95,10 +85,6 @@ class Touchdetector(CMakePackage):
                         'touchdetector/DistributedTouchDetector.cxx')
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant('USE_OPENMP', 'openmp'),
-        ]
-
         if self.spec.satisfies('@:5.6.1'):
             args += [
                 self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc),
