@@ -16,6 +16,7 @@ class PyFiona(PythonPackage):
     maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("1.9.1", sha256="3a3725e94840a387fef48726d60db6a6791563f366939d22378a4661f8941be7")
     version("1.9.0", sha256="6e487cbfba5a849fbdf06e45169fd7e1f1662f44f3d717ab4b946046b2457eae")
     version("1.8.22", sha256="a82a99ce9b3e7825740157c45c9fb2259d4e92f0a886aaac25f0db40ffe1eea3")
     version("1.8.21", sha256="3a0edca2a7a070db405d71187214a43d2333a57b4097544a3fcc282066a58bfc")
