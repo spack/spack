@@ -169,15 +169,16 @@ def loads(module_type, specs, args, out=None):
     modules = list(
         (
             spec,
-            spack.modules.common.get_module(
+            module,
+        )
+        for spec in specs
+        for module in spack.modules.common.get_module(
                 module_type,
                 spec,
                 get_full_path=False,
                 module_set_name=args.module_set_name,
                 required=False,
-            ),
         )
-        for spec in specs
     )
 
     module_commands = {"tcl": "module load ", "lmod": "module load "}
@@ -217,18 +218,19 @@ def find(module_type, specs, args):
         dependency_specs_to_retrieve = []
 
     try:
-        modules = [
-            spack.modules.common.get_module(
-                module_type,
-                spec,
-                args.full_path,
-                module_set_name=args.module_set_name,
-                required=False,
-            )
+        modules = list(
+            module
             for spec in dependency_specs_to_retrieve
-        ]
+            for module in spack.modules.common.get_module(
+                    module_type,
+                    spec,
+                    args.full_path,
+                    module_set_name=args.module_set_name,
+                    required=False,
+            )
+        )
 
-        modules.append(
+        modules.extend(
             spack.modules.common.get_module(
                 module_type,
                 single_spec,

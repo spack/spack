@@ -390,12 +390,21 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     if upstream:
         module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
         if not module:
-            return None
+            return []
 
         if get_full_path:
-            return module.path
+            return [module.path]
         else:
-            return module.use_name
+            return [module.use_name]
+    elif spec.external_modules:
+        if get_full_path:
+            # FIXME: this is possible in Lmod with 
+            #       module --redirect --location show <module>
+            # Unsure about environment modules.
+            err_msg = "Cannot retrieve full path to an external module"
+            raise NotImplementedError(err_msg)
+        else:
+            return spec.external_modules
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
@@ -407,12 +416,12 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             elif required:
                 tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))
             else:
-                return None
+                return []
 
         if get_full_path:
-            return writer.layout.filename
+            return [writer.layout.filename]
         else:
-            return writer.layout.use_name
+            return [writer.layout.use_name]
 
 
 class BaseConfiguration(object):
