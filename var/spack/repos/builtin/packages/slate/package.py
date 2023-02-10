@@ -135,7 +135,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             make()
             test_args = ["-n", "4", "./ex05_blas"]
             launcher = self.mpi_launcher()
-            if not(launcher):
+            if not launcher:
                 raise RuntimeError("Cannot run tests due to absence of MPI launcher")
             self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
             make("clean")
