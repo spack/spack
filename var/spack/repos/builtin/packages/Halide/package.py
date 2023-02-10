@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class _Halide(CMakePackage, PythonExtension):
+class Halide(CMakePackage, PythonExtension):
     """Halide is a programming language designed to make it easier to write
     high-performance image and array processing code on modern machines."""
 
