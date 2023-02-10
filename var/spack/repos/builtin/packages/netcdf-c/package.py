@@ -168,7 +168,18 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         return find_libraries("libnetcdf", root=self.prefix, shared=shared, recursive=True)
 
 
-class BackupStep(object):
+class Setup:
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.pkg.setup_run_environment(env)
+        # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
+        # differs from the path to the compiler that the package should be built with. Therefore,
+        # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
+        # with a backed up version, which references Spack compiler wrapper.
+        if os.path.exists(self._nc_config_backup_dir):
+            env.prepend_path("PATH", self._nc_config_backup_dir)
+
+
+class BackupStep:
     @property
     def _nc_config_backup_dir(self):
         return join_path(self.pkg.metadata_dir, "spack-nc-config")
@@ -182,7 +193,7 @@ class BackupStep(object):
             install(nc_config_file, self._nc_config_backup_dir)
 
 
-class CMakeBuilder(CMakeBuilder, BackupStep):
+class CMakeBuilder(CMakeBuilder, BackupStep, Setup):
     def cmake_args(self):
         base_cmake_args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -198,16 +209,7 @@ class CMakeBuilder(CMakeBuilder, BackupStep):
         return base_cmake_args
 
 
-class AutotoolsBuilder(AutotoolsBuilder, BackupStep):
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-        # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
-        # differs from the path to the compiler that the package should be built with. Therefore,
-        # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
-        # with a backed up version, which references Spack compiler wrapper.
-        if os.path.exists(self._nc_config_backup_dir):
-            env.prepend_path("PATH", self._nc_config_backup_dir)
-
+class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
