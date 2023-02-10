@@ -124,12 +124,15 @@ class Msvc(Compiler):
         """Cl toolset version"""
         return Version(
             re.search(
-                Msvc.version_regex, spack.compiler.get_compiler_version_output(self.cc, "")
+                Msvc.version_regex, spack.compiler.get_compiler_version_output(self.cc, version_arg=None)
             ).group(1)
         )
 
     @property
     def vs_root(self):
+        # The MSVC install root is located at a fix level above the compiler
+        # and is referenceable idiomatically via the pattern below
+        # this should be consistent accross versions
         return os.path.abspath(os.path.join(self.cc, "../../../../../../../.."))
 
     def setup_custom_environment(self, pkg, env):
