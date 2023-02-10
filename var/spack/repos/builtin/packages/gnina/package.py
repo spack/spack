@@ -12,12 +12,12 @@ class Gnina(CMakePackage, CudaPackage):
     for scoring and optimizing ligands using convolutional neural networks."""
 
     homepage = "https://github.com/gnina/gnina"
-    url = "https://github.com/gnina/gnina/archive/refs/tags/v1.0.2.tar.gz"
+    url = "https://github.com/gnina/gnina/archive/refs/tags/v1.0.3.tar.gz"
     git = "https://github.com/gnina/gnina.git"
 
     maintainers("RMeli")
 
-    version("master", branch="master")
+    version("1.0.3", sha256="4274429f38293d79c7d22ab08aca91109e327e9ce3f682cd329a8f9c6ef429da")
 
     _boost = "boost" + "".join(
         [
