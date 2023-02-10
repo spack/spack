@@ -14,7 +14,9 @@ import spack.repo
 
 maintainers = spack.main.SpackCommand("maintainers")
 
-MAINTAINED_PACKAGES = ["maintainers-1", "maintainers-2", "maintainers-3", "py-extension1"]
+MAINTAINED_PACKAGES = [
+    "maintainers-1", "maintainers-2", "maintainers-3", "py-extension1", "py-extension2"
+]
 
 
 def split(output):
