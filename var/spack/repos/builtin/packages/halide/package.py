@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class halide(CMakePackage, PythonExtension):
+class Halide(CMakePackage, PythonExtension):
     """Halide is a programming language designed to make it easier to write
     high-performance image and array processing code on modern machines."""
 
@@ -49,6 +49,10 @@ class halide(CMakePackage, PythonExtension):
     depends_on("pil", type=("build", "run"), when="+python")
     depends_on("py-scipy", type=("build", "run"), when="+python")
     depends_on("py-numpy", type=("build", "run"), when="+python")
+
+    @property
+    def libs(self):
+        return find_libraries("libHalide", root=self.prefix, recursive=True)
 
     def cmake_args(self):
         spec = self.spec
