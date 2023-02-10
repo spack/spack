@@ -98,7 +98,7 @@ class MSBuildBuilder(MSBuildBuilder):
         return os.path.join(win_dir, newest_compiler)
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in self.pkg.spec.target.family
 
     def msbuild_args(self):
         plat = "x64" if self.is_64bit() else "x86"
@@ -113,13 +113,10 @@ class MSBuildBuilder(MSBuildBuilder):
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
             # Ensure we have libs directory
-            if not os.path.isdir(prefix.lib):
-                mkdirp(prefix.lib)
+            mkdirp(prefix.lib)
             libs_to_find = []
-            if self.pkg.spec.satisfies("libs=shared,static"):
+            if "shared" in self.pkg.spec:
                 libs_to_find.extend(["*.dll", "*.lib"])
-            elif self.pkg.spec.satisfies("libs=shared"):
-                libs_to_find.append("*.dll")
             else:
                 libs_to_find.append("*.lib")
             for lib in libs_to_find:
