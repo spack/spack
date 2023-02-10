@@ -98,7 +98,11 @@ class UfsWeatherModel(CMakePackage):
     )
     variant("mom6solo", default=False, description="Build MOM6 solo executable", when="@develop")
 
-    variant("cmake_platform", default="auto", description="Override value for CMAKE_Platform env variable ('linux.intel', 'hera.gnu', 'acorn', etc.)")
+    variant(
+        "cmake_platform",
+        default="auto",
+        description="Override CMAKE_Platform (e.g., 'linux.intel', 'hera.gnu')",
+    )
 
     variant("app", default="ATM", description="UFS application", when="@develop")
 
