@@ -13,7 +13,7 @@ class Pmdk(Package):
     """
 
     homepage = "https://pmem.io/pmdk/"
-    url = "https://github.com/pmem/pmdk/archive/1.12.1.tar.gz"    
+    url = "https://github.com/pmem/pmdk/archive/1.12.1.tar.gz"
     git = "https://github.com/pmem/pmdk.git"
     maintainers("hyoklee")
 
