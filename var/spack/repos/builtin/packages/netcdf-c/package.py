@@ -66,12 +66,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     patch("4.8.1-win-hdf5-with-zlib.patch", when="@4.8.1: platform=windows")
 
-    patch("netcdfc-win-inc-mpi.patch", when="platform=windows")
-
-    patch("netcdfc-hdf5-link-mpi.patch", when="platform=windows")
-
-    patch("netcdfc-cmake-config-import-mpi.patch", when="platform=windows")
-
+    patch("netcdfc-mpi-win-support.patch", when="platform=windows")
     # See https://github.com/Unidata/netcdf-c/pull/1752
     patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
 
@@ -203,9 +198,13 @@ class CMakeBuilder(CMakeBuilder, BackupStep, Setup):
             self.define("CMAKE_INSTALL_PREFIX", self.prefix),
             self.define_from_variant("ENABLE_HDF4", "hdf4"),
             self.define("ENABLE_PARALLEL_TESTS", False),
+            self.define_from_variant("ENABLE_FSYNC", "fsync"),
+            self.define("ENABLE_LARGE_FILE_SUPPORT", True),
         ]
         if "+parallel-netcdf" in self.spec:
             base_cmake_args.append(self.define("ENABLE_PNETCDF", True))
+        if self.spec.satisfies("@4.3.1:"):
+            base_cmake_args.append(self.define("ENABLE_DYNAMIC_LOADING", True))
         return base_cmake_args
 
 
