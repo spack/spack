@@ -17,19 +17,7 @@ from llnl.util.lang import union_dicts
 # the gitlab schema
 script_schema = {
     "type": "array",
-    "items": {
-        "anyOf": [
-            {
-                "type": "string",
-            },
-            {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                },
-            },
-        ],
-    },
+    "items": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
 }
 
 # Additional attributes are allow
@@ -45,24 +33,15 @@ attributes_schema = {
                     "type": "object",
                     "properties": {
                         "name": {"type": "string"},
-                        "entrypoint": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            },
-                        },
+                        "entrypoint": {"type": "array", "items": {"type": "string"}},
                     },
                 },
-            ],
+            ]
         },
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
-            "patternProperties": {
-                r"[\w\d\-_\.]+": {
-                    "type": "string",
-                },
-            },
+            "patternProperties": {r"[\w\d\-_\.]+": {"type": "string"}},
         },
         "before_script": script_schema,
         "script": script_schema,
@@ -75,11 +54,7 @@ submapping_schema = {
     "additinoalProperties": False,
     "required": ["submapping"],
     "properties": {
-        "match_behavior": {
-            "type": "string",
-            "enum": ["first", "merge"],
-            "default": "first",
-        },
+        "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
         "submapping": {
             "type": "array",
             "items": {
@@ -87,12 +62,7 @@ submapping_schema = {
                 "additionalProperties": False,
                 "required": ["match"],
                 "properties": {
-                    "match": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                        },
-                    },
+                    "match": {"type": "array", "items": {"type": "string"}},
                     "build-job": attributes_schema,
                     "build-job-remove": attributes_schema,
                 },
@@ -106,18 +76,12 @@ named_attributes_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "properties": {
-                "noop-job": attributes_schema,
-                "noop-job-remove": attributes_schema,
-            },
+            "properties": {"noop-job": attributes_schema, "noop-job-remove": attributes_schema},
         },
         {
             "type": "object",
             "additionalProperties": False,
-            "properties": {
-                "build-job": attributes_schema,
-                "build-job-remove": attributes_schema,
-            },
+            "properties": {"build-job": attributes_schema, "build-job-remove": attributes_schema},
         },
         {
             "type": "object",
@@ -146,22 +110,14 @@ named_attributes_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "properties": {
-                "any-job": attributes_schema,
-                "any-job-remove": attributes_schema,
-            },
+            "properties": {"any-job": attributes_schema, "any-job-remove": attributes_schema},
         },
     ]
 }
 
 pipeline_gen_schema = {
     "type": "array",
-    "items": {
-        "oneOf": [
-            submapping_schema,
-            named_attributes_schema,
-        ]
-    },
+    "items": {"oneOf": [submapping_schema, named_attributes_schema]},
 }
 
 core_shared_properties = union_dicts(
@@ -171,40 +127,24 @@ core_shared_properties = union_dicts(
             "type": "array",
             "items": {
                 "anyOf": [
-                    {
-                        "type": "string",
-                    },
+                    {"type": "string"},
                     {
                         "type": "object",
                         "additionalProperties": False,
                         "required": ["name"],
                         "properties": {
-                            "name": {
-                                "type": "string",
-                            },
-                            "compiler-agnostic": {
-                                "type": "boolean",
-                                "default": False,
-                            },
+                            "name": {"type": "string"},
+                            "compiler-agnostic": {"type": "boolean", "default": False},
                         },
                     },
-                ],
+                ]
             },
         },
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
-        "broken-tests-packages": {
-            "type": "array",
-            "items": {
-                "type": "string",
-            },
-        },
-        "target": {
-            "type": "string",
-            "enum": ["gitlab"],
-            "default": "gitlab",
-        },
-    },
+        "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
+        "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
+    }
 )
 
 ci_properties = {
@@ -214,12 +154,7 @@ ci_properties = {
             "additionalProperties": False,
             # "required": ["mappings"],
             "properties": union_dicts(
-                core_shared_properties,
-                {
-                    "enable-artifacts-buildcache": {
-                        "type": "boolean",
-                    },
-                },
+                core_shared_properties, {"enable-artifacts-buildcache": {"type": "boolean"}}
             ),
         },
         {
@@ -227,21 +162,14 @@ ci_properties = {
             "additionalProperties": False,
             # "required": ["mappings"],
             "properties": union_dicts(
-                core_shared_properties,
-                {
-                    "temporary-storage-url-prefix": {
-                        "type": "string",
-                    },
-                },
+                core_shared_properties, {"temporary-storage-url-prefix": {"type": "string"}}
             ),
         },
     ]
 }
 
 #: Properties for inclusion in other schemas
-properties = {
-    "ci": ci_properties,
-}
+properties = {"ci": ci_properties}
 
 #: Full schema with metadata
 schema = {

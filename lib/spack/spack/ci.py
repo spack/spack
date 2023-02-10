@@ -363,6 +363,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
 def _spec_matches(spec, match_string):
     return spec.satisfies(match_string)
 
+
 def _format_job_needs(
     phase_name,
     strip_compilers,
@@ -510,14 +511,7 @@ class SpackCI:
         """
 
         self.ci_config = ci_config
-        self.named_jobs = [
-            "any",
-            "build",
-            "cleanup",
-            "noop",
-            "reindex",
-            "signing",
-        ]
+        self.named_jobs = ["any", "build", "cleanup", "noop", "reindex", "signing"]
 
         self.ir = {
             "jobs": {},
@@ -609,16 +603,10 @@ class SpackCI:
                         "cd {env_dir}",
                         "spack env activate --without-view .",
                         "spack ci rebuild",
-                    ],
+                    ]
                 }
             },
-            {
-                "noop-job": {
-                    "script": [
-                        'echo "All specs already up to date, nothing to rebuild."',
-                    ],
-                }
-            },
+            {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
         ]
 
         # Job overrides
@@ -627,30 +615,22 @@ class SpackCI:
             {
                 "reindex-job": {
                     "script:": [
-                        "spack buildcache update-index --keys --mirror-url {index_target_mirror}",
-                    ],
+                        "spack buildcache update-index --keys --mirror-url {index_target_mirror}"
+                    ]
                 }
             },
             # Cleanup script
             {
                 "cleanup-job": {
                     "script:": [
-                        "spack -d mirror destroy --mirror-url {mirror_prefix}/$CI_PIPELINE_ID",
+                        "spack -d mirror destroy --mirror-url {mirror_prefix}/$CI_PIPELINE_ID"
                     ]
                 }
             },
             # Add signing job tags
-            {
-                "signing-job": {
-                    "tags": ["aws", "protected", "notary"],
-                }
-            },
+            {"signing-job": {"tags": ["aws", "protected", "notary"]}},
             # Remove reserved tags
-            {
-                "any-job-remove": {
-                    "tags": SPACK_RESERVED_TAGS,
-                }
-            },
+            {"any-job-remove": {"tags": SPACK_RESERVED_TAGS}},
         ]
 
         pipeline_gen = overrides + self.ci_config.get("pipeline-gen", []) + defaults
