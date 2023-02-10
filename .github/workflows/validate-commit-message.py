@@ -3,6 +3,7 @@
 # requires: gitpython
 
 import os
+import textwrap
 from argparse import ArgumentParser
 
 from git import Repo
@@ -25,10 +26,13 @@ def main(title):
     faulty_commits = []
 
     if prefix_invalid(title):
-        msg = '* Merge Request Title\n'
-        msg += f'> {title}\n\n'
-        msg += 'Merge request title needs to be compliant as well, '
-        msg += 'as it will be used for the merge/squash commit'
+        msg = textwrap.dedent(f"""\
+            * Pull Request Title
+              > {title}
+
+              Pull request title needs to be compliant as well, '
+              as it will be used for the merge/squash commit'
+            """)
         faulty_commits.append(msg)
 
     for commit in repo.iter_commits():
@@ -39,10 +43,8 @@ def main(title):
 
         prefix = commit.message.splitlines()[0]
         if prefix_invalid(prefix):
-            quoted_commit_message = '\n'.join([f'> {line}' for
-                                               line in commit.message.splitlines()])
-            msg = f'* {commit.hexsha}\n'
-            msg += f'{quoted_commit_message}'
+            quoted_commit_message = textwrap.indent(commit.message, prefix="  > ")
+            msg = f'* {commit.hexsha}\n{quoted_commit_message}'
             faulty_commits.append(msg)
 
     if faulty_commits:

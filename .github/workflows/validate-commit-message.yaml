@@ -22,7 +22,7 @@ jobs:
           echo "PR number is ${{ github.event.pull_request.number }}"
           git fetch --deepen=$((${{ github.event.pull_request.commits }} - 1))
           pip install gitpython
-          python ./.github/workflows/validate-commit-message.py --title "${{ github.event.pull_request.title }}" || true
+          python ./.github/workflows/validate-commit-message.py --title "${{ github.event.pull_request.title }}"
 
       - name: Show output
         run: |
