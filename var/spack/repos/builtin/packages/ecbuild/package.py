@@ -25,3 +25,12 @@ class Ecbuild(CMakePackage):
 
     # Some of the installed scripts require running Perl:
     depends_on("perl", type=("build", "run"))
+
+    variant("fismahigh", default=False, description="Apply patches for FISMA-high compliance")
+
+    def patch(self):
+        if self.spec.satisfies("+fismahigh"):
+            filter_file("ssh://[^\"]+", "", "cmake/compat/ecmwf_git.cmake")
+            filter_file("https?://[^\"]+", "", "cmake/compat/ecmwf_git.cmake")
+            filter_file("https?://.*test-data", "DISABLED_BY_DEFAULT", "cmake/ecbuild_check_urls.cmake")
+            filter_file("https?://.*test-data", "DISABLED_BY_DEFAULT", "cmake/ecbuild_get_test_data.cmake")
