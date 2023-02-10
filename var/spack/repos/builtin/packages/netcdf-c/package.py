@@ -81,7 +81,11 @@ class NetcdfC(AutotoolsPackage):
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
     variant("nczarr", default=True, description="Enable zarr storage support", when="@4.8.0:")
     variant("byterange", default=False, description="Allow byte-range I/O")
-    variant("fismahigh", default=False, description="Disable network connectivity to support FISMA-high compliance")
+    variant(
+        "fismahigh",
+        default=False,
+        description="Disable network connectivity to support FISMA-high compliance",
+    )
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment

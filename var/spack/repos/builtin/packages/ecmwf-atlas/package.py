@@ -85,7 +85,7 @@ class EcmwfAtlas(CMakePackage):
     def patch(self):
         filter_file("http://www\.ecmwf\.int", "", "cmake/atlas-import.cmake.in")
         filter_file("int\.ecmwf", "", "cmake/atlas-import.cmake.in")
-        filter_file("http[^\"]+", "", "cmake/atlas_export.cmake")
+        filter_file('http[^"]+', "", "cmake/atlas_export.cmake")
         patterns = [".travis.yml", "tools/install*.sh", "tools/github-sha.sh"]
         for pattern in patterns:
             paths = glob.glob(pattern)
