@@ -227,22 +227,22 @@ def test_run(args):
         )
 
 
+def report_filename(args, test_suite):
+    if args.log_file:
+        if os.path.isabs(args.log_file):
+            return args.log_file
+        else:
+            log_dir = os.getcwd()
+            return os.path.join(log_dir, args.log_file)
+    else:
+        return os.path.join(os.getcwd(), "test-%s" % test_suite.name)
+
+
 def create_reporter(args, specs_to_test, test_suite):
     if args.log_format is None:
         return None
 
-    filename = args.cdash_upload_url
-    if not filename:
-        if args.log_file:
-            if os.path.isabs(args.log_file):
-                log_file = args.log_file
-            else:
-                log_dir = os.getcwd()
-                log_file = os.path.join(log_dir, args.log_file)
-        else:
-            log_file = os.path.join(os.getcwd(), "test-%s" % test_suite.name)
-        filename = log_file
-
+    filename = report_filename(args, test_suite)
     context_manager = spack.report.test_context_manager(
         reporter=args.reporter(),
         filename=filename,

@@ -319,3 +319,26 @@ def test_test_results_status(mock_packages, mock_test_stage, status, expected):
         else:
             assert status in results
         assert expected in results
+
+
+@pytest.mark.regression("35337")
+def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
+    """Test that the temporary file used to write Testing.xml for CDash is not the upload URL"""
+    name = "trivial"
+    spec = spack.spec.Spec("trivial-smoke-test").concretized()
+    suite = spack.install_test.TestSuite([spec], name)
+    suite.ensure_stage()
+
+    parser = argparse.ArgumentParser()
+    spack.cmd.test.setup_parser(parser)
+    args = parser.parse_args(
+        [
+            "run",
+            "--cdash-upload-url=https://blahblah/submit.php?project=debugging",
+            "trivial-smoke-test",
+        ]
+    )
+
+    spack.cmd.common.arguments.sanitize_reporter_options(args)
+    filename = spack.cmd.test.report_filename(args, suite)
+    assert filename != "https://blahblah/submit.php?project=debugging"
