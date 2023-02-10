@@ -47,7 +47,7 @@ class PyTorchbenchmark(Package, PythonExtension):
 
     def patch(self):
         # Avoid call to pip to install dependencies
-        filter_file(" = pip_install_requirements\(.*\)", " = True, 'skip'")
+        filter_file(r" = pip_install_requirements\(.*\)", " = True, 'skip'", "install.py")
 
     def install(self, spec, prefix):
         # Downloads datasets and models
