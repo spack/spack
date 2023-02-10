@@ -66,7 +66,6 @@ class Spykfunc(PythonPackage):
     depends_on('py-pyspark@3.0.0:', type=('build', 'run'))
 
     # old dependencies
-    depends_on('py-bb5', type=('build', 'run'), when='@:0.15.6')
     depends_on('py-lazy-property', type=('build', 'run'), when='@:0.16')
     depends_on('py-progress', type=('build', 'run'), when='@:0.16')
     depends_on('py-six', type=('build', 'run'), when='@0.15.7:0.16')
@@ -91,8 +90,6 @@ class Spykfunc(PythonPackage):
         env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
 
         if self.spec.satisfies('@:0.15.6'):
-            env.prepend_path('PATH',
-                             os.path.join(self.spec['py-bb5'].prefix, 'bin'))
             env.prepend_path('PATH',
                              os.path.join(self.spec['py-sparkmanager'].prefix,
                                           'bin'))
