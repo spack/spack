@@ -13,9 +13,10 @@ EXISTING_PACKAGES = []
 
 
 def prefix_invalid(prefix):
-    package = prefix.split(':')[0]
-    if package.strip() not in EXISTING_PACKAGES and package not in KEYWORDS:
-        return True
+    packages = prefix.split(':')[0].split(',')
+    for package in map(str.strip, packages):
+        if package not in EXISTING_PACKAGES and package not in KEYWORDS:
+            return True
 
     return False
 
@@ -51,6 +52,7 @@ def main(title):
         warning = 'These commits are not formatted correctly. '
         warning += 'Please amend them to start with one of:\n'
         warning += '* \\<package>: \n'
+        warning += '* \\<package>, <package>, ...: \n'
         warning += f'* {", ".join(keyword + ":" for keyword in KEYWORDS)}\n\n'
         warning += "### Faulty commits:\n"
         faulty_commits.insert(0, warning)
