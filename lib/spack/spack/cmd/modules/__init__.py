@@ -309,9 +309,10 @@ def refresh(module_type, specs, args):
 
     cls = spack.modules.module_types[module_type]
 
-    # Skip unknown packages.
+    # Skip unknown packages and filter external modules
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if spack.repo.path.exists(spec.name)
+        cls(spec, args.module_set_name) for spec in specs if
+        (spack.repo.path.exists(spec.name) and not spec.external_modules)
     ]
 
     # Filter excluded packages early
