@@ -32,7 +32,7 @@ class PyPennylane(PythonPackage):
     depends_on("py-semantic-version@2.7:", type=("build", "run"))
     depends_on("py-autoray", type=("build", "run"))
     depends_on("py-cachetools", type=("build", "run"))
-    depends_on("py-pennylane-lightning+python", type=("build", "run"))
+    depends_on("py-pennylane-lightning", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
 
     # Test deps

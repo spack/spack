@@ -39,7 +39,6 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     )
     variant("kokkos", default=True, description="Build with Kokkos support")
     variant("openmp", default=True, description="Build with OpenMP support")
-    variant("python", default=True, description="Build with Python support")
 
     variant("native", default=False, description="Build natively for given hardware")
     variant("verbose", default=False, description="Build with full verbosity")
@@ -54,7 +53,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
 
-    extends("python", when="+python")
+    extends("python")
 
     # hard dependencies
     depends_on("cmake@3.21:3.24,3.25.2:", type="build")
@@ -66,12 +65,12 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     depends_on("kokkos-kernels@3.7.00", when="+kokkos")
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
-    depends_on("python@3.8:", type=("build", "run"), when="+python")
-    depends_on("py-setuptools", type="build", when="+python")
-    depends_on("py-numpy", type=("build", "run"), when="+python")
-    depends_on("py-pybind11", type=("build"), when="+python")
-    depends_on("py-pip", type="build", when="+python")
-    depends_on("py-wheel", type="build", when="+python")
+    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pybind11", type=("build"))
+    depends_on("py-pip", type="build")
+    depends_on("py-wheel", type="build")
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -89,7 +88,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
             self.define_from_variant("BUILD_TESTS", "cpptests"),
             self.define_from_variant("BUILD_BENCHMARKS", "cppbenchmarks"),
-            self.define_from_variant("ENABLE_PYTHON", "python"),
             self.define_from_variant("ENABLE_GATE_DISPATCHER", "dispatcher"),
         ]
 
@@ -106,22 +104,20 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
     def build(self, pkg, spec, prefix):
         super().build(pkg, spec, prefix)
-        if self.spec.variants["python"].value:
-            cm_args = ";".join(
-                [
-                    s[2:]
-                    for s in self.cmake_args()
-                    if s[2:] not in ["BUILD_TESTS:BOOL=ON", "BUILD_BENCHMARKS:BOOL=ON"]
-                ]
-            )
-            args = ["-i", f"--define={cm_args}"]
-            build_ext = Executable(f"{self.spec['python'].command.path}" + " setup.py build_ext")
-            build_ext(*args)
+        cm_args = ";".join(
+            [
+                s[2:]
+                for s in self.cmake_args()
+                if s[2:] not in ["BUILD_TESTS:BOOL=ON", "BUILD_BENCHMARKS:BOOL=ON"]
+            ]
+        )
+        args = ["-i", f"--define={cm_args}"]
+        build_ext = Executable(f"{self.spec['python'].command.path}" + " setup.py build_ext")
+        build_ext(*args)
 
     def install(self, pkg, spec, prefix):
-        if self.spec.variants["python"].value:
-            pip_args = std_pip_args + ["--prefix=" + prefix, "."]
-            pip(*pip_args)
+        pip_args = std_pip_args + ["--prefix=" + prefix, "."]
+        pip(*pip_args)
         super().install(pkg, spec, prefix)
 
     @run_after("install")
