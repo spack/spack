@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
+
 from spack.package import *
 
 
@@ -63,6 +66,8 @@ class EcmwfAtlas(CMakePackage):
     variant("fftw", default=True)
     depends_on("fftw-api", when="+fftw")
 
+    variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
+
     def cmake_args(self):
         args = [
             self.define_from_variant('ENABLE_OMP', 'openmp'),
@@ -75,3 +80,14 @@ class EcmwfAtlas(CMakePackage):
         if "~shared" in self.spec:
             args.append("-DBUILD_SHARED_LIBS=OFF")
         return args
+
+    @when("+fismahigh")
+    def patch(self):
+        filter_file("http://www\.ecmwf\.int", "", "cmake/atlas-import.cmake.in")
+        filter_file("int\.ecmwf", "", "cmake/atlas-import.cmake.in")
+        filter_file("http[^\"]+", "", "cmake/atlas_export.cmake")
+        patterns = [".travis.yml", "tools/install*.sh", "tools/github-sha.sh"]
+        for pattern in patterns:
+            paths = glob.glob(pattern)
+            for path in paths:
+                os.remove(path)
