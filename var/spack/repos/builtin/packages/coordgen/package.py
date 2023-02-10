@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Coordgen(CMakePackage):
-    """Schrödinger, Inc's 2D coordinate generation"
+    """Schrödinger, Inc's 2D coordinate generation"""
 
     homepage = "https://github.com/schrodinger/coordgenlibs"
     url = "https://github.com/schrodinger/coordgenlibs/archive/refs/tags/v3.0.2.tar.gz"
