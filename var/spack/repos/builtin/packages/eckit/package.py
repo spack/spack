@@ -196,6 +196,7 @@ class Eckit(CMakePackage):
     def _enable_experimental(self):
         return "linalg=armadillo" in self.spec
 
+    @when("+fismahigh")
     def patch(self):
-        if self.spec.satisfies("+fismahigh") and os.exists(".travis.yml"):
+        if os.path.exists(".travis.yml"):
             os.remove(".travis.yml")

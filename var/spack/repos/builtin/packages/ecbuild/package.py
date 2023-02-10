@@ -28,9 +28,9 @@ class Ecbuild(CMakePackage):
 
     variant("fismahigh", default=False, description="Apply patches for FISMA-high compliance")
 
+    @when("+fismahigh")
     def patch(self):
-        if self.spec.satisfies("+fismahigh"):
-            filter_file("ssh://[^\"]+", "", "cmake/compat/ecmwf_git.cmake")
-            filter_file("https?://[^\"]+", "", "cmake/compat/ecmwf_git.cmake")
-            filter_file("https?://.*test-data", "DISABLED_BY_DEFAULT", "cmake/ecbuild_check_urls.cmake")
-            filter_file("https?://.*test-data", "DISABLED_BY_DEFAULT", "cmake/ecbuild_get_test_data.cmake")
+        filter_file("ssh://[^\"]+", "", "cmake/compat/ecmwf_git.cmake")
+        filter_file("https?://[^\"]+", "", "cmake/compat/ecmwf_git.cmake")
+        filter_file("https?://.*test-data", "DISABLED_BY_DEFAULT", "cmake/ecbuild_check_urls.cmake")
+        filter_file("https?://.*test-data", "DISABLED_BY_DEFAULT", "cmake/ecbuild_get_test_data.cmake")
