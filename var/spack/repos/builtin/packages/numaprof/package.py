@@ -17,7 +17,7 @@ class Numaprof(CMakePackage):
     # Infos
     homepage = "https://memtt.github.io/numaprof"
     url = "https://github.com/memtt/numaprof/releases/download/v1.1.4/numaprof-1.1.4.tar.bz2"
-    maintainers = ["svalat"]
+    maintainers("svalat")
 
     # Versions
     version("1.1.4", sha256="96cc5e153895f43d8be58e052433c9e7c9842071cc6bf915b3b1b346908cbbff")
@@ -39,11 +39,6 @@ class Numaprof(CMakePackage):
         when="@1.1.4:",
         sha256="a2e3242f72b502285da2ad41dd896382e99a8987bda9ff38e081a048776ee7b3",
     )
-
-    # Generate the urls
-    def url_for_version(self, version):
-        url_fmt = "https://github.com/memtt/numaprof/releases/download/v{0}/numaprof-{0}.tar.bz2"
-        return url_fmt.format(version)
 
     # Generate build command
     def cmake_args(self):
