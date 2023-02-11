@@ -21,6 +21,7 @@ class PyChemfiles(PythonPackage):
 
     depends_on("python")
     depends_on("chemfiles+shared")
+    depends_on("py-numpy")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-cmake", type="build")
