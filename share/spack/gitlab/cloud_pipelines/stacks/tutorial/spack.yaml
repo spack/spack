@@ -15,9 +15,9 @@ spack:
     - matrix:
       - - zlib
         - zlib@1.2.8
-        - zlib@1.2.8 cppflags=-O3
+        - zlib@1.2.8 cflags=-O3
         - tcl
-        - tcl ^zlib@1.2.8 cppflags=-O3
+        - tcl ^zlib@1.2.8 cflags=-O3
         - hdf5
         - hdf5~mpi
         - hdf5+hl+mpi ^mpich
