@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Tblite(MesonPackage):
     url = "https://github.com/tblite/tblite/releases/download/v0.3.0/tblite-0.3.0.tar.xz"
     git = "https://github.com/tblite/tblite.git"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("0.3.0", "46d77c120501ac55ed6a64dea8778d6593b26fb0653c591f8e8c985e35884f0a")
 
