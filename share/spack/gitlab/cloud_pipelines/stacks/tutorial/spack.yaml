@@ -55,7 +55,7 @@ spack:
     pipeline-gen:
     - build-job:
         image:
-          name: ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02
+          name: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-05
           entrypoint: ['']
   cdash:
     build-group: Spack Tutorial
