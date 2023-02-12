@@ -5,73 +5,78 @@ spack:
     reuse: false
     unify: false
 
-  config:
-    concretizer: clingo
-    install_tree:
-      root: $SPACK_ROOT/opt/spack
-      padded_length: 512
-      projections:
-        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-
   packages:
     all:
-      compiler: [apple-clang@13.1.6]
+      require: "%apple-clang@14.0.0"
       target: [m1]
 
-  definitions:
-  - easy_specs:
-    - berkeley-db
-    - ncurses
-    - gcc
-    - py-jupyterlab
-    - py-scipy
-    - py-matplotlib
-    - py-pandas
-
-  - arch:
-    - '%apple-clang@13.1.6 target=m1'
+  compilers:
+  - compiler:
+      spec: apple-clang@14.0.0
+      paths:
+        cc: /usr/bin/clang
+        cxx: /usr/bin/clang++
+        f77: /opt/homebrew/bin/gfortran-12
+        fc: /opt/homebrew/bin/gfortran-12
+      flags: {}
+      operating_system: ventura
+      target: aarch64
+      modules: []
+      environment: {}
+      extra_rpaths: []
 
   specs:
-
-  - matrix:
-    - - $easy_specs
-    - - $arch
+  - bash
+  - py-numpy
+  - py-scipy
+  - py-matplotlib
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s-mac" }
 
   gitlab-ci:
 
     script:
-      - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
-      - . "./share/spack/setup-env.sh"
-      - spack --version
-      - spack arch
-      - cd ${SPACK_CONCRETE_ENV_DIR}
-      - spack env activate --without-view .
-      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
-      - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+    - uname -a || true
+    - ls -ld /opt/spack
+    - rm -rf /opt/spack/*
+    - rm -rf /opt/spack/.* || true
+    - cp -r $CI_PROJECT_DIR/* /opt/spack/.
+    - export SPACK_DISABLE_LOCAL_CONFIG=1
+    - export SPACK_USER_CACHE_PATH=$(pwd)/_user_cache
+    - . /opt/spack/share/spack/setup-env.sh
+    - spack --version
+    - spack arch
+    - spack compiler find
+    - spack compiler list
+    - cd ${SPACK_CONCRETE_ENV_DIR}
+    - spack env activate --without-view .
+    - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+    - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     match_behavior: first
     mappings:
-      - match: ['os=monterey']
+      - match: ['os=ventura']
         runner-attributes:
           tags:
-          - lambda
+          - apple-clang-14
+          - m1
+          - macos-ventura
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
     service-job-attributes:
       before_script:
+      - export SPACK_DISABLE_LOCAL_CONFIG=1
       - export SPACK_USER_CACHE_PATH=$(pwd)/.spack-user-cache
-      - export SPACK_USER_CONFIG_PATH=$(pwd)/.spack-user-config
-      - . "./share/spack/setup-env.sh"
+      - . share/spack/setup-env.sh
       - spack --version
       tags:
-      - lambda
+      - apple-clang-14
+      - m1
+      - macos-ventura
 
   cdash:
-    build-group: E4S Mac
+    build-group: E4S MacOS
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
