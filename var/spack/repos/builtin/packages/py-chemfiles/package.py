@@ -23,7 +23,7 @@ class PyChemfiles(PythonPackage):
     depends_on("chemfiles+shared")
     depends_on("py-numpy")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@44:", type="build")
     depends_on("py-wheel", type="build")
     depends_on("py-cmake", type="build")
     depends_on("py-ninja", type="build")
