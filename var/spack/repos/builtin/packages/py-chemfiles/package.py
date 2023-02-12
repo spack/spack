@@ -21,7 +21,7 @@ class PyChemfiles(PythonPackage):
 
     depends_on("python")
     depends_on("chemfiles+shared")
-    depends_on("py-numpy")
+    depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-setuptools@44:", type="build")
     depends_on("py-wheel@0.36:", type="build")
