@@ -15,12 +15,10 @@ class PyChemfiles(PythonPackage):
     maintainers("RMeli")
 
     version("0.10.3", sha256="4bbb8b116492a57dbf6ddb4c84aad0133cd782e0cc0e53e4b957f2d93e6806ea")
-    version("0.10.2", sha256="e277725803715762f9ea787f1ed51dbc2a83a47188ca3bf5d77ddcbc527f55f9")
-    version("0.10.1", sha256="6fe35c529c2ded099a59b689270ac0368c6aa33664069c1ccf88eb9fb2686906")
-    version("0.10.0", sha256="b52bc19ac7967935a2acc896b1b9738bd904444a1fc09589ed6ada7658a02bf4")
+
+    depends_on("chemfiles@0.10.3+shared", when="@0.10.3")
 
     depends_on("python")
-    depends_on("chemfiles+shared")
     depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-setuptools@44:", type="build")
