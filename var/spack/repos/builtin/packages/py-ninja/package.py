@@ -20,7 +20,6 @@ class PyNinja(PythonPackage):
     depends_on("cmake@3.6:", type="build")
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-scikit-build", type="build")
-    depends_on("py-scikit-build@0.12:", type="build", when="@1.11.1")
     depends_on("ninja@1.10.2", type=("build", "run"), when="@1.10.2")
 
     def patch(self):
