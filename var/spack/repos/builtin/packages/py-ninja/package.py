@@ -14,7 +14,6 @@ class PyNinja(PythonPackage):
     homepage = "https://ninja-build.org"
     pypi = "ninja/ninja-1.10.2.tar.gz"
 
-    version("1.11.1", sha256="c833a47d39b2d1eee3f9ca886fa1581efd5be6068b82734ac229961ee8748f90")
     version("1.10.2", sha256="bb5e54b9a7343b3a8fc6532ae2c169af387a45b0d4dd5b72c2803e21658c5791")
 
     depends_on("cmake@3.6:", type="build")
