@@ -109,6 +109,9 @@ class Setup:
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.pkg.setup_run_environment(env)
 
+    def setup_build_environment(self, env):
+        env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad") )
+
 
 class CMakeBuilder(cmake.CMakeBuilder, Setup):
     def cmake_args(self):
@@ -123,7 +126,7 @@ class CMakeBuilder(cmake.CMakeBuilder, Setup):
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder, Setup):
     def configure_args(self):
-        args = ["PROJ_LIB={0}".format(join_path(self.stage.source_path, "nad"))]
+        args = ["PROJ_LIB={0}".format(join_path(self.pkg.stage.source_path, "nad"))]
 
         if self.spec.satisfies("@6:"):
             args.append("--with-external-gtest")
@@ -135,7 +138,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, Setup):
                 args.append("--disable-tiff")
 
             if "+curl" in self.spec:
-                args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
+                args.append("--with-curl=" + self.pkg.spec["curl"].prefix.bin.join("curl-config"))
             else:
                 args.append("--without-curl")
 
