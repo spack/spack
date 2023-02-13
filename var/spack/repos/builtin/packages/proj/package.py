@@ -110,7 +110,7 @@ class Setup:
         self.pkg.setup_run_environment(env)
 
     def setup_build_environment(self, env):
-        env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad") )
+        env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
 
 
 class CMakeBuilder(cmake.CMakeBuilder, Setup):
