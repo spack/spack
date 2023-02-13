@@ -184,6 +184,7 @@ class Rccl(CMakePackage):
         "5.4.0",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
+        depends_on("chrpath", when="@5.3.0:")
 
     @classmethod
     def determine_version(cls, lib):
@@ -212,4 +213,31 @@ class Rccl(CMakePackage):
 
         if self.spec.satisfies("@4.5.0:"):
             args.append(self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append(self.define("BUILD_TESTS", "ON"))
         return args
+
+    def test(self):
+        if self.spec.satisfies("@:5.3.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.spec["rccl"].prefix, "bin")
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join(
+                [
+                    self.spec["hsa-rocr-dev"].prefix,
+                    self.spec["chrpath"].prefix,
+                    self.spec["rocm-cmake"].prefix,
+                    self.spec["rccl"].prefix,
+                ]
+            )
+            rocm_cmake_module_path = join_path(self.spec["rocm-cmake"].prefix, "share", "rocm","cmake")
+            cc_options = [
+                "-DCMAKE_PREFIX_PATH=" + prefixes,
+                "-DBUILD_TESTS=ON",
+                "-DROCM_PATH=" + self.spec["rccl"].prefix,
+                "-DCMAKE_MODULE_PATH=" + rocm_cmake_module_path,
+                ".",
+            ]
+            self.run_test("UnitTests")
