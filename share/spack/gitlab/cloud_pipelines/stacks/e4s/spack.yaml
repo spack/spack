@@ -26,6 +26,8 @@ spack:
       require: "intel-tbb"
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
+    boost:
+      variants: +python +filesystem +iostreams +system
     cuda:
       version: [11.7.0]
     elfutils:
@@ -42,6 +44,9 @@ spack:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    paraview:
+      # Don't build GUI support or GLX rendering for HPC/container deployments
+      require: "@5.11 ~qt+osmesa"
     python:
       version: [3.8.13]
     trilinos:
@@ -67,6 +72,7 @@ spack:
   - bolt
   - bricks
   - butterflypack
+  - boost +python +filesystem +iostreams +system
   - cabana
   - caliper
   - chai ~benchmarks ~tests
@@ -74,8 +80,7 @@ spack:
   - conduit
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm
-    +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
   - exaworks
   - flecsi
   - flit
@@ -123,8 +128,10 @@ spack:
   - plumed
   - precice
   - pumi
+  - py-h5py +mpi
+  - py-h5py ~mpi
   - py-jupyterhub
-  - py-libensemble
+  - py-libensemble +mpi +nlopt
   - py-petsc4py
   - py-warpx ^warpx dims=2
   - py-warpx ^warpx dims=3
@@ -142,6 +149,7 @@ spack:
   - superlu-dist
   - swig
   - swig@4.0.2-fortran
+  - sz3
   - tasmanian
   - tau +mpi +python
   - trilinos@13.0.1 +belos +ifpack2 +stokhos
@@ -150,20 +158,19 @@ spack:
   - umpire
   - upcxx
   - variorum
+  - veloc
   - wannier90
 
   # CUDA
   - amrex +cuda
-  - arborx +cuda ^kokkos@3.6.00 +wrapper
+  - arborx +cuda ^kokkos +wrapper
   - bricks +cuda
-  - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda
+  - cabana +cuda ^kokkos +wrapper +cuda_lambda +cuda
   - caliper +cuda
-  - chai ~benchmarks ~tests +cuda ^umpire@6.0.0 ~shared
+  - chai ~benchmarks ~tests +cuda ^umpire ~shared
+  - cusz +cuda
   - dealii +cuda
-  - ecp-data-vis-sdk +cuda
-    +adios2 +hdf5 +vtkm +zfp
-    # Removing ascent because Dray is hung in CI.
-    # +ascent
+  - ecp-data-vis-sdk +cuda +adios2 +hdf5 +paraview +vtkm +zfp # Removing ascent because Dray is hung in CI. +ascent
   - flecsi +cuda
   - flux-core +cuda
   - ginkgo +cuda
@@ -196,8 +203,7 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +rocm
-    +vtkm
+  - ecp-data-vis-sdk +paraview +vtkm +rocm
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm
@@ -222,14 +228,13 @@ spack:
   - upcxx +rocm
 
   # CPU failures
-  #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- loki                                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
-  #- paraview +qt                                 # llvm@14
-  #- pruners-ninja                                # test/ninja_test_util.c:34: multiple definition of `a';
-  #- rempi                                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
+  #- geopm                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
+  #- loki                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
+  #- pruners-ninja                # test/ninja_test_util.c:34: multiple definition of `a';
+  #- rempi                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
 
   # CUDA failures
-  #- parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+  #- parsec +cuda                 # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
@@ -249,19 +254,23 @@ spack:
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
+      - if [[ -r /mnt/key/e4s.gpg ]]; then spack gpg trust /mnt/key/e4s.gpg; fi
+      # UO runners mount intermediate ci public key (verification), AWS runners mount public/private (signing/verification)
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
     after_script:
       - cat /proc/loadavg || true
 
-    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
 
     broken-tests-packages:
       - gptune
 
     match_behavior: first
     mappings:
+
       - match:
           - hipblas
           - llvm
@@ -454,7 +463,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-12-01
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:

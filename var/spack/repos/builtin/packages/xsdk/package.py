@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,7 +82,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://xsdk.info"
-    maintainers = ["balay", "luszczek", "balos1", "shuds13", "v-dobrev"]
+    maintainers("balay", "luszczek", "balos1", "shuds13", "v-dobrev")
 
     version("develop")
     version("0.8.0")

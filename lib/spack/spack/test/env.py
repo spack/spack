@@ -1,12 +1,15 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test environment internals without CLI"""
 import io
+import os
 import sys
 
 import pytest
+
+import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.spec
@@ -129,3 +132,32 @@ def test_activate_should_require_an_env():
 
     with pytest.raises(TypeError):
         ev.activate(env=None)
+
+
+def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
+    # When spack.yaml files are checked into version control, we
+    # don't want view: ./relative to get canonicalized on disk.
+
+    # We create a view in <tmpdir>/env_dir
+    env_path = tmpdir.mkdir("env_dir").strpath
+
+    # And use a relative path to specify the view dir
+    view = os.path.join(".", "view")
+
+    # Which should always resolve to the following independent of cwd.
+    absolute_view = os.path.join(env_path, "view")
+
+    # Serialize environment with relative view path
+    with fs.working_dir(str(tmpdir)):
+        fst = ev.Environment(env_path, with_view=view)
+        fst.write()
+
+    # The view link should be created
+    assert os.path.isdir(absolute_view)
+
+    # Deserialize and check if the view path is still relative in yaml
+    # and also check that the getter is pointing to the right dir.
+    with fs.working_dir(str(tmpdir)):
+        snd = ev.Environment(env_path)
+        assert snd.yaml["spack"]["view"] == view
+        assert os.path.samefile(snd.default_view.root, absolute_view)

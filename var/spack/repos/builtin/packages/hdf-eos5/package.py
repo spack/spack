@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,7 +52,7 @@ class HdfEos5(AutotoolsPackage):
 
     conflicts("~static", when="~shared", msg="At least one of +static or +shared must be set")
 
-    maintainers = ["payerle"]
+    maintainers("payerle")
 
     # Build dependencies
     depends_on("hdf5+hl")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Simulationio(CMakePackage):
     url = "https://github.com/eschnett/SimulationIO/archive/version/9.0.1.tar.gz"
     git = "https://github.com/eschnett/SimulationIO.git"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("master", branch="master")
     version("9.0.2", sha256="3dd3422e64f6a75215783f6157effd07430e1d0af5884e565f73388a815511f8")
@@ -44,10 +44,14 @@ class Simulationio(CMakePackage):
     extends("python")
 
     def cmake_args(self):
-        spec = self.spec
-        options = []
-        if "+pic" in spec:
-            options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true")
+        from_variant = self.define_from_variant
+        options = [
+            from_variant("ENABLE_ASDF_CXX", "asdf"),
+            from_variant("ENABLE_HDF5", "hdf5"),
+            from_variant("ENABLE_RNPL", "rnpl"),
+            from_variant("ENABLE_SILO", "silo"),
+            from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+        ]
         return options
 
     def check(self):

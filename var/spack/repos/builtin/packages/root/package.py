@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Root(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["chissg", "HadrienG2", "drbenmorgan", "vvolkl"]
+    maintainers("greenc-FNAL", "HadrienG2", "drbenmorgan", "vvolkl")
 
     # ###################### Versions ##########################
 
@@ -318,6 +318,10 @@ class Root(CMakePackage):
 
     # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
     conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")
+
+    # ROOT does not support LTO builds
+    # See https://github.com/root-project/root/issues/11135
+    conflicts("+ipo", msg="LTO is not a supported configuration for building ROOT")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):

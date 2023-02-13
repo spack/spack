@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ from __future__ import print_function
 import ast
 import collections
 import collections.abc
+import gzip
 import inspect
+import json
 import os
 
 import pytest
@@ -45,6 +47,27 @@ def test_simple_spec():
     spec = Spec("mpileaks")
     check_yaml_round_trip(spec)
     check_json_round_trip(spec)
+
+
+def test_read_spec_from_signed_json():
+    spec_dir = os.path.join(spack.paths.test_path, "data", "mirrors", "signed_json")
+    file_name = (
+        "linux-ubuntu18.04-haswell-gcc-8.4.0-"
+        "zlib-1.2.12-g7otk5dra3hifqxej36m5qzm7uyghqgb.spec.json.sig"
+    )
+    spec_path = os.path.join(spec_dir, file_name)
+
+    def check_spec(spec_to_check):
+        assert spec_to_check.name == "zlib"
+        assert spec_to_check._hash == "g7otk5dra3hifqxej36m5qzm7uyghqgb"
+
+    with open(spec_path) as fd:
+        s = Spec.from_signed_json(fd)
+        check_spec(s)
+
+    with open(spec_path) as fd:
+        s = Spec.from_signed_json(fd.read())
+        check_spec(s)
 
 
 def test_normal_spec(mock_packages):
@@ -486,3 +509,33 @@ ordered_spec = collections.OrderedDict(
         ("version", "1.2.11"),
     ]
 )
+
+
+@pytest.mark.parametrize(
+    "specfile,expected_hash,reader_cls",
+    [
+        # First version supporting JSON format for specs
+        ("specfiles/hdf5.v013.json.gz", "vglgw4reavn65vx5d4dlqn6rjywnq76d", spack.spec.SpecfileV1),
+        # Introduces full hash in the format, still has 3 hashes
+        ("specfiles/hdf5.v016.json.gz", "stp45yvzte43xdauknaj3auxlxb4xvzs", spack.spec.SpecfileV1),
+        # Introduces "build_specs", see https://github.com/spack/spack/pull/22845
+        ("specfiles/hdf5.v017.json.gz", "xqh5iyjjtrp2jw632cchacn3l7vqzf3m", spack.spec.SpecfileV2),
+        # Use "full hash" everywhere, see https://github.com/spack/spack/pull/28504
+        ("specfiles/hdf5.v019.json.gz", "iulacrbz7o5v5sbj7njbkyank3juh6d3", spack.spec.SpecfileV3),
+    ],
+)
+def test_load_json_specfiles(specfile, expected_hash, reader_cls):
+    fullpath = os.path.join(spack.paths.test_path, "data", specfile)
+    with gzip.open(fullpath, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+
+    s1 = Spec.from_dict(data)
+    s2 = reader_cls.load(data)
+
+    assert s2.dag_hash() == expected_hash
+    assert s1.dag_hash() == s2.dag_hash()
+    assert s1 == s2
+    assert Spec.from_json(s2.to_json()).dag_hash() == s2.dag_hash()
+
+    openmpi_edges = s2.edges_to_dependencies(name="openmpi")
+    assert len(openmpi_edges) == 1

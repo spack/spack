@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,6 +56,7 @@ import os
 import re
 import sys
 import warnings
+from typing import Tuple
 
 import ruamel.yaml as yaml
 
@@ -156,8 +157,18 @@ default_format = "{name}{@version}"
 default_format += "{%compiler.name}{@compiler.version}{compiler_flags}"
 default_format += "{variants}{arch=architecture}"
 
+#: Regular expression to pull spec contents out of clearsigned signature
+#: file.
+CLEARSIGN_FILE_REGEX = re.compile(
+    (
+        r"^-----BEGIN PGP SIGNED MESSAGE-----"
+        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
+    ),
+    re.MULTILINE | re.DOTALL,
+)
+
 #: specfile format version. Must increase monotonically
-specfile_format_version = 3
+SPECFILE_FORMAT_VERSION = 3
 
 
 def colorize_spec(spec):
@@ -643,8 +654,9 @@ class CompilerSpec(object):
 
 
 @lang.lazy_lexicographic_ordering
-class DependencySpec(object):
-    """DependencySpecs connect two nodes in the DAG, and contain deptypes.
+class DependencySpec:
+    """DependencySpecs represent an edge in the DAG, and contain dependency types
+    and information on the virtuals being provided.
 
     Dependencies can be one (or more) of several types:
 
@@ -652,20 +664,20 @@ class DependencySpec(object):
     - link: is linked to and added to compiler flags.
     - run: needs to be in the PATH for the package to run.
 
-    Fields:
-    - spec: Spec depended on by parent.
-    - parent: Spec that depends on `spec`.
-    - deptypes: list of strings, representing dependency relationships.
+    Args:
+        parent: starting node of the edge
+        spec: ending node of the edge.
+        deptypes: list of strings, representing dependency relationships.
     """
 
     __slots__ = "parent", "spec", "deptypes"
 
-    def __init__(self, parent, spec, deptypes):
+    def __init__(self, parent: "Spec", spec: "Spec", *, deptypes: dp.DependencyArgument):
         self.parent = parent
         self.spec = spec
         self.deptypes = dp.canonical_deptype(deptypes)
 
-    def update_deptypes(self, deptypes):
+    def update_deptypes(self, deptypes: dp.DependencyArgument) -> bool:
         deptypes = set(deptypes)
         deptypes.update(self.deptypes)
         deptypes = tuple(sorted(deptypes))
@@ -674,10 +686,10 @@ class DependencySpec(object):
         self.deptypes = deptypes
         return changed
 
-    def copy(self):
-        return DependencySpec(self.parent, self.spec, self.deptypes)
+    def copy(self) -> "DependencySpec":
+        return DependencySpec(self.parent, self.spec, deptypes=self.deptypes)
 
-    def add_type(self, type):
+    def add_type(self, type: dp.DependencyArgument):
         self.deptypes = dp.canonical_deptype(self.deptypes + dp.canonical_deptype(type))
 
     def _cmp_iter(self):
@@ -685,17 +697,17 @@ class DependencySpec(object):
         yield self.spec.name if self.spec else None
         yield self.deptypes
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s %s--> %s" % (
             self.parent.name if self.parent else None,
             self.deptypes,
             self.spec.name if self.spec else None,
         )
 
-    def canonical(self):
+    def canonical(self) -> Tuple[str, str, Tuple[str, ...]]:
         return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
 
-    def flip(self):
+    def flip(self) -> "DependencySpec":
         return DependencySpec(parent=self.spec, spec=self.parent, deptypes=self.deptypes)
 
 
@@ -1517,14 +1529,14 @@ class Spec(object):
             )
         self.compiler = compiler
 
-    def _add_dependency(self, spec, deptypes):
+    def _add_dependency(self, spec: "Spec", *, deptypes: dp.DependencyArgument):
         """Called by the parser to add another spec as a dependency."""
         if spec.name not in self._dependencies:
-            self.add_dependency_edge(spec, deptypes)
+            self.add_dependency_edge(spec, deptypes=deptypes)
             return
 
         # Keep the intersection of constraints when a dependency is added
-        # multiple times. Currently we only allow identical edge types.
+        # multiple times. Currently, we only allow identical edge types.
         orig = self._dependencies[spec.name]
         try:
             dspec = next(dspec for dspec in orig if deptypes == dspec.deptypes)
@@ -1538,34 +1550,39 @@ class Spec(object):
                 "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
             )
 
-    def add_dependency_edge(self, dependency_spec, deptype):
+    def add_dependency_edge(
+        self,
+        dependency_spec: "Spec",
+        *,
+        deptypes: dp.DependencyArgument,
+    ):
         """Add a dependency edge to this spec.
 
         Args:
-            dependency_spec (Spec): spec of the dependency
-            deptype (str or tuple): dependency types
+            dependency_spec: spec of the dependency
+            deptypes: dependency types for this edge
         """
-        deptype = dp.canonical_deptype(deptype)
+        deptypes = dp.canonical_deptype(deptypes)
 
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
-            if any(d in edge.deptypes for d in deptype):
+            if any(d in edge.deptypes for d in deptypes):
                 msg = (
                     'cannot add a dependency on "{0.spec}" of {1} type '
                     'when the "{0.parent}" has the edge {0!s} already'
                 )
-                raise spack.error.SpecError(msg.format(edge, deptype))
+                raise spack.error.SpecError(msg.format(edge, deptypes))
 
         for edge in selected:
             if id(dependency_spec) == id(edge.spec):
                 # If we are here, it means the edge object was previously added to
                 # both the parent and the child. When we update this object they'll
                 # both see the deptype modification.
-                edge.add_type(deptype)
+                edge.add_type(deptypes)
                 return
 
-        edge = DependencySpec(self, dependency_spec, deptype)
+        edge = DependencySpec(self, dependency_spec, deptypes=deptypes)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
@@ -2015,7 +2032,7 @@ class Spec(object):
                         node_list.append(node)
                         hash_set.add(node_hash)
 
-        meta_dict = syaml.syaml_dict([("version", specfile_format_version)])
+        meta_dict = syaml.syaml_dict([("version", SPECFILE_FORMAT_VERSION)])
         inner_dict = syaml.syaml_dict([("_meta", meta_dict), ("nodes", node_list)])
         spec_dict = syaml.syaml_dict([("spec", inner_dict)])
         return spec_dict
@@ -2051,136 +2068,12 @@ class Spec(object):
 
     @staticmethod
     def from_specfile(path):
-        """Construct a spec from aJSON or YAML spec file path"""
+        """Construct a spec from a JSON or YAML spec file path"""
         with open(path, "r") as fd:
             file_content = fd.read()
             if path.endswith(".json"):
                 return Spec.from_json(file_content)
             return Spec.from_yaml(file_content)
-
-    @staticmethod
-    def from_node_dict(node):
-        spec = Spec()
-        if "name" in node.keys():
-            # New format
-            name = node["name"]
-        else:
-            # Old format
-            name = next(iter(node))
-            node = node[name]
-        for h in ht.hashes:
-            setattr(spec, h.attr, node.get(h.name, None))
-
-        spec.name = name
-        spec.namespace = node.get("namespace", None)
-
-        if "version" in node or "versions" in node:
-            spec.versions = vn.VersionList.from_dict(node)
-
-        if "arch" in node:
-            spec.architecture = ArchSpec.from_dict(node)
-
-        if "compiler" in node:
-            spec.compiler = CompilerSpec.from_dict(node)
-        else:
-            spec.compiler = None
-
-        if "parameters" in node:
-            for name, values in node["parameters"].items():
-                if name in _valid_compiler_flags:
-                    spec.compiler_flags[name] = []
-                    for val in values:
-                        spec.compiler_flags.add_flag(name, val, False)
-                else:
-                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values)
-        elif "variants" in node:
-            for name, value in node["variants"].items():
-                spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, value)
-            for name in FlagMap.valid_compiler_flags():
-                spec.compiler_flags[name] = []
-
-        spec.external_path = None
-        spec.external_modules = None
-        if "external" in node:
-            # This conditional is needed because sometimes this function is
-            # called with a node already constructed that contains a 'versions'
-            # and 'external' field. Related to virtual packages provider
-            # indexes.
-            if node["external"]:
-                spec.external_path = node["external"]["path"]
-                spec.external_modules = node["external"]["module"]
-                if spec.external_modules is False:
-                    spec.external_modules = None
-                spec.extra_attributes = node["external"].get(
-                    "extra_attributes", syaml.syaml_dict()
-                )
-
-        # specs read in are concrete unless marked abstract
-        spec._concrete = node.get("concrete", True)
-
-        if "patches" in node:
-            patches = node["patches"]
-            if len(patches) > 0:
-                mvar = spec.variants.setdefault("patches", vt.MultiValuedVariant("patches", ()))
-                mvar.value = patches
-                # FIXME: Monkey patches mvar to store patches order
-                mvar._patches_in_order_of_appearance = patches
-
-        # Don't read dependencies here; from_dict() is used by
-        # from_yaml() and from_json() to read the root *and* each dependency
-        # spec.
-
-        return spec
-
-    @staticmethod
-    def build_spec_from_node_dict(node, hash_type=ht.dag_hash.name):
-        build_spec_dict = node["build_spec"]
-        return build_spec_dict["name"], build_spec_dict[hash_type], hash_type
-
-    @staticmethod
-    def dependencies_from_node_dict(node):
-        if "name" in node.keys():
-            # New format
-            name = node["name"]
-        else:
-            name = next(iter(node))
-            node = node[name]
-        if "dependencies" not in node:
-            return
-        for t in Spec.read_yaml_dep_specs(node["dependencies"]):
-            yield t
-
-    @staticmethod
-    def read_yaml_dep_specs(deps, hash_type=ht.dag_hash.name):
-        """Read the DependencySpec portion of a YAML-formatted Spec.
-        This needs to be backward-compatible with older spack spec
-        formats so that reindex will work on old specs/databases.
-        """
-        dep_iter = deps.items() if isinstance(deps, dict) else deps
-        for dep in dep_iter:
-            if isinstance(dep, tuple):
-                dep_name, elt = dep
-            else:
-                elt = dep
-                dep_name = dep["name"]
-            if isinstance(elt, str):
-                # original format, elt is just the dependency hash.
-                dep_hash, deptypes = elt, ["build", "link"]
-            elif isinstance(elt, tuple):
-                # original deptypes format: (used tuples, not future-proof)
-                dep_hash, deptypes = elt
-            elif isinstance(elt, dict):
-                # new format: elements of dependency spec are keyed.
-                for h in ht.hashes:
-                    if h.name in elt:
-                        dep_hash, deptypes = elt[h.name], elt["type"]
-                        hash_type = h.name
-                        break
-                else:  # We never determined a hash type...
-                    raise spack.error.SpecError("Couldn't parse dependency spec.")
-            else:
-                raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            yield dep_name, dep_hash, list(deptypes), hash_type
 
     @staticmethod
     def override(init_spec, change_spec):
@@ -2355,7 +2248,7 @@ class Spec(object):
                     dag_node, dependency_types = spec_and_dependency_types(s)
 
                 dependency_spec = spec_builder({dag_node: s_dependencies})
-                spec._add_dependency(dependency_spec, dependency_types)
+                spec._add_dependency(dependency_spec, deptypes=dependency_types)
 
             return spec
 
@@ -2368,54 +2261,14 @@ class Spec(object):
         Args:
             data: a nested dict/list data structure read from YAML or JSON.
         """
-        if isinstance(data["spec"], list):  # Legacy specfile format
-            return _spec_from_old_dict(data)
+        # Legacy specfile format
+        if isinstance(data["spec"], list):
+            return SpecfileV1.load(data)
 
-        # Current specfile format
-        nodes = data["spec"]["nodes"]
-        hash_type = None
-        any_deps = False
-
-        # Pass 0: Determine hash type
-        for node in nodes:
-            if "dependencies" in node.keys():
-                any_deps = True
-                for _, _, _, dhash_type in Spec.dependencies_from_node_dict(node):
-                    if dhash_type:
-                        hash_type = dhash_type
-                        break
-
-        if not any_deps:  # If we never see a dependency...
-            hash_type = ht.dag_hash.name
-        elif not hash_type:  # Seen a dependency, still don't know hash_type
-            raise spack.error.SpecError(
-                "Spec dictionary contains malformed " "dependencies. Old format?"
-            )
-
-        hash_dict = {}
-        root_spec_hash = None
-
-        # Pass 1: Create a single lookup dictionary by hash
-        for i, node in enumerate(nodes):
-            node_hash = node[hash_type]
-            node_spec = Spec.from_node_dict(node)
-            hash_dict[node_hash] = node
-            hash_dict[node_hash]["node_spec"] = node_spec
-            if i == 0:
-                root_spec_hash = node_hash
-        if not root_spec_hash:
-            raise spack.error.SpecError("Spec dictionary contains no nodes.")
-
-        # Pass 2: Finish construction of all DAG edges (including build specs)
-        for node_hash, node in hash_dict.items():
-            node_spec = node["node_spec"]
-            for _, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
-                node_spec._add_dependency(hash_dict[dhash]["node_spec"], dtypes)
-            if "build_spec" in node.keys():
-                _, bhash, _ = Spec.build_spec_from_node_dict(node, hash_type=hash_type)
-                node_spec._build_spec = hash_dict[bhash]["node_spec"]
-
-        return hash_dict[root_spec_hash]["node_spec"]
+        specfile_version = int(data["spec"]["_meta"]["version"])
+        if specfile_version == 2:
+            return SpecfileV2.load(data)
+        return SpecfileV3.load(data)
 
     @staticmethod
     def from_yaml(stream):
@@ -2442,6 +2295,27 @@ class Spec(object):
             return Spec.from_dict(data)
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e)) from e
+
+    @staticmethod
+    def extract_json_from_clearsig(data):
+        m = CLEARSIGN_FILE_REGEX.search(data)
+        if m:
+            return sjson.load(m.group(1))
+        return sjson.load(data)
+
+    @staticmethod
+    def from_signed_json(stream):
+        """Construct a spec from clearsigned json spec file.
+
+        Args:
+            stream: string or file object to read from.
+        """
+        data = stream
+        if hasattr(stream, "read"):
+            data = stream.read()
+
+        extracted_json = Spec.extract_json_from_clearsig(data)
+        return Spec.from_dict(extracted_json)
 
     @staticmethod
     def from_detection(spec_str, extra_attributes=None):
@@ -2550,7 +2424,7 @@ class Spec(object):
 
             # add the replacement, unless it is already a dep of dependent.
             if concrete.name not in dependent._dependencies:
-                dependent._add_dependency(concrete, deptypes)
+                dependent._add_dependency(concrete, deptypes=deptypes)
 
     def _expand_virtual_packages(self, concretizer):
         """Find virtual packages in this spec, replace them with providers,
@@ -3221,7 +3095,7 @@ class Spec(object):
         # Add merged spec to my deps and recurse
         spec_dependency = spec_deps[dep.name]
         if dep.name not in self._dependencies:
-            self._add_dependency(spec_dependency, dependency.type)
+            self._add_dependency(spec_dependency, deptypes=dependency.type)
 
         changed |= spec_dependency._normalize_helper(visited, spec_deps, provider_index, tests)
         return changed
@@ -3552,7 +3426,7 @@ class Spec(object):
             dep_spec_copy = other._get_dependency(name)
             dep_copy = dep_spec_copy.spec
             deptypes = dep_spec_copy.deptypes
-            self._add_dependency(dep_copy.copy(), deptypes)
+            self._add_dependency(dep_copy.copy(), deptypes=deptypes)
             changed = True
 
         return changed
@@ -3865,7 +3739,7 @@ class Spec(object):
                 new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
             new_specs[spid(edge.parent)].add_dependency_edge(
-                new_specs[spid(edge.spec)], edge.deptypes
+                new_specs[spid(edge.spec)], deptypes=edge.deptypes
             )
 
     def copy(self, deps=True, **kwargs):
@@ -4780,12 +4654,12 @@ class Spec(object):
             if name in self_nodes:
                 for edge in self[name].edges_to_dependencies():
                     dep_name = deps_to_replace.get(edge.spec, edge.spec).name
-                    nodes[name].add_dependency_edge(nodes[dep_name], edge.deptypes)
+                    nodes[name].add_dependency_edge(nodes[dep_name], deptypes=edge.deptypes)
                 if any(dep not in self_nodes for dep in self[name]._dependencies):
                     nodes[name].build_spec = self[name].build_spec
             else:
                 for edge in other[name].edges_to_dependencies():
-                    nodes[name].add_dependency_edge(nodes[edge.spec.name], edge.deptypes)
+                    nodes[name].add_dependency_edge(nodes[edge.spec.name], deptypes=edge.deptypes)
                 if any(dep not in other_nodes for dep in other[name]._dependencies):
                     nodes[name].build_spec = other[name].build_spec
 
@@ -4858,40 +4732,252 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
         # Update with additional constraints from other spec
         for name in current_spec_constraint.direct_dep_difference(merged_spec):
             edge = next(iter(current_spec_constraint.edges_to_dependencies(name)))
-            merged_spec._add_dependency(edge.spec.copy(), edge.deptypes)
+            merged_spec._add_dependency(edge.spec.copy(), deptypes=edge.deptypes)
 
     return merged_spec
 
 
-def _spec_from_old_dict(data):
-    """Construct a spec from JSON/YAML using the format version 1.
-    Note: Version 1 format has no notion of a build_spec, and names are
-    guaranteed to be unique.
+class SpecfileReaderBase:
+    @classmethod
+    def from_node_dict(cls, node):
+        spec = Spec()
 
-    Parameters:
-    data -- a nested dict/list data structure read from YAML or JSON.
-    """
-    nodes = data["spec"]
+        name, node = cls.name_and_data(node)
+        for h in ht.hashes:
+            setattr(spec, h.attr, node.get(h.name, None))
 
-    # Read nodes out of list.  Root spec is the first element;
-    # dependencies are the following elements.
-    dep_list = [Spec.from_node_dict(node) for node in nodes]
-    if not dep_list:
-        raise spack.error.SpecError("YAML spec contains no nodes.")
-    deps = dict((spec.name, spec) for spec in dep_list)
-    spec = dep_list[0]
+        spec.name = name
+        spec.namespace = node.get("namespace", None)
 
-    for node in nodes:
-        # get dependency dict from the node.
+        if "version" in node or "versions" in node:
+            spec.versions = vn.VersionList.from_dict(node)
+
+        if "arch" in node:
+            spec.architecture = ArchSpec.from_dict(node)
+
+        if "compiler" in node:
+            spec.compiler = CompilerSpec.from_dict(node)
+        else:
+            spec.compiler = None
+
+        for name, values in node.get("parameters", {}).items():
+            if name in _valid_compiler_flags:
+                spec.compiler_flags[name] = []
+                for val in values:
+                    spec.compiler_flags.add_flag(name, val, False)
+            else:
+                spec.variants[name] = vt.MultiValuedVariant.from_node_dict(name, values)
+
+        spec.external_path = None
+        spec.external_modules = None
+        if "external" in node:
+            # This conditional is needed because sometimes this function is
+            # called with a node already constructed that contains a 'versions'
+            # and 'external' field. Related to virtual packages provider
+            # indexes.
+            if node["external"]:
+                spec.external_path = node["external"]["path"]
+                spec.external_modules = node["external"]["module"]
+                if spec.external_modules is False:
+                    spec.external_modules = None
+                spec.extra_attributes = node["external"].get(
+                    "extra_attributes", syaml.syaml_dict()
+                )
+
+        # specs read in are concrete unless marked abstract
+        spec._concrete = node.get("concrete", True)
+
+        if "patches" in node:
+            patches = node["patches"]
+            if len(patches) > 0:
+                mvar = spec.variants.setdefault("patches", vt.MultiValuedVariant("patches", ()))
+                mvar.value = patches
+                # FIXME: Monkey patches mvar to store patches order
+                mvar._patches_in_order_of_appearance = patches
+
+        # Don't read dependencies here; from_dict() is used by
+        # from_yaml() and from_json() to read the root *and* each dependency
+        # spec.
+
+        return spec
+
+    @classmethod
+    def _load(cls, data):
+        """Construct a spec from JSON/YAML using the format version 2.
+
+        This format is used in Spack v0.17, was introduced in
+        https://github.com/spack/spack/pull/22845
+
+        Args:
+            data: a nested dict/list data structure read from YAML or JSON.
+        """
+        # Current specfile format
+        nodes = data["spec"]["nodes"]
+        hash_type = None
+        any_deps = False
+
+        # Pass 0: Determine hash type
+        for node in nodes:
+            for _, _, _, dhash_type in cls.dependencies_from_node_dict(node):
+                any_deps = True
+                if dhash_type:
+                    hash_type = dhash_type
+                    break
+
+        if not any_deps:  # If we never see a dependency...
+            hash_type = ht.dag_hash.name
+        elif not hash_type:  # Seen a dependency, still don't know hash_type
+            raise spack.error.SpecError(
+                "Spec dictionary contains malformed dependencies. Old format?"
+            )
+
+        hash_dict = {}
+        root_spec_hash = None
+
+        # Pass 1: Create a single lookup dictionary by hash
+        for i, node in enumerate(nodes):
+            node_hash = node[hash_type]
+            node_spec = cls.from_node_dict(node)
+            hash_dict[node_hash] = node
+            hash_dict[node_hash]["node_spec"] = node_spec
+            if i == 0:
+                root_spec_hash = node_hash
+
+        if not root_spec_hash:
+            raise spack.error.SpecError("Spec dictionary contains no nodes.")
+
+        # Pass 2: Finish construction of all DAG edges (including build specs)
+        for node_hash, node in hash_dict.items():
+            node_spec = node["node_spec"]
+            for _, dhash, dtypes, _ in cls.dependencies_from_node_dict(node):
+                node_spec._add_dependency(hash_dict[dhash]["node_spec"], deptypes=dtypes)
+            if "build_spec" in node.keys():
+                _, bhash, _ = cls.build_spec_from_node_dict(node, hash_type=hash_type)
+                node_spec._build_spec = hash_dict[bhash]["node_spec"]
+
+        return hash_dict[root_spec_hash]["node_spec"]
+
+
+class SpecfileV1(SpecfileReaderBase):
+    @classmethod
+    def load(cls, data):
+        """Construct a spec from JSON/YAML using the format version 1.
+
+        Note: Version 1 format has no notion of a build_spec, and names are
+        guaranteed to be unique. This function is guaranteed to read specs as
+        old as v0.10 - while it was not checked for older formats.
+
+        Args:
+            data: a nested dict/list data structure read from YAML or JSON.
+        """
+        nodes = data["spec"]
+
+        # Read nodes out of list.  Root spec is the first element;
+        # dependencies are the following elements.
+        dep_list = [cls.from_node_dict(node) for node in nodes]
+        if not dep_list:
+            raise spack.error.SpecError("specfile contains no nodes.")
+
+        deps = {spec.name: spec for spec in dep_list}
+        result = dep_list[0]
+
+        for node in nodes:
+            # get dependency dict from the node.
+            name, data = cls.name_and_data(node)
+            for dname, _, dtypes, _ in cls.dependencies_from_node_dict(data):
+                deps[name]._add_dependency(deps[dname], deptypes=dtypes)
+
+        return result
+
+    @classmethod
+    def name_and_data(cls, node):
         name = next(iter(node))
+        node = node[name]
+        return name, node
 
-        if "dependencies" not in node[name]:
-            continue
+    @classmethod
+    def dependencies_from_node_dict(cls, node):
+        if "dependencies" not in node:
+            return []
 
-        for dname, _, dtypes, _ in Spec.dependencies_from_node_dict(node):
-            deps[name]._add_dependency(deps[dname], dtypes)
+        for t in cls.read_specfile_dep_specs(node["dependencies"]):
+            yield t
 
-    return spec
+    @classmethod
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+        """Read the DependencySpec portion of a YAML-formatted Spec.
+        This needs to be backward-compatible with older spack spec
+        formats so that reindex will work on old specs/databases.
+        """
+        for dep_name, elt in deps.items():
+            if isinstance(elt, dict):
+                for h in ht.hashes:
+                    if h.name in elt:
+                        dep_hash, deptypes = elt[h.name], elt["type"]
+                        hash_type = h.name
+                        break
+                else:  # We never determined a hash type...
+                    raise spack.error.SpecError("Couldn't parse dependency spec.")
+            else:
+                raise spack.error.SpecError("Couldn't parse dependency types in spec.")
+            yield dep_name, dep_hash, list(deptypes), hash_type
+
+
+class SpecfileV2(SpecfileReaderBase):
+    @classmethod
+    def load(cls, data):
+        result = cls._load(data)
+        return result
+
+    @classmethod
+    def name_and_data(cls, node):
+        return node["name"], node
+
+    @classmethod
+    def dependencies_from_node_dict(cls, node):
+        return cls.read_specfile_dep_specs(node.get("dependencies", []))
+
+    @classmethod
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+        """Read the DependencySpec portion of a YAML-formatted Spec.
+        This needs to be backward-compatible with older spack spec
+        formats so that reindex will work on old specs/databases.
+        """
+        if not isinstance(deps, list):
+            raise spack.error.SpecError("Spec dictionary contains malformed dependencies")
+
+        result = []
+        for dep in deps:
+            elt = dep
+            dep_name = dep["name"]
+            if isinstance(elt, dict):
+                # new format: elements of dependency spec are keyed.
+                for h in ht.hashes:
+                    if h.name in elt:
+                        dep_hash, deptypes, hash_type, virtuals = cls.extract_info_from_dep(elt, h)
+                        break
+                else:  # We never determined a hash type...
+                    raise spack.error.SpecError("Couldn't parse dependency spec.")
+            else:
+                raise spack.error.SpecError("Couldn't parse dependency types in spec.")
+            result.append((dep_name, dep_hash, list(deptypes), hash_type))
+        return result
+
+    @classmethod
+    def extract_info_from_dep(cls, elt, hash):
+        dep_hash, deptypes = elt[hash.name], elt["type"]
+        hash_type = hash.name
+        virtuals = []
+        return dep_hash, deptypes, hash_type, virtuals
+
+    @classmethod
+    def build_spec_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
+        build_spec_dict = node["build_spec"]
+        return build_spec_dict["name"], build_spec_dict[hash_type], hash_type
+
+
+class SpecfileV3(SpecfileV2):
+    pass
 
 
 class LazySpecCache(collections.defaultdict):

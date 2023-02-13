@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,10 @@ class PyRasterio(PythonPackage):
     pypi = "rasterio/rasterio-1.1.8.tar.gz"
     git = "https://github.com/rasterio/rasterio.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("1.3.5", sha256="92358c3d4d5d6f3c7cd2812c8832d5175abce02b11bc101ac9548ff07163e8e2")
     version("1.3.4", sha256="5a8771405276ecf00b8ee927bd0a81ec21778dcfc97e4a37d0b388f10c9a41a8")
     version("1.3.3", sha256="b6fb1f12489f3a678c05ddcb78a74f0b6f63836219f51c0541e505f5e5208e7d")
     version("1.3.2", sha256="a91b32f649bc5aa3259909349258eb7999b7e830375f63cd37ade2082066ec1c")

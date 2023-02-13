@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,12 +18,14 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocalution_hip"]
 
+    version("5.4.0", sha256="dccf004434e0fee6d0c7bedd46827f5a2af0392bc4807a08403b130e461f55eb")
+    version("5.3.3", sha256="3af022250bc25bebdee12bfb8fdbab4b60513b537b9fe15dfa82ded8850c5066")
     version("5.3.0", sha256="f623449789a5c9c9137ae51d4dbbee5c6940d8813826629cb4b7e84f07fab494")
     version("5.2.3", sha256="8e0d77099bf7dc0d00505e1c936b072a59719102c75398dc1416cbef31902253")
     version("5.2.1", sha256="f246bd5b5d1b5821c29b566610a1c1d5c5cc361e0e5c373b8b04168b05e9b26f")
@@ -133,6 +135,8 @@ class Rocalution(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
+        "5.4.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -166,6 +170,8 @@ class Rocalution(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
+        "5.4.0",
     ]:
         for tgt in itertools.chain(["auto"], amdgpu_targets):
             depends_on(
@@ -178,7 +184,7 @@ class Rocalution(CMakePackage):
     # already taken in 5.2.3 rocm release.
     patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2")
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
-    patch("0004-fix-navi-1x.patch", when="@5.2.0:")
+    patch("0004-fix-navi-1x.patch", when="@5.2.0:5.3")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocalution-test")

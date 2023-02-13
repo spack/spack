@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -605,6 +605,10 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
+    # On Windows10 console handling for ASCI/VT100 sequences is not
+    # on by default. Turn on before we try to write to console
+    # with color
+    color.try_enable_terminal_color_on_windows()
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
 

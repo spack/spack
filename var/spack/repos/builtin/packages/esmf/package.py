@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Esmf(MakefilePackage):
     url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
-    maintainers = ["climbfuji", "jedwards4b"]
+    maintainers("climbfuji", "jedwards4b", "AlexanderRichert-NOAA")
 
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
@@ -90,6 +90,11 @@ class Esmf(MakefilePackage):
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("shared", default=True, description="Build shared library")
+    # 'esmf_comm' and 'esmf_os' variants allow override values for their corresponding
+    # build environment variables. Documentation, including valid values, can be found at
+    # https://earthsystemmodeling.org/docs/release/latest/ESMF_usrdoc/node10.html#SECTION000105000000000000000
+    variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
+    variant("esmf_os", default="auto", description="Override for ESMF_OS variable")
 
     # Required dependencies
     depends_on("zlib")
@@ -251,6 +256,11 @@ class Esmf(MakefilePackage):
         if self.compiler.name == "cce" or "^cray-mpich" in self.spec:
             os.environ["ESMF_OS"] = "Unicos"
 
+        # Allow override of ESMF_OS:
+        os_variant = spec.variants["esmf_os"].value
+        if os_variant != "auto":
+            os.environ["ESMF_OS"] = os_variant
+
         #######
         # MPI #
         #######
@@ -283,6 +293,11 @@ class Esmf(MakefilePackage):
         else:
             # Force use of the single-processor MPI-bypass library.
             os.environ["ESMF_COMM"] = "mpiuni"
+
+        # Allow override of ESMF_COMM:
+        comm_variant = spec.variants["esmf_comm"].value
+        if comm_variant != "auto":
+            os.environ["ESMF_COMM"] = comm_variant
 
         ##########
         # LAPACK #

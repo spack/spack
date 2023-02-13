@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,10 @@ class SingularityEos(CMakePackage, CudaPackage):
     git = "https://github.com/lanl/singularity-eos.git"
     url = "https://github.com/lanl/singularity-eos/archive/refs/tags/release-1.6.1.tar.gz"
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("main", branch="main")
+    version("1.7.0", sha256="ce0825db2e9d079503e98cecf1c565352be696109042b3a0941762b35f36dc49")
     version("1.6.2", sha256="9c85fca679139a40cc9c72fcaeeca78a407cc1ca184734785236042de364b942")
     version("1.6.1", sha256="c6d92dfecf9689ffe2df615791c039f7e527e9f47799a862e26fa4e3420fe5d7")
 
@@ -40,33 +41,19 @@ class SingularityEos(CMakePackage, CudaPackage):
         values=any_combination_of("sesame", "stellarcollapse").with_default("none"),
     )
 
-    # build tests
-    variant("tests", default=False, description="Build tests")
-
     # build the Fortran interface
     variant("fortran", default=True, description="Enable building fortran interface")
 
     # build the Python bindings
     variant("python", default=False, description="Enable building Python bindings")
 
-    # build the documentation
-    variant("doc", default=False, description="Sphinx Documentation Support")
-
-    # include depedencies for automatic code formatting (i.e. clang-format)
-    variant("format", default=False, description="Clang-Format Support")
-
     variant("eospac", default=True, description="Pull in EOSPAC")
 
     # building/testing/docs
-    depends_on("cmake@3.14:")
-    depends_on("catch2@2.13.7", when="+tests")
+    depends_on("cmake@3.14:", type="build")
+    depends_on("catch2@2.13.7", type="test")
     depends_on("python@3:", when="+python")
     depends_on("py-pybind11@2.9.1:", when="+python")
-    #    depends_on("py-h5py", when="+tests build_extra=stellarcollapse")
-    depends_on("py-sphinx", when="+doc")
-    depends_on("py-sphinx-rtd-theme@0.4.3", when="+doc")
-    depends_on("py-sphinx-multiversion", when="+doc")
-    depends_on("llvm@12.0.0+clang", when="+format")
 
     # linear algebra when not using GPUs
     depends_on("eigen@3.3.8", when="~cuda")
@@ -116,9 +103,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     # common MPI dependence
     for _flag in ("~mpi", "+mpi"):
         depends_on("hdf5~cxx+hl" + _flag, when=_flag)
-        depends_on("py-h5py" + _flag, when="+tests build_extra=stellarcollapse " + _flag)
-        #        depends_on("hdf5+hl" + _flag, when=_flag)
-        depends_on("py-h5py" + _flag, when=_flag)
+        depends_on("py-h5py" + _flag, when="@:1.6.2 " + _flag)
         depends_on("kokkos-nvcc-wrapper" + _flag, when="+cuda+kokkos" + _flag)
 
     def cmake_args(self):
@@ -130,25 +115,24 @@ class SingularityEos(CMakePackage, CudaPackage):
             self.define_from_variant("SINGULARITY_USE_FORTRAN", "fortran"),
             self.define_from_variant("SINGULARITY_BUILD_CLOSURE", "fortran"),
             self.define_from_variant("SINGULARITY_BUILD_PYTHON", "python"),
-            self.define_from_variant("SINGULARITY_BUILD_TESTS", "tests"),
+            self.define("SINGULARITY_BUILD_TESTS", self.run_tests),
             self.define(
-                "SINGULARITY_BUILD_SESAME2SPINER", "sesame" in self.spec.variants["build_extra"]
+                "SINGULARITY_BUILD_SESAME2SPINER",
+                "sesame" in self.spec.variants["build_extra"].value,
             ),
             self.define(
                 "SINGULARITY_TEST_SESAME",
-                ("sesame" in self.spec.variants["build_extra"] and "tests" in self.spec),
+                ("sesame" in self.spec.variants["build_extra"].value and self.run_tests),
             ),
             self.define(
                 "SINGULARITY_BUILD_STELLARCOLLAPSE2SPINER",
-                "stellarcollapse" in self.spec.variants["build_extra"],
+                "stellarcollapse" in self.spec.variants["build_extra"].value,
             ),
             self.define(
                 "SINGULARITY_TEST_STELLARCOLLAPSE2SPINER",
-                ("stellarcollapse" in self.spec.variants["build_extra"] and "tests" in self.spec),
+                ("stellarcollapse" in self.spec.variants["build_extra"].value and self.run_tests),
             ),
-            self.define(
-                "SINGULARITY_TEST_PYTHON", ("python" in self.spec and "tests" in self.spec)
-            ),
+            self.define("SINGULARITY_TEST_PYTHON", ("+python" in self.spec and self.run_tests)),
             self.define("SINGULARITY_USE_HDF5", "^hdf5" in self.spec),
             self.define("SINGULARITY_USE_EOSPAC", "^eospac" in self.spec),
         ]

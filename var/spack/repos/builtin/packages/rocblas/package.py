@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,15 +13,17 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocblas"]
 
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.4.0", sha256="261e05375024a01e68697c5d175210a07f0f5fc63a756234d996ddedffde78a2")
+    version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
     version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
     version("5.2.3", sha256="36f74ce53b82331a756c42f95f3138498d6f4a66f2fd370cff9ab18281bb12d5")
     version("5.2.1", sha256="6be804ba8d9e491a85063c220cd0ddbf3d13e3b481eee31041c35a938723f4c6")
@@ -113,8 +115,6 @@ class Rocblas(CMakePackage):
     # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
     # gfx803,gfx900,gfx:xnack-,gfx908:xnack- are valid gpus for @4.1.0:4.2.0
     # gfx803 till gfx1030  are valid gpus for @4.3.0:
-    conflicts("amdgpu_target=gfx906", when="@4.0.1:")
-    conflicts("amdgpu_target=gfx908", when="@4.0.1:")
     conflicts("amdgpu_target=gfx906:xnack-", when="@:4.0.0")
     conflicts("amdgpu_target=gfx908:xnack-", when="@:4.0.0")
     conflicts("amdgpu_target=gfx90a:xnack+", when="@:4.2.1")
@@ -169,6 +169,8 @@ class Rocblas(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
+        "5.4.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -208,6 +210,8 @@ class Rocblas(CMakePackage):
         ("@5.2.1", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.2.3", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
         ("@5.3.0", "b33ca97af456cda14f7b1ec9bcc8aeab3ed6dd08"),
+        ("@5.3.3", "006a5d653ce0d82fecb05d5e215d053749b57c04"),
+        ("@5.4.0", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
     ]:
         resource(
             name="Tensile",

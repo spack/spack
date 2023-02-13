@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Glib(Package):
     list_url = "https://download.gnome.org/sources/glib"
     list_depth = 1
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version("2.74.3", sha256="e9bc41ecd9690d9bc6a970cc7380119b828e5b6a4b16c393c638b3dc2b87cbcb")
     version("2.74.1", sha256="0ab981618d1db47845e56417b0d7c123f81a3427b2b9c93f5a46ff5bbb964964")
@@ -126,6 +126,7 @@ class Glib(Package):
     depends_on("perl", type=("build", "run"))
     depends_on("python", type=("build", "run"), when="@2.53.4:")
     depends_on("pcre2", when="@2.73.2:")
+    depends_on("pcre2@10.34:", when="@2.74:")
     depends_on("pcre+utf", when="@2.48:2.73.1")
     depends_on("uuid", when="+libmount")
     depends_on("util-linux", when="+libmount")

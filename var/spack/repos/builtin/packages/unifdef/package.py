@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Unifdef(MakefilePackage):
     homepage = "https://dotat.at/prog/unifdef/"
     url = "https://dotat.at/prog/unifdef/unifdef-2.11.tar.xz"
 
-    maintainers = ["matthiasdiener"]
+    maintainers("matthiasdiener")
 
     version("2.11", sha256="828ffc270ac262b88fe011136acef2780c05b0dc3c5435d005651740788d4537")
 

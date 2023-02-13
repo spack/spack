@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class GitFilterRepo(Package):
     homepage = "https://github.com/newren/git-filter-repo"
     url = "https://github.com/newren/git-filter-repo/releases/download/v2.34.0/git-filter-repo-2.34.0.tar.xz"
 
-    maintainers = ["aphedges"]
+    maintainers("aphedges")
 
     version("2.38.0", sha256="db954f4cae9e47c6be3bd3161bc80540d44f5379cb9cf9df498f4e019f0a41a9")
     version("2.34.0", sha256="b1bf46af1e6a91a54056d0254e480803db8e40f631336c559a1a94d2a08389c4")

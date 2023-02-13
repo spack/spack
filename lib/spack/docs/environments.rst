@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1040,7 +1040,7 @@ gets installed and is available for use in the ``env`` target.
    	$(SPACK) -e . concretize -f
 
    env.mk: spack.lock
-   	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
+   	$(SPACK) -e . env depfile -o $@ --make-prefix spack
 
    env: spack/env
    	$(info Environment installed!)
@@ -1063,9 +1063,9 @@ the include is conditional.
 .. note::
 
    When including generated ``Makefile``\s, it is important to use
-   the ``--make-target-prefix`` flag and use the non-phony target
-   ``<target-prefix>/env`` as prerequisite, instead of the phony target
-   ``<target-prefix>/all``.
+   the ``--make-prefix`` flag and use the non-phony target
+   ``<prefix>/env`` as prerequisite, instead of the phony target
+   ``<prefix>/all``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a subset of the environment
@@ -1091,3 +1091,51 @@ output (``spack install --verbose``) while its dependencies are installed silent
 
    # Install the root spec with verbose output.
    $ make -j16 install/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--verbose
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding post-install hooks
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Another advanced use-case of generated ``Makefile``\s is running a post-install
+command for each package. These "hooks" could be anything from printing a
+post-install message, running tests, or pushing just-built binaries to a buildcache.
+
+This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS``
+variable. Assuming we have an active and concrete environment, we generate the
+associated ``Makefile`` with a prefix ``example``:
+
+.. code:: console
+
+   $ spack env depfile -o env.mk --make-prefix example
+
+And we now include it in a different ``Makefile``, in which we create a target
+``example/push/%`` with ``%`` referring to a package identifier. This target
+depends on the particular package installation. In this target we automatically
+have the target-specific ``HASH`` and ``SPEC`` variables at our disposal. They
+are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
+Finally, we have an entrypoint target ``push`` that will update the buildcache
+index once every package is pushed. Note how this target uses the generated
+``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
+
+.. code:: Makefile
+
+   SPACK ?= spack
+   BUILDCACHE_DIR = $(CURDIR)/tarballs
+   
+   .PHONY: all
+   
+   all: push
+   
+   include env.mk
+   
+   example/push/%: example/install/%
+   	@mkdir -p $(dir $@)
+   	$(info About to push $(SPEC) to a buildcache)
+   	$(SPACK) -e . buildcache create --allow-root --only=package --directory $(BUILDCACHE_DIR) /$(HASH)
+   	@touch $@
+   
+   push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
+   	$(info Updating the buildcache index)
+   	$(SPACK) -e . buildcache update-index --directory $(BUILDCACHE_DIR)
+   	$(info Done!)
+   	@touch $@

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyPicmistandard(PythonPackage):
     git = "https://github.com/picmi-standard/picmi.git"
     pypi = "picmistandard/picmistandard-0.0.18.tar.gz"
 
-    maintainers = ["ax3l", "dpgrote", "RemiLehe"]
+    maintainers("ax3l", "dpgrote", "RemiLehe")
 
     version("develop", branch="master")
     version("0.0.22", sha256="e234a431274254b22cd70be64d6555b383d98426b2763ea0c174cf77bf4d0890")

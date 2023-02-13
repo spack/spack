@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ import llnl.util.lang
 
 import spack.compilers
 import spack.concretize
+import spack.detection
 import spack.error
 import spack.hash_types as ht
 import spack.platforms
@@ -1940,7 +1941,9 @@ class TestConcretize(object):
             assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
 
     def test_external_python_extensions_have_dependency(self):
-        """Test that python extensions have access to a python dependency"""
+        """Test that python extensions have access to a python dependency
+
+        when python is otherwise in the DAG"""
         external_conf = {
             "py-extension1": {
                 "buildable": False,
@@ -1953,3 +1956,106 @@ class TestConcretize(object):
 
         assert "python" in spec["py-extension1"]
         assert spec["python"] == spec["py-extension1"]["python"]
+
+    target = spack.platforms.test.Test.default
+
+    @pytest.mark.parametrize(
+        "python_spec",
+        [
+            "python@configured",
+            "python@configured platform=test",
+            "python@configured os=debian",
+            "python@configured target=%s" % target,
+        ],
+    )
+    def test_external_python_extension_find_dependency_from_config(self, python_spec):
+        fake_path = os.path.sep + "fake"
+
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
+            },
+            "python": {
+                "externals": [{"spec": python_spec, "prefix": fake_path}],
+            },
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == fake_path
+        # The spec is not equal to spack.spec.Spec("python@configured") because it gets a
+        # namespace and an external prefix before marking concrete
+        assert spec["python"].satisfies(python_spec)
+
+    def test_external_python_extension_find_dependency_from_installed(self, monkeypatch):
+        fake_path = os.path.sep + "fake"
+
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
+            },
+            "python": {
+                "buildable": False,
+                "externals": [{"spec": "python@installed", "prefix": fake_path}],
+            },
+        }
+        spack.config.set("packages", external_conf)
+
+        # install python external
+        python = Spec("python").concretized()
+        monkeypatch.setattr(spack.store.db, "query", lambda x: [python])
+
+        # ensure that we can't be faking this by getting it from config
+        external_conf.pop("python")
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == fake_path
+        # The spec is not equal to spack.spec.Spec("python@configured") because it gets a
+        # namespace and an external prefix before marking concrete
+        assert spec["python"].satisfies(python)
+
+    def test_external_python_extension_find_dependency_from_detection(self, monkeypatch):
+        """Test that python extensions have access to a python dependency
+
+        when python isn't otherwise in the DAG"""
+        python_spec = spack.spec.Spec("python@detected")
+        prefix = os.path.sep + "fake"
+
+        def find_fake_python(classes, path_hints):
+            return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
+
+        monkeypatch.setattr(spack.detection, "by_executable", find_fake_python)
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": "%s" % prefix}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension1").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"].prefix == prefix
+        assert spec["python"] == python_spec
+
+    def test_external_python_extension_find_unified_python(self):
+        """Test that python extensions use the same python as other specs in unified env"""
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": os.path.sep + "fake"}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        abstract_specs = [spack.spec.Spec(s) for s in ["py-extension1", "python"]]
+        specs = spack.concretize.concretize_specs_together(*abstract_specs)
+        assert specs[0]["python"] == specs[1]["python"]

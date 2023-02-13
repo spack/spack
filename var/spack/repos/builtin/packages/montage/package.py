@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,19 @@ class Montage(MakefilePackage):
 
     homepage = "http://montage.ipac.caltech.edu/"
     url = "http://montage.ipac.caltech.edu/download/Montage_v6.0.tar.gz"
+    maintainers("snehring")
 
     version("6.0", sha256="1f540a7389d30fcf9f8cd9897617cc68b19350fbcde97c4d1cdc5634de1992c6")
 
     depends_on("freetype")
     depends_on("bzip2")
+    depends_on("libnsl")
     depends_on("libpng")
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies("%gcc@10:") and name.lower() == "cflags":
+            flags.append("-fcommon")
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         # not using autotools, just builds bin and lib in the source directory

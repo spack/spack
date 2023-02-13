@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Mono(AutotoolsPackage):
 
     homepage = "https://www.mono-project.com/"
     url = "https://download.mono-project.com/sources/mono/mono-5.0.1.1.tar.bz2"
-    maintainers = ["grospelliergilles"]
+    maintainers("grospelliergilles")
 
     # /usr/share/.mono/keypairs needs to exist or be able to be
     # created, e.g. https://github.com/gentoo/dotnet/issues/6

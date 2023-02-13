@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Hal(MakefilePackage):
 
     version("2.1", "540255be1af55abf390359fe034b82d7e61bdf6c3277df3cc01259cd450994e5")
 
-    maintainers = ["ilbiondo"]
+    maintainers("ilbiondo")
 
     # HAL expects to be compiled alongside sonlib so we need both the
     # source version and python library version

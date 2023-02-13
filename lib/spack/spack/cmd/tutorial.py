@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,7 +63,7 @@ def tutorial(parser, args):
         if not tty.get_yes_or_no("Are you sure you want to proceed?"):
             tty.die("Aborted")
 
-    rm_cmds = ["rm -f %s" % f for f in rm_configs]
+    rm_cmds = [f"rm -f {f}" for f in rm_configs]
     tty.msg("Reverting compiler and repository configuration", *rm_cmds)
     for path in rm_configs:
         if os.path.exists(path):
@@ -71,19 +71,19 @@ def tutorial(parser, args):
 
     tty.msg(
         "Ensuring that the tutorial binary mirror is configured:",
-        "spack mirror add tutorial %s" % tutorial_mirror,
+        f"spack mirror add tutorial {tutorial_mirror}",
     )
     mirror_config = syaml_dict()
     mirror_config["tutorial"] = tutorial_mirror
     spack.config.set("mirrors", mirror_config, scope="user")
 
-    tty.msg("Ensuring that we trust tutorial binaries", "spack gpg trust %s" % tutorial_key)
+    tty.msg("Ensuring that we trust tutorial binaries", f"spack gpg trust {tutorial_key}")
     spack.util.gpg.trust(tutorial_key)
 
     # Note that checkout MUST be last. It changes Spack under our feet.
     # If you don't put this last, you'll get import errors for the code
     # that follows (exacerbated by the various lazy singletons we use)
-    tty.msg("Ensuring we're on the releases/v{0}.{1} branch".format(*spack.spack_version_info[:2]))
+    tty.msg(f"Ensuring we're on the {tutorial_branch} branch")
     git = spack.util.git.git(required=True)
     with working_dir(spack.paths.prefix):
         git("checkout", tutorial_branch)

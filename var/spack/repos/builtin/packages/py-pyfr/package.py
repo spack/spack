@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     homepage = "http://www.pyfr.org/"
     pypi = "pyfr/pyfr-1.13.0.tar.gz"
     git = "https://github.com/PyFR/PyFR/"
-    maintainers = ["MichaelLaufer"]
+    maintainers("MichaelLaufer")
 
     # git branches
     version("develop", branch="develop")

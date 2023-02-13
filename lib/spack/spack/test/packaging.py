@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ from spack.relocate import (
     needs_binary_relocation,
     needs_text_relocation,
     relocate_links,
-    unsafe_relocate_text,
+    relocate_text,
 )
 from spack.spec import Spec
 
@@ -190,7 +190,7 @@ echo $PATH"""
 
 
 @pytest.mark.usefixtures("install_mockery")
-def test_unsafe_relocate_text(tmpdir):
+def test_relocate_text(tmpdir):
     spec = Spec("trivial-install-test-package")
     spec.concretize()
     with tmpdir.as_cwd():
@@ -203,7 +203,7 @@ def test_unsafe_relocate_text(tmpdir):
         filenames = [filename]
         new_dir = "/opt/rh/devtoolset/"
         # Singleton dict doesn't matter if Ordered
-        unsafe_relocate_text(filenames, {old_dir: new_dir})
+        relocate_text(filenames, {old_dir: new_dir})
         with open(filename, "r") as script:
             for line in script:
                 assert new_dir in line

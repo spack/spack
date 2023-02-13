@@ -54,6 +54,11 @@ config:
   # are that it precludes its use as a system package and its ability to be
   # pip installable.
   #
+  # In Spack environment files, chaining onto existing system Spack
+  # installations, the $env variable can be used to download, cache and build
+  # into user-writable paths that are relative to the currently active
+  # environment.
+  #
   # In any case, if the username is not already in the path, Spack will append
   # the value of `$user` in an attempt to avoid potential conflicts between
   # users in shared temporary spaces.

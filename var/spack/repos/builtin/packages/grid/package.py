@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Grid(AutotoolsPackage):
     url = "https://github.com/paboyle/Grid/archive/refs/tags/0.8.2.tar.gz"
     git = "https://github.com/paboyle/Grid.git"
 
-    maintainers = ["giordano"]
+    maintainers("giordano")
 
     version("develop", branch="develop")
 

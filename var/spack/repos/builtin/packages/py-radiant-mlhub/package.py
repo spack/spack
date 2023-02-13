@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyRadiantMlhub(PythonPackage):
     homepage = "https://github.com/radiantearth/radiant-mlhub"
     pypi = "radiant-mlhub/radiant_mlhub-0.2.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.5.2", sha256="d310afce962508a44c60f5738fef164c50e78f76c3e85813653824b39a189ca3")
     version("0.5.1", sha256="b7daff4a127e96e27c64eda66e393d9727e61a87c887f86738753486cc44fa46")
