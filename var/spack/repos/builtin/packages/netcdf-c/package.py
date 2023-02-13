@@ -133,6 +133,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+parallel-netcdf")
 
+    # We also need to use MPI wrappers when building against static MPI-enabled HDF5:
+    depends_on("mpi", when="^hdf5+mpi~shared")
+
     # zlib 1.2.5 or later is required for netCDF-4 compression:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
     depends_on("zlib@1.2.5:")
@@ -326,7 +329,7 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
         else:
             config_args.append("--disable-pnetcdf")
 
-        if "+mpi" in self.pkg.spec or "+parallel-netcdf" in self.pkg.spec:
+        if any(s in self.pkg.spec for s in ["+mpi", "+parallel-netcdf", "^hdf5+mpi~shared"]):
             config_args.append("CC=%s" % self.pkg.spec["mpi"].mpicc)
 
         config_args += self.enable_or_disable("hdf4")
