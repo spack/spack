@@ -41,7 +41,7 @@ class PyJax(PythonPackage):
     }
 
     for jax, jaxlib in jax_to_jaxlib.items():
-        depends_on(f"py-jaxlib@{jaxlib}", when=f"@{jax}", type=("build", "run"))
+        depends_on(f"py-jaxlib@{jaxlib}:", when=f"@{jax}", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-absl-py", when="@:0.3", type=("build", "run"))
