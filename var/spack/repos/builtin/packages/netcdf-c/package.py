@@ -273,6 +273,7 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
 
         # if '+dap' in self.pkg.spec or '+cdmremote' in self.pkg.spec:
         if "+dap" in self.pkg.spec:
+            config_args.append("--enable-libxml2")
             # Make sure Netcdf links against Spack's curl, otherwise it may
             # pick up system's curl, which can give link errors, e.g.:
             # undefined reference to `SSL_CTX_use_certificate_chain_file
@@ -304,6 +305,16 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
         hdf5_hl = self.pkg.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
+        if "~shared" in hdf5_hl:
+            zlib = self.pkg.spec["zlib"]
+            if "~shared" in zlib:
+                # If zlib is static, and some other dependency is dynamic and, as well, depends on
+                # zlib (e.g. libxml2), the latter might contain a subset of symbols of the former.
+                # If one of those symbols happens to be 'deflate', the configure script considers
+                # all zlib symbols to be available without extra linker flags. That is, however,
+                # not necessarily true for other zlib symbols (e.g. 'compress2') that are required
+                # for hdf5. Therefore, we have to help the configure script:
+                libs.append(zlib.libs.link_flags)
 
         if "+parallel-netcdf" in self.pkg.spec:
             config_args.append("--enable-pnetcdf")
