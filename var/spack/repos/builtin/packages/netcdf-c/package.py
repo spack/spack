@@ -80,6 +80,10 @@ class NetcdfC(AutotoolsPackage):
     variant("fsync", default=False, description="Enable fsync support")
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+    # New byterange I/O option doesn't compile with 4.9.1, will be fixed in 4.9.2
+    # https://github.com/Unidata/netcdf-c/issues/2614
+    variant("byterange", default=False, description="Enable byterange", when="@4.9.1")
+    variant("byterange", default=True, description="Enable byterange", when="@4.9.2:")
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -231,6 +235,9 @@ class NetcdfC(AutotoolsPackage):
             ldflags.append("-L" + pnetcdf.prefix.lib)
         else:
             config_args.append("--disable-pnetcdf")
+
+        if "~byterange" in self.spec:
+            config_args.append("--disable-byterange")
 
         if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
             config_args.append("CC=%s" % self.spec["mpi"].mpicc)
