@@ -39,6 +39,12 @@ class NetcdfFortran(AutotoolsPackage):
     depends_on("doxygen", when="+doc", type="build")
     depends_on("mpi", when="^hdf5~shared+mpi")
 
+    # We need to use MPI wrappers when building against static MPI-enabled NetCDF and/or HDF5:
+    with when("^netcdf-c~shared"):
+        depends_on("mpi", when="^netcdf-c+mpi")
+        depends_on("mpi", when="^netcdf-c+parallel-netcdf")
+        depends_on("mpi", when="^hdf5+mpi~shared")
+
     # Enable 'make check' for NAG, which is too strict.
     patch("nag_testing.patch", when="@4.4.5%nag")
 
@@ -128,25 +134,13 @@ class NetcdfFortran(AutotoolsPackage):
                 # configuration failure, we set the following cache variable:
                 config_args.append("ac_cv_func_MPI_File_open=yes")
 
-            if "~shared" in self.spec:
+        if "~shared" in netcdf_c_spec:
+            nc_config = which("nc-config")
+            config_args.append("LIBS={0}".format(nc_config("--libs", output=str)))
+            if any(s in netcdf_c_spec for s in ["+mpi", "+parallel-netcdf", "^hdf5+mpi~shared"]):
                 config_args.append("CC=%s" % self.spec["mpi"].mpicc)
                 config_args.append("FC=%s" % self.spec["mpi"].mpifc)
                 config_args.append("F77=%s" % self.spec["mpi"].mpif77)
-
-        if "~shared" in netcdf_c_spec:
-            netcdf_libs_cmd = ["pkg-config","netcdf","--libs"]
-            netcdf_libs = subprocess.check_output(netcdf_libs_cmd, encoding="utf-8").strip()
-            config_args.append("LIBS=" + netcdf_libs)
-
-            netcdf_ldflags_cmd = ["pkg-config","netcdf","--libs-only-L"]
-            netcdf_ldflags = \
-              subprocess.check_output(netcdf_ldflags_cmd, encoding="utf8").strip()
-            config_args.append("LDFLAGS=" + netcdf_ldflags)
-
-            netcdf_cflags_cmd = ["pkg-config","netcdf","--cflags"]
-            netcdf_cflags = \
-              subprocess.check_output(netcdf_cflags_cmd, encoding="utf8").strip()
-            config_args.append("CPPFLAGS=" + netcdf_cflags)
 
         return config_args
 
