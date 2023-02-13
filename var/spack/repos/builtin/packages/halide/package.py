@@ -50,6 +50,10 @@ class Halide(CMakePackage, PythonExtension):
     depends_on("py-scipy", type=("build", "run"), when="+python")
     depends_on("py-numpy", type=("build", "run"), when="+python")
 
+    @property
+    def libs(self):
+        return find_libraries("libHalide", root=self.prefix, recursive=True)
+
     def cmake_args(self):
         spec = self.spec
         llvm_config = Executable(spec["llvm"].prefix.bin.join("llvm-config"))
