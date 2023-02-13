@@ -39,8 +39,6 @@ class Googletest(CMakePackage):
     conflicts("cxxstd=98", when="@1.9:")
     conflicts("cxxstd=11", when="@1.13:")
 
-    conflicts("%intel@18", when="@1.10:")
-
     def cmake_args(self):
         spec = self.spec
         args = [

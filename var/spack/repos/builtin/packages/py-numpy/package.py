@@ -153,10 +153,6 @@ class PyNumpy(PythonPackage):
     conflicts("%intel", when="@1.23.0:")
     conflicts("%oneapi", when="@1.23.0:")
 
-    # Intel 18 doesn't build 1.22.3 (and later?) on newer CPUs,
-    # because these want to apply CPU-specific optimizations.
-    conflicts("%intel@18", when="@1.22:")
-
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}"
         if version >= Version("1.23"):
