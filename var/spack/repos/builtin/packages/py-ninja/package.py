@@ -22,7 +22,6 @@ class PyNinja(PythonPackage):
     depends_on("py-scikit-build", type="build")
     depends_on("py-scikit-build@0.12:", type="build", when="@1.11.1")
     depends_on("ninja@1.10.2", type=("build", "run"), when="@1.10.2")
-    depends_on("ninja@1.11.1", type=("build", "run"), when="@1.11.1")
 
     def patch(self):
         os.unlink(join_path(self.stage.source_path, "CMakeLists.txt"))
