@@ -2447,7 +2447,7 @@ writing a package for a legacy Python module that only works with Python
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
 greater than or equal to ``2.4`` and up to and including any ``2.6.x``.
 
-Note that while Python is versioned with three digis, like ``2.4.0``, we can
+Note that while Python is versioned with three digits, like ``2.4.0``, we can
 omit the trailing digits if we only care about the initial ones. For example,
 the version ``2.4.0`` will get matched by the spec ``@2.4:2.6``.
 
@@ -2480,7 +2480,8 @@ preferred.
 
 Note that if a version part is alphabetic, it is considered to precede
 numeric versions, and it is compared to other alphabetic sequences using
-dictionary order, unless it is a special name, so:
+dictionary order, unless it is a
+:py:data:`special name <spack.version.infinity_versions>`, so:
 
 .. code-block:: text
 
