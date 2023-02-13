@@ -106,6 +106,12 @@ class Expat(CMakePackage):
         description="Use libbsd (for high quality randomness)",
     )
 
+    variant(
+        "shared",
+        default=True,
+        description="Build expat as shared if true, static if false"
+    )
+
     depends_on("libbsd", when="@2.2.1:+libbsd")
 
     def url_for_version(self, version):
@@ -113,7 +119,7 @@ class Expat(CMakePackage):
         return url.format(version.underscored, version.dotted)
 
     def cmake_args(self):
-        args = [self.define("EXPAT_BUILD_DOCS", False), self.define("BUILD_SHARED_LIBS", False)]
+        args = [self.define("EXPAT_BUILD_DOCS", False), self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         if "+libbsd" in self.spec and "@2.2.1:" in self.spec:
             args.append(self.define_from_variant("EXPAT_WITH_LIBBSD", "libbsd"))
