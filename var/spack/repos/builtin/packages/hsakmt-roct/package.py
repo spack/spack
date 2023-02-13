@@ -165,10 +165,9 @@ class HsakmtRoct(CMakePackage):
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,
                 ".",
             ]
-            os.environ["NUMA_PATH"]=self.spec["numactl"].prefix
+            os.environ["NUMA_PATH"] = self.spec["numactl"].prefix
             self.run_test(cmake_bin, cc_options)
             make()
-            os.environ["LD_LIBRARY_PATH"]= drm_lib_path + os.pathsep + hsakmt_path
+            os.environ["LD_LIBRARY_PATH"] = drm_lib_path + os.pathsep + hsakmt_path
             self.run_test("kfdtest")
             make("clean")
-

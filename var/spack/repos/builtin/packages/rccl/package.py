@@ -223,21 +223,4 @@ class Rccl(CMakePackage):
             return
         test_dir = join_path(self.spec["rccl"].prefix, "bin")
         with working_dir(test_dir, create=True):
-            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-            prefixes = ";".join(
-                [
-                    self.spec["hsa-rocr-dev"].prefix,
-                    self.spec["chrpath"].prefix,
-                    self.spec["rocm-cmake"].prefix,
-                    self.spec["rccl"].prefix,
-                ]
-            )
-            rocm_cmake_module_path = join_path(self.spec["rocm-cmake"].prefix, "share", "rocm","cmake")
-            cc_options = [
-                "-DCMAKE_PREFIX_PATH=" + prefixes,
-                "-DBUILD_TESTS=ON",
-                "-DROCM_PATH=" + self.spec["rccl"].prefix,
-                "-DCMAKE_MODULE_PATH=" + rocm_cmake_module_path,
-                ".",
-            ]
             self.run_test("UnitTests")

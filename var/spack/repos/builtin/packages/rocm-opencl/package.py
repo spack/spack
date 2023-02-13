@@ -250,6 +250,7 @@ class RocmOpencl(CMakePackage):
             f.write("libamdocl64.so")
 
     test_src_dir = "tests/ocltst"
+
     def test(self):
         test_dir = join_path(self.spec["rocm-opencl"].prefix, self.test_src_dir)
         with working_dir(test_dir, create=True):
