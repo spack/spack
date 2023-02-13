@@ -93,7 +93,7 @@ class Cce(Compiler):
     def cxx17_flag(self):
         if self.is_clang_based:
             return "-std=c++17"
-    
+
     @property
     def c99_flag(self):
         if self.is_clang_based:
