@@ -56,9 +56,17 @@ class Serenity(CMakePackage):
 
         filter_file(
             "find_package(GMock 1.8.1 QUIET)",
-            "return()",
+            "add_library(GMock::GMock IMPORTED INTERFACE)\n"
+            "add_library(GMock::Main IMPORTED INTERFACE)",
             "cmake/ImportGTest.cmake",
             string=True,
+        )
+
+        filter_file(
+            "^    (xc|xcfun|libint2-static)\s*$",
+            "",
+            "CMakeLists.txt",
+            start_at="# Add all targets to the build-tree export set",
         )
 
         filter_file(
