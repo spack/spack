@@ -690,8 +690,17 @@ class SimpleFilesystemView(FilesystemView):
         # For compatibility, we have to create a merge_map dict mapping
         # full_src => full_dst
         files_per_spec = itertools.groupby(visitor.files.items(), key=lambda item: item[1][0])
+        prefix_to_files = dict()
+        for src_root, rel_paths in files_per_spec:
+            prefix_to_files[src_root] = list(rel_paths)
 
-        for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
+        spec_to_file_group = dict()
+        for spec in specs:
+            if not spec.prefix in prefix_to_files:
+                continue
+            spec_to_file_group[spec] = (spec.prefix, prefix_to_files[spec.prefix])
+
+        for (spec, (src_root, rel_paths)) in spec_to_file_group.items():
             merge_map = dict()
             for dst_rel, (_, src_rel) in rel_paths:
                 full_src = os.path.join(src_root, src_rel)
