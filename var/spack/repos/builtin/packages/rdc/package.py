@@ -24,6 +24,7 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.4.3", sha256="c44f0b070b5650bc78e2eb968aae57a8ac1e1fd160e897055b79f3026c4fbad3")
     version("5.4.0", sha256="268aab43e31045443b08a21aee8750da4cf04750c6f419ec171ec704d377a4e4")
     version("5.3.3", sha256="1bf1a02f305e3a629801e62584116a34eafbd1b26627837a2a8c10550fcf611b")
     version("5.3.0", sha256="ce9c85dad8e0c0b21e8e5938bf16f86a62dc5f6ded5f453c61acd43666634d6b")
@@ -128,6 +129,7 @@ class Rdc(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-smi-lib@" + ver, type=("build", "link"), when="@" + ver)
 
@@ -142,6 +144,7 @@ class Rdc(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
 
@@ -153,7 +156,7 @@ class Rdc(CMakePackage):
             "CMakeLists.txt",
             string=True,
         )
-        if self.spec.satisfies("@5.4.0"):
+        if self.spec.satisfies("@5.4.0:5.4"):
             filter_file(
                 "${ROCM_DIR}/${CMAKE_INSTALL_INCLUDEDIR}",
                 "{0}/include".format(self.spec["rocm-smi-lib"].prefix),
