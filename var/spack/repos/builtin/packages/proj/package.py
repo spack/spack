@@ -126,7 +126,7 @@ class CMakeBuilder(cmake.CMakeBuilder, Setup):
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder, Setup):
     def configure_args(self):
-        args = ["PROJ_LIB={0}".format(join_path(self.pkg.stage.source_path, "nad"))]
+        args = []
 
         if self.spec.satisfies("@6:"):
             args.append("--with-external-gtest")
@@ -138,7 +138,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, Setup):
                 args.append("--disable-tiff")
 
             if "+curl" in self.spec:
-                args.append("--with-curl=" + self.pkg.spec["curl"].prefix.bin.join("curl-config"))
+                args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
             else:
                 args.append("--without-curl")
 
