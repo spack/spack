@@ -27,6 +27,7 @@ class GlobalWorkflowEnv(BundlePackage):
     depends_on("esmf")
     depends_on("bacio")
     depends_on("g2")
+    depends_on("g2tmpl")
     depends_on("w3nco")
     depends_on("w3emc")
     depends_on("sp")
@@ -40,5 +41,8 @@ class GlobalWorkflowEnv(BundlePackage):
     depends_on("wgrib2")
     depends_on("met")
     depends_on("metplus")
+    depends_on("gsi-ncdiag")
+    depends_on("ncl")
+    depends_on("crtm@2.4.0")
 
     # There is no need for install() since there is no code.

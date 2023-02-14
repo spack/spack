@@ -81,10 +81,9 @@ class NetcdfC(AutotoolsPackage):
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
     variant("nczarr", default=True, description="Enable zarr storage support", when="@4.8.0:")
-    # New byte-range I/O option doesn't compile with 4.9.1, will be fixed in 4.9.2
+    # New byte-range I/O option doesn't compile with 4.7.0:4.9.1, will be fixed in 4.9.2?
     # https://github.com/Unidata/netcdf-c/issues/2614
-    variant("byterange", default=False, description="Allow byte-range I/O", when="@4.9.1")
-    variant("byterange", default=True, description="Allow byte-range I/O", when="@4.9.2:")
+    variant("byterange", default=False, description="Allow byte-range I/O", when="@4.7.0:")
     # Variant fismahigh is required for FISMA high compliance on operational supercomputers
     variant(
         "fismahigh",
@@ -248,9 +247,6 @@ class NetcdfC(AutotoolsPackage):
             ldflags.append("-L" + pnetcdf.prefix.lib)
         else:
             config_args.append("--disable-pnetcdf")
-
-        if "~byterange" in self.spec:
-            config_args.append("--disable-byterange")
 
         if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
             config_args.append("CC=%s" % self.spec["mpi"].mpicc)
