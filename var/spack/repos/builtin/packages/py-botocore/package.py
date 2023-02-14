@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PyBotocore(PythonPackage):
     homepage = "https://github.com/boto/botocore"
     pypi = "botocore/botocore-1.13.44.tar.gz"
 
+    version("1.29.56", sha256="ca4d6403d745218270a20d9ca3ca9a33e3ad2fabb59a96ed8d6e1a824b274c86")
     version("1.29.26", sha256="f71220fe5a5d393c391ed81a291c0d0985f147568c56da236453043f93727a34")
     version("1.28.5", sha256="f322d7b62163219ffeb787a116d318273dfb7243c3b49d95f5bfff8daa1df4e0")
     version("1.27.96", sha256="fc0a13ef6042e890e361cf408759230f8574409bb51f81740d2e5d8ad5d1fbea")

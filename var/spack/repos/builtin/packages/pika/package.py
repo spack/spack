@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
     git = "https://github.com/pika-org/pika.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
+    maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.12.0", sha256="daa1422eb73d6a897ce7b8ff8022e09e7b0fec83d92728ed941a92e57dec5da3")
     version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
     version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
     version("0.9.0", sha256="c349b2a96476d6974d2421288ca4d2e14ef9e5897d44cd7d5343165faa2d1299")
@@ -43,7 +44,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant(
         "malloc",
-        default="tcmalloc",
+        default="mimalloc",
         description="Define which allocator will be linked in",
         values=("system", "jemalloc", "mimalloc", "tbbmalloc", "tcmalloc"),
     )
@@ -102,8 +103,28 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
     conflicts("tracy-client@0.9:", when="@:0.9")
-    depends_on("whip+rocm", when="@0.9: +rocm")
-    depends_on("whip+cuda", when="@0.9: +cuda")
+    depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
+    depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    with when("+rocm"):
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on(
+                "whip@0.1: amdgpu_target={0}".format(val),
+                when="@0.9: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocsolver amdgpu_target={0}".format(val),
+                when="@0.5: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
+            )
+
+    with when("+cuda"):
+        for val in CudaPackage.cuda_arch_values:
+            depends_on(
+                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
+            )
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))

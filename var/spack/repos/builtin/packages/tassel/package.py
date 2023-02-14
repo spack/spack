@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Tassel(Package):
 
     homepage = "https://www.maizegenetics.net/tassel"
     git = "https://bitbucket.org/tasseladmin/tassel-5-standalone.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("5.2.86", commit="6557864512a89932710b9f53c6005a35ad6c526e")
     version("5.2.39", commit="ae96ae75c3c9a9e8026140b6c775fa4685bdf531")

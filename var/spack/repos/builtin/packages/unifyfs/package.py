@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Unifyfs(AutotoolsPackage):
     homepage = "https://github.com/LLNL/UnifyFS"
     git = "https://github.com/LLNL/UnifyFS.git"
     url = "https://github.com/LLNL/UnifyFS/releases/download/v0.9.2/unifyfs-0.9.2.tar.gz"
-    maintainers = ["CamStan"]
+    maintainers("CamStan")
 
     tags = ["e4s"]
 

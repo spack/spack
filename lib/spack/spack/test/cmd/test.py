@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -258,7 +258,7 @@ def test_has_test_method_fails(capsys):
     assert "is not a class" in captured
 
 
-def test_read_old_results(mock_test_stage):
+def test_read_old_results(mock_packages, mock_test_stage):
     """Take test data generated before the switch to full hash everywhere
     and make sure we can still read it in"""
     # Test data was generated with:
@@ -319,3 +319,26 @@ def test_test_results_status(mock_packages, mock_test_stage, status, expected):
         else:
             assert status in results
         assert expected in results
+
+
+@pytest.mark.regression("35337")
+def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
+    """Test that the temporary file used to write Testing.xml for CDash is not the upload URL"""
+    name = "trivial"
+    spec = spack.spec.Spec("trivial-smoke-test").concretized()
+    suite = spack.install_test.TestSuite([spec], name)
+    suite.ensure_stage()
+
+    parser = argparse.ArgumentParser()
+    spack.cmd.test.setup_parser(parser)
+    args = parser.parse_args(
+        [
+            "run",
+            "--cdash-upload-url=https://blahblah/submit.php?project=debugging",
+            "trivial-smoke-test",
+        ]
+    )
+
+    spack.cmd.common.arguments.sanitize_reporter_options(args)
+    filename = spack.cmd.test.report_filename(args, suite)
+    assert filename != "https://blahblah/submit.php?project=debugging"

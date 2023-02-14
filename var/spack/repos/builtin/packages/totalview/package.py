@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Totalview(Package):
     be downloaded as a resource."""
 
     homepage = "https://totalview.io"
-    maintainers = ["dshrader", "petertea"]
+    maintainers("dshrader", "petertea")
     manual_download = True
     license_required = True
     license_comment = "#"

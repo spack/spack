@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1108,7 +1108,7 @@ class TestSpecSematics(object):
     def test_satisfies_dependencies_ordered(self):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
-        s._add_dependency(d, ())
+        s._add_dependency(d, deptypes=())
         assert s.satisfies("mpileaks ^zmpi ^fake", strict=True)
 
     @pytest.mark.parametrize("transitive", [True, False])
@@ -1156,7 +1156,9 @@ def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
 
 def test_malformed_spec_dict():
     with pytest.raises(SpecError, match="malformed"):
-        Spec.from_dict({"spec": {"nodes": [{"dependencies": {"name": "foo"}}]}})
+        Spec.from_dict(
+            {"spec": {"_meta": {"version": 2}, "nodes": [{"dependencies": {"name": "foo"}}]}}
+        )
 
 
 def test_spec_dict_hashless_dep():
@@ -1164,9 +1166,10 @@ def test_spec_dict_hashless_dep():
         Spec.from_dict(
             {
                 "spec": {
+                    "_meta": {"version": 2},
                     "nodes": [
                         {"name": "foo", "hash": "thehash", "dependencies": [{"name": "bar"}]}
-                    ]
+                    ],
                 }
             }
         )
@@ -1252,7 +1255,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
-    top.add_dependency_edge(bottom, ())
+    top.add_dependency_edge(bottom, deptypes=())
 
     # concretize with the already-concrete dependency
     top.concretize()

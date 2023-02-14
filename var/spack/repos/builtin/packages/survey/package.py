@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Survey(CMakePackage):
     homepage = "http://www.trenzasynergy.com"
     git = "ssh://git@gitlab.com/trenza/survey.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
 
     version("master", branch="master")
     version("1.0.7", branch="1.0.7")

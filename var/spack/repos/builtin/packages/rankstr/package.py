@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Rankstr(CMakePackage):
     git = "https://github.com/ecp-veloc/rankstr.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
     version("0.2.0", sha256="a3f7fd8015156c1b600946af759a03e099e05c83e7b2da6bac394fe7c0d4efae")

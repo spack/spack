@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class PerlFth(Package):
     homepage = "https://sourceforge.net/projects/ftagshtml/"
     url = "https://downloads.sourceforge.net/project/ftagshtml/ftagshtml-0.524.tgz"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("0.527", sha256="df98e9e2f4dbef863b09a22ed92681dff028a6f345ba530bc3afd8221efe633c")
     version("0.526", sha256="ada1c7306111d59d64572fe8a9b038026fd0daebaff630924997ef2dc22d87a8")

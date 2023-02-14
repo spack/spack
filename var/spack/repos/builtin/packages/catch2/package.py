@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Catch2(CMakePackage):
     homepage = "https://github.com/catchorg/Catch2"
     url = "https://github.com/catchorg/Catch2/archive/v2.9.1.tar.gz"
     git = "https://github.com/catchorg/Catch2.git"
-    maintainers = ["ax3l", "AndrewGaspar"]
+    maintainers("ax3l", "AndrewGaspar")
 
     # In-Development
     version("develop", branch="devel")

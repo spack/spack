@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,15 @@ implementation language for two reasons.  First, Python is becoming
 ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
+
+.. warning::
+
+   As a general rule, packages should install the software *from source*.
+   The only exception is for proprietary software (e.g., vendor compilers).
+
+   If a special build system needs to be added in order to support building
+   a package from source, then the associated code and recipe need to be added
+   first.
 
 
 .. _installation_procedure:
@@ -225,7 +234,7 @@ generates a boilerplate template for your package, and opens up the new
 .. code-block:: python
    :linenos:
 
-   # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+   # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    # Spack Project Developers. See the top-level COPYRIGHT file for details.
    #
    # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -259,7 +268,7 @@ generates a boilerplate template for your package, and opens up the new
 
        # FIXME: Add a list of GitHub accounts to
        # notify when the package is updated.
-       # maintainers = ["github_user1", "github_user2"]
+       # maintainers("github_user1", "github_user2")
 
        version("6.2.1", sha256="eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c")
 
@@ -310,14 +319,8 @@ The rest of the tasks you need to do are as follows:
 
 #. Add a comma-separated list of maintainers.
 
-   The ``maintainers`` field is a list of GitHub accounts of people
-   who want to be notified any time the package is modified. When a
-   pull request is submitted that updates the package, these people
-   will be requested to review the PR. This is useful for developers
-   who maintain a Spack package for their own software, as well as
-   users who rely on a piece of software and want to ensure that the
-   package doesn't break. It also gives users a list of people to
-   contact for help when someone reports a build error with the package.
+   Add a list of Github accounts of people who want to be notified
+   any time the package is modified. See :ref:`package_maintainers`.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -487,6 +490,31 @@ some examples:
 
 In general, you won't have to remember this naming convention because
 :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
+
+.. _package_maintainers:
+
+-----------
+Maintainers
+-----------
+
+Each package in Spack may have one or more maintainers, i.e. one or more
+GitHub accounts of people who want to be notified any time the package is
+modified.
+
+When a pull request is submitted that updates the package, these people will
+be requested to review the PR. This is useful for developers who maintain a
+Spack package for their own software, as well as users who rely on a piece of
+software and want to ensure that the package doesn't break. It also gives users
+a list of people to contact for help when someone reports a build error with
+the package.
+
+To add maintainers to a package, simply declare them with the ``maintainers`` directive:
+
+.. code-block:: python
+
+   maintainers("user1", "user2")
+
+The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
 
 -----------------
 Trusted Downloads

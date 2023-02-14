@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class EpicsBase(MakefilePackage):
     homepage = "https://epics-controls.org"
     url = "https://epics-controls.org/download/base/base-7.0.6.1.tar.gz"
 
-    maintainers = ["glenn-horton-smith"]
+    maintainers("glenn-horton-smith")
 
     version("7.0.6.1", sha256="8ff318f25e2b70df466f933636a2da85e4b0c841504b9e89857652a4786b6387")
 
