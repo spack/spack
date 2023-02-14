@@ -24,6 +24,7 @@ class Dd4hep(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("1.24", sha256="361a932b9af2479458c0759281fef0161439d8bd119da426ce462a0467adc679")
     version("1.23", sha256="64e4f213e500147e4067301b03143b872381e2ae33710cb6eea8c578529dd596")
     version("1.22", sha256="0e729b8897b7a9c348bc3304c63d4efd1a88e032a2ff5a8c4daf6c927fd7f8ee")
     version("1.21", sha256="0f9fe9784bf28fa20ce5555ff074430da430e9becc2566fe11e27c4904a51c94")
@@ -152,6 +153,7 @@ class Dd4hep(CMakePackage):
     depends_on("lcio", when="+lcio")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
+    depends_on("podio@0.16:", when="@1.24: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
     # See https://github.com/AIDASoft/DD4hep/pull/771

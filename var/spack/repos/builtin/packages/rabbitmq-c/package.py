@@ -22,10 +22,12 @@ class RabbitmqC(CMakePackage):
     variant("shared", default=True, description="Build shared library")
     variant("static", default=True, description="Build static library")
     variant("doc", default=False, description="Build the documentation")
+    variant("tools", default=False, description="Build the tools")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("openssl@1.1.1:", when="+ssl", type=("build", "link", "run"))
     depends_on("doxygen", when="+doc", type="build")
+    depends_on("popt@1.14:", when="+tools", type=("build", "link", "run"))
 
     def cmake_args(self):
         args = [
@@ -35,5 +37,6 @@ class RabbitmqC(CMakePackage):
             # Tests can only be built against static libraries
             self.define_from_variant("BUILD_TESTS", "static"),
             self.define_from_variant("BUILD_API_DOCS", "doc"),
+            self.define_from_variant("BUILD_TOOLS", "tools"),
         ]
         return args
