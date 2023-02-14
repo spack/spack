@@ -45,6 +45,9 @@ class PyTorchbenchmark(Package, PythonExtension):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-submitit", type=("build", "run"))
 
+    # torchbenchmark/models/BERT_pytorch/setup.py
+    depends_on("py-setuptools", type="build")
+
     def patch(self):
         # Avoid call to pip to install dependencies
         filter_file(r" = pip_install_requirements\(.*\)", " = True, 'skip'", "install.py")
