@@ -17,7 +17,7 @@ class PyTorchbenchmark(Package, PythonExtension):
     extends("python")
 
     # README.md
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.8:+pythoncmd", type=("build", "run"))
     depends_on("git-lfs", type=("build", "run"))
     depends_on("py-torch", type=("build", "run"))
     depends_on("py-torchaudio", type=("build", "run"))
@@ -49,8 +49,13 @@ class PyTorchbenchmark(Package, PythonExtension):
     depends_on("py-setuptools", type="build")
 
     def patch(self):
-        # Avoid call to pip to install dependencies
+        # Avoid attempts to install dependencies
         filter_file(r" = pip_install_requirements\(.*\)", " = True, 'skip'", "install.py")
+        filter_file(
+            r" = _install_deps\(.*\)",
+            " = (True, None, None)",
+            join_path("torchbenchmark", "__init__.py"),
+        )
 
     def install(self, spec, prefix):
         # Downloads datasets and models
