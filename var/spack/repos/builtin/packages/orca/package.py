@@ -49,13 +49,15 @@ class Orca(Package):
     )
 
     depends_on("zstd", when="@:4.2.1", type="build")
+    depends_on("libevent", type="run")
+    depends_on("libpciaccess", type="run")
 
     # Map Orca version with the required OpenMPI version
     openmpi_versions = {
         "4.0.1.2": "2.0.2",
         "4.2.0": "3.1.4",
         "4.2.1": "3.1.4",
-        "5.0.3": "4.1.2",
+        "5.0.3": "4.1.1",
         "5.0.3-f.1": "4.1.2",
     }
     for orca_version, openmpi_version in openmpi_versions.items():
@@ -98,3 +100,7 @@ class Orca(Package):
         # In 5.0.3-f.1 an RPATH is set to $ORGIN/../lib
         if not self.spec.satisfies("@5.0.3-f.1"):
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["openmpi"].prefix.lib)
+
