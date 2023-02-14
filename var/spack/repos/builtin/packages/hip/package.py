@@ -592,23 +592,35 @@ class Hip(CMakePackage):
         )
         cc_options = [
             "-DCMAKE_PREFIX_PATH=" + prefixes,
-             ".",
+            ".",
         ]
-        #Get top level directories of samples
-        top_subdirs = sorted([os.path.join(test_dir, o) for o in os.listdir(test_dir) if os.path.isdir(os.path.join(test_dir,o))])
+        # Get top level directories of samples
+        top_subdirs = sorted(
+            [
+                os.path.join(test_dir, o)
+                for o in os.listdir(test_dir)
+                if os.path.isdir(os.path.join(test_dir, o))
+            ]
+        )
         failed_tests = []
         for top_subdir in top_subdirs:
-            #Get the directories of each test
-            bottom_subdirs = sorted([os.path.join(top_subdir, o) for o in os.listdir(top_subdir) if os.path.isdir(os.path.join(top_subdir,o))])
+            # Get the directories of each test
+            bottom_subdirs = sorted(
+                [
+                    os.path.join(top_subdir, o)
+                    for o in os.listdir(top_subdir)
+                    if os.path.isdir(os.path.join(top_subdir, o))
+                ]
+            )
             for test_dir in bottom_subdirs:
                 with working_dir(test_dir, create=True):
                     test_name = test_dir.rsplit('/', 1)[1]
                     try:
                         print("{:=^80}".format("Configuring test for " + test_name))
-                        if(os.path.exists(test_dir + "/CMakeLists.txt")):
+                        if (os.path.exists(test_dir + "/CMakeLists.txt")):
                             self.run_test(cmake_bin, cc_options)
-                        elif(os.path.exists(test_dir + "/Makefile")):
-                            print("CMakeLists.txt doesn't exist for this test, attempting to run Makefile")
+                        elif (os.path.exists(test_dir + "/Makefile")):
+                            print("CMakeLists.txt doesn't exist for this test, running Makefile")
                         else:
                             print("No CMakeLists.txt or Makefile found, skipping test")
                             continue
@@ -619,10 +631,9 @@ class Hip(CMakePackage):
                         print("Executing test " + test_name)
                         self.run_test(exe)
                         make("clean")
-                    except:
+                    except ProcessError:
                         print("Test Failed\n")
                         failed_tests.append(test_name)
 
         print("\nFailed Tests List:")
-        print(*failed_tests, sep = "\n")
-
+        print(*failed_tests, sep="\n")
