@@ -161,7 +161,6 @@ class RocmSmiLib(CMakePackage):
                     self.spec["rocm-smi-lib"].prefix,
                 ]
             )
-            rocm_smi_lib_path = ";".join([self.spec["rocm-smi-lib"].prefix.lib])
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DROCM_DIR=" + self.spec["rocm-smi-lib"].prefix,

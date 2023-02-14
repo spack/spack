@@ -165,4 +165,3 @@ class RocmClangOcl(CMakePackage):
             self.run_test(cmake_bin, cc_options)
             make()
             make("clean")
-
