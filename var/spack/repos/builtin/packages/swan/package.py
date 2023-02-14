@@ -17,7 +17,7 @@ class Swan(MakefilePackage):
     homepage = "http://swanmodel.sourceforge.net/"
     url = "https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
 
-    maintainers = ["lhxone"]
+    maintainers("lhxone")
 
     version("4131", sha256="cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e")
 

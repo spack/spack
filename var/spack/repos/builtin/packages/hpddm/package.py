@@ -13,7 +13,7 @@ class Hpddm(Package):
     url = "https://github.com/hpddm/hpddm"
     git = "https://github.com/hpddm/hpddm.git"
 
-    maintainers = ["corentin-dev"]
+    maintainers("corentin-dev")
 
     version("main", branch="main")
     version("2.1.2", commit="e58205623814f59bf2aec2e2bab8eafcfbd22466")

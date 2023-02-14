@@ -23,7 +23,7 @@ class W3m(AutotoolsPackage):
     # Also, Gentoo, Fedora and openSUSE switched to Debian's branch.
     homepage = "http://w3m.sourceforge.net/index.en.html"
     url = "https://downloads.sourceforge.net/project/w3m/w3m/w3m-0.5.3/w3m-0.5.3.tar.gz"
-    maintainers = ["ronin_gw"]
+    maintainers("ronin_gw")
 
     version("0.5.3", sha256="e994d263f2fd2c22febfbe45103526e00145a7674a0fda79c822b97c2770a9e3")
 

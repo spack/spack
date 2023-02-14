@@ -17,7 +17,7 @@ class Gnuconfig(Package):
     git = "https://github.com/spack/gnuconfig.git"
     url = "https://github.com/spack/gnuconfig/releases/download/2021-08-14/gnuconfig-2021-08-14.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("master", branch="master")
     version(

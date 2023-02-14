@@ -13,7 +13,7 @@ class Ibmisc(CMakePackage):
     homepage = "https://github.com/citibeth/ibmisc"
     url = "https://github.com/citibeth/ibmisc/archive/v0.1.0.tar.gz"
 
-    maintainers = ["citibeth"]
+    maintainers("citibeth")
 
     version("0.1.0", sha256="38481a8680aad4b40eca6723b2898b344cf0ef891ebc3581f5e99fbe420fa0d8")
 

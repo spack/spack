@@ -31,6 +31,9 @@ class PyPyyaml(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", when="@6:+libyaml", type="build")
 
+    # Includes "longintrepr.h" instead of Python.h
+    conflicts("^python@3.11:", when="@:5.3")
+
     @property
     def import_modules(self):
         modules = ["yaml"]

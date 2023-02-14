@@ -14,7 +14,7 @@ class Rdkit(CMakePackage):
     homepage = "https://www.rdkit.org"
     url = "https://github.com/rdkit/rdkit/archive/refs/tags/Release_2021_03_2.tar.gz"
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("2021_09_5", sha256="f720b3f6292c4cd0a412a073d848ffac01a43960082e33ee54b68798de0cbfa1")
     version("2021_09_4", sha256="ce192e85bbdc1dcf24d327197229099c8625ee20ef022fcbd980791fdbfc7203")

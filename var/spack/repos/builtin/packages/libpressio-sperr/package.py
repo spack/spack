@@ -13,7 +13,7 @@ class LibpressioSperr(CMakePackage):
     url = "https://github.com/robertu94/libpressio-sperr/archive/refs/tags/0.0.1.tar.gz"
     git = homepage
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     depends_on("libpressio@0.88.0:", when="@0.0.3:")
     depends_on("libpressio@:0.88.0", when="@:0.0.2")

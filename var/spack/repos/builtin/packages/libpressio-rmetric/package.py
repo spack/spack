@@ -13,7 +13,7 @@ class LibpressioRmetric(CMakePackage):
     git = "https://github.com/robertu94/libpressio-rmetric"
     homepage = git
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("master", branch="master")
     # note versions <= 0.0.3 do not build with spack

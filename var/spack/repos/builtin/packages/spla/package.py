@@ -15,7 +15,7 @@ class Spla(CMakePackage):
     url = "https://github.com/eth-cscs/spla/archive/v1.0.0.tar.gz"
     git = "https://github.com/eth-cscs/spla.git"
 
-    maintainers = ["AdhocMan", "haampie"]
+    maintainers("AdhocMan", "haampie")
 
     version("1.5.4", sha256="de30e427d24c741e2e4fcae3d7668162056ac2574afed6522c0bb49d6f1d0f79")
     version("1.5.3", sha256="527c06e316ce46ec87309a16bfa4138b1abad23fd276fe789c78a2de84f05637")

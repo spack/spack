@@ -18,7 +18,7 @@ class IntelOneapiDpl(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://github.com/oneapi-src/oneDPL"
 

@@ -9,7 +9,7 @@ from spack.pkg.builtin.clingo import Clingo
 class ClingoBootstrap(Clingo):
     """Clingo with some options used for bootstrapping"""
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     variant("build_type", default="Release", values=("Release",), description="CMake build type")
 

@@ -26,7 +26,7 @@ class Plumed(AutotoolsPackage):
     homepage = "https://www.plumed.org/"
     url = "https://github.com/plumed/plumed2/archive/v2.7.4.tar.gz"
     git = "https://github.com/plumed/plumed2.git"
-    maintainers = ["marcodelapierre"]
+    maintainers("marcodelapierre")
 
     version("master", branch="master")
 

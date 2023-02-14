@@ -19,7 +19,7 @@ class Hipsycl(CMakePackage):
     url = "https://github.com/illuhad/hipSYCL/archive/v0.8.0.tar.gz"
     git = "https://github.com/illuhad/hipSYCL.git"
 
-    maintainers = ["nazavode"]
+    maintainers("nazavode")
 
     provides("sycl")
 

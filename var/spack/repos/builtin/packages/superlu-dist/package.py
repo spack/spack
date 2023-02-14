@@ -16,7 +16,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
-    maintainers = ["xiaoye", "gchavez2", "balay", "pghysels", "liuyangzhuan"]
+    maintainers("xiaoye", "gchavez2", "balay", "pghysels", "liuyangzhuan")
 
     version("develop", branch="master")
     version("amd", branch="amd")

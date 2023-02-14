@@ -11,7 +11,7 @@ class Libslirp(MesonPackage):
 
     homepage = "https://gitlab.freedesktop.org/slirp/libslirp"
     url = "https://gitlab.freedesktop.org/slirp/libslirp/-/archive/v4.6.1/libslirp-v4.6.1.tar.gz"
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
 
     version("4.6.1", sha256="69ad4df0123742a29cc783b35de34771ed74d085482470df6313b6abeb799b11")
 

@@ -18,7 +18,7 @@ class PyScipy(PythonPackage):
     pypi = "scipy/scipy-1.5.4.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
-    maintainers = ["adamjstewart", "rgommers"]
+    maintainers("adamjstewart", "rgommers")
 
     version("master", branch="master")
     version("1.10.0", sha256="c8b3cbc636a87a89b770c6afc999baa6bcbb01691b5ccbbc1b1791c7c0a07540")
@@ -100,10 +100,10 @@ class PyScipy(PythonPackage):
     depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
     depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
     depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
-    depends_on("python@3.7:", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@:1.2", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10.0", when="@1.6:1.6.1", type=("build", "link", "run"))
+    depends_on("python@3.6:3.10.0", when="@1.5.0:1.5", type=("build", "link", "run"))
+    depends_on("python@3.5:3.10.0", when="@1.3:1.4", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:3.10.0", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # NOTE: scipy should use the same BLAS/LAPACK as numpy.

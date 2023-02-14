@@ -14,7 +14,7 @@ class PyBakta(PythonPackage):
     homepage = "https://github.com/oschwengers/bakta"
     pypi = "bakta/bakta-1.5.1.tar.gz"
 
-    maintainers = ["oschwengers"]
+    maintainers("oschwengers")
 
     version("1.5.1", sha256="36781612c4eaa99e6e24a00e8ab5b27dadf21c98ae6d16432f3e78c96a4adb5d")
 

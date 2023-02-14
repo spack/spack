@@ -13,7 +13,7 @@ class Munge(AutotoolsPackage):
 
     homepage = "https://dun.github.io/munge/"
     url = "https://github.com/dun/munge/releases/download/munge-0.5.14/munge-0.5.14.tar.xz"
-    maintainers = ["ChristianTackeGSI"]
+    maintainers("ChristianTackeGSI")
 
     version("0.5.15", sha256="3f979df117a34c74db8fe2835521044bdeb08e3b7d0f168ca97c3547f51da9ba")
     version("0.5.14", sha256="6606a218f18090fa1f702e3f6fb608073eb6aafed534cf7dd81b67b2e0d30640")
