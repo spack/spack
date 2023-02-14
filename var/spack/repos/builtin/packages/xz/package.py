@@ -114,7 +114,7 @@ class MSBuildBuilder(MSBuildBuilder):
             # Ensure we have libs directory
             mkdirp(prefix.lib)
             libs_to_find = []
-            if "shared" in self.pkg.spec:
+            if "libs=shared" in self.pkg.spec:
                 libs_to_find.extend(["*.dll", "*.lib"])
             else:
                 libs_to_find.append("*.lib")
