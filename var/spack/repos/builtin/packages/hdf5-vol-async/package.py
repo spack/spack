@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Hdf5VolAsync(CMakePackage):
     homepage = "https://hdf5-vol-async.readthedocs.io"
     git = "https://github.com/hpc-io/vol-async.git"
 
-    maintainers = ["hyoklee", "houjun", "jeanbez"]
+    maintainers("hyoklee", "houjun", "jeanbez")
 
     tags = ["e4s"]
 

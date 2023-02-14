@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,7 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version("master", branch="develop", submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version("0.8.6", sha256="8ca5d37033143ed7181c7286dd25a3f6126ba0358889066f13a2b32f68fc647e")
     version("0.8.5", sha256="b4a6f269a81570a4597e2565927fd0ed2ac45da0a2500ce5a71c26f7c92c5483")
     version("0.8.4", sha256="55c37ddc668dbc45d43b60c440192f76e688a530d64f9fe1a9c7fdad8cd525fd")
     version("0.8.3", sha256="a9e60945366f3b8c37ee6a19f62d79a8d5888be7e230eabc31af2f837283ed1a")
@@ -62,7 +63,7 @@ class Conduit(CMakePackage):
     version("0.2.1", sha256="796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4")
     version("0.2.0", sha256="31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061")
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
 
     ###########################################################################
     # package variants

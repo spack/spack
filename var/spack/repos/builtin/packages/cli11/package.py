@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Cli11(CMakePackage):
 
     homepage = "https://cliutils.github.io/CLI11/book/"
     url = "https://github.com/CLIUtils/CLI11/archive/v1.9.1.tar.gz"
-    maintainers = ["nightlark"]
+    maintainers("nightlark")
 
     version("2.3.1", sha256="378da73d2d1d9a7b82ad6ed2b5bda3e7bc7093c4034a1d680a2e009eb067e7b2")
     version("2.1.1", sha256="d69023d1d0ab6a22be86b4f59d449422bc5efd9121868f4e284d6042e52f682e")

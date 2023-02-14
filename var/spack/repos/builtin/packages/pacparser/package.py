@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.package import *
 class Pacparser(MakefilePackage):
     """pacparser is a library to parse proxy auto-config (PAC) files."""
 
-    maintainers = ["iarspider"]
+    maintainers("iarspider")
 
     homepage = "https://pacparser.github.io/"
     url = "https://github.com/manugarg/pacparser/releases/download/v1.4.0/pacparser-v1.4.0.tar.gz"

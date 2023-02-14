@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     homepage = "https://github.com/llvm-doe-org"
     url = "https://github.com/llvm-doe-org/llvm-project/archive/llvmorg-10.0.0.zip"
     git = "https://github.com/llvm-doe-org/llvm-project"
-    maintainers = ["vlkale"]
+    maintainers("vlkale")
 
     tags = ["e4s"]
 

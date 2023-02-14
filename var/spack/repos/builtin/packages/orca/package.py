@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,9 +19,14 @@ class Orca(Package):
 
     homepage = "https://cec.mpg.de"
     url = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
-    maintainers = ["snehring"]
+    maintainers("snehring")
     manual_download = True
 
+    version(
+        "5.0.3-f.1",
+        sha256="dea377459d61ef7d7e822e366420197ee2a4864991dfcdc4ea1a683f9be26c7f",
+        url="file://{0}/orca-5.0.3-f.1_linux_x86-64_shared_openmpi41.tar.xz".format(os.getcwd()),
+    )
     version(
         "5.0.3",
         sha256="b8b9076d1711150a6d6cb3eb30b18e2782fa847c5a86d8404b9339faef105043",
@@ -46,7 +51,13 @@ class Orca(Package):
     depends_on("zstd", when="@:4.2.1", type="build")
 
     # Map Orca version with the required OpenMPI version
-    openmpi_versions = {"4.0.1.2": "2.0.2", "4.2.0": "3.1.4", "4.2.1": "3.1.4", "5.0.3": "4.1.2"}
+    openmpi_versions = {
+        "4.0.1.2": "2.0.2",
+        "4.2.0": "3.1.4",
+        "4.2.1": "3.1.4",
+        "5.0.3": "4.1.2",
+        "5.0.3-f.1": "4.1.2",
+    }
     for orca_version, openmpi_version in openmpi_versions.items():
         depends_on(
             "openmpi@{0}".format(openmpi_version), type="run", when="@{0}".format(orca_version)
@@ -70,6 +81,9 @@ class Orca(Package):
 
             # there are READMEs in there but they don't hurt anyone
             install_tree(vername, prefix.bin)
+        if self.spec.satisfies("@5.0.3-f.1"):
+            install_tree("bin", prefix.bin)
+            install_tree("lib", prefix.lib)
         else:
             install_tree(".", prefix.bin)
 
@@ -81,4 +95,6 @@ class Orca(Package):
             install(mpirun_srun, prefix.bin.mpirun)
 
     def setup_run_environment(self, env):
-        env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
+        # In 5.0.3-f.1 an RPATH is set to $ORGIN/../lib
+        if not self.spec.satisfies("@5.0.3-f.1"):
+            env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)

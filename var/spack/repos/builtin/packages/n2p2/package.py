@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,10 @@ class N2p2(MakefilePackage):
     url = "https://github.com/CompPhysVienna/n2p2/archive/v2.1.0.tar.gz"
 
     version(
+        "2.2.0",
+        sha256="4acaa255632a7b9811d7530fd52ac7dd0bb3a8e3a3cf8512beadd29b62c1bfef",
+    )
+    version(
         "2.1.4",
         sha256="f1672c09af4ed16a7f396606977e4675a0fee98f04bfd9574907fba4b83a14ef",
     )
@@ -29,11 +33,12 @@ class N2p2(MakefilePackage):
     )
 
     variant("doc", default=False, description="build documentation with Doxygen")
+    variant("shared", default=False, description="build shared libraries")
 
     patch("interface-makefile.patch", when="@2.1.0")
     patch("interface-makefile211.patch", when="@2.1.1:")
     patch("libnnp-makefile.patch", when="@:2.1.1")
-    patch("libnnp-makefile212.patch", when="@2.1.2:")
+    patch("libnnp-makefile212.patch", when="@2.1.2:2.1.4")
     patch("nnp_test.h.patch")
 
     depends_on("mpi")
@@ -61,6 +66,9 @@ class N2p2(MakefilePackage):
     test_requires_compiler = True
 
     def edit(self, spec, prefix):
+        makefile = FileFilter(join_path("src", "makefile"))
+        makefile.filter("MODE=.*", "MODE={0}".format("shared" if "+shared" in spec else "static"))
+
         makefile = FileFilter(join_path("src", "makefile.gnu"))
         blas_libs = self.spec["blas"].libs
         makefile.filter("PROJECT_CC=.*", "PROJECT_CC={0}".format(spack_cxx))

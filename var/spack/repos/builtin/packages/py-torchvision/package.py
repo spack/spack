@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyTorchvision(PythonPackage):
     url = "https://github.com/pytorch/vision/archive/v0.8.2.tar.gz"
     git = "https://github.com/pytorch/vision.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("main", branch="main")
     version("0.14.1", sha256="ced67e1cf1f97e168cdf271851a4d0b6d382ab7936e7bcbb39aaa87239c324b6")

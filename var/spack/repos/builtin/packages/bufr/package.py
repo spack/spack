@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,13 @@ class Bufr(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-bufr"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-bufr/archive/refs/tags/bufr_v11.5.0.tar.gz"
 
-    maintainers = [
+    maintainers(
         "t-brown",
         "AlexanderRichert-NOAA",
         "edwardhartnett",
         "Hang-Lei-NOAA",
         "jbathegit",
-    ]
+    )
 
     version("11.7.1", sha256="6533ce6eaa6b02c0cb5424cfbc086ab120ccebac3894980a4daafd4dfadd71f8")
     version("11.7.0", sha256="6a76ae8e7682bbc790321bf80c2f9417775c5b01a5c4f10763df92e01b20b9ca")

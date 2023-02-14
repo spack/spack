@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Interproscan(Package):
 
     homepage = "https://www.ebi.ac.uk/interpro/interproscan.html"
     url = "https://github.com/ebi-pf-team/interproscan/archive/5.36-75.0.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("5.56-89.0", sha256="75e6a8f86ca17356a2f77f75b07d6d8fb7b397c9575f6e9716b64983e490b230")
     version("5.38-76.0", sha256="cb191ff8eee275689b789167a57b368ea5c06bbcd36b4de23e8bbbbdc0fc7434")

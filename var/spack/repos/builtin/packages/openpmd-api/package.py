@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class OpenpmdApi(CMakePackage):
     url = "https://github.com/openPMD/openPMD-api/archive/0.14.2.tar.gz"
     git = "https://github.com/openPMD/openPMD-api.git"
 
-    maintainers = ["ax3l", "franzpoeschel"]
+    maintainers("ax3l", "franzpoeschel")
 
     tags = ["e4s"]
 

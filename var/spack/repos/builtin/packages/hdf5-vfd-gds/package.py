@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
     homepage = "https://github.com/hpc-io/vfd-gds"
     url = "https://github.com/hpc-io/vfd-gds/archive/refs/tags/1.0.1.tar.gz"
     git = "https://github.com/hpc-io/vfd-gds.git"
-    maintainers = ["hyoklee", "lrknox"]
+    maintainers("hyoklee", "lrknox")
 
     # Versions
     version("master", branch="master")

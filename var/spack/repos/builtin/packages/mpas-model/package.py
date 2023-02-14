@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class MpasModel(MakefilePackage):
 
     homepage = "https://mpas-dev.github.io/"
     url = "https://github.com/MPAS-Dev/MPAS-Model/archive/v7.0.tar.gz"
-    maintainers = ["t-brown"]
+    maintainers("t-brown")
 
     version("7.3", sha256="a6a9570911b47aa3607036c1ab5a9ae770f9f3a85cea2710f08bb3b35c08facf")
     version("7.2", sha256="3158c22e4a33ae00ce20b65f6ad189c0b7839587dee124d685b02f9df9cf27a7")

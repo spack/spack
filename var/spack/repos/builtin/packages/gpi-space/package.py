@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class GpiSpace(CMakePackage):
     url = "https://github.com/cc-hpc-itwm/gpispace/archive/refs/tags/v21.09.tar.gz"
     git = "https://github.com/cc-hpc-itwm/gpispace.git"
 
-    maintainers = ["mzeyen1985", "tiberot", "rumach", "mrahn", "acastanedam"]
+    maintainers("mzeyen1985", "tiberot", "rumach", "mrahn", "acastanedam")
 
     version("latest", branch="main")
     version("22.09", sha256="f938847205181081ed24896bba16302ac35bbf478b4ceecae5bb21d5a38c8556")

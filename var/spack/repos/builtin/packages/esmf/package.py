@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Esmf(MakefilePackage):
     url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
-    maintainers = ["climbfuji", "jedwards4b"]
+    maintainers("climbfuji", "jedwards4b", "AlexanderRichert-NOAA")
 
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")

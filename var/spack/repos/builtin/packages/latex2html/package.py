@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Latex2html(AutotoolsPackage):
     url = "https://github.com/latex2html/latex2html/archive/refs/tags/v2021.tar.gz"
     git = "https://github.com/latex2html/latex2html.git"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("master", branch="master")
     version("2022.2", sha256="b1d5bba7bab7d0369d1241f2d8294137a52b7cb7df11239bfa15ec0a2546c093")

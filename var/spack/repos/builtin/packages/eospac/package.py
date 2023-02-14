@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Eospac(Package):
 
     homepage = "https://laws.lanl.gov/projects/data/eos.html"
     list_url = "https://laws.lanl.gov/projects/data/eos/eospacReleases.php"
-    maintainers = ["KineticTheory"]
+    maintainers("KineticTheory")
 
     # - An EOSPAC release labeled "beta" doesn't always imply that the release
     #   is less suitable for production.  According to the current EOSPAC
@@ -150,7 +150,7 @@ class Eospac(Package):
                 "INSTALLED_INCLUDE_DIR={0}".format(prefix.include),
                 "INSTALLED_EXAMPLE_DIR={0}".format(prefix.example),
                 "INSTALLED_BIN_DIR={0}".format(prefix.bin),
-                *compilerArgs
+                *compilerArgs,
             )
         # fix conflict with linux's getopt for 6.4.0beta.2
         if spec.satisfies("@6.4.0beta.2"):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Mpiwrapper(CMakePackage):
     url = "https://github.com/eschnett/MPIwrapper/archive/refs/tags/v1.0.1.tar.gz"
     git = "https://github.com/eschnett/MPIwrapper"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("develop", branch="main")
     version("2.10.1", sha256="54b57642b14b7b2dc257f7066eec8639133e4a4d5c351b8d689e31816b872b0d")

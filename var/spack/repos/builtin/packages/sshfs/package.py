@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Sshfs(MesonPackage):
     url = "https://github.com/libfuse/sshfs/releases/download/sshfs-3.7.1/sshfs-3.7.1.tar.xz"
     git = "https://github.com/libfuse/sshfs.git"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("3.7.1", sha256="fe5d3436d61b46974889e0c4515899c21a9d67851e3793c209989f72353d7750")
 

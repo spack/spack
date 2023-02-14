@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class NetcdfC(AutotoolsPackage):
     git = "https://github.com/Unidata/netcdf-c.git"
     url = "https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.8.1.tar.gz"
 
-    maintainers = ["skosukhin", "WardF"]
+    maintainers("skosukhin", "WardF")
 
     version("main", branch="main")
     version("4.9.0", sha256="9f4cb864f3ab54adb75409984c6202323d2fc66c003e5308f3cdf224ed41c0a6")
@@ -213,8 +213,6 @@ class NetcdfC(AutotoolsPackage):
         hdf5_hl = self.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
-        if hdf5_hl.satisfies("~shared"):
-            libs.append(hdf5_hl.libs.link_flags)
 
         if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")

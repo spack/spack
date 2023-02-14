@@ -1,7 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 import llnl.util.tty as tty
 
@@ -18,7 +20,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     homepage = "http://hpctoolkit.org"
     git = "https://gitlab.com/hpctoolkit/hpctoolkit.git"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     tags = ["e4s"]
 
@@ -43,13 +45,19 @@ class Hpctoolkit(AutotoolsPackage):
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
-    # version of hpcprof.  Cray and Blue Gene need separate options
-    # because an MPI module in packages.yaml doesn't work on these
-    # systems.
+    # version of hpcprof.  Cray needs a separate option because an
+    # external MPI module in packages.yaml doesn't work.
     variant(
         "cray",
         default=False,
-        description="Build for Cray compute nodes, including hpcprof-mpi.",
+        description="Build hpcprof-mpi for Cray systems (requires --dirty).",
+    )
+
+    variant(
+        "cray-static",
+        default=False,
+        description="Build old rev of hpcprof-mpi statically on Cray systems.",
+        when="@:2022.09",
     )
 
     variant(
@@ -120,7 +128,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
     depends_on("xz+pic@:5.2.6", type="link")
-    depends_on("yaml-cpp@0.7.0:", when="@2022.10:")
+    depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
     depends_on("zlib+shared")
 
     depends_on("cuda", when="+cuda")
@@ -150,12 +158,15 @@ class Hpctoolkit(AutotoolsPackage):
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
 
+    conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
+    conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
+
     # Fix the build for old revs with gcc 10.x.
     patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
 
     patch(
-        "https://github.com/HPCToolkit/hpctoolkit/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch?full_index=1",
-        sha256="c8371b929f45dafae37d2ef17880fcfb86de893beebaec501a282bc04b61ef64",
+        "https://gitlab.com/hpctoolkit/hpctoolkit/-/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch",
+        sha256="8da18df88a80847c092da8d0892de51ea2bf2523124148b6305ab8717707d897",
         when="@2019.08.01:2021.03 %gcc@11.0:",
     )
 
@@ -170,6 +181,13 @@ class Hpctoolkit(AutotoolsPackage):
     # with /usr/bin/env python.
     depends_on("python@3.4:", type="build", when="@2020.03:2020.08")
     patch("python3.patch", when="@2020.03:2020.08")
+
+    # Fix a bug where make would mistakenly overwrite hpcrun-fmt.h.
+    # https://gitlab.com/hpctoolkit/hpctoolkit/-/merge_requests/751
+    def patch(self):
+        with working_dir(join_path("src", "lib", "prof-lean")):
+            if os.access("hpcrun-fmt.txt", os.F_OK):
+                os.rename("hpcrun-fmt.txt", "hpcrun-fmt.readme")
 
     flag_handler = AutotoolsPackage.build_system_flags
 
@@ -239,18 +257,16 @@ class Hpctoolkit(AutotoolsPackage):
                 ]
             )
 
-        # MPI options for hpcprof-mpi.
-        if "+cray" in spec:
+        # MPI options for hpcprof-mpi. +cray supersedes +mpi.
+        if spec.satisfies("+cray"):
             args.append("--enable-mpi-search=cray")
-            args.append("--enable-all-static")
-
-        elif "+mpi" in spec:
-            if spec.satisfies("@2022.10.01"):
-                # temporary hack to disable +mpi for one rev
-                tty.warn("hpcprof-mpi is not available in version 2022.10.01")
-                args.append("MPICXX=")
+            if spec.satisfies("@:2022.09 +cray-static"):
+                args.append("--enable-all-static")
             else:
-                args.append("MPICXX=%s" % spec["mpi"].mpicxx)
+                args.append("HPCPROFMPI_LT_LDFLAGS=-dynamic")
+
+        elif spec.satisfies("+mpi"):
+            args.append("MPICXX=%s" % spec["mpi"].mpicxx)
 
         # Make sure MPICXX is not picked up through the environment.
         else:
