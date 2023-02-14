@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,12 @@ class Sp(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-sp"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-sp/archive/refs/tags/v2.3.3.tar.gz"
 
-    maintainers = [
+    maintainers(
         "t-brown",
         "AlexanderRichert-NOAA",
         "edwardhartnett",
         "Hang-Lei-NOAA",
-    ]
+    )
 
     version("2.3.3", sha256="c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f")
 

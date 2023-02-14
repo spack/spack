@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -88,6 +88,11 @@ class Cce(Compiler):
         if self.is_clang_based:
             return "-std=c++14"
         return "-h std=c++14"
+
+    @property
+    def cxx17_flag(self):
+        if self.is_clang_based:
+            return "-std=c++17"
 
     @property
     def c99_flag(self):

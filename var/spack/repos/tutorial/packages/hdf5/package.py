@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Hdf5(CMakePackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git = "https://github.com/HDFGroup/hdf5.git"
-    maintainers = [
+    maintainers(
         "lrknox",
         "brtnfld",
         "byrnHDF",
@@ -33,7 +33,7 @@ class Hdf5(CMakePackage):
         "hyoklee",
         "lkurz",
         "soumagne",
-    ]
+    )
 
     test_requires_compiler = True
 
@@ -441,7 +441,7 @@ class Hdf5(CMakePackage):
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
             r"\1\2\3",
             *pc_files,
-            backup=False
+            backup=False,
         )
 
         # Create non-versioned symlinks to the versioned pkg-config files:

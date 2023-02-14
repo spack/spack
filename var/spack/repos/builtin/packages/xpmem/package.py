@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Xpmem(AutotoolsPackage):
     url = "https://github.com/hjelmn/xpmem/archive/v2.6.3.tar.gz"
     git = "https://github.com/hjelmn/xpmem.git"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("master", branch="master")
 
@@ -109,5 +109,5 @@ class Xpmem(AutotoolsPackage):
             # Override the hardcoded prefix for 'cray-xpmem.conf'
             make(
                 "ldsoconfdir={0}".format(self.spec.prefix.etc.join("ld.so.conf.d")),
-                *self.install_targets
+                *self.install_targets,
             )

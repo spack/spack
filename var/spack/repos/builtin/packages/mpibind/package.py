@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Mpibind(AutotoolsPackage):
     homepage = "https://github.com/LLNL/mpibind"
     git = "https://github.com/LLNL/mpibind.git"
 
-    maintainers = ["eleon"]
+    maintainers("eleon")
 
     # This package uses 'git describe --tags' to get the
     # package version in Autotools' AC_INIT, thus

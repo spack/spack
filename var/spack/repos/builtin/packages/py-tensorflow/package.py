@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTensorflow(Package, CudaPackage, ROCmPackage):
+class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     """An Open Source Machine Learning Framework for Everyone.
 
     TensorFlow is an end-to-end open source platform for machine learning. It has a
@@ -27,7 +27,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     homepage = "https://www.tensorflow.org"
     url = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
-    maintainers = ["adamjstewart", "aweits"]
+    maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
 
     version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
@@ -1037,16 +1037,3 @@ def protobuf_deps():
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
         remove_linked_tree(tmp_path)
-
-    def test(self):
-        """Attempts to import modules of the installed package."""
-
-        # Make sure we are importing the installed modules,
-        # not the ones in the source directory
-        for module in self.import_modules:
-            self.run_test(
-                self.spec["python"].command.path,
-                ["-c", "import {0}".format(module)],
-                purpose="checking import of {0}".format(module),
-                work_dir="spack-test",
-            )

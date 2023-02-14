@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
     git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
-    maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
+    maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
     version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
@@ -112,7 +112,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop@0.3.99:", when="@0.99:+hiop")
     depends_on("hiop@0.5.1:", when="@1.1.0:+hiop")
     depends_on("hiop@0.5.3:", when="@1.3.0:+hiop")
-    depends_on("hiop@0.7.0:", when="@1.5.0:+hiop")
+    depends_on("hiop@0.7.0:0.7.1", when="@1.5.0:+hiop")
 
     depends_on("hiop~mpi", when="+hiop~mpi")
     depends_on("hiop+mpi", when="+hiop+mpi")

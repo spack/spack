@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -530,10 +530,9 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    cdash_args = []
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
-        cdash_args.extend(cdash_handler.args())
+        install_args.extend(cdash_handler.args())
 
     slash_hash = "/{}".format(job_spec.dag_hash())
     deps_install_args = install_args

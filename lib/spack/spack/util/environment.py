@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -912,7 +912,7 @@ def inspect_path(root, inspections, exclude=None):
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
     for relative_path, variables in inspections.items():
-        expected = os.path.join(root, relative_path)
+        expected = os.path.join(root, os.path.normpath(relative_path))
 
         if os.path.isdir(expected) and not exclude(expected):
             for variable in variables:

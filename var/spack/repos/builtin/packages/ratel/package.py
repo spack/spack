@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     homepage = "https://ratel.micromorph.org"
     git = "https://gitlab.com/micromorph/ratel.git"
 
-    maintainers = ["jedbrown", "jeremylt"]
+    maintainers("jedbrown", "jeremylt")
 
     version("develop", branch="main")
     version("0.2.1", tag="v0.2.1")

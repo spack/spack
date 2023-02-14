@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Tamaas(SConsPackage):
     homepage = "https://gitlab.com/tamaas/tamaas"
     url = "https://gitlab.com/tamaas/tamaas/-/archive/v2.4.0/tamaas-v2.4.0.tar.gz"
     git = "https://gitlab.com/tamaas/tamaas.git"
-    maintainers = ["prs513rosewood"]
+    maintainers("prs513rosewood")
 
     version("master", branch="master")
     version("2.6.0", sha256="e3a262e5b893aa1e23554b6bd6b41af68c841ef4ffd862bb8e50a1a17ac15af6")

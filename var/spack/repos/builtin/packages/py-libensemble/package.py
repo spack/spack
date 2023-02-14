@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyLibensemble(PythonPackage):
     homepage = "https://libensemble.readthedocs.io"
     pypi = "libensemble/libensemble-0.9.3.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
-    maintainers = ["shuds13", "jlnav"]
+    maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
 
@@ -80,7 +80,7 @@ class PyLibensemble(PythonPackage):
         )
 
         if not os.path.isfile(join_path(test_dir, exe)):
-            print("Skipping {0} test".format(exe))
+            print("SKIPPED: {0} test does not exist".format(exe))
             return
 
         self.run_test(
@@ -91,4 +91,6 @@ class PyLibensemble(PythonPackage):
         )
 
     def test(self):
-        self.run_tutorial_tests("test_uniform_sampling.py")
+        super(__class__, self).test()
+        for tutorial in ["test_uniform_sampling.py", "test_1d_sampling.py"]:
+            self.run_tutorial_tests(tutorial)

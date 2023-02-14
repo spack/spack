@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Dealii(CMakePackage, CudaPackage):
     url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
     git = "https://github.com/dealii/dealii.git"
 
-    maintainers = ["jppelteret", "luca-heltai"]
+    maintainers("jppelteret", "luca-heltai")
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.

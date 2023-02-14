@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Abacus(MakefilePackage):
     for large-scale electronic-structure simulations
     from first principles"""
 
-    maintainers = ["bitllion"]
+    maintainers("bitllion")
 
     homepage = "http://abacus.ustc.edu.cn/"
     git = "https://github.com/abacusmodeling/abacus-develop.git"
@@ -61,7 +61,8 @@ class Abacus(MakefilePackage):
             inc_var = "-"
             system_var = "ELPA_LIB = -L${ELPA_LIB_DIR} -lelpa -Wl,-rpath=${ELPA_LIB_DIR}"
 
-        tempInc = "\
+        tempInc = (
+            "\
 FORTRAN = ifort\n\
 CPLUSPLUS = icpc\n\
 CPLUSPLUS_MPI = mpiicpc\n\
@@ -72,12 +73,14 @@ ELPA_INCLUDE = -I${ELPA_DIR}/include/elpa%s%s\n\
 CEREAL_DIR = %s\n\
 OBJ_DIR = obj\n\
 OBJ_DIR_serial = obj\n\
-NP      = 14\n" % (
-            spec["fftw"].prefix,
-            spec["elpa"].prefix,
-            inc_var,
-            "{0}".format(spec["elpa"].version),
-            spec["cereal"].prefix,
+NP      = 14\n"
+            % (
+                spec["fftw"].prefix,
+                spec["elpa"].prefix,
+                inc_var,
+                "{0}".format(spec["elpa"].version),
+                spec["cereal"].prefix,
+            )
         )
 
         with open(self.build_directory + "/Makefile.vars", "w") as f:

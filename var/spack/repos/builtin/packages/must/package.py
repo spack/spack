@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Must(CMakePackage):
     homepage = "https://www.i12.rwth-aachen.de/go/id/nrbe"
     url = "https://hpc.rwth-aachen.de/must/files/MUST-v1.8.0-rc1.tar.gz"
 
-    maintainers = ["jgalarowicz", "dmont"]
+    maintainers("jgalarowicz", "dmont")
 
     version(
         "1.8.0-rc1",

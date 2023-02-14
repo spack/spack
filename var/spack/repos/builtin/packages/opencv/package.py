@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Opencv(CMakePackage, CudaPackage):
     url = "https://github.com/opencv/opencv/archive/4.5.0.tar.gz"
     git = "https://github.com/opencv/opencv.git"
 
-    maintainers = ["bvanessen", "adamjstewart", "glennpj"]
+    maintainers("bvanessen", "adamjstewart", "glennpj")
 
     version("master", branch="master")
     version("4.6.0", sha256="1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277")
@@ -929,9 +929,11 @@ class Opencv(CMakePackage, CudaPackage):
         ]
 
         if self.spec.satisfies("+contrib"):
-            args += self.define(
-                "OPENCV_EXTRA_MODULES_PATH",
-                join_path(self.stage.source_path, "opencv_contrib", "modules"),
+            args.append(
+                self.define(
+                    "OPENCV_EXTRA_MODULES_PATH",
+                    join_path(self.stage.source_path, "opencv_contrib", "modules"),
+                )
             )
 
         # OpenCV pre-built apps

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Podio(CMakePackage):
     url = "https://github.com/AIDASoft/podio/archive/v00-09-02.tar.gz"
     git = "https://github.com/AIDASoft/podio.git"
 
-    maintainers = ["vvolkl", "drbenmorgan"]
+    maintainers("vvolkl", "drbenmorgan")
 
     tags = ["hep", "key4hep"]
 

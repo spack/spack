@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,9 +28,12 @@ class Apptainer(SingularityBase):
 
     version("main", branch="main")
 
+    version("1.1.5", sha256="3eadb26b6656a89a111abe29c7e50eab0023e9a8718f1e77e46ca871398bfa67")
     version("1.1.4", sha256="b1ab9d5842002803e66da8f456ee00f352ea2bb43436d5b668f19ef7475ed4a5")
     version("1.1.3", sha256="c7bf7f4d5955e1868739627928238d02f94ca9fd0caf110b0243d65548427899")
     version("1.0.2", sha256="2d7a9d0a76d5574459d249c3415e21423980d9154ce85e8c34b0600782a7dfd3")
+
+    depends_on("go@1.17.5:", when="@1.1.0:")
 
     singularity_org = "apptainer"
     singularity_name = "apptainer"

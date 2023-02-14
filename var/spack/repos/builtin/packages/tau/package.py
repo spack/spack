@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Tau(Package):
     Java, Python.
     """
 
-    maintainers = ["wspear", "eugeneswalker", "khuck", "sameershende"]
+    maintainers("wspear", "eugeneswalker", "khuck", "sameershende")
     homepage = "https://www.cs.uoregon.edu/research/tau"
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git = "https://github.com/UO-OACISS/tau2"
@@ -111,7 +111,9 @@ class Tau(Package):
     # TAU requires the ELF header support, libiberty and demangle.
     depends_on("binutils+libiberty+headers+plugins", when="+binutils")
     # Build errors with Python 3.9
-    depends_on("python@2.7:3.8", when="+python")
+    depends_on("python@2.7:3.8", when="@:2.31.0+python")
+    # python 3.11 doesn't work as of 2.32
+    depends_on("python@2.7:3.10", when="@2.31.1:+python")
     depends_on("libunwind", when="+libunwind")
     depends_on("mpi", when="+mpi", type=("build", "run", "link"))
     depends_on("cuda", when="+cuda")

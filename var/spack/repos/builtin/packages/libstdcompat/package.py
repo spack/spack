@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Libstdcompat(CMakePackage):
     url = "https://github.com/robertu94/std_compat/archive/0.0.1.tar.gz"
     git = "https://github.com/robertu94/std_compat"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("master", branch="master")
     version("0.0.15", sha256="af374a8883a32d874f6cd18cce4e4344e32f9d60754be403a5ac7114feca2a28")

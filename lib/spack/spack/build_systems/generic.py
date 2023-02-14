@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import spack.builder
 import spack.directives
 import spack.package_base
 
-from ._checks import BaseBuilder, apply_macos_rpath_fixups
+from ._checks import BaseBuilder, apply_macos_rpath_fixups, execute_install_time_tests
 
 
 class Package(spack.package_base.PackageBase):
@@ -38,7 +38,16 @@ class GenericBuilder(BaseBuilder):
     legacy_methods: Tuple[str, ...] = ()
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes: Tuple[str, ...] = ("archive_files",)
+    legacy_attributes: Tuple[str, ...] = (
+        "archive_files",
+        "install_time_test_callbacks",
+    )
+
+    #: Callback names for post-install phase tests
+    install_time_test_callbacks = []
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
     spack.builder.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
+
+    # unconditionally perform any post-install phase tests
+    spack.builder.run_after("install")(execute_install_time_tests)

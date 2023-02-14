@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Pgplot(MakefilePackage):
     homepage = "https://sites.astro.caltech.edu/~tjp/pgplot/"
     url = "ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version(
         "5.2.2",
