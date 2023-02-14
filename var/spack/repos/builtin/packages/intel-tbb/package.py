@@ -255,7 +255,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang"):
+        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%rocmcc"):
             tbb_compiler = "clang"
         elif spec.satisfies("%intel"):
             tbb_compiler = "icc"
