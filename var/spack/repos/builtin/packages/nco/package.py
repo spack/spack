@@ -54,7 +54,16 @@ class Nco(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        return ["--{0}-doc".format("enable" if "+doc" in spec else "disable")]
+
+        config_args = ["--{0}-doc".format("enable" if "+doc" in spec else "disable")]
+
+        # Older versions of the Intel compilers (definitely 18) can't compile
+        # nco with full optimization (-O2), internal compiler error.
+        if spec.satisfies("%intel@18"):
+            config_args.append("CFLAGS=-O1")
+            config_args.append("CXXFLAGS=-O1")
+
+        return config_args
 
     def setup_build_environment(self, env):
         spec = self.spec

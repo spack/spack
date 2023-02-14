@@ -281,7 +281,6 @@ class Cdo(AutotoolsPackage):
         # Workaround compiler issues
         # https://github.com/NOAA-EMC/spack-stack/issues/468
         if self.spec.satisfies("%intel"):
-            #config_args.append("CFLAGS=-O1")
             flags["CFLAGS"].append("-O1")
             flags["CXXFLAGS"].append("-O1")
 
