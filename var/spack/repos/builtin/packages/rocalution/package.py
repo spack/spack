@@ -174,7 +174,6 @@ class Rocalution(CMakePackage):
             )
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
-
     depends_on("googletest@1.10.0:", type="test")
     # This fix is added to address the compilation failure and it is
     # already taken in 5.2.3 rocm release.
