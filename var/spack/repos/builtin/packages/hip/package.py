@@ -610,7 +610,7 @@ class Hip(CMakePackage):
                 self.spec["llvm-amdgpu"].prefix,
                 self.spec["comgr"].prefix,
                 self.spec["hsa-rocr-dev"].prefix,
-             ]
+            ]
         )
         cc_options = [
             "-DCMAKE_PREFIX_PATH=" + prefixes,
@@ -636,12 +636,12 @@ class Hip(CMakePackage):
             )
             for test_dir in bottom_subdirs:
                 with working_dir(test_dir, create=True):
-                    test_name = test_dir.rsplit('/', 1)[1]
+                    test_name = test_dir.rsplit("/", 1)[1]
                     try:
                         print("{:=^80}".format("Configuring test for " + test_name))
-                        if (os.path.exists(test_dir + "/CMakeLists.txt")):
+                        if os.path.exists(test_dir + "/CMakeLists.txt"):
                             self.run_test(cmake_bin, cc_options)
-                        elif (os.path.exists(test_dir + "/Makefile")):
+                        elif os.path.exists(test_dir + "/Makefile"):
                             print("CMakeLists.txt doesn't exist for this test, running Makefile")
                         else:
                             print("No CMakeLists.txt or Makefile found, skipping test")
