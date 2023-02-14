@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Easybuild(PythonPackage):
 
     homepage = "https://easybuilders.github.io/easybuild/"
     pypi = "easybuild/easybuild-4.0.0.tar.gz"
-    maintainers = ["boegel"]
+    maintainers("boegel")
 
     version("4.0.0", sha256="21bcc1048525ad6219667cc97a7421b5388068c670cabba356712e474896de40")
 

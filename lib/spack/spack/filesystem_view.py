@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -90,11 +90,11 @@ def view_copy(src, dst, view, spec=None):
                 prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
 
         if spack.relocate.is_binary(dst):
-            spack.relocate.unsafe_relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
+            spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
         else:
             prefix_to_projection[spack.store.layout.root] = view._root
             prefix_to_projection[orig_sbang] = new_sbang
-            spack.relocate.unsafe_relocate_text(files=[dst], prefixes=prefix_to_projection)
+            spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
         try:
             stat = os.stat(src)
             os.chown(dst, stat.st_uid, stat.st_gid)

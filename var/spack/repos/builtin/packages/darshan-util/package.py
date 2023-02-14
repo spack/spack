@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,15 +16,18 @@ class DarshanUtil(AutotoolsPackage):
     url = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git = "https://github.com/darshan-hpc/darshan.git"
 
-    maintainers = ["shanedsnyder", "carns"]
+    maintainers("shanedsnyder", "carns")
 
     tags = ["e4s"]
 
     version("main", branch="main", submodules="True")
     version(
+        "3.4.2",
+        sha256="b095c3b7c059a8eba4beb03ec092b60708780a3cae3fc830424f6f9ada811c6b",
+    )
+    version(
         "3.4.1",
         sha256="77c0a4675d94a0f9df5710e5b8658cc9ef0f0981a6dafb114d0389b1af64774c",
-        preferred=True,
     )
     version(
         "3.4.0",

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,10 @@ class Rdc(CMakePackage):
     """ROCm Data Center Tool"""
 
     homepage = "https://github.com/RadeonOpenCompute/rdc"
-    url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-4.3.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librdc"]
 
     def url_for_version(self, version):
@@ -24,6 +24,9 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.4.0", sha256="268aab43e31045443b08a21aee8750da4cf04750c6f419ec171ec704d377a4e4")
+    version("5.3.3", sha256="1bf1a02f305e3a629801e62584116a34eafbd1b26627837a2a8c10550fcf611b")
+    version("5.3.0", sha256="ce9c85dad8e0c0b21e8e5938bf16f86a62dc5f6ded5f453c61acd43666634d6b")
     version("5.2.3", sha256="5ba060449bbf5e84979cb4c62eb1dac9b0e3eca45e930d2e20e7beaa87361b39")
     version("5.2.1", sha256="84b3c3754b8c9732ee6d00d37881591d3d6876feb8f29746d9eb18faea7ad035")
     version("5.2.0", sha256="2f35f74485e783f56ea724a7c69ce825f181fcdbe89de453d97ce6a3d3176ae0")
@@ -99,7 +102,8 @@ class Rdc(CMakePackage):
 
     depends_on("cmake@3.15:3.19.7", type="build", when="@:4.3.1")
     depends_on("cmake@3.15:", type="build", when="@4.5.0:")
-    depends_on("grpc@1.28.1+shared", type="build")
+    depends_on("grpc@1.28.1+shared", type="build", when="@:5.3")
+    depends_on("grpc@1.44.0+shared", when="@5.4.0:")
     depends_on("protobuf", type=("build", "link"))
     depends_on("libcap", type=("build", "link"))
 
@@ -121,10 +125,24 @@ class Rdc(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
     ]:
         depends_on("rocm-smi-lib@" + ver, type=("build", "link"), when="@" + ver)
 
-    for ver in ["5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3"]:
+    for ver in [
+        "5.0.0",
+        "5.0.2",
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+    ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
 
     def patch(self):
@@ -135,6 +153,19 @@ class Rdc(CMakePackage):
             "CMakeLists.txt",
             string=True,
         )
+        if self.spec.satisfies("@5.4.0"):
+            filter_file(
+                "${ROCM_DIR}/${CMAKE_INSTALL_INCLUDEDIR}",
+                "{0}/include".format(self.spec["rocm-smi-lib"].prefix),
+                "CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_DIR}/${CMAKE_INSTALL_LIBDIR}",
+                "{0}/lib".format(self.spec["rocm-smi-lib"].prefix),
+                "CMakeLists.txt",
+                string=True,
+            )
 
     @classmethod
     def determine_version(cls, lib):

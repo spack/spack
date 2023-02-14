@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     version("5.0", sha256="2c579345a39a2a0bb4b8c28533f0b61356504a202da6a25d17d4d866af7f5803")
 
     depends_on("perl")
+    depends_on("ncurses")
+    depends_on("gettext")
 
     # sanity check
     sanity_check_is_file = [
@@ -60,6 +62,12 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
         if self.spec.satisfies("@7.0:"):
             targets.append("CFLAGS={}".format(self.compiler.c11_flag))
         return targets
+
+    def setup_build_environment(self, env):
+        # texinfo builds Perl XS modules internally, and by default it overrides the
+        # CC that the top-level configure reports. This loses the Spack wrappers unless
+        # we set PERL_EXT_CC
+        env.set("PERL_EXT_CC", spack_cc)
 
     @classmethod
     def determine_version(cls, exe):

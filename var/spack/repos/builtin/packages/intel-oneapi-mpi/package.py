@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,18 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers = [
+    maintainers(
         "rscohn2",
-    ]
+    )
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
 
+    version(
+        "2021.8.0",
+        url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19131/l_mpi_oneapi_p_2021.8.0.25329_offline.sh",
+        sha256="0fcb1171fc42fd4b2d863ae474c0b0f656b0fa1fdc1df435aa851ccd6d1eaaf7",
+        expand=False,
+    )
     version(
         "2021.7.1",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19010/l_mpi_oneapi_p_2021.7.1.16815_offline.sh",
@@ -108,11 +114,11 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
             self.spec.mpifc = join_path(self.component_prefix.bin, "mpiifort")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("MPICH_CC", spack_cc)
-        env.set("MPICH_CXX", spack_cxx)
-        env.set("MPICH_F77", spack_f77)
-        env.set("MPICH_F90", spack_fc)
-        env.set("MPICH_FC", spack_fc)
+        env.set("I_MPI_CC", spack_cc)
+        env.set("I_MPI_CXX", spack_cxx)
+        env.set("I_MPI_F77", spack_f77)
+        env.set("I_MPI_F90", spack_fc)
+        env.set("I_MPI_FC", spack_fc)
 
         # Set compiler wrappers for dependent build stage
         if "+generic-names" in self.spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,13 @@ class Hipfort(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipfort"
     git = "https://github.com/ROCmSoftwarePlatform/hipfort.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.4.0", sha256="a781bc6d1dbb508a4bd6cc3df931696fac6c6361d4fd35efb12c9a04a72e112c")
+    version("5.3.3", sha256="593be86502578b68215ffe767c26849fd27d4dbd92c8e76762275805f99e64f5")
     version("5.3.0", sha256="9e2aa142de45b2d2c29449d6f82293fb62844d511fbf51fa597845ba05c700fa")
     version("5.2.3", sha256="6648350ca4edc8757f0ae51d73a05a9a536808f19ad45f5b5ab84d420c72c9ec")
     version("5.2.1", sha256="ed53c9914d326124482751b81c4a353c6e64e87c1111124169a33513a3c49b42")
@@ -113,6 +115,8 @@ class Hipfort(CMakePackage):
         "5.2.1",
         "5.2.3",
         "5.3.0",
+        "5.3.3",
+        "5.4.0",
     ]:
         depends_on("hip@" + ver, type="build", when="@" + ver)
 

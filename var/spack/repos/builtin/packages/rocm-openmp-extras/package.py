@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,9 @@ aomp = [
     "20e21312816272222d1f427ea72a99a9a67077078552f5e2638a40860d161d25",
     "c0aa6997e889d6ce0e37cfa6a2e91c5c0b54cda1673abdcabcf34da1ba78ba72",
     "4ba1792095427588c484feed01f2f48e66aaad26bc000cbc74a15032551699e7",
+    "371ed037b95b83fac64fb2ff2fc17313fe7d3befc8671f0a08f0e2072393fa5b",
+    "c86141fcde879fc78d06a41ba6a26ff528da539c6a1be8b714f635182c66e3f4",
+    "bbca540897848fa95fd0f14fc05ab6deda31299a061424972d5e2bc09c7543dc",
 ]
 
 devlib = [
@@ -50,6 +53,9 @@ devlib = [
     "901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c",
     "e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225",
     "16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a",
+    "f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c",
+    "963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768",
+    "d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951",
 ]
 
 llvm = [
@@ -69,6 +75,9 @@ llvm = [
     "0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f",
     "3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf",
     "1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df",
+    "4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e",
+    "5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38",
+    "ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf",
 ]
 
 flang = [
@@ -88,6 +97,9 @@ flang = [
     "20f48cac9b58496230fa2428eba4e15ec0a6e92d429569b154a328b7a8c5da17",
     "012a9c10a7d2a248dc40510e2f5c02a54b5f6bc39961500dc48b6780dac5ad67",
     "496f00918721c72eae0bd926a5a8f1f35bd443f6b22bc08e2a42c67e44a4dbaf",
+    "ef1256ddf6cd9de10a1b88df4736dce48295136983a7e31eadd942fb39b156f7",
+    "ddccd866d0c01086087fe21b5711668f85bcf9cbd9f62853f8bda32eaedb5339",
+    "fae8195a5e1b3778e31dbc6cbeedeae9998ea4b5a54215534af41e91fdcb8ba0",
 ]
 
 extras = [
@@ -107,6 +119,9 @@ extras = [
     "817c2e8975e56a8875ff56f9d1ea34d5e7e50f1b541b7f1236e3e5c8d9eee47f",
     "8b738225f0be39f27bba64c014816cfa1b79f2c7cf2d0e31fbc0fffb6c26e429",
     "f42ca7d85b0b64e6890502f1cf8309ef97f707829876742da2ea5c2cdf3ad8ac",
+    "b3beee383d9c130666c230595c950bdc2ce4c7a99d728b9ddf1bca3963152223",
+    "b26b9f4b11a9ccfab53d0dd55aada7e5b98f7ab51981cb033b376321dd44bf87",
+    "2546becd4b182d1e366f47660c731c8ff7366b6306782f04706b6a7bf4e2094c",
 ]
 
 versions = [
@@ -126,6 +141,9 @@ versions = [
     "5.2.0",
     "5.2.1",
     "5.2.3",
+    "5.3.0",
+    "5.3.3",
+    "5.4.0",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -143,10 +161,13 @@ class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-5.2.3.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-5.4.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath", "estewart08"]
+    maintainers("srekolam", "renjithravindrankannath", "estewart08")
+    version("5.4.0", sha256=versions_dict["5.4.0"]["aomp"])
+    version("5.3.3", sha256=versions_dict["5.3.3"]["aomp"])
+    version("5.3.0", sha256=versions_dict["5.3.0"]["aomp"])
     version("5.2.3", sha256=versions_dict["5.2.3"]["aomp"])
     version("5.2.1", sha256=versions_dict["5.2.1"]["aomp"])
     version("5.2.0", sha256=versions_dict["5.2.0"]["aomp"])
@@ -233,6 +254,9 @@ class RocmOpenmpExtras(Package):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
@@ -289,10 +313,14 @@ class RocmOpenmpExtras(Package):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
         openmp_extras_prefix = self.spec["rocm-openmp-extras"].prefix
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
+        hsa_prefix = self.spec["hsa-rocr-dev"].prefix
         env.set("AOMP", "{0}".format(llvm_prefix))
         env.set("HIP_DEVICE_LIB_PATH", "{0}/amdgcn/bitcode".format(devlibs_prefix))
         env.prepend_path("CPATH", "{0}/include".format(openmp_extras_prefix))
         env.prepend_path("LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
+        if self.spec.satisfies("@5.3.0:"):
+            env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
+            env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(hsa_prefix))
         if self.spec.version < Version("4.1.0"):
             env.set("AOMP_GPU", "`{0}/rocm-bin/mygpu`".format(openmp_extras_prefix))
         else:
@@ -530,6 +558,9 @@ class RocmOpenmpExtras(Package):
             openmp_common_args += ["-DHSA_INCLUDE={0}".format(hsa_prefix)]
         else:
             openmp_common_args += ["-DHSA_INCLUDE={0}/include/hsa".format(hsa_prefix)]
+
+        if self.spec.satisfies("@5.3.0:"):
+            openmp_common_args += ["-DLIBOMPTARGET_ENABLE_DEBUG=ON"]
 
         components["openmp"] = ["../rocm-openmp-extras/llvm-project/openmp"]
         components["openmp"] += openmp_common_args

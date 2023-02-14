@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,17 @@ from spack.build_environment import dso_suffix
 from spack.package import *
 
 versions = [
+    {
+        "version": "2023.0.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19123/l_dpcpp-cpp-compiler_p_2023.0.0.25393_offline.sh",
+            "sha256": "473eb019282c2735d65c6058f6890e60b79a5698ae18d2c1e4489fed8dd18a02",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/irc_nas/19105/l_fortran-compiler_p_2023.0.0.25394_offline.sh",
+            "sha256": "fd7525bf90646c8e43721e138f29c9c6f99e96dfe5648c13633f30ec64ac8b1b",
+        },
+    },
     {
         "version": "2022.2.1",
         "cpp": {
@@ -117,7 +128,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 

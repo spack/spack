@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class ParallelNetcdf(AutotoolsPackage):
     url = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     tags = ["e4s"]
 
