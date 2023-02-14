@@ -28,6 +28,7 @@ class Libsonata(CMakePackage):
 
     variant('mpi', default=True, description="Enable MPI backend")
     variant('tests', default=False, description="Enable building tests")
+    variant('cxxstd', default="14", when="@0.1.17:", description="The C++ standard to use")
 
     depends_on('cmake@3.3:', type='build')
     depends_on('py-setuptools-scm', type='build', when='@0.1:')
@@ -47,6 +48,10 @@ class Libsonata(CMakePackage):
             '-DEXTLIB_FROM_SUBMODULES=OFF',
             self.define_from_variant('SONATA_TESTS', 'tests'),
         ]
+
+        if self.spec.satisfies('@0.1.17:'):
+            result.append(self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
+
         if not self.spec.satisfies('@develop'):
             result.append('-DSONATA_CXX_WARNINGS:BOOL=OFF')
         if self.spec.satisfies('+mpi'):
