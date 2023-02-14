@@ -1,11 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
-import subprocess
 from shutil import Error, copyfile
 
 from spack.package import *
@@ -20,7 +19,7 @@ class NetcdfFortran(AutotoolsPackage):
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
     url = "https://downloads.unidata.ucar.edu/netcdf-fortran/4.5.4/netcdf-fortran-4.5.4.tar.gz"
 
-    maintainers = ["skosukhin", "WardF"]
+    maintainers("skosukhin", "WardF")
 
     version("4.6.0", sha256="198bff6534cc85a121adc9e12f1c4bc53406c403bda331775a1291509e7b2f23")
     version("4.5.4", sha256="0a19b26a2b6e29fab5d29d7d7e08c24e87712d09a5cafeea90e16e0a2ab86b81")
@@ -37,7 +36,6 @@ class NetcdfFortran(AutotoolsPackage):
     depends_on("netcdf-c")
     depends_on("netcdf-c@4.7.4:", when="@4.5.3:")  # nc_def_var_szip required
     depends_on("doxygen", when="+doc", type="build")
-    depends_on("mpi", when="^hdf5~shared+mpi")
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
@@ -135,23 +133,6 @@ class NetcdfFortran(AutotoolsPackage):
                 # not run by default and explicitly disabled above. To avoid the
                 # configuration failure, we set the following cache variable:
                 config_args.append("ac_cv_func_MPI_File_open=yes")
-            if "~shared" in self.spec:
-                config_args.append("CC=%s" % self.spec["mpi"].mpicc)
-                config_args.append("FC=%s" % self.spec["mpi"].mpifc)
-                config_args.append("F77=%s" % self.spec["mpi"].mpif77)
-
-        if "~shared" in netcdf_c_spec:
-            netcdf_libs_cmd = ["pkg-config", "netcdf", "--libs"]
-            netcdf_libs = subprocess.check_output(netcdf_libs_cmd, encoding="utf-8").strip()
-            config_args.append("LIBS=" + netcdf_libs)
-
-            netcdf_ldflags_cmd = ["pkg-config", "netcdf", "--libs-only-L"]
-            netcdf_ldflags = subprocess.check_output(netcdf_ldflags_cmd, encoding="utf8").strip()
-            config_args.append("LDFLAGS=" + netcdf_ldflags)
-
-            netcdf_cflags_cmd = ["pkg-config", "netcdf", "--cflags"]
-            netcdf_cflags = subprocess.check_output(netcdf_cflags_cmd, encoding="utf8").strip()
-            config_args.append("CPPFLAGS=" + netcdf_cflags)
 
         return config_args
 
