@@ -696,7 +696,7 @@ class SimpleFilesystemView(FilesystemView):
 
         spec_to_file_group = dict()
         for spec in specs:
-            if not spec.prefix in prefix_to_files:
+            if spec.prefix not in prefix_to_files:
                 continue
             spec_to_file_group[spec] = (spec.prefix, prefix_to_files[spec.prefix])
 
