@@ -89,7 +89,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on("arpack-ng", when="+arpack")
     depends_on("curl", when="+curl")
-    depends_on("fftw", when="+fftw")
+    depends_on("fftw-api@3", when="+fftw")
     depends_on("fltk", when="+fltk")
     depends_on("fontconfig", when="+fontconfig")
     depends_on("freetype", when="+freetype")
@@ -222,12 +222,13 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             config_args.append("--without-curl")
 
         if "+fftw" in spec:
+            fftw_string = "fftw-api"
             config_args.extend(
                 [
-                    "--with-fftw3-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3-libdir=%s" % spec["fftw"].prefix.lib,
-                    "--with-fftw3f-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3f-libdir=%s" % spec["fftw"].prefix.lib,
+                    "--with-fftw3-includedir=%s" % spec[fftw_string].prefix.include,
+                    "--with-fftw3-libdir=%s" % spec[fftw_string].prefix.lib,
+                    "--with-fftw3f-includedir=%s" % spec[fftw_string].prefix.include,
+                    "--with-fftw3f-libdir=%s" % spec[fftw_string].prefix.lib,
                 ]
             )
         else:
