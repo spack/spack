@@ -103,4 +103,3 @@ class Orca(Package):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)
             env.prepend_path("LD_LIBRARY_PATH", self.spec["openmpi"].prefix.lib)
-
