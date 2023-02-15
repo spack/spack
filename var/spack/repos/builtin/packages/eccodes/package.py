@@ -3,42 +3,151 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
+import os
 
 from spack.package import *
 
-_definitions = {
-    # German Meteorological Service (Deutscher Wetterdienst, DWD):
-    "edzw": {
-        "conflicts": {"when": "@:2.19.1,2.22.0,2.24.0:"},
-        "resources": [
-            {
-                "when": "@2.20.0",
-                "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz",
-                "sha256": "a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4",
-            },
-            {
-                "when": "@2.21.0",
-                "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2",
-                "sha256": "046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9",
-            },
-            {
-                "when": "@2.22.1",
-                "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2",
-                "sha256": "be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389",
-            },
-            {
-                "when": "@2.23.0",
-                "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2",
-                "sha256": "c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338",
-            },
-        ],
-    }
+
+def das_placement_dirname(das_type, center):
+    return "{0}.{1}".format(das_type, center)
+
+
+# Extra definitions and samples:
+das = {
+    "definitions": {
+        # German Meteorological Service (Deutscher Wetterdienst, DWD):
+        "edzw": {
+            "conflicts": {"when": "@:2.19"},
+            "resources": [
+                {
+                    "when": "@2.20.0:2.20",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz",
+                    "sha256": "a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4",
+                },
+                {
+                    "when": "@2.21.0:2.22.0",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2",
+                    "sha256": "046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9",
+                },
+                {
+                    "when": "@2.22.1:2.22",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2",
+                    "sha256": "be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389",
+                },
+                {
+                    "when": "@2.23.0:2.24.1",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2",
+                    "sha256": "c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338",
+                },
+                {
+                    "when": "@2.24.2:2.24",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.24.2-1.tar.bz2",
+                    "sha256": "7a49b2f7ba072ce23fff6f81ecfe802615396d96cb90e08e4fe9e0f490fd153c",
+                },
+                {
+                    "when": "@2.25.0:2.25",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.25.0-1.tar.bz2",
+                    "sha256": "2ec059d8eaddb4f534954bc46944e57c765f33f0879d6c2288032586105434c4",
+                },
+                {
+                    "when": "@2.26.0:",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.26.0-1.tar.bz2",
+                    "sha256": "e64d2968a03c82ceb4875d7fc14f616bb5ac65cf0d3785fe6561921db4241829",
+                },
+            ],
+            "patches": [
+                {"when": "@2.23.0:", "files": ["grib2/tables/1"], "fn": lambda f: os.remove(f)}
+            ],
+        },
+        "mpim": {
+            "conflicts": {"when": "@:2.19"},
+            "resources": [
+                {
+                    "when": "@2.20:",
+                    "git": "https://gitlab.dkrz.de/m214089/grib2-db.git",
+                    "branch": "master",
+                    "placement": {
+                        # The definitions reside in a subdirectory:
+                        "definitions.mpim": das_placement_dirname("definitions", "mpim")
+                    },
+                }
+            ],
+            "copies": [{"when": "@2.20:", "files": ["boot.def"]}],
+            "patches": [
+                {
+                    "when": "@2.20:",
+                    "files": ["boot.def"],
+                    "fn": lambda f: filter_file(
+                        r"(^\s*transient\s*preferLocalConcepts\s*=\s*)0(.*$)",
+                        r"\11\2",
+                        f,
+                        backup=False,
+                    ),
+                }
+            ],
+        },
+    },
+    "samples": {},
 }
 
 
+def das_values(centers, only_with=None):
+    def permutations(seq, ow=None):
+        """Returns an iterable that provides all permutations of all lengths of elements in a
+        sequence. Optionally returns only those permutations that contain element only_with."""
+        if ow is None:
+            return itertools.chain.from_iterable(
+                itertools.permutations(seq, length + 1) for length in range(len(seq))
+            )
+        else:
+
+            def filtered_permutations():
+                for perm in permutations(seq):
+                    if ow in perm:
+                        yield perm
+
+            return filtered_permutations()
+
+    for p in permutations(centers, only_with):
+        yield ":".join(p)
+
+
+def declare_das_variants():
+    for das_type, das_dict in das.items():
+        variant(
+            "extra-{0}".format(das_type),
+            default="none",
+            sticky=True,
+            values=("none",) + tuple(das_values(das_dict.keys())),
+            description="Colon-separated list of extra " "{0} to install".format(das_type),
+        )
+
+
+def declare_das_resources():
+    for das_type, das_dict in das.items():
+        for center, center_dict in das_dict.items():
+            for kwargs in center_dict.get("resources", ()):
+                kwargs = kwargs.copy()
+                if "placement" not in kwargs:
+                    kwargs["placement"] = {"": das_placement_dirname(das_type, center)}
+                when = Spec(kwargs.get("when", None))
+                for value in das_values(das_dict.keys(), only_with=center):
+                    kwargs["when"] = when.constrained("extra-{0}={1}".format(das_type, value))
+                    resource(name=center, destination="spack-{0}".format(das_type), **kwargs)
+
+
+def declare_das_conflicts():
+    for das_type, das_dict in das.items():
+        for center, center_dict in das_dict.items():
+            if "conflicts" in center_dict:
+                for value in das_values(das_dict.keys(), only_with=center):
+                    conflicts("extra-{0}={1}".format(das_type, value), **center_dict["conflicts"])
+
+
 class Eccodes(CMakePackage):
-    """ecCodes is a package developed by ECMWF for processing meteorological
-    data in GRIB (1/2), BUFR (3/4) and GTS header formats."""
+    """ecCodes is a package developed by ECMWF for processing meteorological data in GRIB (1/2),
+    BUFR (3/4) and GTS header formats."""
 
     homepage = "https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home"
     url = "https://confluence.ecmwf.int/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2"
@@ -48,6 +157,7 @@ class Eccodes(CMakePackage):
     maintainers("skosukhin")
 
     version("develop", branch="develop")
+    version("2.26.0", sha256="392f632612e16a8c0bb0b8f6d627cbc3f54e56f51ace05bceac368377ab52e49")
     version("2.25.0", sha256="8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e")
     version("2.24.2", sha256="c60ad0fd89e11918ace0d84c01489f21222b11d6cad3ff7495856a0add610403")
     version("2.23.0", sha256="cbdc8532537e9682f1a93ddb03440416b66906a4cc25dec3cbd73940d194bf0c")
@@ -80,22 +190,14 @@ class Eccodes(CMakePackage):
     variant("fortran", default=False, description="Enable the Fortran support")
     variant("shared", default=True, description="Build shared versions of the libraries")
 
-    variant(
-        "definitions",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",) + tuple(_definitions.keys()),
-        ).with_default("auto"),
-        description="List of definitions to install",
-    )
+    declare_das_variants()
 
     variant(
-        "samples",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",),
-        ).with_default("auto"),
-        description="List of samples to install",
+        "create-view",
+        default=False,
+        # Enabling this option allows for using the library without setting
+        # the environment variables:
+        description="Project definitions and samples to a single directory",
     )
 
     depends_on("netcdf-c", when="+netcdf")
@@ -119,6 +221,8 @@ class Eccodes(CMakePackage):
 
     depends_on("ecbuild", type="build", when="@develop")
 
+    declare_das_resources()
+
     conflicts("+openmp", when="+pthreads", msg="Cannot enable both POSIX threads and OMP")
 
     conflicts(
@@ -133,21 +237,17 @@ class Eccodes(CMakePackage):
         msg="The command line tools can be disabled " "only starting version 2.19.0",
     )
 
-    for center, definitions in _definitions.items():
-        kwargs = definitions.get("conflicts", None)
-        if kwargs:
-            conflicts("definitions={0}".format(center), **kwargs)
-        for kwargs in definitions.get("resources", []):
-            resource(
-                name=center,
-                destination="spack-definitions",
-                placement="definitions.{0}".format(center),
-                **kwargs,
-            )
+    conflicts(
+        "+create-view",
+        when="extra-definitions=none extra-samples=none",
+        msg="Creating the view without extra definitions and samples " "does not make sense",
+    )
+
+    declare_das_conflicts()
 
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
-    patch("openjpeg_jasper.patch", when="@:2.16")
+    patch("openjpeg_jasper.patch", when="@:2.15")
 
     # CMAKE_INSTALL_RPATH must be a semicolon-separated list.
     patch("cmake_install_rpath.patch", when="@:2.10")
@@ -161,16 +261,14 @@ class Eccodes(CMakePackage):
 
     @when("%nag+fortran")
     def patch(self):
-        # A number of Fortran source files assume that the kinds of integer and
-        # real variables are specified in bytes. However, the NAG compiler
-        # accepts such code only with an additional compiler flag -kind=byte.
-        # We do not simply add the flag because all user applications would
-        # have to be compiled with this flag too, which goes against one of the
-        # purposes of using the NAG compiler: make sure the code does not
-        # contradict the Fortran standards. The following logic could have been
-        # implemented as regular patch files, which would, however, be quite
-        # large. We would also have to introduce several versions of each patch
-        # file to support different versions of the package.
+        # A number of Fortran source files assume that the kinds of integer and real variables are
+        # specified in bytes. However, the NAG compiler accepts such code only with an additional
+        # compiler flag -kind=byte. We do not simply add the flag because all user applications
+        # would have to be compiled with this flag too, which goes against one of the purposes of
+        # using the NAG compiler: make sure the code does not contradict the Fortran standards. The
+        # following logic could have been implemented as regular patch files, which would, however,
+        # be quite large. We would also have to introduce several versions of each patch file to
+        # support different versions of the package.
 
         patch_kind_files = [
             "fortran/eccodes_f90_head.f90",
@@ -187,23 +285,23 @@ class Eccodes(CMakePackage):
                 [
                     "examples/F90/grib_print_data.f90",
                     "examples/F90/grib_print_data_static.f90",
-                    # Files that need patching only when the extended regression
-                    # tests are enabled, which we disable unconditionally:
-                    # 'examples/F90/bufr_attributes.f90',
-                    # 'examples/F90/bufr_expanded.f90',
-                    # 'examples/F90/bufr_get_keys.f90',
-                    # 'examples/F90/bufr_read_scatterometer.f90',
-                    # 'examples/F90/bufr_read_synop.f90',
-                    # 'examples/F90/bufr_read_temp.f90',
-                    # 'examples/F90/bufr_read_tempf.f90',
-                    # 'examples/F90/bufr_read_tropical_cyclone.f90',
-                    # 'examples/F90/grib_clone.f90',
-                    # 'examples/F90/grib_get_data.f90',
-                    # 'examples/F90/grib_nearest.f90',
-                    # 'examples/F90/grib_precision.f90',
-                    # 'examples/F90/grib_read_from_file.f90',
-                    # 'examples/F90/grib_samples.f90',
-                    # 'examples/F90/grib_set_keys.f90'
+                    # Files that need patching only when the extended regression tests are enabled,
+                    # which we disable unconditionally:
+                    # "examples/F90/bufr_attributes.f90",
+                    # "examples/F90/bufr_expanded.f90",
+                    # "examples/F90/bufr_get_keys.f90",
+                    # "examples/F90/bufr_read_scatterometer.f90",
+                    # "examples/F90/bufr_read_synop.f90",
+                    # "examples/F90/bufr_read_temp.f90",
+                    # "examples/F90/bufr_read_tempf.f90",
+                    # "examples/F90/bufr_read_tropical_cyclone.f90",
+                    # "examples/F90/grib_clone.f90",
+                    # "examples/F90/grib_get_data.f90",
+                    # "examples/F90/grib_nearest.f90",
+                    # "examples/F90/grib_precision.f90",
+                    # "examples/F90/grib_read_from_file.f90",
+                    # "examples/F90/grib_samples.f90",
+                    # "examples/F90/grib_set_keys.f90",
                 ]
             )
 
@@ -212,13 +310,13 @@ class Eccodes(CMakePackage):
                     "examples/F90/bufr_ecc-1284.f90",
                     "examples/F90/grib_set_data.f90",
                     "examples/F90/grib_set_packing.f90",
-                    # Files that need patching only when the extended regression
-                    # tests are enabled, which we disable unconditionally:
-                    # 'examples/F90/bufr_copy_data.f90',
-                    # 'examples/F90/bufr_get_string_array.f90',
-                    # 'examples/F90/bufr_keys_iterator.f90',
-                    # 'examples/F90/get_product_kind.f90',
-                    # 'examples/F90/grib_count_messages_multi.f90'
+                    # Files that need patching only when the extended regression tests are enabled,
+                    # which we disable unconditionally:
+                    # "examples/F90/bufr_copy_data.f90",
+                    # "examples/F90/bufr_get_string_array.f90",
+                    # "examples/F90/bufr_keys_iterator.f90",
+                    # "examples/F90/get_product_kind.f90",
+                    # "examples/F90/grib_count_messages_multi.f90",
                 ]
             )
 
@@ -264,6 +362,33 @@ class Eccodes(CMakePackage):
             **kwargs,
         )
 
+    def setup_run_environment(self, env):
+        for das_type in das.keys():
+            value = self._get_das_value(das_type)
+
+            if "+memfs" in self.spec:
+                # The following is a marker, not a real path:
+                default_path = "/MEMFS/{0}".format(das_type)
+            elif "+create-view" in self.spec and value != "none":
+                default_path = join_path(
+                    self.prefix.share.eccodes, das_placement_dirname(das_type, "all")
+                )
+            else:
+                default_path = join_path(self.prefix.share.eccodes, das_type)
+
+            env_var_name = "ECCODES_{0}_PATH".format(self._get_var_stem(das_type))
+
+            env.prepend_path(env_var_name, default_path)
+
+            if "+create-view" in self.spec or value == "none":
+                continue
+
+            for center in reversed(value.split(":")):
+                center_path = join_path(
+                    self.prefix.share.eccodes, das_placement_dirname(das_type, center)
+                )
+                env.prepend_path(env_var_name, center_path)
+
     @property
     def libs(self):
         libraries = []
@@ -279,12 +404,10 @@ class Eccodes(CMakePackage):
 
         # Return Fortran library if requested:
         return_fortran = "fortran" in query_parameters
-        # Return C library if either requested or the Fortran library is not
-        # requested (to avoid overlinking) or the static libraries are
-        # requested:
+        # Return C library if either requested or the Fortran library is not requested (to avoid
+        # overlinking) or the static libraries are requested:
         return_c = "c" in query_parameters or not (return_fortran and shared)
-        # Return MEMFS library only if enabled and the static libraries are
-        # requested:
+        # Return MEMFS library only if enabled and the static libraries are requested:
         return_memfs = "+memfs" in self.spec and not shared
 
         if return_fortran:
@@ -311,6 +434,91 @@ class Eccodes(CMakePackage):
         if "+fortran" in self.spec and self.compiler.fc is None:
             raise InstallError("Fortran interface requires a Fortran compiler!")
 
+    @run_before("cmake")
+    def prepare_extra_das(self):
+        for das_type, das_dict in das.items():
+            value = self._get_das_value(das_type)
+
+            if value == "none":
+                continue
+
+            for center in value.split(":"):
+                center_placement_path = join_path(
+                    self.stage.source_path,
+                    "spack-{0}".format(das_type),
+                    das_placement_dirname(das_type, center),
+                )
+
+                # Make sure the directory exists to cover the case when no resources are assigned
+                # to the center:
+                mkdirp(center_placement_path)
+
+                # Copy files from the default definitions/samples directory:
+                for cp in das_dict[center].get("copies", ()):
+                    if "when" in cp and cp["when"] not in self.spec:
+                        continue
+
+                    for f in cp["files"]:
+                        cp_src_path = join_path(self.stage.source_path, das_type, f)
+                        cp_dst_path = join_path(center_placement_path, f)
+                        copy(cp_src_path, cp_dst_path)
+
+                # Patch the definitions/samples:
+                for patch in das_dict[center].get("patches", ()):
+                    if "when" in patch and patch["when"] not in self.spec:
+                        continue
+
+                    for f in patch["files"]:
+                        patch["fn"](join_path(center_placement_path, f))
+
+    @run_before("cmake")
+    def create_memfs_view(self):
+        if not self.spec.satisfies("+create-view+memfs"):
+            return
+
+        for das_type in das.keys():
+            value = self._get_das_value(das_type)
+
+            if value == "none":
+                continue
+
+            # Path to the root directory with extra definitions/samples:
+            das_destination_dir = join_path(self.stage.source_path, "spack-{0}".format(das_type))
+
+            # Path to the view directory to be searched for files when generating the in-memory
+            # representation on definitions/samples:
+            view_dir = join_path(das_destination_dir, das_type)
+
+            # List of the projected directories:
+            projected_dirs = [
+                join_path(das_destination_dir, das_placement_dirname(das_type, center))
+                for center in value.split(":")
+            ]
+            projected_dirs.append(join_path(self.root_cmakelists_dir, das_type))
+
+            # Create the view:
+            self._create_view(view_dir, *projected_dirs)
+
+            # Tell Cmake where to search for definitions/samples files when generating their
+            # in-memory representation:
+            filter_file(
+                "${{PROJECT_SOURCE_DIR}}/{0}".format(das_type),
+                view_dir,
+                join_path(self.root_cmakelists_dir, "memfs", "CMakeLists.txt"),
+                string=True,
+                backup=False,
+            )
+
+        if self.run_tests:
+            # Run the tests using unmodified definitions/samples from the files:
+            filter_file(
+                "HAVE_MEMFS=@HAVE_MEMFS@",
+                "HAVE_MEMFS=0",
+                *find(self.root_cmakelists_dir, "include.ctest.sh.in", recursive=True),
+                string=True,
+                backup=False,
+            )
+
     def cmake_args(self):
         jp2k = self.spec.variants["jp2k"].value
 
@@ -330,16 +538,16 @@ class Eccodes(CMakePackage):
             self.define("ENABLE_TESTS", self.run_tests),
             # Examples are not installed and are just part of the test suite:
             self.define("ENABLE_EXAMPLES", self.run_tests),
-            # Unconditionally disable the extended regression tests, since they
-            # download additional data (~134MB):
+            # Unconditionally disable the extended regression tests, since they download additional
+            # data (~134MB):
             self.define("ENABLE_EXTRA_TESTS", False),
         ]
 
         if "+netcdf" in self.spec:
             args.extend(
                 [
-                    # Prevent possible overriding by environment variables
-                    # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
+                    # Prevent possible overriding by environment variables NETCDF_ROOT, NETCDF_DIR,
+                    # and NETCDF_PATH:
                     self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix),
                     # Prevent overriding by environment variable HDF5_ROOT:
                     self.define("HDF5_ROOT", self.spec["hdf5"].prefix),
@@ -359,32 +567,140 @@ class Eccodes(CMakePackage):
         if "^python" in self.spec:
             args.append(self.define("PYTHON_EXECUTABLE", python.path))
 
-        definitions = self.spec.variants["definitions"].value
+        if "+create-view" in self.spec:
+            for das_type in das.keys():
+                if self._get_das_value(das_type) == "none":
+                    continue
 
-        if "auto" not in definitions:
-            args.append(
-                self.define("ENABLE_INSTALL_ECCODES_DEFINITIONS", "default" in definitions)
-            )
+                if "+memfs" in self.spec:
+                    # Enforce installation of the default definitions/samples to let the user
+                    # override the in-memory representation if needed:
+                    var_name = "ENABLE_INSTALL_ECCODES_{0}".format(das_type.upper())
+                    var_value = True
+                else:
+                    # Make the view directory the default one to be searched for the
+                    # definitions/samples:
+                    var_name = "ECCODES_{0}_SUFF".format(self._get_var_stem(das_type))
+                    var_value = join_path(
+                        "share", "eccodes", das_placement_dirname(das_type, "all")
+                    )
 
-        samples = self.spec.variants["samples"].value
-
-        if "auto" not in samples:
-            args.append(self.define("ENABLE_INSTALL_ECCODES_SAMPLES", "default" in samples))
+                args.append(self.define(var_name, var_value))
 
         return args
 
     @run_after("install")
-    def install_extra_definitions(self):
-        noop = set(["auto", "none", "default"])
-        for center in self.spec.variants["definitions"].value:
-            if center not in noop:
-                center_dir = "definitions.{0}".format(center)
-                install_tree(
-                    join_path(self.stage.source_path, "spack-definitions", center_dir),
-                    join_path(self.prefix.share.eccodes, center_dir),
+    def install_extra_das(self):
+        for das_type, das_dict in das.items():
+            value = self._get_das_value(das_type)
+
+            if value == "none":
+                continue
+
+            for center in value.split(":"):
+                center_dir = das_placement_dirname(das_type, center)
+                center_src_path = join_path(
+                    self.stage.source_path, "spack-{0}".format(das_type), center_dir
                 )
+
+                # Generate README file for the curious users:
+                readme_msg = [
+                    "This directory contains extra {0} from {1}, "
+                    "fetched from:".format(das_type, center)
+                ]
+                for key in self.resources:
+                    if key in self.spec:
+                        for res in self.resources[key]:
+                            if res.name == center:
+                                readme_msg.append(str(res.fetcher))
+                self._create_or_prepend(
+                    join_path(center_src_path, "README"), "\n".join(readme_msg)
+                )
+
+                install_tree(center_src_path, join_path(self.prefix.share.eccodes, center_dir))
+
+    @run_after("install")
+    def create_file_view(self):
+        if not self.spec.satisfies("+create-view~memfs"):
+            return
+
+        for das_type in das.keys():
+            value = self._get_das_value(das_type)
+
+            if value == "none":
+                continue
+
+            # Path to the default directory (i.e. the one that the library searches for the
+            # definitions/samples by default):
+            default_dir = join_path(
+                self.prefix.share.eccodes, das_placement_dirname(das_type, "all")
+            )
+
+            # Path to the usual installation directory for the definitions/samples:
+            usual_dir = join_path(self.prefix.share.eccodes, das_type)
+
+            # Move the default definitions/samples to the usual directory:
+            os.rename(default_dir, usual_dir)
+
+            # Recreate the default directory:
+            mkdirp(default_dir)
+
+            # List of the projected directories:
+            projected_dirs = [
+                join_path(self.prefix.share.eccodes, das_placement_dirname(das_type, center))
+                for center in value.split(":")
+            ]
+            projected_dirs.append(usual_dir)
+
+            # Generate README file for the curious users:
+            readme_path = join_path(default_dir, "README")
+            with open(readme_path, "w") as f:
+                f.write(
+                    "This directory is a projection of {0} from the following directories:\n"
+                    "{1}".format(das_type, "\n".join(projected_dirs))
+                )
+            set_install_permissions(readme_path)
+
+            # Create the view:
+            self._create_view(default_dir, *projected_dirs)
 
     def check(self):
         # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
         with working_dir(self.build_directory):
             ctest()
+
+    def _get_das_value(self, das_type):
+        return self.spec.variants["extra-{0}".format(das_type)].value
+
+    @staticmethod
+    def _get_var_stem(das_type):
+        # Workaround for the inconsistent name:
+        return das_type.upper() if das_type != "definitions" else "DEFINITION"
+
+    @staticmethod
+    def _create_view(dst_path, *src_paths):
+        from llnl.util.link_tree import LinkTree
+
+        for src_path in src_paths:
+            tree = LinkTree(src_path)
+
+            def ignore(file_or_dir):
+                dst_file_or_dir = join_path(dst_path, file_or_dir)
+                # Ignore if dst_file_or_dir exists and it's either a file (not a directory) or a
+                # directory that conflicts with a file (not a directory) from src_path:
+                return os.path.exists(dst_file_or_dir) and (
+                    not os.path.isdir(dst_file_or_dir)
+                    or not os.path.isdir(join_path(src_path, file_or_dir))
+                )
+
+            tree.merge(dst_path, ignore=ignore, relative=True)
+
+    @staticmethod
+    def _create_or_prepend(fname, msg, separator="#" * 80):
+        lines = [msg, "\n"]
+        if os.path.exists(fname):
+            with open(fname, "r") as f:
+                lines.extend([separator, "\n", f.read()])
+
+        with open(fname, "w") as f:
+            f.writelines(lines)
