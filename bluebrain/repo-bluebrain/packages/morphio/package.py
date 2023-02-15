@@ -15,6 +15,7 @@ class Morphio(CMakePackage):
 
     version('develop', submodules=True)
 
+    version('3.3.4', sha256='b70c6884e9b835560501f798c75c9cc7eaf3162cba1d930b5a9b854bb9ea60dc')
     version('3.3.3', sha256='f6d91970cfd734b2e5fb8f9239a0bfa00519fe082dd8e403e4cc204dbdf0a9fa')
     version('3.3.2', sha256="fc961defbfbfb3f11360954fb3ec51373eaff25b154fa31d6b31decca6937780")
     version('3.1.1', sha256="ad9f0e363f09f03c6eda54f5f3b006d204236677d2f2c9675421e0441033a503")
@@ -40,6 +41,6 @@ class Morphio(CMakePackage):
                 '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx)
             ]
         # PyPI tarballs don't include the unit tests
-        if self.spec.satisfies('@3.3.3'):
+        if self.spec.satisfies('@3.3.3:'):
             args.append('-DMORPHIO_TESTS:BOOL=OFF')
         return args
