@@ -7,7 +7,7 @@ import inspect
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, extends
+from spack.directives import build_system, extends, maintainers
 
 from ._checks import BaseBuilder
 
@@ -15,7 +15,7 @@ from ._checks import BaseBuilder
 class RubyPackage(spack.package_base.PackageBase):
     """Specialized class for building Ruby gems."""
 
-    maintainers = ["Kerilk"]
+    maintainers("Kerilk")
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
