@@ -133,7 +133,6 @@ spack:
     - poppler
     - python
     - qhull
-    - "qt@5:"  # Forcefully avoid qt@4
     - readline
     - singularityce
     - snakemake
@@ -143,7 +142,6 @@ spack:
     - totalview
     - valgrind~mpi
     - virtualgl
-    - vrpn
     - zlib
     # Viz stuff that complicates specs
     - optix

@@ -206,7 +206,7 @@ github_information:
    #-     rm -rf /gpfs/bbp.cscs.ch/ssd/apps/bsd/pulls/1765/2022-11-15/stage_compilers
    #- fi
     # Concretize and pre-fetch, afterwards build the environment
-    - spack -d concretize -f|tee "concretization_${DEPLOY_ENV}.txt"
+    - spack concretize -f|tee "concretization_${DEPLOY_ENV}.txt"
     - installed-hashes -m|tee missing.txt
     - if [[ -n "$(<missing.txt)" ]]; then
     -     spack fetch -m
