@@ -55,6 +55,8 @@ def setup_parser(subparser):
         help="print bat commands to load the package",
     )
 
+    arguments.add_common_arguments(subparser, ["deptype"])
+
     constraints = subparser.add_mutually_exclusive_group()
     constraints.add_argument(
         "-c",
@@ -124,7 +126,9 @@ def load(parser, args):
         if "dependencies" in args.things_to_load:
             include_roots = "package" in args.things_to_load
             specs = [
-                dep for spec in specs for dep in spec.traverse(root=include_roots, order="post")
+                dep
+                for spec in specs
+                for dep in spec.traverse(root=include_roots, deptype=args.deptype, order="post")
             ]
 
         env_mod = spack.util.environment.EnvironmentModifications()
