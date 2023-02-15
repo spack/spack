@@ -6,15 +6,15 @@
 from spack.package import *
 
 
-class PyTorchbenchmark(Package, PythonExtension):
+class PyTorchbenchmark(Package):
     """A collection of open source benchmarks used to evaluate PyTorch performance."""
 
     homepage = "https://github.com/pytorch/benchmark"
     git = "https://github.com/pytorch/benchmark.git"
 
-    version("main", branch="main")
+    maintainers("adamjstewart")
 
-    extends("python")
+    version("main", branch="main")
 
     # README.md
     depends_on("python@3.8:+pythoncmd", type=("build", "run"))
