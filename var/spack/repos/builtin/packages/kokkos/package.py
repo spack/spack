@@ -226,6 +226,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Build shared libraries")
 
+    # A few spack-generated files may include links to the spack compiler wrappers
+    # Filter these out to point to the proper compiler
+    filter_compiler_wrappers("kokkos_launch_compiler", 
+                             relative_root="bin")
+    filter_compiler_wrappers("KokkosConfigCommon.cmake", 
+                             relative_root=os.path.join("lib64", "cmake", "Kokkos"))
+    
     @classmethod
     def get_microarch(cls, target):
         """Get the Kokkos microarch name for a Spack target (spec.target)."""
