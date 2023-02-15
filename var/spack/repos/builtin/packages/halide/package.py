@@ -87,7 +87,7 @@ class Halide(CMakePackage, PythonExtension):
             self.define_from_variant("WITH_TUTORIALS", "tutorials"),
             self.define_from_variant("WITH_UTILS", "utils"),
             self.define_from_variant("WITH_PYTHON_BINDINGS", "python"),
-            self.define_from_variant("Halide_SHARED_LLVM", "sharedllvm")
+            self.define_from_variant("Halide_SHARED_LLVM", "sharedllvm"),
             self.define("WITH_WABT", False),
         ]
         llvm_targets = get_llvm_targets_to_build(spec)
