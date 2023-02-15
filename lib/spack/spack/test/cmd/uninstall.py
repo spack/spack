@@ -225,17 +225,8 @@ class TestUninstallFromEnv(object):
 
     @pytest.fixture
     def environment_setup(
-        self,
-        mutable_mock_env_path,
-        config,
-        mock_packages,
-        mutable_database,
-        install_mockery,
-        tmpdir,
+        self, mutable_mock_env_path, config, mock_packages, mutable_database, install_mockery
     ):
-        # make environments local to each instantiation of the fixture so they don't clash
-        # in parallel
-        spack.config.set("config:environments_root", str(tmpdir.join("envs")))
         TestUninstallFromEnv.env("create", "e1")
         e1 = spack.environment.read("e1")
         with e1:

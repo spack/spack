@@ -38,12 +38,7 @@ def check_blame(element, file_name, line=None):
     if line is not None:
         annotation += ":%d" % line
 
-    try:
-        assert file_name in element_line
-    except Exception:
-        print(output)
-    finally:
-        assert file_name in element_line
+    assert file_name in element_line
 
 
 def test_config_blame(config):

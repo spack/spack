@@ -1027,7 +1027,6 @@ spack:
     config:
         verify_ssl: False
         dirty: False
-        environments_root: ~/my/env/location
     repos:
         - ~/my/repo/location
     mirrors:
@@ -1455,7 +1454,7 @@ def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
 def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
     """Test reading a configuration file with invalid (unparseable) YAML
     raises a ConfigFileError."""
-    filename = tmpdir.join("test.yaml")
+    filename = join_path(tmpdir.strpath, "test.yaml")
     with open(filename, "w") as f:
         f.write("spack:\nview")
 
