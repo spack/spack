@@ -173,11 +173,11 @@ def loads(module_type, specs, args, out=None):
         )
         for spec in specs
         for module in spack.modules.common.get_module(
-                module_type,
-                spec,
-                get_full_path=False,
-                module_set_name=args.module_set_name,
-                required=False,
+            module_type,
+            spec,
+            get_full_path=False,
+            module_set_name=args.module_set_name,
+            required=False,
         )
     )
 
@@ -222,11 +222,11 @@ def find(module_type, specs, args):
             module
             for spec in dependency_specs_to_retrieve
             for module in spack.modules.common.get_module(
-                    module_type,
-                    spec,
-                    args.full_path,
-                    module_set_name=args.module_set_name,
-                    required=False,
+                module_type,
+                spec,
+                args.full_path,
+                module_set_name=args.module_set_name,
+                required=False,
             )
         )
 
@@ -308,8 +308,9 @@ def refresh(module_type, specs, args):
 
     # Skip unknown packages and filter external modules
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if
-        (spack.repo.path.exists(spec.name) and not spec.external_modules)
+        cls(spec, args.module_set_name)
+        for spec in specs
+        if (spack.repo.path.exists(spec.name) and not spec.external_modules)
     ]
 
     # Filter excluded packages early
