@@ -167,7 +167,7 @@ module_index:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index
 
-        m1_path = spack.modules.common.get_module("tcl", s1, True)
+        m1_path = spack.modules.common.get_module("tcl", s1, True)[0]
         assert m1_path == "/path/to/a"
     finally:
         spack.modules.common.upstream_module_index = old_index
@@ -188,7 +188,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 
-    module_path = spack.modules.common.get_module("tcl", spec, True)
+    module_path = spack.modules.common.get_module("tcl", spec, True)[0]
     assert module_path
 
     spack.package_base.PackageBase.uninstall_by_spec(spec)
