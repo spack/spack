@@ -91,11 +91,20 @@ while read -r line; do
         if [[ "${INTEL_DIR}" != "${DEPLOYMENT_ROOT}"* ]]; then
             log "...installation does not match install prefix, skipping modification of files"
         else
-            for comp in icc icpc ifort icx icpx ifx; do
+            for comp in icc icpc ifort; do
                 for f in $(find ${INTEL_DIR} -name "${comp}.cfg"); do
                     sed -i -z -e 's/ -gcc-name=.*//g' ${f}
                     echo -n " -gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
                     echo -n " -gxx-name=${GCC_DIR}/bin/g++" >> ${f}
+                    echo -n " -Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
+                    echo -n " -Xlinker -rpath=${GCC_DIR}/lib64" >> ${f}
+                    log "updated ${f} to use GCC from ${GCC_DIR}"
+                done
+            done
+            for comp in icx icpx ifx; do
+                for f in $(find ${INTEL_DIR} -name "${comp}.cfg"); do
+                    sed -i -z -e 's/ --gcc-toolchain=.*//g' ${f}
+                    echo -n " --gcc-toolchain=${GCC_DIR}" >> ${f}
                     echo -n " -Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
                     echo -n " -Xlinker -rpath=${GCC_DIR}/lib64" >> ${f}
                     log "updated ${f} to use GCC from ${GCC_DIR}"
