@@ -21,6 +21,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
     version("0.3.22", sha256="680a6f5265ba26d5515617a95ae47244005366f879a5c321782fde60f34e6d0d")
     version("0.1.74", sha256="bbc78c7a4927012dcb1b7cd135c7521f782d7dad516a2401b56d3190f81afe35")
 
+    variant("cuda", default=True, description="Build with CUDA")
+
     # jaxlib/setup.py
     depends_on("python@3.8:", when="@0.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -36,7 +38,9 @@ class PyJaxlib(PythonPackage, CudaPackage):
     # README.md
     depends_on("cuda@11.4:", when="@0.4:+cuda")
     depends_on("cuda@11.1:", when="@0.3+cuda")
-    depends_on("cuda@11.1:11.7.0", when="@0.1+cuda")  # TODO: why the upper bound?
+    # Header file change in CUDA 11.7.1 causes problems with vendored copy of TF
+    # https://github.com/tensorflow/tensorflow/commit/a76f797b9cd4b9b15bec4c503b16236a804f676f
+    depends_on("cuda@11.1:11.7.0", when="@0.1+cuda")
     depends_on("cudnn@8.2:", when="@0.4:+cuda")
     depends_on("cudnn@8.0.5:", when="+cuda")
 
