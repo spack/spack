@@ -936,6 +936,12 @@ class BaseModuleFileWriter(object):
 
     def remove(self):
         """Deletes the module file."""
+
+        # Don't delete external modules
+        if self.spec.external_modules:
+            err_msg = "Can't delete external modulefile for {0}!"
+            raise spack.error.SpackError(err_msg.format(self.spec))
+
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
             try:
