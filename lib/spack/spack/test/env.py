@@ -75,8 +75,8 @@ env:
   - desired_specs: ["mpileaks@2.1"]
   specs:
   - matrix:
-    - [$compilers]
     - [$desired_specs]
+    - [$compilers]
 """
 
 

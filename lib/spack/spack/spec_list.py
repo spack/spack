@@ -51,7 +51,9 @@ class SpecList(object):
             constraints = []
             for item in self.specs_as_yaml_list:
                 if isinstance(item, dict):  # matrix of specs
-                    constraints.extend(_expand_matrix_constraints(item))
+                    expanded = _expand_matrix_constraints(item)
+                    for e in expanded:
+                        constraints.append([Spec(x) for x in e])
                 else:  # individual spec
                     constraints.append([Spec(item)])
             self._constraints = constraints
@@ -62,13 +64,12 @@ class SpecList(object):
     def specs(self):
         if self._specs is None:
             specs = []
-            # This could be slightly faster done directly from yaml_list,
-            # but this way is easier to maintain.
-            for constraint_list in self.specs_as_constraints:
-                spec = constraint_list[0].copy()
-                for const in constraint_list[1:]:
-                    spec.constrain(const)
-                specs.append(spec)
+            for item in self.specs_as_yaml_list:
+                if isinstance(item, dict):  # matrix of specs
+                    expanded = _expand_matrix_constraints(item)
+                    specs.extend([Spec(" ".join(x)) for x in _expand_matrix_constraints(item)])
+                else:  # individual spec
+                    specs.append(Spec(item))
             self._specs = specs
 
         return self._specs
@@ -193,11 +194,7 @@ def _expand_matrix_constraints(matrix_config):
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
         flat_combo = [constraint for constraint_list in combo for constraint in constraint_list]
-        flat_combo = [Spec(x) for x in flat_combo]
-
-        test_spec = flat_combo[0].copy()
-        for constraint in flat_combo[1:]:
-            test_spec.constrain(constraint)
+        test_spec = Spec(" ".join(flat_combo))
 
         # Abstract variants don't have normal satisfaction semantics
         # Convert all variants to concrete types.
@@ -213,7 +210,7 @@ def _expand_matrix_constraints(matrix_config):
             continue
 
         if sigil:
-            flat_combo[0] = Spec(sigil + str(flat_combo[0]))
+            flat_combo[0] = sigil + flat_combo[0]
 
         # Add to list of constraints
         results.append(flat_combo)

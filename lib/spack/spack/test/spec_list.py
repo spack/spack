@@ -61,25 +61,25 @@ class TestSpecList(object):
     @pytest.mark.parametrize(
         "specs,expected",
         [
-            # Constraints are ordered randomly
+            # Constraints are ordered carefully to apply to appropriate node
             (
                 [
                     {
                         "matrix": [
-                            ["^zmpi"],
-                            ["%gcc@4.5.0"],
                             ["hypre", "libelf"],
                             ["~shared"],
-                            ["cflags=-O3", 'cflags="-g -O0"'],
                             ["^foo"],
+                            ["^zmpi"],
+                            ["%gcc@4.5.0"],
+                            ["cflags=-O3", 'cflags="-g -O0"'],
                         ]
                     }
                 ],
                 [
-                    "hypre cflags=-O3 ~shared %gcc@4.5.0 ^foo ^zmpi",
-                    'hypre cflags="-g -O0" ~shared %gcc@4.5.0 ^foo ^zmpi',
-                    "libelf cflags=-O3 ~shared %gcc@4.5.0 ^foo ^zmpi",
-                    'libelf cflags="-g -O0" ~shared %gcc@4.5.0 ^foo ^zmpi',
+                    "hypre ~shared ^foo ^zmpi cflags=-O3 %gcc@4.5.0",
+                    'hypre ~shared ^foo ^zmpi cflags="-g -O0" %gcc@4.5.0',
+                    "libelf ~shared ^foo ^zmpi cflags=-O3 %gcc@4.5.0",
+                    'libelf ~shared ^foo ^zmpi cflags="-g -O0" %gcc@4.5.0',
                 ],
             ),
             # A constraint affects both the root and a dependency
