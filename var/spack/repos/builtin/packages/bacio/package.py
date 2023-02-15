@@ -40,6 +40,11 @@ class Bacio(CMakePackage):
 
     def cmake_args(self):
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
+        if self.spec.satisfies("@2.6.0:"):
+            if "+shared" in spec:
+                args.append("-DBUILD_SHARED_LIBS=ON")
+            else:
+                args.append("-DBUILD_SHARED_LIBS=OFF")
 
         return args
 
