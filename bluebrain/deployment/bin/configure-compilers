@@ -37,7 +37,6 @@ log "...using gcc ${DEFAULT_GCC_VERSION} from ${DEFAULT_GCC_DIR} for modern Inte
 while read -r line; do
     sha="${line%% *}"    # Remove everything after and including the first space
     spec="${line#* }"    # Remove everything up to and including the first space
-    module_additions=""  # Stuff to append to the module if the base one is incomplete
     set +o nounset
     env_mods=""
 
@@ -111,21 +110,6 @@ while read -r line; do
                 done
             done
         fi
-        if [[ ${spec} = "intel-oneapi-compilers@"* ]]; then
-            module_additions=$(cat <<EOF
-# Somehow these don't get set by Spack…
-setenv CC "$(which icc)"
-setenv CXX "$(which icpc)"
-setenv FC "$(which ifort)"
-setenv F77 "$(which ifort)"
-setenv F90 "$(which ifort)"
-# These are set just like in the "intel" module
-setenv MPICC_CC "icc"
-setenv MPICXX_CXX "icpc"
-setenv MPIF90_F90 "ifort"
-EOF
-            )
-        fi
     elif [[ ${line} = *"nvhpc"* ]]; then
         # Configure NVHPC compilers to use an up to date version of the C++
         # standard library from the deployed version of GCC.
@@ -155,10 +139,6 @@ EOF
 
     cmd=${cmd/unload/show/}
     full_module_path="$(${cmd}|&sed -ne '2{s/:$// p}')"
-    # First add any potential additions to the module
-    if [[ -n "$module_additions" ]]; then
-        echo "$module_additions" >> "$full_module_path"
-    fi
     # Then append a bunch of other required modules
     if [[ $line = *"nvhpc"* ]]; then
         if [[ -n $GCC_MODULES ]]; then
