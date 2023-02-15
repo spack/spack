@@ -361,11 +361,14 @@ class UpstreamModuleIndex(object):
 
 
 def get_module(module_type, spec, get_full_path, module_set_name="default", required=True):
-    """Retrieve the module file for a given spec and module type.
+    """Retrieve the module file(s) for a given spec and module type.
 
-    Retrieve the module file for the given spec if it is available. If the
-    module is not available, this will raise an exception unless the module
+    Retrieve the module file(s) for the given spec if it is available. If the
+    module(s) is not available, this will raise an exception unless the module
     is excluded or if the spec is installed upstream.
+
+    Currently only external packages may have multiple module files associated
+    with one spec.
 
     Args:
         module_type: the type of module we want to retrieve (e.g. lmod)
@@ -380,7 +383,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             for which to retrieve the module.
 
     Returns:
-        The module name or path. May return ``None`` if the module is not
+        List of module names or paths. May return ``[]`` if the module is not
         available.
     """
     try:
@@ -608,9 +611,10 @@ class BaseFileLayout(object):
 
     @property
     def use_name(self):
-        """Returns the 'use' name of the module i.e. the name you have to type
-        to console to use it. This implementation fits the needs of most
-        non-hierarchical layouts.
+        """Returns a list of the 'use' names of the module i.e. the names you
+        have to type to console to use it. This implementation fits the needs of
+        most non-hierarchical layouts. Most specs will only have one use name;
+        currently only external packages may have multiple modulefiles per spec.
         """
         if self.spec.external_modules:
             return self.spec.external_modules
