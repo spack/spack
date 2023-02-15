@@ -37,9 +37,9 @@ class Bacio(CMakePackage):
     )
 
     variant("pic", default=True, description="Build with position-independent-code")
+    variant("shared", default=False, description="Build shared library", when="@2.6.0:")
 
     def cmake_args(self):
-        variant("shared", default=False, description="Build shared library", when="@2.6.0:")
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
