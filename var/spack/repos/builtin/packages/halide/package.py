@@ -28,7 +28,9 @@ class Halide(CMakePackage, PythonExtension):
     variant("tests", default=False, description="Build and Run Halide Tests and Apps.")
     variant("opencl", default=False, description="Build Non-llvm based OpenCl-C backend.")
     variant("metal", default=False, description="Build Non-llvm based Metal backend.")
-    variant("d3d12", default=False, description="Build Non-llvm based Direct3D 12 Compute backend.")
+    variant(
+        "d3d12", default=False, description="Build Non-llvm based Direct3D 12 Compute backend."
+    )
     extends("python", when="+python")
     _values = (
         "aarch64",
@@ -57,7 +59,9 @@ class Halide(CMakePackage, PythonExtension):
         type=("link", "run"),
     )
     for v in _values:
-        depends_on("llvm targets={0}".format(v), type=("link", "run"), when="targets={0}".format(v))
+        depends_on(
+            "llvm targets={0}".format(v), type=("link", "run"), when="targets={0}".format(v)
+        )
     depends_on("llvm+llvm_dylib", type=("link", "run"), when="+sharedllvm")
 
     depends_on("libjpeg", type=("build", "link", "run"))
@@ -115,6 +119,9 @@ class Halide(CMakePackage, PythonExtension):
 def get_llvm_targets_to_build(spec):
     targets = spec.variants["targets"].value
     llvm_targets = set()
+
+    for t in targets:
+        llvm_targets.add((t, True))
 
     # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
     spack_to_cmake = {
