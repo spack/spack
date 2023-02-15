@@ -113,11 +113,6 @@ class Hipsparse(CMakePackage):
     for ver in [
         "3.5.0",
         "3.7.0",
-    ]:
-        depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocsparse@" + ver, when="@" + ver)
-    for ver in [
         "3.8.0",
         "3.9.0",
         "3.10.0",
