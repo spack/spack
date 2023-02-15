@@ -15,7 +15,7 @@ class PyCufflinks(PythonPackage):
 
     version("0.17.3", sha256="48c1b3406dc030004121966489eebc5518cea70fd4e3f16379b491328501a644")
 
-    depends_on("py-setuptools@34.4.1:", type="build")
+    depends_on("py-setuptools@34.4.1:", type=("build", "run"))
     depends_on("py-numpy@1.9.2:", type=("build", "run"))
     depends_on("py-pandas@0.19.2:", type=("build", "run"))
     depends_on("py-plotly@4.1.1:", type=("build", "run"))
