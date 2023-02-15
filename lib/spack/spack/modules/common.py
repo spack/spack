@@ -793,7 +793,11 @@ class BaseContext(tengine.Context):
     def _create_module_list_of(self, what):
         m = self.conf.module
         name = self.conf.name
-        return [use_name for x in getattr(self.conf, what) for use_name in m.make_layout(x, name).use_name]
+        return [
+            use_name
+            for x in getattr(self.conf, what)
+            for use_name in m.make_layout(x, name).use_name
+        ]
 
     @tengine.context_property
     def verbose(self):
