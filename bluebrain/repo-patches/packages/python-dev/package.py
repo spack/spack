@@ -31,7 +31,6 @@ class PythonDev(BundlePackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-sympy', type=('build', 'run'))
-    depends_on('py-tox', type=('build', 'run'))
 
     def setup_run_environment(self, env):
         for dep in self.spec.dependencies(deptype='run'):

@@ -21,6 +21,7 @@ spack:
           - py-notebook
           - py-numpy
           - py-poisson-recon-pybind
+          - py-pytest
           - py-rtree
           - py-scikit-learn
           - py-scipy
@@ -53,6 +54,7 @@ spack:
     - py-rtree
     - py-scikit-learn
     - py-scipy
+    - py-pytest  # requested by Pramod
     - py-virtualenv
     - python-dev
     - sundials+int64
