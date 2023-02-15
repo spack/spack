@@ -5,10 +5,12 @@
 
 import sys
 
+import spack.config
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.cmd.find
 import spack.environment as ev
+import spack.solver.asp as asp
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
@@ -53,7 +55,16 @@ def setup_parser(subparser):
         help="print bat commands to load the package",
     )
 
-    subparser.add_argument(
+    constraints = subparser.add_mutually_exclusive_group()
+    constraints.add_argument(
+        "-c",
+        "--concretize",
+        action="store_true",
+        default=False,
+        help="concretize the input specs",
+    )
+
+    constraints.add_argument(
         "--first",
         action="store_true",
         default=False,
@@ -90,10 +101,16 @@ def load(parser, args):
         spack.cmd.display_specs(results)
         return
 
-    specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
-        for spec in spack.cmd.parse_specs(args.constraint)
-    ]
+    if args.concretize:
+        spack.config.set("concretizer:reuse", "always", scope="command_line")
+        solver = asp.Solver()
+        result = solver.solve(spack.cmd.parse_specs(args.constraint))
+        specs = result.specs
+    else:
+        specs = [
+            spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
+            for spec in spack.cmd.parse_specs(args.constraint)
+        ]
 
     if not args.shell:
         specs_str = " ".join(args.constraint) or "SPECS"
