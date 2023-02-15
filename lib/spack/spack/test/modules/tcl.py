@@ -148,7 +148,7 @@ class TestTcl(object):
 
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections["all"])
-        assert projection in writer.layout.use_name
+        assert projection in writer.layout.use_name[0]
 
     def test_projections_specific(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
@@ -163,7 +163,7 @@ class TestTcl(object):
 
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections["mpileaks"])
-        assert projection in writer.layout.use_name
+        assert projection in writer.layout.use_name[0]
 
     def test_projections_all(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
@@ -178,7 +178,7 @@ class TestTcl(object):
 
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections["all"])
-        assert projection in writer.layout.use_name
+        assert projection in writer.layout.use_name[0]
 
     def test_invalid_naming_scheme(self, factory, module_configuration, mock_module_filename):
         """Tests the evaluation of an invalid naming scheme."""
@@ -189,7 +189,7 @@ class TestTcl(object):
         # a RuntimeError
         writer, _ = factory("mpileaks")
         with pytest.raises(RuntimeError):
-            writer.layout.use_name
+            writer.layout.use_name[0]
 
     def test_invalid_token_in_env_name(self, factory, module_configuration, mock_module_filename):
         """Tests setting environment variables with an invalid name."""
@@ -231,7 +231,7 @@ class TestTcl(object):
 
         index = spack.modules.common.read_module_index(test_root)
 
-        assert index[s1.dag_hash()].use_name == w1.layout.use_name
+        assert index[s1.dag_hash()].use_name[0] == w1.layout.use_name[0]
         assert index[s2.dag_hash()].path == w2.layout.filename
 
         spack.modules.common.generate_module_index(test_root, [w3])
@@ -239,7 +239,7 @@ class TestTcl(object):
         index = spack.modules.common.read_module_index(test_root)
 
         assert len(index) == 3
-        assert index[s1.dag_hash()].use_name == w1.layout.use_name
+        assert index[s1.dag_hash()].use_name[0] == w1.layout.use_name[0]
         assert index[s2.dag_hash()].path == w2.layout.filename
 
         spack.modules.common.generate_module_index(test_root, [w3], overwrite=True)
@@ -247,22 +247,22 @@ class TestTcl(object):
         index = spack.modules.common.read_module_index(test_root)
 
         assert len(index) == 1
-        assert index[s3.dag_hash()].use_name == w3.layout.use_name
+        assert index[s3.dag_hash()].use_name[0] == w3.layout.use_name[0]
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
         module_configuration("suffix")
 
         writer, spec = factory("mpileaks+debug target=x86_64")
-        assert "foo" in writer.layout.use_name
-        assert "foo-foo" not in writer.layout.use_name
+        assert "foo" in writer.layout.use_name[0]
+        assert "foo-foo" not in writer.layout.use_name[0]
 
         writer, spec = factory("mpileaks~debug target=x86_64")
-        assert "foo-bar" in writer.layout.use_name
-        assert "baz" not in writer.layout.use_name
+        assert "foo-bar" in writer.layout.use_name[0]
+        assert "baz" not in writer.layout.use_name[0]
 
         writer, spec = factory("mpileaks~debug+opt target=x86_64")
-        assert "baz-foo-bar" in writer.layout.use_name
+        assert "baz-foo-bar" in writer.layout.use_name[0]
 
     def test_setup_environment(self, modulefile_content, module_configuration):
         """Tests the internal set-up of run-time environment."""
@@ -285,14 +285,14 @@ class TestTcl(object):
         module_configuration("override_config")
 
         writer, spec = factory("mpileaks~opt target=x86_64")
-        assert "mpich-static" in writer.layout.use_name
-        assert "over" not in writer.layout.use_name
-        assert "ridden" not in writer.layout.use_name
+        assert "mpich-static" in writer.layout.use_name[0]
+        assert "over" not in writer.layout.use_name[0]
+        assert "ridden" not in writer.layout.use_name[0]
 
         writer, spec = factory("mpileaks+opt target=x86_64")
-        assert "over-ridden" in writer.layout.use_name
-        assert "mpich" not in writer.layout.use_name
-        assert "static" not in writer.layout.use_name
+        assert "over-ridden" in writer.layout.use_name[0]
+        assert "mpich" not in writer.layout.use_name[0]
+        assert "static" not in writer.layout.use_name[0]
 
     def test_override_template_in_package(self, modulefile_content, module_configuration):
         """Tests overriding a template from and attribute in the package."""
