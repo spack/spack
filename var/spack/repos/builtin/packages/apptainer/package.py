@@ -45,4 +45,8 @@ class Apptainer(SingularityBase):
     # Override config options from SingularityBase
     @property
     def config_options(self):
-        return []
+        spec = self.spec
+        options = []
+        if "+suid" in spec and spec.satisfies("@1.1.0:"):
+            options += ["--with-suid"]                    
+        return options
