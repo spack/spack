@@ -231,7 +231,7 @@ class TestTcl(object):
 
         index = spack.modules.common.read_module_index(test_root)
 
-        assert index[s1.dag_hash()].use_name[0] == w1.layout.use_name[0]
+        assert index[s1.dag_hash()].use_name == w1.layout.use_name[0]
         assert index[s2.dag_hash()].path == w2.layout.filename
 
         spack.modules.common.generate_module_index(test_root, [w3])
@@ -239,7 +239,7 @@ class TestTcl(object):
         index = spack.modules.common.read_module_index(test_root)
 
         assert len(index) == 3
-        assert index[s1.dag_hash()].use_name[0] == w1.layout.use_name[0]
+        assert index[s1.dag_hash()].use_name == w1.layout.use_name[0]
         assert index[s2.dag_hash()].path == w2.layout.filename
 
         spack.modules.common.generate_module_index(test_root, [w3], overwrite=True)
@@ -247,7 +247,7 @@ class TestTcl(object):
         index = spack.modules.common.read_module_index(test_root)
 
         assert len(index) == 1
-        assert index[s3.dag_hash()].use_name[0] == w3.layout.use_name[0]
+        assert index[s3.dag_hash()].use_name == w3.layout.use_name[0]
 
     def test_suffixes(self, module_configuration, factory):
         """Tests adding suffixes to module file name."""
