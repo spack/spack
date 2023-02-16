@@ -14,12 +14,13 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
+    version("5.4.3", sha256="37ffe2ed3d7942da8ea2f6bdb85c7a2f58e3ccd31767db158a322769d3604efd")
     version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
     version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
     version("5.3.0", sha256="c5819f593d71beeda2eb24b89182912240cc40f83b2b8f9de695a8e230aa4ea6")
@@ -145,6 +146,7 @@ class MiopenHip(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -164,6 +166,7 @@ class MiopenHip(CMakePackage):
 
     for ver in [
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocmlir@" + ver, when="@" + ver)
         depends_on("nlohmann-json", type="link")
