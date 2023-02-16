@@ -72,7 +72,9 @@ class Pfunit(CMakePackage):
         values=("Debug", "Release"),
     )
 
-    depends_on("python@2.7:", type=("build", "run"))  # python3 too!
+    depends_on("doxygen", type="build", when="+docs")
+
+    depends_on("python", type=("build", "run"))  # python3 too!
     depends_on("mpi", when="+mpi")
     depends_on("esmf", when="+esmf")
     depends_on("m4", when="@4.1.5:", type="build")
@@ -123,10 +125,11 @@ class Pfunit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            self.define("PYTHON_EXECUTABLE", spec["python"].command),
-            self.define_from_variant("BUILD_SHARED", "shared"),
+            self.define("Python_EXECUTABLE", spec["python"].command),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("CMAKE_Fortran_MODULE_DIRECTORY", spec.prefix.include),
-            self.define_from_variant("BUILD_DOCS", "docs"),
+            self.define_from_variant("ENABLE_BUILD_DOXYGEN", "docs"),
+            self.define("ENABLE_TESTS", self.run_tests),
         ]
 
         if spec.satisfies("@4.0.0:"):
