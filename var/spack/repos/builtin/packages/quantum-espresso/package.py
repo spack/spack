@@ -592,7 +592,7 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
                 filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
 
         # Filer file must be applied for AOCC due to incorrect make.inc generation
-        if spec.satisfies("%aocc") and spec.satisfies("@6.8:"):
+        if spec.satisfies("@6.8: %aocc"):
             make_inc = join_path(self.stage.source_path, "make.inc")
             filter_file("FOX_FLAGS = -D__PGI", "FOX_FLAGS = -D__PGI -cpp", make_inc)
 
