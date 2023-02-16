@@ -186,9 +186,8 @@ protected-publish:
 .mac-pr:
   only:
   - /^pr[\d]+_.*$/
-  - /^github\/pr[\d]+_.*$/
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PRUNE_UNTOUCHED: "True"
 
 .mac-protected:
@@ -196,7 +195,6 @@ protected-publish:
   - /^develop$/
   - /^releases\/v.*/
   - /^v.*/
-  - /^github\/develop$/
   variables:
     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
 
