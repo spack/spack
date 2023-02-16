@@ -686,21 +686,33 @@ class SimpleFilesystemView(FilesystemView):
         for dst in visitor.directories:
             os.mkdir(os.path.join(self._root, dst))
 
-        # Then group the files to be linked by spec...
-        # For compatibility, we have to create a merge_map dict mapping
-        # full_src => full_dst
-        files_per_spec = itertools.groupby(visitor.files.items(), key=lambda item: item[1][0])
-
-        for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
-            merge_map = dict()
-            for dst_rel, (_, src_rel) in rel_paths:
-                full_src = os.path.join(src_root, src_rel)
-                full_dst = os.path.join(self._root, dst_rel)
-                merge_map[full_src] = full_dst
+        # Link the files using a "merge map": full src => full dst
+        merge_map_per_prefix = self._source_merge_visitor_to_merge_map(visitor)
+        for spec in specs:
+            merge_map = merge_map_per_prefix.get(spec.package.view_source(), None)
+            if not merge_map:
+                # Not every spec may have files to contribute.
+                continue
             spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
 
         # Finally create the metadata dirs.
         self.link_metadata(specs)
+
+    def _source_merge_visitor_to_merge_map(self, visitor: SourceMergeVisitor):
+        # For compatibility with add_files_to_view, we have to create a
+        # merge_map of the form join(src_root, src_rel) => join(dst_root, dst_rel),
+        # but our visitor.files format is dst_rel => (src_root, src_rel).
+        # We exploit that visitor.files is an ordered dict, and files per source
+        # prefix are contiguous.
+        source_root = lambda item: item[1][0]
+        per_source = itertools.groupby(visitor.files.items(), key=source_root)
+        return {
+            src_root: {
+                os.path.join(src_root, src_rel): os.path.join(self._root, dst_rel)
+                for dst_rel, (_, src_rel) in group
+            }
+            for src_root, group in per_source
+        }
 
     def link_metadata(self, specs):
         metadata_visitor = SourceMergeVisitor()

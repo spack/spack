@@ -75,7 +75,7 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         # so that we have a fast lookup and can run mkdir in order.
         self.directories = OrderedDict()
 
-        # Files to link. Maps dst_rel to (src_rel, src_root)
+        # Files to link. Maps dst_rel to (src_root, src_rel)
         self.files = OrderedDict()
 
     def before_visit_dir(self, root, rel_path, depth):
