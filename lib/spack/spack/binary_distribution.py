@@ -1316,11 +1316,11 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         nodes = set(specs)
 
     # Limit to installed non-externals.
-    packagable = lambda n: not n.external and n.installed
+    packageable = lambda n: not n.external and n.installed
 
     # Mass install check
     with spack.store.db.read_transaction():
-        return list(filter(packagable, nodes))
+        return list(filter(packageable, nodes))
 
 
 def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs):
