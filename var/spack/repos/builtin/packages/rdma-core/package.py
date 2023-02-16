@@ -88,8 +88,7 @@ class RdmaCore(CMakePackage):
             "-DCMAKE_INSTALL_RUNDIR=/var/run",
         ]
 
-        if self.spec.satisfies("+static"):
-            cmake_args.append(self.define("ENABLE_STATIC", 1))
+        cmake_args.append(self.define_from_variant("ENABLE_STATIC", "static"))
 
         if self.spec.satisfies("@:39.0"):
             cmake_args.extend(
