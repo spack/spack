@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
+
 from spack import *
 
 
@@ -40,6 +43,7 @@ class Fckit(CMakePackage):
     variant('openmp', default=True, description='Use OpenMP?')
     depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
     variant('shared', default=True)
+    variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
 
     def cmake_args(self):
         args = [
@@ -61,3 +65,10 @@ class Fckit(CMakePackage):
         args.append('-DECBUILD_CXX_IMPLICIT_LINK_LIBRARIES={}'.format(cxxlib))
 
         return args
+
+    @when("+fismahigh")
+    def patch(self):
+        patterns = ["tools/install-*", "tools/github-sha*", ".travis.yml"]
+        for pattern in patterns:
+            for path in glob.glob(pattern):
+                os.remove(path)

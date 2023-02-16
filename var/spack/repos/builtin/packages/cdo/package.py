@@ -278,6 +278,12 @@ class Cdo(AutotoolsPackage):
         if self.spec.satisfies("@1.9:+hdf5^hdf5+mpi"):
             flags["CPPFLAGS"].append("-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX")
 
+        # Workaround compiler issues
+        # https://github.com/NOAA-EMC/spack-stack/issues/468
+        if self.spec.satisfies("%intel"):
+            flags["CFLAGS"].append("-O1")
+            flags["CXXFLAGS"].append("-O1")
+
         config_args.extend(["{0}={1}".format(var, " ".join(val)) for var, val in flags.items()])
 
         return config_args
