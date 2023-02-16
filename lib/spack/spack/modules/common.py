@@ -383,7 +383,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             for which to retrieve the module.
 
     Returns:
-        List of module names or paths. May return ``[]`` if the module is not
+        List of module names or paths. May return ``[None]`` if the module is not
         available.
     """
     try:
@@ -393,13 +393,20 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     if upstream:
         module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
         if not module:
-            return []
+            return [None]
 
         if get_full_path:
             return [module.path]
         else:
             return module.use_name
     elif spec.external_modules:
+        writer = spack.modules.module_types[module_type](spec, module_set_name)
+        if writer.conf.excluded:
+            if required:
+                tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))
+            else:
+                return [None]
+
         if get_full_path:
             err_msg = "Cannot retrieve full path to an external module"
             raise NotImplementedError(err_msg)
@@ -416,7 +423,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             elif required:
                 tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))
             else:
-                return []
+                return [None]
 
         if get_full_path:
             return [writer.layout.filename]
