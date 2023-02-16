@@ -340,6 +340,10 @@ class Cp2k(MakefilePackage, CudaPackage):
         libs = []
         gpuver = ""
 
+        # CP2K Makefile doesn't set C standard, but the source code uses
+        # C99-style for-loops with inline definition of iterating variable.
+        cflags.append(self.compiler.c99_flag)
+
         if "%intel" in spec:
             cflags.append("-fp-model precise")
             cxxflags.append("-fp-model precise")
