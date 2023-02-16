@@ -59,7 +59,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args += self.enable_or_disable("doc")
         return args
 
-    def autoreconf(self, spec, prefix):
+    def autoreconf(self, pkg, spec, prefix):
         sh = which("sh")
         if self.spec.satisfies("target=aarch64:"):
             sh("./autogen.sh", "prefix={0}".format(prefix), "--build=arm-linux")
