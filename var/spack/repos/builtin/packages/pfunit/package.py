@@ -9,8 +9,7 @@ from spack.package import *
 
 
 class Pfunit(CMakePackage):
-    """
-    pFUnit is a unit testing framework enabling JUnit-like testing of
+    """pFUnit is a unit testing framework enabling JUnit-like testing of
     serial and MPI-parallel software written in Fortran.
     """
 
@@ -20,6 +19,7 @@ class Pfunit(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    version("4.6.3", sha256="a43a64c4338be57fdbe1cae1a89e277196f10931bc1f73418a463e05e5e7b2d1")
     version("4.6.2", sha256="fd302a1f7a131b38e18bc31ede69a216e580c640152e5e313f5a1e084669a950")
     version("4.6.1", sha256="19de22ff0542ca900aaf2957407f24d7dadaccd993ea210beaf22032d3095add")
     version("4.6.0", sha256="7c768ea3a2d16d8ef6229b25bd7756721c24a18db779c7422afde0e3e2248d72")
@@ -39,16 +39,44 @@ class Pfunit(CMakePackage):
     version("4.1.12", sha256="7d71b0fb996497fe9a20eb818d02d596cd0d3cded1033a89a9081fbd925c68f2")
     version("4.1.11", sha256="16160bac223aaa3ed2b27e30287d25fdaec3cf6f2c570ebd8d61196e6aa6180f")
     version("4.1.10", sha256="051c35ad9678002943f4a4f2ab532a6b44de86ca414751616f93e69f393f5373")
-    version("3.3.3", sha256="9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5")
-    version("3.3.2", sha256="b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8")
-    version("3.3.1", sha256="f8f4bea7de991a518a0371b4c70b19e492aa9a0d3e6715eff9437f420b0cdb45")
-    version("3.3.0", sha256="4036ab448b821b500fbe8be5e3d5ab3e419ebae8be82f7703bcf84ab1a0ff862")
-    version("3.2.10", sha256="b9debba6d0e31b682423ffa756531e9728c10acde08c4d8e1609b4554f552b1a")
-    version("3.2.9", sha256="403f9a150865700c8b4240fd033162b8d3e8aeefa265c50c5a6fe14c455fbabc")
+    version(
+        "3.3.3",
+        sha256="9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5",
+        deprecated=True,
+    )
+    version(
+        "3.3.2",
+        sha256="b1cc2e109ba602ea71bccefaa3c4a06e7ab1330db9ce6c08db89cfde497b8ab8",
+        deprecated=True,
+    )
+    version(
+        "3.3.1",
+        sha256="f8f4bea7de991a518a0371b4c70b19e492aa9a0d3e6715eff9437f420b0cdb45",
+        deprecated=True,
+    )
+    version(
+        "3.3.0",
+        sha256="4036ab448b821b500fbe8be5e3d5ab3e419ebae8be82f7703bcf84ab1a0ff862",
+        deprecated=True,
+    )
+    version(
+        "3.2.10",
+        sha256="b9debba6d0e31b682423ffa756531e9728c10acde08c4d8e1609b4554f552b1a",
+        deprecated=True,
+    )
+    version(
+        "3.2.9",
+        sha256="403f9a150865700c8b4240fd033162b8d3e8aeefa265c50c5a6fe14c455fbabc",
+        deprecated=True,
+    )
 
-    variant("shared", default=True, description="Build shared library in addition to static")
     variant("mpi", default=False, description="Enable MPI")
-    variant("use_comm_world", default=False, description="Enable MPI_COMM_WORLD for testing")
+    variant(
+        "use_comm_world",
+        default=False,
+        description="Enable MPI_COMM_WORLD for testing",
+        when="@:3 +mpi",
+    )
     variant("openmp", default=False, description="Enable OpenMP")
     variant("fhamcrest", default=False, description="Enable hamcrest support")
     variant("esmf", default=False, description="Enable esmf support")
@@ -72,7 +100,9 @@ class Pfunit(CMakePackage):
         values=("Debug", "Release"),
     )
 
-    depends_on("python@2.7:", type=("build", "run"))  # python3 too!
+    depends_on("doxygen", type="build", when="+docs")
+
+    depends_on("python", type=("build", "run"))
     depends_on("mpi", when="+mpi")
     depends_on("esmf", when="+esmf")
     depends_on("m4", when="@4.1.5:", type="build")
@@ -84,7 +114,7 @@ class Pfunit(CMakePackage):
     conflicts(
         "^cmake@3.25.0",
         when="@4.0.0:",
-        msg="CMake 3.25.0 has a bug with pFUnit. Please use an older or newer version.",
+        msg="CMake 3.25.0 has a bug with pFUnit. Please use another version.",
     )
 
     conflicts(
@@ -93,10 +123,7 @@ class Pfunit(CMakePackage):
         msg="pFUnit requires GCC 8.4.0 or newer",
     )
 
-    # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
-    conflicts("+shared", when="@4.0.0:")
-    conflicts("+use_comm_world", when="~mpi")
-    patch("mpi-test.patch", when="@:3 +use_comm_world")
+    patch("mpi-test.patch", when="+use_comm_world")
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;
@@ -123,34 +150,48 @@ class Pfunit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            "-DPYTHON_EXECUTABLE=%s" % spec["python"].command,
-            self.define_from_variant("BUILD_SHARED", "shared"),
-            "-DCMAKE_Fortran_MODULE_DIRECTORY=%s" % spec.prefix.include,
-            self.define_from_variant("BUILD_DOCS", "docs"),
+            self.define("Python_EXECUTABLE", spec["python"].command),
+            self.define_from_variant("BUILD_SHARED_LIBS", False),
+            self.define("CMAKE_Fortran_MODULE_DIRECTORY", spec.prefix.include),
+            self.define_from_variant("ENABLE_BUILD_DOXYGEN", "docs"),
+            self.define("ENABLE_TESTS", self.run_tests),
         ]
 
         if spec.satisfies("@4.0.0:"):
-            args.append("-DSKIP_MPI=%s" % ("YES" if "~mpi" in spec else "NO"))
-            args.append("-DSKIP_OPENMP=%s" % ("YES" if "~openmp" in spec else "NO"))
-            args.append("-DSKIP_FHAMCREST=%s" % ("YES" if "~fhamcrest" in spec else "NO"))
-            args.append("-DSKIP_ESMF=%s" % ("YES" if "~esmf" in spec else "NO"))
-            args.append("-DMAX_ASSERT_RANK=%s" % spec.variants["max_array_rank"].value)
+            args.extend(
+                [
+                    self.define("SKIP_MPI", self.spec.satisfies("~mpi")),
+                    self.define("SKIP_OPENMP", self.spec.satisfies("~openmp")),
+                    self.define("SKIP_FHAMCREST", self.spec.satisfies("~fhamcrest")),
+                    self.define("SKIP_ESMF", self.spec.satisfies("~esmf")),
+                    self.define_from_variant("MAX_ASSERT_RANK", "max_array_rank"),
+                ]
+            )
         else:
             if spec.satisfies("%gcc@10:"):
-                args.append("-DCMAKE_Fortran_FLAGS_DEBUG=-g -O2 -fallow-argument-mismatch")
+                args.append(
+                    self.define("CMAKE_Fortran_FLAGS_DEBUG", "-g -O2 -fallow-argument-mismatch")
+                )
 
-            args.append(self.define_from_variant("MPI", "mpi"))
-            args.append(self.define_from_variant("OPENMP", "openmp"))
-            args.append("-DMAX_RANK=%s" % spec.variants["max_array_rank"].value)
+            args.extend(
+                [
+                    self.define_from_variant("MPI", "mpi"),
+                    self.define_from_variant("OPENMP", "openmp"),
+                    self.define_from_variant("MAX_RANK", "max_array_rank"),
+                ]
+            )
 
         if spec.satisfies("@:4.2.1") and spec.satisfies("%gcc@5:"):
             # prevents breakage when max_array_rank is larger than default. Note
             # that 4.0.0-4.2.1 still had a 512 limit
-            args.append("-DCMAKE_Fortran_FLAGS=-ffree-line-length-none")
+            args.append(self.define("CMAKE_Fortran_FLAGS", "-ffree-line-length-none"))
 
         if spec.satisfies("+mpi"):
             args.extend(
-                ["-DMPI_USE_MPIEXEC=YES", "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc]
+                [
+                    self.define("MPI_USE_MPIEXEC", True),
+                    self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
+                ]
             )
 
         return args
@@ -182,13 +223,5 @@ class Pfunit(CMakePackage):
         raise InstallError("Unsupported compiler.")
 
     def setup_build_environment(self, env):
-        env.set("PFUNIT", self.spec.prefix)
-        env.set("F90_VENDOR", self.compiler_vendor())
-
-    def setup_run_environment(self, env):
-        env.set("PFUNIT", self.spec.prefix)
-        env.set("F90_VENDOR", self.compiler_vendor())
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("PFUNIT", self.spec.prefix)
-        env.set("F90_VENDOR", self.compiler_vendor())
+        if self.spec.satisfies("@:3"):
+            env.set("F90_VENDOR", self.compiler_vendor())
