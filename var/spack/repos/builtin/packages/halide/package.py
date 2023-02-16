@@ -121,14 +121,14 @@ def get_llvm_targets_to_build(spec):
     llvm_targets = set()
     # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
     spack_to_cmake = {
-        "aarch64": "AArch64",
+        "aarch64": "AARCH64",
         "amdgpu": "AMDGPU",
         "arm": "ARM",
-        "hexagon": "Hexagon",
+        "hexagon": "HEXAGON",
         "nvptx": "NVPTX",
-        "powerpc": "PowerPC",
+        "powerpc": "POWERPC",
         "riscv": "RISCV",
-        "webassembly": "WebAssembly",
+        "webassembly": "WEBASSEMBLY",
         "x86": "X86",
     }
     for t in targets:
@@ -139,9 +139,9 @@ def get_llvm_targets_to_build(spec):
     elif spec.target.family == "arm":
         llvm_targets.add(("ARM", True))
     elif spec.target.family == "aarch64":
-        llvm_targets.add(("AArch64", True))
+        llvm_targets.add(("AARCH64", True))
     elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
-        llvm_targets.add(("PowerPC", True))
+        llvm_targets.add(("POWERPC", True))
 
     # for everything not represented, we add False
     for v in spack_to_cmake.values():
