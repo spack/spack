@@ -38,8 +38,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     # README.md
     depends_on("cuda@11.4:", when="@0.4:+cuda")
     depends_on("cuda@11.1:", when="@0.3+cuda")
-    # Header file change in CUDA 11.7.1 causes problems with vendored copy of TF
-    # https://github.com/tensorflow/tensorflow/commit/a76f797b9cd4b9b15bec4c503b16236a804f676f
+    # https://github.com/google/jax/issues/12614
     depends_on("cuda@11.1:11.7.0", when="@0.1+cuda")
     depends_on("cudnn@8.2:", when="@0.4:+cuda")
     depends_on("cudnn@8.0.5:", when="+cuda")
