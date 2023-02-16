@@ -185,7 +185,7 @@ class Hdf5(CMakePackage):
 
     variant("hl", default=False, description="Enable the high-level library")
     variant("cxx", default=False, description="Enable C++ support")
-    variant("map", default=False, description="Enable MAP API support")
+    variant("map", when="@1.14:" default=False, description="Enable MAP API support")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
