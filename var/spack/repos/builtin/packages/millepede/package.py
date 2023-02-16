@@ -14,7 +14,7 @@ class Millepede(MakefilePackage):
     homepage = "https://gitlab.desy.de/claus.kleinwort/millepede-ii"
     url = "https://gitlab.desy.de/claus.kleinwort/millepede-ii/-/archive/V04-11-01/millepede-ii-V04-11-01.tar.gz"
 
-    maintainers = ["iarspider"]
+    maintainers("iarspider")
 
     parallel = False
 

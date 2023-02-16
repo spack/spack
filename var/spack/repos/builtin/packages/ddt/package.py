@@ -16,7 +16,7 @@ class Ddt(Package):
     homepage = "https://arm.com"
     url = "http://content.allinea.com/downloads/arm-forge-22.0.2-linux-x86_64.tar"
 
-    maintainers = ["robgics"]
+    maintainers("robgics")
 
     license_required = True
     license_files = ["./licences/ddt.lic"]

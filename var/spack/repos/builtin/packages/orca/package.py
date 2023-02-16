@@ -19,7 +19,7 @@ class Orca(Package):
 
     homepage = "https://cec.mpg.de"
     url = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
-    maintainers = ["snehring"]
+    maintainers("snehring")
     manual_download = True
 
     version(
@@ -49,6 +49,8 @@ class Orca(Package):
     )
 
     depends_on("zstd", when="@:4.2.1", type="build")
+    depends_on("libevent", type="run")
+    depends_on("libpciaccess", type="run")
 
     # Map Orca version with the required OpenMPI version
     openmpi_versions = {
@@ -98,3 +100,6 @@ class Orca(Package):
         # In 5.0.3-f.1 an RPATH is set to $ORGIN/../lib
         if not self.spec.satisfies("@5.0.3-f.1"):
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["openmpi"].prefix.lib)

@@ -12,7 +12,7 @@ class SzCpp(CMakePackage):
     homepage = "https://github.com/robertu94/meta_compressor/"
     git = "https://github.com/robertu94/meta_compressor/"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("2022-01-27", commit="9441b79abc89d4bcce53fe18edf0df53fd92d1d7")
 

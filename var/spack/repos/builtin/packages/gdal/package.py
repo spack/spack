@@ -28,7 +28,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     list_url = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("3.6.2", sha256="35f40d2e08061b342513cdcddc2b997b3814ef8254514f0ef1e8bc7aa56cf681")
     version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")

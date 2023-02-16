@@ -12,7 +12,7 @@ class PyIocapture(PythonPackage):
     homepage = "https://github.com/oinume/iocapture"
     pypi = "iocapture/iocapture-0.1.2.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.1.2", sha256="86670e1808bcdcd4f70112f43da72ae766f04cd8311d1071ce6e0e0a72e37ee8")
 

@@ -15,7 +15,7 @@ class Kassiopeia(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("main", branch="main")
     version("3.8.2", sha256="9da59697365540a8b0d66e9a63f57aff6d868f7c5b39dfec28bb11ec83f31527")

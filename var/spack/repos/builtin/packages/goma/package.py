@@ -14,7 +14,7 @@ class Goma(CMakePackage):
     url = "https://github.com/goma/goma/archive/v7.0.0.tar.gz"
     git = "https://github.com/goma/goma.git"
 
-    maintainers = ["wortiz"]
+    maintainers("wortiz")
 
     version("7.1.1", commit="4bebca85ab3840709b44f63502893af6453710e8")
     version("7.0.4", commit="27b2cb2477fa92f9457597f588c137de2572ef69")

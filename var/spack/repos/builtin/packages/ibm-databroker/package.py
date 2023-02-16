@@ -19,7 +19,7 @@ class IbmDatabroker(CMakePackage, PythonExtension):
     url = "https://github.com/IBM/data-broker/archive/0.6.1.tar.gz"
 
     # IBM dev team should take over
-    maintainers = ["bhatiaharsh"]
+    maintainers("bhatiaharsh")
 
     version("master", branch="master")
     version("0.7.0", sha256="5460fa1c5c05ad25c759b2ee4cecee92980d4dde5bc7c5f6da9242806cf22bb8")

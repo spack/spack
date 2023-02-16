@@ -14,7 +14,7 @@ class PyPyscf(PythonPackage):
     homepage = "https://sunqm.github.io/pyscf/"
     git = "https://github.com/pyscf/pyscf"
 
-    maintainers = ["naromero77"]
+    maintainers("naromero77")
 
     version("2.0.1", tag="v2.0.1")
     version("1.7.5", tag="v1.7.5")

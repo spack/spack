@@ -12,7 +12,7 @@ class Formetis(CMakePackage):
     homepage = "https://github.com/swig-fortran/formetis"
     url = "https://github.com/swig-fortran/formetis/archive/refs/tags/v0.0.1.tar.gz"
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     version("0.0.2", sha256="0067c03ca822f4a3955751acb470f21eed489256e2ec5ff24741eb2b638592f1")
 

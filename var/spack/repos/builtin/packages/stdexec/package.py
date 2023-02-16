@@ -11,7 +11,7 @@ class Stdexec(CMakePackage):
 
     homepage = "https://github.com/NVIDIA/stdexec"
     git = "https://github.com/NVIDIA/stdexec.git"
-    maintainers = ["msimberg", "aurianer"]
+    maintainers("msimberg", "aurianer")
 
     version("main", branch="main")
 

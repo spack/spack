@@ -17,7 +17,7 @@ class Ocamlbuild(MakefilePackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["scemama", "cessenat"]
+    maintainers("scemama", "cessenat")
 
     # Add proper versions here.
     version("master", branch="master")

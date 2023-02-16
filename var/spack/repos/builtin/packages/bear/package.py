@@ -13,7 +13,7 @@ class Bear(CMakePackage):
     homepage = "https://github.com/rizsotto/Bear"
     git = "git@github.com:rizsotto/Bear.git"
     url = "https://github.com/rizsotto/Bear/archive/2.0.4.tar.gz"
-    maintainers = ["vmiheer", "trws"]
+    maintainers("vmiheer", "trws")
 
     version("3.0.20", sha256="45cfcdab07f824f6c06c9776701156f7a04b23eadd25ecbc88c188789a447cc7")
     version("3.0.19", sha256="2fcfe2c6e029182cfc54ed26b3505c0ef12b0f43df03fb587f335afdc2ca9431")

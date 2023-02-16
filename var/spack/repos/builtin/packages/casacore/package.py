@@ -15,7 +15,7 @@ class Casacore(CMakePackage):
     homepage = "https://github.com/casacore/casacore"
     url = "https://github.com/casacore/casacore/archive/v2.4.1.tar.gz"
 
-    maintainers = ["mpokorny"]
+    maintainers("mpokorny")
 
     version("3.4.0", sha256="31f02ad2e26f29bab4a47a2a69e049d7bc511084a0b8263360e6157356f92ae1")
     version("3.3.0", sha256="3a714644b908ef6e81489b792cc9b80f6d8267a275e15d38a42a6a5137d39d3d")

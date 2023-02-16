@@ -12,7 +12,7 @@ class Wcs(CMakePackage):
 
     homepage = "https://github.com/LLNL/wcs.git"
     git = "https://github.com/LLNL/wcs.git"
-    maintainers = ["rblake-llnl"]
+    maintainers("rblake-llnl")
 
     version("master", branch="master")
     version("develop", branch="devel")

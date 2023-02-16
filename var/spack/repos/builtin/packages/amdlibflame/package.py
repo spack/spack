@@ -42,7 +42,7 @@ class Amdlibflame(LibflameBase):
     url = "https://github.com/amd/libflame/archive/3.0.tar.gz"
     git = "https://github.com/amd/libflame.git"
 
-    maintainers = ["amd-toolchain-support"]
+    maintainers("amd-toolchain-support")
 
     version("4.0", sha256="bcb05763aa1df1e88f0da5e43ff86d956826cbea1d9c5ff591d78a3e091c66a4")
     version("3.2", sha256="6b5337fb668b82d0ed0a4ab4b5af4e2f72e4cedbeeb4a8b6eb9a3ef057fb749a")
@@ -63,6 +63,7 @@ class Amdlibflame(LibflameBase):
     provides("flame@5.2", when="@2:")
 
     depends_on("python+pythoncmd", type="build")
+    depends_on("gmake@4:", when="@3.0.1,3.1:", type="build")
 
     @property
     def lapack_libs(self):

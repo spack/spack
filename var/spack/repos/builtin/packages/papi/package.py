@@ -23,7 +23,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     across the hardware and software stack."""
 
     homepage = "https://icl.cs.utk.edu/papi/index.html"
-    maintainers = ["G-Ragghianti"]
+    maintainers("G-Ragghianti")
 
     tags = ["e4s"]
 
