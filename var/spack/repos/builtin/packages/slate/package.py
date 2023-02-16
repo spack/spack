@@ -6,6 +6,7 @@
 from spack.package import *
 from os import environ
 
+
 class Slate(CMakePackage, CudaPackage, ROCmPackage):
     """The Software for Linear Algebra Targeting Exascale (SLATE) project is
     to provide fundamental dense linear algebra capabilities to the US
