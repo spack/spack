@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from os import environ
-
 from spack.package import *
 
 
@@ -117,7 +115,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources(["examples"])
 
     def mpi_launcher(self):
-        searchpath = [self.spec["mpi"].prefix.bin, environ.get("PATH", "")]
+        searchpath = [self.spec["mpi"].prefix.bin]
         try:
             searchpath.insert(0, self.spec["slurm"].prefix.bin)
         except KeyError:
