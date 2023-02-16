@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://icl.utk.edu/slate/"
     git = "https://bitbucket.org/icl/slate"
     url = "https://bitbucket.org/icl/slate/downloads/slate-2020.10.00.tar.gz"
-    maintainers = ["G-Ragghianti", "mgates3"]
+    maintainers("G-Ragghianti", "mgates3")
 
     tags = ["e4s"]
     test_requires_compiler = True

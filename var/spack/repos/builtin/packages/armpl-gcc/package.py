@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,6 @@ _os_map = {
     "rocky8": "RHEL-8",
     "amzn2": "RHEL-7",
 }
-
 
 _versions = {
     "22.1_gcc-11.2": {
@@ -146,7 +145,7 @@ class ArmplGcc(Package):
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
     url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-1/ubuntu-20/arm-performance-libraries_22.1_Ubuntu-20.04_gcc-11.2.tar"
 
-    maintainers = ["annop-w"]
+    maintainers("annop-w")
 
     for ver, packages in _versions.items():
         key = "{0}".format(get_os())
@@ -201,23 +200,25 @@ class ArmplGcc(Package):
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
+    def lib_suffix(self):
+        suffix = ""
+        suffix += "_ilp64" if self.spec.satisfies("+ilp64") else ""
+        suffix += "_mp" if self.spec.satisfies("threads=openmp") else ""
+        return suffix
+
+    @property
     def blas_libs(self):
 
         armpl_prefix = get_armpl_prefix(self.spec)
 
-        shared = True if "+shared" in self.spec else False
-        if "+ilp64" in self.spec and self.spec.satisfies("threads=openmp"):
-            libname = "libarmpl_ilp64_mp"
-        elif "+ilp64" in self.spec:
-            libname = "libarmpl_ilp64"
-        elif self.spec.satisfies("threads=openmp"):
-            libname = "libarmpl_mp"
-        else:
-            libname = "libarmpl"
+        libname = "libarmpl" + self.lib_suffix
 
         # Get ArmPL Lib
         armpl_libs = find_libraries(
-            [libname, "libamath", "libastring"], root=armpl_prefix, shared=shared, recursive=True
+            [libname, "libamath", "libastring"],
+            root=armpl_prefix,
+            shared=self.spec.satisfies("+shared"),
+            recursive=True,
         )
 
         armpl_libs += find_system_libraries(["libm"])
@@ -239,11 +240,9 @@ class ArmplGcc(Package):
     @property
     def headers(self):
         armpl_dir = get_armpl_prefix(self.spec)
-        suffix = "include"
-        if self.spec.satisfies("+ilp64"):
-            suffix += "_ilp64"
-        if self.spec.satisfies("threads=openmp"):
-            suffix += "_mp"
+
+        suffix = "include" + self.lib_suffix
+
         incdir = join_path(armpl_dir, suffix)
 
         hlist = find_all_headers(incdir)
@@ -253,3 +252,24 @@ class ArmplGcc(Package):
     def setup_run_environment(self, env):
         armpl_dir = get_armpl_prefix(self.spec)
         env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+
+    @run_after("install")
+    def check_install(self):
+        armpl_dir = get_armpl_prefix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, "examples")
+        # run example makefile
+        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
+        # clean up
+        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "clean")
+
+    @run_after("install")
+    def make_pkgconfig_files(self):
+        # ArmPL pkgconfig files do not have .pc extension and are thus not found by pkg-config
+        armpl_dir = get_armpl_prefix(self.spec)
+        for f in find(join_path(armpl_dir, "pkgconfig"), "*"):
+            symlink(f, f + ".pc")
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # pkgconfig directory is not in standard ("lib", "lib64", "share") location
+        armpl_dir = get_armpl_prefix(self.spec)
+        env.append_path("PKG_CONFIG_PATH", join_path(armpl_dir, "pkgconfig"))

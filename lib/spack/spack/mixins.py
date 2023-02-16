@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,6 @@
 package.
 """
 import os
-import sys
-from typing import Callable, DefaultDict, List  # novm
-
-if sys.version_info >= (3, 5):
-    CallbackDict = DefaultDict[str, List[Callable]]
-else:
-    CallbackDict = None
 
 import llnl.util.filesystem
 

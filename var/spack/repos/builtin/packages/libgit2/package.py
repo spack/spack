@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,6 @@ class Libgit2(CMakePackage):
 
     homepage = "https://libgit2.github.com/"
     url = "https://github.com/libgit2/libgit2/archive/v0.26.0.tar.gz"
-
-    maintainers = ["AndrewGaspar"]
 
     version("1.5.0", sha256="8de872a0f201b33d9522b817c92e14edb4efad18dae95cf156cf240b2efff93e")
     version("1.4.4", sha256="e9923e9916a32f54c661d55d79c28fa304cb23617639e68bff9f94d3e18f2d4b")
@@ -85,6 +83,7 @@ class Libgit2(CMakePackage):
     depends_on("openssl", when="https=system platform=cray")
     depends_on("openssl", when="https=openssl")
     depends_on("curl", when="+curl")
+    depends_on("pcre", when="@0.99:")
 
     conflicts("+curl", when="@0.28:")
 

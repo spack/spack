@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,4 +18,3 @@ class PyLogilabCommon(PythonPackage):
     extends("python", ignore=r"bin/pytest")
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.4.0:", type=("build", "run"))
-    depends_on("py-unittest2@0.5.1:", type=("build", "run"), when="^python@:2.7")

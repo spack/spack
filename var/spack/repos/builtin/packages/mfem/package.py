@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     homepage = "http://www.mfem.org"
     git = "https://github.com/mfem/mfem.git"
 
-    maintainers = ["v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86"]
+    maintainers("v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86")
 
     test_requires_compiler = True
 
@@ -429,17 +429,24 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.2-petsc-3.15.0.patch", when="@4.2.0+petsc ^petsc@3.15.0:")
     patch("mfem-4.3-hypre-2.23.0.patch", when="@4.3.0")
     patch("mfem-4.3-cusparse-11.4.patch", when="@4.3.0+cuda")
-
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
     # https://github.com/mfem/mfem/pull/1043 for the bugfix contributed
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
+    patch("mfem-4.5.patch", when="@4.5.0")
+
     phases = ["configure", "build", "install"]
 
     def setup_build_environment(self, env):
         env.unset("MFEM_DIR")
         env.unset("MFEM_BUILD_DIR")
+        # Workaround for changes made by the 'kokkos-nvcc-wrapper' package
+        # which can be a dependency e.g. through PETSc that uses Kokkos:
+        if "^kokkos-nvcc-wrapper" in self.spec:
+            env.set("MPICH_CXX", spack_cxx)
+            env.set("OMPI_CXX", spack_cxx)
+            env.set("MPICXX_CXX", spack_cxx)
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
@@ -594,7 +601,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
 
-        cxxflags = spec.compiler_flags["cxxflags"]
+        cxxflags = spec.compiler_flags["cxxflags"].copy()
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
@@ -798,9 +805,22 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "apf_zoltan",
                 "spr",
             ]
+            pumi_dep_zoltan = ""
+            pumi_dep_parmetis = ""
+            if "+zoltan" in spec["pumi"]:
+                pumi_dep_zoltan = ld_flags_from_dirs([spec["zoltan"].prefix.lib], ["zoltan"])
+                if "+parmetis" in spec["zoltan"]:
+                    pumi_dep_parmetis = ld_flags_from_dirs(
+                        [spec["parmetis"].prefix.lib], ["parmetis"]
+                    )
             options += [
                 "PUMI_OPT=-I%s" % spec["pumi"].prefix.include,
-                "PUMI_LIB=%s" % ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
+                "PUMI_LIB=%s %s %s"
+                % (
+                    ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
+                    pumi_dep_zoltan,
+                    pumi_dep_parmetis,
+                ),
             ]
 
         if "+gslib" in spec:
@@ -866,15 +886,33 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_libs = LibraryList([])
+            # To use a C++ compiler that supports -xhip flag one can use
+            # something like this:
+            #   options += [
+            #       "HIP_CXX=%s" % (spec["mpi"].mpicxx if "+mpi" in spec else spack_cxx),
+            #       "HIP_FLAGS=-xhip --offload-arch=%s" % amdgpu_target,
+            #   ]
+            #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
-                # Note: MFEM's defaults.mk want to find librocsparse.* in
-                # $(HIP_DIR)/lib, so we set HIP_DIR to be the prefix of
-                # rocsparse (which is a dependency of hipsparse).
-                options += [
-                    "HIP_DIR=%s" % spec["rocsparse"].prefix,
-                    "HIP_OPT=%s" % spec["hipsparse"].headers.cpp_flags,
-                    "HIP_LIB=%s" % ld_flags_from_library_list(spec["hipsparse"].libs),
-                ]
+                hipsparse = spec["hipsparse"]
+                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_libs += hipsparse.libs
+                # Note: MFEM's defaults.mk wants to find librocsparse.* in
+                # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
+                # external HIP, or the prefix of rocsparse (which is a
+                # dependency of hipsparse) when using Spack-built HIP.
+                if spec["hip"].external:
+                    options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
+                else:
+                    options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "%cce" in spec:
+                # We assume the proper Cray CCE module (cce) is loaded:
+                craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
+                hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_libs:
+                options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
         if "+occa" in spec:
             options += [
@@ -883,12 +921,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ]
 
         if "+raja" in spec:
-            raja_opt = "-I%s" % spec["raja"].prefix.include
-            if spec["raja"].satisfies("^camp"):
-                raja_opt += " -I%s" % spec["camp"].prefix.include
+            raja = spec["raja"]
+            raja_opt = "-I%s" % raja.prefix.include
+            raja_lib = find_libraries(
+                "libRAJA", raja.prefix, shared=("+shared" in raja), recursive=True
+            )
+            if raja.satisfies("^camp"):
+                camp = raja["camp"]
+                raja_opt += " -I%s" % camp.prefix.include
+                raja_lib += find_optional_library("libcamp", camp.prefix)
             options += [
                 "RAJA_OPT=%s" % raja_opt,
-                "RAJA_LIB=%s" % ld_flags_from_dirs([spec["raja"].prefix.lib], ["RAJA"]),
+                "RAJA_LIB=%s" % ld_flags_from_library_list(raja_lib),
             ]
 
         if "+amgx" in spec:
@@ -975,10 +1019,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+hiop" in spec:
             hiop = spec["hiop"]
-            lapack_blas = spec["lapack"].libs + spec["blas"].libs
+            hiop_libs = hiop.libs
+            hiop_libs += spec["lapack"].libs + spec["blas"].libs
+            if "^magma" in hiop:
+                hiop_libs += hiop["magma"].libs
             options += [
                 "HIOP_OPT=-I%s" % hiop.prefix.include,
-                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop.libs + lapack_blas),
+                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
             ]
 
         make("config", *options, parallel=False)
@@ -1013,7 +1060,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             with working_dir("config"):
                 os.rename("config.mk", "config.mk.orig")
                 copy(str(self.config_mk), "config.mk")
+                # Add '/mfem' to MFEM_INC_DIR for miniapps that include directly
+                # headers like "general/forall.hpp":
+                filter_file("(MFEM_INC_DIR.*)$", "\\1/mfem", "config.mk")
                 shutil.copystat("config.mk.orig", "config.mk")
+                # TODO: miniapps linking to libmfem-common.* will not work.
 
         prefix_share = join_path(prefix, "share", "mfem")
 
@@ -1078,7 +1129,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "miniapps/gslib/findpts.cpp",
             "miniapps/gslib/pfindpts.cpp",
         ]
-        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else u"\ufeff"
+        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else "\ufeff"
         for f in files_with_bom:
             filter_file(bom, "", f)
 

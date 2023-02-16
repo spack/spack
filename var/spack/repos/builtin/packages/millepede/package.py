@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Millepede(MakefilePackage):
     homepage = "https://gitlab.desy.de/claus.kleinwort/millepede-ii"
     url = "https://gitlab.desy.de/claus.kleinwort/millepede-ii/-/archive/V04-11-01/millepede-ii-V04-11-01.tar.gz"
 
-    maintainers = ["iarspider"]
+    maintainers("iarspider")
 
     parallel = False
 

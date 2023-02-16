@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -115,7 +115,7 @@ class LuaImplPackage(MakefilePackage):
 
     def _setup_dependent_env_helper(self, env, dependent_spec):
         lua_paths = []
-        for d in dependent_spec.traverse(deptypes=("build", "run"), deptype_query="run"):
+        for d in dependent_spec.traverse(deptype=("build", "run")):
             if d.package.extends(self.spec):
                 lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
                 lua_paths.append(os.path.join(d.prefix, self.lua_lib64_dir))

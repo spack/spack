@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,17 +32,24 @@ class Acts(CMakePackage, CudaPackage):
     homepage = "https://acts.web.cern.ch/ACTS/"
     git = "https://github.com/acts-project/acts.git"
     list_url = "https://github.com/acts-project/acts/releases/"
-    maintainers = ["HadrienG2"]
+    maintainers("HadrienG2")
 
     tags = ["hep"]
 
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("23.0.0", commit="5af1b1b5feb8ca8f4c2c69106a1b9ef612c70d9c", submodules=True)
+    version("22.0.1", commit="a4ac99dd72828c5eb3fac06e146f3391958fca8c", submodules=True)
+    version("22.0.0", commit="0fb6f8d2ace65338915451201e9ceb6cee11fb5e", submodules=True)
+    version("21.1.1", commit="8ae825de246e8e574d05d9eaf05ba4a937c69aa9", submodules=True)
+    version("21.1.0", commit="3b4b5c741c8541491d496a36b917b00b344d52d1", submodules=True)
+    version("21.0.0", commit="d8cb0fac3a44e1d44595a481f977df9bd70195fb", submodules=True)
     version("20.3.0", commit="b1859b322744cb033328fd57d9e74fb5326aa56b", submodules=True)
     version("20.2.0", commit="7750c1d24714314e8de716b92ebcd4a92cc4e303", submodules=True)
     version("20.1.0", commit="be36226fb1be88d7be7c9b17a1c1f6e76ff0e006", submodules=True)
     version("20.0.0", commit="3740e6cdbfb1f75d8e481686acdfa5b16d3c41a3", submodules=True)
+    version("19.11.0", commit="d56ca2583e55b48e77c853b7c567070d07fc1cae", submodules=True)
     version("19.10.0", commit="2d07f60eb2280a46af1085600ec8327679bbb630", submodules=True)
     version("19.9.0", commit="b655e18929ae0ccb6926d8e217b1b3fc02978d35", submodules=True)
     version("19.8.0", commit="7582072dbaa70802264f20b392de4313afd25667", submodules=True)
@@ -272,7 +279,9 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
-    depends_on("py-onnx-runtime", when="+onnx")
+    depends_on("python@3.8:", when="+python @19.11:19")
+    depends_on("python@3.8:", when="+python @21:")
+    depends_on("py-onnxruntime", when="+onnx")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
     depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
@@ -330,6 +339,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
             example_cmake_variant("GEANT4", "geant4"),
+            plugin_cmake_variant("GEANT4", "geant4"),
             example_cmake_variant("HEPMC3", "hepmc3"),
             plugin_cmake_variant("IDENTIFICATION", "identification"),
             cmake_variant(integration_tests_label, "integration_tests"),

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -83,12 +83,6 @@ class TestPackage(object):
         s = Spec("patch-inheritance")
         # Will error if inheritor package cannot find inherited patch files
         s.concretize()
-
-    def test_dependency_extensions(self):
-        s = Spec("extension2")
-        s.concretize()
-        deps = set(x.name for x in s.package.dependency_activations())
-        assert deps == set(["extension1"])
 
     def test_import_class_from_package(self):
         from spack.pkg.builtin.mock.mpich import Mpich  # noqa: F401

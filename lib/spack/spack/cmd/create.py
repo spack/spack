@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import re
+import urllib.parse
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -35,7 +36,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +70,7 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
-    # maintainers = ["github_user1", "github_user2"]
+    # maintainers("github_user1", "github_user2")
 
 {versions}
 
@@ -827,8 +828,8 @@ def get_versions(args, name):
 
     valid_url = True
     try:
-        spack.util.url.require_url_format(args.url)
-        if args.url.startswith("file://"):
+        parsed = urllib.parse.urlparse(args.url)
+        if not parsed.scheme or parsed.scheme == "file":
             valid_url = False  # No point in spidering these
     except (ValueError, TypeError):
         valid_url = False

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,10 +28,11 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     git = "https://github.com/open-mpi/hwloc.git"
 
-    maintainers = ["bgoglin"]
+    maintainers("bgoglin")
     executables = ["^hwloc-bind$"]
 
     version("master", branch="master")
+    version("2.9.0", sha256="9d7d3450e0a5fea4cb80ca07dc8db939abb7ab62e2a7bb27f9376447658738ec")
     version("2.8.0", sha256="20b2bd4df436827d8e50f7afeafb6f967259f2fb374ce7330244f8d0ed2dde6f")
     version("2.7.1", sha256="4cb0a781ed980b03ad8c48beb57407aa67c4b908e45722954b9730379bc7f6d5")
     version("2.7.0", sha256="d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374")
@@ -145,6 +146,11 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     def url_for_version(self, version):
         url = "https://download.open-mpi.org/release/hwloc/v{0}/hwloc-{1}.tar.gz"
         return url.format(version.up_to(2), version)
+
+    @property
+    def libs(self):
+        libs = find_libraries("libhwloc", root=self.prefix, shared=True, recursive=True)
+        return LibraryList(libs)
 
     def configure_args(self):
         args = []

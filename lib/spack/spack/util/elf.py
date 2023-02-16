@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import bisect
+import re
 import struct
-import sys
 from collections import namedtuple
 from struct import calcsize, unpack, unpack_from
 
@@ -93,16 +93,6 @@ class ELF_CONSTANTS:
     SHT_STRTAB = 3
 
 
-def get_byte_at(byte_array, idx):
-    if sys.version_info[0] < 3:
-        return ord(byte_array[idx])
-    return byte_array[idx]
-
-
-class ElfParsingError(Exception):
-    pass
-
-
 class ElfFile(object):
     """Parsed ELF file."""
 
@@ -121,6 +111,7 @@ class ElfFile(object):
         "has_pt_dynamic",
         "pt_dynamic_p_offset",
         "pt_dynamic_p_filesz",
+        "pt_dynamic_strtab_offset",  # string table for dynamic section
         # rpath
         "has_rpath",
         "dt_rpath_offset",
@@ -359,7 +350,8 @@ def parse_pt_dynamic(f, elf):
     if not (elf.has_rpath or elf.has_soname or elf.has_needed):
         return
 
-    string_table = retrieve_strtab(f, elf, vaddr_to_offset(elf, strtab_vaddr))
+    elf.pt_dynamic_strtab_offset = vaddr_to_offset(elf, strtab_vaddr)
+    string_table = retrieve_strtab(f, elf, elf.pt_dynamic_strtab_offset)
 
     if elf.has_needed:
         elf.dt_needed_strs = list(
@@ -382,7 +374,7 @@ def parse_header(f, elf):
         raise ElfParsingError("Not an ELF file")
 
     # Defensively require a valid class and data.
-    e_ident_class, e_ident_data = get_byte_at(e_ident, 4), get_byte_at(e_ident, 5)
+    e_ident_class, e_ident_data = e_ident[4], e_ident[5]
 
     if e_ident_class not in (ELF_CONSTANTS.CLASS32, ELF_CONSTANTS.CLASS64):
         raise ElfParsingError("Invalid class found")
@@ -454,6 +446,81 @@ def get_rpaths(path):
 
     # If it does, split the string in components
     rpath = elf.dt_rpath_str
-    if sys.version_info[0] >= 3:
-        rpath = rpath.decode("utf-8")
+    rpath = rpath.decode("utf-8")
     return rpath.split(":")
+
+
+def replace_rpath_in_place_or_raise(path, substitutions):
+    regex = re.compile(b"|".join(re.escape(p) for p in substitutions.keys()))
+
+    try:
+        with open(path, "rb+") as f:
+            elf = parse_elf(f, interpreter=False, dynamic_section=True)
+
+            # If there's no RPATH, then there's no need to replace anything.
+            if not elf.has_rpath:
+                return False
+
+            # Get the non-empty rpaths. Sometimes there's a bunch of trailing
+            # colons ::::: used for padding, we don't add them back to make it
+            # more likely that the string doesn't grow.
+            rpaths = list(filter(len, elf.dt_rpath_str.split(b":")))
+
+            num_rpaths = len(rpaths)
+
+            if num_rpaths == 0:
+                return False
+
+            changed = False
+            for i in range(num_rpaths):
+                old_rpath = rpaths[i]
+                match = regex.match(old_rpath)
+                if match:
+                    changed = True
+                    rpaths[i] = substitutions[match.group()] + old_rpath[match.end() :]
+
+            # Nothing to replace!
+            if not changed:
+                return False
+
+            new_rpath_string = b":".join(rpaths)
+
+            pad = len(elf.dt_rpath_str) - len(new_rpath_string)
+
+            if pad < 0:
+                raise ElfDynamicSectionUpdateFailed(elf.dt_rpath_str, new_rpath_string)
+
+            # We zero out the bits we shortened because (a) it should be a
+            # C-string and (b) it's nice not to have spurious parts of old
+            # paths in the output of `strings file`. Note that we're all
+            # good when pad == 0; the original terminating null is used.
+            new_rpath_string += b"\x00" * pad
+
+            # The rpath is at a given offset in the string table used by the
+            # dynamic section.
+            rpath_offset = elf.pt_dynamic_strtab_offset + elf.rpath_strtab_offset
+
+            f.seek(rpath_offset)
+            f.write(new_rpath_string)
+            return True
+
+    except ElfParsingError:
+        # This just means the file wasnt an elf file, so there's no point
+        # in updating its rpath anyways; ignore this problem.
+        return False
+
+
+class ElfDynamicSectionUpdateFailed(Exception):
+    def __init__(self, old, new):
+        self.old = old
+        self.new = new
+        super(ElfDynamicSectionUpdateFailed, self).__init__(
+            "New rpath {} is longer than old rpath {}".format(
+                new.decode("utf-8"),
+                old.decode("utf-8"),
+            )
+        )
+
+
+class ElfParsingError(Exception):
+    pass

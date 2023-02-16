@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Igv(Package):
     homepage = "https://software.broadinstitute.org/software/igv/home"
     url = "https://data.broadinstitute.org/igv/projects/downloads/2.8/IGV_2.8.0.zip"
 
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("2.12.3", sha256="c87a109deb35994e1b28dee80b5acfd623ec3257f031fcd9cfce008cd32a4cf2")
     version("2.8.0", sha256="33f3ac57017907b931f90c35b63b2de2e4f8d2452f0fbb5be39d30288fc9b2c6")

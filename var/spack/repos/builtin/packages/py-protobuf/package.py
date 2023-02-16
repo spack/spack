@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,9 @@ class PyProtobuf(PythonPackage):
     homepage = "https://developers.google.com/protocol-buffers/"
     pypi = "protobuf/protobuf-3.11.0.tar.gz"
 
-    variant("cpp", default=False, description="Enable the cpp implementation")
+    variant("cpp", default=True, description="Enable the cpp implementation")
 
+    version("4.21.7", sha256="71d9dba03ed3432c878a801e2ea51e034b0ea01cf3a4344fb60166cb5f6c8757")
     version("4.21.5", sha256="eb1106e87e095628e96884a877a51cdb90087106ee693925ec0a300468a9be3a")
     version(
         "3.20.1",
@@ -49,6 +50,7 @@ class PyProtobuf(PythonPackage):
     version("3.10.0", sha256="db83b5c12c0cd30150bb568e6feb2435c49ce4e68fe2d7b903113f0e221e58fe")
     version("3.9.2", sha256="843f498e98ad1469ad54ecb4a7ccf48605a1c5d2bd26ae799c7a2cddab4a37ec")
     version("3.9.1", sha256="d831b047bd69becaf64019a47179eb22118a50dd008340655266a906c69c6417")
+    version("3.8.0", sha256="8c61cc8a76e9d381c665aecc5105fa0f1878cf7db8b5cd17202603bcb386d0fc")
     version("3.7.1", sha256="21e395d7959551e759d604940a115c51c6347d90a475c9baf471a1a86b5604a9")
     version("3.6.1", sha256="1489b376b0f364bcc6f89519718c057eb191d7ad6f1b395ffd93d1aa45587811")
     version("3.6.0", sha256="a37836aa47d1b81c2db1a6b7a5e79926062b5d76bd962115a0e615551be2b48d")
@@ -56,40 +58,20 @@ class PyProtobuf(PythonPackage):
     version("3.5.1", sha256="95b78959572de7d7fafa3acb718ed71f482932ddddddbd29ba8319c10639d863")
     version("3.4.0", sha256="ef02609ef445987976a3a26bff77119c518e0915c96661c3a3b17856d0ef6374")
     version("3.3.0", sha256="1cbcee2c45773f57cb6de7ee0eceb97f92b9b69c0178305509b162c0160c1f04")
-    version(
-        "3.1.0",
-        sha256="0bc10bfd00a9614fae58c86c21fbcf339790e48accf6d45f098034de985f5405",
-        url="https://github.com/protocolbuffers/protobuf/releases/download/v3.1.0/protobuf-python-3.1.0.tar.gz",
-        deprecated=True,
-    )
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
-    version("3.0.0b2", sha256="d5b560bbc4b7d97cc2455c05cad9299d9db02d7bd11193b05684e3a86303c229")
-    version("3.0.0a3", sha256="b61622de5048415bfd3f2d812ad64606438ac9e25009ae84191405fe58e522c1")
-    version("2.6.1", sha256="8faca1fb462ee1be58d00f5efb4ca4f64bde92187fe61fde32615bbee7b3e745")
-    version("2.5.0", sha256="58292c459598c9297258bf57acc055f701c727f0154a86af8c0947dde37d8172")
-    version("2.4.1", sha256="df30b98acb6ef892da8b4776175510cff2131908fd0526b6bad960c55a830a1b")
-    version("2.3.0", sha256="374bb047874a506507912c3717d0ce62affbaa9a22bcb494d63d60326a0867b5")
 
     depends_on("python@3.5:", when="@3.18:", type=("build", "run"))
     depends_on("python@3.7:", when="@3.20:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.9:", when="@3:", type=("build", "run"))
-    depends_on("py-ordereddict", when="@3: ^python@:2", type=("build", "run"))
-    depends_on("py-unittest2", when="@3: ^python@:2", type=("build", "run"))
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases
     for ver in list(range(21, 22)):
         depends_on("protobuf@3." + str(ver), when="+cpp @4." + str(ver))
     # Handle the 3.x series releases
-    for ver in list(range(1, 8)) + list(range(9, 21)):
+    for ver in list(range(0, 21)):
         depends_on("protobuf@3." + str(ver), when="+cpp @3." + str(ver))
-    # Handle the 2.x series releases
-    for ver in list(range(3, 7)):
-        if ver == 5:
-            depends_on("protobuf@2." + str(ver), when="+cpp @2." + str(ver))
-        else:
-            conflicts("+cpp", when="@2." + str(ver))
 
     @property
     def build_directory(self):

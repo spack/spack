@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,15 @@ implementation language for two reasons.  First, Python is becoming
 ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
+
+.. warning::
+
+   As a general rule, packages should install the software *from source*.
+   The only exception is for proprietary software (e.g., vendor compilers).
+
+   If a special build system needs to be added in order to support building
+   a package from source, then the associated code and recipe need to be added
+   first.
 
 
 .. _installation_procedure:
@@ -225,7 +234,7 @@ generates a boilerplate template for your package, and opens up the new
 .. code-block:: python
    :linenos:
 
-   # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+   # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    # Spack Project Developers. See the top-level COPYRIGHT file for details.
    #
    # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -259,7 +268,7 @@ generates a boilerplate template for your package, and opens up the new
 
        # FIXME: Add a list of GitHub accounts to
        # notify when the package is updated.
-       # maintainers = ["github_user1", "github_user2"]
+       # maintainers("github_user1", "github_user2")
 
        version("6.2.1", sha256="eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c")
 
@@ -310,14 +319,8 @@ The rest of the tasks you need to do are as follows:
 
 #. Add a comma-separated list of maintainers.
 
-   The ``maintainers`` field is a list of GitHub accounts of people
-   who want to be notified any time the package is modified. When a
-   pull request is submitted that updates the package, these people
-   will be requested to review the PR. This is useful for developers
-   who maintain a Spack package for their own software, as well as
-   users who rely on a piece of software and want to ensure that the
-   package doesn't break. It also gives users a list of people to
-   contact for help when someone reports a build error with the package.
+   Add a list of Github accounts of people who want to be notified
+   any time the package is modified. See :ref:`package_maintainers`.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -487,6 +490,31 @@ some examples:
 
 In general, you won't have to remember this naming convention because
 :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
+
+.. _package_maintainers:
+
+-----------
+Maintainers
+-----------
+
+Each package in Spack may have one or more maintainers, i.e. one or more
+GitHub accounts of people who want to be notified any time the package is
+modified.
+
+When a pull request is submitted that updates the package, these people will
+be requested to review the PR. This is useful for developers who maintain a
+Spack package for their own software, as well as users who rely on a piece of
+software and want to ensure that the package doesn't break. It also gives users
+a list of people to contact for help when someone reports a build error with
+the package.
+
+To add maintainers to a package, simply declare them with the ``maintainers`` directive:
+
+.. code-block:: python
+
+   maintainers("user1", "user2")
+
+The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
 
 -----------------
 Trusted Downloads
@@ -2397,13 +2425,15 @@ this because uninstalling the dependency would break the package.
 
 ``build``, ``link``, and ``run`` dependencies all affect the hash of Spack
 packages (along with ``sha256`` sums of patches and archives used to build the
-package, and a [canonical hash](https://github.com/spack/spack/pull/28156) of
+package, and a `canonical hash <https://github.com/spack/spack/pull/28156>`_ of
 the ``package.py`` recipes). ``test`` dependencies do not affect the package
 hash, as they are only used to construct a test environment *after* building and
 installing a given package installation. Older versions of Spack did not include
-build dependencies in the hash, but this has been
-[fixed](https://github.com/spack/spack/pull/28504) as of [Spack
-``v0.18``](https://github.com/spack/spack/releases/tag/v0.18.0)
+build dependencies in the hash, but this has been 
+`fixed <https://github.com/spack/spack/pull/28504>`_ as of |Spack v0.18|_.
+
+.. |Spack v0.18| replace:: Spack ``v0.18``
+.. _Spack v0.18: https://github.com/spack/spack/releases/tag/v0.18.0
 
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.
@@ -2634,9 +2664,12 @@ extendable package:
        extends('python')
        ...
 
-Now, the ``py-numpy`` package can be used as an argument to ``spack
-activate``.  When it is activated, all the files in its prefix will be
-symbolically linked into the prefix of the python package.
+This accomplishes a few things. Firstly, the Python package can set special
+variables such as ``PYTHONPATH`` for all extensions when the run or build
+environment is set up. Secondly, filesystem views can ensure that extensions
+are put in the same prefix as their extendee. This ensures that Python in
+a view can always locate its Python packages, even without environment
+variables set.
 
 A package can only extend one other package at a time.  To support packages
 that may extend one of a list of other packages, Spack supports multiple
@@ -2684,9 +2717,8 @@ variant(s) are selected.  This may be accomplished with conditional
        ...
 
 Sometimes, certain files in one package will conflict with those in
-another, which means they cannot both be activated (symlinked) at the
-same time.  In this case, you can tell Spack to ignore those files
-when it does the activation:
+another, which means they cannot both be used in a view at the
+same time.  In this case, you can tell Spack to ignore those files:
 
 .. code-block:: python
 
@@ -2698,7 +2730,7 @@ when it does the activation:
        ...
 
 The code above will prevent everything in the ``$prefix/bin/`` directory
-from being linked in at activation time.
+from being linked in a view.
 
 .. note::
 
@@ -2721,67 +2753,6 @@ binary since the real path of the Python executable is used to detect
 extensions; as a consequence python extension packages (those inheriting from
 ``PythonPackage``) likewise override ``add_files_to_view`` in order to rewrite
 shebang lines which point to the Python interpreter.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Activation & deactivation
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Adding an extension to a view is referred to as an activation. If the view is
-maintained in the Spack installation prefix of the extendee this is called a
-global activation. Activations may involve updating some centralized state
-that is maintained by the extendee package, so there can be additional work
-for adding extensions compared with non-extension packages.
-
-Spack's ``Package`` class has default ``activate`` and ``deactivate``
-implementations that handle symbolically linking extensions' prefixes
-into a specified view. Extendable packages can override these methods
-to add custom activate/deactivate logic of their own.  For example,
-the ``activate`` and ``deactivate`` methods in the Python class handle
-symbolic linking of extensions, but they also handle details surrounding
-Python's ``.pth`` files, and other aspects of Python packaging.
-
-Spack's extensions mechanism is designed to be extensible, so that
-other packages (like Ruby, R, Perl, etc.)  can provide their own
-custom extension management logic, as they may not handle modules the
-same way that Python does.
-
-Let's look at Python's activate function:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.activate
-   :linenos:
-
-This function is called on the *extendee* (Python).  It first calls
-``activate`` in the superclass, which handles symlinking the
-extension package's prefix into the specified view.  It then does
-some special handling of the ``easy-install.pth`` file, part of
-Python's setuptools.
-
-Deactivate behaves similarly to activate, but it unlinks files:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.deactivate
-   :linenos:
-
-Both of these methods call some custom functions in the Python
-package.  See the source for Spack's Python package for details.
-
-^^^^^^^^^^^^^^^^^^^^
-Activation arguments
-^^^^^^^^^^^^^^^^^^^^
-
-You may have noticed that the ``activate`` function defined above
-takes keyword arguments.  These are the keyword arguments from
-``extends()``, and they are passed to both activate and deactivate.
-
-This capability allows an extension to customize its own activation by
-passing arguments to the extendee.  Extendees can likewise implement
-custom ``activate()`` and ``deactivate()`` functions to suit their
-needs.
-
-The only keyword argument supported by default is the ``ignore``
-argument, which can take a regex, list of regexes, or a predicate to
-determine which files *not* to symlink during activation.
 
 .. _virtual-dependencies:
 
@@ -3584,7 +3555,7 @@ will likely contain some overriding of default builder methods:
        def cmake_args(self):
            pass
 
-   class Autotoolsbuilder(spack.build_systems.autotools.AutotoolsBuilder):
+   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
        def configure_args(self):
            pass
 
@@ -4406,16 +4377,9 @@ In addition to invoking the right compiler, the compiler wrappers add
 flags to the compile line so that dependencies can be easily found.
 These flags are added for each dependency, if they exist:
 
-Compile-time library search paths
-* ``-L$dep_prefix/lib``
-* ``-L$dep_prefix/lib64``
-
-Runtime library search paths (RPATHs)
-* ``$rpath_flag$dep_prefix/lib``
-* ``$rpath_flag$dep_prefix/lib64``
-
-Include search paths
-* ``-I$dep_prefix/include``
+* Compile-time library search paths: ``-L$dep_prefix/lib``, ``-L$dep_prefix/lib64``
+* Runtime library search paths (RPATHs): ``$rpath_flag$dep_prefix/lib``, ``$rpath_flag$dep_prefix/lib64``
+* Include search paths: ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
@@ -5260,6 +5224,16 @@ where each argument has the following meaning:
   will run.
 
   The default of ``None`` corresponds to the current directory (``'.'``).
+  Each call starts with the working directory set to the spec's test stage
+  directory (i.e., ``self.test_suite.test_dir_for_spec(self.spec)``).
+
+.. warning::
+
+   Use of the package spec's installation directory for building and running
+   tests is **strongly** discouraged. Doing so has caused permission errors
+   for shared spack instances *and* for facilities that install the software
+   in read-only file systems or directories.
+
 
 """""""""""""""""""""""""""""""""""""""""
 Accessing package- and test-related files
@@ -5267,10 +5241,10 @@ Accessing package- and test-related files
 
 You may need to access files from one or more locations when writing
 stand-alone tests. This can happen if the software's repository does not
-include test source files or includes files but no way to build the
-executables using the installed headers and libraries. In these
-cases, you may need to reference the files relative to one or more
-root directory. The properties containing package- and test-related
+include test source files or includes files but has no way to build the
+executables using the installed headers and libraries. In these cases,
+you may need to reference the files relative to one or more root
+directory. The properties containing package- (or spec-) and test-related
 directory paths are provided in the table below.
 
 .. list-table:: Directory-to-property mapping
@@ -5279,19 +5253,22 @@ directory paths are provided in the table below.
    * - Root Directory
      - Package Property
      - Example(s)
-   * - Package Installation Files
+   * - Package (Spec) Installation
      - ``self.prefix``
      - ``self.prefix.include``, ``self.prefix.lib``
-   * - Package Dependency's Files
+   * - Dependency Installation
      - ``self.spec['<dependency-package>'].prefix``
      - ``self.spec['trilinos'].prefix.include``
-   * - Test Suite Stage Files
+   * - Test Suite Stage
      - ``self.test_suite.stage``
      - ``join_path(self.test_suite.stage, 'results.txt')``
-   * - Staged Cached Build-time Files
+   * - Spec's Test Stage
+     - ``self.test_suite.test_dir_for_spec``
+     - ``self.test_suite.test_dir_for_spec(self.spec)``
+   * - Current Spec's Build-time Files
      - ``self.test_suite.current_test_cache_dir``
      - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
-   * - Staged Custom Package Files
+   * - Current Spec's Custom Test Files
      - ``self.test_suite.current_test_data_dir``
      - ``join_path(self.test_suite.current_test_data_dir, 'hello.f90')``
 

@@ -1,10 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import itertools as it
+import itertools
 import os
+import subprocess
 import sys
 
 import pytest
@@ -14,37 +14,25 @@ import llnl.util.filesystem as fs
 import spack.ci as ci
 import spack.ci_needs_workaround as cinw
 import spack.ci_optimization as ci_opt
-import spack.config as cfg
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.paths as spack_paths
-import spack.spec as spec
+import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 
 
 @pytest.fixture
-def tmp_scope():
-    """Creates a temporary configuration scope"""
-    base_name = "internal-testing-scope"
-    current_overrides = set(x.name for x in cfg.config.matching_scopes(r"^{0}".format(base_name)))
-
-    num_overrides = 0
-    scope_name = base_name
-    while scope_name in current_overrides:
-        scope_name = "{0}{1}".format(base_name, num_overrides)
-        num_overrides += 1
-
-    with cfg.override(cfg.InternalConfigScope(scope_name)):
-        yield scope_name
+def repro_dir(tmp_path):
+    result = tmp_path / "repro_dir"
+    result.mkdir()
+    with fs.working_dir(str(tmp_path)):
+        yield result
 
 
 def test_urlencode_string():
-    s = "Spack Test Project"
-
-    s_enc = ci._url_encode_string(s)
-
-    assert s_enc == "Spack+Test+Project"
+    assert ci._url_encode_string("Spack Test Project") == "Spack+Test+Project"
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
@@ -70,16 +58,16 @@ def test_configure_compilers(mutable_config):
             "install_missing_compilers" in config and config["install_missing_compilers"] is True
         )
 
-    original_config = cfg.get("config")
+    original_config = spack.config.get("config")
     assert_missing(original_config)
 
     ci.configure_compilers("FIND_ANY", scope="site")
 
-    second_config = cfg.get("config")
+    second_config = spack.config.get("config")
     assert_missing(second_config)
 
     ci.configure_compilers("INSTALL_MISSING")
-    last_config = cfg.get("config")
+    last_config = spack.config.get("config")
     assert_present(last_config)
 
 
@@ -145,13 +133,12 @@ def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
         ci.download_and_extract_artifacts(url, working_dir)
 
 
-def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, config, mock_packages, monkeypatch, capfd):
+def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, default_mock_concretization, capfd):
     """The copy will fail because the spec is not concrete so does not have
     a package."""
     log_dir = tmpdir.join("log_dir")
-    s = spec.Spec("printing-package").concretized()
-
-    ci.copy_stage_logs_to_artifacts(s, log_dir)
+    concrete_spec = default_mock_concretization("printing-package")
+    ci.copy_stage_logs_to_artifacts(concrete_spec, log_dir)
     _, err = capfd.readouterr()
     assert "Unable to copy files" in err
     assert "No such file or directory" in err
@@ -182,14 +169,13 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     monkeypatch.setattr(spack.paths, "prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to find the path" in err
 
     monkeypatch.setattr(spack.paths, "prefix", prefix_save)
-
-    monkeypatch.setattr(spack.util.executable, "which", lambda cmd: None)
+    monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
     out, err = capfd.readouterr()
@@ -210,39 +196,39 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
 
     git_cmd = mock_git_cmd()
 
-    monkeypatch.setattr(spack.util.executable, "which", lambda cmd: git_cmd)
+    monkeypatch.setattr(spack.util.git, "git", lambda: git_cmd)
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c2 else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Missing commit: {0}".format(c2) in err
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c1 else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Missing commit: {0}".format(c1) in err
 
     git_cmd.check = lambda *a, **k: 1 if a[0] == "clone" else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to clone" in err
 
     git_cmd.check = lambda *a, **k: 1 if a[0] == "checkout" else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to checkout" in err
 
     git_cmd.check = lambda *a, **k: 1 if "merge" in a else 0
     ret = ci.setup_spack_repro_version(repro_dir, c2, c1)
-    out, err = capfd.readouterr()
+    _, err = capfd.readouterr()
 
     assert not ret
     assert "Unable to merge {0}".format(c1) in err
@@ -324,7 +310,7 @@ def test_ci_workarounds():
 
         result = {
             "stage": "stage-rebuild-index",
-            "script": "spack buildcache update-index -d s3://mirror",
+            "script": "spack buildcache update-index --mirror-url s3://mirror",
             "tags": ["tag-0", "tag-1"],
             "image": {"name": "spack/centos7", "entrypoint": [""]},
             "after_script": ['rm -rf "./spack"'],
@@ -398,7 +384,7 @@ def test_ci_workarounds():
             use_artifact_buildcache=use_ab, optimize=False, use_dependencies=False
         )
 
-        for opt, deps in it.product(*(((False, True),) * 2)):
+        for opt, deps in itertools.product(*(((False, True),) * 2)):
             # neither optimizing nor converting needs->dependencies
             if not (opt or deps):
                 # therefore, nothing to test
@@ -442,60 +428,53 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
     touched = ["libdwarf"]
 
     # traversing both directions from libdwarf in the graphs depicted
-    # above results in the following possibly affected env specs:
-    # mpileaks, callpath, dyninst, libdwarf, and libelf.  Unaffected
-    # specs are mpich, plus hypre and it's dependencies.
+    # above (and additionally including dependencies of dependents of
+    # libdwarf) results in the following possibly affected env specs:
+    # mpileaks, callpath, dyninst, libdwarf, libelf, and mpich.
+    # Unaffected specs are hypre and it's dependencies.
 
     affected_specs = ci.get_spec_filter_list(e1, touched)
     affected_pkg_names = set([s.name for s in affected_specs])
-    expected_affected_pkg_names = set(["mpileaks", "callpath", "dyninst", "libdwarf", "libelf"])
+    expected_affected_pkg_names = set(
+        ["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"]
+    )
 
     assert affected_pkg_names == expected_affected_pkg_names
 
 
-@pytest.mark.maybeslow
 @pytest.mark.regression("29947")
-def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
+def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_packages, config):
     e = ev.create("first_concretization")
-    e.add("hdf5~mpi~szip")
-    e.add("hdf5~mpi+szip")
+    e.add("mpileaks~shared")
+    e.add("mpileaks+shared")
     e.concretize()
 
-    affected_specs = spack.ci.get_spec_filter_list(e, ["zlib"])
-    hdf5_specs = [s for s in affected_specs if s.name == "hdf5"]
-    assert len(hdf5_specs) == 2
+    affected_specs = spack.ci.get_spec_filter_list(e, ["callpath"])
+    mpileaks_specs = [s for s in affected_specs if s.name == "mpileaks"]
+    assert len(mpileaks_specs) == 2, e.all_specs()
 
 
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
-def test_ci_process_command(tmpdir):
-    repro_dir = tmpdir.join("repro_dir").strpath
-    os.makedirs(repro_dir)
-    result = ci.process_command("help", [], repro_dir)
-
-    assert os.path.exists(fs.join_path(repro_dir, "help.sh"))
-    assert not result
+def test_ci_process_command(repro_dir):
+    result = ci.process_command("help", commands=[], repro_dir=str(repro_dir))
+    help_sh = repro_dir / "help.sh"
+    assert help_sh.exists() and not result
 
 
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
-def test_ci_process_command_fail(tmpdir, monkeypatch):
-    import subprocess
-
-    err = "subprocess wait exception"
+def test_ci_process_command_fail(repro_dir, monkeypatch):
+    msg = "subprocess wait exception"
 
     def _fail(self, args):
-        raise RuntimeError(err)
+        raise RuntimeError(msg)
 
     monkeypatch.setattr(subprocess.Popen, "__init__", _fail)
-
-    repro_dir = tmpdir.join("repro_dir").strpath
-    os.makedirs(repro_dir)
-
-    with pytest.raises(RuntimeError, match=err):
-        ci.process_command("help", [], repro_dir)
+    with pytest.raises(RuntimeError, match=msg):
+        ci.process_command("help", [], str(repro_dir))
 
 
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
@@ -512,14 +491,14 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
 
 
 def test_ci_run_standalone_tests_missing_requirements(
-    tmpdir, working_env, config, mock_packages, capfd
+    tmpdir, working_env, default_mock_concretization, capfd
 ):
     """This test case checks for failing prerequisite checks."""
     ci.run_standalone_tests()
     err = capfd.readouterr()[1]
     assert "Job spec is required" in err
 
-    args = {"job_spec": spec.Spec("printing-package").concretized()}
+    args = {"job_spec": default_mock_concretization("printing-package")}
     ci.run_standalone_tests(**args)
     err = capfd.readouterr()[1]
     assert "Reproduction directory is required" in err
@@ -529,16 +508,15 @@ def test_ci_run_standalone_tests_missing_requirements(
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
+    tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
-    log_file = tmpdir.join("junit.xml").strpath
+    log_file = tmp_path / "junit.xml"
     args = {
-        "log_file": log_file,
-        "job_spec": spec.Spec("printing-package").concretized(),
-        "repro_dir": tmpdir.join("repro_dir").strpath,
+        "log_file": str(log_file),
+        "job_spec": default_mock_concretization("printing-package"),
+        "repro_dir": str(repro_dir),
         "fail_fast": True,
     }
-    os.makedirs(args["repro_dir"])
 
     ci.run_standalone_tests(**args)
     err = capfd.readouterr()[1]
@@ -550,16 +528,15 @@ def test_ci_run_standalone_tests_not_installed_junit(
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_cdash(
-    tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
+    tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
     """Test run_standalone_tests with cdash and related options."""
-    log_file = tmpdir.join("junit.xml").strpath
+    log_file = tmp_path / "junit.xml"
     args = {
-        "log_file": log_file,
-        "job_spec": spec.Spec("printing-package").concretized(),
-        "repro_dir": tmpdir.join("repro_dir").strpath,
+        "log_file": str(log_file),
+        "job_spec": default_mock_concretization("printing-package"),
+        "repro_dir": str(repro_dir),
     }
-    os.makedirs(args["repro_dir"])
 
     # Cover when CDash handler provided (with the log file as well)
     ci_cdash = {
@@ -580,9 +557,9 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     assert "0 passed of 0" in out
 
     # copy test results (though none)
-    artifacts_dir = tmpdir.join("artifacts")
-    fs.mkdirp(artifacts_dir.strpath)
-    handler.copy_test_results(tmpdir.strpath, artifacts_dir.strpath)
+    artifacts_dir = tmp_path / "artifacts"
+    artifacts_dir.mkdir()
+    handler.copy_test_results(str(tmp_path), str(artifacts_dir))
     err = capfd.readouterr()[1]
     assert "Unable to copy files" in err
     assert "No such file or directory" in err

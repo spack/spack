@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,9 +44,11 @@ class Hpcviewer(Package):
     """
 
     homepage = "http://hpctoolkit.org"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     darwin_sha = {
+        ("2023.01", "aarch64"): "97af564945799652cf3efc46146297ebc0f7ebe44258876a6995cbdb5b469990",
+        ("2023.01", "x86_64"): "8efbb7234f86bfc8eedfd8c3b73f148eab298d63d988f95a87b75f91d35bba8b",
         ("2022.10", "aarch64"): "4c5b4d94d5d2d82c4e583cf2229ccfde7c74741416fdb31c94cfd13c8e940b12",
         ("2022.10", "x86_64"): "5e7c419ee5cf5527c24f075aae1eeb246a2e54f253b140c816dccae02fc0b871",
         ("2022.06", "aarch64"): "7536abac5159a5bdb3c662d90be94f813c91ee0ecd6646e2c52b49d37b9ac637",
@@ -59,6 +61,9 @@ class Hpcviewer(Package):
     }
 
     viewer_sha = {
+        ("2023.01", "aarch64"): "686ca752c3b1c362108ead984862170f4a48c70afd437210f367f2c1a35ad5e5",
+        ("2023.01", "ppc64le"): "95980b48a783cd8c9a2b961525bad6d0ab576f70e035cf17a2c6b9cd553955d8",
+        ("2023.01", "x86_64"): "3c4686d64c2e27c05a8e4012e4f24f86602e353263aab5bf5930a85d53919841",
         ("2022.10", "aarch64"): "b6ab0d16168e67ba5de3fb0b989cba7b8a683aa5210d4ed69b5c8581ab990ea8",
         ("2022.10", "ppc64le"): "72abc3ee923a4aae6fe75a5269210b2e92ada2c392eab70480f9950e5be18bd0",
         ("2022.10", "x86_64"): "444e101da54b0cc79769b91ef5119d38864e15e0166575af28f3bb75d7f905ea",

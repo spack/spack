@@ -1,13 +1,16 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
+import collections.abc
 import contextlib
 import errno
 import functools
 import importlib
+import importlib.machinery
+import importlib.util
 import inspect
 import itertools
 import os
@@ -18,19 +21,16 @@ import shutil
 import stat
 import string
 import sys
-import tempfile
 import traceback
 import types
 import uuid
-from typing import Dict  # novm
+from typing import Dict, Union
 
 import ruamel.yaml as yaml
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.compat import Mapping
 from llnl.util.filesystem import working_dir
 
 import spack.caches
@@ -41,9 +41,9 @@ import spack.provider_index
 import spack.spec
 import spack.tag
 import spack.util.file_cache
+import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
-from spack.util.executable import which
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
@@ -79,125 +79,23 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-# The code below is needed to have a uniform Loader interface that could cover both
-# Python 2.7 and Python 3.X when we load Spack packages as Python modules, e.g. when
-# we do "import spack.pkg.builtin.mpich" in package recipes.
-if sys.version_info[0] == 2:
-    import imp
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):
+    def __init__(self, fullname, path, prepend=None):
+        super(_PrependFileLoader, self).__init__(fullname, path)
+        self.prepend = prepend
 
-    @contextlib.contextmanager
-    def import_lock():
-        try:
-            imp.acquire_lock()
-            yield
-        finally:
-            imp.release_lock()
+    def path_stats(self, path):
+        stats = super(_PrependFileLoader, self).path_stats(path)
+        if self.prepend:
+            stats["size"] += len(self.prepend) + 1
+        return stats
 
-    def load_source(fullname, path, prepend=None):
-        """Import a Python module from source.
-
-        Load the source file and add it to ``sys.modules``.
-
-        Args:
-            fullname (str): full name of the module to be loaded
-            path (str): path to the file that should be loaded
-            prepend (str or None): some optional code to prepend to the
-                loaded module; e.g., can be used to inject import statements
-
-        Returns:
-            the loaded module
-        """
-        with import_lock():
-            with prepend_open(path, text=prepend) as f:
-                return imp.load_source(fullname, path, f)
-
-    @contextlib.contextmanager
-    def prepend_open(f, *args, **kwargs):
-        """Open a file for reading, but prepend with some text prepended
-
-        Arguments are same as for ``open()``, with one keyword argument,
-        ``text``, specifying the text to prepend.
-
-        We have to write and read a tempfile for the ``imp``-based importer,
-        as the ``file`` argument to ``imp.load_source()`` requires a
-        low-level file handle.
-
-        See the ``importlib``-based importer for a faster way to do this in
-        later versions of python.
-        """
-        text = kwargs.get("text", None)
-
-        with open(f, *args) as f:
-            with tempfile.NamedTemporaryFile(mode="w+") as tf:
-                if text:
-                    tf.write(text + "\n")
-                tf.write(f.read())
-                tf.seek(0)
-                yield tf.file
-
-    class _PrependFileLoader(object):
-        def __init__(self, fullname, path, prepend=None):
-            # Done to have a compatible interface with Python 3
-            #
-            # All the object attributes used in this method must be defined
-            # by a derived class
-            pass
-
-        def package_module(self):
-            try:
-                module = load_source(self.fullname, self.package_py, prepend=self._package_prepend)
-            except SyntaxError as e:
-                # SyntaxError strips the path from the filename, so we need to
-                # manually construct the error message in order to give the
-                # user the correct package.py where the syntax error is located
-                msg = "invalid syntax in {0:}, line {1:}"
-                raise SyntaxError(msg.format(self.package_py, e.lineno))
-
-            module.__package__ = self.repo.full_namespace
-            module.__loader__ = self
-            return module
-
-        def load_module(self, fullname):
-            # Compatibility method to support Python 2.7
-            if fullname in sys.modules:
-                return sys.modules[fullname]
-
-            namespace, dot, module_name = fullname.rpartition(".")
-
-            try:
-                module = self.package_module()
-            except Exception as e:
-                raise ImportError(str(e))
-
-            module.__loader__ = self
-            sys.modules[fullname] = module
-            if namespace != fullname:
-                parent = sys.modules[namespace]
-                if not hasattr(parent, module_name):
-                    setattr(parent, module_name, module)
-
-            return module
-
-else:
-    import importlib.machinery  # novm
-
-    class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
-        def __init__(self, fullname, path, prepend=None):
-            super(_PrependFileLoader, self).__init__(fullname, path)
-            self.prepend = prepend
-
-        def path_stats(self, path):
-            stats = super(_PrependFileLoader, self).path_stats(path)
-            if self.prepend:
-                stats["size"] += len(self.prepend) + 1
-            return stats
-
-        def get_data(self, path):
-            data = super(_PrependFileLoader, self).get_data(path)
-            if path != self.path or self.prepend is None:
-                return data
-            else:
-                return self.prepend.encode() + b"\n" + data
+    def get_data(self, path):
+        data = super(_PrependFileLoader, self).get_data(path)
+        if path != self.path or self.prepend is None:
+            return data
+        else:
+            return self.prepend.encode() + b"\n" + data
 
 
 class RepoLoader(_PrependFileLoader):
@@ -227,22 +125,6 @@ class SpackNamespaceLoader(object):
     def exec_module(self, module):
         module.__loader__ = self
 
-    def load_module(self, fullname):
-        # Compatibility method to support Python 2.7
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-        module = SpackNamespace(fullname)
-        self.exec_module(module)
-
-        namespace, dot, module_name = fullname.rpartition(".")
-        sys.modules[fullname] = module
-        if namespace != fullname:
-            parent = sys.modules[namespace]
-            if not hasattr(parent, module_name):
-                setattr(parent, module_name, module)
-
-        return module
-
 
 class ReposFinder(object):
     """MetaPathFinder class that loads a Python module corresponding to a Spack package
@@ -251,9 +133,6 @@ class ReposFinder(object):
     """
 
     def find_spec(self, fullname, python_path, target=None):
-        # This function is Python 3 only and will not be called by Python 2.7
-        import importlib.util
-
         # "target" is not None only when calling importlib.reload()
         if target is not None:
             raise RuntimeError('cannot reload module "{0}"'.format(fullname))
@@ -265,7 +144,7 @@ class ReposFinder(object):
         loader = self.compute_loader(fullname)
         if loader is None:
             return None
-        return importlib.util.spec_from_loader(fullname, loader)  # novm
+        return importlib.util.spec_from_loader(fullname, loader)
 
     def compute_loader(self, fullname):
         # namespaces are added to repo, and package modules are leaves.
@@ -291,12 +170,6 @@ class ReposFinder(object):
             return SpackNamespaceLoader()
 
         return None
-
-    def find_module(self, fullname, python_path=None):
-        # Compatibility method to support Python 2.7
-        if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
-            return None
-        return self.compute_loader(fullname)
 
 
 #
@@ -325,27 +198,16 @@ class GitExe:
     #
     # Not using -C as that is not supported for git < 1.8.5.
     def __init__(self):
-        self._git_cmd = which("git", required=True)
+        self._git_cmd = spack.util.git.git(required=True)
 
     def __call__(self, *args, **kwargs):
         with working_dir(packages_path()):
             return self._git_cmd(*args, **kwargs)
 
 
-_git = None
-
-
-def get_git():
-    """Get a git executable that runs *within* the packages path."""
-    global _git
-    if _git is None:
-        _git = GitExe()
-    return _git
-
-
 def list_packages(rev):
     """List all packages associated with the given revision"""
-    git = get_git()
+    git = GitExe()
 
     # git ls-tree does not support ... merge-base syntax, so do it manually
     if rev.endswith("..."):
@@ -397,7 +259,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
 
     removed, added = diff_packages(rev1, rev2)
 
-    git = get_git()
+    git = GitExe()
     out = git("diff", "--relative", "--name-only", rev1, rev2, output=str).strip()
 
     lines = [] if not out else re.split(r"\s+", out)
@@ -420,7 +282,7 @@ def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
 
 def add_package_to_git_stage(packages):
     """add a package to the git stage with `git add`"""
-    git = get_git()
+    git = GitExe()
 
     for pkg_name in packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
@@ -483,7 +345,7 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(Mapping):
+class FastPackageChecker(collections.abc.Mapping):
     """Cache that maps package names to the stats obtained on the
     'package.py' files associated with them.
 
@@ -493,7 +355,7 @@ class FastPackageChecker(Mapping):
     """
 
     #: Global cache, reused by every instance
-    _paths_cache = {}  # type: Dict[str, Dict[str, os.stat_result]]
+    _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
 
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
@@ -511,7 +373,7 @@ class FastPackageChecker(Mapping):
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
 
-    def _create_new_cache(self):  # type: () -> Dict[str, os.stat_result]
+    def _create_new_cache(self) -> Dict[str, os.stat_result]:
         """Create a new cache for packages in a repo.
 
         The implementation here should try to minimize filesystem
@@ -521,7 +383,7 @@ class FastPackageChecker(Mapping):
         """
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
-        cache = {}  # type: Dict[str, os.stat_result]
+        cache: Dict[str, os.stat_result] = {}
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
             pkg_dir = os.path.join(self.packages_path, pkg_name)
@@ -576,8 +438,7 @@ class FastPackageChecker(Mapping):
         return len(self._packages_to_stats)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Indexer(object):
+class Indexer(metaclass=abc.ABCMeta):
     """Adaptor for indexes that need to be generated when repos are updated."""
 
     def __init__(self, repository):
@@ -804,7 +665,7 @@ class RepoPath(object):
         # Add each repo to this path.
         for repo in repos:
             try:
-                if isinstance(repo, six.string_types):
+                if isinstance(repo, str):
                     repo = Repo(repo, cache=cache)
                 self.put_last(repo)
             except RepoError as e:
@@ -881,6 +742,14 @@ class RepoPath(object):
 
     def all_package_names(self, include_virtuals=False):
         return self._all_package_names(include_virtuals)
+
+    def package_path(self, name):
+        """Get path to package.py file for this repo."""
+        return self.repo_for_pkg(name).package_path(name)
+
+    def all_package_paths(self):
+        for name in self.all_package_names():
+            yield self.package_path(name)
 
     def packages_with_tags(self, *tags):
         r = set()
@@ -1281,6 +1150,14 @@ class Repo(object):
             return names
         return [x for x in names if not self.is_virtual(x)]
 
+    def package_path(self, name):
+        """Get path to package.py file for this repo."""
+        return os.path.join(self.root, packages_dir_name, name, package_file_name)
+
+    def all_package_paths(self):
+        for name in self.all_package_names():
+            yield self.package_path(name)
+
     def packages_with_tags(self, *tags):
         v = set(self.all_package_names())
         index = self.tag_index
@@ -1362,6 +1239,41 @@ class Repo(object):
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
 
+        new_cfg_settings = (
+            spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
+        )
+
+        overridden_attrs = getattr(cls, "overridden_attrs", {})
+        attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
+        # Clear any prior changes to class attributes in case the config has
+        # since changed
+        for key, val in overridden_attrs.items():
+            setattr(cls, key, val)
+        for key in attrs_exclusively_from_config:
+            delattr(cls, key)
+
+        # Keep track of every class attribute that is overridden by the config:
+        # if the config changes between calls to this method, we make sure to
+        # restore the original config values (in case the new config no longer
+        # sets attributes that it used to)
+        new_overridden_attrs = {}
+        new_attrs_exclusively_from_config = set()
+        for key, val in new_cfg_settings.items():
+            if hasattr(cls, key):
+                new_overridden_attrs[key] = getattr(cls, key)
+            else:
+                new_attrs_exclusively_from_config.add(key)
+
+            setattr(cls, key, val)
+        if new_overridden_attrs:
+            setattr(cls, "overridden_attrs", dict(new_overridden_attrs))
+        elif hasattr(cls, "overridden_attrs"):
+            delattr(cls, "overridden_attrs")
+        if new_attrs_exclusively_from_config:
+            setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
+        elif hasattr(cls, "attrs_exclusively_from_config"):
+            delattr(cls, "attrs_exclusively_from_config")
+
         return cls
 
     def __str__(self):
@@ -1372,6 +1284,9 @@ class Repo(object):
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
+
+
+RepoType = Union[Repo, RepoPath]
 
 
 def create_repo(root, namespace=None):

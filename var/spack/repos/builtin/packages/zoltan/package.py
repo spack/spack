@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -132,7 +132,6 @@ class Zoltan(AutotoolsPackage):
                 [
                     "CC={0}".format(spec["mpi"].mpicc),
                     "CXX={0}".format(spec["mpi"].mpicxx),
-                    "FC={0}".format(spec["mpi"].mpifc),
                     "--with-mpi={0}".format(spec["mpi"].prefix),
                     # NOTE: Zoltan assumes that it's linking against an MPI library
                     # that can be found with '-lmpi' which isn't the case for many
@@ -142,6 +141,8 @@ class Zoltan(AutotoolsPackage):
                     "--with-mpi-libs= ",
                 ]
             )
+            if "+fortran" in spec:
+                config_args.extend(["FC={0}".format(spec["mpi"].mpifc)])
 
         config_fcflags = config_cflags[:]
         if spec.satisfies("%gcc@10:+fortran"):

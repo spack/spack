@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ import re
 import subprocess
 import sys
 import tempfile
-
-from six.moves.urllib.parse import urlparse
+from datetime import date
+from urllib.parse import urlparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -27,16 +27,56 @@ is_windows = sys.platform == "win32"
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
 
+def architecture():
+    # break circular import
+    import spack.platforms
+    import spack.spec
+
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system("default_os")
+    host_target = host_platform.target("default_target")
+
+    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
+
+
+def get_user():
+    # User pwd where available because it accounts for effective uids when using ksu and similar
+    try:
+        # user pwd for unix systems
+        import pwd
+
+        return pwd.getpwuid(os.geteuid()).pw_name
+    except ImportError:
+        # fallback on getpass
+        return getpass.getuser()
+
+
+# return value for replacements with no match
+NOMATCH = object()
+
+
 # Substitutions to perform
 def replacements():
-    # break circular import from spack.util.executable
+    # break circular imports
+    import spack.environment as ev
     import spack.paths
 
+    arch = architecture()
+
     return {
-        "spack": spack.paths.prefix,
-        "user": getpass.getuser(),
-        "tempdir": tempfile.gettempdir(),
-        "user_cache_path": spack.paths.user_cache_path,
+        "spack": lambda: spack.paths.prefix,
+        "user": lambda: get_user(),
+        "tempdir": lambda: tempfile.gettempdir(),
+        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "architecture": lambda: arch,
+        "arch": lambda: arch,
+        "platform": lambda: arch.platform,
+        "operating_system": lambda: arch.os,
+        "os": lambda: arch.os,
+        "target": lambda: arch.target,
+        "target_family": lambda: arch.target.microarchitecture.family,
+        "date": lambda: date.today().strftime("%Y-%m-%d"),
+        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
     }
 
 
@@ -88,7 +128,7 @@ def path_to_os_path(*pths):
     """
     ret_pths = []
     for pth in pths:
-        if type(pth) is str and not is_path_url(pth):
+        if isinstance(pth, str) and not is_path_url(pth):
             pth = convert_to_platform_path(pth)
         ret_pths.append(pth)
     return ret_pths
@@ -245,26 +285,28 @@ def substitute_config_variables(path):
     - $tempdir           Default temporary directory returned by tempfile.gettempdir()
     - $user              The current user's username
     - $user_cache_path   The user cache directory (~/.spack, unless overridden)
+    - $architecture      The spack architecture triple for the current system
+    - $arch              The spack architecture triple for the current system
+    - $platform          The spack platform for the current system
+    - $os                The OS of the current system
+    - $operating_system  The OS of the current system
+    - $target            The ISA target detected for the system
+    - $target_family     The family of the target detected for the system
+    - $date              The current date (YYYY-MM-DD)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    import spack.environment as ev  # break circular
-
     _replacements = replacements()
-    env = ev.active_environment()
-    if env:
-        _replacements.update({"env": env.path})
-    else:
-        # If a previous invocation added env, remove it
-        _replacements.pop("env", None)
 
     # Look up replacements
     def repl(match):
-        m = match.group(0).strip("${}")
-        return _replacements.get(m.lower(), match.group(0))
+        m = match.group(0)
+        key = m.strip("${}").lower()
+        repl = _replacements.get(key, lambda: m)()
+        return m if repl is NOMATCH else str(repl)
 
     # Replace $var or ${var}.
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/lbann.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("develop", branch="develop")
     version("0.102", sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a")
@@ -243,7 +243,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("python@3: +shared", type=("build", "run"), when="@:0.90,0.99: +pfe")
     extends("python", when="+pfe")
     depends_on("py-setuptools", type="build", when="+pfe")
-    depends_on("py-argparse", type="run", when="@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1")
     depends_on("py-protobuf+cpp@3.10.0:", type=("build", "run"), when="@:0.90,0.99: +pfe")
 
     depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")

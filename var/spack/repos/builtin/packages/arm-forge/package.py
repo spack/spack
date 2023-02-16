@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,22 @@ class ArmForge(Package):
     through to complex parallel HPC codes with MPI, OpenMP, threads or CUDA."""
 
     homepage = "https://www.arm.com/products/development-tools/server-and-hpc/forge"
-    maintainers = ["NickRF"]
+    maintainers("NickRF")
 
     # TODO: this mess should be fixed as soon as a way to parametrize/constrain
     #       versions (and checksums) based on the target platform shows up
 
     if platform.machine() == "aarch64":
+        version(
+            "22.1.3", sha256="131884f998b82673e885a7b42cc883210e3a0229b50af374092140cdfd42a408"
+        )
+        version(
+            "22.1.2", sha256="1774ed647a18d2cb47b2e4dd4f6f268f67817dfe6a6bca8ba2f9e71d2f18c690"
+        )
+        version(
+            "22.1.1", sha256="f352625659a5319ca26130b633cbe8cc8e5fda312c50a8cd81145051eb66855c"
+        )
+        version("22.1", sha256="c0e2639051f75be77a440fd00f049ffd42a932a6c2459372e64657a8e5b78779")
         version(
             "22.0.4", sha256="f770781d3c5e2fccb341f6b6ea7ddbe106e26168d4bad4cad3296b2eef65cb76"
         )
@@ -58,6 +68,16 @@ class ArmForge(Package):
         version("21.0", sha256="2bcc745d0049d6b25c77c97b2d7bad7b4f804180972a2306a8599ce41f6a4573")
     elif platform.machine() == "ppc64le":
         version(
+            "22.1.3", sha256="6479c3a4ae6ce6648c37594eb0266161f06d9f89010fca9299855848661dda49"
+        )
+        version(
+            "22.1.2", sha256="1c59d1ccdd83bbd953d891a8e5f4926949daab7f6f1cd73328128794615d23ad"
+        )
+        version(
+            "22.1.1", sha256="c160779ad7217582ced9924a2af90330626af34385d07f4c39b827f929f89508"
+        )
+        version("22.1", sha256="b94a7923360a76a431b29b939191bce1d2076bc6bc0bc698f24191055328952c")
+        version(
             "22.0.4", sha256="f4cb5bcbaa67f9209299fe4653186a2829760b8b16a2883913aa43766375b04c"
         )
         version(
@@ -91,6 +111,16 @@ class ArmForge(Package):
         )
         version("21.0", sha256="60cfa7dd1cd131ec85e67cb660f2f84cf30bb700d8979cae1f5f88af658fd249")
     elif platform.machine() == "x86_64":
+        version(
+            "22.1.3", sha256="4f8a8b1df6ad712e89c82eedf4bd85b93b57b3c8d5b37d13480ff058fa8f4467"
+        )
+        version(
+            "22.1.2", sha256="baeac2b49c38547a8f3dd6a5237544eefe8c7695d969784e6f861ce77b610542"
+        )
+        version(
+            "22.1.1", sha256="392a7b0b4a212c506dc600ca2c37001cf85780ea2248fc47701953f12ef35300"
+        )
+        version("22.1", sha256="3a1346ec10ff1871de7a013bacc21911976f97640297fc8d88136c4f91092e69")
         version(
             "22.0.4", sha256="a2c8c1da38b9684d7c4656a98b3fc42777b03fd474cd0bf969324804f47587e5"
         )

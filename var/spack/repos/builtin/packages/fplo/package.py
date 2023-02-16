@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Fplo(MakefilePackage):
     url = "file://{0}/FPLO22.00-62.tar.gz".format(os.getcwd())
     manual_download = True
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     version("22.00-62", sha256="0d1d4e9c1e8e41900901e26c3cd08ee39dcfdeb3f2c4c8862055eaf704b6d69e")
 
@@ -128,10 +128,7 @@ class Fplo(MakefilePackage):
 
             # build python
             with working_dir("PYTHON"):
-                if "^python@:2" in self.spec:
-                    make()
-                else:
-                    make("python3")
+                make("python3")
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):

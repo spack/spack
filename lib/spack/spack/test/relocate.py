@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ import os.path
 import re
 import shutil
 import sys
-from collections import OrderedDict
 
 import pytest
 
@@ -17,11 +16,11 @@ import spack.concretize
 import spack.paths
 import spack.platforms
 import spack.relocate
+import spack.relocate_text as relocate_text
 import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
-from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -141,13 +140,13 @@ def make_object_file(tmpdir):
 
 
 @pytest.fixture()
-def copy_binary():
+def copy_binary(prefix_like):
     """Returns a function that copies a binary somewhere and
     returns the new location.
     """
 
     def _copy_somewhere(orig_binary):
-        new_root = orig_binary.mkdtemp()
+        new_root = orig_binary.mkdtemp().mkdir(prefix_like)
         new_binary = new_root.join("main.x")
         shutil.copy(str(orig_binary), str(new_binary))
         return new_binary
@@ -157,14 +156,21 @@ def copy_binary():
 
 @pytest.mark.requires_executables("/usr/bin/gcc", "patchelf", "strings", "file")
 @skip_unless_linux
-def test_file_is_relocatable(source_file, is_relocatable):
+def test_ensure_binary_is_relocatable(source_file, is_relocatable):
     compiler = spack.util.executable.Executable("/usr/bin/gcc")
     executable = str(source_file).replace(".c", ".x")
     compiler_env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
     compiler(str(source_file), "-o", executable, env=compiler_env)
 
     assert spack.relocate.is_binary(executable)
-    assert spack.relocate.file_is_relocatable(executable) is is_relocatable
+
+    try:
+        spack.relocate.ensure_binary_is_relocatable(executable)
+        relocatable = True
+    except spack.relocate.InstallRootStringError:
+        relocatable = False
+
+    assert relocatable == is_relocatable
 
 
 @pytest.mark.requires_executables("patchelf", "strings", "file")
@@ -172,14 +178,14 @@ def test_file_is_relocatable(source_file, is_relocatable):
 def test_patchelf_is_relocatable():
     patchelf = os.path.realpath(spack.relocate._patchelf())
     assert llnl.util.filesystem.is_exe(patchelf)
-    assert spack.relocate.file_is_relocatable(patchelf)
+    spack.relocate.ensure_binary_is_relocatable(patchelf)
 
 
 @skip_unless_linux
-def test_file_is_relocatable_errors(tmpdir):
+def test_ensure_binary_is_relocatable_errors(tmpdir):
     # The file passed in as argument must exist...
     with pytest.raises(ValueError) as exc_info:
-        spack.relocate.file_is_relocatable("/usr/bin/does_not_exist")
+        spack.relocate.ensure_binary_is_relocatable("/usr/bin/does_not_exist")
     assert "does not exist" in str(exc_info.value)
 
     # ...and the argument must be an absolute path to it
@@ -188,26 +194,8 @@ def test_file_is_relocatable_errors(tmpdir):
 
     with llnl.util.filesystem.working_dir(str(tmpdir)):
         with pytest.raises(ValueError) as exc_info:
-            spack.relocate.file_is_relocatable("delete.me")
+            spack.relocate.ensure_binary_is_relocatable("delete.me")
         assert "is not an absolute path" in str(exc_info.value)
-
-
-@pytest.mark.parametrize(
-    "patchelf_behavior,expected",
-    [
-        ("echo ", []),
-        ("echo /opt/foo/lib:/opt/foo/lib64", ["/opt/foo/lib", "/opt/foo/lib64"]),
-        ("exit 1", []),
-    ],
-)
-def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
-    # Here we are mocking an executable that is always called "patchelf"
-    # because that will skip the part where we try to build patchelf
-    # by ourselves. The executable will output some rpaths like
-    # `patchelf --print-rpath` would.
-    path = mock_patchelf(patchelf_behavior)
-    rpaths = spack.relocate._elf_rpaths_for(path)
-    assert rpaths == expected
 
 
 @pytest.mark.parametrize(
@@ -279,29 +267,33 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_replace_prefix_bin(binary_with_rpaths):
+def test_relocate_text_bin(binary_with_rpaths, prefix_like):
+    prefix = "/usr/" + prefix_like
+    prefix_bytes = prefix.encode("utf-8")
+    new_prefix = "/foo/" + prefix_like
+    new_prefix_bytes = new_prefix.encode("utf-8")
     # Compile an "Hello world!" executable and set RPATHs
-    executable = binary_with_rpaths(rpaths=["/usr/lib", "/usr/lib64"])
+    executable = binary_with_rpaths(rpaths=[prefix + "/lib", prefix + "/lib64"])
 
     # Relocate the RPATHs
-    spack.relocate._replace_prefix_bin(str(executable), {b"/usr": b"/foo"})
+    spack.relocate.relocate_text_bin([str(executable)], {prefix_bytes: new_prefix_bytes})
 
     # Some compilers add rpaths so ensure changes included in final result
-    assert "/foo/lib:/foo/lib64" in rpaths_for(executable)
+    assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
 
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, tmpdir):
+def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = binary_with_rpaths(rpaths=[str(tmpdir.mkdir("lib")), "/usr/lib64"])
+    orig_binary = binary_with_rpaths(rpaths=[str(prefix_tmpdir.mkdir("lib")), "/usr/lib64"])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
         binaries=[str(new_binary)],
         orig_root=str(orig_binary.dirpath()),
         new_root=None,  # Not needed when relocating absolute paths
-        new_prefixes={str(tmpdir): "/foo"},
+        new_prefixes={str(orig_binary.dirpath()): "/foo"},
         rel=False,
         # Not needed when relocating absolute paths
         orig_prefix=None,
@@ -335,9 +327,13 @@ def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, tmpdir):
+def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
-        rpaths=[str(tmpdir.mkdir("lib")), str(tmpdir.mkdir("lib64")), "/opt/local/lib"]
+        rpaths=[
+            str(prefix_tmpdir.mkdir("lib")),
+            str(prefix_tmpdir.mkdir("lib64")),
+            "/opt/local/lib",
+        ]
     )
     new_binary = copy_binary(orig_binary)
 
@@ -349,34 +345,32 @@ def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, tmpdir):
     assert "$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib" in rpaths_for(new_binary)
 
 
-def test_raise_if_not_relocatable(monkeypatch):
-    monkeypatch.setattr(spack.relocate, "file_is_relocatable", lambda x: False)
-    with pytest.raises(spack.relocate.InstallRootStringError):
-        spack.relocate.raise_if_not_relocatable(["an_executable"], allow_root=False)
-
-
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_text_bin(binary_with_rpaths, copy_binary, tmpdir):
+def test_relocate_text_bin_with_message(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
-        rpaths=[str(tmpdir.mkdir("lib")), str(tmpdir.mkdir("lib64")), "/opt/local/lib"],
-        message=str(tmpdir),
+        rpaths=[
+            str(prefix_tmpdir.mkdir("lib")),
+            str(prefix_tmpdir.mkdir("lib64")),
+            "/opt/local/lib",
+        ],
+        message=str(prefix_tmpdir),
     )
     new_binary = copy_binary(orig_binary)
 
-    # Check original directory is in the executabel and the new one is not
-    assert text_in_bin(str(tmpdir), new_binary)
+    # Check original directory is in the executable and the new one is not
+    assert text_in_bin(str(prefix_tmpdir), new_binary)
     assert not text_in_bin(str(new_binary.dirpath()), new_binary)
 
     # Check this call succeed
     orig_path_bytes = str(orig_binary.dirpath()).encode("utf-8")
     new_path_bytes = str(new_binary.dirpath()).encode("utf-8")
 
-    spack.relocate.unsafe_relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
+    spack.relocate.relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
-    assert not text_in_bin(str(tmpdir), new_binary)
+    assert not text_in_bin(str(prefix_tmpdir), new_binary)
     assert text_in_bin(str(new_binary.dirpath()), new_binary)
 
 
@@ -386,8 +380,8 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
     fpath = str(tmpdir.join("fakebin"))
     with open(fpath, "w") as f:
         f.write("/short")
-    with pytest.raises(spack.relocate.BinaryTextReplaceError):
-        spack.relocate.unsafe_relocate_text_bin([fpath], {short_prefix: long_prefix})
+    with pytest.raises(relocate_text.BinaryTextReplaceError):
+        spack.relocate.relocate_text_bin([fpath], {short_prefix: long_prefix})
 
 
 @pytest.mark.requires_executables("install_name_tool", "file", "cc")
@@ -442,56 +436,3 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # (this is a corner case for GCC installation)
     (root, filename) = make_object_file()
     assert not fixup_rpath(root, filename)
-
-
-def test_text_relocation_regex_is_safe():
-    # Test whether prefix regex is properly escaped
-    string = b"This does not match /a/, but this does: /[a-z]/."
-    assert utf8_path_to_binary_regex("/[a-z]/").search(string).group(0) == b"/[a-z]/"
-
-
-def test_utf8_paths_to_single_binary_regex():
-    regex = utf8_paths_to_single_binary_regex(["/first/path", "/second/path", "/safe/[a-z]"])
-    # Match nothing
-    assert not regex.search(b"text /neither/first/path text /the/second/path text")
-
-    # Match first
-    string = b"contains both /first/path/subdir and /second/path/sub"
-    assert regex.search(string).group(0) == b"/first/path/subdir"
-
-    # Match second
-    string = b"contains both /not/first/path/subdir but /second/path/subdir"
-    assert regex.search(string).group(0) == b"/second/path/subdir"
-
-    # Match "unsafe" dir name
-    string = b"don't match /safe/a/path but do match /safe/[a-z]/file"
-    assert regex.search(string).group(0) == b"/safe/[a-z]/file"
-
-
-def test_ordered_replacement(tmpdir):
-    # This tests whether binary text replacement respects order, so that
-    # a long package prefix is replaced before a shorter sub-prefix like
-    # the root of the spack store (as a fallback).
-    def replace_and_expect(prefix_map, before, after):
-        file = str(tmpdir.join("file"))
-        with open(file, "wb") as f:
-            f.write(before)
-        spack.relocate._replace_prefix_bin(file, prefix_map)
-        with open(file, "rb") as f:
-            assert f.read() == after
-
-    replace_and_expect(
-        OrderedDict(
-            [(b"/old-spack/opt/specific-package", b"/first"), (b"/old-spack/opt", b"/second")]
-        ),
-        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
-        b"Binary with /first///////////////////////// and /second///////",
-    )
-
-    replace_and_expect(
-        OrderedDict(
-            [(b"/old-spack/opt", b"/second"), (b"/old-spack/opt/specific-package", b"/first")]
-        ),
-        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
-        b"Binary with /second////////specific-package and /second///////",
-    )

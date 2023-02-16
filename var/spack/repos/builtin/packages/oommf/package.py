@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,14 @@ class Oommf(Package):
     # default URL for versions
     url = "https://github.com/fangohr/oommf/archive/refs/tags/20a1_20180930_ext.tar.gz"
 
-    maintainers = ["fangohr"]
+    #: post-install phase methods used to check the installation
+    install_time_test_callbacks = [
+        "check_install_version",
+        "check_install_platform",
+        "check_install_stdprob3",
+    ]
+
+    maintainers("fangohr")
 
     version(
         "20b0_20220930", sha256="764f1983d858fbad4bae34c720b217940ce56f745647ba94ec74de4b185f1328"
@@ -118,7 +125,7 @@ class Oommf(Package):
 
     # sanity checks: (https://spack.readthedocs.io/en/latest/packaging_guide.html#checking-an-installation)
     sanity_check_is_file = [join_path("bin", "oommf.tcl")]
-    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/eamples"]
+    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/examples"]
 
     def get_oommf_source_root(self):
         """If we download the source from NIST, then 'oommf.tcl' is in the root directory.
@@ -220,15 +227,12 @@ class Oommf(Package):
 
         print("output received from oommf is %s" % output)
 
-    @run_after("install")
     def check_install_version(self):
         self._check_install_oommf_command(["+version"])
 
-    @run_after("install")
     def check_install_platform(self):
         self._check_install_oommf_command(["+platform"])
 
-    @run_after("install")
     def check_install_stdprob3(self):
         oommf_examples = join_path(self.spec.prefix.usr.bin, "oommf/app/oxs/examples")
         task = join_path(oommf_examples, "stdprob3.mif")

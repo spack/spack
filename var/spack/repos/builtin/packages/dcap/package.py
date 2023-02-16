@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,12 @@ class Dcap(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
+
+    variant("plugins", default=True, description="Build plugins")
+
+    def patch(self):
+        if self.spec.satisfies("~plugins"):
+            filter_file("SUBDIRS = .*", "SUBDIRS = src", "Makefile.am")
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 
 import spack.builder
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE, determine_number_of_jobs
-from spack.directives import build_system, extends
+from spack.directives import build_system, extends, maintainers
 from spack.package_base import PackageBase
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
@@ -23,7 +23,7 @@ class RacketPackage(PackageBase):
     """
 
     #: Package name, version, and extension on PyPI
-    maintainers = ["elfprince13"]
+    maintainers("elfprince13")
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = "RacketPackage"
@@ -34,7 +34,7 @@ class RacketPackage(PackageBase):
 
     extends("racket", when="build_system=racket")
 
-    racket_name = None  # type: Optional[str]
+    racket_name: Optional[str] = None
     parallel = True
 
     @lang.classproperty
@@ -51,7 +51,7 @@ class RacketBuilder(spack.builder.Builder):
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = tuple()  # type: Tuple[str, ...]
+    legacy_methods: Tuple[str, ...] = tuple()
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = ("build_directory", "build_time_test_callbacks", "subdirectory")
@@ -59,7 +59,7 @@ class RacketBuilder(spack.builder.Builder):
     #: Callback names for build-time test
     build_time_test_callbacks = ["check"]
 
-    racket_name = None  # type: Optional[str]
+    racket_name: Optional[str] = None
 
     @property
     def subdirectory(self):

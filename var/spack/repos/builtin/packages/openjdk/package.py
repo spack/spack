@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -413,3 +413,8 @@ class Openjdk(Package):
             class_paths = find(dependent_spec.prefix, "*.jar")
             classpath = os.pathsep.join(class_paths)
             env.prepend_path("CLASSPATH", classpath)
+
+    # Since we provide openjdk as a binary, we can't remove an obsolete glibc
+    # fix that prevents us from modifying the soname of libjvm.so. If we move
+    # to source builds this should be possible.
+    non_bindable_shared_objects = ["libjvm.so"]

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,13 +18,15 @@ class Ndzip(CMakePackage, CudaPackage):
     homepage = "https://github.com/fknorr/ndzip"
     git = "https://github.com/robertu94/ndzip"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("master", branch="master")
     version("2021-11-30", commit="5b3c34991005c0924a339f2ec06750729ebbf015")
 
     variant("cuda", description="build with cuda support", default=False)
     variant("openmp", description="build with cuda support", default=False)
+
+    depends_on("boost+thread+program_options")
 
     def cmake_args(self):
         args = [

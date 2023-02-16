@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Spath(CMakePackage):
     git = "https://github.com/ecp-veloc/spath.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
     version("0.2.0", sha256="2de8a25547b53ef064664d79b543141bc3020219f40ff0e1076f676e13a9e77a")
