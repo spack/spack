@@ -539,12 +539,12 @@ requirement_group_satisfied(Package, X) :-
   requirement_policy(Package, X, "one_of"),
   requirement_group(Package, X).
 
-requirement_weight(Package, W) :-
+requirement_weight(Package, Group, W) :-
   condition_holds(Y),
   requirement_has_weight(Y, W),
-  requirement_group_member(Y, Package, X),
-  requirement_policy(Package, X, "one_of"),
-  requirement_group_satisfied(Package, X).
+  requirement_group_member(Y, Package, Group),
+  requirement_policy(Package, Group, "one_of"),
+  requirement_group_satisfied(Package, Group).
 
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
@@ -552,16 +552,16 @@ requirement_group_satisfied(Package, X) :-
   requirement_policy(Package, X, "any_of"),
   requirement_group(Package, X).
 
-requirement_weight(Package, W) :-
+requirement_weight(Package, Group, W) :-
   W = #min {
-    Z : requirement_has_weight(Y, Z), condition_holds(Y), requirement_group_member(Y, Package, X);
+    Z : requirement_has_weight(Y, Z), condition_holds(Y), requirement_group_member(Y, Package, Group);
     % We need this to avoid an annoying warning during the solve
     %   concretize.lp:1151:5-11: info: tuple ignored:
     %   #sup@73
     10000
   },
-  requirement_policy(Package, X, "any_of"),
-  requirement_group_satisfied(Package, X).
+  requirement_policy(Package, Group, "any_of"),
+  requirement_group_satisfied(Package, Group).
 
 error(2, "Cannot satisfy the requirements in packages.yaml for the '{0}' package. You may want to delete them to proceed with concretization. To check where the requirements are defined run 'spack config blame packages'", Package) :-
   activate_requirement_rules(Package),
@@ -1222,8 +1222,8 @@ opt_criterion(75, "requirement weight").
 #minimize{ 0@275: #true }.
 #minimize{ 0@75: #true }.
 #minimize {
-    Weight@75+Priority
-    : requirement_weight(Package, Weight),
+    Weight@75+Priority,Package,Group
+    : requirement_weight(Package, Group, Weight),
       build_priority(Package, Priority)
 }.
 
