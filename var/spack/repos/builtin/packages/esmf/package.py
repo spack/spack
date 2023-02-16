@@ -156,14 +156,15 @@ class Esmf(MakefilePackage):
                 version.dotted
             )
 
-    def edit(self, spec, prefix):
+    def setup_build_environment(self, env):
+        spec = self.spec
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
 
         # Unset any environment variables that may influence the installation.
         for var in os.environ:
             if var.startswith("ESMF_"):
-                os.environ.pop(var)
+                env.unset(var)
 
         ######################################
         # Build and Installation Directories #
@@ -171,28 +172,26 @@ class Esmf(MakefilePackage):
 
         # The environment variable ESMF_DIR must be set to the full pathname
         # of the top level ESMF directory before building the framework.
-        os.environ["ESMF_DIR"] = os.getcwd()
+        env.set("ESMF_DIR", self.stage.source_path)
 
         # This variable specifies the prefix of the installation path used
         # with the install target.
-        os.environ["ESMF_INSTALL_PREFIX"] = prefix
+        env.set("ESMF_INSTALL_PREFIX", prefix)
 
         # Installation subdirectories default to:
         # bin/binO/Linux.gfortran.64.default.default
-        os.environ["ESMF_INSTALL_BINDIR"] = "bin"
-        os.environ["ESMF_INSTALL_LIBDIR"] = "lib"
-        os.environ["ESMF_INSTALL_MODDIR"] = "include"
+        env.set("ESMF_INSTALL_BINDIR", "bin")
+        env.set("ESMF_INSTALL_LIBDIR", "lib")
+        env.set("ESMF_INSTALL_MODDIR", "include")
 
         # Allow compiler flags to carry through from compiler spec
-        os.environ["ESMF_CXXCOMPILEOPTS"] = " ".join(spec.compiler_flags["cxxflags"])
-        os.environ["ESMF_F90COMPILEOPTS"] = " ".join(spec.compiler_flags["fflags"])
+        env.set("ESMF_CXXCOMPILEOPTS", " ".join(spec.compiler_flags["cxxflags"]))
+        env.set("ESMF_F90COMPILEOPTS", " ".join(spec.compiler_flags["fflags"]))
         # ESMF will simply not build with Intel using backing GCC 8, in that
         # case you need to point to something older, below is commented but is
         # an example
-        # os.environ["ESMF_CXXCOMPILEOPTS"] = \
-        #     "-O2 -std=c++11 -gcc-name=/usr/bin/gcc"
-        # os.environ["ESMF_F90COMPILEOPTS"] = \
-        #     "-O2 -gcc-name=/usr/bin/gcc"
+        # env.set("ESMF_CXXCOMPILEOPTS", "-O2 -std=c++11 -gcc-name=/usr/bin/gcc")
+        # env.set("ESMF_F90COMPILEOPTS", "-O2 -gcc-name=/usr/bin/gcc")
 
         ############
         # Compiler #
@@ -201,51 +200,51 @@ class Esmf(MakefilePackage):
         # ESMF_COMPILER must be set to select which Fortran and
         # C++ compilers are being used to build the ESMF library.
         if self.compiler.name == "gcc":
-            os.environ["ESMF_COMPILER"] = "gfortran"
+            env.set("ESMF_COMPILER", "gfortran")
             gfortran_major_version = int(
                 spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
                     "."
                 )[0]
             )
         elif self.compiler.name == "intel" or self.compiler.name == "oneapi":
-            os.environ["ESMF_COMPILER"] = "intel"
+            env.set("ESMF_COMPILER", "intel")
         elif self.compiler.name in ["clang", "apple-clang"]:
-            os.environ["ESMF_COMPILER"] = "gfortranclang"
+            env.set("ESMF_COMPILER", "gfortranclang")
             gfortran_major_version = int(
                 spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
                     "."
                 )[0]
             )
         elif self.compiler.name == "nag":
-            os.environ["ESMF_COMPILER"] = "nag"
+            env.set("ESMF_COMPILER", "nag")
         elif self.compiler.name == "pgi":
-            os.environ["ESMF_COMPILER"] = "pgi"
+            env.set("ESMF_COMPILER", "pgi")
         elif self.compiler.name == "nvhpc":
-            os.environ["ESMF_COMPILER"] = "nvhpc"
+            env.set("ESMF_COMPILER", "nvhpc")
         elif self.compiler.name == "cce":
-            os.environ["ESMF_COMPILER"] = "cce"
+            env.set("ESMF_COMPILER", "cce")
         else:
             msg = "The compiler you are building with, "
             msg += '"{0}", is not supported by ESMF.'
             raise InstallError(msg.format(self.compiler.name))
 
         if "+mpi" in spec:
-            os.environ["ESMF_CXX"] = spec["mpi"].mpicxx
-            os.environ["ESMF_F90"] = spec["mpi"].mpifc
+            env.set("ESMF_CXX", spec["mpi"].mpicxx)
+            env.set("ESMF_F90", spec["mpi"].mpifc)
         else:
-            os.environ["ESMF_CXX"] = os.environ["CXX"]
-            os.environ["ESMF_F90"] = os.environ["FC"]
+            env.set("ESMF_CXX", env["CXX"])
+            env.set("ESMF_F90", env["FC"])
 
         # This environment variable controls the build option.
         if "+debug" in spec:
             # Build a debuggable version of the library.
-            os.environ["ESMF_BOPT"] = "g"
+            env.set("ESMF_BOPT", "g")
         else:
             # Build an optimized version of the library.
-            os.environ["ESMF_BOPT"] = "O"
+            env.set("ESMF_BOPT", "O")
 
         if self.compiler.name in ["gcc", "clang", "apple-clang"] and gfortran_major_version >= 10:
-            os.environ["ESMF_F90COMPILEOPTS"] = "-fallow-argument-mismatch"
+            env.set("ESMF_F90COMPILEOPTS", "-fallow-argument-mismatch")
 
         #######
         # OS  #
@@ -254,12 +253,12 @@ class Esmf(MakefilePackage):
         # ESMF_OS must be set for Cray systems
         # But spack no longer gives arch == cray
         if self.compiler.name == "cce" or "^cray-mpich" in self.spec:
-            os.environ["ESMF_OS"] = "Unicos"
+            env.set("ESMF_OS", "Unicos")
 
         # Allow override of ESMF_OS:
         os_variant = spec.variants["esmf_os"].value
         if os_variant != "auto":
-            os.environ["ESMF_OS"] = os_variant
+            env.set("ESMF_OS", os_variant)
 
         #######
         # MPI #
@@ -269,35 +268,35 @@ class Esmf(MakefilePackage):
         # is used to build the ESMF library.
         if "+mpi" in spec:
             if "^cray-mpich" in self.spec:
-                os.environ["ESMF_COMM"] = "mpi"
+                env.set("ESMF_COMM", "mpi")
             elif "^mvapich2" in spec:
-                os.environ["ESMF_COMM"] = "mvapich2"
+                env.set("ESMF_COMM", "mvapich2")
             elif "^mpich" in spec:
                 # esmf@7.0.1 does not include configs for mpich3,
                 # so we start with the configs for mpich2:
-                os.environ["ESMF_COMM"] = "mpich2"
+                env.set("ESMF_COMM", "mpich2")
                 # The mpich 3 series split apart the Fortran and C bindings,
                 # so we link the Fortran libraries when building C programs:
-                os.environ["ESMF_CXXLINKLIBS"] = "-lmpifort"
+                env.set("ESMF_CXXLINKLIBS", "-lmpifort")
             elif "^openmpi" in spec or "^hpcx-mpi" in spec:
-                os.environ["ESMF_COMM"] = "openmpi"
+                env.set("ESMF_COMM", "openmpi")
             elif (
                 "^intel-parallel-studio+mpi" in spec
                 or "^intel-mpi" in spec
                 or "^intel-oneapi-mpi" in spec
             ):
-                os.environ["ESMF_COMM"] = "intelmpi"
+                env.set("ESMF_COMM", "intelmpi")
             elif "^mpt" in spec:
                 # MPT is the HPE (SGI) variant of mpich
-                os.environ["ESMF_COMM"] = "mpt"
+                env.set("ESMF_COMM", "mpt")
         else:
             # Force use of the single-processor MPI-bypass library.
-            os.environ["ESMF_COMM"] = "mpiuni"
+            env.set("ESMF_COMM", "mpiuni")
 
         # Allow override of ESMF_COMM:
         comm_variant = spec.variants["esmf_comm"].value
         if comm_variant != "auto":
-            os.environ["ESMF_COMM"] = comm_variant
+            env.set("ESMF_COMM", comm_variant)
 
         ##########
         # LAPACK #
@@ -307,17 +306,17 @@ class Esmf(MakefilePackage):
             # A system-dependent external LAPACK/BLAS installation is used
             # to satisfy the external dependencies of the LAPACK-dependent
             # ESMF code.
-            os.environ["ESMF_LAPACK"] = "system"
+            env.set("ESMF_LAPACK", "system")
 
             # FIXME: determine whether or not we need to set this
             # Specifies the path where the LAPACK library is located.
-            # os.environ["ESMF_LAPACK_LIBPATH"] = spec["lapack"].prefix.lib
+            # env.set("ESMF_LAPACK_LIBPATH", spec["lapack"].prefix.lib)
 
             # Specifies the linker directive needed to link the LAPACK library
             # to the application.
-            os.environ["ESMF_LAPACK_LIBS"] = spec["lapack"].libs.link_flags  # noqa
+            env.set("ESMF_LAPACK_LIBS", spec["lapack"].libs.link_flags)  # noqa
         else:
-            os.environ["ESMF_LAPACK"] = "internal"
+            env.set("ESMF_LAPACK", "internal")
 
         ##########
         # NetCDF #
@@ -326,8 +325,8 @@ class Esmf(MakefilePackage):
         if "+netcdf" in spec:
             # ESMF provides the ability to read Grid and Mesh data in
             # NetCDF format.
-            os.environ["ESMF_NETCDF"] = "nc-config"
-            os.environ["ESMF_NFCONFIG"] = "nf-config"
+            env.set("ESMF_NETCDF", "nc-config")
+            env.set("ESMF_NFCONFIG", "nf-config")
 
         ###################
         # Parallel-NetCDF #
@@ -339,25 +338,25 @@ class Esmf(MakefilePackage):
 
             # When defined, enables the use of Parallel-NetCDF.
             # ESMF_PNETCDF_LIBS will be set to "-lpnetcdf".
-            os.environ["ESMF_PNETCDF"] = "pnetcdf-config"
+            env.set("ESMF_PNETCDF", "pnetcdf-config")
 
         ##############
         # ParallelIO #
         ##############
         if "+parallelio" in spec:
-            os.environ["ESMF_PIO"] = "external"
-            os.environ["ESMF_PIO_LIBPATH"] = spec["parallelio"].prefix.lib
-            os.environ["ESMF_PIO_INCLUDE"] = spec["parallelio"].prefix.include
+            env.set("ESMF_PIO", "external")
+            env.set("ESMF_PIO_LIBPATH", spec["parallelio"].prefix.lib)
+            env.set("ESMF_PIO_INCLUDE", spec["parallelio"].prefix.include)
         elif "+pio" in spec and "+mpi" in spec:
             # ESMF provides the ability to read and write data in both binary
             # and NetCDF formats through ParallelIO (PIO), a third-party IO
             # software library that is integrated in the ESMF library.
             # PIO-dependent features will be enabled and will use the
             # PIO library that is included and built with ESMF.
-            os.environ["ESMF_PIO"] = "internal"
+            env.set("ESMF_PIO", "internal")
         else:
             # Disables PIO-dependent code.
-            os.environ["ESMF_PIO"] = "OFF"
+            env.set("ESMF_PIO", "OFF")
 
         ##########
         # XERCES #
@@ -368,7 +367,7 @@ class Esmf(MakefilePackage):
             # XML file format via the XERCES C++ library.
 
             # ESMF_XERCES_LIBS will be set to "-lxerces-c".
-            os.environ["ESMF_XERCES"] = "standard"
+            env.set("ESMF_XERCES", "standard")
 
             # FIXME: determine if the following are needed
             # ESMF_XERCES_INCLUDE
@@ -376,7 +375,7 @@ class Esmf(MakefilePackage):
 
         # Static-only option:
         if "~shared" in spec:
-            os.environ["ESMF_SHARED_LIB_BUILD"] = "OFF"
+            env.set("ESMF_SHARED_LIB_BUILD", "OFF")
 
     @run_after("install")
     def install_findesmf(self):
