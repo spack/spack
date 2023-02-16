@@ -1012,11 +1012,13 @@ class SpackSolverSetup(object):
     def package_requirement_rules(self, pkg):
         pkg_name = pkg.name
         config = spack.config.get("packages")
-        requirements = config.get(pkg_name, {}).get("require", []) or config.get("all", {}).get(
-            "require", []
-        )
+        requirements, raise_on_failure = config.get(pkg_name, {}).get("require", []), True
+        if not requirements:
+            requirements, raise_on_failure = config.get("all", {}).get("require", []), False
         rules = self._rules_from_requirements(pkg_name, requirements)
-        self.emit_facts_from_requirement_rules(rules, virtual=False)
+        self.emit_facts_from_requirement_rules(
+            rules, virtual=False, raise_on_failure=raise_on_failure
+        )
 
     def _rules_from_requirements(self, pkg_name, requirements):
         """Manipulate requirements from packages.yaml, and return a list of tuples
@@ -1161,11 +1163,13 @@ class SpackSolverSetup(object):
         named_cond.name = named_cond.name or name
         assert named_cond.name, "must provide name for anonymous condtions!"
 
+        # Check if we can emit the requirements before updating the condition ID counter.
+        # In this way, if a condition can't be emitted but the exception is handled in the caller,
+        # we won't emit partial facts.
+        requirements = self.spec_clauses(named_cond, body=True, required_from=name)
+
         condition_id = next(self._condition_id_counter)
         self.gen.fact(fn.condition(condition_id, msg))
-
-        # requirements trigger the condition
-        requirements = self.spec_clauses(named_cond, body=True, required_from=name)
         for pred in requirements:
             self.gen.fact(fn.condition_requirement(condition_id, *pred.args))
 
@@ -1261,23 +1265,39 @@ class SpackSolverSetup(object):
             rules = self._rules_from_requirements(virtual_str, requirements)
             self.emit_facts_from_requirement_rules(rules, virtual=True)
 
-    def emit_facts_from_requirement_rules(self, rules, virtual=False):
-        """Generate facts to enforce requirements from packages.yaml."""
+    def emit_facts_from_requirement_rules(self, rules, *, virtual=False, raise_on_failure=True):
+        """Generate facts to enforce requirements from packages.yaml.
+
+        Args:
+            rules: rules for which we want facts to be emitted
+            virtual: if True the requirements are on a virtual spec
+            raise_on_failure: if True raise an exception when a requirement condition is invalid
+                for the current spec. If False, just skip that condition
+        """
         for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
-            for requirement_weight, spec_str in enumerate(requirement_grp):
+            requirement_weight = 0
+            for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
                 when_spec = spec
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
-                member_id = self.condition(
-                    required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
-                )
+
+                try:
+                    member_id = self.condition(
+                        required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
+                    )
+                except Exception as e:
+                    if raise_on_failure:
+                        raise RuntimeError("cannot emit requirements for the solver") from e
+                    continue
+
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+                requirement_weight += 1
 
     def external_packages(self):
         """Facts on external packages, as read from packages.yaml"""
