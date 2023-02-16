@@ -51,7 +51,7 @@ class Ascent(CMakePackage, CudaPackage):
     maintainers = ["cyrush"]
 
     version("develop", branch="develop", submodules=True)
-    
+
     version("0.9.0", tag="v0.9.0", submodules=True, preferred=True)
 
     version("0.8.0", tag="v0.8.0", submodules=True)
@@ -550,23 +550,22 @@ class Ascent(CMakePackage, CudaPackage):
 
         if "+vtkh" in spec:
             cfg.write("# vtk-h\n")
-            if self.spec.satisfies('@0.8.1:'):
+            if self.spec.satisfies("@0.8.1:"):
                 cfg.write(cmake_cache_entry("ENABLE_VTKH", "ON"))
             else:
-                cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtk-h'].prefix))
+                cfg.write(cmake_cache_entry("VTKH_DIR", spec["vtk-h"].prefix))
 
             cfg.write("# vtk-m from spack\n")
-            cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtk-m'].prefix))
+            cfg.write(cmake_cache_entry("VTKM_DIR", spec["vtk-m"].prefix))
 
             if "+cuda" in spec:
                 cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "ON"))
-                cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",
-                          env["SPACK_CXX"]))
+                cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER", env["SPACK_CXX"]))
             else:
                 cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "OFF"))
 
         else:
-            if self.spec.satisfies('@0.8.1:'):
+            if self.spec.satisfies("@0.8.1:"):
                 cfg.write("# vtk-h\n")
                 cfg.write(cmake_cache_entry("ENABLE_VTKH", "OFF"))
             else:
@@ -577,7 +576,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         if "+raja" in spec:
             cfg.write("# RAJA from spack \n")
-            cfg.write(cmake_cache_entry("RAJA_DIR", spec['raja'].prefix))
+            cfg.write(cmake_cache_entry("RAJA_DIR", spec["raja"].prefix))
         else:
             cfg.write("# RAJA not built by spack \n")
 
@@ -586,7 +585,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         if "+umpire" in spec:
             cfg.write("# umpire from spack \n")
-            cfg.write(cmake_cache_entry("UMPIRE_DIR", spec['umpire'].prefix))
+            cfg.write(cmake_cache_entry("UMPIRE_DIR", spec["umpire"].prefix))
         else:
             cfg.write("# umpire not built by spack \n")
 
@@ -595,7 +594,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         if "+umpire" in spec or "+raja" in spec:
             cfg.write("# camp from spack \n")
-            cfg.write(cmake_cache_entry("CAMP_DIR", spec['camp'].prefix))
+            cfg.write(cmake_cache_entry("CAMP_DIR", spec["camp"].prefix))
         else:
             cfg.write("# camp not built by spack \n")
 
@@ -613,14 +612,14 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         if "+dray" in spec:
             cfg.write("# devil ray\n")
-            if self.spec.satisfies('@0.8.1:'):
+            if self.spec.satisfies("@0.8.1:"):
                 cfg.write(cmake_cache_entry("ENABLE_DRAY", "ON"))
                 cfg.write(cmake_cache_entry("ENABLE_APCOMP", "ON"))
             else:
                 cfg.write("# devil ray from spack \n")
-                cfg.write(cmake_cache_entry("DRAY_DIR", spec['dray'].prefix))
+                cfg.write(cmake_cache_entry("DRAY_DIR", spec["dray"].prefix))
         else:
-            if self.spec.satisfies('@0.8.1:'):
+            if self.spec.satisfies("@0.8.1:"):
                 cfg.write("# devil ray\n")
                 cfg.write(cmake_cache_entry("ENABLE_DRAY", "OFF"))
                 cfg.write(cmake_cache_entry("ENABLE_APCOMP", "OFF"))
