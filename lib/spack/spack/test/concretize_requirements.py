@@ -413,3 +413,18 @@ def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages
     spec = Spec("callpath ^zmpi")
     with pytest.raises(UnsatisfiableSpecError):
         spec.concretize()
+
+
+def test_non_existing_variants_under_all(concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+    packages:
+      all:
+        require:
+        - any_of: ["~foo", "@:"]
+    """
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath ^zmpi").concretized()
+    assert "~foo" not in spec
