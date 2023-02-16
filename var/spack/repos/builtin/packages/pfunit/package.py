@@ -84,7 +84,7 @@ class Pfunit(CMakePackage):
     conflicts(
         "^cmake@3.25.0",
         when="@4.0.0:",
-        msg="CMake 3.25.0 has a bug with pFUnit. Please use an older or newer version.",
+        msg="CMake 3.25.0 has a bug with pFUnit. Please use another version.",
     )
 
     conflicts(
@@ -94,7 +94,7 @@ class Pfunit(CMakePackage):
     )
 
     # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
-    conflicts("+shared", when="@4.0.0:")
+    conflicts("+shared", when="@4.0.0:4.1.5")
     conflicts("+use_comm_world", when="~mpi")
     patch("mpi-test.patch", when="@:3 +use_comm_world")
 
@@ -123,34 +123,47 @@ class Pfunit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            "-DPYTHON_EXECUTABLE=%s" % spec["python"].command,
+            self.define("PYTHON_EXECUTABLE", spec["python"].command),
             self.define_from_variant("BUILD_SHARED", "shared"),
-            "-DCMAKE_Fortran_MODULE_DIRECTORY=%s" % spec.prefix.include,
+            self.define("CMAKE_Fortran_MODULE_DIRECTORY", spec.prefix.include),
             self.define_from_variant("BUILD_DOCS", "docs"),
         ]
 
         if spec.satisfies("@4.0.0:"):
-            args.append("-DSKIP_MPI=%s" % ("YES" if "~mpi" in spec else "NO"))
-            args.append("-DSKIP_OPENMP=%s" % ("YES" if "~openmp" in spec else "NO"))
-            args.append("-DSKIP_FHAMCREST=%s" % ("YES" if "~fhamcrest" in spec else "NO"))
-            args.append("-DSKIP_ESMF=%s" % ("YES" if "~esmf" in spec else "NO"))
-            args.append("-DMAX_ASSERT_RANK=%s" % spec.variants["max_array_rank"].value)
+            args.extend(
+                [
+                    self.define("SKIP_MPI", self.spec.satisfies("~mpi")),
+                    self.define("SKIP_OPENMP", self.spec.satisfies("~openmp")),
+                    self.define("SKIP_FHAMCREST", self.spec.satisfies("~fhamcrest")),
+                    self.define("SKIP_ESMF", self.spec.satisfies("~esmf")),
+                    self.define_from_variant("MAX_ASSERT_RANK", "max_array_rank"),
+                ]
+            )
         else:
             if spec.satisfies("%gcc@10:"):
-                args.append("-DCMAKE_Fortran_FLAGS_DEBUG=-g -O2 -fallow-argument-mismatch")
+                args.append(
+                    self.define("CMAKE_Fortran_FLAGS_DEBUG", "-g -O2 -fallow-argument-mismatch")
+                )
 
-            args.append(self.define_from_variant("MPI", "mpi"))
-            args.append(self.define_from_variant("OPENMP", "openmp"))
-            args.append("-DMAX_RANK=%s" % spec.variants["max_array_rank"].value)
+            args.extend(
+                [
+                    self.define_from_variant("MPI", "mpi"),
+                    self.define_from_variant("OPENMP", "openmp"),
+                    self.define_from_variant("MAX_RANK", "max_array_rank"),
+                ]
+            )
 
         if spec.satisfies("@:4.2.1") and spec.satisfies("%gcc@5:"):
             # prevents breakage when max_array_rank is larger than default. Note
             # that 4.0.0-4.2.1 still had a 512 limit
-            args.append("-DCMAKE_Fortran_FLAGS=-ffree-line-length-none")
+            args.append(self.define("CMAKE_Fortran_FLAGS", "-ffree-line-length-none"))
 
         if spec.satisfies("+mpi"):
             args.extend(
-                ["-DMPI_USE_MPIEXEC=YES", "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc]
+                [
+                    self.define("MPI_USE_MPIEXEC", True),
+                    self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
+                ]
             )
 
         return args
