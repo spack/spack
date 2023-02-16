@@ -9,8 +9,7 @@ from spack.package import *
 
 
 class Pfunit(CMakePackage):
-    """
-    pFUnit is a unit testing framework enabling JUnit-like testing of
+    """pFUnit is a unit testing framework enabling JUnit-like testing of
     serial and MPI-parallel software written in Fortran.
     """
 
@@ -20,6 +19,7 @@ class Pfunit(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    version("4.6.3", sha256="a43a64c4338be57fdbe1cae1a89e277196f10931bc1f73418a463e05e5e7b2d1")
     version("4.6.2", sha256="fd302a1f7a131b38e18bc31ede69a216e580c640152e5e313f5a1e084669a950")
     version("4.6.1", sha256="19de22ff0542ca900aaf2957407f24d7dadaccd993ea210beaf22032d3095add")
     version("4.6.0", sha256="7c768ea3a2d16d8ef6229b25bd7756721c24a18db779c7422afde0e3e2248d72")
