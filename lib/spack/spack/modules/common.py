@@ -403,9 +403,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
             if not writer.conf.excluded:
-                err_msg = "No module available for package {0} at {1}".format(
-                    spec, writer.layout.filename
-                )
+                err_msg = f"The module for package {spec.name}@{spec.version}/{spec.dag_hash()[:10]} should be at {writer.layout.filename} but it does not exist!"
                 raise ModuleNotFoundError(err_msg)
             elif required:
                 tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))
