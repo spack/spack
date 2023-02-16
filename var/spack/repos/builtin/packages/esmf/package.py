@@ -325,12 +325,12 @@ class Esmf(MakefilePackage):
         if "+netcdf" in spec:
             # ESMF provides the ability to read Grid and Mesh data in
             # NetCDF format.
-            env.set["ESMF_NETCDF"] = "nc-config"
-            env.set["ESMF_NFCONFIG"] = "nf-config"
+            env.set("ESMF_NETCDF", "nc-config")
+            env.set("ESMF_NFCONFIG", "nf-config")
             if spec["netcdf-c"].satisfies("~shared"):
                 nc_config = which("nc-config")
                 nc_flags = nc_config("--libs", output=str).strip()
-                env.set["ESMF_NETCDF_LIBS"] = nc_flags
+                env.set("ESMF_NETCDF_LIBS", nc_flags)
 
         ###################
         # Parallel-NetCDF #
