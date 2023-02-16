@@ -596,15 +596,14 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
             make_inc = join_path(self.stage.source_path, "make.inc")
             filter_file("FOX_FLAGS = -D__PGI", "FOX_FLAGS = -D__PGI -cpp", make_inc)
 
-
         # QE 6.8 and later has parallel builds fixed
         if spec.satisfies("@:6.7"):
             parallel_build_on = False
         else:
             parallel_build_on = True
-        # Parallel build fails with 7.1 
+        # Parallel build fails with 7.1
         if spec.satisfies("@7.1"):
-            parallel_build_on = False    
+            parallel_build_on = False
 
         if "+epw" in spec:
             make("all", "epw", parallel=parallel_build_on)
