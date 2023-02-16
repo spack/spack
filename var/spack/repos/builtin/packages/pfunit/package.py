@@ -195,13 +195,5 @@ class Pfunit(CMakePackage):
         raise InstallError("Unsupported compiler.")
 
     def setup_build_environment(self, env):
-        env.set("PFUNIT", self.spec.prefix)
-        env.set("F90_VENDOR", self.compiler_vendor())
-
-    def setup_run_environment(self, env):
-        env.set("PFUNIT", self.spec.prefix)
-        env.set("F90_VENDOR", self.compiler_vendor())
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("PFUNIT", self.spec.prefix)
-        env.set("F90_VENDOR", self.compiler_vendor())
+        if self.spec.satisfies("@:3"):
+            env.set("F90_VENDOR", self.compiler_vendor())
