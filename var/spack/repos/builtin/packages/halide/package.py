@@ -119,10 +119,7 @@ class Halide(CMakePackage, PythonExtension):
 def get_llvm_targets_to_build(spec):
     targets = spec.variants["targets"].value
     llvm_targets = set()
-
-    for t in targets:
-        llvm_targets.add((t, True))
-
+    
     # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
     spack_to_cmake = {
         "aarch64": "AArch64",
@@ -135,6 +132,9 @@ def get_llvm_targets_to_build(spec):
         "webassembly": "WebAssembly",
         "x86": "X86",
     }
+    
+    for t in targets:
+        llvm_targets.add((spack_to_cmake[t], True))
 
     if spec.target.family in ("x86", "x86_64"):
         llvm_targets.add(("X86", True))
