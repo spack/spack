@@ -20,7 +20,7 @@ class PyCmakeFormat(PythonPackage):
     variant("yaml", default=False, description="Support for YAML config files")
     variant("htmlgen", default=False, description="Support for HTML annotator")
 
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     depends_on("py-six@1.13.0:", type=("build", "run"))
 
     depends_on("py-pyyaml@5.3:", when="+yaml", type=("build", "run"))
