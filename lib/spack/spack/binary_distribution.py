@@ -1198,40 +1198,42 @@ def _build_tarball(
     ):
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
-    # make a copy of the install directory to work with
-    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
-    # install_tree copies hardlinks
-    # create a temporary tarfile from prefix and exract it to workdir
-    # tarfile preserves hardlinks
-    temp_tarfile_name = tarball_name(spec, ".tar")
-    temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
-    with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
-        tar.add(name="%s" % spec.prefix, arcname=".")
-    with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
-        tar.extractall(workdir)
-    os.remove(temp_tarfile_path)
+    pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
+    workdir = os.path.join(tmpdir, pkg_dir)
+
+    # TODO: We generally don't want to mutate any files, but when using relative
+    # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
+    # For now, we only make a full copy of the spec prefix when in relative mode.
+
+    if relative:
+        # tarfile is used because it preserves hardlink etc best.
+        binaries_dir = workdir
+        temp_tarfile_name = tarball_name(spec, ".tar")
+        temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
+        with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
+            tar.add(name="%s" % spec.prefix, arcname=".")
+        with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
+            tar.extractall(workdir)
+        os.remove(temp_tarfile_path)
+    else:
+        binaries_dir = spec.prefix
+        mkdirp(os.path.join(workdir, ".spack"))
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    if relative:
-        try:
+    try:
+        if relative:
             make_package_relative(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            tty.die(e)
-    else:
-        try:
-            check_package_relocatable(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            tty.die(e)
+        elif not allow_root:
+            ensure_package_relocatable(workdir, binaries_dir)
+    except Exception as e:
+        shutil.rmtree(workdir)
+        shutil.rmtree(tarfile_dir)
+        shutil.rmtree(tmpdir)
+        tty.die(e)
 
     # create gzip compressed tarball of the install prefix
     # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
@@ -1239,7 +1241,13 @@ def _build_tarball(
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
     # So we follow gzip.
     with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
-        tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
+        tar.add(name=binaries_dir, arcname=pkg_dir)
+        if not relative:
+            # Add buildinfo file
+            buildinfo_path = buildinfo_file_name(workdir)
+            buildinfo_arcname = buildinfo_file_name(pkg_dir)
+            tar.add(name=buildinfo_path, arcname=buildinfo_arcname)
+
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -1567,16 +1575,11 @@ def make_package_relative(workdir, spec, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def check_package_relocatable(workdir, spec, allow_root):
-    """
-    Check if package binaries are relocatable.
-    Change links to placeholder links.
-    """
+def ensure_package_relocatable(workdir, binaries_dir):
+    """Check if package binaries are relocatable."""
     buildinfo = read_buildinfo_file(workdir)
-    cur_path_names = list()
-    for filename in buildinfo["relocate_binaries"]:
-        cur_path_names.append(os.path.join(workdir, filename))
-    allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
+    binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
+    relocate.ensure_binaries_are_relocatable(binaries)
 
 
 def dedupe_hardlinks_if_necessary(root, buildinfo):
