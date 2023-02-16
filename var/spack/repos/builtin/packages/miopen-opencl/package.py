@@ -120,9 +120,7 @@ class MiopenOpencl(CMakePackage):
     depends_on("half", type="build")
     depends_on("miopengemm@1.1.6", type="link", when="@3.5.0")
 
-    for ver in [
-        "3.5.0",
-    ]:
+    for ver in ["3.5.0"]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("rocm-opencl@" + ver, when="@" + ver)
 
