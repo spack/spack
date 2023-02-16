@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-
+from os import environ
 
 class Slate(CMakePackage, CudaPackage, ROCmPackage):
     """The Software for Linear Algebra Targeting Exascale (SLATE) project is
@@ -115,9 +115,13 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources(["examples"])
 
     def mpi_launcher(self):
-        if self.spec["mpi"].satisfies("+pmi") and self.spec["slurm"]:
-            return which("srun", path=self.spec["slurm"].prefix.bin)
-        return which("mpirun", "mpiexec", path=self.spec["mpi"].prefix.bin)
+        searchpath = [self.spec["mpi"].prefix.bin, environ.get("PATH", "")]
+        try:
+            searchpath.insert(0, self.spec["slurm"].prefix.bin)
+        except KeyError:
+            print("Slurm not found, ignoring.")
+        commands = ["srun", "mpirun", "mpiexec"]
+        return which(*commands, path=searchpath) or which(*commands)
 
     def test(self):
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
