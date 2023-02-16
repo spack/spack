@@ -46,7 +46,6 @@ class Pfunit(CMakePackage):
     version("3.2.10", sha256="b9debba6d0e31b682423ffa756531e9728c10acde08c4d8e1609b4554f552b1a", deprecated=True)
     version("3.2.9", sha256="403f9a150865700c8b4240fd033162b8d3e8aeefa265c50c5a6fe14c455fbabc", deprecated=True)
 
-    variant("shared", default=True, description="Build shared library in addition to static")
     variant("mpi", default=False, description="Enable MPI")
     variant("use_comm_world", default=False, description="Enable MPI_COMM_WORLD for testing", when="@:3 +mpi")
     variant("openmp", default=False, description="Enable OpenMP")
@@ -95,9 +94,6 @@ class Pfunit(CMakePackage):
         msg="pFUnit requires GCC 8.4.0 or newer",
     )
 
-    # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
-    conflicts("+shared", when="@4.0.0:4.1.5")
-
     patch("mpi-test.patch", when="+use_comm_world")
 
     def patch(self):
@@ -126,7 +122,7 @@ class Pfunit(CMakePackage):
         spec = self.spec
         args = [
             self.define("Python_EXECUTABLE", spec["python"].command),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_SHARED_LIBS", False),
             self.define("CMAKE_Fortran_MODULE_DIRECTORY", spec.prefix.include),
             self.define_from_variant("ENABLE_BUILD_DOXYGEN", "docs"),
             self.define("ENABLE_TESTS", self.run_tests),
