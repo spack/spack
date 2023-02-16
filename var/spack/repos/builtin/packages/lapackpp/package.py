@@ -25,9 +25,9 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     by the Innovative Computing Laboratory at the University of Tennessee,
     Knoxville."""
 
-    homepage = "https://bitbucket.org/icl/lapackpp"
+    homepage = "https://github.com/icl-utk-edu/lapackpp"
     git = homepage
-    url = "https://bitbucket.org/icl/lapackpp/downloads/lapackpp-2020.09.00.tar.gz"
+    url = "https://github.com/icl-utk-edu/lapackpp/releases/download/v2023.01.00/lapackpp-2023.01.00.tar.gz"
     maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
     version("master", branch="master")
