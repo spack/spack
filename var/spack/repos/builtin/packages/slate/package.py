@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 from os import environ
+
+from spack.package import *
 
 
 class Slate(CMakePackage, CudaPackage, ROCmPackage):
