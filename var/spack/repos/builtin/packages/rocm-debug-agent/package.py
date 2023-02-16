@@ -13,12 +13,13 @@ class RocmDebugAgent(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent"
     git = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-debug-agent"]
 
+    version("5.4.3", sha256="b2c9ac198ea3cbf35e7e80f57c5d81c461de78b821d07b637ea4037a65cdf49f")
     version("5.4.0", sha256="94bef73ea0a6d385dab2292ee591ca1dc268a5585cf9f1b5092a1530949f575e")
     version("5.3.3", sha256="7170312d08e91334ee03586aa1f23d67f33d9ec0df25a5556cbfa3f210b15b06")
     version("5.3.0", sha256="8dfb6aa442ce136207c0c089321c8099042395977b4a488e4ca219661df0cd78")
@@ -140,6 +141,7 @@ class RocmDebugAgent(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -166,6 +168,7 @@ class RocmDebugAgent(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-dbgapi@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)

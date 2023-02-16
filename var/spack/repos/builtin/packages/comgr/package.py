@@ -14,7 +14,7 @@ class Comgr(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
     git = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git"
-    url = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
@@ -22,6 +22,7 @@ class Comgr(CMakePackage):
 
     version("master", branch="amd-stg-open")
 
+    version("5.4.3", sha256="8af18035550977fe0aa9cca8dfacbe65fe292e971de5a0e160710bafda05a81f")
     version("5.4.0", sha256="f4b83b27ff6195679d695c3f41fa25456e9c50bae6d978f46d3541b472aef757")
     version("5.3.3", sha256="6a4ef69e672a077b5909977248445f0eedf5e124af9812993a4d444be030c78b")
     version("5.3.0", sha256="072f849d79476d87d31d62b962e368762368d540a9da02ee2675963dc4942b2c")
@@ -144,6 +145,7 @@ class Comgr(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep

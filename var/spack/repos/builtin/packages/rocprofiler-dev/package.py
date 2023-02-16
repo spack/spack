@@ -13,12 +13,13 @@ class RocprofilerDev(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
     git = "https://github.com/ROCm-Developer-Tools/rocprofiler.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.4.0.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocprofiler64"]
 
+    version("5.4.3", sha256="86c3f43ee6cb9808796a21409c853cc8fd496578b9eef4de67ca77830229cac1")
     version("5.4.0", sha256="0322cbe5d1d3182e616f472da31f0707ad6040833c38c28f2b39381a85210f43")
     version("5.3.3", sha256="07ee28f3420a07fc9d45910e78ad7961b388109cfc0e74cfdf2666789e6af171")
     version("5.3.0", sha256="b0905a329dc1c97a362b951f3f8ef5da9d171cabb001ed4253bd59a2742e7d39")
@@ -129,6 +130,7 @@ class RocprofilerDev(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
