@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import platform
 
 from spack.build_systems.generic import GenericBuilder
 from spack.package import *
