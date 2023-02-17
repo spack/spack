@@ -40,7 +40,7 @@ class GenericBuilder(GenericBuilder):
     phases = ["build", "install"]
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in self.pkg.spec.target.family
 
     def build(self, spec, prefix):
         if spec.satisfies("%msvc"):
