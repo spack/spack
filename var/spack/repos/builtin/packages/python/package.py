@@ -1074,6 +1074,10 @@ class AutotoolsBuilder(AutotoolsBuilder, RunAfter, BuildEnvironment):
 
         return config_args
 
+    def install(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            make(*self.install_targets, parllel=False)
+
 
 class GenericBuilder(GenericBuilder, RunAfter, BuildEnvironment):
     phases = ("build", "install")
