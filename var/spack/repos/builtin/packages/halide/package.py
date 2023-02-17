@@ -26,15 +26,44 @@ class Halide(CMakePackage, PythonExtension):
     variant("tutorials", default=False, description="Install the Halide Tutorials.")
     variant("utils", default=False, description="Install the Halide Utilities.")
     variant("tests", default=False, description="Build and Run Halide Tests and Apps.")
+    variant("opencl", default=False, description="Build Non-llvm based OpenCl-C backend.")
+    variant("metal", default=False, description="Build Non-llvm based Metal backend.")
+    variant(
+        "d3d12", default=False, description="Build Non-llvm based Direct3D 12 Compute backend."
+    )
     extends("python", when="+python")
+    _values = (
+        "aarch64",
+        "amdgpu",
+        "arm",
+        "hexagon",
+        "nvptx",
+        "powerpc",
+        "riscv",
+        "webassembly",
+        "x86",
+    )
+    variant(
+        "targets",
+        default="arm,x86,nvptx,aarch64,hexagon,webassembly",
+        description=("What targets to build. Spack's target family is always added "),
+        values=_values,
+        multi=True,
+    )
+    variant("sharedllvm", default=False, description="Link to the shared version of LLVM.")
 
-    _targets = " targets=arm,x86,nvptx,aarch64,hexagon,webassembly "
     depends_on("cmake@3.22:", type="build")
     depends_on("ninja", type="build")
     depends_on(
-        "llvm@14.0.0:14+clang+lld" + _targets + " build_type=Release",
+        "llvm@14.0.0:14+clang+lld build_type=Release",
         type=("link", "run"),
     )
+    for v in _values:
+        depends_on(
+            "llvm targets={0}".format(v), type=("link", "run"), when="targets={0}".format(v)
+        )
+    depends_on("llvm+llvm_dylib", type=("link", "run"), when="+sharedllvm")
+
     depends_on("libjpeg", type=("build", "link", "run"))
     depends_on("libpng", type=("build", "link", "run"))
 
@@ -55,24 +84,68 @@ class Halide(CMakePackage, PythonExtension):
         return find_libraries("libHalide", root=self.prefix, recursive=True)
 
     def cmake_args(self):
+        # See https://github.com/halide/Halide/blob/main/README_cmake.md#building-halide-with-cmake
         spec = self.spec
         llvm_config = Executable(spec["llvm"].prefix.bin.join("llvm-config"))
         llvmdir = llvm_config("--cmakedir", output=str)
         args = [
-            self.define("Python3_EXECUTABLE", spec["python"].command.path),
-            self.define("PYBIND11_USE_FETCHCONTENT", False),
             self.define("LLVM_DIR", llvmdir),
             self.define_from_variant("WITH_TESTS", "tests"),
             self.define_from_variant("WITH_TUTORIALS", "tutorials"),
             self.define_from_variant("WITH_UTILS", "utils"),
             self.define_from_variant("WITH_PYTHON_BINDINGS", "python"),
+            self.define_from_variant("Halide_SHARED_LLVM", "sharedllvm"),
             self.define("WITH_WABT", False),
+            self.define_from_variant("TARGET_OPENCL", "opencl"),
+            self.define_from_variant("TARGET_METAL", "metal"),
+            self.define_from_variant("TARGET_D3D12COMPUTE", "d3d12"),
         ]
+        llvm_targets = get_llvm_targets_to_build(spec)
+        for target in llvm_targets:
+            args += [self.define("TARGET_{0}".format(target[0]), target[1])]
+
         if "+python" in spec:
             args += [
+                self.define("Python3_EXECUTABLE", spec["python"].command.path),
+                self.define("PYBIND11_USE_FETCHCONTENT", False),
                 self.define(
                     "Halide_INSTALL_PYTHONDIR",
                     python_platlib,
-                )
+                ),
             ]
         return args
+
+
+def get_llvm_targets_to_build(spec):
+    targets = spec.variants["targets"].value
+    llvm_targets = set()
+    # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
+    spack_to_cmake = {
+        "aarch64": "AARCH64",
+        "amdgpu": "AMDGPU",
+        "arm": "ARM",
+        "hexagon": "HEXAGON",
+        "nvptx": "NVPTX",
+        "powerpc": "POWERPC",
+        "riscv": "RISCV",
+        "webassembly": "WEBASSEMBLY",
+        "x86": "X86",
+    }
+    for t in targets:
+        llvm_targets.add((spack_to_cmake[t], True))
+
+    if spec.target.family in ("x86", "x86_64"):
+        llvm_targets.add(("X86", True))
+    elif spec.target.family == "arm":
+        llvm_targets.add(("ARM", True))
+    elif spec.target.family == "aarch64":
+        llvm_targets.add(("AARCH64", True))
+    elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
+        llvm_targets.add(("POWERPC", True))
+
+    # for everything not represented, we add False
+    for v in spack_to_cmake.values():
+        if (v, True) not in llvm_targets:
+            llvm_targets.add((v, False))
+
+    return list(llvm_targets)
