@@ -2,7 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+import subprocess
 
 
 class Nccmp(CMakePackage):
@@ -15,4 +20,33 @@ class Nccmp(CMakePackage):
     version("1.8.9.0", sha256="da5d2b4dcd52aec96e7d96ba4d0e97efebbd40fe9e640535e5ee3d5cd082ae50")
     version("1.8.2.0", sha256="7f5dad4e8670568a71f79d2bcebb08d95b875506d3d5faefafe1a8b3afa14f18")
 
-    depends_on("netcdf-c")
+    depends_on("cmake@3.12:", type="build")
+    depends_on("netcdf-c", type=("build", "run"))
+    depends_on("mpi", when="^netcdf-c+mpi~shared")
+
+    def cmake_args(self):
+        args = []
+        cflags = []
+
+        if self.spec.satisfies("%intel"):
+            cflags.append("-std=c99")
+
+        if cflags:
+            args.append(self.define("CMAKE_C_FLAGS", " ".join(cflags)))
+
+        nc = self.spec["netcdf-c"]
+        if "~shared" in nc:
+            nc_pc_cmd = ["nc-config","--static","--libs"]
+            nc_flags = \
+              subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+            args.append(self.define("CMAKE_EXE_LINKER_FLAGS", nc_flags))
+            if "+mpi" in nc:
+                args.append(
+                  self.define(
+                    "CMAKE_C_COMPILER",
+                    self.spec["mpi"].mpicc
+                  )
+                )
+
+        return args
+
