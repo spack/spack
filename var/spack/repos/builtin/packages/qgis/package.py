@@ -17,13 +17,13 @@ class Qgis(CMakePackage):
 
     maintainers("adamjstewart", "Sinan81")
 
+    version("3.28.3", sha256="a09124f46465a520f6d735306ba3954c339b84aa396d6f52b476b82edcc4fe0e")
     # Prefer latest long term release
     version(
-        "3.28.3",
-        sha256="a09124f46465a520f6d735306ba3954c339b84aa396d6f52b476b82edcc4fe0e",
+        "3.22.16",
+        sha256="dbd1f8a639291bb2492eea61e4ef96079d7b27d3dfa538dab8cd98f31429254a",
         preferred=True,
     )
-    version("3.22.16", sha256="dbd1f8a639291bb2492eea61e4ef96079d7b27d3dfa538dab8cd98f31429254a")
     version("3.22.0", sha256="cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b")
     version("3.18.2", sha256="1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d")
     version("3.16.12", sha256="65e9634b5c885c98f3555cf77bc2e3fae5e19279aa17e3f6626ff5d7455fd2b9")
