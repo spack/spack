@@ -72,7 +72,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            Executable(os.path.join(os.curdir, "build.sh"))()
+            Executable(os.path.join(self.stage.source_path, "build.sh"))()
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
