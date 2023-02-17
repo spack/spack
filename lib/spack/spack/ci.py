@@ -863,7 +863,8 @@ def generate_gitlab_ci_yaml(
                         f"There is no matching configuration for {release_spec}. Check "
                         f"the 'gitlab-ci:mappings' section of this pipeline stack."
                     )
-                    tty.die(msg)
+                    tty.warn(msg)
+                    continue
 
                 tags = [tag for tag in runner_attribs["tags"]]
 
