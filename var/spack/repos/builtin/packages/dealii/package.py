@@ -611,17 +611,9 @@ class Dealii(CMakePackage, CudaPackage):
         # As a final step, collect CXX flags that may have been
         # added anywhere above:
         if len(cxx_flags_release) > 0 and "+optflags" in spec:
-            options.extend(
-                [
-                    self.define("CMAKE_CXX_FLAGS_RELEASE", " ".join(cxx_flags_release)),
-                ]
-            )
+            options.extend([self.define("CMAKE_CXX_FLAGS_RELEASE", " ".join(cxx_flags_release))])
         if len(cxx_flags) > 0:
-            options.extend(
-                [
-                    self.define("CMAKE_CXX_FLAGS", " ".join(cxx_flags)),
-                ]
-            )
+            options.extend([self.define("CMAKE_CXX_FLAGS", " ".join(cxx_flags))])
 
         # Add flags for machine vectorization, used when tutorials
         # and user code is built.

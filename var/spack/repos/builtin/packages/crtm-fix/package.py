@@ -15,11 +15,7 @@ class CrtmFix(Package):
     url = "ftp://ftp.ssec.wisc.edu/pub/s4/CRTM/fix_REL-2.3.0_emc.tgz"
 
     maintainers(
-        "BenjaminTJohnson",
-        "edwardhartnett",
-        "AlexanderRichert-NOAA",
-        "Hang-Lei-NOAA",
-        "climbfuji",
+        "BenjaminTJohnson", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "climbfuji"
     )
 
     version("2.4.0_emc", sha256="88d659ae5bc4434f7fafa232ff65b4c48442d2d1a25f8fc96078094fa572ac1a")

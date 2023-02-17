@@ -98,10 +98,7 @@ class Go(Package):
     @when("@:1.4.3")
     def patch(self):
         test_suite_file = FileFilter(join_path("src", "run.bash"))
-        test_suite_file.filter(
-            r"^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$",
-            r"# \1\2\3",
-        )
+        test_suite_file.filter(r"^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$", r"# \1\2\3")
 
     def install(self, spec, prefix):
         bash = which("bash")

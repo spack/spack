@@ -56,7 +56,6 @@ class Damaris(CMakePackage):
     depends_on("boost+thread+log+filesystem+date_time+python+numpy @1.67:", when="+python")
 
     def cmake_args(self):
-
         args = []
         if not self.spec.variants["static"].value:
             args.extend(["-DBUILD_SHARED_LIBS=ON"])

@@ -53,7 +53,7 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared library")
 
     # Match each LAPACK++ version to a specific BLAS++ version
-    for (lpp_ver, bpp_ver) in _versions:
+    for lpp_ver, bpp_ver in _versions:
         depends_on("blaspp@" + bpp_ver, when="@" + lpp_ver)
 
     depends_on("blaspp ~cuda", when="~cuda")

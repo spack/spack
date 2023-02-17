@@ -514,7 +514,6 @@ def test_ccld_with_system_dirs(wrapper_environment):
         SPACK_RPATH_DIRS="xlib:ylib:zlib",
         SPACK_LINK_DIRS="xlib:ylib:zlib",
     ):
-
         sys_path_args = [
             "-I/usr/include",
             "-L/usr/local/lib",
@@ -551,7 +550,6 @@ def test_ccld_with_system_dirs_isystem(wrapper_environment):
         SPACK_RPATH_DIRS="xlib:ylib:zlib",
         SPACK_LINK_DIRS="xlib:ylib:zlib",
     ):
-
         sys_path_args = [
             "-isystem",
             "/usr/include",
@@ -717,15 +715,9 @@ def test_keep_and_replace(wrapper_environment):
     werror_specific = ["-Werror=meh"]
     werror = ["-Werror"]
     werror_all = werror_specific + werror
-    with set_env(
-        SPACK_COMPILER_FLAGS_KEEP="",
-        SPACK_COMPILER_FLAGS_REPLACE="-Werror*|",
-    ):
+    with set_env(SPACK_COMPILER_FLAGS_KEEP="", SPACK_COMPILER_FLAGS_REPLACE="-Werror*|"):
         check_args_contents(cc, test_args + werror_all, ["-Wl,--end-group"], werror_all)
-    with set_env(
-        SPACK_COMPILER_FLAGS_KEEP="-Werror=*",
-        SPACK_COMPILER_FLAGS_REPLACE="-Werror*|",
-    ):
+    with set_env(SPACK_COMPILER_FLAGS_KEEP="-Werror=*", SPACK_COMPILER_FLAGS_REPLACE="-Werror*|"):
         check_args_contents(cc, test_args + werror_all, werror_specific, werror)
     with set_env(
         SPACK_COMPILER_FLAGS_KEEP="-Werror=*",

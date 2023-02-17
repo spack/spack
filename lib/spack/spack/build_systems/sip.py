@@ -61,10 +61,7 @@ class SIPPackage(spack.package_base.PackageBase):
             list: list of strings of module names
         """
         modules = []
-        root = os.path.join(
-            self.prefix,
-            self.spec["python"].package.platlib,
-        )
+        root = os.path.join(self.prefix, self.spec["python"].package.platlib)
 
         # Some Python libraries are packages: collections of modules
         # distributed in directories containing __init__.py files

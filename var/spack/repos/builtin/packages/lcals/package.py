@@ -33,7 +33,6 @@ class Lcals(MakefilePackage):
 
     @property
     def build_targets(self):
-
         targets = []
 
         cxxflags = "-std=c++0x "

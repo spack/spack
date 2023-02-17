@@ -72,7 +72,6 @@ class Papyrus(CMakePackage):
         ]
 
         for example in example_list:
-
             test_dir = join_path(self.test_suite.current_test_cache_dir, "kv", "tests", example)
             test_example = "test{0}.c".format(example)
 

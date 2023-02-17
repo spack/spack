@@ -229,6 +229,7 @@ class ArchSpec(object):
                 Otherwise information on platform, OS and target should be
                 passed in either as a spec string or as a tuple.
         """
+
         # If the argument to __init__ is a spec string, parse it
         # and construct an ArchSpec
         def _string_or_none(s):
@@ -731,7 +732,6 @@ _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "c
 
 
 class FlagMap(lang.HashableMap):
-
     __slots__ = ("spec",)
 
     def __init__(self, spec):
@@ -1221,7 +1221,6 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec(object):
-
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
@@ -1550,12 +1549,7 @@ class Spec(object):
                 "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
             )
 
-    def add_dependency_edge(
-        self,
-        dependency_spec: "Spec",
-        *,
-        deptypes: dp.DependencyArgument,
-    ):
+    def add_dependency_edge(self, dependency_spec: "Spec", *, deptypes: dp.DependencyArgument):
         """Add a dependency edge to this spec.
 
         Args:
@@ -2241,7 +2235,6 @@ class Spec(object):
 
             # Recurse on dependencies
             for s, s_dependencies in dep_like.items():
-
                 if isinstance(s, str):
                     dag_node, dependency_types = name_and_dependency_types(s)
                 else:
@@ -2897,7 +2890,6 @@ class Spec(object):
         try:
             deptree = self.traverse(root=False)
             for spec in deptree:
-
                 if spec.name not in flat_deps:
                     if copy:
                         spec = spec.copy(deps=False)
@@ -5245,7 +5237,6 @@ class ConflictsInSpecError(spack.error.SpecError, RuntimeError):
         match_fmt_custom = '{0}. "{1}" conflicts with "{2}" [{3}]\n'
 
         for idx, (s, c, w, msg) in enumerate(matches):
-
             if s not in visited:
                 visited.add(s)
                 long_message += "List of matching conflicts for spec:\n\n"

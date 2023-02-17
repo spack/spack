@@ -91,7 +91,6 @@ class Rmgdft(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-
         # create top-level directories
         mkdirp(prefix.bin)
         mkdirp(prefix.share.tests.RMG)

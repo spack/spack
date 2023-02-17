@@ -19,6 +19,5 @@ class Bamaddrg(MakefilePackage):
     depends_on("bamtools", type="build")
 
     def setup_build_environment(self, env):
-
         env.set("BAMTOOLS_ROOT", self.spec["bamtools"].prefix)
         env.set("PREFIX", self.prefix)

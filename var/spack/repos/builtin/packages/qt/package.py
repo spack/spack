@@ -578,7 +578,7 @@ class Qt(Package):
                 [
                     # NIS is deprecated in more recent glibc,
                     # but qt-5.6.3 does not recognize this option
-                    "-no-nis",
+                    "-no-nis"
                 ]
             )
 
@@ -698,12 +698,7 @@ class Qt(Package):
                 config_args.append("-no-feature-getentropy")
 
         if "~webkit" in spec:
-            config_args.extend(
-                [
-                    "-skip",
-                    "webengine" if version >= Version("5.6") else "qtwebkit",
-                ]
-            )
+            config_args.extend(["-skip", "webengine" if version >= Version("5.6") else "qtwebkit"])
 
         if spec.satisfies("@5.7"):
             config_args.extend(["-skip", "virtualkeyboard"])
@@ -743,12 +738,7 @@ class Qt(Package):
             # These options are only valid if 'multimedia' is enabled, i.e.
             # +opengl is selected. Force them to be off on macOS, but let other
             # platforms decide for themselves.
-            config_args.extend(
-                [
-                    "-no-pulseaudio",
-                    "-no-alsa",
-                ]
-            )
+            config_args.extend(["-no-pulseaudio", "-no-alsa"])
 
         if spec.satisfies("platform=darwin target=aarch64:"):
             # https://www.qt.io/blog/qt-on-apple-silicon

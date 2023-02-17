@@ -335,8 +335,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("ginkgo@1.4.0:", when="+ginkgo")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "ginkgo+cuda cuda_arch={0}".format(sm_),
-            when="+ginkgo+cuda cuda_arch={0}".format(sm_),
+            "ginkgo+cuda cuda_arch={0}".format(sm_), when="+ginkgo+cuda cuda_arch={0}".format(sm_)
         )
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
@@ -347,8 +346,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("hiop@0.4.6:+mpi", when="+hiop+mpi")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "hiop+cuda cuda_arch={0}".format(sm_),
-            when="+hiop+cuda cuda_arch={0}".format(sm_),
+            "hiop+cuda cuda_arch={0}".format(sm_), when="+hiop+cuda cuda_arch={0}".format(sm_)
         )
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
