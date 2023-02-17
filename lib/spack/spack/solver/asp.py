@@ -2131,8 +2131,8 @@ class SpackSolverSetup(object):
 
     def _get_versioned_specs_from_pkg_requirements(self):
         """If package requirements mention versions that are not mentioned
-           elsewhere, then we need to collect those to mark them as possible
-           versions.
+        elsewhere, then we need to collect those to mark them as possible
+        versions.
         """
         req_version_specs = list()
         config = spack.config.get("packages")
