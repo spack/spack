@@ -1344,15 +1344,8 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
         (True, False, True),  # install log file, print contents
     ],
 )
-def test_print_test_log(
-    tmpdir,
-    mock_packages,
-    install_mockery,
-    capsys,
-    monkeypatch,
-    installed,
-    staged,
-    verbose,
+def test_print_install_test_log(
+    tmpdir, mock_packages, install_mockery, capsys, monkeypatch, installed, staged, verbose
 ):
     pkg = "py-test-callback"
     content = """
@@ -1389,7 +1382,8 @@ def test_print_test_log(
     s = spack.spec.Spec(pkg).concretized()
     write_outputs(s.package)
 
-    inst._print_test_log(s.package, verbose)
+    s.package.run_tests = True
+    inst._print_install_test_log(s.package, verbose)
     captured = str(capsys.readouterr())
 
     for e in expected:
