@@ -43,7 +43,7 @@ class PyAwkward(PythonPackage):
     patch("pybind11.patch", when="@:1.2.2")
     patch("pybind11_02.patch", when="@1.2.3:1.8.0")
 
-    depends_on("py-setuptools@42.0:", when=":1", type=("build", "run"))
+    depends_on("py-setuptools@42.0:", when="@:1", type=("build", "run"))
     depends_on("py-pyyaml", type="build")
     depends_on("py-hatchling@1.10:", when="@2:", type="build")
     depends_on("py-hatch-fancy-pypi-readme", when="@2:", type="build")
