@@ -32,8 +32,6 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
     )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("ninja", type="build")
-
     depends_on("halide@14.0.0:", type=("build", "link", "run"))
     depends_on("isl", type=("build", "link", "run"))
     depends_on("python@3.8:", type=("build", "link", "run"), when="+python")

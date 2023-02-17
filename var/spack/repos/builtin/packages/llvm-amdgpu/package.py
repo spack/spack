@@ -141,7 +141,6 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("z3", type="link")
     depends_on("zlib", type="link")
     depends_on("ncurses+termlib", type="link")
-    depends_on("ninja", type="build")
     depends_on("pkgconfig", type="build")
 
     # openmp dependencies

@@ -31,7 +31,6 @@ class Foundationdb(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     generator("ninja")
-    depends_on("ninja", type="build")
 
     def cmake_args(self):
         args = ["-DUSE_WERROR=ON"]

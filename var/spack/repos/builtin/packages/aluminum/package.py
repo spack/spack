@@ -146,7 +146,6 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+nccl", when="+rccl", msg="NCCL and RCCL support are mutually exclusive")
 
     generator("ninja")
-    depends_on("ninja", type="build")
 
     def cmake_args(self):
         spec = self.spec

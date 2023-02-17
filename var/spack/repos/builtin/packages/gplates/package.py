@@ -25,7 +25,6 @@ class Gplates(CMakePackage):
     depends_on("cmake@3.5:", when="@2.3:", type="build")
     depends_on("cmake@2.8.8:", when="@2.1", type="build")
     depends_on("cmake@2.6.2:", when="@2.0", type="build")
-    depends_on("ninja", type="build")
     depends_on("gl")
     depends_on("glu")
     depends_on("glew")

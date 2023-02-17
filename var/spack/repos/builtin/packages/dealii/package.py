@@ -140,7 +140,6 @@ class Dealii(CMakePackage, CudaPackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("lapack")
-    depends_on("ninja", type="build")
     depends_on("suite-sparse")
     depends_on("zlib")
 

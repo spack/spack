@@ -33,7 +33,6 @@ class PikaAlgorithms(CMakePackage):
 
     # Build dependencies
     depends_on("git", type="build")
-    depends_on("ninja", type="build")
     depends_on("cmake@3.22:", type="build")
 
     conflicts("%gcc@:8")

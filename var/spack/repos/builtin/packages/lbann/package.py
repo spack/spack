@@ -316,7 +316,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("zstr")
 
     generator("ninja")
-    depends_on("ninja", type="build")
 
     @property
     def common_config_args(self):

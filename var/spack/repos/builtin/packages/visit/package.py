@@ -99,7 +99,6 @@ class Visit(CMakePackage):
     conflicts("+gui", when="+osmesa")
 
     depends_on("cmake@3.14.7:", type="build")
-    depends_on("ninja", type="build")
 
     depends_on("mpi", when="+mpi")
 

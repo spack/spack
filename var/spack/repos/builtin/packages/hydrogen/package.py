@@ -140,7 +140,6 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     generator("ninja")
-    depends_on("ninja", type="build")
 
     @property
     def libs(self):

@@ -137,7 +137,6 @@ class Dd4hep(CMakePackage):
     )
 
     depends_on("cmake @3.12:", type="build")
-    depends_on("ninja", type="build")
     depends_on("boost @1.49:")
     depends_on("boost +iostreams", when="+ddg4")
     depends_on("boost +system +filesystem", when="%gcc@:7")
