@@ -428,7 +428,10 @@ class Gromacs(CMakePackage):
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= "zen2":
+        if target >= "zen4":
+            # AMD Family 17h (EPYC Genoa)
+            options.append("-DGMX_SIMD=AVX_512")
+        elif target >= "zen2":
             # AMD Family 17h (EPYC Rome)
             options.append("-DGMX_SIMD=AVX2_256")
         elif target >= "zen":
