@@ -26,7 +26,7 @@ class Spectre(CMakePackage):
 
     maintainers("nilsvu")
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("develop", branch="develop")
     version(

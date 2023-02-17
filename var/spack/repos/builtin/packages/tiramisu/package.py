@@ -16,7 +16,7 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
 
     maintainers("wraith1995")
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("master", branch="master")
     version("2023-2-8", commit="2cd0c43cc1656bfa43cfb6e81d06f770cbf7251e")

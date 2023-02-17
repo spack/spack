@@ -21,4 +21,4 @@ class Psimd(CMakePackage):
     depends_on("cmake@2.8.12:", type="build")
     depends_on("ninja", type="build")
 
-    generator = "Ninja"
+    generator("ninja")

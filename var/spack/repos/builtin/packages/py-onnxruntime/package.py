@@ -71,7 +71,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
         description="AVX support level",
     )
 
-    generator = "Ninja"
+    generator("ninja")
     root_cmakelists_dir = "cmake"
     build_directory = "."
 

@@ -17,7 +17,7 @@ class LlvmAmdgpu(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
     url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
-    generator = "Ninja"
+    generator("ninja")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 

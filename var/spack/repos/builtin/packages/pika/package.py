@@ -32,7 +32,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
 
-    generator = "Ninja"
+    generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
     cxxstds = ("17", "20")

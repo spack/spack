@@ -139,7 +139,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         msg="Hydrogen did not exist before v0.99. " + "Did you mean to use Elemental instead?",
     )
 
-    generator = "Ninja"
+    generator("ninja")
     depends_on("ninja", type="build")
 
     @property

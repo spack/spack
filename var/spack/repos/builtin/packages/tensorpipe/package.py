@@ -33,4 +33,4 @@ class Tensorpipe(CMakePackage):
     depends_on("ninja", type="build")
     depends_on("libuv@1.26:")
 
-    generator = "Ninja"
+    generator("ninja")

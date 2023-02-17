@@ -61,7 +61,7 @@ class Fbgemm(CMakePackage):
 
     conflicts("%gcc@:4", msg="FBGEMM requires GCC 5+")
 
-    generator = "Ninja"
+    generator("ninja")
 
     @run_before("cmake")
     def check_requirements(self):

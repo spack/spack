@@ -8,7 +8,7 @@ import os
 import platform
 import re
 import sys
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import llnl.util.filesystem as fs
 
@@ -16,7 +16,7 @@ import spack.build_environment
 import spack.builder
 import spack.package_base
 import spack.util.path
-from spack.directives import build_system, depends_on, variant
+from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
 
 from ._checks import BaseBuilder, execute_build_time_tests
@@ -33,6 +33,43 @@ def _extract_primary_generator(generator):
     """
     primary_generator = _primary_generator_extractor.match(generator).group(1)
     return primary_generator
+
+
+def generator(*names: str, default: Optional[str] = None):
+    """The build system generator to use.
+
+    See ``cmake --help`` for a list of valid generators.
+    Currently, "Unix Makefiles" and "Ninja" are the only generators
+    that Spack supports. Defaults to "Unix Makefiles".
+
+    See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
+    for more information.
+
+    Args:
+        names: allowed generators for this package
+        default: default generator
+    """
+    allowed_values = ("make", "ninja")
+    if any(x not in allowed_values for x in names):
+        msg = "only 'make' and 'ninja' are allowed for CMake's 'generator' directive"
+        raise ValueError(msg)
+
+    default = default or names[0]
+    not_used = [x for x in allowed_values if x not in names]
+
+    def _values(x):
+        return x in allowed_values
+
+    _values.__doc__ = f"{','.join(names)}"
+
+    variant(
+        "generator",
+        default=default,
+        values=_values,
+        description="the build system generator to use",
+    )
+    for x in not_used:
+        conflicts(f"generator={x}")
 
 
 class CMakePackage(spack.package_base.PackageBase):
@@ -67,8 +104,15 @@ class CMakePackage(spack.package_base.PackageBase):
             when="^cmake@3.9:",
             description="CMake interprocedural optimization",
         )
+
+        if sys.platform == "win32":
+            generator("ninja")
+        else:
+            generator("ninja", "make", default="make")
+
         depends_on("cmake", type="build")
-        depends_on("ninja", type="build", when="platform=windows")
+        depends_on("gmake", type="build", when="generator=make")
+        depends_on("ninja", type="build", when="generator=ninja")
 
     def flags_to_build_system_args(self, flags):
         """Return a list of all command line arguments to pass the specified
@@ -138,18 +182,6 @@ class CMakeBuilder(BaseBuilder):
         | :py:meth:`~.CMakeBuilder.build_directory`     | Directory where to |
         |                                               | build the package  |
         +-----------------------------------------------+--------------------+
-
-    The generator used by CMake can be specified by providing the ``generator``
-    attribute. Per
-    https://cmake.org/cmake/help/git-master/manual/cmake-generators.7.html,
-    the format is: [<secondary-generator> - ]<primary_generator>.
-
-    The full list of primary and secondary generators supported by CMake may be found
-    in the documentation for the version of CMake used; however, at this time Spack
-    supports only the primary generators "Unix Makefiles" and "Ninja." Spack's CMake
-    support is agnostic with respect to primary generators. Spack will generate a
-    runtime error if the generator string does not follow the prescribed format, or if
-    the primary generator is not supported.
     """
 
     #: Phases of a CMake package
@@ -160,7 +192,6 @@ class CMakeBuilder(BaseBuilder):
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes: Tuple[str, ...] = (
-        "generator",
         "build_targets",
         "install_targets",
         "build_time_test_callbacks",
@@ -170,16 +201,6 @@ class CMakeBuilder(BaseBuilder):
         "build_dirname",
         "build_directory",
     )
-
-    #: The build system generator to use.
-    #:
-    #: See ``cmake --help`` for a list of valid generators.
-    #: Currently, "Unix Makefiles" and "Ninja" are the only generators
-    #: that Spack supports. Defaults to "Unix Makefiles".
-    #:
-    #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
-    #: for more information.
-    generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
 
     #: Targets to be used during the build phase
     build_targets: List[str] = []
@@ -203,11 +224,19 @@ class CMakeBuilder(BaseBuilder):
         return self.pkg.stage.source_path
 
     @property
+    def generator(self):
+        if self.spec.satisfies("generator=make"):
+            return "Unix Makefiles"
+        if self.spec.satisfies("generator=ninja"):
+            return "Ninja"
+        msg = f'{self.spec.format()} has an unsupported value for the "generator" variant'
+        raise ValueError(msg)
+
+    @property
     def std_cmake_args(self):
         """Standard cmake arguments provided as a property for
         convenience of package writers
         """
-        # standard CMake arguments
         std_cmake_args = CMakeBuilder.std_args(self.pkg, generator=self.generator)
         std_cmake_args += getattr(self.pkg, "cmake_flag_args", [])
         return std_cmake_args

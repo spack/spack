@@ -84,7 +84,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
 
     # python/setup.py assumes libs can be found in build directory
     build_directory = "build"
-    generator = "Ninja"
+    generator("ninja")
 
     def setup_run_environment(self, env):
         env.set("MXNET_LIBRARY_PATH", self.spec["mxnet"].libs[0])

@@ -69,7 +69,7 @@ class Qnnpack(CMakePackage):
         placement="pthreadpool",
     )
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         return [

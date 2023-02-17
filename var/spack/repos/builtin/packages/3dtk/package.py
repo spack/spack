@@ -42,7 +42,7 @@ class _3dtk(CMakePackage):
     conflicts("~opencv", when="platform=darwin")
     conflicts("+compact_octree", when="~opengl")
 
-    generator = "Ninja"
+    generator("ninja")
 
     depends_on("cmake@3.5:", when="@trunk", type="build")
     depends_on("cmake@2.6.1:2", when="@1.2", type="build")

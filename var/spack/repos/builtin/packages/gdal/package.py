@@ -463,7 +463,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
 
 class CMakeBuilder(CMakeBuilder):
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         # https://gdal.org/build_hints.html

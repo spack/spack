@@ -30,7 +30,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     tags = ["e4s"]
 
-    generator = "Ninja"
+    generator("ninja")
 
     family = "compiler"  # Used by lmod
 

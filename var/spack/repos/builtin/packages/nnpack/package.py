@@ -25,7 +25,7 @@ class Nnpack(CMakePackage):
     depends_on("python", type="build")
     depends_on("py-setuptools", type="build")
 
-    generator = "Ninja"
+    generator("ninja")
 
     resource(
         name="six",

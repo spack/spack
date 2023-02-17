@@ -31,4 +31,4 @@ class Kineto(CMakePackage):
     depends_on("python", type="build")
     depends_on("cuda")
 
-    generator = "Ninja"
+    generator("ninja")

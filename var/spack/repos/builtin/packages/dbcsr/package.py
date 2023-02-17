@@ -92,7 +92,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("smm=blas", when="+opencl")
 
-    generator = "Ninja"
+    generator("ninja")
     depends_on("ninja@1.10:", type="build")
 
     def cmake_args(self):

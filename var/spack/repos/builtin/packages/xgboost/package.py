@@ -52,7 +52,7 @@ class Xgboost(CMakePackage, CudaPackage):
         "https://developer.nvidia.com/cuda-gpus",
     )
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         # https://xgboost.readthedocs.io/en/latest/build.html

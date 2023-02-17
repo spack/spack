@@ -101,7 +101,7 @@ class Dd4hep(CMakePackage):
         deprecated=True,
     )
 
-    generator = "Ninja"
+    generator("ninja")
 
     # Workarounds for various TBB issues in DD4hep v1.11
     # See https://github.com/AIDASoft/DD4hep/pull/613 .

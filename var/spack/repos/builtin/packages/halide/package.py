@@ -22,7 +22,7 @@ class Halide(CMakePackage, PythonExtension):
         description="The build type to build",
         values=("Release", "Debug", "RelWithDebInfo"),
     )
-    generator = "Ninja"
+    generator("ninja")
     variant("python", default=False, description="Install python bindings")
     variant("tutorials", default=False, description="Install the Halide Tutorials.")
     variant("utils", default=False, description="Install the Halide Utilities.")

@@ -55,7 +55,7 @@ class Onnx(CMakePackage):
     depends_on("python", type="build")
     depends_on("protobuf")
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         # Try to get ONNX to use the same version of python as the spec is using

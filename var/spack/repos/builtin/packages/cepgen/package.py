@@ -11,7 +11,7 @@ class Cepgen(CMakePackage):
 
     homepage = "https://cepgen.hepforge.org/"
     url = "https://github.com/cepgen/cepgen/archive/refs/tags/1.0.2patch1.tar.gz"
-    generator = "Ninja"
+    generator("ninja")
 
     tags = ["hep"]
 

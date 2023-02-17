@@ -31,7 +31,7 @@ class QtPackage(CMakePackage):
         _list_url = "https://github.com/qt/{}/tags"
         return _list_url.format(qualname.lower())
 
-    generator = "Ninja"
+    generator("ninja")
 
     maintainers("wdconinc", "sethrj")
 

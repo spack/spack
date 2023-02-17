@@ -21,7 +21,7 @@ class Fxdiv(CMakePackage):
     depends_on("ninja", type="build")
     depends_on("python", type="build")
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         return [

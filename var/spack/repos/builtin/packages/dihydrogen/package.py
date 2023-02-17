@@ -116,7 +116,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("half", when="+half")
 
-    generator = "Ninja"
+    generator("ninja")
     depends_on("ninja", type="build")
     depends_on("cmake@3.17.0:", type="build")
 

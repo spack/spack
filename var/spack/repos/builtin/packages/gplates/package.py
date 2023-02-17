@@ -50,7 +50,7 @@ class Gplates(CMakePackage):
 
     # When built in parallel, headers are not generated before they are used
     # (specifically, ViewportWindowUi.h) with the Makefiles generator.
-    generator = "Ninja"
+    generator("ninja")
 
     @when("@:2.1")
     def patch(self):

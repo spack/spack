@@ -55,7 +55,7 @@ class Geos(CMakePackage):
     depends_on("cmake@3.8:", type="build")
     depends_on("ninja", type="build")
 
-    generator = "Ninja"
+    generator("ninja")
 
     patch(
         "https://github.com/libgeos/geos/pull/461.patch?full_index=1",
