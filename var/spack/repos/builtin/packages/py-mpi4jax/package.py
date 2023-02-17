@@ -15,7 +15,9 @@ class PyMpi4jax(PythonPackage, CudaPackage):
 
     maintainers("bhaveshshrimali")
 
-    version("0.3.11.post3", sha256="ad4c5840c81ead40b68f4885d705c06eeca22cd4e998790de589c6566db75a75")
+    version(
+        "0.3.11.post3", sha256="ad4c5840c81ead40b68f4885d705c06eeca22cd4e998790de589c6566db75a75"
+    )
 
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools@42:", type="build")
