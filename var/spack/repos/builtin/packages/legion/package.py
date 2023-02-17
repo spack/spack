@@ -395,13 +395,7 @@ class Legion(CMakePackage, ROCmPackage):
             options.append("-DLegion_USE_Fortran=ON")
 
         if spec.variants["build_type"].value == "Debug":
-            cmake_cxx_flags.extend(
-                [
-                    "-DDEBUG_REALM",
-                    "-DDEBUG_LEGION",
-                    "-ggdb",
-                ]
-            )
+            cmake_cxx_flags.extend(["-DDEBUG_REALM", "-DDEBUG_LEGION", "-ggdb"])
 
         maxdims = int(spec.variants["max_dims"].value)
         # TODO: sanity check if maxdims < 0 || > 9???

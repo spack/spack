@@ -53,7 +53,6 @@ def packages(parser, args):
 
 
 def packages_https(parser, args):
-
     # Since packages takes a long time, --all is required without name
     if not args.check_all and not args.name:
         tty.die("Please specify one or more packages to audit, or --all.")

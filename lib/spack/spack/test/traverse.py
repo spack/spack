@@ -145,16 +145,7 @@ def test_breadth_first_traversal(abstract_specs_dtuse):
 def test_breadth_first_deptype_traversal(abstract_specs_dtuse):
     s = abstract_specs_dtuse["dtuse"]
 
-    names = [
-        "dtuse",
-        "dttop",
-        "dtbuild1",
-        "dtlink1",
-        "dtbuild2",
-        "dtlink2",
-        "dtlink3",
-        "dtlink4",
-    ]
+    names = ["dtuse", "dttop", "dtbuild1", "dtlink1", "dtbuild2", "dtlink2", "dtlink3", "dtlink4"]
 
     traversal = traverse.traverse_nodes([s], order="breadth", key=id, deptype=("build", "link"))
     assert [x.name for x in traversal] == names
@@ -243,23 +234,13 @@ def test_breadth_first_versus_depth_first_tree(abstract_specs_chain):
     assert [
         (depth, edge.spec.name)
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=False)
-    ] == [
-        (0, "chain-a"),
-        (1, "chain-b"),
-        (1, "chain-c"),
-        (1, "chain-d"),
-    ]
+    ] == [(0, "chain-a"), (1, "chain-b"), (1, "chain-c"), (1, "chain-d")]
 
     # DFS will disover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=True)
-    ] == [
-        (0, "chain-a"),
-        (1, "chain-b"),
-        (2, "chain-c"),
-        (3, "chain-d"),
-    ]
+    ] == [(0, "chain-a"), (1, "chain-b"), (2, "chain-c"), (3, "chain-d")]
 
     # When covering all edges, we should never exceed depth 2 in BFS.
     assert [
@@ -402,15 +383,7 @@ def test_traverse_edges_topo(abstract_specs_toposort):
 
     # See figure above, we have 7 edges (excluding artifical ones to the root)
     assert set(edges) == set(
-        [
-            ("A", "B"),
-            ("A", "C"),
-            ("B", "F"),
-            ("B", "G"),
-            ("C", "D"),
-            ("D", "B"),
-            ("E", "D"),
-        ]
+        [("A", "B"), ("A", "C"), ("B", "F"), ("B", "G"), ("C", "D"), ("D", "B"), ("E", "D")]
     )
 
     # Verify that all in-edges precede all out-edges

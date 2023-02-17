@@ -202,12 +202,7 @@ class Acts(CMakePackage, CudaPackage):
         description="Enable memory profiling using gperftools",
         when="@19.3:",
     )
-    variant(
-        "sycl",
-        default=False,
-        description="Build the SyCL plugin",
-        when="@1:",
-    )
+    variant("sycl", default=False, description="Build the SyCL plugin", when="@1:")
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
@@ -241,12 +236,7 @@ class Acts(CMakePackage, CudaPackage):
         description="Build python bindings for the examples",
         when="@14: +examples",
     )
-    variant(
-        "svg",
-        default=False,
-        description="Build ActSVG display plugin",
-        when="@20.1:",
-    )
+    variant("svg", default=False, description="Build ActSVG display plugin", when="@20.1:")
     variant(
         "tbb",
         default=True,

@@ -445,9 +445,7 @@ def mirror_create(args):
 
     mirror_specs = concrete_specs_from_user(args)
     create_mirror_for_individual_specs(
-        mirror_specs,
-        path=path,
-        skip_unstable_versions=args.skip_unstable_versions,
+        mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions
     )
 
 
@@ -467,9 +465,7 @@ def create_mirror_for_all_specs(path, skip_unstable_versions, selection_fn):
 def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions, selection_fn):
     mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
     create_mirror_for_individual_specs(
-        mirror_specs,
-        path=path,
-        skip_unstable_versions=skip_unstable_versions,
+        mirror_specs, path=path, skip_unstable_versions=skip_unstable_versions
     )
 
 

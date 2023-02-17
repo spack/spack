@@ -51,12 +51,7 @@ class syaml_int(int):
 
 
 #: mapping from syaml type -> primitive type
-syaml_types = {
-    syaml_str: str,
-    syaml_int: int,
-    syaml_dict: dict,
-    syaml_list: list,
-}
+syaml_types = {syaml_str: str, syaml_int: int, syaml_dict: dict, syaml_list: list}
 
 
 markable_types = set(syaml_types) | set([yaml.comments.CommentedSeq, yaml.comments.CommentedMap])

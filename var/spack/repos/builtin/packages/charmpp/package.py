@@ -226,7 +226,6 @@ class Charmpp(Package):
     #            build-target=LIBS backend={0}'.format(b))
 
     def install(self, spec, prefix):
-
         if not ("backend=mpi" in self.spec) or not ("backend=netlrts" in self.spec):
             if "+pthreads" in self.spec:
                 raise InstallError(

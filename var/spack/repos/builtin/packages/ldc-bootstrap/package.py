@@ -32,7 +32,6 @@ class LdcBootstrap(CMakePackage):
     depends_on("binutils")
 
     def setup_dependent_build_environment(self, env, dep_spec):
-
         # The code below relies on this function being executed after the
         # environment has been sanitized (because LD_LIBRARY_PATH is among
         # the variables that get unset)

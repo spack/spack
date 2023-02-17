@@ -69,9 +69,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        args = [
-            "--with-gmp=" + self.spec["gmp"].prefix,
-        ]
+        args = ["--with-gmp=" + self.spec["gmp"].prefix]
         args += self.enable_or_disable("libs")
         if "libs=static" in self.spec:
             args.append("--with-pic")

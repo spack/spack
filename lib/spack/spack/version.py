@@ -229,11 +229,7 @@ class VersionBase(object):
 
     """
 
-    __slots__ = [
-        "version",
-        "separators",
-        "string",
-    ]
+    __slots__ = ["version", "separators", "string"]
 
     def __init__(self, string: str) -> None:
         if not isinstance(string, str):

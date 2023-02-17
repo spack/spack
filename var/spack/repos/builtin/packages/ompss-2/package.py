@@ -70,11 +70,7 @@ class Ompss2(Package):
         reconf = which("autoreconf")
         reconf("-fiv")
 
-        configure(
-            "--prefix=%s" % prefix,
-            "--with-nanos6=%s" % prefix,
-            "--enable-ompss-2",
-        )
+        configure("--prefix=%s" % prefix, "--with-nanos6=%s" % prefix, "--enable-ompss-2")
         make()
         make("install")
         os.chdir("..")

@@ -62,11 +62,7 @@ class Openldap(AutotoolsPackage):
     # Ref: https://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when("+client_only")
     def configure_args(self):
-        args = [
-            "CPPFLAGS=-D_GNU_SOURCE",
-            "--disable-debug",
-            "--disable-slapd",
-        ]
+        args = ["CPPFLAGS=-D_GNU_SOURCE", "--disable-debug", "--disable-slapd"]
         args += self.with_or_without("cyrus-sasl", variant="sasl")
         args += self.enable_or_disable("static")
         args += self.enable_or_disable("shared")

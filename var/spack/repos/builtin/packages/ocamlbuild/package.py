@@ -29,11 +29,7 @@ class Ocamlbuild(MakefilePackage):
 
     # Installation : https://github.com/ocaml/ocamlbuild/
     def edit(self, spec, prefix):
-        makefile_inc = [
-            "BINDIR       = bin",
-            "LIBDIR       = lib",
-            "MANDIR       = man",
-        ]
+        makefile_inc = ["BINDIR       = bin", "LIBDIR       = lib", "MANDIR       = man"]
         makefile_inc.append("OCAML_PREFIX       = %s" % self.spec["ocaml"].prefix)
         makefile_inc.append("DESTDIR       = %s/" % self.spec.prefix)
         with open("Makefile.config", "a") as fh:

@@ -125,7 +125,6 @@ class Abinit(AutotoolsPackage):
     patch("fix_for_fujitsu.v9.patch", when="@9: %fj")
 
     def configure_args(self):
-
         spec = self.spec
 
         options = []

@@ -37,7 +37,4 @@ class Sfcgal(CMakePackage):
         # It seems viewer is discontinued as of v1.3.0
         # https://github.com/Oslandia/SFCGAL/releases/tag/v1.3.0
         # Also, see https://github.com/Oslandia/SFCGAL-viewer
-        return [
-            self.define("BUILD_SHARED_LIBS", True),
-            self.define("SFCGAL_BUILD_VIEWER", False),
-        ]
+        return [self.define("BUILD_SHARED_LIBS", True), self.define("SFCGAL_BUILD_VIEWER", False)]

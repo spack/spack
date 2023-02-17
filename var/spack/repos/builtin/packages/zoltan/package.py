@@ -88,10 +88,7 @@ class Zoltan(AutotoolsPackage):
             self.get_config_flag("f90interface", "fortran"),
             self.get_config_flag("mpi", "mpi"),
         ]
-        config_cflags = [
-            "-O0" if "+debug" in spec else "-O3",
-            "-g" if "+debug" in spec else "",
-        ]
+        config_cflags = ["-O0" if "+debug" in spec else "-O3", "-g" if "+debug" in spec else ""]
 
         config_ldflags = []
         # PGI runtime libraries

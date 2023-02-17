@@ -147,11 +147,7 @@ def join(base_url, path, *extra, **kwargs):
     last_abs_component = None
     scheme = ""
     for i in range(n - 1, -1, -1):
-        obj = urllib.parse.urlparse(
-            paths[i],
-            scheme="",
-            allow_fragments=False,
-        )
+        obj = urllib.parse.urlparse(paths[i], scheme="", allow_fragments=False)
 
         scheme = obj.scheme
 
@@ -161,11 +157,7 @@ def join(base_url, path, *extra, **kwargs):
                 # Without a scheme, we have to go back looking for the
                 # next-last component that specifies a scheme.
                 for j in range(i - 1, -1, -1):
-                    obj = urllib.parse.urlparse(
-                        paths[j],
-                        scheme="",
-                        allow_fragments=False,
-                    )
+                    obj = urllib.parse.urlparse(paths[j], scheme="", allow_fragments=False)
 
                     if obj.scheme:
                         paths[i] = "{SM}://{NL}{PATH}".format(
@@ -181,11 +173,7 @@ def join(base_url, path, *extra, **kwargs):
     if last_abs_component is not None:
         paths = paths[last_abs_component:]
         if len(paths) == 1:
-            result = urllib.parse.urlparse(
-                paths[0],
-                scheme="file",
-                allow_fragments=False,
-            )
+            result = urllib.parse.urlparse(paths[0], scheme="file", allow_fragments=False)
 
             # another subtlety: If the last argument to join() is an absolute
             # file:// URL component with a relative path, the relative path
@@ -250,12 +238,7 @@ def _join(base_url, path, *extra, **kwargs):
 
     return format(
         urllib.parse.ParseResult(
-            scheme=scheme,
-            netloc=netloc,
-            path=base_path,
-            params=params,
-            query=query,
-            fragment=None,
+            scheme=scheme, netloc=netloc, path=base_path, params=params, query=query, fragment=None
         )
     )
 

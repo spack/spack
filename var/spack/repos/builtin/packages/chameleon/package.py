@@ -71,7 +71,6 @@ class Chameleon(CMakePackage, CudaPackage):
         depends_on("lapack")
 
     def cmake_args(self):
-
         spec = self.spec
         args = [
             "-Wno-dev",

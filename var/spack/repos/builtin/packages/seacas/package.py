@@ -286,10 +286,7 @@ class Seacas(CMakePackage):
         # ##################### Dependencies ##########################
         # Always need NetCDF-C
         options.extend(
-            [
-                define("TPL_ENABLE_Netcdf", True),
-                define("NetCDF_ROOT", spec["netcdf-c"].prefix),
-            ]
+            [define("TPL_ENABLE_Netcdf", True), define("NetCDF_ROOT", spec["netcdf-c"].prefix)]
         )
 
         if "+parmetis" in spec:
@@ -323,10 +320,7 @@ class Seacas(CMakePackage):
             )
         else:
             options.extend(
-                [
-                    define("TPL_ENABLE_METIS", False),
-                    define("TPL_ENABLE_ParMETIS", False),
-                ]
+                [define("TPL_ENABLE_METIS", False), define("TPL_ENABLE_ParMETIS", False)]
             )
 
         options.append(from_variant("TPL_ENABLE_Matio", "matio"))

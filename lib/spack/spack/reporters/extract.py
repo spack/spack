@@ -10,11 +10,7 @@ from datetime import datetime
 import llnl.util.tty as tty
 
 # The keys here represent the only recognized (ctest/cdash) status values
-completed = {
-    "failed": "Completed",
-    "passed": "Completed",
-    "notrun": "No tests to run",
-}
+completed = {"failed": "Completed", "passed": "Completed", "notrun": "No tests to run"}
 
 log_regexp = re.compile(r"^==> \[([0-9:.\-]*)(?:, [0-9]*)?\] (.*)")
 returns_regexp = re.compile(r"\[([0-9 ,]*)\]")

@@ -74,11 +74,7 @@ class Scalpel(MakefilePackage, SourceforgePackage):
         for f in files:
             install(f, destdir)
 
-        dirs = [
-            "Text",
-            "MLDBM",
-            "Parallel",
-        ]
+        dirs = ["Text", "MLDBM", "Parallel"]
         for d in dirs:
             install_tree(d, join_path(destdir, d))
 

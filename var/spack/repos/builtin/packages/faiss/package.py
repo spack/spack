@@ -128,7 +128,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return args
 
     def build(self, pkg, spec, prefix):
-
         make()
 
         if "+python" in self.spec:
@@ -148,7 +147,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
                 make("demo_ivfpq_indexing_gpu")
 
     def install(self, pkg, spec, prefix):
-
         make("install")
 
         if "+python" in self.spec:
@@ -185,7 +183,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
     @run_after("configure")
     def _fix_makefile(self):
-
         # spack injects its own optimization flags
         makefile = FileFilter("makefile.inc")
         makefile.filter("CPUFLAGS     = -mavx2 -mf16c", "#CPUFLAGS     = -mavx2 -mf16c")

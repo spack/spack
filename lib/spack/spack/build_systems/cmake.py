@@ -252,10 +252,7 @@ class CMakeBuilder(BaseBuilder):
 
         if platform.mac_ver()[0]:
             args.extend(
-                [
-                    define("CMAKE_FIND_FRAMEWORK", "LAST"),
-                    define("CMAKE_FIND_APPBUNDLE", "LAST"),
-                ]
+                [define("CMAKE_FIND_FRAMEWORK", "LAST"), define("CMAKE_FIND_APPBUNDLE", "LAST")]
             )
 
         # Set up CMake rpath

@@ -377,7 +377,8 @@ def compute_windows_user_path_for_package(pkg):
     install location, return list of potential locations based
     on common heuristics. For more info on Windows user specific
     installs see:
-    https://learn.microsoft.com/en-us/dotnet/api/system.environment.specialfolder?view=netframework-4.8"""
+    https://learn.microsoft.com/en-us/dotnet/api/system.environment.specialfolder?view=netframework-4.8
+    """
     if not is_windows:
         return []
 

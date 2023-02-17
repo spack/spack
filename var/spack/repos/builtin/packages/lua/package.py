@@ -154,9 +154,7 @@ class LuaImplPackage(MakefilePackage):
 
     def setup_run_environment(self, env):
         env.prepend_path(
-            "LUA_PATH",
-            os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"),
-            separator=";",
+            "LUA_PATH", os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"), separator=";"
         )
         env.prepend_path(
             "LUA_PATH",
@@ -164,9 +162,7 @@ class LuaImplPackage(MakefilePackage):
             separator=";",
         )
         env.prepend_path(
-            "LUA_PATH",
-            os.path.join(self.spec.prefix, self.lua_lib_dir, "?.lua"),
-            separator=";",
+            "LUA_PATH", os.path.join(self.spec.prefix, self.lua_lib_dir, "?.lua"), separator=";"
         )
         env.prepend_path(
             "LUA_PATH",
@@ -174,9 +170,7 @@ class LuaImplPackage(MakefilePackage):
             separator=";",
         )
         env.prepend_path(
-            "LUA_CPATH",
-            os.path.join(self.spec.prefix, self.lua_lib_dir, "?.so"),
-            separator=";",
+            "LUA_CPATH", os.path.join(self.spec.prefix, self.lua_lib_dir, "?.so"), separator=";"
         )
 
     @property

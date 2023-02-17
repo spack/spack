@@ -22,7 +22,6 @@ class Ace(MakefilePackage):
     version("6.5.0", "b6f9ec922fbdcecb4348e16d851d0d1f135df1836dfe77d2e0b64295ddb83066")
 
     def edit(self, spec, prefix):
-
         # Dictionary mapping: compiler-name : ACE config-label
         supported = {"intel": "_icc", "gcc": ""}
 

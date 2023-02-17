@@ -42,7 +42,6 @@ def _specify(spec_like):
 
 
 def check_satisfies(target_spec, constraint_spec, target_concrete=False):
-
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
@@ -55,7 +54,6 @@ def check_satisfies(target_spec, constraint_spec, target_concrete=False):
 
 
 def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False):
-
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
@@ -325,7 +323,6 @@ class TestSpecSematics(object):
         assert "a@1.0" not in spec
 
     def test_unsatisfiable_multi_value_variant(self):
-
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 

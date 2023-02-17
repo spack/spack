@@ -496,9 +496,7 @@ def install(parser, args):
             return None
 
         context_manager = spack.report.build_context_manager(
-            reporter=args.reporter(),
-            filename=report_filename(args, specs=specs),
-            specs=specs,
+            reporter=args.reporter(), filename=report_filename(args, specs=specs), specs=specs
         )
         return context_manager
 

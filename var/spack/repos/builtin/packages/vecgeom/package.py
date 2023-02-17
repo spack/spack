@@ -140,11 +140,6 @@ class Vecgeom(CMakePackage, CudaPackage):
             )
 
         if spec.satisfies("@:0.5.2"):
-            args.extend(
-                [
-                    define("USOLIDS", True),
-                    define("USOLIDS_VECGEOM", True),
-                ]
-            )
+            args.extend([define("USOLIDS", True), define("USOLIDS_VECGEOM", True)])
 
         return args

@@ -103,9 +103,7 @@ def setup_parser(subparser):
         help="Regenerate buildcache index after building package(s)",
     )
     create.add_argument(
-        "--spec-file",
-        default=None,
-        help="Create buildcache entry for spec from json or yaml file",
+        "--spec-file", default=None, help="Create buildcache entry for spec from json or yaml file"
     )
     create.add_argument(
         "--only",

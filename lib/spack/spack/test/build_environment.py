@@ -17,11 +17,7 @@ import spack.config
 import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import (
-    _static_to_shared_library,
-    determine_number_of_jobs,
-    dso_suffix,
-)
+from spack.build_environment import _static_to_shared_library, determine_number_of_jobs, dso_suffix
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
@@ -160,7 +156,6 @@ def test_static_to_shared_library(build_environment):
 @pytest.mark.regression("8345")
 @pytest.mark.usefixtures("config", "mock_packages")
 def test_cc_not_changed_by_modules(monkeypatch, working_env):
-
     s = spack.spec.Spec("cmake")
     s.concretize()
     pkg = s.package

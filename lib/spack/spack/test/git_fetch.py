@@ -177,7 +177,6 @@ def test_fetch_pkg_attr_submodule_init(
 def test_adhoc_version_submodules(
     mock_git_repository, config, mutable_mock_repo, monkeypatch, mock_stage
 ):
-
     t = mock_git_repository.checks["tag"]
     # Construct the package under test
     pkg_class = spack.repo.path.get_pkg_class("git-test")

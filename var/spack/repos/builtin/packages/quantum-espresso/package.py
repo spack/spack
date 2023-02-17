@@ -80,11 +80,7 @@ class QuantumEspresso(CMakePackage, Package):
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
     with when("%nvhpc"):
-        variant(
-            "cuda",
-            default=False,
-            description="Build with CUDA Fortran",
-        )
+        variant("cuda", default=False, description="Build with CUDA Fortran")
         with when("+cuda"):
             # GPUs are enabled since v6.6
             conflicts("@:6.5")
@@ -535,7 +531,6 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
             options.append("--with-libxc-prefix={0}".format(spec["libxc"].prefix))
 
         if "+elpa" in spec:
-
             # Spec for elpa
             elpa = spec["elpa"]
 

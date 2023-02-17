@@ -154,10 +154,7 @@ class AppleClang(spack.compilers.clang.Clang):
                 ),
             )
 
-            real_dirs = [
-                "Toolchains/XcodeDefault.xctoolchain/usr/bin",
-                "usr/bin",
-            ]
+            real_dirs = ["Toolchains/XcodeDefault.xctoolchain/usr/bin", "usr/bin"]
 
             bins = ["c++", "c89", "c99", "cc", "clang", "clang++", "cpp"]
 

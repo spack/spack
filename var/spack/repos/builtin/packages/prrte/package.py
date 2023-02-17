@@ -43,7 +43,6 @@ class Prrte(AutotoolsPackage):
             perl("autogen.pl")
 
     def configure_args(self):
-
         spec = self.spec
         config_args = ["--enable-shared", "--enable-static"]
 

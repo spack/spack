@@ -106,12 +106,7 @@ def setup_parser(subparser):
 
 
 def url(parser, args):
-    action = {
-        "parse": url_parse,
-        "list": url_list,
-        "summary": url_summary,
-        "stats": url_stats,
-    }
+    action = {"parse": url_parse, "list": url_list, "summary": url_summary, "stats": url_stats}
 
     action[args.subcommand](args)
 

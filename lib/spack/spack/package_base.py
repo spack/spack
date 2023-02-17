@@ -65,9 +65,7 @@ from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
+    Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
 ]
 FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
@@ -1705,11 +1703,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             "don't know how to make {0}. Stop",
         ]
 
-        kwargs = {
-            "fail_on_error": False,
-            "output": os.devnull,
-            "error": str,
-        }
+        kwargs = {"fail_on_error": False, "output": os.devnull, "error": str}
 
         stderr = make("-n", target, **kwargs)
 
@@ -2220,10 +2214,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         if not force:
             dependents = spack.store.db.installed_relatives(
-                spec,
-                direction="parents",
-                transitive=True,
-                deptype=("link", "run"),
+                spec, direction="parents", transitive=True, deptype=("link", "run")
             )
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
@@ -2236,7 +2227,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # Pre-uninstall hook runs first.
         with spack.store.db.prefix_write_lock(spec):
-
             if pkg is not None:
                 try:
                     spack.hooks.pre_uninstall(spec)
@@ -2399,11 +2389,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                self.all_urls,
-                self.list_url,
-                self.list_depth,
-                concurrency,
-                reference_package=self,
+                self.all_urls, self.list_url, self.list_depth, concurrency, reference_package=self
             )
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url, e.message)

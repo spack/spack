@@ -14,10 +14,7 @@ class Dust(Package):
 
     maintainers("fangohr")
 
-    version(
-        "0.7.5",
-        sha256="f892aaf7a0a7852e12d01b2ced6c2484fb6dc5fe7562abdf0c44a2d08aa52618",
-    )
+    version("0.7.5", sha256="f892aaf7a0a7852e12d01b2ced6c2484fb6dc5fe7562abdf0c44a2d08aa52618")
 
     depends_on("rust")
 
@@ -31,10 +28,7 @@ class Dust(Package):
     def check_install(self):
         print("Attempt to call 'dust' with '--version'")
         dust = Executable(join_path(self.spec["dust"].prefix.bin, "dust"))
-        output = dust(
-            "--version",
-            output=str.split,
-        )
+        output = dust("--version", output=str.split)
         print("stdout received fromm dust is '{}".format(output))
         assert "Dust " in output
 

@@ -44,7 +44,7 @@ jobs:
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip six setuptools types-six black==22.12.0 mypy isort clingo flake8
+        python3 -m pip install --upgrade pip six setuptools types-six black==23.1.0 mypy isort clingo flake8
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.

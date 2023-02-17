@@ -124,12 +124,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
 
-            gpu_map = {
-                "35": "K40",
-                "37": "K80",
-                "60": "P100",
-                "70": "V100",
-            }
+            gpu_map = {"35": "K40", "37": "K80", "60": "P100", "70": "V100"}
 
             if "@2.3:" in spec:
                 gpu_map["80"] = "A100"

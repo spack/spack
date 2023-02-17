@@ -14,11 +14,7 @@ class G2c(CMakePackage):
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-g2c"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-g2c/archive/refs/tags/v1.6.4.tar.gz"
 
-    maintainers(
-        "AlexanderRichert-NOAA",
-        "Hang-Lei-NOAA",
-        "edwardhartnett",
-    )
+    maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     variant("png", default=True)
     variant("jasper", default=True)

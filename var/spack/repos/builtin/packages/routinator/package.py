@@ -14,10 +14,7 @@ class Routinator(Package):
 
     maintainers("aweits")
 
-    version(
-        "0.11.2",
-        sha256="00f825c53168592da0285e8dbd228018e77248d458214a2c0f86cd0ca45438f5",
-    )
+    version("0.11.2", sha256="00f825c53168592da0285e8dbd228018e77248d458214a2c0f86cd0ca45438f5")
 
     depends_on("rust@1.56:")
 

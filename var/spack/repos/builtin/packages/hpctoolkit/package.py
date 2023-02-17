@@ -48,9 +48,7 @@ class Hpctoolkit(AutotoolsPackage):
     # version of hpcprof.  Cray needs a separate option because an
     # external MPI module in packages.yaml doesn't work.
     variant(
-        "cray",
-        default=False,
-        description="Build hpcprof-mpi for Cray systems (requires --dirty).",
+        "cray", default=False, description="Build hpcprof-mpi for Cray systems (requires --dirty)."
     )
 
     variant(

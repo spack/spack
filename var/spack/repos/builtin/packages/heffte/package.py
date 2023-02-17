@@ -141,9 +141,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         # using the tests copied from <prefix>/share/heffte/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
-        options = [
-            cmake_dir,
-        ]
+        options = [cmake_dir]
         if "+rocm" in self.spec:
             options.append(
                 "-Dhip_DIR=" + join_path(self.spec["hip"].prefix, "lib", "cmake", "hip")

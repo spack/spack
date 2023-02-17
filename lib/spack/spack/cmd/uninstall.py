@@ -31,12 +31,7 @@ error_message = """You can either:
 """
 
 # Arguments for display_specs when we find ambiguity
-display_args = {
-    "long": True,
-    "show_flags": False,
-    "variants": False,
-    "indent": 4,
-}
+display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
 def setup_parser(subparser):
@@ -236,12 +231,7 @@ def do_uninstall(specs, force=False):
     hashes_to_remove = set(s.dag_hash() for s in specs)
 
     for s in traverse.traverse_nodes(
-        specs,
-        order="topo",
-        direction="children",
-        root=True,
-        cover="nodes",
-        deptype="all",
+        specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
     ):
         if s.dag_hash() in hashes_to_remove:
             spack.package_base.PackageBase.uninstall_by_spec(s, force=force)

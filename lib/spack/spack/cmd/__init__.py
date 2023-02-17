@@ -161,9 +161,7 @@ class _UnquotedFlags(object):
     """
 
     flags_arg_pattern = re.compile(
-        r'^({0})=([^\'"].*)$'.format(
-            "|".join(spack.spec.FlagMap.valid_compiler_flags()),
-        )
+        r'^({0})=([^\'"].*)$'.format("|".join(spack.spec.FlagMap.valid_compiler_flags()))
     )
 
     def __init__(self, all_unquoted_flag_pairs: List[Tuple[Match[str], str]]):
@@ -227,7 +225,6 @@ def parse_specs(args, **kwargs):
         return specs
 
     except spack.error.SpecError as e:
-
         msg = e.message
         if e.long_message:
             msg += e.long_message

@@ -324,7 +324,7 @@ class Git(AutotoolsPackage):
         deprecated=True,
     )
 
-    for (_version, _sha256_manpage) in {
+    for _version, _sha256_manpage in {
         "2.39.1": "b2d1b2c6cba2343934792c4409a370a8c684add1b3c0f9b757e71189b1a2e80e",
         "2.38.3": "9e5c924f6f1c961e09d1a8926c2775a158a0375a3311205d7a6176a3ed522272",
         "2.38.1": "fcb27484406b64419a9f9890e95ef29af08e1f911d9d368546eddc59a18e245d",

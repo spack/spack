@@ -116,11 +116,7 @@ class Relion(CMakePackage, CudaPackage):
             if carch == "none":
                 raise ValueError("Must select a value for cuda_arch")
             else:
-                args += [
-                    "-DCUDA=ON",
-                    "-DCudaTexture=ON",
-                    "-DCUDA_ARCH=%s" % (carch),
-                ]
+                args += ["-DCUDA=ON", "-DCudaTexture=ON", "-DCUDA_ARCH=%s" % (carch)]
 
         return args
 

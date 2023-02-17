@@ -55,9 +55,7 @@ class Libgeotiff(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            "--with-libtiff={0}".format(spec["libtiff"].prefix),
-        ]
+        args = ["--with-libtiff={0}".format(spec["libtiff"].prefix)]
 
         if "+zlib" in spec:
             args.append("--with-zlib={0}".format(spec["zlib"].prefix))

@@ -14,10 +14,7 @@ from shutil import copy
 from typing import Dict, List
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    is_nonsymlink_exe_with_shebang,
-    path_contains_subdirectory,
-)
+from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_subdirectory
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
@@ -874,13 +871,7 @@ print(json.dumps(config))
         win_bin_dir = self.config_vars["BINDIR"]
         win_root_dir = self.config_vars["prefix"]
 
-        directories = [
-            libdir,
-            frameworkprefix,
-            macos_developerdir,
-            win_bin_dir,
-            win_root_dir,
-        ]
+        directories = [libdir, frameworkprefix, macos_developerdir, win_bin_dir, win_root_dir]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
@@ -914,18 +905,14 @@ print(json.dumps(config))
             shared_libs = []
         else:
             shared_libs = [self.config_vars["LDLIBRARY"]]
-        shared_libs += [
-            "{}python{}.{}".format(lib_prefix, py_version, dso_suffix),
-        ]
+        shared_libs += ["{}python{}.{}".format(lib_prefix, py_version, dso_suffix)]
         # Like LDLIBRARY for Python on Mac OS, LIBRARY may refer to an un-linkable object
         file_extension_static = os.path.splitext(self.config_vars["LIBRARY"])[-1]
         if file_extension_static == "":
             static_libs = []
         else:
             static_libs = [self.config_vars["LIBRARY"]]
-        static_libs += [
-            "{}python{}.{}".format(lib_prefix, py_version, stat_suffix),
-        ]
+        static_libs += ["{}python{}.{}".format(lib_prefix, py_version, stat_suffix)]
 
         # The +shared variant isn't reliable, as `spack external find` currently can't
         # detect it. If +shared, prefer the shared libraries, but check for static if

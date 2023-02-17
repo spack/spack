@@ -113,7 +113,6 @@ class InfoCollector:
 
                 start_time = time.time()
                 try:
-
                     value = wrapped_fn(instance, *args, **kwargs)
                     package["stdout"] = self.fetch_log(pkg)
                     package["installed_from_binary_cache"] = pkg.installed_from_binary_cache
@@ -234,9 +233,7 @@ class TestInfoCollector(InfoCollector):
 
 @contextlib.contextmanager
 def build_context_manager(
-    reporter: spack.reporters.Reporter,
-    filename: str,
-    specs: List[spack.spec.Spec],
+    reporter: spack.reporters.Reporter, filename: str, specs: List[spack.spec.Spec]
 ):
     """Decorate a package to generate a report after the installation function is executed.
 

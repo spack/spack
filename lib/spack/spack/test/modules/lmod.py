@@ -41,10 +41,7 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures(
-    "config",
-    "mock_packages",
-)
+@pytest.mark.usefixtures("config", "mock_packages")
 class TestLmod(object):
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
@@ -254,12 +251,7 @@ class TestLmod(object):
         assert writer.conf.core_compilers
 
     @pytest.mark.parametrize(
-        "spec_str",
-        [
-            "mpileaks target=nocona",
-            "mpileaks target=core2",
-            "mpileaks target=x86_64",
-        ],
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
     )
     @pytest.mark.regression("13005")
     def test_only_generic_microarchitectures_in_root(

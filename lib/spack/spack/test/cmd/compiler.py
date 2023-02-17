@@ -271,10 +271,7 @@ def test_compiler_find_path_order(no_compilers_yaml, working_env, clangdir):
         shutil.copy("gfortran-8", "first_in_path/gfortran-8")
 
     # the first_in_path folder should be searched first
-    os.environ["PATH"] = "{0}:{1}".format(
-        str(clangdir.join("first_in_path")),
-        str(clangdir),
-    )
+    os.environ["PATH"] = "{0}:{1}".format(str(clangdir.join("first_in_path")), str(clangdir))
 
     compiler("find", "--scope=site")
 

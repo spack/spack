@@ -60,7 +60,6 @@ class CbtfLanl(CMakePackage):
     build_directory = "build_cbtf_lanl"
 
     def cmake_args(self):
-
         spec = self.spec
         compile_flags = "-O2 -g -Wall"
 

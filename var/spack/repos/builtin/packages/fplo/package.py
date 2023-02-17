@@ -95,14 +95,7 @@ class Fplo(MakefilePackage):
 
     def build(self, spec, prefix):
         mmakefile = Executable(join_path(self.build_directory, "install", "MMakefile"))
-        mmakefile_args = [
-            "-f90",
-            spack_fc,
-            "-cc",
-            spack_cc,
-            "-c+",
-            spack_cxx,
-        ]
+        mmakefile_args = ["-f90", spack_fc, "-cc", spack_cc, "-c+", spack_cxx]
 
         with working_dir(self.build_directory):
             # copy contents of bin
@@ -144,13 +137,6 @@ class Fplo(MakefilePackage):
         with working_dir(self.prefix.bin):
             pattern = "^#!.*/usr/bin/perl"
             repl = "#!{0}".format(self.spec["perl"].command.path)
-            files = [
-                "fconv2",
-                "fconvdens2",
-                "fdowngrad.pl",
-                "fout2in",
-                "grBhfat",
-                "grpop",
-            ]
+            files = ["fconv2", "fconvdens2", "fdowngrad.pl", "fout2in", "grBhfat", "grpop"]
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)

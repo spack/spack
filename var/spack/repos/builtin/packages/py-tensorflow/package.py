@@ -604,10 +604,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             # Please specify which gcc nvcc should use as the host compiler
             env.set("GCC_HOST_COMPILER_PATH", spack_cc)
 
-            cuda_paths = [
-                spec["cuda"].prefix,
-                spec["cudnn"].prefix,
-            ]
+            cuda_paths = [spec["cuda"].prefix, spec["cudnn"].prefix]
 
             # Do you wish to build TensorFlow with TensorRT support?
             if "+tensorrt" in spec:

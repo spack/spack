@@ -26,10 +26,7 @@ class E3smKernels(MakefilePackage):
     variant(
         "kernel",
         default="atmosphere",
-        values=(
-            "atmosphere",
-            "mmf-mpdata-tracer",
-        ),
+        values=("atmosphere", "mmf-mpdata-tracer"),
         description="Specify E3SM Kernel to Build",
         multi=False,
     )

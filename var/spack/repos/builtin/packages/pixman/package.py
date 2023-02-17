@@ -59,10 +59,7 @@ class Pixman(AutotoolsPackage):
         return find_libraries("libpixman-1", self.prefix, shared=True, recursive=True)
 
     def configure_args(self):
-        args = [
-            "--enable-libpng",
-            "--disable-gtk",
-        ]
+        args = ["--enable-libpng", "--disable-gtk"]
 
         if sys.platform == "darwin":
             args.append("--disable-mmx")

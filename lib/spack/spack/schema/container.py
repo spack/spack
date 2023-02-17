@@ -62,9 +62,7 @@ container_schema = {
             "additionalProperties": False,
         },
         # Add labels to the image
-        "labels": {
-            "type": "object",
-        },
+        "labels": {"type": "object"},
         # Add a custom extra section at the bottom of a stage
         "extra_instructions": {
             "type": "object",
@@ -83,11 +81,7 @@ container_schema = {
                 "help": {"type": "string"},
             },
         },
-        "docker": {
-            "type": "object",
-            "additionalProperties": False,
-            "default": {},
-        },
+        "docker": {"type": "object", "additionalProperties": False, "default": {}},
     },
 }
 

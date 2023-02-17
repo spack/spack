@@ -409,13 +409,7 @@ def needs_text_relocation(m_type, m_subtype):
 
 
 def relocate_macho_binaries(
-    path_names,
-    old_layout_root,
-    new_layout_root,
-    prefix_to_prefix,
-    rel,
-    old_prefix,
-    new_prefix,
+    path_names, old_layout_root, new_layout_root, prefix_to_prefix, rel, old_prefix, new_prefix
 ):
     """
     Use macholib python package to get the rpaths, depedent libraries
@@ -829,7 +823,7 @@ def fixup_macos_rpath(root, filename):
 
     # Check for nonexistent rpaths (often added by spack linker overzealousness
     # with both lib/ and lib64/) and duplicate rpaths
-    for (rpath, count) in rpaths.items():
+    for rpath, count in rpaths.items():
         if rpath.startswith("@loader_path") or rpath.startswith("@executable_path"):
             # Allowable relative paths
             pass

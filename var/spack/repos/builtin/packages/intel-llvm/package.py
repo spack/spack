@@ -35,7 +35,6 @@ class IntelLlvm(CMakePackage):
     root_cmakelists_dir = "llvm"
 
     def cmake_args(self):
-
         cmake_args = []
 
         cmake_args.extend(

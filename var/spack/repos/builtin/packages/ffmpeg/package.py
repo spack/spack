@@ -126,15 +126,7 @@ class Ffmpeg(AutotoolsPackage):
         xlib_opts = []
 
         if spec.satisfies("@2.5:"):
-            xlib_opts.extend(
-                [
-                    "libxcb",
-                    "libxcb-shape",
-                    "libxcb-shm",
-                    "libxcb-xfixes",
-                    "xlib",
-                ]
-            )
+            xlib_opts.extend(["libxcb", "libxcb-shape", "libxcb-shm", "libxcb-xfixes", "xlib"])
 
         config_args += self.enable_or_disable_meta("X", xlib_opts)
 

@@ -20,16 +20,8 @@ class Actsvg(CMakePackage):
 
     version("0.4.26", sha256="a1dfad15b616cac8191a355c1a87544571c36349400e3de56b9e5be6fa73714c")
 
-    variant(
-        "examples",
-        default=False,
-        description="Build the example applications",
-    )
-    variant(
-        "meta",
-        default=True,
-        description="Build the meta level interface",
-    )
+    variant("examples", default=False, description="Build the example applications")
+    variant("meta", default=True, description="Build the meta level interface")
 
     depends_on("boost +program_options", type="test")
     depends_on("boost +program_options", when="+examples")

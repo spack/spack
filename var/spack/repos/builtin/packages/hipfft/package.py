@@ -111,7 +111,7 @@ class Hipfft(CMakePackage):
     def cmake_args(self):
         args = [
             # Make sure find_package(HIP) finds the module.
-            self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
+            self.define("BUILD_CLIENTS_SAMPLES", "OFF")
         ]
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):

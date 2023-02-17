@@ -117,11 +117,7 @@ class Pfunit(CMakePackage):
         msg="CMake 3.25.0 has a bug with pFUnit. Please use another version.",
     )
 
-    conflicts(
-        "%gcc@:8.3.9",
-        when="@4.0.0:",
-        msg="pFUnit requires GCC 8.4.0 or newer",
-    )
+    conflicts("%gcc@:8.3.9", when="@4.0.0:", msg="pFUnit requires GCC 8.4.0 or newer")
 
     patch("mpi-test.patch", when="+use_comm_world")
 

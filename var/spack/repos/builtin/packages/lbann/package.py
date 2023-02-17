@@ -274,17 +274,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         cppflags.append("-DLBANN_SET_EL_RNG")
         cppflags.append("-std=c++17")
         args = []
-        args.extend(
-            [
-                "-DCMAKE_CXX_FLAGS=%s" % " ".join(cppflags),
-                "-DLBANN_VERSION=spack",
-            ]
-        )
+        args.extend(["-DCMAKE_CXX_FLAGS=%s" % " ".join(cppflags), "-DLBANN_VERSION=spack"])
 
         if "+numpy" in spec:
-            args.append(
-                "-DCNPY_DIR={0}".format(spec["cnpy"].prefix),
-            )
+            args.append("-DCNPY_DIR={0}".format(spec["cnpy"].prefix))
 
         # Use lld high performance linker
         if "+lld" in spec:
@@ -428,11 +421,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
             if "platform=cray" in spec:
-                args.extend(
-                    [
-                        "-DMPI_ASSUME_NO_BUILTIN_MPI=ON",
-                    ]
-                )
+                args.extend(["-DMPI_ASSUME_NO_BUILTIN_MPI=ON"])
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)

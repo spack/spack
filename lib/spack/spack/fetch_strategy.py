@@ -35,13 +35,7 @@ from typing import List, Optional
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    get_single_file,
-    mkdirp,
-    temp_cwd,
-    temp_rename,
-    working_dir,
-)
+from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
 from llnl.util.symlink import symlink
 
 import spack.config
@@ -1555,11 +1549,7 @@ def for_package_version(pkg, version):
         # performance hit for branches on older versions of git.
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
         ref_type = "commit" if version.is_commit else "tag"
-        kwargs = {
-            "git": pkg.git,
-            ref_type: version.ref,
-            "no_cache": True,
-        }
+        kwargs = {"git": pkg.git, ref_type: version.ref, "no_cache": True}
 
         kwargs["submodules"] = getattr(pkg, "submodules", False)
 

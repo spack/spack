@@ -25,7 +25,6 @@ class Glpk(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gmp", when="+gmp")
 
     def configure_args(self):
-
         options = []
 
         if "+gmp" in self.spec:

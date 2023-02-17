@@ -31,15 +31,7 @@ class Prism(MakefilePackage):
             for f in ["prism", "xprism"]:
                 filter_file("^PRISM_DIR.*", "", "bin/{0}".format(f))
 
-            dirs = [
-                "bin",
-                "classes",
-                "dtds",
-                "etc",
-                "include",
-                "images",
-                "lib",
-            ]
+            dirs = ["bin", "classes", "dtds", "etc", "include", "images", "lib"]
 
             for d in dirs:
                 install_tree(d, join_path(prefix, d))

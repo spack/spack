@@ -20,7 +20,5 @@ class Buddy(AutotoolsPackage):
 
     def configure_args(self):
         if platform.machine() == "aarch64":
-            config_args = [
-                "--build=aarch64-unknown-linux-gnu",
-            ]
+            config_args = ["--build=aarch64-unknown-linux-gnu"]
             return config_args

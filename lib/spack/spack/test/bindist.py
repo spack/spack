@@ -416,11 +416,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
-@pytest.mark.usefixtures(
-    "install_mockery_mutable_config",
-    "mock_packages",
-    "mock_fetch",
-)
+@pytest.mark.usefixtures("install_mockery_mutable_config", "mock_packages", "mock_fetch")
 def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     """Ensure spack buildcache index only reports available packages"""
 

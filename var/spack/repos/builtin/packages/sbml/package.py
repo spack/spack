@@ -84,10 +84,7 @@ class Sbml(CMakePackage):
         args.append(self.define_from_variant("WITH_CPP_NAMESPACE", "cpp"))
         if "+python" in spec:
             args.extend(
-                [
-                    "-DWITH_PYTHON:BOOL=ON",
-                    "-DWITH_PYTHON_INCLUDE:PATH=%s" % spec["python"].prefix,
-                ]
+                ["-DWITH_PYTHON:BOOL=ON", "-DWITH_PYTHON_INCLUDE:PATH=%s" % spec["python"].prefix]
             )
         else:
             args.append("-DWITH_PYTHON:BOOL=OFF")

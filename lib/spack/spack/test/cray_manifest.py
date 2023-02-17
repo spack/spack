@@ -130,10 +130,7 @@ class JsonCompilerEntry(object):
         """The compiler spec only lists the name/version, not
         arch/executables.
         """
-        return {
-            "name": self.name,
-            "version": self.version,
-        }
+        return {"name": self.name, "version": self.version}
 
 
 _common_arch = JsonArchEntry(platform="linux", os="centos8", target="haswell").to_dict()
@@ -265,10 +262,7 @@ def test_translate_compiler_name():
     nvidia_compiler = JsonCompilerEntry(
         name="nvidia",
         version="19.1",
-        executables={
-            "cc": "/path/to/compiler/nvc",
-            "cxx": "/path/to/compiler/nvc++",
-        },
+        executables={"cc": "/path/to/compiler/nvc", "cxx": "/path/to/compiler/nvc++"},
     )
 
     compiler = compiler_from_entry(nvidia_compiler.compiler_json())

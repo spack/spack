@@ -47,9 +47,7 @@ class Bowtie2(MakefilePackage):
         match = "^#!/usr/bin/env perl"
         perl = spec["perl"].command
         substitute = "#!{perl}".format(perl=perl)
-        files = [
-            "bowtie2",
-        ]
+        files = ["bowtie2"]
         filter_file(match, substitute, *files, **kwargs)
 
         match = "^#!/usr/bin/env python.*"

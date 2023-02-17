@@ -65,19 +65,9 @@ class Med(CMakePackage):
             )
 
         if "+shared" in spec:
-            options.extend(
-                [
-                    "-DMEDFILE_BUILD_SHARED_LIBS=ON",
-                    "-DMEDFILE_BUILD_STATIC_LIBS=OFF",
-                ]
-            )
+            options.extend(["-DMEDFILE_BUILD_SHARED_LIBS=ON", "-DMEDFILE_BUILD_STATIC_LIBS=OFF"])
         else:
-            options.extend(
-                [
-                    "-DMEDFILE_BUILD_SHARED_LIBS=OFF",
-                    "-DMEDFILE_BUILD_STATIC_LIBS=ON",
-                ]
-            )
+            options.extend(["-DMEDFILE_BUILD_SHARED_LIBS=OFF", "-DMEDFILE_BUILD_STATIC_LIBS=ON"])
 
         if "+mpi" in spec:
             options.extend(["-DMEDFILE_USE_MPI=YES", "-DMPI_ROOT_DIR=%s" % spec["mpi"].prefix])

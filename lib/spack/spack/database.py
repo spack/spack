@@ -46,10 +46,7 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from spack.directory_layout import (
-    DirectoryLayoutError,
-    InconsistentInstallDirectoryError,
-)
+from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDirectoryError
 from spack.error import SpackError
 from spack.util.crypto import bit_length
 from spack.version import Version
@@ -108,10 +105,7 @@ default_install_record_fields = [
 
 
 def reader(version):
-    reader_cls = {
-        Version("5"): spack.spec.SpecfileV1,
-        Version("6"): spack.spec.SpecfileV3,
-    }
+    reader_cls = {Version("5"): spack.spec.SpecfileV1, Version("6"): spack.spec.SpecfileV3}
     return reader_cls[version]
 
 

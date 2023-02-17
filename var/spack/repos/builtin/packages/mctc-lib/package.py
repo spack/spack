@@ -26,6 +26,4 @@ class MctcLib(MesonPackage):
     depends_on("pkgconfig", type="build")
 
     def meson_args(self):
-        return [
-            "-Djson={0}".format("enabled" if "+json" in self.spec else "disabled"),
-        ]
+        return ["-Djson={0}".format("enabled" if "+json" in self.spec else "disabled")]

@@ -39,11 +39,7 @@ class Libcroco(AutotoolsPackage):
             )
         else:
             config_args.extend(
-                [
-                    "--disable-gtk-doc",
-                    "--disable-gtk-doc-html",
-                    "--disable-gtk-doc-pdf",
-                ]
+                ["--disable-gtk-doc", "--disable-gtk-doc-html", "--disable-gtk-doc-pdf"]
             )
 
         # macOS ld does not support this flag

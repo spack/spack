@@ -230,9 +230,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     # Build system
     build_system(
-        conditional("cmake", when="@3.5:"),
-        conditional("autotools", when="@:3.5"),
-        default="cmake",
+        conditional("cmake", when="@3.5:"), conditional("autotools", when="@:3.5"), default="cmake"
     )
 
     with when("build_system=cmake"):

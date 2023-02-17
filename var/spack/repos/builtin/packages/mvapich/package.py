@@ -76,10 +76,7 @@ class Mvapich(AutotoolsPackage):
         "by libfabrics, use the ofi netmod. For more info, visit the "
         "homepage url.",
         default="ofi",
-        values=(
-            "ofi",
-            "ucx",
-        ),
+        values=("ofi", "ucx"),
         multi=False,
     )
 

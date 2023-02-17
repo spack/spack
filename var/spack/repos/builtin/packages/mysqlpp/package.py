@@ -30,7 +30,5 @@ class Mysqlpp(AutotoolsPackage):
                 "--with-mysql-lib={0}".format(self.spec["mysql-client"].prefix.lib.mariadb),
             ]
         else:
-            args = [
-                "--with-mysql={0}".format(self.spec["mysql-client"].prefix),
-            ]
+            args = ["--with-mysql={0}".format(self.spec["mysql-client"].prefix)]
         return args

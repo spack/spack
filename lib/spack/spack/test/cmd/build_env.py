@@ -23,14 +23,7 @@ def test_error_when_multiple_specs_are_given():
     assert "only takes one spec" in output
 
 
-@pytest.mark.parametrize(
-    "args",
-    [
-        ("--", "/bin/bash", "-c", "echo test"),
-        ("--",),
-        (),
-    ],
-)
+@pytest.mark.parametrize("args", [("--", "/bin/bash", "-c", "echo test"), ("--",), ()])
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 def test_build_env_requires_a_spec(args):
     output = build_env(*args, fail_on_error=False)

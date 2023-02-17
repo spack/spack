@@ -37,7 +37,6 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
     exception of an exclude list."""
 
     def __init__(self, exclude_list):
-
         # List of file and directory names to be excluded
         self.exclude_list = frozenset(exclude_list)
 

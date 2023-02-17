@@ -54,10 +54,7 @@ class Halide(CMakePackage, PythonExtension):
 
     depends_on("cmake@3.22:", type="build")
     depends_on("ninja", type="build")
-    depends_on(
-        "llvm@14.0.0:14+clang+lld build_type=Release",
-        type=("link", "run"),
-    )
+    depends_on("llvm@14.0.0:14+clang+lld build_type=Release", type=("link", "run"))
     for v in _values:
         depends_on(
             "llvm targets={0}".format(v), type=("link", "run"), when="targets={0}".format(v)

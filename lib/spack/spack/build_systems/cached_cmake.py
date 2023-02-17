@@ -31,7 +31,6 @@ def cmake_cache_option(name, boolean_value, comment=""):
 
 
 class CachedCMakeBuilder(CMakeBuilder):
-
     #: Phases of a Cached CMake package
     #: Note: the initconfig phase is used for developer builds as a final phase to stop on
     phases: Tuple[str, ...] = ("initconfig", "cmake", "build", "install")

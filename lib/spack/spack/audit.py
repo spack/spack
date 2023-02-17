@@ -321,8 +321,7 @@ def _check_patch_urls(pkgs, error_cls):
                     errors.append(
                         error_cls(
                             "patch URL in package {0} must end with {1}".format(
-                                pkg_cls.name,
-                                full_index_arg,
+                                pkg_cls.name, full_index_arg
                             ),
                             [patch.url],
                         )

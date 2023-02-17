@@ -258,12 +258,7 @@ def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
 
 
 def test_ci_generate_bootstrap_gcc(
-    tmpdir,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
+    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
 ):
     """Test that we can bootstrap a compiler and use it as the
     compiler for a spec in the environment"""
@@ -300,21 +295,10 @@ spack:
 
     needs_graph = {
         "(bootstrap) conflict": [],
-        "(bootstrap) gcc": [
-            "(bootstrap) conflict",
-        ],
-        "(specs) libelf": [
-            "(bootstrap) gcc",
-        ],
-        "(specs) libdwarf": [
-            "(bootstrap) gcc",
-            "(specs) libelf",
-        ],
-        "(specs) dyninst": [
-            "(bootstrap) gcc",
-            "(specs) libelf",
-            "(specs) libdwarf",
-        ],
+        "(bootstrap) gcc": ["(bootstrap) conflict"],
+        "(specs) libelf": ["(bootstrap) gcc"],
+        "(specs) libdwarf": ["(bootstrap) gcc", "(specs) libelf"],
+        "(specs) dyninst": ["(bootstrap) gcc", "(specs) libelf", "(specs) libdwarf"],
     }
 
     with tmpdir.as_cwd():
@@ -331,12 +315,7 @@ spack:
 
 
 def test_ci_generate_bootstrap_artifacts_buildcache(
-    tmpdir,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
+    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
 ):
     """Test that we can bootstrap a compiler when artifacts buildcache
     is turned on"""
@@ -373,18 +352,9 @@ spack:
 
     needs_graph = {
         "(bootstrap) conflict": [],
-        "(bootstrap) gcc": [
-            "(bootstrap) conflict",
-        ],
-        "(specs) libelf": [
-            "(bootstrap) gcc",
-            "(bootstrap) conflict",
-        ],
-        "(specs) libdwarf": [
-            "(bootstrap) gcc",
-            "(bootstrap) conflict",
-            "(specs) libelf",
-        ],
+        "(bootstrap) gcc": ["(bootstrap) conflict"],
+        "(specs) libelf": ["(bootstrap) gcc", "(bootstrap) conflict"],
+        "(specs) libdwarf": ["(bootstrap) gcc", "(bootstrap) conflict", "(specs) libelf"],
         "(specs) dyninst": [
             "(bootstrap) gcc",
             "(bootstrap) conflict",
@@ -447,11 +417,7 @@ def test_ci_generate_with_cdash_token(
     mock_binary_index,
 ):
     """Make sure we it doesn't break if we configure cdash"""
-    os.environ.update(
-        {
-            "SPACK_CDASH_AUTH_TOKEN": "notreallyatokenbutshouldnotmatter",
-        }
-    )
+    os.environ.update({"SPACK_CDASH_AUTH_TOKEN": "notreallyatokenbutshouldnotmatter"})
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -598,12 +564,7 @@ spack:
 
 
 def test_ci_generate_pkg_with_deps(
-    tmpdir,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
+    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
 ):
     """Test pipeline generation for a package w/ dependencies"""
     filename = str(tmpdir.join("spack.yaml"))
@@ -670,10 +631,7 @@ def test_ci_generate_for_pr_pipeline(
     rebuilding the mirror index, even if that job is specifically
     configured"""
     os.environ.update(
-        {
-            "SPACK_PIPELINE_TYPE": "spack_pull_request",
-            "SPACK_PR_BRANCH": "fake-test-branch",
-        }
+        {"SPACK_PIPELINE_TYPE": "spack_pull_request", "SPACK_PR_BRANCH": "fake-test-branch"}
     )
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -928,7 +886,6 @@ def test_ci_rebuild_mock_success(
     monkeypatch,
     broken_tests,
 ):
-
     pkg_name = "archive-files"
     rebuild_env = create_rebuild_env(tmpdir, pkg_name, broken_tests)
 
@@ -1129,11 +1086,7 @@ def test_ci_generate_mirror_override(
     """Ensure that protected pipelines using --buildcache-destination do not
     skip building specs that are not in the override mirror when they are
     found in the main mirror."""
-    os.environ.update(
-        {
-            "SPACK_PIPELINE_TYPE": "spack_protected_branch",
-        }
-    )
+    os.environ.update({"SPACK_PIPELINE_TYPE": "spack_protected_branch"})
 
     working_dir = tmpdir.join("working_dir")
 
@@ -1727,12 +1680,7 @@ spack:
         if spec.name == "gcc":
             return []
         else:
-            return [
-                {
-                    "spec": spec,
-                    "mirror_url": mirror_url,
-                }
-            ]
+            return [{"spec": spec, "mirror_url": mirror_url}]
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
@@ -1766,12 +1714,7 @@ spack:
             # not otherwise need to be rebuilt (thanks to DAG pruning), they
             # both end up in the generated pipeline because the compiler they
             # depend on is bootstrapped, and *does* need to be rebuilt.
-            needs_graph = {
-                "(bootstrap) gcc": [],
-                "(specs) b": [
-                    "(bootstrap) gcc",
-                ],
-            }
+            needs_graph = {"(bootstrap) gcc": [], "(specs) b": ["(bootstrap) gcc"]}
 
             _validate_needs_graph(new_yaml_contents, needs_graph, False)
 
@@ -1788,11 +1731,7 @@ def test_ci_generate_prune_untouched(
 ):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
-    os.environ.update(
-        {
-            "SPACK_PRUNE_UNTOUCHED": "TRUE",  # enables pruning of untouched specs
-        }
-    )
+    os.environ.update({"SPACK_PRUNE_UNTOUCHED": "TRUE"})  # enables pruning of untouched specs
     mirror_url = "https://my.fake.mirror"
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -2216,14 +2155,7 @@ spack:
 
 
 @pytest.mark.parametrize(
-    "subcmd",
-    [
-        (""),
-        ("generate"),
-        ("rebuild-index"),
-        ("rebuild"),
-        ("reproduce-build"),
-    ],
+    "subcmd", [(""), ("generate"), ("rebuild-index"), ("rebuild"), ("reproduce-build")]
 )
 def test_ci_help(subcmd, capsys):
     """Make sure `spack ci` --help describes the (sub)command help."""

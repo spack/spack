@@ -143,10 +143,7 @@ class Bohrium(CMakePackage, CudaPackage):
         #
         # Vector engines
         #
-        args += [
-            "-DVE_OPENCL=" + str("+opencl" in spec),
-            "-DVE_CUDA=" + str("+cuda" in spec),
-        ]
+        args += ["-DVE_OPENCL=" + str("+opencl" in spec), "-DVE_CUDA=" + str("+cuda" in spec)]
 
         if "+openmp" in spec:
             args += [

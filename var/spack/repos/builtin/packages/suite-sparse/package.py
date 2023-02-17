@@ -211,10 +211,7 @@ class SuiteSparse(Package):
 
         # Intel TBB in SuiteSparseQR
         if "+tbb" in spec:
-            make_args += [
-                "SPQR_CONFIG=-DHAVE_TBB",
-                "TBB=%s" % spec["tbb"].libs.ld_flags,
-            ]
+            make_args += ["SPQR_CONFIG=-DHAVE_TBB", "TBB=%s" % spec["tbb"].libs.ld_flags]
 
         if "@5.3:" in spec:
             # Without CMAKE_LIBRARY_PATH defined, the CMake file in the

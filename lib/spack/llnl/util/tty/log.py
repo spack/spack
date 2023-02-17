@@ -161,10 +161,7 @@ class keyboard_input(object):
     def _get_canon_echo_flags(self):
         """Get current termios canonical and echo settings."""
         cfg = termios.tcgetattr(self.stream)
-        return (
-            bool(cfg[3] & termios.ICANON),
-            bool(cfg[3] & termios.ECHO),
-        )
+        return (bool(cfg[3] & termios.ICANON), bool(cfg[3] & termios.ECHO))
 
     def _enable_keyboard_input(self):
         """Disable canonical input and echoing on ``self.stream``."""

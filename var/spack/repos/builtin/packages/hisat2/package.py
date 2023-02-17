@@ -81,18 +81,13 @@ class Hisat2(MakefilePackage):
         with working_dir(self.prefix.bin):
             pattern = "^#!.*/usr/bin/env python"
             repl = "#!{0}".format(self.spec["python"].command.path)
-            files = [
-                "hisat2-build",
-                "hisat2-inspect",
-            ]
+            files = ["hisat2-build", "hisat2-inspect"]
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)
 
             pattern = "^#!.*/usr/bin/env perl"
             repl = "#!{0}".format(self.spec["perl"].command.path)
-            files = [
-                "hisat2",
-            ]
+            files = ["hisat2"]
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)
 

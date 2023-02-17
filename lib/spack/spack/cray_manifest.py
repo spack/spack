@@ -18,10 +18,7 @@ from spack.schema.cray_manifest import schema as manifest_schema
 #: packages here.
 default_path = "/opt/cray/pe/cpe-descriptive-manifest/"
 
-compiler_name_translation = {
-    "nvidia": "nvhpc",
-    "rocm": "rocmcc",
-}
+compiler_name_translation = {"nvidia": "nvhpc", "rocm": "rocmcc"}
 
 
 def translated_compiler_name(manifest_compiler_name):

@@ -252,13 +252,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
 
 
-@pytest.mark.parametrize(
-    "module",
-    [
-        spack.spec,
-        spack.version,
-    ],
-)
+@pytest.mark.parametrize("module", [spack.spec, spack.version])
 def test_hashes_use_no_python_dicts(module):
     """Coarse check to make sure we don't use dicts in Spec.to_node_dict().
 
@@ -479,15 +473,7 @@ ordered_spec = collections.OrderedDict(
                 ]
             ),
         ),
-        (
-            "compiler",
-            collections.OrderedDict(
-                [
-                    ("name", "apple-clang"),
-                    ("version", "13.0.0"),
-                ]
-            ),
-        ),
+        ("compiler", collections.OrderedDict([("name", "apple-clang"), ("version", "13.0.0")])),
         ("name", "zlib"),
         ("namespace", "builtin"),
         (

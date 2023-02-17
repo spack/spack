@@ -619,11 +619,9 @@ def arguments_to_detect_version_fn(operating_system, paths):
         command_arguments = []
         files_to_be_tested = fs.files_in(*search_paths)
         for compiler_name in spack.compilers.supported_compilers():
-
             compiler_cls = class_for_compiler_name(compiler_name)
 
             for language in ("cc", "cxx", "f77", "fc"):
-
                 # Select only the files matching a regexp
                 for (file, full_path), regexp in itertools.product(
                     files_to_be_tested, compiler_cls.search_regexps(language)

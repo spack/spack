@@ -124,10 +124,7 @@ parlib :
         # Set MPI.
         if "+mpi" in self.spec:
             mpi = self.spec["mpi"]
-            args += [
-                "MPI={0}".format(mpi.name),
-                "MPI_INST={0}".format(mpi.prefix),
-            ]
+            args += ["MPI={0}".format(mpi.name), "MPI_INST={0}".format(mpi.prefix)]
         return args
 
     def install(self, spec, prefix):

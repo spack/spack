@@ -29,13 +29,9 @@ class Mujoco(Package):
             version(ver, sha256=pkg_sha256)
 
     def url_for_version(self, version):
-
         url = "https://mujoco.org/download/mujoco{0}-{1}-x86_64.tar.gz"
 
-        system_map = {
-            "Linux": "linux",
-            "Darwin": "macos",
-        }
+        system_map = {"Linux": "linux", "Darwin": "macos"}
 
         return url.format(version.joined, system_map[platform.system()])
 

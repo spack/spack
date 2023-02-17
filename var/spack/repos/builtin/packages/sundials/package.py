@@ -479,10 +479,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+superlu-mt" in spec:
             if spec.satisfies("@3:"):
                 args.extend(
-                    [
-                        define("BLAS_ENABLE", True),
-                        define("BLAS_LIBRARIES", spec["blas"].libs),
-                    ]
+                    [define("BLAS_ENABLE", True), define("BLAS_LIBRARIES", spec["blas"].libs)]
                 )
             args.extend(
                 [

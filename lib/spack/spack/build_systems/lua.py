@@ -68,10 +68,7 @@ class LuaBuilder(spack.builder.Builder):
 
     @staticmethod
     def _generate_tree_line(name, prefix):
-        return """{{ name = "{name}", root = "{prefix}" }};""".format(
-            name=name,
-            prefix=prefix,
-        )
+        return """{{ name = "{name}", root = "{prefix}" }};""".format(name=name, prefix=prefix)
 
     def generate_luarocks_config(self, pkg, spec, prefix):
         spec = self.pkg.spec

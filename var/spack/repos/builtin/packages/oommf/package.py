@@ -59,8 +59,7 @@ class Oommf(Package):
     )
 
     version(
-        "20a3_20210930",
-        sha256="880242afdf4c84de7f2a3c42ab0ad8c354028a7d2d3c3160980cf3e08e285691",
+        "20a3_20210930", sha256="880242afdf4c84de7f2a3c42ab0ad8c354028a7d2d3c3160980cf3e08e285691"
     )
 
     version(
@@ -70,8 +69,7 @@ class Oommf(Package):
     )
 
     version(
-        "20a2_20200608",
-        sha256="a3113f2aca0b6249ee99b2f4874f31de601bd7af12498d84f28706b265fa50ab",
+        "20a2_20200608", sha256="a3113f2aca0b6249ee99b2f4874f31de601bd7af12498d84f28706b265fa50ab"
     )
 
     version(
@@ -175,7 +173,6 @@ class Oommf(Package):
     def configure(self, spec, prefix):
         # change into directory with source code
         with working_dir(self.get_oommf_source_root()):
-
             configure = Executable("./oommf.tcl pimake distclean")
             configure()
             configure2 = Executable("./oommf.tcl pimake upgrade")
@@ -194,7 +191,6 @@ class Oommf(Package):
         oommfdir = self.get_oommf_path(prefix)
 
         with working_dir(self.get_oommf_source_root()):
-
             install_tree(".", oommfdir)
 
             # The one file that is used directly by the users should be
@@ -263,12 +259,7 @@ class Oommf(Package):
         # run "oommf +platform"
         options = [oommf_tcl_path, "+platform"]
         purpose = "Check oommf.tcl can execute (+platform)"
-        expected = [
-            "OOMMF threads",
-            "OOMMF release",
-            "OOMMF API index",
-            "Temp file directory",
-        ]
+        expected = ["OOMMF threads", "OOMMF release", "OOMMF API index", "Temp file directory"]
         self.run_test(
             exe,
             options=options,

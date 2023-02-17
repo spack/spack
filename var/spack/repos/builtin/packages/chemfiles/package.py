@@ -21,7 +21,5 @@ class Chemfiles(CMakePackage):
     variant("shared", default=False, description="Build shared libraries")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-        ]
+        args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
         return args

@@ -7,7 +7,6 @@ from spack.package import *
 
 
 class BaseWithDirectives(Package):
-
     depends_on("cmake", type="build")
     depends_on("mpi")
     variant("openblas", description="Activates openblas", default=True)

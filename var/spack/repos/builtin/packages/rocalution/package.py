@@ -115,11 +115,7 @@ class Rocalution(CMakePackage):
     )
 
     depends_on("cmake@3.5:", type="build")
-    for ver in [
-        "3.5.0",
-        "3.7.0",
-        "3.8.0",
-    ]:
+    for ver in ["3.5.0", "3.7.0", "3.8.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
         for tgt in itertools.chain(["auto"], amdgpu_targets):
