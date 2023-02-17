@@ -1874,9 +1874,12 @@ class SpackSolverSetup(object):
             # generate facts for each package constraint and the version
             # that satisfies it
             for v in allowed_versions:
-                if isinstance(v, spack.version.GitVersion) and v.user_supplied_reference:
-                    x, _ = str(v).split("=")
-                    self.gen.fact(fn.version_satisfies(pkg_name, x, v))
+                # TODO: with the below 3 lines, the latter check in
+                # test_requirement_adds_multiple_new_versions passes, but
+                # this doesn't seem like the right thing to do...
+                # if isinstance(v, spack.version.GitVersion) and v.user_supplied_reference:
+                #     x, _ = str(v).split("=")
+                #     self.gen.fact(fn.version_satisfies(pkg_name, x, v))
                 self.gen.fact(fn.version_satisfies(pkg_name, versions, v))
 
             self.gen.newline()
