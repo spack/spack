@@ -67,7 +67,7 @@ class ScineUtilities(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("SCINE_BUILD_TESTS", self.run_tests),
-            self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
+            self.define_from_variant("SCINE_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SCINE_MARCH", ""),
             self.define("BOOST_ROOT", self.spec["boost"].prefix),
             self.define("BOOST_LIBRARY_DIR", self.spec["boost"].libs.directories[0]),
