@@ -26,6 +26,7 @@ class PyFiona(PythonPackage):
     version("1.7.12", sha256="8b54eb8422d7c502bb7776b184018186bede1a489cf438a7a47f992ade6a0e51")
 
     # pyproject.toml
+    depends_on("python", type=("build", "link", "run"))
     depends_on("py-cython@0.29.29:0.29", when="@1.9:", type="build")
     depends_on("py-setuptools@61:", when="@1.9:", type="build")
     depends_on("py-attrs@19.2:", when="@1.9:", type=("build", "run"))
