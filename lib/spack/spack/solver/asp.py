@@ -878,6 +878,7 @@ class SpackSolverSetup(object):
             if (
                 isinstance(v.version, spack.version.GitVersion)
                 and v.version.user_supplied_reference
+                and v.origin != version_provenance.packages_yaml
             ):
                 ref_version = spack.version.Version(v.version.ref_version_str)
                 self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
@@ -2071,8 +2072,7 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         req_version_specs = self._get_versioned_specs_from_pkg_requirements()
-        # TODO: if I use version_provenance.packages_yaml, the associated test fail
-        self.add_concrete_versions_from_specs(req_version_specs, version_provenance.spec)
+        self.add_concrete_versions_from_specs(req_version_specs, version_provenance.packages_yaml)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
