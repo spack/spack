@@ -63,17 +63,9 @@ class Parallelio(CMakePackage):
             define("PIO_ENABLE_EXAMPLES", False),
         ]
         if spec.satisfies("+pnetcdf"):
-            args.extend(
-                [
-                    define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix),
-                ]
-            )
+            args.extend([define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix)])
         if spec.satisfies("+fortran"):
-            args.extend(
-                [
-                    define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix),
-                ]
-            )
+            args.extend([define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix)])
         if spec.satisfies("+mpi"):
             env["CC"] = spec["mpi"].mpicc
             env["FC"] = spec["mpi"].mpifc

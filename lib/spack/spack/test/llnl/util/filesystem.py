@@ -315,7 +315,6 @@ def test_paths_containing_libs(dirs_with_libfiles):
 
 
 def test_move_transaction_commit(tmpdir):
-
     fake_library = tmpdir.mkdir("lib").join("libfoo.so")
     fake_library.write("Just some fake content.")
 
@@ -330,7 +329,6 @@ def test_move_transaction_commit(tmpdir):
 
 
 def test_move_transaction_rollback(tmpdir):
-
     fake_library = tmpdir.mkdir("lib").join("libfoo.so")
     fake_library.write("Initial content.")
 
@@ -812,28 +810,10 @@ def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
         j("c", "file_2"),
         j("file_3"),
     ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("a", "d"),
-        j("b", "d"),
-        j("c"),
-    ]
-    assert visitor.dirs_after == [
-        j("a", "d"),
-        j("a"),
-        j("b", "d"),
-        j("c"),
-    ]
-    assert visitor.symlinked_dirs_before == [
-        j("a", "to_c"),
-        j("b"),
-        j("b", "to_c"),
-    ]
-    assert visitor.symlinked_dirs_after == [
-        j("a", "to_c"),
-        j("b", "to_c"),
-        j("b"),
-    ]
+    assert visitor.dirs_before == [j("a"), j("a", "d"), j("b", "d"), j("c")]
+    assert visitor.dirs_after == [j("a", "d"), j("a"), j("b", "d"), j("c")]
+    assert visitor.symlinked_dirs_before == [j("a", "to_c"), j("b"), j("b", "to_c")]
+    assert visitor.symlinked_dirs_after == [j("a", "to_c"), j("b", "to_c"), j("b")]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
@@ -849,20 +829,9 @@ def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
         j("c", "file_2"),
         j("file_3"),
     ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("a", "d"),
-        j("c"),
-    ]
-    assert visitor.dirs_after == [
-        j("a", "d"),
-        j("a"),
-        j("c"),
-    ]
-    assert visitor.symlinked_dirs_before == [
-        j("a", "to_c"),
-        j("b"),
-    ]
+    assert visitor.dirs_before == [j("a"), j("a", "d"), j("c")]
+    assert visitor.dirs_after == [j("a", "d"), j("a"), j("c")]
+    assert visitor.symlinked_dirs_before == [j("a", "to_c"), j("b")]
     assert not visitor.symlinked_dirs_after
 
 
@@ -872,17 +841,10 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
     visitor = RegisterVisitor(root, follow_dirs=False, follow_symlink_dirs=False)
     fs.visit_directory_tree(root, visitor)
     j = os.path.join
-    assert visitor.files == [
-        j("file_3"),
-    ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("c"),
-    ]
+    assert visitor.files == [j("file_3")]
+    assert visitor.dirs_before == [j("a"), j("c")]
     assert not visitor.dirs_after
-    assert visitor.symlinked_dirs_before == [
-        j("b"),
-    ]
+    assert visitor.symlinked_dirs_before == [j("b")]
     assert not visitor.symlinked_dirs_after
 
 

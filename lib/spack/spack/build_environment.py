@@ -1016,7 +1016,6 @@ def get_cmake_prefix_path(pkg):
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
-
     context = kwargs.get("context", "build")
 
     try:

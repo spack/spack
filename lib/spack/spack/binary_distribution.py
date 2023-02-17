@@ -210,10 +210,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     self._mirrors_for_spec[dag_hash].append(
-                        {
-                            "mirror_url": mirror_url,
-                            "spec": indexed_spec,
-                        }
+                        {"mirror_url": mirror_url, "spec": indexed_spec}
                     )
         finally:
             shutil.rmtree(tmpdir)
@@ -296,10 +293,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     current_list.append(
-                        {
-                            "mirror_url": new_entry["mirror_url"],
-                            "spec": new_entry["spec"],
-                        }
+                        {"mirror_url": new_entry["mirror_url"], "spec": new_entry["spec"]}
                     )
 
     def update(self, with_cooldown=False):
@@ -367,8 +361,7 @@ class BinaryCacheIndex(object):
                     # May need to fetch the index and update the local caches
                     try:
                         needs_regen = self._fetch_and_cache_index(
-                            cached_mirror_url,
-                            cache_entry=cache_entry,
+                            cached_mirror_url, cache_entry=cache_entry
                         )
                         self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
@@ -2006,12 +1999,7 @@ def try_direct_fetch(spec, mirrors=None):
             fetched_spec = Spec.from_json(specfile_contents)
         fetched_spec._mark_concrete()
 
-        found_specs.append(
-            {
-                "mirror_url": mirror.fetch_url,
-                "spec": fetched_spec,
-            }
-        )
+        found_specs.append({"mirror_url": mirror.fetch_url, "spec": fetched_spec})
 
     return found_specs
 
@@ -2313,11 +2301,7 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     local_tarball_path = os.path.join(destination, tarball_dir_name)
 
     files_to_fetch = [
-        {
-            "url": [tarball_path_name],
-            "path": local_tarball_path,
-            "required": True,
-        },
+        {"url": [tarball_path_name], "path": local_tarball_path, "required": True},
         {
             "url": [
                 tarball_name(concrete_spec, ".spec.json.sig"),
@@ -2438,12 +2422,7 @@ class DefaultIndexFetcher:
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
 
-        return FetchIndexResult(
-            etag=etag,
-            hash=computed_hash,
-            data=result,
-            fresh=False,
-        )
+        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
 class EtagIndexFetcher:

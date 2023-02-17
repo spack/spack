@@ -42,18 +42,12 @@ class Arbor(CMakePackage, CudaPackage):
         url="https://github.com/arbor-sim/arbor/releases/download/v0.5.2/arbor-v0.5.2-full.tar.gz",
     )
 
-    variant(
-        "assertions",
-        default=False,
-        description="Enable arb_assert() assertions in code.",
-    )
+    variant("assertions", default=False, description="Enable arb_assert() assertions in code.")
     variant("doc", default=False, description="Build documentation.")
     variant("mpi", default=False, description="Enable MPI support")
     variant("python", default=True, description="Enable Python frontend support")
     variant(
-        "vectorize",
-        default=False,
-        description="Enable vectorization of computational kernels",
+        "vectorize", default=False, description="Enable vectorization of computational kernels"
     )
     variant(
         "gpu_rng",

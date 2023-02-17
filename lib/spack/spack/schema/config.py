@@ -21,7 +21,7 @@ properties = {
             "flags": {
                 "type": "object",
                 "properties": {
-                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]},
+                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]}
                 },
             },
             "shared_linking": {
@@ -54,12 +54,12 @@ properties = {
                         ),
                     },
                     {"type": "string"},  # deprecated
-                ],
+                ]
             },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "install_path_scheme": {"type": "string"},  # deprecated
             "build_stage": {
-                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
             },
             "test_stage": {"type": "string"},
             "extensions": {"type": "array", "items": {"type": "string"}},
@@ -82,7 +82,7 @@ properties = {
             "concretizer": {"type": "string", "enum": ["original", "clingo"]},
             "db_lock_timeout": {"type": "integer", "minimum": 1},
             "package_lock_timeout": {
-                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}],
+                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
             },
             "allow_sgid": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
@@ -96,7 +96,7 @@ properties = {
             "modules:[module set]:roots and is ignored",
             "error": False,
         },
-    },
+    }
 }
 
 

@@ -168,11 +168,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
-        known_targets = {
-            "x86_64": "x86_64",
-            "aarch64": "aarch64",
-            "ppc64le": "powerpc",
-        }
+        known_targets = {"x86_64": "x86_64", "aarch64": "aarch64", "ppc64le": "powerpc"}
         known_platforms = {"linux": "linux-gnu", "cray": "linux-gnu", "darwin": "apple-darwin"}
 
         family = str(self.spec.target.family)

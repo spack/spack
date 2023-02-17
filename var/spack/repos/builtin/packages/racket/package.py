@@ -34,7 +34,6 @@ class Racket(MakefilePackage):
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
-
     build_directory = "src"
 
     def toggle(self, spec, variant):

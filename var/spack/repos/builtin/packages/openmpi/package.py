@@ -952,11 +952,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         config_args.extend(self.enable_or_disable("memchecker"))
         if spec.satisfies("+memchecker", strict=True):
-            config_args.extend(
-                [
-                    "--enable-debug",
-                ]
-            )
+            config_args.extend(["--enable-debug"])
 
         # Package dependencies
         for dep in ["libevent", "lustre", "pmix", "singularity", "valgrind", "zlib"]:
