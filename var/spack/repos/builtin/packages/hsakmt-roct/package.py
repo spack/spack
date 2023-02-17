@@ -5,6 +5,7 @@
 
 
 from spack.package import *
+import os
 
 
 class HsakmtRoct(CMakePackage):
@@ -112,7 +113,7 @@ class HsakmtRoct(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("numactl")
     depends_on("libdrm", when="@4.5.0:")
-    depends_on("llvm-amdgpu", when="@4.5.0:")
+    depends_on("llvm-amdgpu", when="@5.3.0:")
 
     # See https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/issues/72
     # and https://github.com/spack/spack/issues/28398
@@ -136,12 +137,12 @@ class HsakmtRoct(CMakePackage):
     def cache_test_sources(self):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies("@:5.1.0"):
+        if self.spec.satisfies("@:5.3.0"):
             return
         self.cache_extra_test_sources([self.test_src_dir, "include"])
 
     def test(self):
-        if self.spec.satisfies("@:5.1.0"):
+        if self.spec.satisfies("@:5.3.0"):
             print("Skipping: stand-alone tests")
             return
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)

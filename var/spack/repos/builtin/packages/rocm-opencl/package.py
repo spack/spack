@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+import os
 
 
 class RocmOpencl(CMakePackage):
