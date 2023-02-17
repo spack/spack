@@ -398,6 +398,23 @@ under ``all`` are disregarded. For example, with a configuration like this:
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake``
 dependencies) to use ``clang``.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting requirements for versions that are git commit hashes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are installing a package that retrieves its source code from a git
+repository, and you want to specify a commit hash from the repository as a
+version requirement, then you need to define an equivalence to a numbered
+version as part of the requirement spec and also mention it as a version
+preference for the package:
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require: "@full-commit-hash=4.1.5"
+       version: ["4.1.5"]
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting requirements on virtual specs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
