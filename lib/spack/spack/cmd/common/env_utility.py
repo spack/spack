@@ -48,9 +48,9 @@ class AreDepsInstalledVisitor:
             raise ValueError("context can only be build or test")
 
         if context == "build":
-            self.direct_deps = ("build", "test", "link", "run")
-        else:
             self.direct_deps = ("build", "link", "run")
+        else:
+            self.direct_deps = ("build", "test", "link", "run")
 
         self.has_uninstalled_deps = False
 
