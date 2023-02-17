@@ -109,7 +109,7 @@ spack:
             KUBERNETES_MEMORY_REQUEST: "500M"
 
       - match:
-          - 'os=ubuntu18.04'
+          - 'os=ubuntu22.04'
         runner-attributes:
           tags: ["spack", "x86_64"]
           variables:
