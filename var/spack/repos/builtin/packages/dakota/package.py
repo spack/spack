@@ -68,4 +68,7 @@ class Dakota(CMakePackage):
                 ]
             )
 
+        if self.run_tests:
+            args += ["-DCMAKE_CTEST_ARGUMENTS=-L;Accept"]
+
         return args
