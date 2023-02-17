@@ -66,7 +66,6 @@ class SpecList(object):
             specs = []
             for item in self.specs_as_yaml_list:
                 if isinstance(item, dict):  # matrix of specs
-                    expanded = _expand_matrix_constraints(item)
                     specs.extend([Spec(" ".join(x)) for x in _expand_matrix_constraints(item)])
                 else:  # individual spec
                     specs.append(Spec(item))
