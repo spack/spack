@@ -40,6 +40,7 @@ import spack.platforms
 import spack.relocate as relocate
 import spack.repo
 import spack.store
+import spack.traverse as traverse
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
@@ -209,10 +210,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     self._mirrors_for_spec[dag_hash].append(
-                        {
-                            "mirror_url": mirror_url,
-                            "spec": indexed_spec,
-                        }
+                        {"mirror_url": mirror_url, "spec": indexed_spec}
                     )
         finally:
             shutil.rmtree(tmpdir)
@@ -295,10 +293,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     current_list.append(
-                        {
-                            "mirror_url": new_entry["mirror_url"],
-                            "spec": new_entry["spec"],
-                        }
+                        {"mirror_url": new_entry["mirror_url"], "spec": new_entry["spec"]}
                     )
 
     def update(self, with_cooldown=False):
@@ -366,8 +361,7 @@ class BinaryCacheIndex(object):
                     # May need to fetch the index and update the local caches
                     try:
                         needs_regen = self._fetch_and_cache_index(
-                            cached_mirror_url,
-                            cache_entry=cache_entry,
+                            cached_mirror_url, cache_entry=cache_entry
                         )
                         self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
@@ -1198,40 +1192,42 @@ def _build_tarball(
     ):
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
-    # make a copy of the install directory to work with
-    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
-    # install_tree copies hardlinks
-    # create a temporary tarfile from prefix and exract it to workdir
-    # tarfile preserves hardlinks
-    temp_tarfile_name = tarball_name(spec, ".tar")
-    temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
-    with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
-        tar.add(name="%s" % spec.prefix, arcname=".")
-    with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
-        tar.extractall(workdir)
-    os.remove(temp_tarfile_path)
+    pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
+    workdir = os.path.join(tmpdir, pkg_dir)
+
+    # TODO: We generally don't want to mutate any files, but when using relative
+    # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
+    # For now, we only make a full copy of the spec prefix when in relative mode.
+
+    if relative:
+        # tarfile is used because it preserves hardlink etc best.
+        binaries_dir = workdir
+        temp_tarfile_name = tarball_name(spec, ".tar")
+        temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
+        with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
+            tar.add(name="%s" % spec.prefix, arcname=".")
+        with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
+            tar.extractall(workdir)
+        os.remove(temp_tarfile_path)
+    else:
+        binaries_dir = spec.prefix
+        mkdirp(os.path.join(workdir, ".spack"))
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    if relative:
-        try:
+    try:
+        if relative:
             make_package_relative(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            tty.die(e)
-    else:
-        try:
-            check_package_relocatable(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            tty.die(e)
+        elif not allow_root:
+            ensure_package_relocatable(workdir, binaries_dir)
+    except Exception as e:
+        shutil.rmtree(workdir)
+        shutil.rmtree(tarfile_dir)
+        shutil.rmtree(tmpdir)
+        tty.die(e)
 
     # create gzip compressed tarball of the install prefix
     # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
@@ -1239,7 +1235,13 @@ def _build_tarball(
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
     # So we follow gzip.
     with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
-        tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
+        tar.add(name=binaries_dir, arcname=pkg_dir)
+        if not relative:
+            # Add buildinfo file
+            buildinfo_path = buildinfo_file_name(workdir)
+            buildinfo_arcname = buildinfo_file_name(pkg_dir)
+            tar.add(name=buildinfo_path, arcname=buildinfo_arcname)
+
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -1300,57 +1302,44 @@ def _build_tarball(
     return None
 
 
-def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
+def nodes_to_be_packaged(specs, root=True, dependencies=True):
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
         specs (List[spack.spec.Spec]): list of root specs to be processed
-        include_root (bool): include the root of each spec in the nodes
-        include_dependencies (bool): include the dependencies of each
+        root (bool): include the root of each spec in the nodes
+        dependencies (bool): include the dependencies of each
             spec in the nodes
     """
-    if not include_root and not include_dependencies:
-        return set()
+    if not root and not dependencies:
+        return []
+    elif dependencies:
+        nodes = traverse.traverse_nodes(specs, root=root, deptype="all")
+    else:
+        nodes = set(specs)
 
-    def skip_node(current_node):
-        if current_node.external or current_node.virtual:
-            return True
-        return spack.store.db.query_one(current_node) is None
+    # Limit to installed non-externals.
+    packageable = lambda n: not n.external and n.installed
 
-    expanded_set = set()
-    for current_spec in specs:
-        if not include_dependencies:
-            nodes = [current_spec]
-        else:
-            nodes = [
-                n
-                for n in current_spec.traverse(
-                    order="post", root=include_root, deptype=("link", "run")
-                )
-            ]
-
-        for node in nodes:
-            if not skip_node(node):
-                expanded_set.add(node)
-
-    return expanded_set
+    # Mass install check
+    with spack.store.db.read_transaction():
+        return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, specs_kwargs=None, **kwargs):
+def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
     Args:
         specs (List[spack.spec.Spec]): installed specs to be packaged
         push_url (str): url where to push the binary package
-        specs_kwargs (dict): dictionary with two possible boolean keys, "include_root"
-            and "include_dependencies", which determine which part of each spec is
-            packaged and pushed to the mirror
+        include_root (bool): include the root of each spec in the nodes
+        include_dependencies (bool): include the dependencies of each
+            spec in the nodes
         **kwargs: TODO
 
     """
-    specs_kwargs = specs_kwargs or {"include_root": True, "include_dependencies": True}
-    nodes = nodes_to_be_packaged(specs, **specs_kwargs)
+    nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
 
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
@@ -1567,16 +1556,11 @@ def make_package_relative(workdir, spec, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def check_package_relocatable(workdir, spec, allow_root):
-    """
-    Check if package binaries are relocatable.
-    Change links to placeholder links.
-    """
+def ensure_package_relocatable(workdir, binaries_dir):
+    """Check if package binaries are relocatable."""
     buildinfo = read_buildinfo_file(workdir)
-    cur_path_names = list()
-    for filename in buildinfo["relocate_binaries"]:
-        cur_path_names.append(os.path.join(workdir, filename))
-    allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
+    binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
+    relocate.ensure_binaries_are_relocatable(binaries)
 
 
 def dedupe_hardlinks_if_necessary(root, buildinfo):
@@ -2015,12 +1999,7 @@ def try_direct_fetch(spec, mirrors=None):
             fetched_spec = Spec.from_json(specfile_contents)
         fetched_spec._mark_concrete()
 
-        found_specs.append(
-            {
-                "mirror_url": mirror.fetch_url,
-                "spec": fetched_spec,
-            }
-        )
+        found_specs.append({"mirror_url": mirror.fetch_url, "spec": fetched_spec})
 
     return found_specs
 
@@ -2322,11 +2301,7 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     local_tarball_path = os.path.join(destination, tarball_dir_name)
 
     files_to_fetch = [
-        {
-            "url": [tarball_path_name],
-            "path": local_tarball_path,
-            "required": True,
-        },
+        {"url": [tarball_path_name], "path": local_tarball_path, "required": True},
         {
             "url": [
                 tarball_name(concrete_spec, ".spec.json.sig"),
@@ -2447,12 +2422,7 @@ class DefaultIndexFetcher:
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
 
-        return FetchIndexResult(
-            etag=etag,
-            hash=computed_hash,
-            data=result,
-            fresh=False,
-        )
+        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
 class EtagIndexFetcher:

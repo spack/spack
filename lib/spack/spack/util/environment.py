@@ -1004,12 +1004,7 @@ def environment_after_sourcing_files(*files, **kwargs):
 
         # Try to source the file
         source_file_arguments = " ".join(
-            [
-                source_file,
-                suppress_output,
-                concatenate_on_success,
-                dump_environment,
-            ]
+            [source_file, suppress_output, concatenate_on_success, dump_environment]
         )
         output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
         return json.loads(output)

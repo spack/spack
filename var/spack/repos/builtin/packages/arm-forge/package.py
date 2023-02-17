@@ -161,11 +161,7 @@ class ArmForge(Package):
         description='Detect available PMU counters via "forge-probe" during install',
     )
 
-    variant(
-        "accept-eula",
-        default=False,
-        description="Accept the EULA",
-    )
+    variant("accept-eula", default=False, description="Accept the EULA")
 
     # forge-probe executes with "/usr/bin/env python"
     depends_on("python@2.7:", type="build", when="+probe")

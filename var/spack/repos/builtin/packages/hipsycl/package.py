@@ -27,17 +27,9 @@ class Hipsycl(CMakePackage):
     version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)
     version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
     version("0.9.1", commit="fe8465cd5399a932f7221343c07c9942b0fe644c", submodules=True)
-    version(
-        "0.8.0",
-        commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a",
-        submodules=True,
-    )
+    version("0.8.0", commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a", submodules=True)
 
-    variant(
-        "cuda",
-        default=False,
-        description="Enable CUDA backend for SYCL kernels",
-    )
+    variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("boost +filesystem", when="@:0.8")
