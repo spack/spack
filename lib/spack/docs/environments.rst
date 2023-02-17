@@ -346,7 +346,7 @@ the Environment and then install the concretized specs.
    (see :ref:`build-jobs`). To speed up environment builds further, independent
    packages can be installed in parallel by launching more Spack instances. For
    example, the following will build at most four packages in parallel using
-   three background jobs: 
+   three background jobs:
 
    .. code-block:: console
 
@@ -394,7 +394,7 @@ version (and other constraints) passed as the spec argument to the
 
 For packages with ``git`` attributes, git branches, tags, and commits can
 also be used as valid concrete versions (see :ref:`version-specifier`).
-This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone
 the ``main`` branch of the package, and ``spack install`` will install from
 that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
@@ -629,6 +629,35 @@ The following two Environment manifests are identical:
 
 Spec matrices can be used to install swaths of software across various
 toolchains.
+
+Note that ordering of matrices is important. For example, the
+following environments are identical:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+       - matrix:
+           - [hdf5@1.10.2+mpi]
+           - [^mpich, ^openmpi]
+           - ['%gcc']
+       - matrix:
+           - [hdf5@1.12.1+mpi]
+           - ['%gcc']
+           - [^mpich, ^openmpi]
+
+   spack:
+     specs:
+       - hdf5@1.10.2+mpi ^mpich%gcc
+       - hdf5@1.10.2+mpi ^openmpi%gcc
+       - hdf5@1.12.1+mpi %gcc ^mpich
+       - hdf5@1.12.1+mpi %gcc ^openmpi
+
+Notice how the first matrix applies the compiler constraints to the
+mpi dependencies, whereas the second matrix applies the compiler
+constraints directly to the root hdf5 node. This gives users the full
+breadth of expressiveness of the spec syntax through the matrix
+interface.
 
 ^^^^^^^^^^^^^^^^^^^^
 Spec List References
@@ -1120,19 +1149,19 @@ index once every package is pushed. Note how this target uses the generated
 
    SPACK ?= spack
    BUILDCACHE_DIR = $(CURDIR)/tarballs
-   
+
    .PHONY: all
-   
+
    all: push
-   
+
    include env.mk
-   
+
    example/push/%: example/install/%
    	@mkdir -p $(dir $@)
    	$(info About to push $(SPEC) to a buildcache)
    	$(SPACK) -e . buildcache create --allow-root --only=package --directory $(BUILDCACHE_DIR) /$(HASH)
    	@touch $@
-   
+
    push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
    	$(info Updating the buildcache index)
    	$(SPACK) -e . buildcache update-index --directory $(BUILDCACHE_DIR)
