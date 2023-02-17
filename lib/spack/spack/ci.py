@@ -859,7 +859,8 @@ def generate_gitlab_ci_yaml(
                 runner_attribs = _find_matching_config(release_spec, gitlab_ci)
 
                 if not runner_attribs:
-                    tty.warn("No match found for {0}, skipping it".format(release_spec))
+                    msg = f"There is no matching configuration for {release_spec}\n{gitlab_ci}"
+                    tty.die(msg)
                     continue
 
                 tags = [tag for tag in runner_attribs["tags"]]
