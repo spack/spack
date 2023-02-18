@@ -556,7 +556,7 @@ class NoChecksumException(spack.error.SpackError):
 
     def __init__(self, path, algorithm, expected, computed):
         size, contents = fsys.filesummary(path)
-        super(NoChecksumException).__init__(
+        super(NoChecksumException, self).__init__(
             f"{algorithm} checksum failed for {path}",
             f"Expected {expected} but got {computed}. "
             f"File size = {size} bytes. Contents = {contents!r}",
