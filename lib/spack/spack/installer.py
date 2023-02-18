@@ -1755,14 +1755,16 @@ class PackageInstaller(object):
                 raise
 
             except binary_distribution.NoChecksumException as exc:
-                if not task.cache_only:
-                    # Checking hash on downloaded binary failed.
-                    err = "Failed to install {0} from binary cache due to {1}:"
-                    err += " Requeueing to install from source."
-                    tty.error(err.format(pkg.name, str(exc)))
-                    task.use_cache = False
-                    self._requeue_task(task)
-                    continue
+                if task.cache_only:
+                    raise
+
+                # Checking hash on downloaded binary failed.
+                err = "Failed to install {0} from binary cache due to {1}:"
+                err += " Requeueing to install from source."
+                tty.error(err.format(pkg.name, str(exc)))
+                task.use_cache = False
+                self._requeue_task(task)
+                continue
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)

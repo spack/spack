@@ -89,22 +89,6 @@ def _ensure_one_stage_entry(stage_path):
     return os.path.join(stage_path, stage_entries[0])
 
 
-def _filesummary(path, print_bytes=16):
-    try:
-        n = print_bytes
-        with open(path, "rb") as f:
-            size = os.fstat(f.fileno()).st_size
-            if size <= 2 * n:
-                short_contents = f.read(2 * n)
-            else:
-                short_contents = f.read(n)
-                f.seek(-n, 2)
-                short_contents += b"..." + f.read(n)
-        return size, short_contents
-    except OSError:
-        return 0, b""
-
-
 def fetcher(cls):
     """Decorator used to register fetch strategies."""
     all_strategies.append(cls)
@@ -513,7 +497,7 @@ class URLFetchStrategy(FetchStrategy):
             # On failure, provide some information about the file size and
             # contents, so that we can quickly see what the issue is (redirect
             # was not followed, empty file, text instead of binary, ...)
-            size, contents = _filesummary(self.archive_file)
+            size, contents = fs.filesummary(self.archive_file)
             raise ChecksumError(
                 f"{checker.hash_name} checksum failed for {self.archive_file}",
                 f"Expected {self.digest} but got {checker.sum}. "
