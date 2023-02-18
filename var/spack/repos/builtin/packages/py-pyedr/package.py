@@ -16,9 +16,10 @@ class PyPyedr(PythonPackage):
 
     version("0.7.1", sha256="ad7ccdeb739399acd11a25f2d2413ebb46a54223059a2b902ac604d29fabd767")
 
-    depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-numpy@1.19.0:", type=("build", "run"))
-    depends_on("py-tqdm", type=("build", "run")
+    depends_on("python@3.6:")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pbr", type="build")
+    depends_on("py-numpy@1.19.0:", type=("build", "run"))
+    depends_on("py-pbr", type=("build", "run"))
+    depends_on("py-tqdm", type=("build", "run"))
+
+    depends_on("py-setuptools@42:", type="build")
