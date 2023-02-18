@@ -66,13 +66,13 @@ class PyPyarrow(PythonPackage, CudaPackage):
     patch("for_aarch64.patch", when="@0 target=aarch64:")
 
     def setup_build_environment(self, env):
-        if spec.satisfies("+parquet"):
-            env.set("PYARROW_PARQUET", "1")
-        if spec.satisfies("+cuda"):
+        if self.spec.satisfies("+parquet"):
+            env.set("PYARROW_WITH_PARQUET", "1")
+        if self.spec.satisfies("+cuda"):
             env.set("PYARROW_WITH_CUDA", "1")
-        if spec.satisfies("+orc"):
+        if self.spec.satisfies("+orc"):
             env.set("PYARROW_WITH_ORC", "1")
-        if spec.satisfies("+dataset"):
+        if self.spec.satisfies("+dataset"):
             env.set("PYARROW_WITH_DATASET", "1")
 
     def install_options(self, spec, prefix):
