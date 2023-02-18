@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class PyPyedr(PythonPackage):
-    """Reads Gromacs EDR file to populate a pandas dataframe"""
+    """Pyedr provides a means of reading a Gromacs EDR binary XDR file and return
+    its contents as a dictionary of NumPy arrays"""
 
     homepage = "https://github.com/MDAnalysis/panedr"
     pypi = "pyedr/pyedr-0.7.1.tar.gz"
