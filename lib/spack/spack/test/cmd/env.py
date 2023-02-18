@@ -1200,7 +1200,7 @@ def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_m
         add("libelf")
         add("libelf cflags=-g")
         with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=spack.store.layout.metadata_dir
+            ev.SpackEnvironmentViewError, match="two specs project to the same prefix"
         ):
             install("--fake")
 
