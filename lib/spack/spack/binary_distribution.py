@@ -554,8 +554,7 @@ class NoChecksumException(spack.error.SpackError):
     Raised if file fails checksum verification.
     """
 
-    def __init__(self, path, algorithm, expected, computed):
-        size, contents = fsys.filesummary(path)
+    def __init__(self, path, size, contents, algorithm, expected, computed):
         super(NoChecksumException, self).__init__(
             f"{algorithm} checksum failed for {path}",
             f"Expected {expected} but got {computed}. "
@@ -1777,7 +1776,8 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
 
     # if the checksums don't match don't install
     if local_checksum != expected:
-        raise NoChecksumException(tarfile_path, "sha256", expected, local_checksum)
+        size, contents = fsys.filesummary(tarfile_path)
+        raise NoChecksumException(tarfile_path, size, contents, "sha256", expected, local_checksum)
 
     return tarfile_path
 
@@ -1839,8 +1839,11 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
 
         # if the checksums don't match don't install
         if local_checksum != expected:
+            size, contents = fsys.filesummary(tarfile_path)
             _delete_staged_downloads(download_result)
-            raise NoChecksumException(tarfile_path, "sha256", expected, local_checksum)
+            raise NoChecksumException(
+                tarfile_path, size, contents, "sha256", expected, local_checksum
+            )
 
     new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.layout.root))
     # if the original relative prefix is in the spec file use it
@@ -1930,8 +1933,11 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         tarball_path = download_result["tarball_stage"].save_filename
         msg = msg.format(tarball_path, sha256)
         if not checker.check(tarball_path):
+            size, contents = fsys.filesummary(tarball_path)
             _delete_staged_downloads(download_result)
-            raise NoChecksumException(tarball_path, checker.hash_name, sha256, checker.sum)
+            raise NoChecksumException(
+                tarball_path, size, contents, checker.hash_name, sha256, checker.sum
+            )
         tty.debug("Verified SHA256 checksum of the build cache")
 
     # don't print long padded paths while extracting/relocating binaries
