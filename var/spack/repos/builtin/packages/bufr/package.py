@@ -49,6 +49,11 @@ class Bufr(CMakePackage):
     depends_on("py-numpy", type="build", when="+python")
     depends_on("py-pip", type="build", when="+python")
 
+    # Need to make the lines shorter at least on some systems
+    def patch(self):
+        with when("@:11.7.1"):
+            filter_file("_lenslmax 120", "_lenslmax 60", "CMakeLists.txt")
+
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_PYTHON", "python"),

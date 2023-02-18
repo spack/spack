@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -51,6 +53,7 @@ class Eckit(CMakePackage):
         description="Enable support for Unicode characters in Yaml/JSON" "parsers",
     )
     variant("aio", default=True, description="Enable asynchronous IO")
+    variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
 
     # Build issues with cmake 3.20, not sure about 3.21
     depends_on("cmake@3.12:3.19,3.22:", type="build")
@@ -192,3 +195,8 @@ class Eckit(CMakePackage):
     @property
     def _enable_experimental(self):
         return "linalg=armadillo" in self.spec
+
+    @when("+fismahigh")
+    def patch(self):
+        if os.path.exists(".travis.yml"):
+            os.remove(".travis.yml")

@@ -21,6 +21,7 @@ class NetcdfC(AutotoolsPackage):
     maintainers = ["skosukhin", "WardF"]
 
     version("main", branch="main")
+    version("4.9.1", sha256="4ee8d5f6b50a1eb4ad4c10f24531e36261fd1882410fb08435eb2ddfd49a0908")
     version("4.9.0", sha256="9f4cb864f3ab54adb75409984c6202323d2fc66c003e5308f3cdf224ed41c0a6")
     version("4.8.1", sha256="bc018cc30d5da402622bf76462480664c6668b55eb16ba205a0dfb8647161dd0")
     version("4.8.0", sha256="aff58f02b1c3e91dc68f989746f652fe51ff39e6270764e484920cb8db5ad092")
@@ -79,6 +80,16 @@ class NetcdfC(AutotoolsPackage):
     variant("fsync", default=False, description="Enable fsync support")
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+    variant("nczarr", default=True, description="Enable zarr storage support", when="@4.8.0:")
+    # New byte-range I/O option doesn't compile with 4.7.0:4.9.1, will be fixed in 4.9.2?
+    # https://github.com/Unidata/netcdf-c/issues/2614
+    variant("byterange", default=False, description="Allow byte-range I/O", when="@4.7.0:")
+    # Variant fismahigh is required for FISMA high compliance on operational supercomputers
+    variant(
+        "fismahigh",
+        default=False,
+        description="Disable network connectivity to support FISMA-high compliance",
+    )
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -141,6 +152,10 @@ class NetcdfC(AutotoolsPackage):
     conflicts("+parallel-netcdf", when="@:4.0")
     conflicts("+hdf4", when="@:4.0")
 
+    conflicts("+dap", when="+fismahigh")
+    conflicts("+byterange", when="+fismahigh")
+    conflicts("+nczarr", when="+fismahigh")
+
     filter_compiler_wrappers("nc-config", relative_root="bin")
 
     @property
@@ -182,6 +197,8 @@ class NetcdfC(AutotoolsPackage):
             cflags.append(self.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable("dap")
+        config_args += self.enable_or_disable("nczarr")
+        config_args += self.enable_or_disable("byterange")
         # config_args += self.enable_or_disable('cdmremote')
 
         # if '+dap' in self.spec or '+cdmremote' in self.spec:
