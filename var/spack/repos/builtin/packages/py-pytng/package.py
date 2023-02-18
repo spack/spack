@@ -1,3 +1,4 @@
+var / spack / repos / builtin / packages / py - pytng / package.py
 # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -19,5 +20,8 @@ class PyPytng(PythonPackage):
     version("0.3.0", sha256="f563f9ea260ca8c8e17b3bcf9458bae35aedd5c58e1c5ac4dfff77a1e036506e")
 
     depends_on("python@3.8:")
+
     depends_on("py-cython@0.28:0.29.33", type="build")
-    depends_on("py-numpy@1.20.0:")
+    depends_on("py-setuptools@42:", type="build")
+
+    depends_on("py-numpy@1.20.0:", type=("build", "run"))
