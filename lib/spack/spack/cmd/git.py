@@ -31,5 +31,5 @@ def git(parser, args):
 
     # execute git within the local spack repository
     with working_dir(spack.paths.prefix):
-        print(git(*args.command, output=str, fail_on_error=False), end='')
+        print(git(*args.command, output=str, fail_on_error=False), end="")
         exit(git.returncode)
