@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyPytng(PythonPackage):
     """Provides the TNGFileIterator object to allow simple Pythonic
     access to data contained within TNG files.
