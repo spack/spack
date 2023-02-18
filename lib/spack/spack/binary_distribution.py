@@ -41,6 +41,7 @@ import spack.relocate as relocate
 import spack.repo
 import spack.store
 import spack.traverse as traverse
+import spack.util.crypto
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
@@ -553,7 +554,13 @@ class NoChecksumException(spack.error.SpackError):
     Raised if file fails checksum verification.
     """
 
-    pass
+    def __init__(self, path, algorithm, expected, computed):
+        size, contents = fsys.filesummary(path)
+        super(NoChecksumException).__init__(
+            f"{algorithm} checksum failed for {path}",
+            f"Expected {expected} but got {computed}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )
 
 
 class NewLayoutException(spack.error.SpackError):
@@ -1763,14 +1770,14 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
             raise UnsignedPackageException(
                 "To install unsigned packages, use the --no-check-signature option."
             )
-    # get the sha256 checksum of the tarball
+
+    # compute the sha256 checksum of the tarball
     local_checksum = checksum_tarball(tarfile_path)
+    expected = remote_checksum["hash"]
 
     # if the checksums don't match don't install
-    if local_checksum != remote_checksum["hash"]:
-        raise NoChecksumException(
-            "Package tarball failed checksum verification.\n" "It cannot be installed."
-        )
+    if local_checksum != expected:
+        raise NoChecksumException(tarfile_path, "sha256", expected, local_checksum)
 
     return tarfile_path
 
@@ -1828,13 +1835,12 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
 
         # compute the sha256 checksum of the tarball
         local_checksum = checksum_tarball(tarfile_path)
+        expected = bchecksum["hash"]
 
         # if the checksums don't match don't install
-        if local_checksum != bchecksum["hash"]:
+        if local_checksum != expected:
             _delete_staged_downloads(download_result)
-            raise NoChecksumException(
-                "Package tarball failed checksum verification.\n" "It cannot be installed."
-            )
+            raise NoChecksumException(tarfile_path, "sha256", expected, local_checksum)
 
     new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.layout.root))
     # if the original relative prefix is in the spec file use it
@@ -1925,7 +1931,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         msg = msg.format(tarball_path, sha256)
         if not checker.check(tarball_path):
             _delete_staged_downloads(download_result)
-            raise spack.binary_distribution.NoChecksumException(msg)
+            raise NoChecksumException(tarball_path, checker.hash_name, sha256, checker.sum)
         tty.debug("Verified SHA256 checksum of the build cache")
 
     # don't print long padded paths while extracting/relocating binaries
