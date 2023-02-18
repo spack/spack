@@ -134,7 +134,10 @@ def windows_is_junction(path):
 
 @lang.memoized
 def windows_can_symlink():
-
+    """
+    Determines if windows is able to make a symlink depending on
+    the system configuration and the level of the user's permissions.
+    """
     if not is_windows:
         console.msg("[symlink] WARNING: window_can_symlink called on non-windows")
         return False
@@ -170,6 +173,11 @@ def windows_can_symlink():
 
 
 def windows_non_symlink(path, link):
+    """
+    Attempts to create a Hard Link or Junction as an alternative
+    to a symbolic link. This is called when symbolic links cannot
+    be created.
+    """
     if os.path.isdir(path):
         try:
             cmd = ["cmd", "/C", "mklink", "/J", link, path]
