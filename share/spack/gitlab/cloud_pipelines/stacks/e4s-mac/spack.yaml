@@ -41,6 +41,7 @@ spack:
     - rm -rf /opt/spack/*
     - rm -rf /opt/spack/.* || true
     - cp -r $CI_PROJECT_DIR/* /opt/spack/.
+    - cp -r $CI_PROJECT_DIR/.git /opt/spack/.
     - export SPACK_DISABLE_LOCAL_CONFIG=1
     - export SPACK_USER_CACHE_PATH=$(pwd)/_user_cache
     - . /opt/spack/share/spack/setup-env.sh
