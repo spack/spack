@@ -42,9 +42,7 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
-JOB_RETRY_CONDITIONS = [
-    "always",
-]
+JOB_RETRY_CONDITIONS = ["always"]
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -129,10 +127,7 @@ def _remove_reserved_tags(tags):
 
 
 def _get_spec_string(spec):
-    format_elements = [
-        "{name}{@version}",
-        "{%compiler}",
-    ]
+    format_elements = ["{name}{@version}", "{%compiler}"]
 
     if spec.architecture:
         format_elements.append(" {arch=architecture}")
@@ -328,12 +323,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
     dependencies = []
 
     def append_dep(s, d):
-        dependencies.append(
-            {
-                "spec": s,
-                "depends": d,
-            }
-        )
+        dependencies.append({"spec": s, "depends": d})
 
     for spec in spec_list:
         for s in spec.traverse(deptype=all):
@@ -346,10 +336,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
             )
 
             skey = _spec_deps_key(s)
-            spec_labels[skey] = {
-                "spec": s,
-                "needs_rebuild": not up_to_date_mirrors,
-            }
+            spec_labels[skey] = {"spec": s, "needs_rebuild": not up_to_date_mirrors}
 
             for d in s.dependencies(deptype=all):
                 dkey = _spec_deps_key(d)
@@ -368,10 +355,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
             }
         )
 
-    deps_json_obj = {
-        "specs": specs,
-        "dependencies": dependencies,
-    }
+    deps_json_obj = {"specs": specs, "dependencies": dependencies}
 
     return deps_json_obj
 
@@ -410,14 +394,7 @@ def _copy_attributes(attrs_list, src_dict, dest_dict):
 
 def _find_matching_config(spec, gitlab_ci):
     runner_attributes = {}
-    overridable_attrs = [
-        "image",
-        "tags",
-        "variables",
-        "before_script",
-        "script",
-        "after_script",
-    ]
+    overridable_attrs = ["image", "tags", "variables", "before_script", "script", "after_script"]
 
     _copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
 
@@ -685,28 +662,14 @@ def generate_gitlab_ci_yaml(
             except AttributeError:
                 phase_name = phase
                 strip_compilers = False
-            phases.append(
-                {
-                    "name": phase_name,
-                    "strip-compilers": strip_compilers,
-                }
-            )
+            phases.append({"name": phase_name, "strip-compilers": strip_compilers})
 
             for bs in env.spec_lists[phase_name]:
                 bootstrap_specs.append(
-                    {
-                        "spec": bs,
-                        "phase-name": phase_name,
-                        "strip-compilers": strip_compilers,
-                    }
+                    {"spec": bs, "phase-name": phase_name, "strip-compilers": strip_compilers}
                 )
 
-    phases.append(
-        {
-            "name": "specs",
-            "strip-compilers": False,
-        }
-    )
+    phases.append({"name": "specs", "strip-compilers": False})
 
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
@@ -1109,15 +1072,9 @@ def generate_gitlab_ci_yaml(
                     "variables": variables,
                     "script": job_script,
                     "tags": tags,
-                    "artifacts": {
-                        "paths": artifact_paths,
-                        "when": "always",
-                    },
+                    "artifacts": {"paths": artifact_paths, "when": "always"},
                     "needs": sorted(job_dependencies, key=lambda d: d["job"]),
-                    "retry": {
-                        "max": 2,
-                        "when": JOB_RETRY_CONDITIONS,
-                    },
+                    "retry": {"max": 2, "when": JOB_RETRY_CONDITIONS},
                     "interruptible": True,
                 }
 
@@ -1135,10 +1092,7 @@ def generate_gitlab_ci_yaml(
                 if image_name:
                     job_object["image"] = image_name
                     if image_entry is not None:
-                        job_object["image"] = {
-                            "name": image_name,
-                            "entrypoint": image_entry,
-                        }
+                        job_object["image"] = {"name": image_name, "entrypoint": image_entry}
 
                 output_object[job_name] = job_object
                 job_id += 1
@@ -1181,11 +1135,7 @@ def generate_gitlab_ci_yaml(
 
     service_job_retries = {
         "max": 2,
-        "when": [
-            "runner_system_failure",
-            "stuck_or_timeout_failure",
-            "script_failure",
-        ],
+        "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
     }
 
     if job_id > 0:
@@ -1357,9 +1307,7 @@ def generate_gitlab_ci_yaml(
             _copy_attributes(default_attrs, service_job_config, noop_job)
 
         if "script" not in noop_job:
-            noop_job["script"] = [
-                'echo "All specs already up to date, nothing to rebuild."',
-            ]
+            noop_job["script"] = ['echo "All specs already up to date, nothing to rebuild."']
 
         noop_job["retry"] = service_job_retries
 
@@ -1620,9 +1568,7 @@ def download_and_extract_artifacts(url, work_dir):
     """
     tty.msg("Fetching artifacts from: {0}\n".format(url))
 
-    headers = {
-        "Content-Type": "application/zip",
-    }
+    headers = {"Content-Type": "application/zip"}
 
     token = os.environ.get("GITLAB_PRIVATE_TOKEN", None)
     if token:
@@ -2081,10 +2027,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         with open(file_path, "w") as fd:
             fd.write(syaml.dump(broken_spec_details))
         web_util.push_to_url(
-            file_path,
-            url,
-            keep_original=False,
-            extra_args={"ContentType": "text/plain"},
+            file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
         )
     except Exception as err:
         # If there is an S3 error (e.g., access denied or connection
@@ -2162,14 +2105,7 @@ def run_standalone_tests(**kwargs):
         tty.error("Reproduction directory is required for stand-alone tests")
         return
 
-    test_args = [
-        "spack",
-        "--color=always",
-        "--backtrace",
-        "--verbose",
-        "test",
-        "run",
-    ]
+    test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
     if fail_fast:
         test_args.append("--fail-fast")
 
@@ -2319,19 +2255,9 @@ class CDashHandler(object):
 
         opener = build_opener(HTTPHandler)
 
-        parent_group_id = self.create_buildgroup(
-            opener,
-            headers,
-            url,
-            self.build_group,
-            "Daily",
-        )
+        parent_group_id = self.create_buildgroup(opener, headers, url, self.build_group, "Daily")
         group_id = self.create_buildgroup(
-            opener,
-            headers,
-            url,
-            "Latest {0}".format(self.build_group),
-            "Latest",
+            opener, headers, url, "Latest {0}".format(self.build_group), "Latest"
         )
 
         if not parent_group_id or not group_id:
@@ -2341,13 +2267,9 @@ class CDashHandler(object):
 
         data = {
             "dynamiclist": [
-                {
-                    "match": name,
-                    "parentgroupid": parent_group_id,
-                    "site": self.site,
-                }
+                {"match": name, "parentgroupid": parent_group_id, "site": self.site}
                 for name in job_names
-            ],
+            ]
         }
 
         enc_data = json.dumps(data).encode("utf-8")

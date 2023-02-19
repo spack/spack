@@ -45,11 +45,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
-from spack.filesystem_view import (
-    SimpleFilesystemView,
-    inverse_view_func_parser,
-    view_func_parser,
-)
+from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
@@ -304,12 +300,7 @@ def _write_yaml(data, str_or_file):
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     valid_variables = spack.util.environment.get_host_environment()
-    valid_variables.update(
-        {
-            "re": re,
-            "env": os.environ,
-        }
-    )
+    valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
 
 
@@ -973,9 +964,7 @@ class Environment(object):
                         config_path = os.path.join(config_path, basename)
                 else:
                     staged_path = spack.config.fetch_remote_configs(
-                        config_path,
-                        self.config_stage_dir,
-                        skip_existing=True,
+                        config_path, self.config_stage_dir, skip_existing=True
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(

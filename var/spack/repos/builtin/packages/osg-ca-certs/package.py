@@ -25,7 +25,7 @@ class OsgCaCerts(Package):
             "igtf_version": "1.117",
             "osg_sha256": "41e12c05aedb4df729bf326318cc29b9b79eb097564fd68c6af2e1448ec74f75",
             "igtf_sha256": "130d4d95cd65d01d2db250ee24c539341e3adc899b7eff1beafef1ba4674807d",
-        },
+        }
     ]
 
     for release in releases:

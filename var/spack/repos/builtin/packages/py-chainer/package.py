@@ -57,21 +57,10 @@ class PyChainer(PythonPackage):
             mnist_file = join_path(mnist_dir, "train_mnist.py")
             mpi_name = self.spec["mpi"].prefix.bin.mpirun
             python_exe = self.spec["python"].command.path
-            opts = [
-                "-n",
-                "4",
-                python_exe,
-                mnist_file,
-                "-o",
-                test_dir,
-            ]
+            opts = ["-n", "4", python_exe, mnist_file, "-o", test_dir]
             env["OMP_NUM_THREADS"] = "4"
 
-            self.run_test(
-                mpi_name,
-                options=opts,
-                work_dir=test_dir,
-            )
+            self.run_test(mpi_name, options=opts, work_dir=test_dir)
 
             # check results
             json_open = open(join_path(test_dir, "log"), "r")

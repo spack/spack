@@ -63,10 +63,7 @@ class Redis(MakefilePackage):
     def build_targets(self):
         use_tls = "yes" if "+tls" in self.spec else "no"
         use_systemd = "yes" if "+systemd" in self.spec else "no"
-        return [
-            "BUILD_TLS={0}".format(use_tls),
-            "USE_SYSTEMD={0}".format(use_systemd),
-        ]
+        return ["BUILD_TLS={0}".format(use_tls), "USE_SYSTEMD={0}".format(use_systemd)]
 
     @property
     def install_targets(self):

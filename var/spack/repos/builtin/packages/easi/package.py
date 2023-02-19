@@ -45,7 +45,6 @@ class Easi(CMakePackage):
     conflicts("jit=impalajit", when="target=riscv64:")
 
     def cmake_args(self):
-
         args = []
         args.append(self.define_from_variant("ASAGI", "asagi"))
         spec = self.spec

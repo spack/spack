@@ -103,7 +103,6 @@ def test_merge_to_new_directory_relative(stage, link_tree):
 
 def test_merge_to_existing_directory(stage, link_tree):
     with working_dir(stage.path):
-
         touchp("dest/x")
         touchp("dest/a/b/y")
 

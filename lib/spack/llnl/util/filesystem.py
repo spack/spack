@@ -268,7 +268,6 @@ def filter_file(
         regex = re.escape(regex)
     filenames = path_to_os_path(*filenames)
     for filename in filenames:
-
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
         tty.debug(msg.format(filename, regex))
 
@@ -1220,7 +1219,6 @@ def traverse_tree(
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
         if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
-
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
@@ -1662,7 +1660,6 @@ def find(root, files, recursive=True):
 
 @system_path_filter
 def _find_recursive(root, search_files):
-
     # The variable here is **on purpose** a defaultdict. The idea is that
     # we want to poke the filesystem as little as possible, but still maintain
     # stability in the order of the answer. Thus we are recording each library
@@ -2633,3 +2630,28 @@ def temporary_dir(
             yield tmp_dir
     finally:
         remove_directory_contents(tmp_dir)
+
+
+def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
+    """Create a small summary of the given file. Does not error
+    when file does not exist.
+
+    Args:
+        print_bytes (int): Number of bytes to print from start/end of file
+
+    Returns:
+        Tuple of size and byte string containing first n .. last n bytes.
+        Size is 0 if file cannot be read."""
+    try:
+        n = print_bytes
+        with open(path, "rb") as f:
+            size = os.fstat(f.fileno()).st_size
+            if size <= 2 * n:
+                short_contents = f.read(2 * n)
+            else:
+                short_contents = f.read(n)
+                f.seek(-n, 2)
+                short_contents += b"..." + f.read(n)
+        return size, short_contents
+    except OSError:
+        return 0, b""
