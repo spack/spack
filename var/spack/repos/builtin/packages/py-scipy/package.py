@@ -21,6 +21,7 @@ class PyScipy(PythonPackage):
     maintainers("adamjstewart", "rgommers")
 
     version("master", branch="master")
+    version("1.10.1", sha256="2cf9dfb80a7b4589ba4c40ce7588986d6d5cebc5457cad2c2880f6bc2d42f3a5")
     version("1.10.0", sha256="c8b3cbc636a87a89b770c6afc999baa6bcbb01691b5ccbbc1b1791c7c0a07540")
     version("1.9.3", sha256="fbc5c05c85c1a02be77b1ff591087c83bc44579c6d2bd9fb798bb64ea5e1a027")
     version("1.9.2", sha256="99e7720caefb8bca6ebf05c7d96078ed202881f61e0c68bd9e0f3e8097d6f794")
@@ -56,7 +57,8 @@ class PyScipy(PythonPackage):
     # https://github.com/mesonbuild/meson-python/pull/167
     depends_on("py-build", when="@1.9:", type="build")
 
-    depends_on("py-meson-python@0.11", when="@1.10:", type="build")
+    depends_on("py-meson-python@0.11:0.12", when="@1.10.1:", type="build")
+    depends_on("py-meson-python@0.11", when="@1.10.0", type="build")
     depends_on("py-meson-python@0.9:", when="@1.9.2:1.9", type="build")
     depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
     depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
