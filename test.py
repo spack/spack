@@ -3,7 +3,8 @@
 import ast
 import contextlib
 
-from typing import Dict, List
+from io import StringIO
+from typing import Dict, List, Optional
 
 import spack.directives
 import spack.repo
@@ -23,8 +24,12 @@ def is_directive(node):
 class NameDescriptor(object):
     """Name in a scope, with global/nonlocal and const information."""
 
-    def __init__(self, name, const, isglobal, isnonlocal):
-        # type: (str, bool, bool, bool) -> None
+    name: str
+    const: bool
+    isglobal: bool
+    isnonlocal: bool
+
+    def __init__(self, name: str, const: bool, isglobal: bool, isnonlocal: bool):
         self.name = name
         self.const = const
         self.isglobal = isglobal
@@ -38,8 +43,10 @@ class ScopeStack(object):
 
     """
 
+    scopes: List[Dict[str, NameDescriptor]]
+
     def __init__(self):
-        self.scopes = []  # type: List[Dict[str, NameDescriptor]]
+        self.scopes = []
 
     def push(self, name):
         """Add a scope with a name for debugging."""
@@ -66,16 +73,15 @@ class ScopeStack(object):
         _, scope = self.scopes[-1]
         return scope
 
-    def define(self, name, const=None, isglobal=None, isnonlocal=None):
+    def define(self, name: str, const=None, isglobal=None, isnonlocal=None):
         # type: NameDescriptor -> None
         self.top[name] = NameDescriptor(name, const, isglobal, isnonlocal)
 
-    def assign(self, name, const=None, isglobal=None, isnonlocal=None):
+    def assign(self, name: str, const=None, isglobal=None, isnonlocal=None):
 
         self.top.add(name)
 
-    def scope_for(self, name):
-        # type: str -> Optional[Dict[str, NameDescriptor]]
+    def scope_for(self, name: str) -> Optional[Dict[str, NameDescriptor]]:
         for _, scope in reversed(self.scopes):
             if name in scope:
                 return scope
@@ -95,6 +101,27 @@ class ScopeStack(object):
 
         del scope[name]
 
+    def __str__(self):
+        out = StringIO()
+
+        out.write("-" * 78)
+        out.write("\n")
+
+        for scope_name, scope in self.scopes:
+            out.write(f"[{scope_name}]\n")
+            for name, desc in scope.items():
+                out.write("    ")
+                out.write(f"{name:20}")
+                out.write("C" if desc.const else "-")
+                out.write("G" if desc.isglobal else "-")
+                out.write("N" if desc.isnonlocal else "-")
+                out.write("\n")
+
+        out.write("-" * 78)
+        out.write("\n")
+
+        return out.getvalue()
+
 
 def target_names(node, names=None):
     """Get names of values targeted by assignment.
@@ -107,16 +134,25 @@ def target_names(node, names=None):
         names = set()
 
     if isinstance(node, ast.Name):
+        print("  added", node.id)
         names.add(node.id)
 
     elif isinstance(node, (ast.List, ast.Tuple)):
+        print("  adding from", node.elts)
         for elt in node.elts:
             names += target_names(elt)
 
     elif isinstance(node, (ast.Attribute, ast.Subscript, ast.Starred)):
+        print("  adding from", node.value)
         names += target_names(node.value)
         # TODO: handle the attr in an Attribute to figure out if it's a variable in a
         # TODO: scope somewhere
+
+    else:
+        print("WHAT IS THIS: ", type(node))
+
+    print(names)
+    return names
 
 
 def constexpr(node):
@@ -209,7 +245,7 @@ class ConstTracker(ast.NodeVisitor):
 
             # We currently only test if the entire iter expression is const.
             #
-            # TODO: if we need this to handle different targets separately , e.g. x and y in:
+            # TODO: if we need this to handle different targets separately, e.g. x and y in:
             #
             #    [(x, y) for x, y in [(a, 1), (b, 2), (c, 3)]]
             #
@@ -217,30 +253,31 @@ class ConstTracker(ast.NodeVisitor):
             # So both x and y would be non-const here.
             const = constexpr(comp.iter)
 
+            print(self.scopes)
+
+            names = target_names(comp.target)
             for name in target_names(comp.target):
-                self.scopes.
-                self.scopes.define(name.id, const=const)
+                # self.scopes.
+                # self.scopes.define(name.id, const=const)
+                pass
 
         # visit element expressions once the generator clauses are done
         self.generic_visit(node.elt)
 
         if not leak:
-            for comp in node.generators:
+            for comp in reversed(node.generators):
                 self.scopes.pop("<generatorexp>")
 
         self.generic_visit(node)
 
     def visit_ListComp(self, node):
-        # use leak-True b/c we support Python 2
-        self.visit_GeneratorExp(node, leak=True)
+        self.visit_GeneratorExp(node)
 
     def visit_SetComp(self, node):
-        # use leak-True b/c we support Python 2
-        self.visit_GeneratorExp(node, leak=True)
+        self.visit_GeneratorExp(node)
 
     def visit_DictComp(self, node):
-        # use leak-True b/c we support Python 2
-        self.visit_GeneratorExp(node, leak=True)
+        self.visit_GeneratorExp(node)
 
     def visit_Lambda(self, node):
         self.generic_visit(node)
@@ -301,6 +338,9 @@ class ConstDirectives(ConstTracker):
         # Directives are represented in the AST as named function call expressions (as
         # opposed to function calls through a variable callback).
         if is_directive(node):
+
+            print(node.value.args[0].value)
+
             for arg in node.value.args:
                 if not constexpr(arg):
                     #                    self.issues.append("ARG:   %s" % ast.dump(arg))
@@ -323,8 +363,9 @@ for pkg_name in spack.repo.all_package_names():
     root = ast.parse(source)
     const = ConstDirectives(pkg_name)
 
+    print("PACKAGE:", pkg_name)
+
     const.visit(root)
     if not const.const:
-        print("PACKAGE:", pkg_name)
         for issue in const.issues:
             print("    ", issue)
