@@ -18,6 +18,8 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "readline/readline-8.0.tar.gz"
 
+    maintainers("samuel21119")
+
     version("8.2", sha256="3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35")
     version("8.1", sha256="f8ceb4ee131e3232226a17f51b164afc46cd0b9e6cef344be87c65962cb82b02")
     version("8.0", sha256="e339f51971478d369f8a053a330a190781acb9864cf4c541060f12078948e461")
@@ -67,5 +69,11 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies("%nvhpc"):
-            filter_file("${GCC+-Wno-parentheses}", "", "configure", string=True)
-            filter_file("${GCC+-Wno-format-security}", "", "configure", string=True)
+            filter_file("${GCC:+-Wno-parentheses}", "", "configure", string=True)
+            filter_file("${GCC:+-Wno-format-security}", "", "configure", string=True)
+            filter_file(
+                "${GCC:+-Wno-tautological-constant-out-of-range-compare}",
+                "",
+                "configure",
+                string=True,
+            )
