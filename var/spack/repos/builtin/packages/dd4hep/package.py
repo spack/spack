@@ -158,7 +158,7 @@ class Dd4hep(CMakePackage):
 
     # See https://github.com/AIDASoft/DD4hep/pull/771 and https://github.com/AIDASoft/DD4hep/pull/876
     conflicts(
-        "^cmake@3.16:3.17.0",
+        "^cmake@3.16:3.17.2",
         when="@1.15:1.18",
         msg="cmake version with buggy FindPython breaks dd4hep cmake config",
     )
