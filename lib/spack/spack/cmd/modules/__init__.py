@@ -172,7 +172,7 @@ def loads(module_type, specs, args, out=None):
             module,
         )
         for spec in specs
-        for module in spack.modules.common.get_module(
+        for module in spack.modules.common.get_modules(
             module_type,
             spec,
             get_full_path=False,
@@ -221,7 +221,7 @@ def find(module_type, specs, args):
         modules = list(
             module
             for spec in dependency_specs_to_retrieve
-            for module in spack.modules.common.get_module(
+            for module in spack.modules.common.get_modules(
                 module_type,
                 spec,
                 args.full_path,
@@ -231,7 +231,7 @@ def find(module_type, specs, args):
         )
 
         modules.extend(
-            spack.modules.common.get_module(
+            spack.modules.common.get_modules(
                 module_type,
                 single_spec,
                 args.full_path,
