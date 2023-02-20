@@ -47,6 +47,6 @@ class Apptainer(SingularityBase):
     def config_options(self):
         spec = self.spec
         options = []
-        if "+suid" in spec and spec.satisfies("@1.1.0:"):
-            options += ["--with-suid"]
+        if spec.satisfies("@1.1.0: +suid"):
+            options.append("--with-suid")
         return options
