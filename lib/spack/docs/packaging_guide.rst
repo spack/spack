@@ -1392,7 +1392,7 @@ Go
 ^^
 
 Go isn't a VCS, it is a programming language with a builtin command,
-`go get <https://golang.org/cmd/go/#hdr-Download_and_install_packages_and_dependencies>`_,
+`go get <https://pkg.go.dev/cmd/go#hdr-Add_dependencies_to_current_module_and_install_them>`_,
 that fetches packages and their dependencies automatically.
 The destination directory will be the standard stage source path.
 
@@ -2117,7 +2117,7 @@ dynamic loader where to find its dependencies at runtime. You may be
 familiar with `LD_LIBRARY_PATH
 <http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
 on Linux or `DYLD_LIBRARY_PATH
-<https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`_
+<https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/dyld.3.html>`_
 on Mac OS X.  RPATH is similar to these paths, in that it tells
 the loader where to find libraries.  Unlike them, it is embedded in
 the binary and not set in each user's environment.
@@ -2429,7 +2429,7 @@ package, and a `canonical hash <https://github.com/spack/spack/pull/28156>`_ of
 the ``package.py`` recipes). ``test`` dependencies do not affect the package
 hash, as they are only used to construct a test environment *after* building and
 installing a given package installation. Older versions of Spack did not include
-build dependencies in the hash, but this has been 
+build dependencies in the hash, but this has been
 `fixed <https://github.com/spack/spack/pull/28504>`_ as of |Spack v0.18|_.
 
 .. |Spack v0.18| replace:: Spack ``v0.18``

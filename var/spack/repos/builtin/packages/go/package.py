@@ -44,19 +44,15 @@ class Go(Package):
 
     maintainers("alecbcs")
 
+    version("1.20.1", sha256="b5c1a3af52c385a6d1c76aed5361cf26459023980d0320de7658bae3915831a2")
+    version("1.20", sha256="3a29ff0421beaf6329292b8a46311c9fbf06c800077ceddef5fb7f8d5b1ace33")
+
+    version("1.19.6", sha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767")
     version("1.19.5", sha256="8e486e8e85a281fc5ce3f0bedc5b9d2dbf6276d7db0b25d3ec034f313da0375f")
-    version(
-        "1.19.4",
-        sha256="eda74db4ac494800a3e66ee784e495bfbb9b8e535df924a8b01b1a8028b7f368",
-        deprecated=True,
-    )
+    version("1.19.4", sha256="eda74db4ac494800a3e66ee784e495bfbb9b8e535df924a8b01b1a8028b7f368")
 
     version("1.18.10", sha256="9cedcca58845df0c9474ae00274c44a95c9dfaefb132fc59921c28c7c106f8e6")
-    version(
-        "1.18.9",
-        sha256="fbe7f09b96aca3db6faeaf180da8bb632868ec049731e355ff61695197c0e3ea",
-        deprecated=True,
-    )
+    version("1.18.9", sha256="fbe7f09b96aca3db6faeaf180da8bb632868ec049731e355ff61695197c0e3ea")
 
     provides("golang")
 

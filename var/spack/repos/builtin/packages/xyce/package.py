@@ -22,7 +22,7 @@ class Xyce(CMakePackage):
     homepage = "https://xyce.sandia.gov"
     git = "https://github.com/Xyce/Xyce.git"
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
-    maintainers("kuberry")
+    maintainers("kuberry", "tbird2001")
 
     version("master", branch="master")
     version("7.6.0", "fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
@@ -127,10 +127,18 @@ class Xyce(CMakePackage):
         # HDF5
         depends_on("hdf5~shared", when="^hdf5")
 
+    # fix RPATH issue on mac
     patch(
         "https://github.com/xyce/xyce/commit/40dbc0e0341a5cf9a7fa82a87313869dc284fdd9.patch?full_index=1",
         sha256="3c32faeeea0bb29be44ec20e414670c9fd375f9ed921a7f6e9fd3de02c28859d",
         when="@7.3:7.5 +shared",
+    )
+
+    # fix parameter merging in pymi
+    patch(
+        "https://github.com/xyce/xyce/commit/fdf457fce1b1511b8a29d134d38e515fb7149246.patch?full_index=1",
+        sha256="077f91d2ff0649b3f7e83c224f71a030521c6fb5a84b29acd772d5657cdb6c23",
+        when="@7.4:7.6 +pymi",
     )
 
     def cmake_args(self):
