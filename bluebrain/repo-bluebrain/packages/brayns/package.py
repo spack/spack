@@ -26,7 +26,8 @@ class Brayns(CMakePackage):
     depends_on('git', type='build')
 
     depends_on('brion@3.3.9:', when='+blueconfig')
-    depends_on('libsonata@0.1.16:')
+    depends_on('libsonata@:0.1.16', when='@:3.1.0')
+    depends_on('libsonata@0.1.17:', when='@3.1.1:')
     depends_on('morphio@3.3.3:')
     depends_on('mvdtool@2.4.2:')
     depends_on('ospray@2.10.0')
