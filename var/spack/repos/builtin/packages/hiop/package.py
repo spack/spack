@@ -132,7 +132,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("ginkgo@1.5.0.glu_experimental", when="+ginkgo")
 
-
     flag_handler = build_system_flags
 
     def cmake_args(self):

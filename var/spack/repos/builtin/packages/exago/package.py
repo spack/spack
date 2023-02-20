@@ -14,7 +14,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
     git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
     maintainers("ryandanehy", "CameronRutherford", "pelesh")
-    
+
     version("1.5.1", commit="7abe482c8da0e247f9de4896f5982c4cacbecd78", submodules=True)
     version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
     version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
@@ -33,9 +33,9 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
-    variant("raja", default=False, when='+hiop', description="Enable/Disable RAJA with HiOp")
-    variant("python", default=True, when='@1.4:', description="Enable/Disable Python bindings")
-    variant("logging", default=True, description"Enable/Disable spdlog based logging")
+    variant("raja", default=False, when="+hiop", description="Enable/Disable RAJA with HiOp")
+    variant("python", default=True, when="@1.4:", description="Enable/Disable Python bindings")
+    variant("logging", default=True, description="Enable/Disable spdlog based logging")
     conflicts(
         "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
     )
@@ -50,7 +50,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     )
     # You can use Python with PFLOW if desired ~ipopt~hiop
     conflicts(
-        "~hiop~ipopt+python @:1.5.0", msg="ExaGO Python wrapper requires at least one solver enabled."
+        "~hiop~ipopt+python @:1.5.0",
+        msg="ExaGO Python wrapper requires at least one solver enabled.",
     )
 
     # Dependencies
