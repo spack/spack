@@ -37,6 +37,7 @@ class PyParticle(PythonPackage):
     depends_on("python@3.6:", when="@0.20:", type=("build", "run"))
     depends_on("python@3.7:", when="@0.21:", type=("build", "run"))
     depends_on("py-setuptools", when="@:0.20", type="build")
+    depends_on("py-setuptools-scm", when="@:0.20", type="build")
     depends_on("py-hatchling", when="@0.21:", type="build")
     depends_on("py-hatch-vcs", when="@0.21:", type="build")
     depends_on("py-importlib-resources@2:", when="@0.16: ^python@:3.8", type=("build", "run"))
