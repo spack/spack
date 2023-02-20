@@ -113,9 +113,10 @@ class PythonExtension(spack.package_base.PackageBase):
         return conflicts
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        if not self.extendee_spec:
+            return super().add_files_to_view(view, merge_map, skip_if_exists)
+
         bin_dir = self.spec.prefix.bin
-        if self.extendee_spec is None:
-            return
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
         global_view = fs.same_path(python_prefix, view.get_projection_for_spec(self.spec))
