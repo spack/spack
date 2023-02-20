@@ -17,6 +17,7 @@ class PyPanedr(PythonPackage):
 
     version("0.7.1", sha256="64c74863f72d51729ac5cb1e2dbb18747f7137588990c308ef8ca120fbf2ddd4")
 
+    # PyEDR is released together with PanEDR, therefore versions should match
     depends_on("py-pyedr@0.7.1", type=("build", "run"), when="@0.7.1")
 
     depends_on("py-pandas", type=("build", "run"))
