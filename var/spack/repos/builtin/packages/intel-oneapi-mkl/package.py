@@ -154,7 +154,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if "+cluster" in self.spec:
             libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
 
-        lib_path = join_path(self.component_prefix, "lib", "intel64")
+        lib_path = self.component_prefix.lib.intel64
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
         return find_libraries(libs, lib_path, shared=shared)
