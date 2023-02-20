@@ -1,0 +1,11 @@
+--- a/INSTALLU.sh
++++ b/INSTALLU.sh
+@@ -267,7 +267,7 @@ if [ ! -z "${mandir-}" ]; then
+         for i in man/*.${manext}; do
+             i_base=`basename "$i"`
+             $move "$i" "${mandir}${manext}"
+-            chmod 644 "${mandir}${manext}"
++            chmod 644 "${mandir}${manext}/${i_base}"
+             if [ "${whoami}" = "root" ]; then
+                 $chown $owner "${mandir}${manext}/${i_base}"
+                 $chgrp $group "${mandir}${manext}/${i_base}"

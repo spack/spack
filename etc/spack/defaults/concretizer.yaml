@@ -33,4 +33,4 @@ concretizer:
   # environments can always be activated. When "false" perform concretization separately
   # on each root spec, allowing different versions and variants of the same package in
   # an environment.
-  unify: false
+  unify: true

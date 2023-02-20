@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNeuralnet(RPackage):
@@ -19,8 +19,8 @@ class RNeuralnet(RPackage):
 
     cran = "neuralnet"
 
-    version('1.44.2', sha256='5f66cd255db633322c0bd158b9320cac5ceff2d56f93e4864a0540f936028826')
+    version("1.44.2", sha256="5f66cd255db633322c0bd158b9320cac5ceff2d56f93e4864a0540f936028826")
 
-    depends_on('r@2.9.0:', type=('build', 'run'))
-    depends_on('r-mass',   type=('build', 'run'))
-    depends_on('r-deriv',  type=('build', 'run'))
+    depends_on("r@2.9.0:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-deriv", type=("build", "run"))

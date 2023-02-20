@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.pkgkit import *
+from spack.package import *
 
 
 class Neovim(CMakePackage):
@@ -13,26 +13,17 @@ class Neovim(CMakePackage):
     git = "https://github.com/neovim/neovim.git"
     url = "https://github.com/neovim/neovim/archive/v0.4.3.tar.gz"
 
-    maintainers = ["albestro", "trws"]
+    maintainers("albestro", "trws")
 
     version("master", branch="master")
     version("stable", tag="stable")
-    version(
-        '0.7.0',
-        sha256='792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df'
-    )
-    version(
-        "0.6.1",
-        sha256="dd882c21a52e5999f656cae3f336b5fc702d52addd4d9b5cd3dc39cfff35e864",
-    )
-    version(
-        "0.6.0",
-        sha256="2cfd600cfa5bb57564cc22ffbbbcb2c91531053fc3de992df33656614384fa4c",
-    )
-    version(
-        "0.5.1",
-        sha256="aa449795e5cc69bdd2eeed7095f20b9c086c6ecfcde0ab62ab97a9d04243ec84",
-    )
+    version("0.8.2", sha256="c516c8db73e1b12917a6b2e991b344d0914c057cef8266bce61a2100a28ffcc9")
+    version("0.8.0", sha256="505e3dfb71e2f73495c737c034a416911c260c0ba9fd2092c6be296655be4d18")
+    version("0.7.2", sha256="ccab8ca02a0c292de9ea14b39f84f90b635a69282de38a6b4ccc8565bc65d096")
+    version("0.7.0", sha256="792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df")
+    version("0.6.1", sha256="dd882c21a52e5999f656cae3f336b5fc702d52addd4d9b5cd3dc39cfff35e864")
+    version("0.6.0", sha256="2cfd600cfa5bb57564cc22ffbbbcb2c91531053fc3de992df33656614384fa4c")
+    version("0.5.1", sha256="aa449795e5cc69bdd2eeed7095f20b9c086c6ecfcde0ab62ab97a9d04243ec84")
     version(
         "0.5.0",
         sha256="6bcfa5192c9460c946e853dbd1a0baf659df5de184436144147711d1bceedeee",
@@ -97,11 +88,11 @@ class Neovim(CMakePackage):
     # base dependencies
     depends_on("cmake@3.0:", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("gettext", type=("build", "link"))
+    depends_on("gettext")
     depends_on("gperf", type="link")
     depends_on("jemalloc", type="link", when="platform=linux")
-    depends_on("lua-lpeg", type="link")
-    depends_on("lua-mpack", type="link")
+    depends_on("lua-lpeg")
+    depends_on("lua-mpack")
     depends_on("libiconv", type="link")
     depends_on("libtermkey", type="link")
     depends_on("libuv", type="link")
@@ -113,28 +104,35 @@ class Neovim(CMakePackage):
 
     # versions
     with when("@0.4:"):
-        depends_on("libuv@1.28:")
-        depends_on("libluv@1.30.0:")
-        depends_on("libtermkey@0.18:")
-        depends_on("libvterm@0.1:")
-        depends_on("unibilium@2.0:")
-        depends_on("msgpack-c@1.0.0:")
-    with when("@0.5:,stable,master"):
-        depends_on("libuv@1.42:")
+        depends_on("libuv@1.28:", type="link")
+        depends_on("libluv@1.30.0:", type="link")
+        depends_on("libtermkey@0.18:", type="link")
+        depends_on("libvterm@0.1:", type="link")
+        depends_on("unibilium@2.0:", type="link")
+        depends_on("msgpack-c@1.0.0:", type="link")
+    with when("@0.5:"):
+        depends_on("libuv@1.42:", type="link")
         depends_on("tree-sitter")
     with when("@0.6:"):
-        depends_on("cmake@3.10:")
-        depends_on("gperf@3.1:")
-        depends_on("libiconv@1.15:")
-        depends_on("libtermkey@0.22:")
-        depends_on("libvterm@0.1.4:")
-        depends_on("msgpack-c@3.0.0:")
-    with when("@0.6:,master"):
+        depends_on("cmake@3.10:", type="build")
+        depends_on("gperf@3.1:", type="link")
+        depends_on("libiconv@1.15:", type="link")
+        depends_on("libtermkey@0.22:", type="link")
+        depends_on("libvterm@0.1.4:", type="link")
+        depends_on("msgpack-c@3.0.0:", type="link")
+    with when("@0.7:"):
         depends_on("gettext@0.20.1:")
-        depends_on("libluv@1.43.0:")
-        depends_on("libuv@1.44.1:")
+        depends_on("libluv@1.43.0:", type="link")
+        depends_on("libuv@1.44.1:", type="link")
         depends_on("tree-sitter@0.20.6:")
+    with when("@0.8:"):
+        depends_on("libvterm@0.3:", type="link")
+
+    # Support for `libvterm@0.2:` has been added in neovim@0.8.0
+    # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
+    # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
+    conflicts("libvterm@0.2:", when="@:0.7")
 
     @when("^lua")
     def cmake_args(self):
-        return [self.define('PREFER_LUA', True)]
+        return [self.define("PREFER_LUA", True)]

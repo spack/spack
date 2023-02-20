@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyTensorflowDatasets(PythonPackage):
@@ -13,10 +13,7 @@ class PyTensorflowDatasets(PythonPackage):
     homepage = "https://github.com/tensorflow/datasets"
     pypi = "tensorflow-datasets/tensorflow-datasets-4.4.0.tar.gz"
 
-    version(
-        "4.4.0",
-        sha256="3e95a61dec1fdb7b05dabc0dbed1b531e13d6c6fd362411423d0a775e5e9b960",
-    )
+    version("4.4.0", sha256="3e95a61dec1fdb7b05dabc0dbed1b531e13d6c6fd362411423d0a775e5e9b960")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -32,6 +29,5 @@ class PyTensorflowDatasets(PythonPackage):
     depends_on("py-tensorflow-metadata", type=("build", "run"))
     depends_on("py-termcolor", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
-    depends_on("py-dataclasses", type=("build", "run"), when="python@:3.6")
     depends_on("py-typing-extensions", type=("build", "run"), when="python@:3.7")
     depends_on("py-importlib-resources", type=("build", "run"), when="python@:3.8")

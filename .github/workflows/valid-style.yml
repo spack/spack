@@ -1,0 +1,60 @@
+name: style
+
+on:
+  workflow_call:
+    inputs:
+      with_coverage:
+        required: true
+        type: string
+
+concurrency:
+  group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+
+jobs:
+  # Validate that the code can be run on all the Python versions
+  # supported by Spack
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    - name: Install Python Packages
+      run: |
+        pip install --upgrade pip
+        pip install --upgrade vermin
+    - name: vermin (Spack's Core)
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+    - name: vermin (Repositories)
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
+  # Run style checks on the files that have been changed
+  style:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    - name: Install Python packages
+      run: |
+        python3 -m pip install --upgrade pip six setuptools types-six black==23.1.0 mypy isort clingo flake8
+    - name: Setup git configuration
+      run: |
+        # Need this for the git tests to succeed.
+        git --version
+        . .github/workflows/setup_git.sh
+    - name: Run style tests
+      run: |
+          share/spack/qa/run-style-tests
+  audit:
+    uses: ./.github/workflows/audit.yaml
+    with:
+      with_coverage: ${{ inputs.with_coverage }}
+      python_version: '3.11'

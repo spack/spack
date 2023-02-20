@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMutoss(RPackage):
@@ -15,10 +15,10 @@ class RMutoss(RPackage):
 
     cran = "mutoss"
 
-    version('0.1-12', sha256='2889ae3d502157592697124eb86adc14911e2b7fdaa7204743a376b1eeb967fa')
+    version("0.1-12", sha256="2889ae3d502157592697124eb86adc14911e2b7fdaa7204743a376b1eeb967fa")
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r-mvtnorm', type=('build', 'run'))
-    depends_on('r-plotrix', type=('build', 'run'))
-    depends_on('r-multtest@2.2.0:', type=('build', 'run'))
-    depends_on('r-multcomp@1.1-0:', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-mvtnorm", type=("build", "run"))
+    depends_on("r-plotrix", type=("build", "run"))
+    depends_on("r-multtest@2.2.0:", type=("build", "run"))
+    depends_on("r-multcomp@1.1-0:", type=("build", "run"))

@@ -1,13 +1,14 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class InstalledDepsB(Package):
     """Used by test_installed_deps test case."""
+
     #     a
     #    / \
     #   b   c   b --> d build/link
@@ -16,7 +17,7 @@ class InstalledDepsB(Package):
     #   d   e   c --> e build/link
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/b-1.0.tar.gz"
+    url = "http://www.example.com/b-1.0.tar.gz"
 
     version("1", "0123456789abcdef0123456789abcdef")
     version("2", "abcdef0123456789abcdef0123456789")

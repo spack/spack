@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRle(RPackage):
@@ -14,6 +14,6 @@ class RRle(RPackage):
 
     cran = "rle"
 
-    version('0.9.2', sha256='803cbe310af6e882e27be61d37d660dbe5910ac1ee1eff61a480bcf724a04f69')
+    version("0.9.2", sha256="803cbe310af6e882e27be61d37d660dbe5910ac1ee1eff61a480bcf724a04f69")
 
-    depends_on('r@3.5:', type=('build', 'run'))
+    depends_on("r@3.5:", type=("build", "run"))

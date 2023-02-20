@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,15 +36,15 @@ properties = union_dicts(
     spack.schema.modules.properties,
     spack.schema.packages.properties,
     spack.schema.repos.properties,
-    spack.schema.upstreams.properties
+    spack.schema.upstreams.properties,
 )
 
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack merged configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack merged configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

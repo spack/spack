@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RInum(RPackage):
@@ -14,8 +14,8 @@ class RInum(RPackage):
 
     cran = "inum"
 
-    version('1.0-4', sha256='5febef69c43a4b95b376c1418550a949d988a5f26b1383ca01c9728a94fc13ce')
-    version('1.0-1', sha256='3c2f94c13c03607e05817e4859595592068b55e810fed94e29bc181ad248a099')
+    version("1.0-4", sha256="5febef69c43a4b95b376c1418550a949d988a5f26b1383ca01c9728a94fc13ce")
+    version("1.0-1", sha256="3c2f94c13c03607e05817e4859595592068b55e810fed94e29bc181ad248a099")
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-libcoin@1.0-0:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-libcoin@1.0-0:", type=("build", "run"))

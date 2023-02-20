@@ -1,12 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
 
-from spack import *
-from spack.util.executable import Executable
+from spack.package import *
 
 
 class Oommf(Package):
@@ -40,11 +39,27 @@ class Oommf(Package):
     # default URL for versions
     url = "https://github.com/fangohr/oommf/archive/refs/tags/20a1_20180930_ext.tar.gz"
 
-    maintainers = ["fangohr"]
+    #: post-install phase methods used to check the installation
+    install_time_test_callbacks = [
+        "check_install_version",
+        "check_install_platform",
+        "check_install_stdprob3",
+    ]
+
+    maintainers("fangohr")
 
     version(
-        "20a3_20210930",
-        sha256="880242afdf4c84de7f2a3c42ab0ad8c354028a7d2d3c3160980cf3e08e285691",
+        "20b0_20220930", sha256="764f1983d858fbad4bae34c720b217940ce56f745647ba94ec74de4b185f1328"
+    )
+
+    version(
+        "20b0_20220930-vanilla",
+        url="https://math.nist.gov/oommf/dist/oommf20b0_20220930.tar.gz",
+        sha256="141826208d638ded65704d0964d9c56e94a35d198e310454f6173e02601378fd",
+    )
+
+    version(
+        "20a3_20210930", sha256="880242afdf4c84de7f2a3c42ab0ad8c354028a7d2d3c3160980cf3e08e285691"
     )
 
     version(
@@ -54,8 +69,7 @@ class Oommf(Package):
     )
 
     version(
-        "20a2_20200608",
-        sha256="a3113f2aca0b6249ee99b2f4874f31de601bd7af12498d84f28706b265fa50ab",
+        "20a2_20200608", sha256="a3113f2aca0b6249ee99b2f4874f31de601bd7af12498d84f28706b265fa50ab"
     )
 
     version(
@@ -109,7 +123,7 @@ class Oommf(Package):
 
     # sanity checks: (https://spack.readthedocs.io/en/latest/packaging_guide.html#checking-an-installation)
     sanity_check_is_file = [join_path("bin", "oommf.tcl")]
-    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/eamples"]
+    sanity_check_is_dir = ["usr/bin/oommf/app", "usr/bin/oommf/app/oxs/examples"]
 
     def get_oommf_source_root(self):
         """If we download the source from NIST, then 'oommf.tcl' is in the root directory.
@@ -118,9 +132,7 @@ class Oommf(Package):
         Here, we try to find the relative path to that file, and return it.
         """
         if "oommf.tcl" in os.listdir():
-            print(
-                "Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)"
-            )
+            print("Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)")
             return "."
         elif "oommf.tcl" in os.listdir("oommf"):
             print(
@@ -161,7 +173,6 @@ class Oommf(Package):
     def configure(self, spec, prefix):
         # change into directory with source code
         with working_dir(self.get_oommf_source_root()):
-
             configure = Executable("./oommf.tcl pimake distclean")
             configure()
             configure2 = Executable("./oommf.tcl pimake upgrade")
@@ -180,7 +191,6 @@ class Oommf(Package):
         oommfdir = self.get_oommf_path(prefix)
 
         with working_dir(self.get_oommf_source_root()):
-
             install_tree(".", oommfdir)
 
             # The one file that is used directly by the users should be
@@ -208,24 +218,17 @@ class Oommf(Package):
             test_env["PATH"] = os.environ["PATH"]
 
         output = self.tclsh(
-            self.oommf_tcl_path,
-            *oommf_args,
-            output=str.split,
-            error=str.split,
-            env=test_env
+            self.oommf_tcl_path, *oommf_args, output=str.split, error=str.split, env=test_env
         )
 
         print("output received from oommf is %s" % output)
 
-    @run_after("install")
     def check_install_version(self):
         self._check_install_oommf_command(["+version"])
 
-    @run_after("install")
     def check_install_platform(self):
         self._check_install_oommf_command(["+platform"])
 
-    @run_after("install")
     def check_install_stdprob3(self):
         oommf_examples = join_path(self.spec.prefix.usr.bin, "oommf/app/oxs/examples")
         task = join_path(oommf_examples, "stdprob3.mif")
@@ -256,12 +259,7 @@ class Oommf(Package):
         # run "oommf +platform"
         options = [oommf_tcl_path, "+platform"]
         purpose = "Check oommf.tcl can execute (+platform)"
-        expected = [
-            "OOMMF threads",
-            "OOMMF release",
-            "OOMMF API index",
-            "Temp file directory",
-        ]
+        expected = ["OOMMF threads", "OOMMF release", "OOMMF API index", "Temp file directory"]
         self.run_test(
             exe,
             options=options,
