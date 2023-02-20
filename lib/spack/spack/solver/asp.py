@@ -595,14 +595,13 @@ class PyclingoDriver(object):
         if choice:
             self.assumptions.append(atom)
 
-    def solve(self, setup, specs, reuse=None, namespace=False, output=None, control=None):
+    def solve(self, setup, specs, reuse=None, output=None, control=None):
         """Set up the input and solve for dependencies of ``specs``.
 
         Arguments:
             setup (SpackSolverSetup): An object to set up the ASP problem.
             specs (list): List of ``Spec`` objects to solve for.
             reuse (None or list): list of concrete specs that can be reused
-            namespace (bool): enable node namespacing
             output (None or OutputConfiguration): configuration object to set
                 the output of this solve.
             control (clingo.Control): configuration for the solver. If None,
@@ -623,11 +622,13 @@ class PyclingoDriver(object):
         self.control = control or default_clingo_control()
         # set up the problem -- this generates facts and rules
         self.assumptions = []
+        timer.start("setup")
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs, reuse=reuse, namespace=namespace)
-        timer.phase("setup")
+            setup.setup(self, specs, reuse=reuse)
+        timer.stop("setup")
 
+        timer.start("load")
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
@@ -657,12 +658,13 @@ class PyclingoDriver(object):
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
-        timer.phase("load")
+        timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
         # and first-order logic rules into propositional logic.
+        timer.start("ground")
         self.control.ground([("base", [])])
-        timer.phase("ground")
+        timer.stop("ground")
 
         # With a grounded program, we can run the solve.
         result = Result(specs)
@@ -680,8 +682,10 @@ class PyclingoDriver(object):
 
         if clingo_cffi:
             solve_kwargs["on_unsat"] = cores.append
+
+        timer.start("solve")
         solve_result = self.control.solve(**solve_kwargs)
-        timer.phase("solve")
+        timer.stop("solve")
 
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
@@ -760,10 +764,6 @@ class SpackSolverSetup(object):
 
         # whether to add installed/binary hashes to the solve
         self.tests = tests
-
-        # whether to namespace nodes in the solve
-        # set by setup()
-        self.namespace = None
 
         # If False allows for input specs that are not solved
         self.concretize_everything = True
@@ -1353,7 +1353,6 @@ class SpackSolverSetup(object):
         # TODO: do this with consistent suffixes.
         class Head(object):
             node = fn.node
-            node_namespace = fn.node_namespace
             virtual_node = fn.virtual_node
             node_platform = fn.node_platform_set
             node_os = fn.node_os_set
@@ -1367,7 +1366,6 @@ class SpackSolverSetup(object):
 
         class Body(object):
             node = fn.node
-            node_namespace = fn.node_namespace
             virtual_node = fn.virtual_node
             node_platform = fn.node_platform
             node_os = fn.node_os
@@ -1383,9 +1381,6 @@ class SpackSolverSetup(object):
 
         if spec.name:
             clauses.append(f.node(spec.name) if not spec.virtual else f.virtual_node(spec.name))
-
-        if self.namespace and spec.namespace:
-            clauses.append(f.node_namespace(spec.name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -1927,7 +1922,7 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def setup(self, driver, specs, reuse=None, namespace=False):
+    def setup(self, driver, specs, reuse=None):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1938,7 +1933,6 @@ class SpackSolverSetup(object):
             driver (PyclingoDriver): driver instance of this solve
             specs (list): list of Specs to solve
             reuse (None or list): list of concrete specs that can be reused
-            namespace (bool): enable namespace matching in the solve
         """
         self._condition_id_counter = itertools.count()
 
@@ -1990,10 +1984,6 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
-
-        self.namespace = namespace
-        if namespace:
-            self.gen.fact(fn.enable_node_namespace())
 
         if reuse:
             self.gen.h1("Reusable specs")
@@ -2087,9 +2077,6 @@ class SpecBuilder(object):
     def node(self, pkg):
         if pkg not in self._specs:
             self._specs[pkg] = spack.spec.Spec(pkg)
-
-    def node_namespace(self, pkg, namespace):
-        self._specs[pkg].namespace = namespace
 
     def _arch(self, pkg):
         arch = self._specs[pkg].architecture
@@ -2386,7 +2373,6 @@ class Solver(object):
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", False)
-        self.namespace = spack.config.get("concretizer:enable_node_namespace", False)
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(specs):
@@ -2449,9 +2435,7 @@ class Solver(object):
         reusable_specs.extend(self._reusable_specs())
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        result, _, _ = self.driver.solve(
-            setup, specs, reuse=reusable_specs, namespace=self.namespace, output=output
-        )
+        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
     def solve_in_rounds(
@@ -2488,7 +2472,7 @@ class Solver(object):
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
-                setup, input_specs, reuse=reusable_specs, namespace=self.namespace, output=output
+                setup, input_specs, reuse=reusable_specs, output=output
             )
             yield result
 

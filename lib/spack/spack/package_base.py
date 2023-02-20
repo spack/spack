@@ -27,7 +27,16 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
+from typing import (  # novm # noqa: F401
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+)
 
 import six
 
@@ -531,10 +540,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     # These are default values for instance variables.
     #
 
-    #: A list or set of build time test functions to be called when tests
-    #: are executed or 'None' if there are no such test functions.
-    build_time_test_callbacks = None  # type: Optional[List[str]]
-
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
@@ -542,10 +547,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: Most Spack packages are used to install source or binary code while
     #: those that do not can be used to install a set of other Spack packages.
     has_code = True
-
-    #: A list or set of install time test functions to be called when tests
-    #: are executed or 'None' if there are no such test functions.
-    install_time_test_callbacks = None  # type: Optional[List[str]]
 
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True

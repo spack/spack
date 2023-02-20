@@ -48,3 +48,9 @@ class OldStyleAutotools(AutotoolsPackage):
     @run_after("autoreconf", when="@2.0")
     def after_autoreconf_2(self):
         os.environ["AFTER_AUTORECONF_2_CALLED"] = "1"
+
+    def check(self):
+        os.environ["CHECK_CALLED"] = "1"
+
+    def installcheck(self):
+        os.environ["INSTALLCHECK_CALLED"] = "1"

@@ -293,10 +293,12 @@ class BinaryCacheIndex(object):
                         cur_entry["spec"] = new_entry["spec"]
                         break
                 else:
-                    current_list.append = {
-                        "mirror_url": new_entry["mirror_url"],
-                        "spec": new_entry["spec"],
-                    }
+                    current_list.append(
+                        {
+                            "mirror_url": new_entry["mirror_url"],
+                            "spec": new_entry["spec"],
+                        }
+                    )
 
     def update(self, with_cooldown=False):
         """Make sure local cache of buildcache index files is up to date.
@@ -554,9 +556,9 @@ class NoOverwriteException(spack.error.SpackError):
     """
 
     def __init__(self, file_path):
-        err_msg = "\n%s\nexists\n" % file_path
-        err_msg += "Use -f option to overwrite."
-        super(NoOverwriteException, self).__init__(err_msg)
+        super(NoOverwriteException, self).__init__(
+            '"{}" exists in buildcache. Use --force flag to overwrite.'.format(file_path)
+        )
 
 
 class NoGpgException(spack.error.SpackError):
