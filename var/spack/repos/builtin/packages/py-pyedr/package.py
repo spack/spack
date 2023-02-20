@@ -23,4 +23,4 @@ class PyPyedr(PythonPackage):
     depends_on("py-pbr", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
 
-    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools", type="build")
