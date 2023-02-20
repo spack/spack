@@ -2,12 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack.package import *
-import subprocess
 
 
 class Nccmp(CMakePackage):
@@ -36,9 +32,7 @@ class Nccmp(CMakePackage):
 
         nc = self.spec["netcdf-c"]
         if "~shared" in nc:
-            nc_pc_cmd = ["nc-config","--static","--libs"]
-            nc_flags = \
-              subprocess.check_output(nc_pc_cmd, encoding="utf8").strip()
+            nc_flags = Executable("nc-config")("--static", "--libs", output=str).strip()
             args.append(self.define("CMAKE_EXE_LINKER_FLAGS", nc_flags))
             if "+mpi" in nc:
                 args.append(
