@@ -69,6 +69,7 @@ class PyAwkward(PythonPackage):
     depends_on("py-pybind11", type=("build", "link"))
     depends_on("py-importlib-resources", when="@2: ^python@:3.8", type=("build", "run"))
     depends_on("py-typing-extensions@4.1:", when="@2: ^python@:3.10", type=("build", "run"))
+    depends_on("py-packaging", when="@2:", type=("build", "run"))
     depends_on("dlpack", when="@1.0.0:")
     depends_on("rapidjson")
     depends_on("cmake@3.13:", type="build")
