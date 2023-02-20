@@ -250,7 +250,8 @@ class Acts(CMakePackage, CudaPackage):
 
     # Build dependencies
     depends_on("acts-dd4hep", when="@19 +dd4hep")
-    depends_on("actsvg", when="@20.1: +svg")
+    depends_on("actsvg@0.4.20:", when="@20.1: +svg")
+    depends_on("actsvg@0.4.28:", when="@23.2: +svg")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
