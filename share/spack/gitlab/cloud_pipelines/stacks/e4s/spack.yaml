@@ -8,6 +8,8 @@ spack:
   config:
     build_jobs: 32
     concretizer: clingo
+    shared_linking:
+      strict: true
     install_tree:
       root: /home/software/spack
       padded_length: 512
