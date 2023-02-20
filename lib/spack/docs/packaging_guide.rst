@@ -2726,29 +2726,6 @@ variant(s) are selected.  This may be accomplished with conditional
        extends("python", when="+python")
        ...
 
-Sometimes, certain files in one package will conflict with those in
-another, which means they cannot both be used in a view at the
-same time.  In this case, you can tell Spack to ignore those files:
-
-.. code-block:: python
-
-   class PySncosmo(Package):
-       ...
-       # py-sncosmo binaries are duplicates of those from py-astropy
-       extends("python", ignore=r"bin/.*")
-       depends_on("py-astropy")
-       ...
-
-The code above will prevent everything in the ``$prefix/bin/`` directory
-from being linked in a view.
-
-.. note::
-
-   You can call *either* ``depends_on`` or ``extends`` on any one
-   package, but not both.  For example you cannot both
-   ``depends_on("python")`` and ``extends("python")`` in the same
-   package.  ``extends`` implies ``depends_on``.
-
 -----
 Views
 -----
