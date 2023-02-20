@@ -21,7 +21,7 @@ be present on the machine where Spack is run:
    :header-rows: 1
 
 These requirements can be easily installed on most modern Linux systems;
-on macOS, the Command Line Tools package is required, and a full XCode suite 
+on macOS, the Command Line Tools package is required, and a full XCode suite
 may be necessary for some packages such as Qt and apple-gl. Spack is designed
 to run on HPC platforms like Cray.  Not all packages should be expected
 to work on all platforms.
@@ -1506,7 +1506,7 @@ Spack On Windows
 
 Windows support for Spack is currently under development. While this work is still in an early stage,
 it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
-you through the steps needed to install Spack and start running it on a fresh Windows machine. 
+you through the steps needed to install Spack and start running it on a fresh Windows machine.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1: Install prerequisites
@@ -1516,7 +1516,7 @@ To use Spack on Windows, you will need the following packages:
 
 Required:
 * Microsoft Visual Studio
-* Python 
+* Python
 * Git
 
 Optional:
@@ -1547,8 +1547,8 @@ Intel Fortran
 """""""""""""
 
 For Fortran-based packages on Windows, we strongly recommend Intel's oneAPI Fortran compilers.
-The suite is free to download from Intel's website, located at 
-https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html#gs.70t5tw.
+The suite is free to download from Intel's website, located at
+https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html.
 The executable of choice for Spack will be Intel's Beta Compiler, ifx, which supports the classic
 compiler's (ifort's) frontend and runtime libraries by using LLVM.
 

@@ -366,7 +366,7 @@ If the ``pyproject.toml`` lists ``mesonpy`` as the ``build-backend``,
 it uses the meson build system. Meson uses the default
 ``pyproject.toml`` keys to list dependencies.
 
-See https://meson-python.readthedocs.io/en/latest/usage/start.html
+See https://meson-python.readthedocs.io/en/latest/tutorials/introduction.html
 for more information.
 
 """
