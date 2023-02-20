@@ -2830,10 +2830,10 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     all_views = os.path.dirname(resolved_view)
     views_before = os.listdir(all_views)
 
-    # Add a spec that results in MergeConflictError's when creating a view
+    # Add a spec that results in view clash when creating a view
     with ev.read("env"):
         add("libelf cflags=-O3")
-        with pytest.raises(llnl.util.link_tree.MergeConflictError):
+        with pytest.raises(ev.SpackEnvironmentViewError):
             install("--fake")
 
     # Make sure there is no broken view in the views directory, and the current
