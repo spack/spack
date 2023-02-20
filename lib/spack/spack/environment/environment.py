@@ -18,7 +18,9 @@ import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 from llnl.util.lang import dedupe
+from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import symlink
 
 import spack.compilers
@@ -603,7 +605,24 @@ class ViewDescriptor(object):
                 os.unlink(tmp_symlink_name)
             except (IOError, OSError):
                 pass
-            raise e
+
+            # Give an informative error message for the typical error case: two specs, same package
+            # project to same prefix.
+            if isinstance(e, ConflictingSpecsError):
+                spec_a = e.args[0].format(color=clr.get_color_when())
+                spec_b = e.args[1].format(color=clr.get_color_when())
+                raise SpackEnvironmentViewError(
+                    f"The environment view in {self.root} could not be created, "
+                    "because the following two specs project to the same prefix:\n"
+                    f"    {spec_a}, and\n"
+                    f"    {spec_b}.\n"
+                    "    To resolve this issue:\n"
+                    "        a. use `concretization:unify:true` to ensure there is only one "
+                    "package per spec in the environment, or\n"
+                    "        b. disable views with `view:false`, or\n"
+                    "        c. create custom view projections."
+                ) from e
+            raise
 
         # Remove the old root when it's in the same folder as the new root. This guards
         # against removal of an arbitrary path when the original symlink in self.root
