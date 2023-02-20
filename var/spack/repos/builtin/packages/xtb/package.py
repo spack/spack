@@ -10,10 +10,11 @@ class Xtb(MesonPackage):
     """Semiempirical extended tight binding program package"""
 
     homepage = "https://xtb-docs.readthedocs.org"
-    url = "https://github.com/grimme-lab/xtb/releases/download/v6.5.1/xtb-6.5.1-source.tar.xz"
+    url = "https://github.com/grimme-lab/xtb/releases/download/v6.6.0/xtb-6.6.0-source.tar.xz"
 
     maintainers("awvwgk")
 
+    version("6.6.0", sha256="8460113f2678dcb23220af17b734f1221af302f42126bb54e3ae356530933b85")
     version("6.5.1", sha256="0922205cc224fe79e28f3d75be4e10c03efa8f3f666aedec8346fed82b272cad")
     version("6.5.0", sha256="5f780656bf7b440a8e1f753a9a877401a7d497fb3160762f48bdefc8a9914976")
 
@@ -22,6 +23,7 @@ class Xtb(MesonPackage):
     depends_on("meson@0.57.2:", type="build")
     depends_on("mctc-lib")
     depends_on("pkgconfig", type="build")
+    depends_on("tblite", when="@6.6.0:")
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")
 
@@ -32,7 +34,9 @@ class Xtb(MesonPackage):
         elif lapack != "openblas":
             lapack = "netlib"
 
+        lapack_opt = "-Dlapack={0}" if self.version > Version("6.6.0") else "-Dla_backend={0}"
+
         return [
-            "-Dla_backend={0}".format(lapack),
+            lapack_opt.format(lapack),
             "-Dopenmp={0}".format(str("+openmp" in self.spec).lower()),
         ]
