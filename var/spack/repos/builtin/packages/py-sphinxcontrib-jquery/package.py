@@ -12,7 +12,7 @@ class PySphinxcontribJquery(PythonPackage):
     homepage = "https://github.com/sphinx-contrib/jquery"
     pypi = "sphinxcontrib-jquery/sphinxcontrib-jquery-2.0.0.tar.gz"
 
-    version("2.0.0", sha256="a8fb65f6dba84bf7bcd1aea1f02ab3955ac34611d838bcc95d4983b805b234da")
+    version("2.0.0", sha256="8fb65f6dba84bf7bcd1aea1f02ab3955ac34611d838bcc95d4983b805b234daa")
 
     depends_on("python@3.5:", when="@2:", type=("build", "run"))
     depends_on("py-setuptools@65:", type=("build", "run"))
