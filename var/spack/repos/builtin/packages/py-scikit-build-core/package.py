@@ -31,3 +31,19 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-typing-extensions@3.10:", when="^python@:3.7", type=("build", "run"))
 
     depends_on("cmake@3.15:", type=("build", "run"))
+
+    # Test dependencies
+    depends_on("py-build +virtualenv", type="test")
+    depends_on("py-pytest@7.2:", type="test")
+    depends_on("py-pytest-subprocess@1.5:", type="test")
+    depends_on("py-cattrs@22.2:", type="test")
+    depends_on("py-importlib-metadata", when="^python@:3.7", type="test")
+    depends_on("py-pybind11", type="test")
+    depends_on("py-setuptools", type="test")
+    depends_on("py-wheel", type="test")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
+        with working_dir("tests"):
+            which("pytest")()
