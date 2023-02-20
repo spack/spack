@@ -2511,6 +2511,12 @@ class Solver(object):
                 # TODO: update mirror configuration so it can indicate that the
                 # TODO: source cache (or any mirror really) doesn't have binaries.
                 pass
+
+            if self.reuse is not True:  # alternative is a list
+                reusable_specs = [
+                    s for s in reusable_specs if any(s.satisfies(r) for r in self.reuse)
+                ]
+
         return reusable_specs
 
     def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
