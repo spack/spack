@@ -39,8 +39,8 @@ class PyParticle(PythonPackage):
     depends_on("py-setuptools", when="@:0.20", type="build")
     depends_on("py-hatchling", when="@0.21:", type="build")
     depends_on("py-hatch-vcs", when="@0.21:", type="build")
-    depends_on("py-importlib-resources@2:", when="@0.21: ^python@:3.8", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@0.21: ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-resources@2:", when="@0.16: ^python@:3.8", type=("build", "run"))
+    depends_on("py-typing-extensions", when="@0.16: ^python@:3.7", type=("build", "run"))
 
     depends_on("py-attrs@19.2.0:", type=("build", "run"))
     depends_on("py-hepunits@1.2.0:", when="@:0.12", type=("build", "run"))
