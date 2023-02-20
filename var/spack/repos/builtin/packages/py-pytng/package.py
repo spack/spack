@@ -21,6 +21,6 @@ class PyPytng(PythonPackage):
     depends_on("python@3.8:")
 
     depends_on("py-cython@0.28:2", type="build")
-    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@1.20.0:", type=("build", "run"))
