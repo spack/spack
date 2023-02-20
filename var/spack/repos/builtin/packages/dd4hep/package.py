@@ -156,15 +156,10 @@ class Dd4hep(CMakePackage):
     depends_on("podio@0.16:", when="@1.24: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
-    # Fix necessary for downstream packages to be able to consume dd4hep with
-    # certain cmake versions
-    # See https://github.com/AIDASoft/DD4hep/pull/876
-    patch("cmake_escape_regex.patch", when="^cmake@3.16:3.17.2")
-
-    # See https://github.com/AIDASoft/DD4hep/pull/771
+    # See https://github.com/AIDASoft/DD4hep/pull/771 and https://github.com/AIDASoft/DD4hep/pull/876
     conflicts(
         "^cmake@3.16:3.17.0",
-        when="@1.15",
+        when="@1.15:1.18",
         msg="cmake version with buggy FindPython breaks dd4hep cmake config",
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
