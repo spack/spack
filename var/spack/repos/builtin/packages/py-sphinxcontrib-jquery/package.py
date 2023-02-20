@@ -15,5 +15,5 @@ class PySphinxcontribJquery(PythonPackage):
     version("2.0.0", sha256="a8fb65f6dba84bf7bcd1aea1f02ab3955ac34611d838bcc95d4983b805b234da")
 
     depends_on("python@3.5:", when="@2:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@65:", type=("build", "run"))
     depends_on("py-flit-core", when="@3:", type="build")
