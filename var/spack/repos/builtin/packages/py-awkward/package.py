@@ -50,14 +50,14 @@ class PyAwkward(PythonPackage):
     depends_on("py-hatch-fancy-pypi-readme", when="@2:", type="build")
 
     _awkward_to_awkward_cpp_map = [
-      ("@2.0.0", "@2"),
-      ("@2.0.1", "@3"),
-      ("@2.0.2", "@4"),
-      ("@2.0.3:2.0.4", "@5"),
-      ("@2.0.5", "@6"),
-      ("@2.0.6", "@7"),
-      ("@2.0.7", "@8"),
-      ("@2.0.8", "@9"),
+        ("@2.0.0", "@2"),
+        ("@2.0.1", "@3"),
+        ("@2.0.2", "@4"),
+        ("@2.0.3:2.0.4", "@5"),
+        ("@2.0.5", "@6"),
+        ("@2.0.6", "@7"),
+        ("@2.0.7", "@8"),
+        ("@2.0.8", "@9"),
     ]
     for _awkward, _awkward_cpp in _awkward_to_awkward_cpp_map:
         depends_on("py-awkward-cpp{}".format(_awkward_cpp), when=_awkward, type=("build", "run"))
