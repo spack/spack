@@ -23,6 +23,8 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("py-hatchling", type="build")
     depends_on("py-hatch-vcs", type="build")
     depends_on("py-packaging@20.9:", type=("build", "run"))
+    depends_on("py-pathspec@0.10.1:", type=("build", "run"))
+    depends_on("py-pyproject-metadata@0.5:", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="^python@:3.10", type=("build", "run"))
     depends_on("py-exceptiongroup", when="^python@:3.10", type=("build", "run"))
     depends_on("py-importlib-resources@1.3:", when="^python@:3.8", type=("build", "run"))
