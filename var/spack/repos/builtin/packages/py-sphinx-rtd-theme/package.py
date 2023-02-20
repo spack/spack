@@ -26,6 +26,7 @@ class PySphinxRtdTheme(PythonPackage):
     depends_on("py-docutils@:0.16", when="@0.5.2:0", type=("build", "run"))
     depends_on("py-docutils@:0.17", when="@1:1.1", type=("build", "run"))
     depends_on("py-docutils@:0.18", when="@1.2:", type=("build", "run"))
+    depends_on("py-sphinxcontrib-jquery@2.0:3.0", when="@1.2:", type=("build", "run"))
 
     def setup_build_environment(self, env):
         # Hack to prevent usage of npm in 0.5+
