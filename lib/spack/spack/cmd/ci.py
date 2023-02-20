@@ -553,14 +553,6 @@ def ci_rebuild(args):
             SPACK_COMMAND,
             "-e",
             env.path,
-            "config",
-            "add",
-            "config:db_lock_timeout:120",  # 2 minutes for processes to fight for a db lock
-        ],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
             "env",
             "depfile",
             "-o",
