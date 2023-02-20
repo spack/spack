@@ -610,10 +610,6 @@ class Lammps(CMakePackage, CudaPackage):
     )
     conflicts("+h5md", when="@:20210527", msg="+h5md only added @20210702, use +user-h5md instead")
     conflicts(
-<<<<<<< HEAD
-        "+user-hdnnp", when="@:20210514", msg="+user-hdnnp was introduced in version @20210527"
-    )
-    conflicts(
         "+user-hdnnp",
         when="@20210702:",
         msg="+user-hdnnp was removed after @20210527, use +ml-hdnnp instead",
