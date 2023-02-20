@@ -395,6 +395,15 @@ class Boost(Package):
     # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
     patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
 
+    # MPI constants are usually not compile-time constants
+    # See https://github.com/boostorg/mpi/issues/133
+    # and https://github.com/boostorg/mpi/pull/134
+    patch("mpi-constants-1_78.patch", when='@1.78')
+    patch("mpi-constants-1_78.patch", when='@1.79')
+    # We need a different patch for `@develop` because its directory structure
+    # is different
+    patch("mpi-constants.patch", when='@develop')
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies("%nvhpc"):
