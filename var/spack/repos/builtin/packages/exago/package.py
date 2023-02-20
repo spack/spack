@@ -33,7 +33,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
-    variant("raja", default=False, when="+hiop", description="Enable/Disable RAJA with HiOp")
+    variant("raja", default=False, description="Enable/Disable RAJA")
     variant("python", default=True, when="@1.4:", description="Enable/Disable Python bindings")
     variant("logging", default=True, description="Enable/Disable spdlog based logging")
     conflicts(
@@ -63,6 +63,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("ipopt~mumps", when="+ipopt")
     depends_on("cuda", when="+cuda")
+    depends_on("raja", when="+raja")
+    depends_on("umpire", when="+raja")
 
     depends_on("cmake@3.18:", type="build")
 
@@ -101,7 +103,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     # ^ need to depend when both hpctoolkit and tau
 
     # HiOp dependency logic
-    depends_on("hiop+raja", when="+hiop+raja")
     depends_on("hiop@0.3.99:", when="@0.99:+hiop")
     depends_on("hiop@0.5.1:", when="@1.1.0:+hiop")
     depends_on("hiop@0.5.3:", when="@1.3.0:+hiop")
@@ -109,6 +110,18 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("hiop~mpi", when="+hiop~mpi")
     depends_on("hiop+mpi", when="+hiop+mpi")
+
+    # RAJA dependency logic
+    # ExaGO will support +raja~hiop in the future
+    depends_on("hiop+raja", when="+hiop+raja")
+    # This is duplicated from HiOp
+    # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
+    # We are working on supporting newer Umpire/RAJA versions
+    depends_on("raja@0.14.0:0.14", when="@1.1.0:+raja")
+    depends_on("umpire@6.0.0:6", when="@1.1.0:+raja")
+    depends_on("camp@0.2.3:0.2", when="@1.1.0:+raja")
+    # This is no longer a requirement in RAJA > 0.14
+    depends_on("umpire+cuda~shared", when="+raja+cuda")
 
     depends_on("petsc@3.13:3.14", when="@:1.2.99")
     depends_on("petsc@3.16.0:3.16", when="@1.3.0:1.4")
@@ -119,10 +132,16 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     for arch in CudaPackage.cuda_arch_values:
         cuda_dep = "+cuda cuda_arch={0}".format(arch)
         depends_on("hiop {0}".format(cuda_dep), when=cuda_dep)
+        depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        depends_on("umpire {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        depends_on("camp {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
 
     for arch in ROCmPackage.amdgpu_targets:
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("hiop {0}".format(rocm_dep), when=rocm_dep)
+        depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        depends_on("camp {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
     flag_handler = build_system_flags
 
