@@ -45,11 +45,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
-from spack.filesystem_view import (
-    SimpleFilesystemView,
-    inverse_view_func_parser,
-    view_func_parser,
-)
+from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
@@ -103,6 +99,15 @@ valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
 lockfile_format_version = 4
+
+
+READER_CLS = {
+    1: spack.spec.SpecfileV1,
+    2: spack.spec.SpecfileV1,
+    3: spack.spec.SpecfileV2,
+    4: spack.spec.SpecfileV3,
+}
+
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
@@ -295,12 +300,7 @@ def _write_yaml(data, str_or_file):
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     valid_variables = spack.util.environment.get_host_environment()
-    valid_variables.update(
-        {
-            "re": re,
-            "env": os.environ,
-        }
-    )
+    valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
 
 
@@ -384,7 +384,8 @@ class ViewDescriptor(object):
         link_type="symlink",
     ):
         self.base = base_path
-        self.root = spack.util.path.canonicalize_path(root)
+        self.raw_root = root
+        self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
         self.projections = projections
         self.select = select
         self.exclude = exclude
@@ -410,7 +411,7 @@ class ViewDescriptor(object):
         )
 
     def to_dict(self):
-        ret = syaml.syaml_dict([("root", self.root)])
+        ret = syaml.syaml_dict([("root", self.raw_root)])
         if self.projections:
             # projections guaranteed to be ordered dict if true-ish
             # for python2.6, may be syaml or ruamel.yaml implementation
@@ -963,9 +964,7 @@ class Environment(object):
                         config_path = os.path.join(config_path, basename)
                 else:
                     staged_path = spack.config.fetch_remote_configs(
-                        config_path,
-                        self.config_stage_dir,
-                        skip_existing=True,
+                        config_path, self.config_stage_dir, skip_existing=True
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(
@@ -1435,7 +1434,7 @@ class Environment(object):
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptype="test"
+                            test_dependency.copy(), deptypes="test"
                         )
 
         results = [
@@ -1941,7 +1940,7 @@ class Environment(object):
             "_meta": {
                 "file-type": "spack-lockfile",
                 "lockfile-version": lockfile_format_version,
-                "specfile-version": spack.spec.specfile_format_version,
+                "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
             # users specs + hashes are the 'roots' of the environment
             "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
@@ -1974,10 +1973,19 @@ class Environment(object):
 
         # Track specs by their DAG hash, allows handling DAG hash collisions
         first_seen = {}
+        current_lockfile_format = d["_meta"]["lockfile-version"]
+        try:
+            reader = READER_CLS[current_lockfile_format]
+        except KeyError:
+            msg = (
+                f"Spack {spack.__version__} cannot read environment lockfiles using the "
+                f"v{current_lockfile_format} format"
+            )
+            raise RuntimeError(msg)
 
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
-            spec = Spec.from_node_dict(node_dict)
+            spec = reader.from_node_dict(node_dict)
             if not spec._hash:
                 # in v1 lockfiles, the hash only occurs as a key
                 spec._hash = lockfile_key
@@ -1986,8 +1994,11 @@ class Environment(object):
         # Second pass: For each spec, get its dependencies from the node dict
         # and add them to the spec
         for lockfile_key, node_dict in json_specs_by_hash.items():
-            for _, dep_hash, deptypes, _ in Spec.dependencies_from_node_dict(node_dict):
-                specs_by_hash[lockfile_key]._add_dependency(specs_by_hash[dep_hash], deptypes)
+            name, data = reader.name_and_data(node_dict)
+            for _, dep_hash, deptypes, _ in reader.dependencies_from_node_dict(data):
+                specs_by_hash[lockfile_key]._add_dependency(
+                    specs_by_hash[dep_hash], deptypes=deptypes
+                )
 
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
@@ -2127,7 +2138,7 @@ class Environment(object):
         # Construct YAML representation of view
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
-            path = self.default_view.root
+            path = self.default_view.raw_root
             if self.default_view == ViewDescriptor(self.path, self.view_path_default):
                 view = True
             elif self.default_view == ViewDescriptor(self.path, path):

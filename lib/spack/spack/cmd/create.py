@@ -16,19 +16,10 @@ import spack.repo
 import spack.stage
 import spack.util.web
 from spack.spec import Spec
-from spack.url import (
-    UndetectableNameError,
-    UndetectableVersionError,
-    parse_name,
-    parse_version,
-)
+from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
 from spack.util.executable import ProcessError, which
-from spack.util.naming import (
-    mod_to_class,
-    simplify_name,
-    valid_fully_qualified_module_name,
-)
+from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 
 description = "create a new package file"
 section = "packaging"
@@ -70,7 +61,7 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
-    # maintainers = ["github_user1", "github_user2"]
+    # maintainers("github_user1", "github_user2")
 
 {versions}
 

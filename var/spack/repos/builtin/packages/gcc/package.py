@@ -31,7 +31,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     list_depth = 1
     keep_werror = "all"
 
-    maintainers = ["michaelkuhn", "alalazo"]
+    maintainers("michaelkuhn", "alalazo")
 
     version("master", branch="master")
 
@@ -765,17 +765,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
-            options.extend(
-                [
-                    "--enable-bootstrap",
-                ]
-            )
+            options.extend(["--enable-bootstrap"])
         else:
-            options.extend(
-                [
-                    "--disable-bootstrap",
-                ]
-            )
+            options.extend(["--disable-bootstrap"])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -876,7 +868,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
-
             options = [
                 "--prefix={0}".format(prefix),
                 "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),

@@ -19,7 +19,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
-    maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
+    maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     # Most recent tagged snapshot is the preferred version when profiling.
     version("0.7.1", commit="8064ef6b2249ad2feca92a9d1e90060bad3eebc7", submodules=True)
@@ -89,14 +89,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
         depends_on("ginkgo {0}".format(rocm_dep), when="+ginkgo {0}".format(rocm_dep))
 
-    magma_ver_constraints = (
-        ("2.5.4", "0.4"),
-        ("2.6.1", "0.4.6"),
-        ("2.6.2", "0.5.4"),
-    )
+    magma_ver_constraints = (("2.5.4", "0.4"), ("2.6.1", "0.4.6"), ("2.6.2", "0.5.4"))
 
     # Depends on Magma when +rocm or +cuda
-    for (magma_v, hiop_v) in magma_ver_constraints:
+    for magma_v, hiop_v in magma_ver_constraints:
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+cuda".format(hiop_v))
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 

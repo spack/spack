@@ -12,7 +12,7 @@ class AppleGl(Package):
 
     homepage = "https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_intro/opengl_intro.html"
 
-    maintainers = ["aphecetche"]
+    maintainers("aphecetche")
 
     has_code = False
 
@@ -23,8 +23,10 @@ class AppleGl(Package):
     # Only supported on 'platform=darwin' and compiler=apple-clang
     conflicts("platform=linux")
     conflicts("platform=cray")
+    conflicts("platform=windows")
     conflicts("%gcc")
     conflicts("%clang")
+    conflicts("%msvc")
 
     phases = []
 

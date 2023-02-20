@@ -11,7 +11,7 @@ class Tbl2asn(Package):
     sequence records for submission to GenBank."""
 
     homepage = "https://www.ncbi.nlm.nih.gov/genbank/tbl2asn2/"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version(
         "2022-04-26", sha256="c76481700e196ebd98a83f4174e0146569db9d6fe5753ac18691e9836d5c6a75"

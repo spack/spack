@@ -23,7 +23,7 @@ class Libtlx(CMakePackage):
     homepage = "https://tlx.github.io/"
     url = "https://github.com/tlx/tlx/archive/v0.5.20191212.tar.gz"
 
-    maintainers = ["fabratu"]
+    maintainers("fabratu")
 
     version(
         "0.5.20200222", sha256="99e63691af3ada066682243f3a65cd6eb32700071cdd6cfedb18777b5ff5ff4d"

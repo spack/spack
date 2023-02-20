@@ -21,7 +21,7 @@ import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
-from spack.directives import build_system, depends_on, extends
+from spack.directives import build_system, depends_on, extends, maintainers
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.version import Version
 
@@ -29,7 +29,7 @@ from ._checks import BaseBuilder, execute_install_time_tests
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart", "pradyunsg")
 
     @property
     def import_modules(self):
@@ -184,8 +184,6 @@ class PythonPackage(PythonExtension):
     #: Package name, version, and extension on PyPI
     pypi: Optional[str] = None
 
-    maintainers = ["adamjstewart", "pradyunsg"]
-
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = "PythonPackage"
@@ -267,7 +265,7 @@ class PythonPackage(PythonExtension):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, ("build", "link", "run"))
+            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
 
     def get_external_python_for_prefix(self):
         """

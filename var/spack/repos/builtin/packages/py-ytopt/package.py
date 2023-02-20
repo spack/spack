@@ -10,7 +10,7 @@ class PyYtopt(PythonPackage):
     """Ytopt package implements search using Random Forest (SuRF), an autotuning
     search method developed within Y-Tune ECP project."""
 
-    maintainers = ["Kerilk"]
+    maintainers("Kerilk")
 
     homepage = "https://github.com/ytopt-team/ytopt"
     url = "https://github.com/ytopt-team/ytopt/archive/refs/tags/v0.0.1.tar.gz"

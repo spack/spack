@@ -21,7 +21,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    maintainers = ["janciesko", "crtrott"]
+    maintainers("janciesko", "crtrott")
 
     version("master", branch="master")
     version("develop", branch="develop")
@@ -225,6 +225,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
 
     variant("shared", default=True, description="Build shared libraries")
+
+    # Filter spack-generated files that may include links to the
+    # spack compiler wrappers
+    filter_compiler_wrappers("kokkos_launch_compiler", relative_root="bin")
+    filter_compiler_wrappers(
+        "KokkosConfigCommon.cmake", relative_root=os.path.join("lib64", "cmake", "Kokkos")
+    )
 
     @classmethod
     def get_microarch(cls, target):

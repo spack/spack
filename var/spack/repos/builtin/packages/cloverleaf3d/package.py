@@ -19,7 +19,7 @@ class Cloverleaf3d(MakefilePackage):
 
     tags = ["proxy-app"]
 
-    maintainers = ["s1913388"]
+    maintainers("s1913388")
 
     version("1.0", sha256="78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef")
 

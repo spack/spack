@@ -13,7 +13,7 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
     homepage = "https://github.com/hpc-io/vfd-gds"
     url = "https://github.com/hpc-io/vfd-gds/archive/refs/tags/1.0.1.tar.gz"
     git = "https://github.com/hpc-io/vfd-gds.git"
-    maintainers = ["hyoklee", "lrknox"]
+    maintainers("hyoklee", "lrknox")
 
     # Versions
     version("master", branch="master")
@@ -31,9 +31,7 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         # CMake options
-        args = [
-            self.define("BUILD_TESTING", self.run_tests),
-        ]
+        args = [self.define("BUILD_TESTING", self.run_tests)]
 
         return args
 

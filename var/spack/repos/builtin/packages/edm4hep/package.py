@@ -14,7 +14,7 @@ class Edm4hep(CMakePackage):
     url = "https://github.com/key4hep/EDM4hep/archive/v00-01.tar.gz"
     git = "https://github.com/key4hep/EDM4hep.git"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     tags = ["hep", "key4hep"]
 

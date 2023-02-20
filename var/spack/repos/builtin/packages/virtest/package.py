@@ -13,7 +13,7 @@ class Virtest(CMakePackage):
 
     homepage = "https://github.com/mattkretz/virtest"
     git = "https://github.com/mattkretz/virtest.git"
-    maintainers = ["bernhardkaindl"]
+    maintainers("bernhardkaindl")
 
     version("master", branch="master")
 

@@ -239,21 +239,14 @@ def test_unequal_args(args1, kwargs1, args2, kwargs2):
     "args1,kwargs1,args2,kwargs2",
     [
         # Ensure that kwargs are stably sorted.
-        ((), {"a": 3, "b": 4}, (), {"b": 4, "a": 3}),
+        ((), {"a": 3, "b": 4}, (), {"b": 4, "a": 3})
     ],
 )
 def test_equal_args(args1, kwargs1, args2, kwargs2):
     assert stable_args(*args1, **kwargs1) == stable_args(*args2, **kwargs2)
 
 
-@pytest.mark.parametrize(
-    "args, kwargs",
-    [
-        ((1,), {}),
-        ((), {"a": 3}),
-        ((1,), {"a": 3}),
-    ],
-)
+@pytest.mark.parametrize("args, kwargs", [((1,), {}), ((), {"a": 3}), ((1,), {"a": 3})])
 def test_memoized(args, kwargs):
     @memoized
     def f(*args, **kwargs):
@@ -265,10 +258,7 @@ def test_memoized(args, kwargs):
     assert f.cache[key] == "return-value"
 
 
-@pytest.mark.parametrize(
-    "args, kwargs",
-    [(([1],), {}), ((), {"a": [1]})],
-)
+@pytest.mark.parametrize("args, kwargs", [(([1],), {}), ((), {"a": [1]})])
 def test_memoized_unhashable(args, kwargs):
     """Check that an exception is raised clearly"""
 

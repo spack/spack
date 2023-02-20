@@ -18,7 +18,7 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     # oneAPI Collective Communications Library
     homepage = (

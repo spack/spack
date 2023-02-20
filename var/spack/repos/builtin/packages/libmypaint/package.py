@@ -14,7 +14,7 @@ class Libmypaint(AutotoolsPackage):
     homepage = "https://github.com/mypaint/libmypaint"
     url = "https://github.com/mypaint/libmypaint/releases/download/v1.6.1/libmypaint-1.6.1.tar.xz"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     version("1.6.1", sha256="741754f293f6b7668f941506da07cd7725629a793108bb31633fb6c3eae5315f")
     version("1.6.0", sha256="a5ec3624ba469b7b35fd66b6fbee7f07285b7a7813d02291ac9b10e46618140e")
@@ -41,10 +41,7 @@ class Libmypaint(AutotoolsPackage):
 
         if "+introspection" in self.spec:
             args.extend(
-                [
-                    "--enable-introspection=yes",
-                    "--with-glib={0}".format(self.spec["glib"].prefix),
-                ]
+                ["--enable-introspection=yes", "--with-glib={0}".format(self.spec["glib"].prefix)]
             )
 
         return args

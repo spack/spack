@@ -5,7 +5,7 @@
 
 import pytest
 
-from spack.fetch_strategy import from_url_scheme
+from spack import fetch_strategy
 
 
 def test_fetchstrategy_bad_url_scheme():
@@ -13,4 +13,4 @@ def test_fetchstrategy_bad_url_scheme():
     unsupported scheme fails as expected."""
 
     with pytest.raises(ValueError):
-        fetcher = from_url_scheme("bogus-scheme://example.com/a/b/c")  # noqa: F841
+        fetcher = fetch_strategy.from_url_scheme("bogus-scheme://example.com/a/b/c")  # noqa: F841

@@ -16,19 +16,17 @@ class Crtm(CMakePackage):
     git = "https://github.com/JCSDA/crtm.git"
     url = "https://github.com/JCSDA/crtm/archive/refs/tags/v2.3.0.tar.gz"
 
-    maintainers = [
+    maintainers(
         "BenjaminTJohnson",
         "t-brown",
         "edwardhartnett",
         "AlexanderRichert-NOAA",
         "Hang-Lei-NOAA",
         "climbfuji",
-    ]
+    )
 
     variant(
-        "fix",
-        default=False,
-        description='Download CRTM coeffecient or "fix" files (several GBs).',
+        "fix", default=False, description='Download CRTM coeffecient or "fix" files (several GBs).'
     )
     variant(
         "build_type",

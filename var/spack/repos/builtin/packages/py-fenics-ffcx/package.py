@@ -12,7 +12,7 @@ class PyFenicsFfcx(PythonPackage):
     homepage = "https://github.com/FEniCS/ffcx"
     url = "https://github.com/FEniCS/ffcx/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/ffcx.git"
-    maintainers = ["chrisrichardson", "garth-wells", "jhale"]
+    maintainers("chrisrichardson", "garth-wells", "jhale")
 
     version("main", branch="main")
     version(

@@ -13,7 +13,7 @@ class MctcLib(MesonPackage):
     url = "https://github.com/grimme-lab/mctc-lib/releases/download/v0.3.0/mctc-lib-0.3.0.tar.xz"
     git = "https://github.com/grimme-lab/mctc-lib"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("main", branch="main")
     version("0.3.1", "a5032a0bbbbacc952037c5215b71aa6b438767a84bafb60fda25ba43c8835513")
@@ -26,6 +26,4 @@ class MctcLib(MesonPackage):
     depends_on("pkgconfig", type="build")
 
     def meson_args(self):
-        return [
-            "-Djson={0}".format("enabled" if "+json" in self.spec else "disabled"),
-        ]
+        return ["-Djson={0}".format("enabled" if "+json" in self.spec else "disabled")]

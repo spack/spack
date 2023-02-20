@@ -21,7 +21,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
     test_requires_compiler = True
 
-    maintainers = ["balos1", "cswoodward", "gardner48"]
+    maintainers("balos1", "cswoodward", "gardner48")
 
     # ==========================================================================
     # Versions
@@ -479,10 +479,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+superlu-mt" in spec:
             if spec.satisfies("@3:"):
                 args.extend(
-                    [
-                        define("BLAS_ENABLE", True),
-                        define("BLAS_LIBRARIES", spec["blas"].libs),
-                    ]
+                    [define("BLAS_ENABLE", True), define("BLAS_LIBRARIES", spec["blas"].libs)]
                 )
             args.extend(
                 [

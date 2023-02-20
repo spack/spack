@@ -20,7 +20,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     homepage = "http://hpctoolkit.org"
     git = "https://gitlab.com/hpctoolkit/hpctoolkit.git"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     tags = ["e4s"]
 
@@ -48,9 +48,7 @@ class Hpctoolkit(AutotoolsPackage):
     # version of hpcprof.  Cray needs a separate option because an
     # external MPI module in packages.yaml doesn't work.
     variant(
-        "cray",
-        default=False,
-        description="Build hpcprof-mpi for Cray systems (requires --dirty).",
+        "cray", default=False, description="Build hpcprof-mpi for Cray systems (requires --dirty)."
     )
 
     variant(

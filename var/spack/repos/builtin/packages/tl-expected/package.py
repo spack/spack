@@ -13,7 +13,7 @@ class TlExpected(CMakePackage):
     url = "https://github.com/TartanLlama/expected/archive/1.0.0.tar.gz"
     git = "https://github.com/TartanLlama/expected.git"
 
-    maintainers = ["charmoniumQ"]
+    maintainers("charmoniumQ")
 
     # Note that the 1.0.0 has this issue:
     # https://github.com/TartanLlama/expected/issues/114

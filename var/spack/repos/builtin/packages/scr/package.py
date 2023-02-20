@@ -27,7 +27,7 @@ class Scr(CMakePackage):
     git = "https://github.com/llnl/scr.git"
     tags = ["e4s", "radiuss"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("develop", branch="develop")
     version("legacy", branch="legacy")

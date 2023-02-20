@@ -38,11 +38,7 @@ def setup_parser(subparser):
         default=False,
         help="packages with detected externals won't be built with Spack",
     )
-    find_parser.add_argument(
-        "--exclude",
-        action="append",
-        help="packages to exclude from search",
-    )
+    find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
     find_parser.add_argument(
         "-p",
         "--path",
@@ -187,7 +183,6 @@ def external_read_cray_manifest(args):
 def _collect_and_consume_cray_manifest_files(
     manifest_file=None, manifest_directory=None, dry_run=False, fail_on_error=False
 ):
-
     manifest_files = []
     if manifest_file:
         manifest_files.append(manifest_file)

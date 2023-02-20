@@ -16,7 +16,7 @@ class AwsOfiRccl(AutotoolsPackage):
     url = "https://github.com/ROCmSoftwarePlatform/aws-ofi-rccl.git"
     tags = ["rocm"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("cxi", branch="cxi", default=True)
     version("master", branch="master")

@@ -1,0 +1,26 @@
+diff -ruN spack-src/CMakeLists.txt spack-src-patched/CMakeLists.txt
+--- spack-src/CMakeLists.txt	2022-10-12 11:48:07.000000000 -0700
++++ spack-src-patched/CMakeLists.txt	2023-01-30 13:35:11.271496106 -0800
+@@ -586,7 +586,8 @@
+ 
+ if(STRUMPACK_USE_MPI)
+   target_link_libraries(strumpack PUBLIC
+-    MPI::MPI_CXX MPI::MPI_C MPI::MPI_Fortran)
++    MPI::MPI_CXX MPI::MPI_C ${MPI_Fortran_LIBRARIES})
++  ## adding the MPI::MPI_Fortran target risks adding unwanted compile flags
+ endif()
+ 
+ if(OpenMP_FOUND)
+@@ -654,11 +655,7 @@
+     ButterflyPACK::sbutterflypack
+     ButterflyPACK::dbutterflypack
+     ButterflyPACK::cbutterflypack
+-    ButterflyPACK::zbutterflypack
+-    MPI::MPI_Fortran ${MPI_Fortran_LIBRARIES})
+-  ## for some reason just adding the MPI::MPI_Fortran target only
+-  ## links with the f08 module, not with the regular fortran MPI
+-  ## library
++    ButterflyPACK::zbutterflypack)
+ endif()
+ 
+ if(slate_FOUND)

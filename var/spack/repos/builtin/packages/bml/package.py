@@ -15,7 +15,7 @@ class Bml(CMakePackage):
     url = "https://github.com/lanl/bml/archive/refs/tags/v2.2.0.tar.gz"
     git = "https://github.com/lanl/bml.git"
 
-    maintainers = ["jeanlucf22"]
+    maintainers("jeanlucf22")
 
     version("master", branch="master")
     version("2.2.0", sha256="41703eee605bcb0ce3bcb5dde5914363aaa382393138ab24f02acf84f670fad0")

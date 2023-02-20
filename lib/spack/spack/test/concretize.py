@@ -407,13 +407,7 @@ class TestConcretize(object):
         s = Spec("singlevalue-variant-dependent-type")
         s.concretize()
 
-    @pytest.mark.parametrize(
-        "spec,version",
-        [
-            ("dealii", "develop"),
-            ("xsdk", "0.4.0"),
-        ],
-    )
+    @pytest.mark.parametrize("spec,version", [("dealii", "develop"), ("xsdk", "0.4.0")])
     def concretize_difficult_packages(self, a, b):
         """Test a couple of large packages that are often broken due
         to current limitations in the concretizer"""
@@ -582,7 +576,6 @@ class TestConcretize(object):
         assert "c" == find_spec(s["b"], lambda s: "+foo" in s).name
 
     def test_find_spec_sibling(self):
-
         s = Spec.from_literal({"a": {"b +foo": {"c": None, "d": None}, "e +foo": None}})
 
         assert "e" == find_spec(s["b"], lambda s: "+foo" in s).name
@@ -710,7 +703,6 @@ class TestConcretize(object):
         ],
     )
     def test_simultaneous_concretization_of_specs(self, abstract_specs):
-
         abstract_specs = [Spec(x) for x in abstract_specs]
         concrete_specs = spack.concretize.concretize_specs_together(*abstract_specs)
 
@@ -918,9 +910,7 @@ class TestConcretize(object):
             pytest.xfail("Known failure of the original concretizer")
 
         packages_yaml = {
-            "all": {
-                "compiler": ["clang", "gcc"],
-            },
+            "all": {"compiler": ["clang", "gcc"]},
             "cmake": {
                 "externals": [{"spec": "cmake@3.4.3", "prefix": "/usr"}],
                 "buildable": False,
@@ -1976,9 +1966,7 @@ class TestConcretize(object):
                 "buildable": False,
                 "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
             },
-            "python": {
-                "externals": [{"spec": python_spec, "prefix": fake_path}],
-            },
+            "python": {"externals": [{"spec": python_spec, "prefix": fake_path}]},
         }
         spack.config.set("packages", external_conf)
 
