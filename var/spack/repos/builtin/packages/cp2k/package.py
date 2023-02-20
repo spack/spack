@@ -5,7 +5,6 @@
 import copy
 import os
 import os.path
-import sys
 
 import spack.util.environment
 from spack.package import *
