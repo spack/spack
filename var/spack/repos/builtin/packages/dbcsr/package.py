@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,12 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/cp2k/dbcsr/releases/download/v2.2.0/dbcsr-2.2.0.tar.gz"
     list_url = "https://github.com/cp2k/dbcsr/releases"
 
-    maintainers = ["dev-zero"]
+    maintainers("dev-zero")
 
     version("develop", branch="develop")
+    version("2.5.0", sha256="91fda9b2502e5d0a2a6cdd5a73ef096253cc7e75bd01ba5189a4726ad86aef08")
+    version("2.4.1", sha256="b3d5ae62ca582b72707a2c932e8074a4f2f61d61085d97bd374213c70b8dbdcf")
+    version("2.4.0", sha256="cf2b774328c9a30677501f49b79955841bd08915a7ca53c8533bfdf14a8f9bd4")
     version("2.3.0", sha256="f750de586cffa66852b646f7f85eb831eeb64fa2d25ce50ed10e1df016dd3364")
     version("2.2.0", sha256="245b0382ddc7b80f85af8288f75bd03d56ec51cdfb6968acb4931529b35173ec")
     version("2.1.0", sha256="9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c")
@@ -121,12 +124,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
 
-            gpu_map = {
-                "35": "K40",
-                "37": "K80",
-                "60": "P100",
-                "70": "V100",
-            }
+            gpu_map = {"35": "K40", "37": "K80", "60": "P100", "70": "V100"}
 
             if "@2.3:" in spec:
                 gpu_map["80"] = "A100"

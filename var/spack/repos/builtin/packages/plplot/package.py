@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -72,22 +72,16 @@ class Plplot(CMakePackage):
                 "-DTCL_LIBRARY={0}".format(
                     LibraryList(
                         find_libraries(
-                            "libtcl*",
-                            self.spec["tcl"].prefix,
-                            shared=True,
-                            recursive=True,
+                            "libtcl*", self.spec["tcl"].prefix, shared=True, recursive=True
                         )
-                    ),
+                    )
                 ),
                 "-DTCL_STUB_LIBRARY={0}".format(
                     LibraryList(
                         find_libraries(
-                            "libtclstub*",
-                            self.spec["tcl"].prefix,
-                            shared=False,
-                            recursive=True,
+                            "libtclstub*", self.spec["tcl"].prefix, shared=False, recursive=True
                         )
-                    ),
+                    )
                 ),
             ]
         else:

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,12 +39,7 @@ class Blast2go(Package):
 
         config_input_file = "spack-config.in"
 
-        config_input_data = [
-            "o\n",
-            prefix.bin + "\n",
-            "n\n",
-            "n\n",
-        ]
+        config_input_data = ["o\n", prefix.bin + "\n", "n\n", "n\n"]
 
         with open(config_input_file, "w") as f:
             f.writelines(config_input_data)

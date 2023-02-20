@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Root(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["chissg", "HadrienG2", "drbenmorgan", "vvolkl"]
+    maintainers("greenc-FNAL", "HadrienG2", "drbenmorgan", "vvolkl")
 
     # ###################### Versions ##########################
 
@@ -177,10 +177,7 @@ class Root(CMakePackage):
         "vmc", when="@:6.25", default=False, description="Enable the Virtual Monte Carlo interface"
     )
     variant(
-        "webgui",
-        default=True,
-        description="Enable web-based UI components of ROOT",
-        when="+root7",
+        "webgui", default=True, description="Enable web-based UI components of ROOT", when="+root7"
     )
     variant("x", default=True, description="Enable set of graphical options")
     variant("xml", default=True, description="Enable XML parser interface")
@@ -318,6 +315,10 @@ class Root(CMakePackage):
 
     # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
     conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")
+
+    # ROOT does not support LTO builds
+    # See https://github.com/root-project/root/issues/11135
+    conflicts("+ipo", msg="LTO is not a supported configuration for building ROOT")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -571,12 +572,7 @@ class Root(CMakePackage):
 
         if sys.platform == "darwin" and self.compiler.cc == "gcc":
             cflags = "-D__builtin_unreachable=__builtin_trap"
-            options.extend(
-                [
-                    define("CMAKE_C_FLAGS", cflags),
-                    define("CMAKE_CXX_FLAGS", cflags),
-                ]
-            )
+            options.extend([define("CMAKE_C_FLAGS", cflags), define("CMAKE_CXX_FLAGS", cflags)])
 
         # Method for selecting C++ standard depends on ROOT version
         if self.spec.satisfies("@6.18.00:"):

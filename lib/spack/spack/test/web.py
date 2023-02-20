@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -182,6 +182,20 @@ def test_get_header():
         spack.util.web.get_header(headers, "ContentLength")
 
 
+def test_etag_parser():
+    # This follows rfc7232 to some extent, relaxing the quote requirement.
+    assert spack.util.web.parse_etag('"abcdef"') == "abcdef"
+    assert spack.util.web.parse_etag("abcdef") == "abcdef"
+
+    # No empty tags
+    assert spack.util.web.parse_etag("") is None
+
+    # No quotes or spaces allowed
+    assert spack.util.web.parse_etag('"abcdef"ghi"') is None
+    assert spack.util.web.parse_etag('"abc def"') is None
+    assert spack.util.web.parse_etag("abc def") is None
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_list_url(tmpdir):
     testpath = str(tmpdir)
@@ -210,11 +224,7 @@ def test_list_url(tmpdir):
 
 class MockPages(object):
     def search(self, *args, **kwargs):
-        return [
-            {"Key": "keyone"},
-            {"Key": "keytwo"},
-            {"Key": "keythree"},
-        ]
+        return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
 
 
 class MockPaginator(object):

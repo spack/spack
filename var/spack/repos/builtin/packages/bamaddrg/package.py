@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,5 @@ class Bamaddrg(MakefilePackage):
     depends_on("bamtools", type="build")
 
     def setup_build_environment(self, env):
-
         env.set("BAMTOOLS_ROOT", self.spec["bamtools"].prefix)
         env.set("PREFIX", self.prefix)

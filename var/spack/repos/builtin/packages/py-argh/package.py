@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class PyArgh(PythonPackage):
     homepage = "https://github.com/neithere/argh/"
     pypi = "argh/argh-0.26.2.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.26.2", sha256="e9535b8c84dc9571a48999094fda7f33e63c3f1b74f3e5f3ac0105a58405bb65")
 

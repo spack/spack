@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,10 +18,11 @@ class GftlShared(CMakePackage):
     )
     git = "https://github.com/Goddard-Fortran-Ecosystem/gFTL-shared.git"
 
-    maintainers = ["mathomp4", "tclune"]
+    maintainers("mathomp4", "tclune")
 
     version("main", branch="main")
 
+    version("1.5.1", sha256="353d07cc22678d1a79b19dbf53d8ba54b889e424a15e315cc4f035b72eedb83a")
     version("1.5.0", sha256="c19b8197cc6956d4a51a16f98b38b63c7bc9f784f1fd38f8e3949be3ea792356")
     version("1.4.1", sha256="bb403f72e80aaac49ed5107f7c755ce5273c2e650bd5438a746228798eeced6c")
     version("1.4.0", sha256="83a2474ae943d81d797460b18106874de14c39093efd4e35abb3f1b6ec835171")
@@ -34,7 +35,7 @@ class GftlShared(CMakePackage):
     version("1.3.0", sha256="979b00c4d531e701bf4346f662e3e4cc865124a97ca958637a53201d66d4ee43")
 
     depends_on("m4", type=("build", "run"))
-    depends_on("cmake", type="build")
+    depends_on("cmake@3.12:", type="build")
     depends_on("gftl")
 
     variant(

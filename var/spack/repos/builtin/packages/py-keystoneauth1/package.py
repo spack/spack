@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyKeystoneauth1(PythonPackage):
     homepage = "https://docs.openstack.org/keystoneauth/"
     pypi = "keystoneauth1/keystoneauth1-4.3.1.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("4.3.1", sha256="93605430a6d1424f31659bc5685e9dc1be9a6254e88c99f00cffc0a60c648a64")
 

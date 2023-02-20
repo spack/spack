@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class RIrkernel(RPackage):
     depends_on("r-jsonlite@0.9.6:", type=("build", "run"))
     depends_on("r-uuid", type=("build", "run"))
     depends_on("r-digest", type=("build", "run"))
-    depends_on("py-jupyter", type="run")
+    depends_on("py-jupyter-client", type="run")
 
     depends_on("r-evaluate@0.5.4:", type=("build", "run"), when="@0.7")
     depends_on("r-devtools", type=("build", "run"), when="@0.7")

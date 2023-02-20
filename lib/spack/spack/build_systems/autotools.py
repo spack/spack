@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,11 +110,7 @@ class AutotoolsBuilder(BaseBuilder):
     phases = ("autoreconf", "configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = (
-        "configure_args",
-        "check",
-        "installcheck",
-    )
+    legacy_methods = ("configure_args", "check", "installcheck")
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = (
@@ -427,15 +423,15 @@ To resolve this problem, please try the following:
             x.filter(regex="-nostdlib", repl="", string=True)
             rehead = r"/\S*/"
             for o in [
-                "fjhpctag.o",
-                "fjcrt0.o",
-                "fjlang08.o",
-                "fjomp.o",
-                "crti.o",
-                "crtbeginS.o",
-                "crtendS.o",
+                r"fjhpctag\.o",
+                r"fjcrt0\.o",
+                r"fjlang08\.o",
+                r"fjomp\.o",
+                r"crti\.o",
+                r"crtbeginS\.o",
+                r"crtendS\.o",
             ]:
-                x.filter(regex=(rehead + o), repl="", string=True)
+                x.filter(regex=(rehead + o), repl="")
         elif self.pkg.compiler.name == "dpcpp":
             # Hack to filter out spurious predep_objects when building with Intel dpcpp
             # (see https://github.com/spack/spack/issues/32863):

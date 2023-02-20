@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyXdot(PythonPackage):
     homepage = "https://github.com/jrfonseca/xdot.py"
     pypi = "xdot/xdot-1.0.tar.gz"
     git = "https://github.com/jrfonseca/xdot.py.git"
-    maintainers = ["lee218llnl"]
+    maintainers("lee218llnl")
 
     version("master", branch="master")
     version("1.2", sha256="3df91e6c671869bd2a6b2a8883fa3476dbe2ba763bd2a7646cf848a9eba71b70")

@@ -1,14 +1,18 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
 import re
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.msbuild import MSBuildBuilder
 from spack.package import *
 
 
-class Xz(AutotoolsPackage, SourceforgePackage):
+class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
     """XZ Utils is free general-purpose data compression software with
     high compression ratio. XZ Utils were written for POSIX-like systems,
     but also work on some not-so-POSIX systems. XZ Utils are the successor
@@ -20,6 +24,8 @@ class Xz(AutotoolsPackage, SourceforgePackage):
 
     executables = [r"^xz$"]
 
+    version("5.4.1", sha256="dd172acb53867a68012f94c17389401b2f274a1aa5ae8f84cbfb8b7e383ea8d3")
+    version("5.2.10", sha256="01b71df61521d9da698ce3c33148bff06a131628ff037398c09482f3a26e5408")
     version("5.2.7", sha256="b65f1d0c2708e57716f4dd2216989a73847ac6fdb4168ffceb155767e22b834b")
     version("5.2.6", sha256="13e3402e301b6018f6a71ef0e497f714c6d11e214ae82dab156b81c2a64acb25")
     version("5.2.5", sha256="5117f930900b341493827d63aa910ff5e011e0b994197c3b71c08a20228a42df")
@@ -42,9 +48,11 @@ class Xz(AutotoolsPackage, SourceforgePackage):
     # xz-5.2.7/src/liblzma/common/common.h:56 uses attribute __symver__ instead of
     # __asm__(.symver) for newer GCC releases.
     conflicts("%intel", when="@5.2.7", msg="icc does not support attribute __symver__")
+    conflicts("platform=windows", when="+pic")  # no pic on Windows
+    # prior to 5.2.3, build system is for MinGW only, not currently supported by Spack
+    conflicts("platform=windows", when="@:5.2.3")
 
-    def configure_args(self):
-        return self.enable_or_disable("libs")
+    build_system(conditional("msbuild", when="platform=windows"), "autotools", default="autotools")
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+pic" in self.spec:
@@ -61,7 +69,60 @@ class Xz(AutotoolsPackage, SourceforgePackage):
         match = re.search(r"xz \(XZ Utils\) (\S+)", output)
         return match.group(1) if match else None
 
+
+class AutotoolsBuilder(AutotoolsBuilder):
+    def configure_args(self):
+        return self.enable_or_disable("libs")
+
     @run_after("install")
     def darwin_fix(self):
         if self.spec.satisfies("platform=darwin"):
             fix_darwin_install_name(self.prefix.lib)
+
+
+class MSBuildBuilder(MSBuildBuilder):
+    @property
+    def build_directory(self):
+        def get_file_string_number(f):
+            s = re.findall(r"\d+$", f)
+            return (int(s[0]) if s else -1, f)
+
+        win_dir = os.path.join(super().build_directory, "windows")
+        compiler_dirs = []
+        with working_dir(win_dir):
+            for obj in os.scandir():
+                if obj.is_dir():
+                    compiler_dirs.append(obj.name)
+        newest_compiler = max(compiler_dirs, key=get_file_string_number)
+        return os.path.join(win_dir, newest_compiler)
+
+    def is_64bit(self):
+        return "64" in self.pkg.spec.target.family
+
+    def msbuild_args(self):
+        plat = "x64" if self.is_64bit() else "x86"
+        if self.pkg.spec.satisfies("libs=shared,static"):
+            f = "xz_win.sln"
+        elif self.pkg.spec.satisfies("libs=shared"):
+            f = "liblzma_dll.vcxproj"
+        else:
+            f = "liblzma.vcxproj"
+        return [self.define("Configuration", "Release"), self.define("Platform", plat), f]
+
+    def install(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            # Ensure we have libs directory
+            mkdirp(prefix.lib)
+            libs_to_find = []
+            if "libs=shared" in self.pkg.spec:
+                libs_to_find.extend(["*.dll", "*.lib"])
+            else:
+                libs_to_find.append("*.lib")
+            for lib in libs_to_find:
+                libs_to_install = glob.glob(
+                    os.path.join(self.build_directory, "**", lib), recursive=True
+                )
+                for library in libs_to_install:
+                    install(library, prefix.lib)
+        with working_dir(pkg.stage.source_path):
+            install_tree(os.path.join("src", "liblzma", "api"), prefix.include)

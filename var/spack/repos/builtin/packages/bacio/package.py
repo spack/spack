@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,7 @@ class Bacio(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-bacio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-bacio/archive/refs/tags/v2.4.1.tar.gz"
 
-    maintainers = [
-        "t-brown",
-        "edwardhartnett",
-        "AlexanderRichert-NOAA",
-        "Hang-Lei-NOAA",
-    ]
+    maintainers("t-brown", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
     version("2.5.0", sha256="540a0ed73941d70dbf5d7b21d5d0a441e76fad2bfe37dfdfea0db3e98fc0fbfb")
 
@@ -39,3 +34,7 @@ class Bacio(CMakePackage):
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         return args
+
+    def patch(self):
+        if self.spec.satisfies("@2.4.1"):
+            filter_file(".+", "2.4.1", "VERSION")

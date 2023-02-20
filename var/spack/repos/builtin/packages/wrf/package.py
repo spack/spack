@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,8 +68,14 @@ class Wrf(Package):
 
     homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
     url = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
-    maintainers = ["MichaelLaufer", "ptooley"]
+    maintainers("MichaelLaufer", "ptooley")
+    tags = ["windows"]
 
+    version(
+        "4.4.2",
+        sha256="488b992e8e994637c58e3c69e869ad05acfe79419c01fbef6ade1f624e50dc3a",
+        url="https://github.com/wrf-model/WRF/releases/download/v4.4.2/v4.4.2.tar.gz",
+    )
     version(
         "4.4",
         sha256="6b649e5ac5532f74d74ab913950b632777ce349d26ebfb7f0042b80f9f4ee83e",
@@ -78,6 +84,7 @@ class Wrf(Package):
     version("4.3.3", sha256="1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86")
     version("4.3.2", sha256="2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec")
     version("4.3.1", sha256="6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87")
+    version("4.2.2", sha256="7be2968c67c2175cd40b57118d9732eda5fdb0828edaa25baf57cc289da1a9b8")
     version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
     version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
     version(
@@ -86,11 +93,7 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    variant(
-        "build_type",
-        default="dmpar",
-        values=("serial", "smpar", "dmpar", "dm+sm"),
-    )
+    variant("build_type", default="dmpar", values=("serial", "smpar", "dmpar", "dm+sm"))
     variant(
         "nesting",
         default="basic",
@@ -114,12 +117,9 @@ class Wrf(Package):
             "em_scm_xy",
         ),
     )
-    variant(
-        "pnetcdf",
-        default=True,
-        description="Parallel IO support through Pnetcdf library",
-    )
+    variant("pnetcdf", default=True, description="Parallel IO support through Pnetcdf library")
     variant("chem", default=False, description="Enable WRF-Chem", when="@4:")
+    variant("netcdf_classic", default=False, description="Use NetCDF without HDF5 compression")
 
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
@@ -143,7 +143,8 @@ class Wrf(Package):
     patch("patches/4.0/add_aarch64.patch", when="@4.0")
 
     patch("patches/4.2/arch.Config.pl.patch", when="@4.2:")
-    patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
+    patch("patches/4.2/arch.configure.defaults.patch", when="@4.2:4.2.0")
+    patch("patches/4.2/4.2.2_arch.configure.defaults.patch", when="@4.2.2")
     patch("patches/4.2/arch.conf_tokens.patch", when="@4.2:")
     patch("patches/4.2/arch.postamble.patch", when="@4.2")
     patch("patches/4.2/configure.patch", when="@4.2:4.3.3")
@@ -220,6 +221,8 @@ class Wrf(Package):
         # Add WRF-Chem module
         if "+chem" in self.spec:
             env.set("WRF_CHEM", 1)
+        if "+netcdf_classic" in self.spec:
+            env.set("NETCDF_classic", 1)
         # This gets used via the applied patch files
         env.set("NETCDFF", self.spec["netcdf-fortran"].prefix)
         env.set("PHDF5", self.spec["hdf5"].prefix)
@@ -244,7 +247,6 @@ class Wrf(Package):
         filter_file("^#!/bin/csh", "#!/usr/bin/env csh", *files)
 
     def answer_configure_question(self, outputbuf):
-
         # Platform options question:
         if "Please select from among the following" in outputbuf:
             options = collect_platform_options(outputbuf)
@@ -286,10 +288,16 @@ class Wrf(Package):
             config = FileFilter(join_path("arch", "configure.defaults"))
 
         if self.spec.satisfies("@3.9.1.1 %gcc"):
+            # Compiling with OpenMPI requires using `-DMPI2SUPPORT`.
+            other_flags = " -DMPI2SUPPORT" if self.spec.satisfies("^openmpi") else ""
             config.filter(
-                "^DM_FC.*mpif90 -f90=$(SFC)", "DM_FC = {0}".format(self.spec["mpi"].mpifc)
+                r"^DM_FC.*mpif90 -f90=\$\(SFC\)",
+                "DM_FC = {0}".format(self.spec["mpi"].mpifc) + other_flags,
             )
-            config.filter("^DM_CC.*mpicc -cc=$(SCC)", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
+            config.filter(
+                r"^DM_CC.*mpicc -cc=\$\(SCC\)",
+                "DM_CC = {0}".format(self.spec["mpi"].mpicc) + other_flags,
+            )
 
         if self.spec.satisfies("%aocc"):
             config.filter(
@@ -306,7 +314,6 @@ class Wrf(Package):
             config.filter("^DM_CC.*mpicc", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
     def configure(self, spec, prefix):
-
         # Remove broken default options...
         self.do_configure_fixup()
 
@@ -386,7 +393,6 @@ class Wrf(Package):
         return False
 
     def build(self, spec, prefix):
-
         result = self.run_compile_script()
 
         if not result:

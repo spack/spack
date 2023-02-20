@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,6 @@ import spack.config
 import spack.platforms
 import spack.spec
 import spack.util.executable as executable
-import spack.util.spack_json as sjson
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = sys.platform == "win32"
@@ -913,7 +912,7 @@ def inspect_path(root, inspections, exclude=None):
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
     for relative_path, variables in inspections.items():
-        expected = os.path.join(root, relative_path)
+        expected = os.path.join(root, os.path.normpath(relative_path))
 
         if os.path.isdir(expected) and not exclude(expected):
             for variable in variables:
@@ -1005,19 +1004,10 @@ def environment_after_sourcing_files(*files, **kwargs):
 
         # Try to source the file
         source_file_arguments = " ".join(
-            [
-                source_file,
-                suppress_output,
-                concatenate_on_success,
-                dump_environment,
-            ]
+            [source_file, suppress_output, concatenate_on_success, dump_environment]
         )
         output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
-        environment = json.loads(output)
-
-        # If we're in python2, convert to str objects instead of unicode
-        # like json gives us.  We can't put unicode in os.environ anyway.
-        return sjson.encode_json_dict(environment)
+        return json.loads(output)
 
     current_environment = kwargs.get("env", dict(os.environ))
     for f in files:
@@ -1054,7 +1044,7 @@ def sanitize(environment, exclude, include):
         return subset
 
     # Don't modify input, make a copy instead
-    environment = sjson.decode_json_dict(dict(environment))
+    environment = dict(environment)
 
     # include supersedes any excluded items
     prune = set_intersection(set(environment), *exclude)

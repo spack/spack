@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,15 +19,18 @@ class Ompss2(Package):
 
     homepage = "https://pm.bsc.es/ompss-2"
 
-    maintainers = ["dave96"]
+    maintainers("dave96", "aleixrocks")
 
+    version("2022.11", sha256="2df1a5c0f01523ebee49596ca0939b3edeae50e6bd76680cc8777d92583e5a1e")
     version("2021.11.1", sha256="9e0ee0c9f75cd558882465efc3d521c2fe93f1a6b50d4d9c8e614ab4eb3a9e6c")
 
-    depends_on("extrae")
+    variant("extrae", default=False, description="Build with Extrae instrumentation support")
+
     depends_on("hwloc")
     depends_on("sqlite")
     depends_on("python", type="build")
     depends_on("cmake", type="build")
+    depends_on("extrae", when="+extrae")
 
     resource(
         name="jemalloc",
@@ -67,11 +70,7 @@ class Ompss2(Package):
         reconf = which("autoreconf")
         reconf("-fiv")
 
-        configure(
-            "--prefix=%s" % prefix,
-            "--with-nanos6=%s" % prefix,
-            "--enable-ompss-2",
-        )
+        configure("--prefix=%s" % prefix, "--with-nanos6=%s" % prefix, "--enable-ompss-2")
         make()
         make("install")
         os.chdir("..")
@@ -101,17 +100,22 @@ class Ompss2(Package):
 
     def install_nanos6(self, spec, prefix):
         os.chdir(glob.glob("./nanos6-*").pop())
-        configure(
+
+        options = [
             "--prefix=%s" % prefix,
             "--with-jemalloc=%s" % prefix,
-            "--with-extrae=%s" % spec["extrae"].prefix,
             "--with-hwloc=%s" % spec["hwloc"].prefix,
             "--disable-stats-instrumentation",
             "--disable-verbose-instrumentation",
             "--disable-lint-instrumentation",
             "--disable-graph-instrumentation",
             "--without-papi",
-        )
+        ]
+
+        if "+extrae" in spec:
+            options.append("--with-extrae=%s" % spec["extrae"].prefix)
+
+        configure(*options)
 
         make()
         make("install")

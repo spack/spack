@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ def kernel_version():
     """Return the kernel version as a Version object.
     Note that the kernel version is distinct from OS and/or
     distribution versions. For instance:
-    >>> external.distro.id()
+    >>> distro.id()
     'centos'
-    >>> external.distro.version()
+    >>> distro.version()
     '7'
     >>> platform.release()
     '5.10.84+'
@@ -39,9 +39,9 @@ class LinuxDistro(OperatingSystem):
     def __init__(self):
         try:
             # This will throw an error if imported on a non-Linux platform.
-            import external.distro
+            import distro
 
-            distname, version = external.distro.id(), external.distro.version()
+            distname, version = distro.id(), distro.version()
         except ImportError:
             distname, version = "unknown", ""
 

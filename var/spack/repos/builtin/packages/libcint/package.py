@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Libcint(CMakePackage):
 
     homepage = "https://github.com/sunqm/libcint"
     url = "https://github.com/sunqm/libcint/archive/v3.0.4.tar.gz"
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions
