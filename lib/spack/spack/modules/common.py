@@ -273,7 +273,7 @@ def generate_module_index(root, modules, overwrite=False):
             entries = yaml_content["module_index"]
 
     for m in modules:
-        entry = {"path": m.layout.filename, "use_name": m.layout.use_name[0]}
+        entry = {"path": m.layout.filename, "use_name": m.layout.use_names[0]}
         entries[m.spec.dag_hash()] = entry
     index = {"module_index": entries}
     llnl.util.filesystem.mkdirp(root)
@@ -363,7 +363,7 @@ class UpstreamModuleIndex(object):
             return None
 
 
-def get_module(module_type, spec, get_full_path, module_set_name="default", required=True):
+def get_modules(module_type, spec, get_full_path, module_set_name="default", required=True):
     """Retrieve the module file(s) for a given spec and module type.
 
     Retrieve the module file(s) for the given spec if it is available. If the
@@ -401,7 +401,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
         if get_full_path:
             return [module.path]
         else:
-            return module.use_name
+            return module.use_names
     elif spec.external_modules:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if writer.conf.excluded:
@@ -431,7 +431,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
         if get_full_path:
             return [writer.layout.filename]
         else:
-            return writer.layout.use_name
+            return writer.layout.use_names
 
 
 class BaseConfiguration(object):
@@ -620,7 +620,7 @@ class BaseFileLayout(object):
         return root_path(module_system, self.conf.name)
 
     @property
-    def use_name(self):
+    def use_names(self):
         """Returns a list of the 'use' names of the module i.e. the names you
         have to type to console to use it. This implementation fits the needs of
         most non-hierarchical layouts. Most specs will only have one use name;
@@ -644,9 +644,9 @@ class BaseFileLayout(object):
     def filename(self):
         """Name of the module file for the current spec."""
         # Just the name of the file
-        filename = self.use_name[0]
+        filename = self.use_names[0]
         if self.extension:
-            filename = "{0}.{1}".format(self.use_name[0], self.extension)
+            filename = "{0}.{1}".format(self.use_names[0], self.extension)
         # Architecture sub-folder
         arch_folder_conf = spack.config.get("modules:%s:arch_folder" % self.conf.name, True)
         if arch_folder_conf:
@@ -807,7 +807,7 @@ class BaseContext(tengine.Context):
         return [
             use_name
             for x in getattr(self.conf, what)
-            for use_name in m.make_layout(x, name).use_name
+            for use_name in m.make_layout(x, name).use_names
         ]
 
     @tengine.context_property
