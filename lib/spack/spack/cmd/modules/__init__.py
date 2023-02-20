@@ -166,6 +166,7 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
+    # Make a list of tuples (spec, module) for each module associated with each spec
     modules = list(
         (
             spec,
