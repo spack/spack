@@ -3239,17 +3239,17 @@ def test_relative_view_path_on_command_line_is_made_absolute(tmpdir, config):
 
 
 def test_environment_created_in_users_location(mutable_config, tmpdir):
-     """Test that an environment is created in a location based on the config"""
-     spack.config.set("config:environments_root", str(tmpdir.join("envs")))
-     env_dir = spack.config.get("config:environments_root")
+    """Test that an environment is created in a location based on the config"""
+    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
+    env_dir = spack.config.get("config:environments_root")
 
-     assert tmpdir.strpath in env_dir
-     assert not os.path.isdir(env_dir)
+    assert tmpdir.strpath in env_dir
+    assert not os.path.isdir(env_dir)
 
-     dir_name = "user_env"
-     env("create", dir_name)
-     out = env("list")
+    dir_name = "user_env"
+    env("create", dir_name)
+    out = env("list")
 
-     assert dir_name in out
-     assert env_dir in ev.root(dir_name)
-     assert os.path.isdir(os.path.join(env_dir, dir_name))
+    assert dir_name in out
+    assert env_dir in ev.root(dir_name)
+    assert os.path.isdir(os.path.join(env_dir, dir_name))
