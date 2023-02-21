@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Boost(Package):
     git = "https://github.com/boostorg/boost.git"
     list_url = "https://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
-    maintainers = ["hainest"]
+    maintainers("hainest")
 
     version("develop", branch="develop", submodules=True)
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
@@ -222,9 +222,14 @@ class Boost(Package):
     conflicts("cxxstd=98", when="+icu")  # Requires c++11 at least
 
     depends_on("python", when="+python")
+    # https://github.com/boostorg/python/commit/cbd2d9f033c61d29d0a1df14951f4ec91e7d05cd
+    depends_on("python@:3.9", when="@:1.75 +python")
+
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
     depends_on("zlib", when="+iostreams")
+    depends_on("zstd", when="+iostreams")
+    depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
@@ -388,7 +393,7 @@ class Boost(Package):
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
-    patch("intel-oneapi-linux-jam.patch", when="@1.76:1.79 %oneapi")
+    patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -513,11 +518,18 @@ class Boost(Package):
                     "-s",
                     "ZLIB_LIBPATH=%s" % spec["zlib"].prefix.lib,
                     "-s",
-                    "NO_LZMA=1",
+                    "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
                     "-s",
-                    "NO_ZSTD=1",
+                    "LZMA_LIBPATH=%s" % spec["xz"].prefix.lib,
+                    "-s",
+                    "ZSTD_INCLUDE=%s" % spec["zstd"].prefix.include,
+                    "-s",
+                    "ZSTD_LIBPATH=%s" % spec["zstd"].prefix.lib,
                 ]
             )
+            # At least with older Xcode, _lzma_cputhreads is missing (#33998)
+            if "platform=darwin" in self.spec:
+                options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
         if "+shared" in spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,11 +23,9 @@ class PyGpustat(PythonPackage):
     depends_on("python@3.4:", when="@1.0.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pytest-runner", when="@0.6.0", type="build")
-    depends_on("py-pytest-runner@5:", when="@1: ^python@3.5:", type="build")
-    depends_on("py-pytest-runner@:4", when="@1: ^python@:3.4", type="build")
+    depends_on("py-pytest-runner@5:", when="@1:", type="build")
     depends_on("py-six@1.7:", type=("build", "run"))
-    depends_on("py-nvidia-ml-py@7.352.0:", when="^python@:2", type=("build", "run"))
-    depends_on("py-nvidia-ml-py3@7.352.0:", when="^python@3:", type=("build", "run"))
+    depends_on("py-nvidia-ml-py3@7.352.0:", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-blessings@1.6:", when="@0.6.0", type=("build", "run"))
     depends_on("py-blessed@1.17.1:", when="@1.0.0:", type=("build", "run"))

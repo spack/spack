@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,15 +37,14 @@ as input.
 """
 import ast
 import collections
+import collections.abc
 import inspect
 import itertools
 import pickle
 import re
-
-from six.moves.urllib.request import urlopen
+from urllib.request import urlopen
 
 import llnl.util.lang
-from llnl.util.compat import Sequence
 
 import spack.config
 import spack.patch
@@ -81,7 +80,7 @@ class Error(object):
         return hash(value)
 
 
-class AuditClass(Sequence):
+class AuditClass(collections.abc.Sequence):
     def __init__(self, group, tag, description, kwargs):
         """Return an object that acts as a decorator to register functions
         associated with a specific class of sanity checks.
@@ -288,7 +287,7 @@ def _check_build_test_callbacks(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
-        test_callbacks = pkg_cls.build_time_test_callbacks
+        test_callbacks = getattr(pkg_cls, "build_time_test_callbacks", None)
 
         if test_callbacks and "test" in test_callbacks:
             msg = '{0} package contains "test" method in ' "build_time_test_callbacks"
@@ -322,8 +321,7 @@ def _check_patch_urls(pkgs, error_cls):
                     errors.append(
                         error_cls(
                             "patch URL in package {0} must end with {1}".format(
-                                pkg_cls.name,
-                                full_index_arg,
+                                pkg_cls.name, full_index_arg
                             ),
                             [patch.url],
                         )

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,8 @@ do
     succeeds _spack_completions "${line[@]}" ''
 
     # Test that completion with flags works
-    contains '-h --help' _spack_completions "${line[@]}" -
+    # all commands but spack pkg grep have -h; all have --help
+    contains '--help' _spack_completions "${line[@]}" -
 done <<- EOF
     $(spack commands --aliases --format=subcommands)
 EOF

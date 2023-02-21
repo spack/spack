@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Last(MakefilePackage):
     homepage = "http://last.cbrc.jp/"
     url = "http://last.cbrc.jp/last-869.zip"
     git = "https://gitlab.com/mcfrith/last.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("1282", commit="4368be912f4759e52b549940276f1adf087f489a")
     version("869", sha256="6371a6282bc1bb02a5e5013cc463625f2ce3e7746ff2ea0bdf9fe6b15605a67c")

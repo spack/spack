@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class RBumphunter(RPackage):
 
     bioc = "bumphunter"
 
+    version("1.40.0", commit="3de207a3659859737d4c748fc8023694943da43b")
     version("1.38.0", commit="06e2fa87b342d48793d0d2f1f7d94a95a6613995")
     version("1.36.0", commit="db50fcf7798c2eddfe48fd510d081dda82f2ee4e")
     version("1.32.0", commit="b7d39c2a6385ca217dceefc918b3ccd5c31bbaa0")

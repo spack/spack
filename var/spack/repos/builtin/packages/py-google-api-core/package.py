@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,4 +26,3 @@ class PyGoogleApiCore(PythonPackage):
     depends_on("py-setuptools@34.0.0:", type=("build", "run"))
     depends_on("py-six@1.10.0:", type=("build", "run"))
     depends_on("py-pytz", type=("build", "run"))
-    depends_on("py-futures@3.2.0:", type=("build", "run"), when="^python@:3.1")

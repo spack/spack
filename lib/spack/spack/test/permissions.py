@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,18 @@ import llnl.util.filesystem as fs
 from spack.util.file_permissions import InvalidPermissionsError, set_permissions
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="chmod unsupported on Windows")
+
+
+def ensure_known_group(path):
+    """Ensure that the group of a file is one that's actually in our group list.
+
+    On systems with remote groups, the primary user group may be remote and may not
+    exist on the local system (i.e., it might just be a number). Trying to use chmod to
+    setgid can fail silently in situations like this.
+    """
+    uid = os.getuid()
+    gid = fs.group_ids(uid)[0]
+    os.chown(path, uid, gid)
 
 
 def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
@@ -50,6 +62,8 @@ def test_chmod_rejects_world_writable_suid(tmpdir):
 
 def test_chmod_rejects_world_writable_sgid(tmpdir):
     path = str(tmpdir.join("file").ensure())
+    ensure_known_group(path)
+
     mode = stat.S_ISGID
     fs.chmod_x(path, mode)
 

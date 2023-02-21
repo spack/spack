@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class CbtfKrell(CMakePackage):
 
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git = "https://github.com/OpenSpeedShop/cbtf-krell.git"
+
+    maintainers = ["jgalarowicz"]
 
     version("develop", branch="master")
     version("1.9.4.1", branch="1.9.4.1")
@@ -58,7 +60,7 @@ class CbtfKrell(CMakePackage):
     depends_on("libtirpc", type="link")
 
     # For binutils
-    depends_on("binutils+plugins~gold@2.32")
+    depends_on("binutils@2.32")
 
     # For boost
     depends_on("boost@1.70.0:")
@@ -105,10 +107,7 @@ class CbtfKrell(CMakePackage):
     depends_on("mvapich2@2:", when="+mvapich2")
     depends_on("mpt", when="+mpt")
 
-    depends_on("python", when="@develop", type=("build", "run"))
-    depends_on("python@2.7.14:2.7.15", when="@2.3.1.3:9999", type=("build", "run"))
-
-    depends_on("gotcha")
+    depends_on("python", type=("build", "run"))
 
     patch("arm.patch", when="target=aarch64:")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class R3d(CMakePackage):
     homepage = "https://github.com/devonmpowell/r3d"
     git = "https://github.com/devonmpowell/r3d.git"
 
-    maintainers = ["raovgarimella", "gaber"]
+    maintainers("raovgarimella", "gaber")
 
     version("master", branch="master")
     version("2021-03-16", commit="5978a3f9cc145a52eecbf89c44d7fd2166b4c778")
@@ -42,10 +42,7 @@ class R3d(CMakePackage):
 
     @when("@:2019-04-24")
     def build(self, spec, prefix):
-
-        make_args = [
-            "CC={0}".format(spack_cc),
-        ]
+        make_args = ["CC={0}".format(spack_cc)]
         make("libr3d.a", *make_args)
 
         if "+test" in spec:
@@ -54,7 +51,6 @@ class R3d(CMakePackage):
 
     @when("@:2019-04-24")
     def install(self, spec, prefix):
-
         # R3D does not have an install target so create our own here.
         mkdirp(prefix.include)
         my_headers = find(".", "*.h", recursive=False)
@@ -65,7 +61,6 @@ class R3d(CMakePackage):
 
         if "+test" in spec:
             with working_dir("tests"):
-
                 # R3D does not have an install target so create our own here.
                 mkdirp(prefix.test)
                 install("r2d_unit_tests", prefix.test)

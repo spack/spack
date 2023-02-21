@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,4 +21,3 @@ class PyAzureMgmtRelay(PythonPackage):
     depends_on("py-msrestazure@0.4.32:1", when="@0.2:", type=("build", "run"))
     depends_on("py-msrestazure@0.4.20:1", type=("build", "run"))
     depends_on("py-azure-common@1.1:1", type=("build", "run"))
-    depends_on("py-azure-mgmt-nspkg", when="@0.2: ^python@:2", type=("build", "run"))

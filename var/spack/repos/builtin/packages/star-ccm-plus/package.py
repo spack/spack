@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,17 @@ class StarCcmPlus(Package):
     """STAR-CCM+ (Computational Continuum Mechanics) CFD solver."""
 
     homepage = "https://mdx.plm.automation.siemens.com/star-ccm-plus"
-    url = "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(os.getcwd())
     manual_download = True
 
+    def url_for_version(self, version):
+        url = "{pwd}/STAR-CCM+{version}_linux-x86_64.tar.gz".format(
+            pwd=os.getcwd(), version=version
+        )
+        return url
+
+    version(
+        "17.02.007_01", sha256="79c0859b84f753d9c690aad60b6252677a8625224148fb698aa6a94aa2a09a8c"
+    )
     version(
         "16.06.008_01", sha256="64577ec0e9a98d971114e68c4eec05bb746e061dfbf77b8d8919583c796c9e4b"
     )

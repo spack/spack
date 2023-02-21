@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ import spack.cmd.common.arguments as arguments
 import spack.mirror
 import spack.paths
 import spack.util.gpg
+import spack.util.url
 
 description = "handle GPG actions for spack"
 section = "packaging"
@@ -98,7 +99,7 @@ def setup_parser(subparser):
         "--directory",
         metavar="directory",
         type=str,
-        help="local directory where " + "keys will be published.",
+        help="local directory where keys will be published.",
     )
     output.add_argument(
         "-m",
@@ -212,7 +213,8 @@ def gpg_publish(args):
 
     mirror = None
     if args.directory:
-        mirror = spack.mirror.Mirror(args.directory, args.directory)
+        url = spack.util.url.path_to_file_url(args.directory)
+        mirror = spack.mirror.Mirror(url, url)
     elif args.mirror_name:
         mirror = spack.mirror.MirrorCollection().lookup(args.mirror_name)
     elif args.mirror_url:

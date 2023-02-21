@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,6 @@ class PyPylatex(PythonPackage):
     depends_on("py-ordered-set", type=("build", "run"))
 
     # from extras section in setup.py
-    depends_on("py-future@0.15.2:", type=("build", "run"), when="^python@:2")
     depends_on("py-sphinx", type="run", when="+docs")
     depends_on("py-matplotlib", type="run", when="+matplotlib")
     depends_on("py-numpy", type="run", when="+matrices")

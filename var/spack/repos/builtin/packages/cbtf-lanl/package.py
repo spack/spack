@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class CbtfLanl(CMakePackage):
 
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
+
+    maintainers = ["jgalarowicz"]
 
     version("develop", branch="master")
     version("1.9.4.1", branch="1.9.4.1")
@@ -58,7 +60,6 @@ class CbtfLanl(CMakePackage):
     build_directory = "build_cbtf_lanl"
 
     def cmake_args(self):
-
         spec = self.spec
         compile_flags = "-O2 -g -Wall"
 

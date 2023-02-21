@@ -1,0 +1,18 @@
+--- ./cmake/FindPyQt5.py.orig	2023-02-14 17:02:41.609544616 -0800
++++ ./cmake/FindPyQt5.py	2023-02-14 17:06:44.860462101 -0800
+@@ -45,11 +45,12 @@
+         sip_dir = p
+         break
+ 
++pyqt_prefix = os.sep.join(PyQt5.QtCore.__file__.split(os.sep)[0:-5])
+ print("pyqt_version_str:%s" % PyQt5.QtCore.PYQT_VERSION_STR)
+-print("pyqt_mod_dir:%s" % os.path.join(cfg.default_mod_dir, "PyQt5"))
+-print("pyqt_sip_dir:%s" % sip_dir)
++print("pyqt_mod_dir:%s" % os.path.dirname(PyQt5.QtCore.__file__))
++print("pyqt_sip_dir:%s" % os.path.join(pyqt_prefix,'share','sip','PyQt5'))
+ print("pyqt_sip_flags:%s" % PyQt5.QtCore.PYQT_CONFIGURATION['sip_flags'])
+-print("pyqt_bin_dir:%s" % cfg.default_bin_dir)
++print("pyqt_bin_dir:%s" % os.path.join(pyqt_prefix,'bin'))
+ 
+ try:
+     import PyQt5.sip

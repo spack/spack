@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyArchspec(PythonPackage):
     homepage = "https://archspec.readthedocs.io/en/latest/"
     pypi = "archspec/archspec-0.1.1.tar.gz"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("0.1.3", sha256="a1aa7abde4d4ce38d115dfd572584906fa8e192e3272b8897e7b4fa1213ec27c")
     version("0.1.2", sha256="8bb998370f0dc3e509d57c13724ab4109d761fd74af20da26fbe513b0fe01c46")
@@ -30,7 +30,7 @@ class PyArchspec(PythonPackage):
 
     def patch(self):
         # See https://python-poetry.org/docs/pyproject/#poetry-and-pep-517
-        with working_dir(self.build_directory):
+        with working_dir(self.stage.source_path):
             if self.spec.satisfies("@:0.1.3"):
                 filter_file("poetry>=0.12", "poetry_core>=1.0.0", "pyproject.toml")
                 filter_file("poetry.masonry.api", "poetry.core.masonry.api", "pyproject.toml")

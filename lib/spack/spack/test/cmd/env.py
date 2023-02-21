@@ -1,21 +1,22 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import filecmp
 import glob
+import io
 import os
 import shutil
 import sys
 from argparse import Namespace
 
 import pytest
-from six import StringIO
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
 import spack.cmd.env
+import spack.config
 import spack.environment as ev
 import spack.environment.shell
 import spack.error
@@ -29,7 +30,6 @@ from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
-from spack.util.web import FetchError
 from spack.version import Version
 
 # TODO-27021
@@ -507,7 +507,7 @@ def test_env_repo():
 
 def test_user_removed_spec():
     """Ensure a user can remove from any position in the spack.yaml file."""
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -545,7 +545,7 @@ env:
 
 def test_init_from_lockfile(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -573,7 +573,7 @@ env:
 
 def test_init_from_yaml(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -602,7 +602,7 @@ def test_env_view_external_prefix(tmpdir_factory, mutable_database, mock_package
     fake_bin = fake_prefix.join("bin")
     fake_bin.ensure(dir=True)
 
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -611,7 +611,7 @@ env:
 """
     )
 
-    external_config = StringIO(
+    external_config = io.StringIO(
         """\
 packages:
   a:
@@ -627,7 +627,6 @@ packages:
 
     test_scope = spack.config.InternalConfigScope("env-external-test", data=external_config_dict)
     with spack.config.override(test_scope):
-
         e = ev.create("test", initial_yaml)
         e.concretize()
         # Note: normally installing specs in a test environment requires doing
@@ -682,7 +681,7 @@ env:
     mpileaks:
       version: [2.2]
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
 
     e = ev.read("test")
     with e:
@@ -699,7 +698,7 @@ spack:
   - /no/such/directory
   - no/such/file.yaml
 """
-    _env_create(env_name, StringIO(test_config))
+    _env_create(env_name, io.StringIO(test_config))
 
     e = ev.read(env_name)
     with pytest.raises(spack.config.ConfigFileError) as exc:
@@ -707,9 +706,9 @@ spack:
             e.concretize()
 
     err = str(exc)
-    assert "not retrieve configuration" in err
-    assert os.path.join("no", "such", "directory") in err
-
+    assert "missing include" in err
+    assert "/no/such/directory" in err
+    assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -723,7 +722,7 @@ def test_env_with_include_config_files_same_basename():
                 [libelf, mpileaks]
             """
 
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     fs.mkdirp(os.path.join(e.path, "path", "to"))
@@ -788,7 +787,7 @@ def test_env_with_included_config_file(packages_file):
     include_filename = "included-config.yaml"
     test_config = mpileaks_env_config(os.path.join(".", include_filename))
 
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     included_path = os.path.join(e.path, include_filename)
@@ -827,7 +826,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
     env = ev.Environment(tmpdir.strpath)
-    with pytest.raises(FetchError, match="No such file or directory"):
+    with pytest.raises(spack.config.ConfigError, match="missing include path"):
         ev.activate(env)
 
 
@@ -842,7 +841,7 @@ def test_env_with_included_config_scope(tmpdir, packages_file):
     test_config = mpileaks_env_config(config_scope_path)
 
     # Create the environment
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
 
     e = ev.read("test")
 
@@ -868,7 +867,7 @@ def test_env_with_included_config_var_path(packages_file):
     config_var_path = os.path.join("$tempdir", "included-config.yaml")
     test_config = mpileaks_env_config(config_var_path)
 
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     config_real_path = substitute_path_variables(config_var_path)
@@ -893,7 +892,7 @@ env:
   specs:
   - mpileaks
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     with open(os.path.join(e.path, "included-config.yaml"), "w") as f:
@@ -926,7 +925,7 @@ env:
   specs:
   - mpileaks
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     with open(os.path.join(e.path, "high-config.yaml"), "w") as f:
@@ -1201,7 +1200,7 @@ def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_m
         add("libelf")
         add("libelf cflags=-g")
         with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=spack.store.layout.metadata_dir
+            ev.SpackEnvironmentViewError, match="two specs project to the same prefix"
         ):
             install("--fake")
 
@@ -1263,7 +1262,7 @@ env:
   specs:
   - mpileaks
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
 
     with ev.read("test"):
         install("--fake")
@@ -2672,7 +2671,7 @@ spack:
       roots:
         tcl: modules
 """
-    _env_create("test", StringIO(spack_yaml))
+    _env_create("test", io.StringIO(spack_yaml))
 
     with ev.read("test") as e:
         install()
@@ -2707,7 +2706,7 @@ spack:
       roots:
         tcl: full_modules
 """
-    _env_create("test", StringIO(spack_yaml))
+    _env_create("test", io.StringIO(spack_yaml))
 
     with ev.read("test") as e:
         install()
@@ -2763,12 +2762,7 @@ def test_query_develop_specs():
 
 @pytest.mark.parametrize("method", [spack.cmd.env.env_activate, spack.cmd.env.env_deactivate])
 @pytest.mark.parametrize(
-    "env,no_env,env_dir",
-    [
-        ("b", False, None),
-        (None, True, None),
-        (None, False, "path/"),
-    ],
+    "env,no_env,env_dir", [("b", False, None), (None, True, None), (None, False, "path/")]
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
@@ -2836,10 +2830,10 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     all_views = os.path.dirname(resolved_view)
     views_before = os.listdir(all_views)
 
-    # Add a spec that results in MergeConflictError's when creating a view
+    # Add a spec that results in view clash when creating a view
     with ev.read("env"):
         add("libelf cflags=-O3")
-        with pytest.raises(llnl.util.link_tree.MergeConflictError):
+        with pytest.raises(ev.SpackEnvironmentViewError):
             install("--fake")
 
     # Make sure there is no broken view in the views directory, and the current
@@ -3071,15 +3065,7 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
         # This prunes all build deps
         (
             ["--use-buildcache=only"],
-            [
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtlink5",
-                "dtrun1",
-                "dtrun3",
-                "dttop",
-            ],
+            ["dtlink1", "dtlink3", "dtlink4", "dtlink5", "dtrun1", "dtrun3", "dttop"],
         ),
         # Test whether pruning of build deps is correct if we explicitly include one
         # that is also a dependency of a root.
@@ -3115,8 +3101,8 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
             "-o",
             makefile,
             "--make-disable-jobserver",
-            "--make-target-prefix=prefix",
-            *depfile_flags
+            "--make-prefix=prefix",
+            *depfile_flags,
         )
 
     # Do make dry run.
@@ -3144,6 +3130,54 @@ def test_environment_depfile_out(tmpdir, mock_packages):
         stdout = env("depfile", "-G", "make")
         with open(makefile_path, "r") as f:
             assert stdout == f.read()
+
+
+def test_spack_package_ids_variable(tmpdir, mock_packages):
+    # Integration test for post-install hooks through prefix/SPACK_PACKAGE_IDS
+    # variable
+    env("create", "test")
+    makefile_path = str(tmpdir.join("Makefile"))
+    include_path = str(tmpdir.join("include.mk"))
+
+    # Create env and generate depfile in include.mk with prefix example/
+    with ev.read("test"):
+        add("libdwarf")
+        concretize()
+
+    with ev.read("test"):
+        env(
+            "depfile",
+            "-G",
+            "make",
+            "--make-disable-jobserver",
+            "--make-prefix=example",
+            "-o",
+            include_path,
+        )
+
+    # Include in Makefile and create target that depend on SPACK_PACKAGE_IDS
+    with open(makefile_path, "w") as f:
+        f.write(
+            r"""
+all: post-install
+
+include include.mk
+
+example/post-install/%: example/install/%
+	$(info post-install: $(HASH)) # noqa: W191,E101
+
+post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
+"""
+        )
+    make = Executable("make")
+
+    # Do dry run.
+    out = make("-n", "-C", str(tmpdir), output=str)
+
+    # post-install: <hash> should've been executed
+    with ev.read("test") as test:
+        for s in test.all_specs():
+            assert "post-install: {}".format(s.dag_hash()) in out
 
 
 def test_unify_when_possible_works_around_conflicts():
@@ -3181,3 +3215,10 @@ def test_env_include_packages_url(
 
         cfg = spack.config.get("packages")
         assert "openmpi" in cfg["all"]["providers"]["mpi"]
+
+
+def test_relative_view_path_on_command_line_is_made_absolute(tmpdir, config):
+    with fs.working_dir(str(tmpdir)):
+        env("create", "--with-view", "view", "--dir", "env")
+        environment = ev.Environment(os.path.join(".", "env"))
+        assert os.path.samefile("view", environment.default_view.root)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyParticle(PythonPackage):
     pypi = "particle/particle-0.11.0.tar.gz"
     homepage = "https://github.com/scikit-hep/particle"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     tags = ["hep"]
 
@@ -30,7 +30,3 @@ class PyParticle(PythonPackage):
     depends_on("py-attrs@19.2.0:", type=("build", "run"))
     depends_on("py-hepunits@1.2.0:", when="@:0.12", type=("build", "run"))
     depends_on("py-hepunits@2.0.0:", when="@0.13:", type=("build", "run"))
-    depends_on("py-importlib-resources@1.0:", when="^python@:3.6", type=("build", "run"))
-
-    depends_on("py-enum34@1.1:", when="^python@:3.3", type=("build", "run"))
-    depends_on("py-typing@3.7:", when="^python@:3.4", type=("build", "run"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class RCtc(RPackage):
 
     bioc = "ctc"
 
+    version("1.72.0", commit="0a4b464e1768e6407c1c2ce64ec4ae5a4577be65")
     version("1.70.0", commit="05dc046ecfddbc1eeadf77e8f3ec0ce054794437")
     version("1.68.0", commit="c2733534ef9d948e07ea654d1998a67ed8f7a98a")
     version("1.64.0", commit="35dbe620a21056b8f69890e6f9a7c320528d8621")

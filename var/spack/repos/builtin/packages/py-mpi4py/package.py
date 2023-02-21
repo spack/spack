@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,6 @@ class PyMpi4py(PythonPackage):
     depends_on("py-setuptools@40.9:", type="build")
     depends_on("mpi")
     depends_on("py-cython@0.27.0:", when="@master", type="build")
-    depends_on("py-3to2", when="@3.1: ^python@:2", type="build")
 
     @when("@3.1:")
     def install_options(self, spec, prefix):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,17 +25,18 @@ import spack.package_base
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.url as url_util
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    file_is_relocatable,
+    ensure_binary_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
     macho_make_paths_relative,
     needs_binary_relocation,
     needs_text_relocation,
     relocate_links,
-    unsafe_relocate_text,
+    relocate_text,
 )
 from spack.spec import Spec
 
@@ -89,7 +90,7 @@ echo $PATH"""
     spack.mirror.create(mirror_path, specs=[])
 
     # register mirror with spack config
-    mirrors = {"spack-mirror-test": "file://" + mirror_path}
+    mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_path)}
     spack.config.set("mirrors", mirrors)
 
     stage = spack.stage.Stage(mirrors["spack-mirror-test"], name="build_cache", keep=True)
@@ -189,7 +190,7 @@ echo $PATH"""
 
 
 @pytest.mark.usefixtures("install_mockery")
-def test_unsafe_relocate_text(tmpdir):
+def test_relocate_text(tmpdir):
     spec = Spec("trivial-install-test-package")
     spec.concretize()
     with tmpdir.as_cwd():
@@ -202,11 +203,11 @@ def test_unsafe_relocate_text(tmpdir):
         filenames = [filename]
         new_dir = "/opt/rh/devtoolset/"
         # Singleton dict doesn't matter if Ordered
-        unsafe_relocate_text(filenames, {old_dir: new_dir})
+        relocate_text(filenames, {old_dir: new_dir})
         with open(filename, "r") as script:
             for line in script:
                 assert new_dir in line
-        assert file_is_relocatable(os.path.realpath(filename))
+        ensure_binary_is_relocatable(os.path.realpath(filename))
     # Remove cached binary specs since we deleted the mirror
     bindist._cached_specs = set()
 
@@ -251,7 +252,6 @@ def test_relocate_links(tmpdir):
 
 
 def test_needs_relocation():
-
     assert needs_binary_relocation("application", "x-sharedlib")
     assert needs_binary_relocation("application", "x-executable")
     assert not needs_binary_relocation("application", "x-octet-stream")
@@ -570,7 +570,9 @@ def mock_download():
     "manual,instr", [(False, False), (False, True), (True, False), (True, True)]
 )
 @pytest.mark.disable_clean_stage_check
-def test_manual_download(install_mockery, mock_download, monkeypatch, manual, instr):
+def test_manual_download(
+    install_mockery, mock_download, default_mock_concretization, monkeypatch, manual, instr
+):
     """
     Ensure expected fetcher fail message based on manual download and instr.
     """
@@ -579,7 +581,7 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual, in
     def _instr(pkg):
         return "Download instructions for {0}".format(pkg.spec.name)
 
-    spec = Spec("a").concretized()
+    spec = default_mock_concretization("a")
     pkg = spec.package
 
     pkg.manual_download = manual
@@ -605,16 +607,20 @@ def fetching_not_allowed(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", fetcher)
 
 
-def test_fetch_without_code_is_noop(install_mockery, fetching_not_allowed):
+def test_fetch_without_code_is_noop(
+    default_mock_concretization, install_mockery, fetching_not_allowed
+):
     """do_fetch for packages without code should be a no-op"""
-    pkg = Spec("a").concretized().package
+    pkg = default_mock_concretization("a").package
     pkg.has_code = False
     pkg.do_fetch()
 
 
-def test_fetch_external_package_is_noop(install_mockery, fetching_not_allowed):
+def test_fetch_external_package_is_noop(
+    default_mock_concretization, install_mockery, fetching_not_allowed
+):
     """do_fetch for packages without code should be a no-op"""
-    spec = Spec("a").concretized()
+    spec = default_mock_concretization("a")
     spec.external_path = "/some/where"
     assert spec.external
     spec.package.do_fetch()
