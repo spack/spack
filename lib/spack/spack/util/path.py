@@ -275,7 +275,7 @@ def convert_to_platform_path(path):
     return format_os_path(path, mode=Path.platform_path)
 
 
-def substitute_config_variables(path, allow_env=True):
+def substitute_config_variables(path):
     """Substitute placeholders into paths.
 
     Spack allows paths in configs to have some placeholders, as follows:
@@ -301,16 +301,6 @@ def substitute_config_variables(path, allow_env=True):
     """
     _replacements = replacements()
 
-    if allow_env:
-        import spack.environment as ev  # break circular
-
-        env = ev.active_environment()
-        if env:
-            _replacements.update({"env": env.path})
-        else:
-            # If a previous invocation added env, remove it
-            _replacements.pop("env", None)
-
     # Look up replacements
     def repl(match):
         m = match.group(0)
@@ -322,9 +312,9 @@ def substitute_config_variables(path, allow_env=True):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path, allow_env=True):
+def substitute_path_variables(path):
     """Substitute config vars, expand environment vars, expand user home."""
-    path = substitute_config_variables(path, allow_env)
+    path = substitute_config_variables(path)
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     return path
@@ -366,7 +356,7 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path, default_wd=None, allow_env=True):
+def canonicalize_path(path, default_wd=None):
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
@@ -386,7 +376,7 @@ def canonicalize_path(path, default_wd=None, allow_env=True):
         filename = os.path.dirname(path._start_mark.name)
         assert path._start_mark.name == path._end_mark.name
 
-    path = substitute_path_variables(path, allow_env)
+    path = substitute_path_variables(path)
     if not os.path.isabs(path):
         if filename:
             path = os.path.join(filename, path)
