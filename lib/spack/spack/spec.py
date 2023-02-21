@@ -3454,15 +3454,20 @@ class Spec(object):
     def satisfies(self, other, deps=True, strict=False):
         """Determine if this spec satisfies all constraints of another.
 
-        There are two senses for satisfies:
+        There are two senses for satisfies, depending on the ``strict``
+        argument.
 
-          * `loose` (default): the absence of a constraint in self
-            implies that it *could* be satisfied by other, so we only
-            check that there are no conflicts with other for
-            constraints that this spec actually has.
+          * ``strict=False``: the left-hand side and right-hand side have
+            non-empty intersection. For example ``zlib`` satisfies
+            ``zlib@1.2.3`` and ``zlib@1.2.3`` satisfies ``zlib``. In this
+            sense satisfies is a commutative operation: ``x.satisfies(y)``
+            if and only if ``y.satisfies(x)``.
 
-          * `strict`: strict means that we *must* meet all the
-            constraints specified on other.
+          * ``strict=True``: the left-hand side is a subset of the right-hand
+            side. For example ``zlib@1.2.3`` satisfies ``zlib``, but ``zlib``
+            does not satisfy ``zlib@1.2.3``. In this sense satisfies is not
+            commutative: the left-hand side should be at least as constrained
+            as the right-hand side.
         """
 
         other = self._autospec(other)
