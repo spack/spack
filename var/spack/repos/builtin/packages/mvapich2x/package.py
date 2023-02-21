@@ -260,9 +260,6 @@ class Mvapich2x(AutotoolsPackage):
         args.append(self.construct_ldflags)
 
         # prevents build error regarding gfortran not allowing mismatched arguments
-        if spec.satisfies('%gcc@10.0.0:'):
-            args.extend([
-                'FFLAGS=-fallow-argument-mismatch',
-                'FCFLAGS=-fallow-argument-mismatch'
-            ])
+        if spec.satisfies("%gcc@10.0.0:"):
+            args.extend(["FFLAGS=-fallow-argument-mismatch", "FCFLAGS=-fallow-argument-mismatch"])
         return args
