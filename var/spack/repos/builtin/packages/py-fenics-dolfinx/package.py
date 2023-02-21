@@ -68,16 +68,16 @@ class PyFenicsDolfinx(PythonPackage):
 
     depends_on("py-fenics-ufl@main", type="run", when="@main")
     depends_on("py-fenics-ufl@2023.1", type="run", when="@0.6")
-    depends_on("py-fenics-ufl@2022.2.0", type="run", when="@0.5.0:0.5")
-    depends_on("py-fenics-ufl@2022.1.0", type="run", when="@0.4.1")
-    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:0.3.99")
+    depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
+    depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.1")
+    depends_on("py-fenics-ufl@2021.1.0", type=("build", "run"), when="@0.1:0.3.99")
 
     depends_on("py-numpy@1.21:", type=("build", "run"), when="@0.5.0:")
     depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-pybind11@2.6.2:", type=("build", "run"))
+    depends_on("py-pybind11@2.7.0:", type=("build", "run"))
     depends_on("xtensor@0.23.10:", type="build", when="@:0.5")
 
     depends_on("py-cffi", type="run")
