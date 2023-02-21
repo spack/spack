@@ -153,7 +153,7 @@ packages:
   all:
     require: "%gcc@12.2.0 target=skylake"
     providers:
-      mpi: [hpe-mpi, intel-oneapi-mpi, mvapich2]
+      mpi:: [hpe-mpi]
       scalapack:: [intel-oneapi-mkl]
       lapack:: [intel-oneapi-mkl]
       blas:: [intel-oneapi-mkl]
