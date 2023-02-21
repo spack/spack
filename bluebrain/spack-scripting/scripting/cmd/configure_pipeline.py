@@ -75,7 +75,7 @@ def configure_pipeline(parser, args):
         spack_package_name = simplify_name(package_name)
         # Check if this package exists
         try:
-            spack.repo.get(spack_package_name)
+            spack.repo.path.get_pkg_class(spack_package_name)
         except spack.repo.UnknownPackageError:
             raise Exception(
                 "Could not find a Spack package corresponding to {}, tried {}".format(
@@ -110,7 +110,7 @@ def configure_pipeline(parser, args):
             else:
                 assert info["ref_type"] == "tag"
                 remote_ref = "refs/tags/" + info["ref"]
-            spack_package = spack.repo.get(spack_package_name)
+            spack_package = spack.repo.path.get_pkg_class(spack_package_name)
             remote_refs = git(
                 "ls-remote", spack_package.git, remote_ref, output=str
             ).splitlines()
@@ -137,7 +137,7 @@ def configure_pipeline(parser, args):
 
     # Now modify the Spack recipes of the given packages
     for spack_package_name, info in modifications.items():
-        spack_package = spack.repo.get(spack_package_name)
+        spack_package = spack.repo.path.get_pkg_class(spack_package_name)
         spack_recipe = os.path.join(
             spack_package.package_dir, spack.repo.package_file_name
         )
