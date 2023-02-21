@@ -1551,7 +1551,7 @@ def mock_svn_repository(tmpdir_factory):
     yield t
 
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def mutable_mock_env_path(tmpdir_factory, mutable_config):
     """Fixture for mocking the internal spack environments directory."""
     saved_path = ev.environment.default_env_path
