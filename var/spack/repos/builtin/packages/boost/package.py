@@ -183,10 +183,7 @@ class Boost(Package):
     )
 
     boost_variant(
-        "shared",
-        default=True,
-        description="Additionally build shared libraries",
-        is_library=False,
+        "shared", default=True, description="Additionally build shared libraries", is_library=False
     )
 
     boost_variant(
@@ -301,10 +298,7 @@ class Boost(Package):
         buildable="@1.47.0:",
     )
     boost_variant(
-        "compute",
-        description="Parallel/GPU-computing library",
-        default="False",
-        when="@1.61.0:",
+        "compute", description="Parallel/GPU-computing library", default="False", when="@1.61.0:"
     )
     boost_variant(
         "container",
@@ -374,10 +368,7 @@ class Boost(Package):
         buildable="@1.29.0:",
     )
     boost_variant(
-        "describe",
-        description="A C++14 reflection library.",
-        default="False",
-        when="@1.77.0:",
+        "describe", description="A C++14 reflection library.", default="False", when="@1.77.0:"
     )
     boost_variant(
         "dll",
@@ -479,10 +470,7 @@ class Boost(Package):
         when="@1.61.0:",
     )
     boost_variant(
-        "heap",
-        description="Priority queue data structures.",
-        default="False",
-        when="@1.49.0:",
+        "heap", description="Priority queue data structures.", default="False", when="@1.49.0:"
     )
     boost_variant(
         "histogram",
@@ -491,10 +479,7 @@ class Boost(Package):
         when="@1.70.0:",
     )
     boost_variant(
-        "hof",
-        description="Higher-order functions for C++",
-        default="False",
-        when="@1.67.0:",
+        "hof", description="Higher-order functions for C++", default="False", when="@1.67.0:"
     )
     boost_variant(
         "icl",
@@ -532,10 +517,7 @@ class Boost(Package):
         buildable="@1.75.0:",
     )
     boost_variant(
-        "lambda2",
-        description="A C++14 lambda library.",
-        default="False",
-        when="@1.77.0:",
+        "lambda2", description="A C++14 lambda library.", default="False", when="@1.77.0:"
     )
     boost_variant(
         "leaf",
@@ -560,10 +542,7 @@ class Boost(Package):
         buildable="@1.48.0:",
     )
     boost_variant(
-        "lockfree",
-        description="Lockfree data structures.",
-        default="False",
-        when="@1.53.0:",
+        "lockfree", description="Lockfree data structures.", default="False", when="@1.53.0:"
     )
     boost_variant(
         "log",
@@ -612,10 +591,7 @@ class Boost(Package):
         when="@1.48.0:",
     )
     boost_variant(
-        "mp11",
-        description="A C++11 metaprogramming library.",
-        default="False",
-        when="@1.66.0:",
+        "mp11", description="A C++11 metaprogramming library.", default="False", when="@1.66.0:"
     )
     boost_variant(
         "mpi",
@@ -840,10 +816,7 @@ class Boost(Package):
         when="@1.74.0:",
     )
     boost_variant(
-        "string_ref",
-        description="String view templates.",
-        default="False",
-        when="@1.71.0:",
+        "string_ref", description="String view templates.", default="False", when="@1.71.0:"
     )
     boost_variant(
         "system",
@@ -883,10 +856,7 @@ class Boost(Package):
         buildable="@1.48.0:",
     )
     boost_variant(
-        "tti",
-        description="Type Traits Introspection library.",
-        default="False",
-        when="@1.54.0:",
+        "tti", description="Type Traits Introspection library.", default="False", when="@1.54.0:"
     )
     boost_variant(
         "type_erasure",
@@ -902,10 +872,7 @@ class Boost(Package):
         when="@1.56.0:",
     )
     boost_variant(
-        "uuid",
-        description="A universally unique identifier.",
-        default="False",
-        when="@1.42.0:",
+        "uuid", description="A universally unique identifier.", default="False", when="@1.42.0:"
     )
     boost_variant(
         "variant2",
@@ -914,10 +881,7 @@ class Boost(Package):
         when="@1.71.0:",
     )
     boost_variant(
-        "vmd",
-        description="Variadic Macro Data library.",
-        default="False",
-        when="@1.60.0:",
+        "vmd", description="Variadic Macro Data library.", default="False", when="@1.60.0:"
     )
     boost_variant(
         "wave",
