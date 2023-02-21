@@ -1295,7 +1295,7 @@ def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_co
     assert a1.process_hash() != a2.process_hash()
 
 
-def test_satisfies_is_commutative_with_concrete_specs(mock_packages, default_mock_concretization):
+def test_satisfies_is_commutative_with_concrete_specs(default_mock_concretization):
     a1 = default_mock_concretization("a@1.0")
     a2 = Spec("a@1.0")
 
@@ -1306,3 +1306,18 @@ def test_satisfies_is_commutative_with_concrete_specs(mock_packages, default_moc
     # strict=True means set inclusion, which is not commutative.
     assert a1.satisfies(a2, strict=True)
     assert not a2.satisfies(a1, strict=True)
+
+
+@pytest.mark.parametrize(
+    "abstract_spec,spec_str",
+    [
+        ("v1-provider", "v1-consumer ^conditional-provider+disable-v1"),
+        ("conditional-provider", "v1-consumer ^conditional-provider+disable-v1"),
+        ("^v1-provider", "v1-consumer ^conditional-provider+disable-v1"),
+        ("^conditional-provider", "v1-consumer ^conditional-provider+disable-v1"),
+    ],
+)
+@pytest.mark.regression("35597")
+def test_abstract_provider_in_spec(abstract_spec, spec_str, default_mock_concretization):
+    s = default_mock_concretization(spec_str)
+    assert abstract_spec in s
