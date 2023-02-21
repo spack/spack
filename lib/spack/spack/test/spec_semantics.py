@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import sys
 
 import pytest
 
@@ -44,7 +42,6 @@ def _specify(spec_like):
 
 
 def check_satisfies(target_spec, constraint_spec, target_concrete=False):
-
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
@@ -57,7 +54,6 @@ def check_satisfies(target_spec, constraint_spec, target_concrete=False):
 
 
 def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False):
-
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
@@ -247,16 +243,23 @@ class TestSpecSematics(object):
 
     def test_satisfies_matching_variant(self):
         check_satisfies("mpich+foo", "mpich+foo")
+        check_satisfies("mpich++foo", "mpich++foo")
         check_satisfies("mpich~foo", "mpich~foo")
+        check_satisfies("mpich~~foo", "mpich~~foo")
         check_satisfies("mpich foo=1", "mpich foo=1")
+        check_satisfies("mpich foo==1", "mpich foo==1")
 
         # confirm that synonymous syntax works correctly
         check_satisfies("mpich+foo", "mpich foo=True")
+        check_satisfies("mpich++foo", "mpich foo=True")
         check_satisfies("mpich foo=true", "mpich+foo")
+        check_satisfies("mpich foo==true", "mpich++foo")
         check_satisfies("mpich~foo", "mpich foo=FALSE")
+        check_satisfies("mpich~~foo", "mpich foo=FALSE")
         check_satisfies("mpich foo=False", "mpich~foo")
+        check_satisfies("mpich foo==False", "mpich~foo")
         check_satisfies("mpich foo=*", "mpich~foo")
-        check_satisfies("mpich +foo", "mpich foo=*")
+        check_satisfies("mpich+foo", "mpich foo=*")
 
     def test_satisfies_multi_value_variant(self):
         # Check quoting
@@ -295,6 +298,7 @@ class TestSpecSematics(object):
         # Assert that an autospec generated from a literal
         # gives the right result for a single valued variant
         assert "foobar=bar" in a
+        assert "foobar==bar" in a
         assert "foobar=baz" not in a
         assert "foobar=fee" not in a
 
@@ -319,7 +323,6 @@ class TestSpecSematics(object):
         assert "a@1.0" not in spec
 
     def test_unsatisfiable_multi_value_variant(self):
-
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
@@ -415,21 +418,32 @@ class TestSpecSematics(object):
         check_satisfies("mpich", "mpich+foo", False)
         check_satisfies("mpich", "mpich~foo", False)
         check_satisfies("mpich", "mpich foo=1", False)
+        check_satisfies("mpich", "mpich++foo", False)
+        check_satisfies("mpich", "mpich~~foo", False)
+        check_satisfies("mpich", "mpich foo==1", False)
 
         # 'mpich' is concrete:
         check_unsatisfiable("mpich", "mpich+foo", True)
         check_unsatisfiable("mpich", "mpich~foo", True)
         check_unsatisfiable("mpich", "mpich foo=1", True)
+        check_unsatisfiable("mpich", "mpich++foo", True)
+        check_unsatisfiable("mpich", "mpich~~foo", True)
+        check_unsatisfiable("mpich", "mpich foo==1", True)
 
     def test_unsatisfiable_variant_mismatch(self):
         # No matchi in specs
         check_unsatisfiable("mpich~foo", "mpich+foo")
         check_unsatisfiable("mpich+foo", "mpich~foo")
         check_unsatisfiable("mpich foo=True", "mpich foo=False")
+        check_unsatisfiable("mpich~~foo", "mpich++foo")
+        check_unsatisfiable("mpich++foo", "mpich~~foo")
+        check_unsatisfiable("mpich foo==True", "mpich foo==False")
 
     def test_satisfies_matching_compiler_flag(self):
         check_satisfies('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
         check_satisfies('mpich cppflags="-O3 -Wall"', 'mpich cppflags="-O3 -Wall"')
+        check_satisfies('mpich cppflags=="-O3"', 'mpich cppflags=="-O3"')
+        check_satisfies('mpich cppflags=="-O3 -Wall"', 'mpich cppflags=="-O3 -Wall"')
 
     def test_satisfies_unconstrained_compiler_flag(self):
         # only asked for mpich, no constraints.  Any will do.
@@ -453,8 +467,9 @@ class TestSpecSematics(object):
             assert copy[s.name].satisfies(s)
 
     def test_unsatisfiable_compiler_flag_mismatch(self):
-        # No matchi in specs
+        # No match in specs
         check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags="-O2"')
+        check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags=="-O3"')
 
     def test_satisfies_virtual(self):
         # Don't use check_satisfies: it checks constrain() too, and
@@ -554,6 +569,12 @@ class TestSpecSematics(object):
         check_constrain("libelf+debug~foo", "libelf+debug", "libelf~foo")
         check_constrain("libelf+debug~foo", "libelf+debug", "libelf+debug~foo")
 
+        check_constrain("libelf++debug++foo", "libelf++debug", "libelf+debug+foo")
+        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf foo=1")
+        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf debug=2 foo=1")
+
+        check_constrain("libelf++debug~~foo", "libelf++debug", "libelf++debug~foo")
+
     def test_constrain_multi_value_variant(self):
         check_constrain(
             'multivalue-variant foo="bar,baz"',
@@ -580,6 +601,17 @@ class TestSpecSematics(object):
             'libelf cflags="-O3" cppflags="-Wall"',
             'libelf cflags="-O3"',
             'libelf cflags="-O3" cppflags="-Wall"',
+        )
+
+        check_constrain(
+            'libelf cflags="-O3" cppflags=="-Wall"',
+            'libelf cppflags=="-Wall"',
+            'libelf cflags="-O3"',
+        )
+        check_constrain(
+            'libelf cflags=="-O3" cppflags=="-Wall"',
+            'libelf cflags=="-O3"',
+            'libelf cflags=="-O3" cppflags=="-Wall"',
         )
 
     def test_constrain_architecture(self):
@@ -620,6 +652,7 @@ class TestSpecSematics(object):
         check_constrain_changed("libelf", "~debug")
         check_constrain_changed("libelf", "debug=2")
         check_constrain_changed("libelf", 'cppflags="-O3"')
+        check_constrain_changed("libelf", 'cppflags=="-O3"')
 
         platform = spack.platforms.host()
         check_constrain_changed("libelf", "target=" + platform.target("default_target").name)
@@ -636,6 +669,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed("libelf debug=2", "debug=2")
         check_constrain_not_changed("libelf debug=2", "debug=*")
         check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
+        check_constrain_not_changed('libelf cppflags=="-O3"', 'cppflags=="-O3"')
 
         platform = spack.platforms.host()
         default_target = platform.target("default_target").name
@@ -670,19 +704,14 @@ class TestSpecSematics(object):
         )
 
     def test_exceptional_paths_for_constructor(self):
-
         with pytest.raises(TypeError):
             Spec((1, 2))
 
         with pytest.raises(ValueError):
-            Spec("")
-
-        with pytest.raises(ValueError):
             Spec("libelf foo")
 
-    def test_spec_formatting(self):
-        spec = Spec("multivalue-variant cflags=-O2")
-        spec.concretize()
+    def test_spec_formatting(self, default_mock_concretization):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
 
         # Since the default is the full spec see if the string rep of
         # spec is the same as the output of spec.format()
@@ -758,9 +787,8 @@ class TestSpecSematics(object):
             actual = spec.format(named_str)
             assert expected == actual
 
-    def test_spec_formatting_escapes(self):
-        spec = Spec("multivalue-variant cflags=-O2")
-        spec.concretize()
+    def test_spec_formatting_escapes(self, default_mock_concretization):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
 
         sigil_mismatches = [
             "{@name}",
@@ -791,7 +819,7 @@ class TestSpecSematics(object):
                 spec.format(fmt_str)
 
     def test_spec_deprecated_formatting(self):
-        spec = Spec("libelf cflags=-O2")
+        spec = Spec("libelf cflags==-O2")
         spec.concretize()
 
         # Since the default is the full spec see if the string rep of
@@ -841,8 +869,8 @@ class TestSpecSematics(object):
         # Spack was assembling flags in a manner that could result in
         # different orderings for repeated concretizations of the same
         # spec and config
-        spec_str = "libelf %gcc@4.7.2 os=redhat6"
-        for _ in range(25):
+        spec_str = "libelf %gcc@11.1.0 os=redhat6"
+        for _ in range(3):
             s = Spec(spec_str).concretized()
             assert all(
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
@@ -857,7 +885,6 @@ class TestSpecSematics(object):
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
             Spec("multivalue-variant foo=*,bar")
 
-    @pytest.mark.skipif(sys.version_info[0] == 2, reason="__wrapped__ requires python 3")
     def test_errors_in_variant_directive(self):
         variant = spack.directives.variant.__wrapped__
 
@@ -915,13 +942,11 @@ class TestSpecSematics(object):
         assert spec.target < "broadwell"
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice(self, transitive):
+    def test_splice(self, transitive, default_mock_concretization):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-h+foo")
 
         # Sanity checking that these are not the same thing.
         assert dep.dag_hash() != spec["splice-h"].dag_hash()
@@ -954,11 +979,9 @@ class TestSpecSematics(object):
         assert out.spliced
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_with_cached_hashes(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_with_cached_hashes(self, default_mock_concretization, transitive):
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-h+foo")
 
         # monkeypatch hashes so we can test that they are cached
         spec._hash = "aaaaaa"
@@ -975,9 +998,9 @@ class TestSpecSematics(object):
         assert out["splice-z"].dag_hash() == out_z_expected.dag_hash()
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_input_unchanged(self, transitive):
-        spec = Spec("splice-t").concretized()
-        dep = Spec("splice-h+foo").concretized()
+    def test_splice_input_unchanged(self, default_mock_concretization, transitive):
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-h+foo")
         orig_spec_hash = spec.dag_hash()
         orig_dep_hash = dep.dag_hash()
         spec.splice(dep, transitive)
@@ -987,16 +1010,13 @@ class TestSpecSematics(object):
         assert dep.dag_hash() == orig_dep_hash
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_subsequent(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_subsequent(self, default_mock_concretization, transitive):
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Now we attempt a second splice.
-        dep = Spec("splice-z+bar")
-        dep.concretize()
+        dep = default_mock_concretization("splice-z+bar")
 
         # Transitivity shouldn't matter since Splice Z has no dependencies.
         out2 = out.splice(dep, transitive)
@@ -1007,11 +1027,9 @@ class TestSpecSematics(object):
         assert out2.spliced
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_dict(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_dict(self, default_mock_concretization, transitive):
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Sanity check all hashes are unique...
@@ -1026,11 +1044,9 @@ class TestSpecSematics(object):
         assert len(build_spec_nodes) == 1
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_dict_roundtrip(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_dict_roundtrip(self, default_mock_concretization, transitive):
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Sanity check all hashes are unique...
@@ -1089,25 +1105,21 @@ class TestSpecSematics(object):
     def test_satisfies_dependencies_ordered(self):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
-        s._add_dependency(d, ())
+        s._add_dependency(d, deptypes=())
         assert s.satisfies("mpileaks ^zmpi ^fake", strict=True)
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_swap_names(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-a+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_swap_names(self, default_mock_concretization, transitive):
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-a+foo")
         out = spec.splice(dep, transitive)
         assert dep.name in out
         assert transitive == ("+foo" in out["splice-z"])
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_swap_names_mismatch_virtuals(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-vh+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_swap_names_mismatch_virtuals(self, default_mock_concretization, transitive):
+        spec = default_mock_concretization("splice-t")
+        dep = default_mock_concretization("splice-vh+foo")
         with pytest.raises(spack.spec.SpliceError, match="will not provide the same virtuals."):
             spec.splice(dep, transitive)
 
@@ -1127,12 +1139,11 @@ class TestSpecSematics(object):
 
 
 @pytest.mark.regression("3887")
-@pytest.mark.parametrize("spec_str", ["git", "hdf5", "py-flake8"])
-def test_is_extension_after_round_trip_to_dict(config, spec_str):
+@pytest.mark.parametrize("spec_str", ["py-extension2", "extension1", "perl-extension"])
+def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
     # x is constructed directly from string, y from a
     # round-trip to dict representation
-    x = Spec(spec_str)
-    x.concretize()
+    x = Spec(spec_str).concretized()
     y = Spec.from_dict(x.to_dict())
 
     # Using 'y' since the round-trip make us lose build dependencies
@@ -1142,7 +1153,9 @@ def test_is_extension_after_round_trip_to_dict(config, spec_str):
 
 def test_malformed_spec_dict():
     with pytest.raises(SpecError, match="malformed"):
-        Spec.from_dict({"spec": {"nodes": [{"dependencies": {"name": "foo"}}]}})
+        Spec.from_dict(
+            {"spec": {"_meta": {"version": 2}, "nodes": [{"dependencies": {"name": "foo"}}]}}
+        )
 
 
 def test_spec_dict_hashless_dep():
@@ -1150,9 +1163,10 @@ def test_spec_dict_hashless_dep():
         Spec.from_dict(
             {
                 "spec": {
+                    "_meta": {"version": 2},
                     "nodes": [
                         {"name": "foo", "hash": "thehash", "dependencies": [{"name": "bar"}]}
-                    ]
+                    ],
                 }
             }
         )
@@ -1192,7 +1206,7 @@ def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
     assert s == Spec(expected)
 
 
-def test_spec_installed(install_mockery, database):
+def test_spec_installed(default_mock_concretization, database):
     """Test whether Spec.installed works."""
     # a known installed spec should say that it's installed
     specs = database.query()
@@ -1205,14 +1219,14 @@ def test_spec_installed(install_mockery, database):
     assert not spec.installed
 
     # 'a' is not in the mock DB and is not installed
-    spec = Spec("a").concretized()
+    spec = default_mock_concretization("a")
     assert not spec.installed
 
 
 @pytest.mark.regression("30678")
-def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, config):
+def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concretization):
     # create a concrete spec
-    a = Spec("a").concretized()
+    a = default_mock_concretization("a")
     dag_hashes = {spec.name: spec.dag_hash() for spec in a.traverse()}
 
     # make it look like an old DAG hash spec with no package hash on the spec.
@@ -1238,7 +1252,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
-    top.add_dependency_edge(bottom, ())
+    top.add_dependency_edge(bottom, deptypes=())
 
     # concretize with the already-concrete dependency
     top.concretize()
@@ -1259,9 +1273,9 @@ def test_unsupported_compiler():
         Spec("gcc%fake-compiler").validate_or_raise()
 
 
-def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
-    a1 = Spec("a").concretized()
-    a2 = Spec("a").concretized()
+def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_concretization):
+    a1 = default_mock_concretization("a")
+    a2 = default_mock_concretization("a")
 
     assert hash(a1) == hash(a2)
     assert a1.dag_hash() == a2.dag_hash()
@@ -1279,3 +1293,16 @@ def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
     assert hash(a1) != hash(a2)
     assert a1.dag_hash() != a2.dag_hash()
     assert a1.process_hash() != a2.process_hash()
+
+
+def test_satisfies_is_commutative_with_concrete_specs(mock_packages, default_mock_concretization):
+    a1 = default_mock_concretization("a@1.0")
+    a2 = Spec("a@1.0")
+
+    # strict=False means non-empty intersection, which is commutative.
+    assert a1.satisfies(a2)
+    assert a2.satisfies(a1)
+
+    # strict=True means set inclusion, which is not commutative.
+    assert a1.satisfies(a2, strict=True)
+    assert not a2.satisfies(a1, strict=True)

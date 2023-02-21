@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Pdftk(MakefilePackage):
     # https://sources.debian.org/src/pdftk/
     # http://archive.ubuntu.com/ubuntu/pool/universe/p/pdftk/pdftk_2.02.orig.tar.gz
 
-    maintainers = ["citibeth"]
+    maintainers("citibeth")
 
     version("2.02", sha256="118f6a25fd3acaafb58824dce6f97cdc07e56050e666b90e4c4ef426ea37b8c1")
 
@@ -30,7 +30,6 @@ class Pdftk(MakefilePackage):
 
     # https://www.pdflabs.com/docs/install-pdftk-on-redhat-or-centos/
     def edit(self, spec, prefix):
-
         # ------ Fix install directory in main Makefile
         makefile = FileFilter(join_path("pdftk", "Makefile.Base"))
         makefile.filter("/usr/local/bin", spec.prefix.bin)

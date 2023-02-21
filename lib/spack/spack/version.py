@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,6 @@ import os
 import re
 from bisect import bisect_left
 from functools import wraps
-
-from six import string_types
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
@@ -231,14 +229,9 @@ class VersionBase(object):
 
     """
 
-    __slots__ = [
-        "version",
-        "separators",
-        "string",
-    ]
+    __slots__ = ["version", "separators", "string"]
 
-    def __init__(self, string):
-        # type: (str) -> None
+    def __init__(self, string: str) -> None:
         if not isinstance(string, str):
             string = str(string)
 
@@ -504,7 +497,7 @@ class GitVersion(VersionBase):
     1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
     2) GitVersions requiring commit lookups
 
-    Git ref versions that are not paried with a known version
+    Git ref versions that are not paired with a known version
     are handled separately from all other version comparisons.
     When Spack identifies a git ref version, it associates a
     ``CommitLookup`` object with the version. This object
@@ -600,7 +593,7 @@ class GitVersion(VersionBase):
         a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler. In the case of two GitVersions we require the ref_versions
-        to satisify one another and the versions to be an exact match.
+        to satisfy one another and the versions to be an exact match.
         """
 
         self_cmp = self._cmp(other.ref_lookup)
@@ -721,9 +714,9 @@ class GitVersion(VersionBase):
 
 class VersionRange(object):
     def __init__(self, start, end):
-        if isinstance(start, string_types):
+        if isinstance(start, str):
             start = Version(start)
-        if isinstance(end, string_types):
+        if isinstance(end, str):
             end = Version(end)
 
         self.start = start
@@ -939,8 +932,8 @@ class VersionList(object):
     def __init__(self, vlist=None):
         self.versions = []
         if vlist is not None:
-            if isinstance(vlist, string_types):
-                vlist = _string_to_version(vlist)
+            if isinstance(vlist, str):
+                vlist = from_string(vlist)
                 if type(vlist) == VersionList:
                     self.versions = vlist.versions
                 else:
@@ -1168,7 +1161,7 @@ class VersionList(object):
         return str(self.versions)
 
 
-def _string_to_version(string):
+def from_string(string):
     """Converts a string to a Version, VersionList, or VersionRange.
     This is private.  Client code should use ver().
     """
@@ -1193,10 +1186,10 @@ def ver(obj):
     """
     if isinstance(obj, (list, tuple)):
         return VersionList(obj)
-    elif isinstance(obj, string_types):
-        return _string_to_version(obj)
+    elif isinstance(obj, str):
+        return from_string(obj)
     elif isinstance(obj, (int, float)):
-        return _string_to_version(str(obj))
+        return from_string(str(obj))
     elif type(obj) in (VersionBase, GitVersion, VersionRange, VersionList):
         return obj
     else:

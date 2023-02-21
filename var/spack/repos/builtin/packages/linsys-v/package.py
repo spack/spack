@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,7 @@ class LinsysV(MakefilePackage):
     homepage = "http://www.math.twcu.ac.jp/ogita/post-k/"
     url = "http://www.math.twcu.ac.jp/ogita/post-k/software/LINSYS_V/LINSYS_V_alpha.tar.gz"
 
-    version(
-        "alpha",
-        sha256="6666bc837bb6598b7cdefb233d3d0f2c308a24fe3465e4fe9b6c9762810bb320",
-    )
+    version("alpha", sha256="6666bc837bb6598b7cdefb233d3d0f2c308a24fe3465e4fe9b6c9762810bb320")
 
     depends_on("mpi")
     depends_on("blas", type="link")

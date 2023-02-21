@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for ``llnl/util/filesystem.py``"""
+import filecmp
 import os
 import shutil
 import stat
@@ -314,7 +315,6 @@ def test_paths_containing_libs(dirs_with_libfiles):
 
 
 def test_move_transaction_commit(tmpdir):
-
     fake_library = tmpdir.mkdir("lib").join("libfoo.so")
     fake_library.write("Just some fake content.")
 
@@ -329,7 +329,6 @@ def test_move_transaction_commit(tmpdir):
 
 
 def test_move_transaction_rollback(tmpdir):
-
     fake_library = tmpdir.mkdir("lib").join("libfoo.so")
     fake_library.write("Initial content.")
 
@@ -497,9 +496,7 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
     # This should not raise exceptions
     fs.filter_file(regex, replacement, target_file, **keyword_args)
     # Check the strings have been replaced
-    extra_kwargs = {}
-    if sys.version_info > (3, 0):
-        extra_kwargs = {"errors": "surrogateescape"}
+    extra_kwargs = {"errors": "surrogateescape"}
 
     with open(target_file, mode="r", **extra_kwargs) as f:
         assert replacement in f.read()
@@ -517,14 +514,35 @@ def test_filter_files_multiple(tmpdir):
     fs.filter_file(r"\<string.h\>", "<unistd.h>", target_file)
     fs.filter_file(r"\<stdio.h\>", "<unistd.h>", target_file)
     # Check the strings have been replaced
-    extra_kwargs = {}
-    if sys.version_info > (3, 0):
-        extra_kwargs = {"errors": "surrogateescape"}
+    extra_kwargs = {"errors": "surrogateescape"}
 
     with open(target_file, mode="r", **extra_kwargs) as f:
         assert "<malloc.h>" not in f.read()
         assert "<string.h>" not in f.read()
         assert "<stdio.h>" not in f.read()
+
+
+def test_filter_files_start_stop(tmpdir):
+    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "start_stop.txt")
+    target_file = os.path.join(str(tmpdir), "start_stop.txt")
+    shutil.copy(original_file, target_file)
+    # None of the following should happen:
+    #   - filtering starts after A is found in the file:
+    fs.filter_file("A", "X", target_file, string=True, start_at="B")
+    #   - filtering starts exactly when B is found:
+    fs.filter_file("B", "X", target_file, string=True, start_at="B")
+    #   - filtering stops before D is found:
+    fs.filter_file("D", "X", target_file, string=True, stop_at="C")
+
+    assert filecmp.cmp(original_file, target_file)
+
+    # All of the following should happen:
+    fs.filter_file("A", "X", target_file, string=True)
+    fs.filter_file("B", "X", target_file, string=True, start_at="X", stop_at="C")
+    fs.filter_file(r"C|D", "X", target_file, start_at="X", stop_at="E")
+
+    with open(target_file, mode="r") as f:
+        assert all("X" == line.strip() for line in f.readlines())
 
 
 # Each test input is a tuple of entries which prescribe
@@ -792,28 +810,10 @@ def test_visit_directory_tree_follow_all(noncyclical_dir_structure):
         j("c", "file_2"),
         j("file_3"),
     ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("a", "d"),
-        j("b", "d"),
-        j("c"),
-    ]
-    assert visitor.dirs_after == [
-        j("a", "d"),
-        j("a"),
-        j("b", "d"),
-        j("c"),
-    ]
-    assert visitor.symlinked_dirs_before == [
-        j("a", "to_c"),
-        j("b"),
-        j("b", "to_c"),
-    ]
-    assert visitor.symlinked_dirs_after == [
-        j("a", "to_c"),
-        j("b", "to_c"),
-        j("b"),
-    ]
+    assert visitor.dirs_before == [j("a"), j("a", "d"), j("b", "d"), j("c")]
+    assert visitor.dirs_after == [j("a", "d"), j("a"), j("b", "d"), j("c")]
+    assert visitor.symlinked_dirs_before == [j("a", "to_c"), j("b"), j("b", "to_c")]
+    assert visitor.symlinked_dirs_after == [j("a", "to_c"), j("b", "to_c"), j("b")]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Requires symlinks")
@@ -829,20 +829,9 @@ def test_visit_directory_tree_follow_dirs(noncyclical_dir_structure):
         j("c", "file_2"),
         j("file_3"),
     ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("a", "d"),
-        j("c"),
-    ]
-    assert visitor.dirs_after == [
-        j("a", "d"),
-        j("a"),
-        j("c"),
-    ]
-    assert visitor.symlinked_dirs_before == [
-        j("a", "to_c"),
-        j("b"),
-    ]
+    assert visitor.dirs_before == [j("a"), j("a", "d"), j("c")]
+    assert visitor.dirs_after == [j("a", "d"), j("a"), j("c")]
+    assert visitor.symlinked_dirs_before == [j("a", "to_c"), j("b")]
     assert not visitor.symlinked_dirs_after
 
 
@@ -852,17 +841,10 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
     visitor = RegisterVisitor(root, follow_dirs=False, follow_symlink_dirs=False)
     fs.visit_directory_tree(root, visitor)
     j = os.path.join
-    assert visitor.files == [
-        j("file_3"),
-    ]
-    assert visitor.dirs_before == [
-        j("a"),
-        j("c"),
-    ]
+    assert visitor.files == [j("file_3")]
+    assert visitor.dirs_before == [j("a"), j("c")]
     assert not visitor.dirs_after
-    assert visitor.symlinked_dirs_before == [
-        j("b"),
-    ]
+    assert visitor.symlinked_dirs_before == [j("b")]
     assert not visitor.symlinked_dirs_after
 
 
@@ -879,3 +861,13 @@ def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
     fs.remove_linked_tree(str(file_instead_of_dir))
     final_stat = os.stat(str(file_instead_of_dir))
     assert final_stat == initial_stat
+
+
+def test_filesummary(tmpdir):
+    p = str(tmpdir.join("xyz"))
+    with open(p, "wb") as f:
+        f.write(b"abcdefghijklmnopqrstuvwxyz")
+
+    assert fs.filesummary(p, print_bytes=8) == (26, b"abcdefgh...stuvwxyz")
+    assert fs.filesummary(p, print_bytes=13) == (26, b"abcdefghijklmnopqrstuvwxyz")
+    assert fs.filesummary(p, print_bytes=100) == (26, b"abcdefghijklmnopqrstuvwxyz")

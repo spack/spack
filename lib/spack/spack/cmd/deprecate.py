@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,12 +33,7 @@ section = "admin"
 level = "long"
 
 # Arguments for display_specs when we find ambiguity
-display_args = {
-    "long": True,
-    "show_flags": True,
-    "variants": True,
-    "indent": 4,
-}
+display_args = {"long": True, "show_flags": True, "variants": True, "indent": 4}
 
 
 def setup_parser(sp):
@@ -117,7 +112,7 @@ def deprecate(parser, args):
     all_deprecators = []
 
     generator = (
-        deprecate.traverse(order="post", type="link", root=True)
+        deprecate.traverse(order="post", deptype="link", root=True)
         if args.dependencies
         else [deprecate]
     )

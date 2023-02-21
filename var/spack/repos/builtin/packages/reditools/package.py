@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Reditools(PythonPackage):
     homepage = "https://github.com/BioinfoUNIBA/REDItools"
     git = "https://github.com/BioinfoUNIBA/REDItools.git"
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     version("1.3_2020-08-03", commit="2dc71277a25e667797c363d1fca22726249774a3")
     version("1.3_2020-03-20", commit="cf47f3d54f324aeb9650bcf8bfacf5a967762a55")
@@ -32,7 +32,7 @@ class Reditools(PythonPackage):
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
-    depends_on("py-reindent", type="build", when="^python@3:")
+    depends_on("py-reindent", type="build")
     depends_on("blat", type="run")
     depends_on("py-fisher", type="run")
     depends_on("py-numpy", type="run")

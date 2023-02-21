@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,11 +18,16 @@ def check(condition, msg):
 
 
 class Cmake(Package):
-    """A dumy package for the cmake build system."""
+    """A dummy package for the cmake build system."""
 
     homepage = "https://www.cmake.org"
     url = "https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz"
 
+    version(
+        "3.23.1",
+        "4cb3ff35b2472aae70f542116d616e63",
+        url="https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz",
+    )
     version(
         "3.4.3",
         "4cb3ff35b2472aae70f542116d616e63",

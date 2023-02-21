@@ -1,0 +1,21 @@
+--- damask.orig/src/CMakeLists.txt	2022-10-10 11:15:50.430977247 +0200
++++ damask/src/CMakeLists.txt	2022-10-10 11:26:53.792092659 +0200
+@@ -2,6 +2,9 @@
+ if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+     # long lines for interaction matrix
+     set_source_files_properties("lattice.f90" PROPERTIES COMPILE_FLAGS "-ffree-line-length-240")
++    # CHKERRQ PETSc macro
++    set_source_files_properties("parallelization.f90" PROPERTIES COMPILE_FLAGS "-ffree-line-length-none")
++    set_source_files_properties("quit.f90" PROPERTIES COMPILE_FLAGS "-ffree-line-length-none")
+ endif()
+ 
+ file(GLOB damask-sources CONFIGURE_DEPENDS *.f90 *.c)
+@@ -18,7 +21,7 @@
+     file(READ ${solver-source} content)
+     string(FIND "${content}" "CHKERR" found)
+     if(NOT ${found} EQUAL -1)
+-      set_source_files_properties(${solver-source} PROPERTIES COMPILE_FLAGS "-ffree-line-length-160")
++      set_source_files_properties(${solver-source} PROPERTIES COMPILE_FLAGS "-ffree-line-length-none")
+     endif()
+ endforeach()
+ 

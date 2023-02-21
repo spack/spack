@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -87,12 +87,7 @@ class Augustus(MakefilePackage):
             makefiles.append("auxprogs/checkTargetSortedness/Makefile")
 
         if self.version >= Version("3.4.0"):
-            makefiles.extend(
-                [
-                    "auxprogs/filterBam/src/Makefile",
-                    "src/unittests/Makefile",
-                ]
-            )
+            makefiles.extend(["auxprogs/filterBam/src/Makefile", "src/unittests/Makefile"])
 
         for makefile in makefiles:
             filter_file("gcc", spack_cc, makefile, string=True)

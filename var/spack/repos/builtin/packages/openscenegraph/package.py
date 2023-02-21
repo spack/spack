@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,7 @@ class Openscenegraph(CMakePackage):
     depends_on("libtiff")
     depends_on("glib")
     depends_on("zlib")
+    depends_on("fontconfig")
 
     depends_on("ffmpeg+avresample", when="+ffmpeg")
     # https://github.com/openscenegraph/OpenSceneGraph/issues/167
@@ -78,11 +79,6 @@ class Openscenegraph(CMakePackage):
         # NOTE: This is necessary in order to allow OpenSceneGraph to compile
         # despite containing a number of implicit bool to int conversions.
         if spec.satisfies("%gcc"):
-            args.extend(
-                [
-                    "-DCMAKE_C_FLAGS=-fpermissive",
-                    "-DCMAKE_CXX_FLAGS=-fpermissive",
-                ]
-            )
+            args.extend(["-DCMAKE_C_FLAGS=-fpermissive", "-DCMAKE_CXX_FLAGS=-fpermissive"])
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,6 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 @pytest.fixture()
 def mock_calls_for_clean(monkeypatch):
-
     counts = {}
 
     class Counter(object):
@@ -61,7 +60,6 @@ all_effects = ["stages", "downloads", "caches", "failures", "python_cache"]
     ],
 )
 def test_function_calls(command_line, effects, mock_calls_for_clean):
-
     # Call the command with the supplied command line
     clean(command_line)
 

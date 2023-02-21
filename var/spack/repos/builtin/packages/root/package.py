@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 
 import sys
 
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 from spack.util.environment import is_system_path
 
@@ -21,7 +22,7 @@ class Root(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["chissg", "HadrienG2", "drbenmorgan", "vvolkl"]
+    maintainers("greenc-FNAL", "HadrienG2", "drbenmorgan", "vvolkl")
 
     # ###################### Versions ##########################
 
@@ -31,6 +32,8 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
+    version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
     version("6.26.04", sha256="a271cf82782d6ed2c87ea5eef6681803f2e69e17b3036df9d863636e9358421e")
     version("6.26.02", sha256="7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb")
@@ -109,6 +112,7 @@ class Root(CMakePackage):
     # options are or are not supported, and why.
 
     variant("aqua", default=False, description="Enable Aqua interface")
+    variant("arrow", default=False, description="Enable Arrow interface")
     variant("davix", default=True, description="Compile with external Davix")
     variant("dcache", default=False, description="Enable support for dCache")
     variant("emacs", default=False, description="Enable Emacs support")
@@ -131,6 +135,7 @@ class Root(CMakePackage):
     variant("math", default=True, description="Build the new libMathMore extended math library")
     variant(
         "memstat",
+        when="@:6.17",
         default=False,
         description="Enable a memory stats utility to detect memory leaks",
     )
@@ -149,7 +154,7 @@ class Root(CMakePackage):
     variant("pythia6", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
-    variant("qt4", default=False, description="Enable Qt graphics backend")
+    variant("qt4", when="@:6.17", default=False, description="Enable Qt graphics backend")
     variant("r", default=False, description="Enable R ROOT bindings")
     variant("rpath", default=True, description="Enable RPATH")
     variant("roofit", default=True, description="Build the libRooFit advanced fitting package")
@@ -158,7 +163,7 @@ class Root(CMakePackage):
     variant("spectrum", default=False, description="Enable support for TSpectrum")
     variant("sqlite", default=False, description="Enable SQLite support")
     variant("ssl", default=False, description="Enable SSL encryption support")
-    variant("table", default=False, description="Build libTable contrib library")
+    variant("table", when="@:6.17", default=False, description="Build libTable contrib library")
     variant("tbb", default=True, description="TBB multi-threading support")
     variant("threads", default=True, description="Enable using thread library")
     variant("tmva", default=False, description="Build TMVA multi variate analysis library")
@@ -168,7 +173,12 @@ class Root(CMakePackage):
     variant(
         "veccore", default=False, description="Enable support for VecCore SIMD abstraction library"
     )
-    variant("vmc", default=False, description="Enable the Virtual Monte Carlo interface")
+    variant(
+        "vmc", when="@:6.25", default=False, description="Enable the Virtual Monte Carlo interface"
+    )
+    variant(
+        "webgui", default=True, description="Enable web-based UI components of ROOT", when="+root7"
+    )
     variant("x", default=True, description="Enable set of graphical options")
     variant("xml", default=True, description="Enable XML parser interface")
     variant("xrootd", default=False, description="Build xrootd file server and its client")
@@ -197,6 +207,7 @@ class Root(CMakePackage):
     depends_on("lz4", when="@6.13.02:")  # See cmake_args, below.
     depends_on("ncurses")
     depends_on("nlohmann-json", when="@6.24:")
+    depends_on("nlohmann-json@:3.10", when="@6.24:6.26.07")
     depends_on("pcre")
     depends_on("xxhash", when="@6.13.02:")  # See cmake_args, below.
     depends_on("xz")
@@ -211,17 +222,18 @@ class Root(CMakePackage):
     depends_on("libsm", when="+x")
 
     # OpenGL
-    depends_on("ftgl@2.4.0:", when="+x+opengl")
-    depends_on("glew", when="+x+opengl")
-    depends_on("gl", when="+x+opengl")
-    depends_on("glu", when="+x+opengl")
-    depends_on("gl2ps", when="+x+opengl")
+    depends_on("ftgl@2.4.0:", when="+opengl")
+    depends_on("glew", when="+opengl")
+    depends_on("gl2ps", when="+opengl")
+    depends_on("gl", when="+opengl")
+    depends_on("glu", when="+opengl")
 
     # Qt4
     depends_on("qt@:4", when="+qt4")
 
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
+    depends_on("python@2.7:3.10", when="@:6.26.09 +python", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"), when="+tmva")
     # This numpy dependency was not intended and will hopefully
     # be fixed in 6.20.06.
@@ -229,6 +241,7 @@ class Root(CMakePackage):
     depends_on("py-numpy", type=("build", "run"), when="@6.20.00:6.20.05 +python")
 
     # Optional dependencies
+    depends_on("arrow", when="+arrow")
     depends_on("davix @0.7.1:", when="+davix")
     depends_on("dcap", when="+dcache")
     depends_on("cfitsio", when="+fits")
@@ -280,26 +293,32 @@ class Root(CMakePackage):
     # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
     conflicts("%gcc@9.0.0:", when="@:6.11")
 
-    # ROOT <6.14 was incompatible with Python 3.7+
-    conflicts("^python@3.7:", when="@:6.13 +python")
-
     # See https://github.com/root-project/root/issues/9297
     conflicts("target=ppc64le:", when="@:6.24")
 
     # Incompatible variants
-    conflicts("+opengl", when="~x", msg="OpenGL requires X")
+    if sys.platform != "darwin":
+        conflicts("+opengl", when="~x", msg="OpenGL requires X")
+    conflicts("+math", when="~gsl", msg="Math requires GSL")
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root " "requires at least C++14")
     conflicts("cxxstd=20", when="@:6.25.01", msg="C++20 support was added " "in 6.25.02")
 
-    # Feature removed in 6.18:
-    for pkg in ("memstat", "qt4", "table"):
-        conflicts("+" + pkg, when="@6.18.00:", msg="Obsolete option +{0} selected.".format(pkg))
+    # See https://github.com/root-project/root/issues/11128
+    conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
 
-    # Feature removed in 6.26.00:
-    conflicts("+vmc", when="@6.26:", msg="VMC was removed in ROOT v6.26.00.")
+    # See https://github.com/root-project/root/issues/11714
+    if sys.platform == "darwin" and macos_version() >= Version("13"):
+        conflicts("@:6.26.09", msg="macOS 13 support was added in 6.26.10")
+
+    # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
+    conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")
+
+    # ROOT does not support LTO builds
+    # See https://github.com/root-project/root/issues/11135
+    conflicts("+ipo", msg="LTO is not a supported configuration for building ROOT")
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -334,6 +353,8 @@ class Root(CMakePackage):
             v.append("cxxstd=14")
         elif "cxx17" in f:
             v.append("cxxstd=17")
+        elif "cxx20" in f:
+            v.append("cxxstd=20")
 
         # helper function: check if featurename is in features, and if it is,
         # append variantname to variants. featurename may be a list/tuple, in
@@ -374,8 +395,8 @@ class Root(CMakePackage):
         _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
-        _add_variant(v, f, ("root7", "webgui"), "+root7")  # for root version >= 6.18.00
-        _add_variant(v, f, ("root7", "webui"), "+root7")  # for root version <= 6.17.02
+        _add_variant(v, f, ("root7", "webgui"), "+webgui")  # for root version >= 6.18.00
+        _add_variant(v, f, ("root7", "webui"), "+webgui")  # for root version <= 6.17.02
         _add_variant(v, f, "rpath", "+rpath")
         _add_variant(v, f, "shadowpw", "+shadow")
         _add_variant(v, f, "spectrum", "+spectrum")
@@ -428,8 +449,11 @@ class Root(CMakePackage):
 
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
+
+        afterimage_enabled = ("+x" in self.spec) if "platform=darwin" not in self.spec else True
+
         options += [
-            define_from_variant("builtin_afterimage", "x"),
+            define("builtin_afterimage", afterimage_enabled),
             define("builtin_cfitsio", False),
             define("builtin_davix", False),
             define("builtin_fftw3", False),
@@ -459,7 +483,7 @@ class Root(CMakePackage):
             define("afdsmrgd", False),
             define("afs", False),
             define("alien", False),
-            define("arrow", False),
+            define_from_variant("arrow"),
             define("asimage", True),
             define("astiff", True),
             define("bonjour", False),
@@ -534,9 +558,9 @@ class Root(CMakePackage):
         # Necessary due to name change of variant (webui->webgui)
         # https://github.com/root-project/root/commit/d631c542909f2f793ca7b06abc622e292dfc4934
         if self.spec.satisfies("@:6.17.02"):
-            options.append(define_from_variant("webui", "root7"))
+            options.append(define_from_variant("webui", "webgui"))
         if self.spec.satisfies("@6.18.00:"):
-            options.append(define_from_variant("webgui", "root7"))
+            options.append(define_from_variant("webgui", "webgui"))
 
         # Some special features
         if self.spec.satisfies("@6.20.02:"):
@@ -548,12 +572,7 @@ class Root(CMakePackage):
 
         if sys.platform == "darwin" and self.compiler.cc == "gcc":
             cflags = "-D__builtin_unreachable=__builtin_trap"
-            options.extend(
-                [
-                    define("CMAKE_C_FLAGS", cflags),
-                    define("CMAKE_CXX_FLAGS", cflags),
-                ]
-            )
+            options.extend([define("CMAKE_C_FLAGS", cflags), define("CMAKE_CXX_FLAGS", cflags)])
 
         # Method for selecting C++ standard depends on ROOT version
         if self.spec.satisfies("@6.18.00:"):
@@ -602,7 +621,7 @@ class Root(CMakePackage):
             add_include_path("fontconfig")
             add_include_path("libx11")
             add_include_path("xproto")
-        if "+opengl" in spec:
+        if "+opengl" in spec and "platform=darwin" not in spec:
             add_include_path("glew")
             add_include_path("mesa-glu")
         if "platform=darwin" in spec:

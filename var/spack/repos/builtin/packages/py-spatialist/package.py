@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PySpatialist(PythonPackage):
     homepage = "https://github.com/johntruckenbrodt/spatialist"
     pypi = "spatialist/spatialist-0.4.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.4", sha256="153b118022c06ad2d1d51fb6cd9ecbfc8020bc1995b643ec7fa689a8c5dde7e9")
     version("0.2.8", sha256="97de7f9c0fbf28497ef28970bdf8093a152e691a783e7edad22998cb235154c6")

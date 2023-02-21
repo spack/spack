@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Mbedtls(MakefilePackage):
 
     homepage = "https://tls.mbed.org"
     url = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
-    maintainers = ["mwkrentel", "haampie"]
+    maintainers("mwkrentel", "haampie")
 
     version("3.1.0", sha256="64d01a3b22b91cf3a25630257f268f11bc7bfa37981ae6d397802dd4ccec4690")
     version("3.0.0", sha256="377d376919be19f07c7e7adeeded088a525be40353f6d938a78e4f986bce2ae0")
@@ -93,7 +93,6 @@ class Mbedtls(MakefilePackage):
 
     depends_on("perl", type="test")
     depends_on("python@3:", type="test", when="@3:")
-    depends_on("python@:2", type="test", when="@:2")
 
     # See https://github.com/Mbed-TLS/mbedtls/issues/4917
     # Only 2.16.12, 2.28.0 and 3.1.0 support clang 12.

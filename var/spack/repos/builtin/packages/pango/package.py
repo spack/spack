@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,6 +55,7 @@ class Pango(MesonPackage):
 
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("harfbuzz")
+    depends_on("harfbuzz+coretext", when="platform=darwin")
     depends_on("cairo+ft+fc")
     depends_on("cairo~X", when="~X")
     depends_on("cairo+X", when="+X")

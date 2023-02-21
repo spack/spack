@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Zziplib(AutotoolsPackage):
     # see zzip/CMakeLists.txt
     depends_on("coreutils", type="build", when="@0.13.71:")
     depends_on("pkgconfig", type="build", when="@0.13.71:")
+    depends_on("zip", type="build", when="@0.13.71:")
+    depends_on("unzip", type="build", when="@0.13.71:")
 
     @when("@0.13.71:")
     def autoreconf(self, spec, prefix):

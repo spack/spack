@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
-@pytest.fixture(params=["clang@3.3", "gcc@4.5.0"])
+@pytest.fixture(params=["clang@12.0.0", "gcc@10.2.1"])
 def compiler(request):
     return request.param
 
@@ -41,10 +41,7 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures(
-    "config",
-    "mock_packages",
-)
+@pytest.mark.usefixtures("config", "mock_packages")
 class TestLmod(object):
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
@@ -80,6 +77,15 @@ class TestLmod(object):
             assert repetitions == 2
         else:
             assert repetitions == 1
+
+    def test_compilers_provided_different_name(self, factory, module_configuration):
+        module_configuration("complex_hierarchy")
+        module, spec = factory("intel-oneapi-compilers%clang@3.3")
+
+        provides = module.conf.provides
+
+        assert "compiler" in provides
+        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple TCL module file."""
@@ -245,12 +251,7 @@ class TestLmod(object):
         assert writer.conf.core_compilers
 
     @pytest.mark.parametrize(
-        "spec_str",
-        [
-            "mpileaks target=nocona",
-            "mpileaks target=core2",
-            "mpileaks target=x86_64",
-        ],
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
     )
     @pytest.mark.regression("13005")
     def test_only_generic_microarchitectures_in_root(
@@ -298,7 +299,7 @@ class TestLmod(object):
     ):
         with ev.Environment(str(tmpdir), with_view=True) as e:
             module_configuration("with_view")
-            install("cmake")
+            install("--add", "cmake")
 
             spec = spack.spec.Spec("cmake").concretized()
 

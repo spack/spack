@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class CbtfArgonavisGui(QMakePackage):
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
 
+    maintainers = ["jgalarowicz"]
+
     version("develop", branch="master")
     version("1.3.0.0", branch="1.3.0.0")
 
@@ -32,7 +34,6 @@ class CbtfArgonavisGui(QMakePackage):
     depends_on(Boost.with_default_variants)
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+lwthreads", when="@develop")
     depends_on("mrnet@5.0.1-3+lwthreads", when="@1.3.0.0:9999")
 
     # Dependencies for the openspeedshop cbtf packages.

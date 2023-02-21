@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Gnutls(AutotoolsPackage):
     homepage = "https://www.gnutls.org"
     url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.5/gnutls-3.5.19.tar.xz"
 
+    version("3.7.8", sha256="c58ad39af0670efe6a8aee5e3a8b2331a1200418b64b7c51977fb396d4617114")
     version("3.6.15", sha256="0ea8c3283de8d8335d7ae338ef27c53a916f15f382753b174c18b45ffd481558")
     version("3.6.14", sha256="5630751adec7025b8ef955af4d141d00d252a985769f51b4059e5affa3d39d63")
     version("3.6.8", sha256="aa81944e5635de981171772857e72be231a7e0f559ae0292d2737de475383e83")
@@ -58,9 +59,7 @@ class Gnutls(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = [
-            "--enable-static",
-        ]
+        args = ["--enable-static"]
 
         if spec.satisfies("@3.5:"):
             # use shipped libraries, might be turned into variants
@@ -79,20 +78,10 @@ class Gnutls(AutotoolsPackage):
             args.append("--disable-guile")
 
         if self.run_tests:
-            args.extend(
-                [
-                    "--enable-tests",
-                    "--enable-valgrind-tests",
-                    "--enable-full-test-suite",
-                ]
-            )
+            args.extend(["--enable-tests", "--enable-valgrind-tests", "--enable-full-test-suite"])
         else:
             args.extend(
-                [
-                    "--disable-tests",
-                    "--disable-valgrind-tests",
-                    "--disable-full-test-suite",
-                ]
+                ["--disable-tests", "--disable-valgrind-tests", "--disable-full-test-suite"]
             )
 
         return args

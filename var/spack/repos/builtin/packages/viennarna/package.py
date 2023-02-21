@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,6 @@ class Viennarna(AutotoolsPackage):
         return url.format(version.up_to(2).underscored, version)
 
     def configure_args(self):
-
         args = self.enable_or_disable("sse")
         args += self.with_or_without("python")
         args += self.with_or_without("perl")

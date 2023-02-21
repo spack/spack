@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ import socket
 import llnl.util.tty as tty
 
 from spack.package import *
-from spack.pkg.builtin.camp import hip_repair_options
+from spack.pkg.builtin.camp import hip_repair_cache
 
 
 class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -20,7 +20,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["davidbeckingsale"]
+    maintainers("davidbeckingsale")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -54,6 +54,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("0.1.4", tag="v0.1.4", submodules=True)
     version("0.1.3", tag="v0.1.3", submodules=True)
 
+    patch("std-filesystem-pr784.patch", when="@2022.03.1 +rocm ^blt@0.5.2:")
     patch("camp_target_umpire_3.0.0.patch", when="@3.0.0")
     patch("cmake_version_check.patch", when="@4.1")
     patch("missing_header_for_numeric_limits.patch", when="@4.1:5.0.1")
@@ -83,7 +84,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.8:", type="build")
     depends_on("cmake@3.9:", when="+cuda", type="build")
-    depends_on("cmake@:3.20", when="+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
@@ -148,6 +148,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super(Umpire, self).initconfig_compiler_entries()
 
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 
         if "+fortran" in spec and self.compiler.fc is not None:
@@ -188,12 +191,15 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            hip_repair_options(entries, spec)
+            hip_repair_cache(entries, spec)
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
                 entries.append(
                     cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
+                )
+                entries.append(
+                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
                 )
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))

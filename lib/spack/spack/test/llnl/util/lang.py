@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import re
 import sys
 from datetime import datetime, timedelta
 from textwrap import dedent
@@ -118,6 +119,14 @@ def test_pretty_string_to_date(format, pretty_string):
     assert t1 == t2
 
 
+def test_pretty_seconds():
+    assert llnl.util.lang.pretty_seconds(2.1) == "2.100s"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000) == "2.100ms"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000) == "2.100us"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000) == "2.100ns"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000 / 10) == "0.210ns"
+
+
 def test_match_predicate():
     matcher = match_predicate(lambda x: True)
     assert matcher("foo")
@@ -230,21 +239,14 @@ def test_unequal_args(args1, kwargs1, args2, kwargs2):
     "args1,kwargs1,args2,kwargs2",
     [
         # Ensure that kwargs are stably sorted.
-        ((), {"a": 3, "b": 4}, (), {"b": 4, "a": 3}),
+        ((), {"a": 3, "b": 4}, (), {"b": 4, "a": 3})
     ],
 )
 def test_equal_args(args1, kwargs1, args2, kwargs2):
     assert stable_args(*args1, **kwargs1) == stable_args(*args2, **kwargs2)
 
 
-@pytest.mark.parametrize(
-    "args, kwargs",
-    [
-        ((1,), {}),
-        ((), {"a": 3}),
-        ((1,), {"a": 3}),
-    ],
-)
+@pytest.mark.parametrize("args, kwargs", [((1,), {}), ((), {"a": 3}), ((1,), {"a": 3})])
 def test_memoized(args, kwargs):
     @memoized
     def f(*args, **kwargs):
@@ -256,10 +258,7 @@ def test_memoized(args, kwargs):
     assert f.cache[key] == "return-value"
 
 
-@pytest.mark.parametrize(
-    "args, kwargs",
-    [(([1],), {}), ((), {"a": [1]})],
-)
+@pytest.mark.parametrize("args, kwargs", [(([1],), {}), ((), {"a": [1]})])
 def test_memoized_unhashable(args, kwargs):
     """Check that an exception is raised clearly"""
 
@@ -299,22 +298,25 @@ def test_grouped_exception():
     top-level raised TypeError: ok"""
     )
 
+    full_message = h.grouped_message(with_tracebacks=True)
+    no_line_numbers = re.sub(r"line [0-9]+,", "line xxx,", full_message)
+
     assert (
-        h.grouped_message(with_tracebacks=True)
+        no_line_numbers
         == dedent(
             """\
     due to the following failures:
     inner method raised ValueError: wow!
       File "{0}", \
-line 290, in test_grouped_exception
+line xxx, in test_grouped_exception
         inner()
       File "{0}", \
-line 287, in inner
+line xxx, in inner
         raise ValueError("wow!")
 
     top-level raised TypeError: ok
       File "{0}", \
-line 293, in test_grouped_exception
+line xxx, in test_grouped_exception
         raise TypeError("ok")
     """
         ).format(__file__)

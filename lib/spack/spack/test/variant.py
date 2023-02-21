@@ -1,14 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import numbers
 
 import pytest
 
 import spack.error
+import spack.variant
 from spack.variant import (
     BoolValuedVariant,
     DuplicateVariantError,
@@ -26,7 +25,6 @@ from spack.variant import (
 
 class TestMultiValuedVariant(object):
     def test_initialization(self):
-
         # Basic properties
         a = MultiValuedVariant("foo", "bar,baz")
         assert repr(a) == "MultiValuedVariant('foo', 'bar,baz')"
@@ -71,7 +69,6 @@ class TestMultiValuedVariant(object):
         assert eval(repr(d)) == a
 
     def test_satisfies(self):
-
         a = MultiValuedVariant("foo", "bar,baz")
         b = MultiValuedVariant("foo", "bar")
         c = MultiValuedVariant("fee", "bar,baz")
@@ -105,7 +102,6 @@ class TestMultiValuedVariant(object):
         assert not d.satisfies(almost_d_bv)
 
     def test_compatible(self):
-
         a = MultiValuedVariant("foo", "bar,baz")
         b = MultiValuedVariant("foo", "True")
         c = MultiValuedVariant("fee", "bar,baz")
@@ -140,7 +136,6 @@ class TestMultiValuedVariant(object):
         assert not c.compatible(b_bv)
 
     def test_constrain(self):
-
         # Try to constrain on a value with less constraints than self
         a = MultiValuedVariant("foo", "bar,baz")
         b = MultiValuedVariant("foo", "bar")
@@ -190,7 +185,6 @@ class TestMultiValuedVariant(object):
         assert not a.constrain(d_bv)
 
     def test_yaml_entry(self):
-
         a = MultiValuedVariant("foo", "bar,baz,barbaz")
         b = MultiValuedVariant("foo", "bar, baz,  barbaz")
         expected = ("foo", sorted(["bar", "baz", "barbaz"]))
@@ -206,7 +200,6 @@ class TestMultiValuedVariant(object):
 
 class TestSingleValuedVariant(object):
     def test_initialization(self):
-
         # Basic properties
         a = SingleValuedVariant("foo", "bar")
         assert repr(a) == "SingleValuedVariant('foo', 'bar')"
@@ -263,7 +256,6 @@ class TestSingleValuedVariant(object):
         assert not e.satisfies(almost_e_bv)
 
     def test_compatible(self):
-
         a = SingleValuedVariant("foo", "bar")
         b = SingleValuedVariant("fee", "bar")
         c = SingleValuedVariant("foo", "baz")
@@ -318,7 +310,6 @@ class TestSingleValuedVariant(object):
         assert not e.compatible(almost_e_bv)
 
     def test_constrain(self):
-
         # Try to constrain on a value equal to self
         a = SingleValuedVariant("foo", "bar")
         b = SingleValuedVariant("foo", "bar")
@@ -450,7 +441,6 @@ class TestBoolValuedVariant(object):
         assert d.satisfies(d_sv)
 
     def test_compatible(self):
-
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("fee", True)
         c = BoolValuedVariant("foo", False)
@@ -524,7 +514,6 @@ class TestBoolValuedVariant(object):
             assert not a.constrain(v)
 
     def test_yaml_entry(self):
-
         a = BoolValuedVariant("foo", "True")
         expected = ("foo", True)
         assert a.yaml_entry() == expected
@@ -737,3 +726,11 @@ def test_disjoint_set_fluent_methods():
         assert "none" not in d
         assert "none" not in [x for x in d]
         assert "none" not in d.feature_values
+
+
+@pytest.mark.regression("32694")
+@pytest.mark.parametrize("other", [True, False])
+def test_conditional_value_comparable_to_bool(other):
+    value = spack.variant.Value("98", when="@1.0")
+    comparison = value == other
+    assert comparison is False

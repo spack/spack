@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,14 +22,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 def test_update_dictionary_extending_list():
     target = {"foo": {"a": 1, "b": 2, "d": 4}, "bar": [1, 2, 4], "baz": "foobar"}
-    update = {
-        "foo": {
-            "c": 3,
-        },
-        "bar": [3],
-        "baz": "foobaz",
-        "newkey": {"d": 4},
-    }
+    update = {"foo": {"c": 3}, "bar": [3], "baz": "foobaz", "newkey": {"d": 4}}
     spack.modules.common.update_dictionary_extending_lists(target, update)
     assert len(target) == 4
     assert len(target["foo"]) == 4

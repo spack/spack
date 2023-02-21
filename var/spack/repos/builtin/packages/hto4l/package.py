@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Hto4l(MakefilePackage):
     homepage = "https://www2.pv.infn.it/~hepcomplex/hto4l.html"
     url = "http://www2.pv.infn.it/~hepcomplex/releases/hto4l/Hto4l-v2.02.tar.bz2"
 
-    maintainers = ["haralmha"]
+    maintainers("haralmha")
 
     version("2.02", sha256="1a7061689ddaf6bde1f12032479c529a9787d7b038ed55a0325398bd531aadf6")
 

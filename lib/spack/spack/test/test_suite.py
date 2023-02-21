@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,6 @@ import os
 import sys
 
 import pytest
-
-import llnl.util.tty as tty
 
 import spack.install_test
 import spack.spec
@@ -18,16 +16,6 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on W
 def _true(*args, **kwargs):
     """Generic monkeypatch function that always returns True."""
     return True
-
-
-@pytest.fixture
-def ensure_debug(monkeypatch):
-    current_debug_level = tty.debug_level()
-    tty.set_debug(1)
-
-    yield
-
-    tty.set_debug(current_debug_level)
 
 
 def ensure_results(filename, expected):
@@ -55,7 +43,7 @@ def test_test_log_pathname(mock_packages, config):
     assert test_suite.test_log_name(spec) in logfile
 
 
-def test_test_ensure_stage(mock_test_stage):
+def test_test_ensure_stage(mock_test_stage, mock_packages):
     """Make sure test stage directory is properly set up."""
     spec = spack.spec.Spec("libdwarf").concretized()
 
@@ -101,10 +89,7 @@ def test_test_uninstalled(mock_packages, install_mockery, mock_test_stage):
 
 @pytest.mark.parametrize(
     "arguments,status,msg",
-    [
-        ({}, "SKIPPED", "Skipped"),
-        ({"externals": True}, "NO-TESTS", "No tests"),
-    ],
+    [({}, "SKIPPED", "Skipped"), ({"externals": True}, "NO-TESTS", "No tests")],
 )
 def test_test_external(
     mock_packages, install_mockery, mock_test_stage, monkeypatch, arguments, status, msg
@@ -158,7 +143,6 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 
 
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
-
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     monkeypatch.setattr(spack.spec.Spec, "installed", _true)
     test_suite = spack.install_test.TestSuite([spec])

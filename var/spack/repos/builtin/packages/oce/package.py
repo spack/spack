@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,9 @@ from spack.package import *
 
 
 class Oce(Package):
-    """Open CASCADE Community Edition:
-    patches/improvements/experiments contributed by users over the official
-    Open CASCADE library.
+    """Open CASCADE Community Edition
+
+    UNMAINTAINED: see https://github.com/tpaviot/oce/issues/745#issuecomment-992285943
     """
 
     homepage = "https://github.com/tpaviot/oce"
@@ -32,9 +32,11 @@ class Oce(Package):
     variant("X11", default=False, description="Build with X11 enabled")
 
     depends_on("cmake@2.8:", type="build")
-    depends_on("tbb", when="+tbb")
-    conflicts("intel-tbb@2021.1:")
-    conflicts("intel-oneapi-tbb@2021.1:")
+
+    with when("+tbb"):
+        depends_on("tbb")
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
+        conflicts("intel-oneapi-tbb@2021.1:")
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see
@@ -76,11 +78,7 @@ class Oce(Package):
         )
 
         if platform.system() == "Darwin":
-            options.extend(
-                [
-                    "-DOCE_OSX_USE_COCOA:BOOL=ON",
-                ]
-            )
+            options.extend(["-DOCE_OSX_USE_COCOA:BOOL=ON"])
 
         if platform.system() == "Darwin" and (macos_version() >= Version("10.12")):
             # use @rpath on Sierra due to limit of dynamic loader

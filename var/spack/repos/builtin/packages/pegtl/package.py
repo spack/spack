@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,6 @@ class Pegtl(CMakePackage):
     patch(patch_url, sha256=patch_checksum, level=0, when="@2.1.4:2.8.3")
 
     def cmake_args(self):
-
         args = []
         if self.run_tests:
             args.extend(["-DPEGTL_BUILD_EXAMPLES=ON", "-DPEGTL_BUILD_TESTS=ON"])

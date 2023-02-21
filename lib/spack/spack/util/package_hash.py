@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,7 +64,7 @@ class RemoveDirectives(ast.NodeTransformer):
         # list of URL attributes and metadata attributes
         # these will be removed from packages.
         self.metadata_attrs = [s.url_attr for s in spack.fetch_strategy.all_strategies]
-        self.metadata_attrs += spack.package_base.Package.metadata_attrs
+        self.metadata_attrs += spack.package_base.PackageBase.metadata_attrs
 
         self.spec = spec
         self.in_classdef = False  # used to avoid nested classdefs
@@ -158,6 +158,7 @@ class TagMultiMethods(ast.NodeVisitor):
 
     def visit_FunctionDef(self, func):
         conditions = []
+
         for dec in func.decorator_list:
             if isinstance(dec, ast.Call) and dec.func.id == "when":
                 try:
@@ -308,10 +309,7 @@ def canonical_source(spec, filter_multimethods=True, source=None):
             AST if they are known statically to be unused. Supply False to disable.
         source (str): Optionally provide a string to read python code from.
     """
-    return unparse(
-        package_ast(spec, filter_multimethods, source=source),
-        py_ver_consistent=True,
-    )
+    return unparse(package_ast(spec, filter_multimethods, source=source), py_ver_consistent=True)
 
 
 def package_hash(spec, source=None):

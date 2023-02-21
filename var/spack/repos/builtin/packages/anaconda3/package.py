@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,23 @@ class Anaconda3(Package):
     homepage = "https://www.anaconda.com"
     url = "https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh"
 
-    maintainers = ["ajkotobi"]
+    maintainers("ajkotobi")
+
+    version(
+        "2022.10",
+        sha256="e7ecbccbc197ebd7e1f211c59df2e37bc6959d081f2235d387e08c9026666acd",
+        expand=False,
+    )
+    version(
+        "2022.05",
+        sha256="a7c0afe862f6ea19a596801fc138bde0463abcbce1b753e8d5c474b506a2db2d",
+        expand=False,
+    )
+    version(
+        "2021.11",
+        sha256="fedf9e340039557f7b5e8a8a86affa9d299f5e9820144bd7b92ae9f7ee08ac60",
+        expand=False,
+    )
 
     version(
         "2021.05",
@@ -174,7 +190,6 @@ class Anaconda3(Package):
     )
 
     def install(self, spec, prefix):
-
         dir, anaconda_script = split(self.stage.archive_file)
         bash = which("bash")
         bash(anaconda_script, "-b", "-f", "-p", self.prefix)

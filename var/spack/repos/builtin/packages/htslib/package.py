@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Htslib(AutotoolsPackage):
     homepage = "https://github.com/samtools/htslib"
     url = "https://github.com/samtools/htslib/releases/download/1.13/htslib-1.13.tar.bz2"
 
+    version("1.16", sha256="606b7c7aff73734cf033ecd156f40529fa5792f54524952a28938ca0890d7924")
     version("1.15.1", sha256="8d7f8bf9658226942eeab70af2a22aca618577eaa8fe2ed9416ee306d5351aa1")
     version("1.15", sha256="1a9f49911503a22f56817cc82ea9b87fb7e7467b5ff989ca5aa61c12e7d532d9")
     version("1.14", sha256="ed221b8f52f4812f810eebe0cc56cd8355a5c9d21c62d142ac05ad0da147935f")

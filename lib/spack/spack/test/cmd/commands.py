@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -195,7 +195,7 @@ def test_update_completion_arg(tmpdir, monkeypatch):
             "format": "bash",
             "header": str(mock_infile),
             "update": str(mock_bashfile),
-        },
+        }
     }
 
     # make a mock completion file missing the --update-completion argument

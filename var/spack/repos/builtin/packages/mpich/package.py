@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,11 +20,13 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     list_url = "https://www.mpich.org/static/downloads/"
     list_depth = 1
 
-    maintainers = ["raffenet", "yfguo"]
+    maintainers("raffenet", "yfguo")
     tags = ["e4s"]
     executables = ["^mpichversion$"]
 
     version("develop", submodules=True)
+    version("4.1", sha256="8b1ec63bc44c7caa2afbb457bc5b3cd4a70dbe46baba700123d67c48dc5ab6a0")
+    version("4.0.3", sha256="17406ea90a6ed4ecd5be39c9ddcbfac9343e6ab4f77ac4e8c5ebe4a3e3b6c501")
     version("4.0.2", sha256="5a42f1a889d4a2d996c26e48cbf9c595cbf4316c6814f7c181e3320d21dedd42")
     version("4.0.1", sha256="66a1fe8052734af2eb52f47808c4dfef4010ceac461cb93c42b99acfb1a43687")
     version("4.0", sha256="df7419c96e2a943959f7ff4dc87e606844e736e30135716971aba58524fbff64")
@@ -150,8 +152,14 @@ with '-Wl,-commons,use_dylibs' and without
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
-    # https://github.com/spack/spack/issues/31678
-    patch("mpich-oneapi-config-rpath.patch", when="@4.0.2 %oneapi")
+    # Set correct rpath flags for Intel Fortran Compiler (%oneapi)
+    # See https://github.com/pmodels/mpich/pull/5824
+    # and https://github.com/spack/spack/issues/31678
+    # We do not fetch the patch from the upstream repo because it cannot be applied to older
+    # versions.
+    with when("%oneapi"):
+        patch("mpich-oneapi-config-rpath/step1.patch", when="@:4.0.2")
+        patch("mpich-oneapi-config-rpath/step2.patch", when="@3.1.1:4.0.2")
 
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
@@ -187,6 +195,18 @@ with '-Wl,-commons,use_dylibs' and without
         sha256="d4c0e99a80f6cb0cb0ced91f6ad5da776c4a70f70f805f08096939ec9a92483e",
         when="@4.0:4.0.2",
     )
+
+    # Fix checking whether the datatype is contiguous
+    # https://github.com/pmodels/yaksa/pull/189
+    # https://github.com/pmodels/mpich/issues/5391
+    # The problem has been fixed starting version 4.0 by updating the yaksa git submodule, which
+    # has not been done for the 3.4.x branch. The following patch is a backport of the
+    # aforementioned pull request for the unreleased version of yaksa that is vendored with MPICH.
+    # Note that Spack builds MPICH against a non-vendored yaksa only starting version 4.0.
+    with when("@3.4"):
+        # Apply the patch only when yaksa is used:
+        patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=yaksa")
+        patch("mpich34_yaksa_hindexed.patch", when="datatype-engine=auto device=ch4")
 
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
@@ -384,8 +404,7 @@ with '-Wl,-commons,use_dylibs' and without
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = self.spec.external_modules
-        if external_modules and "cray" in external_modules[0]:
+        if self.spec.satisfies("platform=cray"):
             # This is intended to support external MPICH instances registered
             # by Spack on Cray machines prior to a879c87; users defining an
             # external MPICH entry for Cray should generally refer to the
@@ -414,8 +433,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = spec.external_modules
-        if external_modules and "cray" in external_modules[0]:
+        if self.spec.satisfies("platform=cray"):
             spec.mpicc = spack_cc
             spec.mpicxx = spack_cxx
             spec.mpifc = spack_fc
@@ -508,7 +526,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         if "+cuda" in spec:
             config_args.append("--with-cuda={0}".format(spec["cuda"].prefix))
-        elif spec.satisfies("@:3.3,3.4.4:"):
+        elif not spec.satisfies("@3.4:3.4.3"):
             # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
             # (see https://github.com/pmodels/mpich/pull/5060):
             config_args.append("--without-cuda")
@@ -567,7 +585,7 @@ with '-Wl,-commons,use_dylibs' and without
         elif "datatype-engine=dataloop" in spec:
             config_args.append("--with-datatype-engine=dataloop")
         elif "datatype-engine=auto" in spec:
-            config_args.append("--with-datatye-engine=auto")
+            config_args.append("--with-datatype-engine=auto")
 
         if "+hcoll" in spec:
             config_args.append("--with-hcoll=" + spec["hcoll"].prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,9 @@ class Cub(Package):
     version("1.7.2", sha256="09b478d4df8e6c62f8425d23ade9e2a52bc279a20057c7d22ce2160f3923764a")
     version("1.7.1", sha256="50b8777b83093fdfdab429a61fccdbfbbb991b3bbc08385118e5ad58e8f62e1d")
     version("1.4.1", sha256="7c3784cf59f02d4a88099d6a11e357032bac9eac2b9c78aaec947d1270e21871")
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set("CUB_DIR", self.prefix.include.cub.cmake)
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)

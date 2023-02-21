@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import io
 import operator
 import os
 import os.path
@@ -22,8 +23,6 @@ import subprocess as sp
 import sys
 import traceback
 import warnings
-
-from six import StringIO
 
 import archspec.cpu
 
@@ -46,7 +45,7 @@ import spack.spec
 import spack.store
 import spack.util.debug
 import spack.util.environment
-import spack.util.executable as exe
+import spack.util.git
 import spack.util.path
 from spack.error import SpackError
 
@@ -107,6 +106,9 @@ required_command_properties = ["level", "section", "description"]
 spack_working_dir = None
 spack_ld_library_path = os.environ.get("LD_LIBRARY_PATH", "")
 
+#: Whether to print backtraces on error
+SHOW_BACKTRACE = False
+
 
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
@@ -134,7 +136,7 @@ def get_version():
     version = spack.spack_version
     git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
-        git = exe.which("git")
+        git = spack.util.git.git()
         if not git:
             return version
         rev = git(
@@ -317,9 +319,9 @@ class SpackArgumentParser(argparse.ArgumentParser):
             kwargs.setdefault("required", True)
 
         sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
-        # This monkey patching is needed for Python 3.5 and 3.6, which support
+        # This monkey patching is needed for Python 3.6, which supports
         # having a required subparser but don't expose the API used above
-        if sys.version_info[:2] == (3, 5) or sys.version_info[:2] == (3, 6):
+        if sys.version_info[:2] == (3, 6):
             sp.required = True
 
         old_add_parser = sp.add_parser
@@ -340,17 +342,21 @@ class SpackArgumentParser(argparse.ArgumentParser):
                 self._remove_action(self._actions[-1])
             self.subparsers = self.add_subparsers(metavar="COMMAND", dest="command")
 
-        # each command module implements a parser() function, to which we
-        # pass its subparser for setup.
-        module = spack.cmd.get_module(cmd_name)
+        if cmd_name not in self.subparsers._name_parser_map:
+            # each command module implements a parser() function, to which we
+            # pass its subparser for setup.
+            module = spack.cmd.get_module(cmd_name)
 
-        # build a list of aliases
-        alias_list = [k for k, v in aliases.items() if v == cmd_name]
+            # build a list of aliases
+            alias_list = [k for k, v in aliases.items() if v == cmd_name]
 
-        subparser = self.subparsers.add_parser(
-            cmd_name, aliases=alias_list, help=module.description, description=module.description
-        )
-        module.setup_parser(subparser)
+            subparser = self.subparsers.add_parser(
+                cmd_name,
+                aliases=alias_list,
+                help=module.description,
+                description=module.description,
+            )
+            module.setup_parser(subparser)
 
         # return the callable function for the command
         return spack.cmd.get_command(cmd_name)
@@ -381,7 +387,7 @@ def make_argument_parser(**kwargs):
             "A flexible package manager that supports multiple versions,\n"
             "configurations, platforms, and compilers."
         ),
-        **kwargs
+        **kwargs,
     )
 
     # stat names in groups of 7, for nice wrapping.
@@ -528,6 +534,12 @@ def make_argument_parser(**kwargs):
         help="add stacktraces to all printed statements",
     )
     parser.add_argument(
+        "--backtrace",
+        action="store_true",
+        default="SPACK_BACKTRACE" in os.environ,
+        help="always show backtraces for exceptions",
+    )
+    parser.add_argument(
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
@@ -555,8 +567,12 @@ def setup_main_options(args):
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
 
+    if args.debug or args.backtrace:
+        spack.error.debug = True
+        global SHOW_BACKTRACE
+        SHOW_BACKTRACE = True
+
     if args.debug:
-        spack.error.debug = args.debug
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.tracing_enabled = True
@@ -571,7 +587,14 @@ def setup_main_options(args):
         spack.config.set("config:locks", args.locks, scope="command_line")
 
     if args.mock:
-        spack.repo.path = spack.repo.RepoPath(spack.paths.mock_packages_path)
+        import spack.util.spack_yaml as syaml
+
+        key = syaml.syaml_str("repos")
+        key.override = True
+        spack.config.config.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
+            [(key, [spack.paths.mock_packages_path])]
+        )
+        spack.repo.path = spack.repo.create(spack.config.config)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -582,6 +605,10 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
+    # On Windows10 console handling for ASCI/VT100 sequences is not
+    # on by default. Turn on before we try to write to console
+    # with color
+    color.try_enable_terminal_color_on_windows()
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
 
@@ -676,7 +703,7 @@ class SpackCommand(object):
                 prepend + [self.command_name] + list(argv)
             )
 
-            out = StringIO()
+            out = io.StringIO()
             try:
                 with log_output(out):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)
@@ -981,22 +1008,19 @@ def main(argv=None):
         e.die()  # gracefully die on any SpackErrors
 
     except KeyboardInterrupt:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         sys.stderr.write("\n")
         tty.error("Keyboard interrupt.")
-        if sys.version_info >= (3, 5):
-            return signal.SIGINT.value
-        else:
-            return signal.SIGINT
+        return signal.SIGINT.value
 
     except SystemExit as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             traceback.print_exc()
         return e.code
 
     except Exception as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         tty.error(e)
         return 3

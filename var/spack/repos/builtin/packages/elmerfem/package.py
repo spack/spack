@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,7 +49,6 @@ class Elmerfem(CMakePackage):
     depends_on("csa-c", when="+scatt2d")
 
     def cmake_args(self):
-
         spec = self.spec
 
         args = ["-DWITH_ElmerIce=ON", "-DWITH_CONTRIB=ON"]
@@ -86,12 +85,7 @@ class Elmerfem(CMakePackage):
             args.append("-DWITH_Hypre=OFF")
 
         if "+trilinos" in spec:
-            args.extend(
-                [
-                    "-DWITH_Trilinos=ON",
-                    "-DCMAKE_CXX_STANDARD=11",
-                ]
-            )
+            args.extend(["-DWITH_Trilinos=ON", "-DCMAKE_CXX_STANDARD=11"])
         else:
             args.append("-DWITH_Trilinos=OFF")
 

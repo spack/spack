@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Package information
     homepage = "https://www.qmcpack.org/"
     git = "https://github.com/QMCPACK/qmcpack.git"
-    maintainers = ["ye-luo"]
+    maintainers("ye-luo")
     tags = ["ecp", "ecp-apps"]
 
     # This download method is untrusted, and is not recommended by the
@@ -23,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version("develop")
+    version("3.15.0", tag="v3.15.0")
     version("3.14.0", tag="v3.14.0")
     version("3.13.0", tag="v3.13.0")
     version("3.12.0", tag="v3.12.0")
@@ -120,6 +121,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Omitted for now due to concretizer bug
     # conflicts('^intel-mkl+ilp64',
     #           msg='QMCPACK does not support MKL 64-bit integer variant')
+
+    # QMCPACK 3.15.0 increased the minimum gcc to 9
+    conflicts("%gcc@:8", when="@3.15.0:")
 
     # QMCPACK 3.10.0 increased the minimum requirements for compiler versions
     newer_compiler_warning = (
@@ -266,6 +270,17 @@ class Qmcpack(CMakePackage, CudaPackage):
             args.append("-DFFTW_HOME={0}".format(fftw_prefix))
             args.append("-DFFTW_INCLUDE_DIRS={0}".format(fftw_prefix.include))
             args.append("-DFFTW_LIBRARY_DIRS={0}".format(fftw_prefix.lib))
+        elif "^armpl-gcc" in spec:
+            args.append("-DFFTW_LIBRARIES={0}".format(spec["armpl-gcc"].libs.joined(";")))
+            args.append("-DFFTW_INCLUDE_DIR={0}".format(spec["armpl-gcc"].headers.directories[0]))
+        elif "^acfl" in spec:
+            args.append("-DFFTW_LIBRARIES={0}".format(spec["acfl"].libs.joined(";")))
+            args.append("-DFFTW_INCLUDE_DIR={0}".format(spec["acfl"].headers.directories[0]))
+
+        if "^armpl-gcc" in spec:
+            args.append("-DBLAS_LIBRARIES={0}".format(spec["armpl-gcc"].libs.joined(";")))
+        elif "^acfl" in spec:
+            args.append("-DBLAS_LIBRARIES={0}".format(spec["acfl"].libs.joined(";")))
 
         args.append("-DBOOST_ROOT={0}".format(self.spec["boost"].prefix))
         args.append("-DHDF5_ROOT={0}".format(self.spec["hdf5"].prefix))
@@ -370,6 +385,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         else:
             args.append("-DBUILD_PPCONVERT=0")
 
+        args.append(self.define("Python3_EXECUTABLE", self.spec["python"].command.path))
         return args
 
     # QMCPACK needs custom install method for the following reason:
@@ -377,7 +393,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     # but still does not install nexus, manual, etc. So, there is no compelling
     # reason to use QMCPACK's built-in version at this time.
     def install(self, spec, prefix):
-
         # create top-level directory
         mkdirp(prefix)
 

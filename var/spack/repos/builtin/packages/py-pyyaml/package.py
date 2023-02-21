@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class PyPyyaml(PythonPackage):
     git = "https://github.com/yaml/pyyaml.git"
 
     version("6.0", sha256="68fb519c14306fec9720a2a5b45bc9f0c8d1b9c72adf45c37baedfcd949c35a2")
+    version("5.4.1", sha256="607774cbba28732bfa802b54baa7484215f530991055bb562efbed5b2f20a45e")
     version("5.3.1", sha256="b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d")
     version("5.2", sha256="c0ee8eca2c582d29c3c2ec6e2c4f703d1b7f1fb10bc72317355a746057e7346c")
     version("5.1.2", sha256="01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4")
@@ -29,6 +30,9 @@ class PyPyyaml(PythonPackage):
     depends_on("libyaml", when="+libyaml", type="link")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", when="@6:+libyaml", type="build")
+
+    # Includes "longintrepr.h" instead of Python.h
+    conflicts("^python@3.11:", when="@:5.3")
 
     @property
     def import_modules(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/DiHydrogen.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -83,9 +83,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     for val in ROCmPackage.amdgpu_targets:
         depends_on("aluminum amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
 
-    for when in ["+cuda", "+distconv"]:
-        depends_on("cuda", when=when)
-        depends_on("cudnn", when=when)
+    depends_on("roctracer-dev", when="+rocm +distconv")
+
+    depends_on("cudnn", when="+cuda")
     depends_on("cub", when="^cuda@:10")
 
     # Note that #1712 forces us to enumerate the different blas variants
@@ -108,8 +108,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cray-libsci", when="blas=libsci")
     depends_on("cray-libsci +openmp", when="blas=libsci +openmp_blas")
 
-    # Distconv builds require cuda
-    conflicts("~cuda", when="+distconv")
+    # Distconv builds require cuda or rocm
+    conflicts("+distconv", when="~cuda ~rocm")
 
     conflicts("+distconv", when="+half")
     conflicts("+rocm", when="+half")
@@ -120,6 +120,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("ninja", type="build")
     depends_on("cmake@3.17.0:", type="build")
 
+    depends_on("spdlog", when="@:0.1,0.2:")
+
     depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     # TODO: Debug linker errors when NVSHMEM is built with UCX
@@ -127,14 +129,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     # Idenfity versions of cuda_arch that are too old
     # from lib/spack/spack/build_systems/cuda.py
-    illegal_cuda_arch_values = [
-        "10",
-        "11",
-        "12",
-        "13",
-        "20",
-        "21",
-    ]
+    illegal_cuda_arch_values = ["10", "11", "12", "13", "20", "21"]
     for value in illegal_cuda_arch_values:
         conflicts("cuda_arch=" + value)
 
@@ -155,9 +150,13 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             "-DH2_ENABLE_DISTCONV_LEGACY=%s" % ("+distconv" in spec),
             "-DH2_ENABLE_OPENMP=%s" % ("+openmp" in spec),
             "-DH2_ENABLE_FP16=%s" % ("+half" in spec),
-            "-DH2_ENABLE_HIP_ROCM=%s" % ("+rocm" in spec),
             "-DH2_DEVELOPER_BUILD=%s" % ("+developer" in spec),
         ]
+
+        if spec.version < Version("0.3"):
+            args.append("-DH2_ENABLE_HIP_ROCM=%s" % ("+rocm" in spec))
+        else:
+            args.append("-DH2_ENABLE_ROCM=%s" % ("+rocm" in spec))
 
         if not spec.satisfies("^cmake@3.23.0"):
             # There is a bug with using Ninja generator in this version
@@ -181,7 +180,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             if spec.satisfies("%cce") and spec.satisfies("^cuda+allow-unsupported-compilers"):
                 args.append("-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler")
 
-        if "+cuda" in spec or "+distconv" in spec:
+        if "+cuda" in spec:
             args.append("-DcuDNN_DIR={0}".format(spec["cudnn"].prefix))
 
         if spec.satisfies("^cuda@:10"):
@@ -209,6 +208,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
                 ]
             )
+            if "platform=cray" in spec:
+                args.extend(["-DMPI_ASSUME_NO_BUILTIN_MPI=ON"])
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
