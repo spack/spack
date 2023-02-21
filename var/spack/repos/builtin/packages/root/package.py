@@ -508,7 +508,6 @@ class Root(CMakePackage):
             define_from_variant("gl2ps", "opengl"),
             define("glite", False),
             define("globus", False),
-            define_from_variant("gsl_shared", "gsl"),
             define_from_variant("gviz", "graphviz"),
             define("hdfs", False),
             define_from_variant("http"),  # See conflicts
