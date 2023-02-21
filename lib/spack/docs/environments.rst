@@ -72,7 +72,7 @@ Spack then creates the directory ``var/spack/environments/myenv``.
 
 .. note::
 
-   All named environments by default are stored in the ``var/spack/environments`` folder.
+   All managed environments by default are stored in the ``var/spack/environments`` folder.
    This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
 
 In the ``var/spack/environments/myenv`` directory, Spack creates the
