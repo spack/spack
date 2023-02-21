@@ -132,7 +132,7 @@ class Root(CMakePackage):
     )
     variant("gsl", default=True, description="Enable linking against shared libraries for GSL")
     variant("http", default=False, description="Enable HTTP server support")
-    variant("jemalloc", default=False, description="Enable using the jemalloc allocator")
+    variant("jemalloc", when="@:6.28", default=False, description="Enable using the jemalloc allocator (deprecated in 6.28)")
     variant("math", default=True, description="Build the new libMathMore extended math library")
     variant(
         "memstat",
