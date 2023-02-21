@@ -112,7 +112,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp@0.2.3:0.2", when="@0.5.0:+raja")
 
     # This is no longer a requirement in RAJA > 0.14
-    depends_on("umpire+cuda~shared", when="+raja+cuda")
+    depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
 
     conflicts(
         "+shared",
