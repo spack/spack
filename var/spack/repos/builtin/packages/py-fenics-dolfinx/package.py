@@ -59,7 +59,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("fenics-basix@0.1.0", type=("build", "link"), when="@0.1.0")
 
     depends_on("py-fenics-ffcx@main", type="run", when="@main")
-    depends_on("py-fenics-ffcx@0.6.0:0.6", type="run", when="@0.6.0:0.6")
+    depends_on("py-fenics-ffcx@0.6", type="run", when="@0.6")
     depends_on("py-fenics-ffcx@0.5.0.post0", type="run", when="@0.5.0:0.5")
     depends_on("py-fenics-ffcx@0.4.2", type="run", when="@0.4.1")
     depends_on("py-fenics-ffcx@0.3.0", type="run", when="@0.3.0")
