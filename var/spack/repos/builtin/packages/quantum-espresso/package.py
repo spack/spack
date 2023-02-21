@@ -257,6 +257,10 @@ class QuantumEspresso(CMakePackage, Package):
     # THIRD-PARTY PATCHES
     # NOTE: *SOME* third-party patches will require deactivation of
     # upstream patches using `~patch` variant
+    
+    # Conflict add for aocc with qe version >= 6.8 ,force use of CMAKE  
+    ## BUILD SYSTEM
+    conflicts("build_system=generic", when="@6.8: %aocc", msg="Please use CMake to build with AOCC")
 
     # QMCPACK converter patches for QE 6.8, 6.7, 6.4.1, 6.4, and 6.3
     conflicts(
@@ -367,7 +371,11 @@ class QuantumEspresso(CMakePackage, Package):
     )
 
     # Configure updated to work with AOCC compilers
-    patch("configure_aocc.patch", when="@6.7:6.8 %aocc")
+    # patch("configure_aocc.patch", when="@6.7:7.0 %aocc")
+    # Restrict the patch to just version 6.7, 
+    ## because it is not needed for the CMake build version
+    patch("configure_aocc.patch", when="@6.7 %aocc")
+ #   patch("configure_qe-7.1_aocc.patch", when="@7.1: %aocc")
 
     # Configure updated to work with NVIDIA compilers
     patch("nvhpc.patch", when="@6.5 %nvhpc")
