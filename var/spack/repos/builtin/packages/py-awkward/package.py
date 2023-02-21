@@ -71,6 +71,7 @@ class PyAwkward(PythonPackage):
     depends_on("py-importlib-resources", when="@2: ^python@:3.8", type=("build", "run"))
     depends_on("py-typing-extensions@4.1:", when="@2: ^python@:3.10", type=("build", "run"))
     depends_on("py-packaging", when="@2:", type=("build", "run"))
+    depends_on("py-pytest@6:", type="test")
     depends_on("dlpack", when="@1.0.0:")
     depends_on("rapidjson")
     depends_on("cmake@3.13:", type="build")
@@ -79,3 +80,9 @@ class PyAwkward(PythonPackage):
     @when("@1.9.0:")
     def setup_build_environment(self, env):
         env.set("CMAKE_ARGS", "-DAWKWARD_EXTERNAL_PYBIND11=TRUE")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
+        with working_dir("tests"):
+            which("pytest")()
