@@ -363,7 +363,7 @@ class Boost(Package):
     boost_variant(
         "date_time",
         description="A set of date-time libraries based on generic programming concepts.",
-        default="True",
+        default="False",
         when="@1.29.0:",
         buildable="@1.29.0:",
     )
@@ -391,7 +391,7 @@ class Boost(Package):
             "The Boost Exception library supports transporting of arbitrary data in exception"
             " objects, and transporting of exceptions between threads."
         ),
-        default="True",
+        default="False",
         when="@1.36.0:",
         buildable="@1.47.0:",
     )
@@ -408,7 +408,7 @@ class Boost(Package):
             "The Boost Filesystem Library provides portable facilities to query and manipulate"
             " paths, files, and directories."
         ),
-        default="True",
+        default="False",
         when="@1.30.0:",
         buildable="@1.30.0:",
     )
@@ -445,7 +445,7 @@ class Boost(Package):
             "The BGL graph interface and graph components are generic, in the same sense as"
             " the Standard Template Library (STL)."
         ),
-        default="True",
+        default="False",
         when="@1.18.0:",
         buildable="@1.18.0:",
     )
@@ -564,7 +564,7 @@ class Boost(Package):
             " numbers often used to parameterise rotations in three dimentional space."
             " Octonions, like quaternions, are a relative of complex numbers."
         ),
-        default="True",
+        default="False",
         when="@1.23.0:",
         buildable="@1.23.0:",
     )
@@ -691,7 +691,7 @@ class Boost(Package):
             " that is (name, value) pairs from the user, via conventional methods such as"
             " command line and config file."
         ),
-        default="True",
+        default="False",
         when="@1.32.0:",
         buildable="@1.32.0:",
     )
@@ -727,7 +727,7 @@ class Boost(Package):
     boost_variant(
         "random",
         description="A complete system for random number generation.",
-        default="True",
+        default="False",
         when="@1.15.0:",
         buildable="@1.43.0:",
     )
@@ -740,7 +740,7 @@ class Boost(Package):
     boost_variant(
         "regex",
         description="Regular expression library.",
-        default="True",
+        default="False",
         when="@1.18.0:",
         buildable="@1.18.0:",
     )
@@ -753,7 +753,7 @@ class Boost(Package):
     boost_variant(
         "serialization",
         description="Serialization for persistence and marshalling.",
-        default="True",
+        default="False",
         when="@1.32.0:",
         buildable="@1.32.0:",
     )
@@ -821,7 +821,7 @@ class Boost(Package):
     boost_variant(
         "system",
         description="Extensible error reporting.",
-        default="True",
+        default="False",
         when="@1.35.0:",
         buildable="@1.35.0:",
     )
@@ -831,14 +831,14 @@ class Boost(Package):
             "Support for simple program testing, full unit testing, and for program execution"
             " monitoring."
         ),
-        default="True",
+        default="False",
         when="@1.21.0:",
         buildable="@1.21.0:",
     )
     boost_variant(
         "thread",
         description="Portable C++ multi-threading. C++03, C++11, C++14, C++17.",
-        default="True",
+        default="False",
         when="@1.25.0:",
         buildable="@1.25.0:",
     )
@@ -851,7 +851,7 @@ class Boost(Package):
     boost_variant(
         "timer",
         description="Event timer, progress timer, and progress display classes.",
-        default="True",
+        default="False",
         when="@1.9.0:",
         buildable="@1.48.0:",
     )
@@ -890,7 +890,7 @@ class Boost(Package):
             " implementation of the mandated C99/C++ preprocessor functionality packed behind"
             " an easy to use iterator interface."
         ),
-        default="True",
+        default="False",
         when="@1.33.0:",
         buildable="@1.33.0:",
     )
