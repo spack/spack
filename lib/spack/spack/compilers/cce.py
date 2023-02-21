@@ -141,3 +141,21 @@ class Cce(Compiler):
         # Cray compiler wrappers link to the standard C++ library
         # without additional flags.
         return ()
+
+    @property
+    def prefix(self):
+        # CCE craycc/crayCC (cc/CC) reports its install prefix when running `-print-search-dirs`
+        # crayftn/ftn should be installed at the same location as the C/C++ compilers 
+        cxx = spack.util.executable.Executable(self.cxx)
+        with self.compiler_environment():
+            cce_output = cxx("-print-search-dirs", output=str, error=str)
+
+            for line in cce_output.splitlines():
+                if line.startswith("programs:"):
+                    cce_prefix = line.split(":")[1].strip()
+                    print(cce_prefix)
+                    return ancestor(cce_prefix, 3)
+
+            raise RuntimeError(
+                "could not find install prefix of CCE from output:\n\t{}".format(cce_output)
+            )
