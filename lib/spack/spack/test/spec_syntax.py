@@ -637,10 +637,16 @@ def test_spec_by_hash(database, monkeypatch, mutable_empty_config):
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [a])
 
     hash_str = f"/{mpileaks.dag_hash()}"
-    assert str(SpecParser(hash_str).next_spec()) == str(mpileaks)
+    b = SpecParser(hash_str).next_spec()
+    b.replace_hash()
+    # b here is NOT a Spec--it is still a query_spec!
+    # THEREFORE, it does not have an abstract_hash attribute, which would be useless anyway.
+    print("parser found {}".format(b))
+    assert b == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
-    assert str(SpecParser(short_hash_str).next_spec()) == str(mpileaks)
+    b = SpecParser(short_hash_str).next_spec().concretize()
+    assert str(b) == str(mpileaks)
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
     assert str(SpecParser(name_version_and_hash).next_spec()) == str(mpileaks)

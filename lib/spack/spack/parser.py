@@ -315,7 +315,6 @@ class SpecNodeParser:
         Return
             The object passed as argument
         """
-        import spack.environment  # Needed to retrieve by hash
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
@@ -391,31 +390,15 @@ class SpecNodeParser:
                 value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=True)
             elif not self.has_hash and self.ctx.accept(TokenType.DAG_HASH):
-                dag_hash = self.ctx.current_token.value[1:]
-                matches = []
-                active_env = spack.environment.active_environment()
-                if active_env:
-                    matches = active_env.get_by_hash(dag_hash)
-                if not matches:
-                    matches = spack.store.db.get_by_hash(dag_hash)
-                if not matches:
-                    query = spack.binary_distribution.BinaryCacheQuery(True)
-                    matches = query(self.ctx.current_token.value)
-                if not matches:
-                    raise spack.spec.NoSuchHashError(dag_hash)
-
-                if len(matches) != 1:
-                    raise spack.spec.AmbiguousHashError(
-                        f"Multiple packages specify hash beginning '{dag_hash}'.", *matches
-                    )
-                spec_by_hash = matches[0]
-                if not spec_by_hash.satisfies(initial_spec):
-                    raise spack.spec.InvalidHashError(initial_spec, spec_by_hash.dag_hash())
-                initial_spec._dup(spec_by_hash)
-
+                initial_spec.abstract_hash = self.ctx.current_token.value[1:]
+                print("found abstract hash: setting {}".format(self.ctx.current_token.value[1:]))
                 self.has_hash = True
             else:
                 break
+        if self.has_hash:
+            print("final parsed abstract hash is {}".format(initial_spec.abstract_hash))
+            print("final parsed spec is {}".format(initial_spec))
+            print("type of parsed spec is {}".format(type(initial_spec)))
 
         return initial_spec
 
