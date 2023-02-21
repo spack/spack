@@ -370,12 +370,8 @@ class QuantumEspresso(CMakePackage, Package):
         when="+patch@6.4.1:6.5.0",
     )
 
-    # Configure updated to work with AOCC compilers
-    # patch("configure_aocc.patch", when="@6.7:7.0 %aocc")
-    # Restrict the patch to just version 6.7, 
-    ## because it is not needed for the CMake build version
+    # Patch automake configure for AOCC compilers
     patch("configure_aocc.patch", when="@6.7 %aocc")
- #   patch("configure_qe-7.1_aocc.patch", when="@7.1: %aocc")
 
     # Configure updated to work with NVIDIA compilers
     patch("nvhpc.patch", when="@6.5 %nvhpc")
