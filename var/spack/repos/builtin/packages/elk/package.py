@@ -140,7 +140,6 @@ class Elk(MakefilePackage):
         # BLAS/LAPACK support
         # Note: openblas must be compiled with OpenMP support
         # if the +openmp variant is chosen
-        self.build_targets = []
         if 'linalg=internal' in spec:
             self.build_targets.append('blas')
             self.build_targets.append('lapack')
