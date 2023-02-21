@@ -516,9 +516,7 @@ class Boost(Package):
         when="@1.75.0:",
         buildable="@1.75.0:",
     )
-    boost_variant(
-        "lambda2", description="A C++14 lambda library.", default=False, when="@1.77.0:"
-    )
+    boost_variant("lambda2", description="A C++14 lambda library.", default=False, when="@1.77.0:")
     boost_variant(
         "leaf",
         description="A lightweight error handling library for C++11.",
@@ -545,11 +543,7 @@ class Boost(Package):
         "lockfree", description="Lockfree data structures.", default=False, when="@1.53.0:"
     )
     boost_variant(
-        "log",
-        description="Logging library.",
-        default=False,
-        when="@1.54.0:",
-        buildable="@1.54.0:",
+        "log", description="Logging library.", default=False, when="@1.54.0:", buildable="@1.54.0:"
     )
     boost_variant(
         "math",
