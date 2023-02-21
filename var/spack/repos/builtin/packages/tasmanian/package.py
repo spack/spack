@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/ORNL/TASMANIAN.git"
 
     tags = ["e4s"]
-    maintainers = ["mkstoyanov"]
+    maintainers("mkstoyanov")
 
     version("develop", branch="master")
 
@@ -193,9 +193,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         # using the tests copied from <prefix>/share/Tasmanian/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
-        options = [
-            cmake_dir,
-        ]
+        options = [cmake_dir]
         if "+rocm" in self.spec:
             options.append(
                 "-DAMDDeviceLibs_DIR="

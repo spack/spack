@@ -1,16 +1,13 @@
 # Copyright (c) 2014-2021, Simon Percivall and Spack Project Developers.
 #
 # SPDX-License-Identifier: Python-2.0
-
 "Usage: unparse.py <path to source file>"
 from __future__ import print_function, unicode_literals
 
 import ast
 import sys
 from contextlib import contextmanager
-
-import six
-from six import StringIO
+from io import StringIO
 
 
 # TODO: if we require Python 3.7, use its `nullcontext()`
@@ -76,11 +73,7 @@ def is_simple_tuple(slice_value):
     return (
         isinstance(slice_value, ast.Tuple)
         and slice_value.elts
-        and (
-            # Python 2 doesn't allow starred elements in tuples like Python 3
-            six.PY2
-            or not any(isinstance(elt, ast.Starred) for elt in slice_value.elts)
-        )
+        and not any(isinstance(elt, ast.Starred) for elt in slice_value.elts)
     )
 
 
@@ -145,7 +138,7 @@ class Unparser:
 
     def write(self, text):
         "Append a piece of text to the current line."
-        self.f.write(six.text_type(text))
+        self.f.write(str(text))
 
     class _Block:
         """A context manager for preparing the source for blocks. It adds
@@ -395,25 +388,14 @@ class Unparser:
 
     def visit_Raise(self, node):
         self.fill("raise")
-        if six.PY3:
-            if not node.exc:
-                assert not node.cause
-                return
-            self.write(" ")
-            self.dispatch(node.exc)
-            if node.cause:
-                self.write(" from ")
-                self.dispatch(node.cause)
-        else:
-            self.write(" ")
-            if node.type:
-                self.dispatch(node.type)
-            if node.inst:
-                self.write(", ")
-                self.dispatch(node.inst)
-            if node.tback:
-                self.write(", ")
-                self.dispatch(node.tback)
+        if not node.exc:
+            assert not node.cause
+            return
+        self.write(" ")
+        self.dispatch(node.exc)
+        if node.cause:
+            self.write(" from ")
+            self.dispatch(node.cause)
 
     def visit_Try(self, node):
         self.fill("try")
@@ -462,10 +444,7 @@ class Unparser:
             self.dispatch(node.type)
         if node.name:
             self.write(" as ")
-            if six.PY3:
-                self.write(node.name)
-            else:
-                self.dispatch(node.name)
+            self.write(node.name)
         with self.block():
             self.dispatch(node.body)
 
@@ -475,42 +454,35 @@ class Unparser:
             self.fill("@")
             self.dispatch(deco)
         self.fill("class " + node.name)
-        if six.PY3:
-            with self.delimit_if("(", ")", condition=node.bases or node.keywords):
-                comma = False
-                for e in node.bases:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
-                for e in node.keywords:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
-                if sys.version_info[:2] < (3, 5):
-                    if node.starargs:
-                        if comma:
-                            self.write(", ")
-                        else:
-                            comma = True
-                        self.write("*")
-                        self.dispatch(node.starargs)
-                    if node.kwargs:
-                        if comma:
-                            self.write(", ")
-                        else:
-                            comma = True
-                        self.write("**")
-                        self.dispatch(node.kwargs)
-        elif node.bases:
-            with self.delimit("(", ")"):
-                for a in node.bases[:-1]:
-                    self.dispatch(a)
+        with self.delimit_if("(", ")", condition=node.bases or node.keywords):
+            comma = False
+            for e in node.bases:
+                if comma:
                     self.write(", ")
-                self.dispatch(node.bases[-1])
+                else:
+                    comma = True
+                self.dispatch(e)
+            for e in node.keywords:
+                if comma:
+                    self.write(", ")
+                else:
+                    comma = True
+                self.dispatch(e)
+            if sys.version_info[:2] < (3, 5):
+                if node.starargs:
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
+                    self.write("*")
+                    self.dispatch(node.starargs)
+                if node.kwargs:
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
+                    self.write("**")
+                    self.dispatch(node.kwargs)
         with self.block():
             self.dispatch(node.body)
 
@@ -642,38 +614,18 @@ class Unparser:
         """Write string literal value w/a best effort attempt to avoid backslashes."""
         string, quote_types = self._str_literal_helper(string, quote_types=quote_types)
         quote_type = quote_types[0]
-        self.write(
-            "{quote_type}{string}{quote_type}".format(
-                quote_type=quote_type,
-                string=string,
-            )
-        )
+        self.write("{quote_type}{string}{quote_type}".format(quote_type=quote_type, string=string))
 
     # expr
     def visit_Bytes(self, node):
         self.write(repr(node.s))
 
     def visit_Str(self, tree):
-        if six.PY3:
-            # Python 3.5, 3.6, and 3.7 can't tell if something was written as a
-            # unicode constant. Try to make that consistent with 'u' for '\u- literals
-            if self._py_ver_consistent and repr(tree.s).startswith("'\\u"):
-                self.write("u")
-            self._write_constant(tree.s)
-        elif self._py_ver_consistent:
-            self.write(repr(tree.s))  # just do a python 2 repr for consistency
-        else:
-            # if from __future__ import unicode_literals is in effect,
-            # then we want to output string literals using a 'b' prefix
-            # and unicode literals with no prefix.
-            if "unicode_literals" not in self.future_imports:
-                self.write(repr(tree.s))
-            elif isinstance(tree.s, str):
-                self.write("b" + repr(tree.s))
-            elif isinstance(tree.s, unicode):  # noqa: F821
-                self.write(repr(tree.s).lstrip("u"))
-            else:
-                assert False, "shouldn't get here"
+        # Python 3.5, 3.6, and 3.7 can't tell if something was written as a
+        # unicode constant. Try to make that consistent with 'u' for '\u- literals
+        if self._py_ver_consistent and repr(tree.s).startswith("'\\u"):
+            self.write("u")
+        self._write_constant(tree.s)
 
     def visit_JoinedStr(self, node):
         # JoinedStr(expr* values)
@@ -707,12 +659,7 @@ class Unparser:
             new_buffer.append(value)
         value = "".join(new_buffer)
         quote_type = quote_types[0]
-        self.write(
-            "{quote_type}{value}{quote_type}".format(
-                quote_type=quote_type,
-                value=value,
-            )
-        )
+        self.write("{quote_type}{value}{quote_type}".format(quote_type=quote_type, value=value))
 
     def visit_FormattedValue(self, node):
         # FormattedValue(expr value, int? conversion, expr? format_spec)
@@ -741,10 +688,7 @@ class Unparser:
         write("{")
 
         expr = StringIO()
-        unparser = type(self)(
-            py_ver_consistent=self._py_ver_consistent,
-            _avoid_backslashes=True,
-        )
+        unparser = type(self)(py_ver_consistent=self._py_ver_consistent, _avoid_backslashes=True)
         unparser.set_precedence(pnext(_Precedence.TEST), node.value)
         unparser.visit(node.value, expr)
         expr = expr.getvalue().rstrip("\n")
@@ -805,15 +749,7 @@ class Unparser:
 
     def visit_Num(self, node):
         repr_n = repr(node.n)
-        if six.PY3:
-            self.write(repr_n.replace("inf", INFSTR))
-        else:
-            # Parenthesize negative numbers, to avoid turning (-1)**2 into -1**2.
-            with self.require_parens(pnext(_Precedence.FACTOR), node):
-                if "inf" in repr_n and repr_n.endswith("*j"):
-                    repr_n = repr_n.replace("*j", "j")
-                # Substitute overflowing decimal literal for AST infinities.
-                self.write(repr_n.replace("inf", INFSTR))
+        self.write(repr_n.replace("inf", INFSTR))
 
     def visit_List(self, node):
         with self.delimit("[", "]"):
@@ -917,17 +853,7 @@ class Unparser:
             if operator_precedence != _Precedence.FACTOR:
                 self.write(" ")
             self.set_precedence(operator_precedence, node.operand)
-
-            if six.PY2 and isinstance(node.op, ast.USub) and isinstance(node.operand, ast.Num):
-                # If we're applying unary minus to a number, parenthesize the number.
-                # This is necessary: -2147483648 is different from -(2147483648) on
-                # a 32-bit machine (the first is an int, the second a long), and
-                # -7j is different from -(7j).  (The first has real part 0.0, the second
-                # has real part -0.0.)
-                with self.delimit("(", ")"):
-                    self.dispatch(node.operand)
-            else:
-                self.dispatch(node.operand)
+            self.dispatch(node.operand)
 
     binop = {
         "Add": "+",
@@ -1001,15 +927,9 @@ class Unparser:
                 self.write(" " + self.cmpops[o.__class__.__name__] + " ")
                 self.dispatch(e)
 
-    boolops = {
-        "And": "and",
-        "Or": "or",
-    }
+    boolops = {"And": "and", "Or": "or"}
 
-    boolop_precedence = {
-        "and": _Precedence.AND,
-        "or": _Precedence.OR,
-    }
+    boolop_precedence = {"and": _Precedence.AND, "or": _Precedence.OR}
 
     def visit_BoolOp(self, node):
         operator = self.boolops[node.op.__class__.__name__]
@@ -1285,11 +1205,7 @@ class Unparser:
 
         with self.delimit("{", "}"):
             keys = node.keys
-            interleave(
-                lambda: self.write(", "),
-                write_key_pattern_pair,
-                zip(keys, node.patterns),
-            )
+            interleave(lambda: self.write(", "), write_key_pattern_pair, zip(keys, node.patterns))
             rest = node.rest
             if rest is not None:
                 if keys:
@@ -1313,9 +1229,7 @@ class Unparser:
                 if patterns:
                     self.write(", ")
                 interleave(
-                    lambda: self.write(", "),
-                    write_attr_pattern,
-                    zip(attrs, node.kwd_patterns),
+                    lambda: self.write(", "), write_attr_pattern, zip(attrs, node.kwd_patterns)
                 )
 
     def visit_MatchAs(self, node):

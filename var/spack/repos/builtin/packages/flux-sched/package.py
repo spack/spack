@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,10 @@ class FluxSched(AutotoolsPackage):
     git = "https://github.com/flux-framework/flux-sched.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["grondo"]
+    maintainers("grondo")
 
     version("master", branch="master")
+    version("0.26.0", sha256="184faec800cf45952ef79bda113f710bf91a05be584034d36a3234627d4a54c7")
     version("0.25.0", sha256="a984b238d8b6968ef51f1948a550bf57887bf3da8002dcd1734ce26afc4bff07")
     version("0.24.0", sha256="e104eb740e94f26a6a690f1c299bbe643f88751cc14a2596f0779a19cfeb5e6f")
     version("0.23.0", sha256="159b62cc4d25ef3d5da5338511ff38449a893d8adca13383cda7b322295acc1c")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,5 +44,3 @@ class PyMultiqc(PythonPackage):
     depends_on("py-simplejson", type=("build", "run"))
     depends_on("py-spectra@0.0.10:", type=("build", "run"), when="@1.5:")
     depends_on("py-spectra", type=("build", "run"))
-    depends_on("py-enum34", type=("build", "run"), when="@1.4:1.5 ^python@:3.3")
-    depends_on("py-enum34", type=("build", "run"), when="@1.3")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Tau(Package):
     Java, Python.
     """
 
-    maintainers = ["wspear", "eugeneswalker", "khuck", "sameershende"]
+    maintainers("wspear", "eugeneswalker", "khuck", "sameershende")
     homepage = "https://www.cs.uoregon.edu/research/tau"
     url = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git = "https://github.com/UO-OACISS/tau2"
@@ -26,7 +26,7 @@ class Tau(Package):
     tags = ["e4s"]
 
     version("master", branch="master")
-    version("2.32", sha256="fc8f5cdbdae999e98e9e97b0d8d66d282cb8bb41c19d5486d48a2d2d11b4b475")
+    version("2.32", sha256="ee774a06e30ce0ef0f053635a52229152c39aba4f4933bed92da55e5e13466f3")
     version("2.31.1", sha256="bf445b9d4fe40a5672a7b175044d2133791c4dfb36a214c1a55a931aebc06b9d")
     version("2.31", sha256="27e73c395dd2a42b91591ce4a76b88b1f67663ef13aa19ef4297c68f45d946c2")
     version("2.30.2", sha256="43f84a15b71a226f8a64d966f0cb46022bcfbaefb341295ecc6fa80bb82bbfb4")
@@ -111,7 +111,9 @@ class Tau(Package):
     # TAU requires the ELF header support, libiberty and demangle.
     depends_on("binutils+libiberty+headers+plugins", when="+binutils")
     # Build errors with Python 3.9
-    depends_on("python@2.7:3.8", when="+python")
+    depends_on("python@2.7:3.8", when="@:2.31.0+python")
+    # python 3.11 doesn't work as of 2.32
+    depends_on("python@2.7:3.10", when="@2.31.1:+python")
     depends_on("libunwind", when="+libunwind")
     depends_on("mpi", when="+mpi", type=("build", "run", "link"))
     depends_on("cuda", when="+cuda")
@@ -140,7 +142,6 @@ class Tau(Package):
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib64")
 
     def set_compiler_options(self, spec):
-
         useropt = ["-O2 -g", self.rpath_args]
 
         ##########
@@ -164,14 +165,13 @@ class Tau(Package):
             if compiler_path:
                 compiler_path = compiler_path + "/bin/"
         os.environ["PATH"] = ":".join([compiler_path, os.environ["PATH"]])
-
         compiler_options = [
-            "-c++=%s" % self.compiler.cxx_names[0],
-            "-cc=%s" % self.compiler.cc_names[0],
+            "-c++=%s" % os.path.basename(self.compiler.cxx),
+            "-cc=%s" % os.path.basename(self.compiler.cc),
         ]
 
         if "+fortran" in spec and self.compiler.fc:
-            compiler_options.append("-fortran=%s" % self.compiler.fc_names[0])
+            compiler_options.append("-fortran=%s" % os.path.basename(self.compiler.fc))
 
         ##########
 

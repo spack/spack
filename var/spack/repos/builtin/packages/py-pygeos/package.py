@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyPygeos(PythonPackage):
     homepage = "https://github.com/pygeos/pygeos"
     pypi = "pygeos/pygeos-0.8.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.10", sha256="8ad4703cf8f983a6878a885765be975709a2fe300e54bc6c8623ddbca4903b6c")
     version("0.9", sha256="c0584b20e95f80ee57277a6eb1e5d7f86600f8b1ef3c627d238e243afdcc0cc7")

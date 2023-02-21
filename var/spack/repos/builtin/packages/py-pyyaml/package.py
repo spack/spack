@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,9 @@ class PyPyyaml(PythonPackage):
     depends_on("libyaml", when="+libyaml", type="link")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", when="@6:+libyaml", type="build")
+
+    # Includes "longintrepr.h" instead of Python.h
+    conflicts("^python@3.11:", when="@:5.3")
 
     @property
     def import_modules(self):

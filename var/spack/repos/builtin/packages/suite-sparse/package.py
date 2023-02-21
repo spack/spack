@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -211,10 +211,7 @@ class SuiteSparse(Package):
 
         # Intel TBB in SuiteSparseQR
         if "+tbb" in spec:
-            make_args += [
-                "SPQR_CONFIG=-DHAVE_TBB",
-                "TBB=%s" % spec["tbb"].libs.ld_flags,
-            ]
+            make_args += ["SPQR_CONFIG=-DHAVE_TBB", "TBB=%s" % spec["tbb"].libs.ld_flags]
 
         if "@5.3:" in spec:
             # Without CMAKE_LIBRARY_PATH defined, the CMake file in the

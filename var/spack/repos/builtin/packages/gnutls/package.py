@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,9 +59,7 @@ class Gnutls(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = [
-            "--enable-static",
-        ]
+        args = ["--enable-static"]
 
         if spec.satisfies("@3.5:"):
             # use shipped libraries, might be turned into variants
@@ -80,20 +78,10 @@ class Gnutls(AutotoolsPackage):
             args.append("--disable-guile")
 
         if self.run_tests:
-            args.extend(
-                [
-                    "--enable-tests",
-                    "--enable-valgrind-tests",
-                    "--enable-full-test-suite",
-                ]
-            )
+            args.extend(["--enable-tests", "--enable-valgrind-tests", "--enable-full-test-suite"])
         else:
             args.extend(
-                [
-                    "--disable-tests",
-                    "--disable-valgrind-tests",
-                    "--disable-full-test-suite",
-                ]
+                ["--disable-tests", "--disable-valgrind-tests", "--disable-full-test-suite"]
             )
 
         return args

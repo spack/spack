@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
-import multiprocessing.pool
+import itertools
 import os
 import re
 import shutil
@@ -18,12 +18,15 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.symlink import symlink
 
-import spack.bootstrap
+import spack.paths
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+
+from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 
 is_macos = str(spack.platforms.real_host()) == "darwin"
 
@@ -44,52 +47,11 @@ class InstallRootStringError(spack.error.SpackError):
         )
 
 
-class BinaryStringReplacementError(spack.error.SpackError):
-    def __init__(self, file_path, old_len, new_len):
-        """The size of the file changed after binary path substitution
-
-        Args:
-            file_path (str): file with changing size
-            old_len (str): original length of the file
-            new_len (str): length of the file after substitution
-        """
-        super(BinaryStringReplacementError, self).__init__(
-            "Doing a binary string replacement in %s failed.\n"
-            "The size of the file changed from %s to %s\n"
-            "when it should have remanined the same." % (file_path, old_len, new_len)
-        )
-
-
-class BinaryTextReplaceError(spack.error.SpackError):
-    def __init__(self, msg):
-        msg += (
-            " To fix this, compile with more padding "
-            "(config:install_tree:padded_length), or install to a shorter prefix."
-        )
-        super(BinaryTextReplaceError, self).__init__(msg)
-
-
-class CannotGrowString(BinaryTextReplaceError):
-    def __init__(self, old, new):
-        msg = "Cannot replace {!r} with {!r} because the new prefix is longer.".format(old, new)
-        super(CannotGrowString, self).__init__(msg)
-
-
-class CannotShrinkCString(BinaryTextReplaceError):
-    def __init__(self, old, new, full_old_string):
-        # Just interpolate binary string to not risk issues with invalid
-        # unicode, which would be really bad user experience: error in error.
-        # We have no clue if we actually deal with a real C-string nor what
-        # encoding it has.
-        msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
-            old, new, full_old_string
-        )
-        super(CannotShrinkCString, self).__init__(msg)
-
-
 @memoized
 def _patchelf():
     """Return the full path to the patchelf binary, if available, else None."""
+    import spack.bootstrap
+
     if is_macos:
         return None
 
@@ -296,17 +258,24 @@ def modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
     if idpath:
         new_idpath = paths_to_paths.get(idpath, None)
         if new_idpath and not idpath == new_idpath:
-            args += ["-id", new_idpath]
+            args += [("-id", new_idpath)]
+
     for dep in deps:
         new_dep = paths_to_paths.get(dep)
         if new_dep and dep != new_dep:
-            args += ["-change", dep, new_dep]
+            args += [("-change", dep, new_dep)]
 
+    new_rpaths = []
     for orig_rpath in rpaths:
         new_rpath = paths_to_paths.get(orig_rpath)
         if new_rpath and not orig_rpath == new_rpath:
-            args += ["-rpath", orig_rpath, new_rpath]
+            args_to_add = ("-rpath", orig_rpath, new_rpath)
+            if args_to_add not in args and new_rpath not in new_rpaths:
+                args += [args_to_add]
+                new_rpaths.append(new_rpath)
 
+    # Deduplicate and flatten
+    args = list(itertools.chain.from_iterable(llnl.util.lang.dedupe(args)))
     if args:
         args.append(str(cur_path))
         install_name_tool = executable.Executable("install_name_tool")
@@ -439,135 +408,8 @@ def needs_text_relocation(m_type, m_subtype):
     return m_type == "text"
 
 
-def _replace_prefix_text(filename, compiled_prefixes):
-    """Replace all the occurrences of the old install prefix with a
-    new install prefix in text files that are utf-8 encoded.
-
-    Args:
-        filename (str): target text file (utf-8 encoded)
-        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are
-        precompiled regex of the old prefixes and the values are the new
-        prefixes (uft-8 encoded)
-    """
-    with open(filename, "rb+") as f:
-        data = f.read()
-        f.seek(0)
-        for orig_prefix_rexp, new_bytes in compiled_prefixes.items():
-            data = orig_prefix_rexp.sub(new_bytes, data)
-        f.write(data)
-        f.truncate()
-
-
-def apply_binary_replacements(f, prefix_to_prefix, suffix_safety_size=7):
-    """
-    Given a file opened in rb+ mode, apply the string replacements as
-    specified by an ordered dictionary of prefix to prefix mappings. This
-    method takes special care of null-terminated C-strings. C-string constants
-    are problematic because compilers and linkers optimize readonly strings for
-    space by aliasing those that share a common suffix (only suffix since all
-    of them are null terminated). See https://github.com/spack/spack/pull/31739
-    and https://github.com/spack/spack/pull/32253 for details. Our logic matches
-    the original prefix with a ``suffix_safety_size + 1`` lookahead for null bytes.
-    If no null terminator is found, we simply pad with leading /, assuming that
-    it's a long C-string; the full C-string after replacement has a large suffix
-    in common with its original value.
-    If there *is* a null terminator we can do the same as long as the replacement
-    has a sufficiently long common suffix with the original prefix.
-    As a last resort when the replacement does not have a long enough common suffix,
-    we can try to shorten the string, but this only works if the new length is
-    sufficiently short (typically the case when going from large padding -> normal path)
-    If the replacement string is longer, or all of the above fails, we error out.
-
-    Arguments:
-        f: file opened in rb+ mode
-        prefix_to_prefix (OrderedDict): OrderedDictionary where the keys are
-            bytes representing the old prefixes and the values are the new
-        suffix_safety_size (int): in case of null terminated strings, what size
-            of the suffix should remain to avoid aliasing issues?
-    """
-    assert suffix_safety_size >= 0
-    assert f.tell() == 0
-
-    # Look for exact matches of our paths, and also look if there's a null terminator
-    # soon after (this covers the case where we search for /abc but match /abc/ with
-    # a trailing dir seperator).
-    regex = re.compile(
-        b"("
-        + b"|".join(re.escape(p) for p in prefix_to_prefix.keys())
-        + b")([^\0]{0,%d}\0)?" % suffix_safety_size
-    )
-
-    # We *could* read binary data in chunks to avoid loading all in memory,
-    # but it's nasty to deal with matches across boundaries, so let's stick to
-    # something simple.
-
-    for match in regex.finditer(f.read()):
-        # The matching prefix (old) and its replacement (new)
-        old = match.group(1)
-        new = prefix_to_prefix[old]
-
-        # Did we find a trailing null within a N + 1 bytes window after the prefix?
-        null_terminated = match.end(0) > match.end(1)
-
-        # Suffix string length, excluding the null byte
-        # Only makes sense if null_terminated
-        suffix_strlen = match.end(0) - match.end(1) - 1
-
-        # How many bytes are we shrinking our string?
-        bytes_shorter = len(old) - len(new)
-
-        # We can't make strings larger.
-        if bytes_shorter < 0:
-            raise CannotGrowString(old, new)
-
-        # If we don't know whether this is a null terminated C-string (we're looking
-        # only N + 1 bytes ahead), or if it is and we have a common suffix, we can
-        # simply pad with leading dir separators.
-        elif (
-            not null_terminated
-            or suffix_strlen >= suffix_safety_size  # == is enough, but let's be defensive
-            or old[-suffix_safety_size + suffix_strlen :]
-            == new[-suffix_safety_size + suffix_strlen :]
-        ):
-            replacement = b"/" * bytes_shorter + new
-
-        # If it *was* null terminated, all that matters is that we can leave N bytes
-        # of old suffix in place. Note that > is required since we also insert an
-        # additional null terminator.
-        elif bytes_shorter > suffix_safety_size:
-            replacement = new + match.group(2)  # includes the trailing null
-
-        # Otherwise... we can't :(
-        else:
-            raise CannotShrinkCString(old, new, match.group()[:-1])
-
-        f.seek(match.start())
-        f.write(replacement)
-
-
-def _replace_prefix_bin(filename, prefix_to_prefix):
-    """Replace all the occurrences of the old prefix with a new prefix in binary
-    files. See :func:`~spack.relocate.apply_binary_replacements` for details.
-
-    Args:
-        filename (str): target binary file
-        byte_prefixes (OrderedDict): ordered dictionary where the keys are
-            bytes representing the old prefixes and the values are the new
-            prefixes (all bytes utf-8 encoded)
-    """
-
-    with open(filename, "rb+") as f:
-        apply_binary_replacements(f, prefix_to_prefix)
-
-
 def relocate_macho_binaries(
-    path_names,
-    old_layout_root,
-    new_layout_root,
-    prefix_to_prefix,
-    rel,
-    old_prefix,
-    new_prefix,
+    path_names, old_layout_root, new_layout_root, prefix_to_prefix, rel, old_prefix, new_prefix
 ):
     """
     Use macholib python package to get the rpaths, depedent libraries
@@ -772,19 +614,17 @@ def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
             _set_elf_rpaths(new_binary, new_rpaths)
 
 
-def raise_if_not_relocatable(binaries, allow_root):
+def ensure_binaries_are_relocatable(binaries):
     """Raise an error if any binary in the list is not relocatable.
 
     Args:
         binaries (list): list of binaries to check
-        allow_root (bool): whether root dir is allowed or not in a binary
 
     Raises:
         InstallRootStringError: if the file is not relocatable
     """
     for binary in binaries:
-        if not (allow_root or file_is_relocatable(binary)):
-            raise InstallRootStringError(binary, spack.store.layout.root)
+        ensure_binary_is_relocatable(binary)
 
 
 def warn_if_link_cant_be_relocated(link, target):
@@ -810,104 +650,32 @@ def relocate_links(links, prefix_to_prefix):
         symlink(new_target, link)
 
 
-def utf8_path_to_binary_regex(prefix):
-    """Create a (binary) regex that matches the input path in utf8"""
-    prefix_bytes = re.escape(prefix).encode("utf-8")
-    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
-
-
-def utf8_paths_to_single_binary_regex(prefixes):
-    """Create a (binary) regex that matches any input path in utf8"""
-    all_prefixes = b"|".join(re.escape(prefix).encode("utf-8") for prefix in prefixes)
-    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
-
-
-def unsafe_relocate_text(files, prefixes, concurrency=32):
+def relocate_text(files, prefixes):
     """Relocate text file from the original installation prefix to the
     new prefix.
 
     Relocation also affects the the path in Spack's sbang script.
 
-    Note: unsafe when files contains duplicates, such as repeated paths,
-    symlinks, hardlinks.
-
     Args:
         files (list): Text files to be relocated
         prefixes (OrderedDict): String prefixes which need to be changed
-        concurrency (int): Preferred degree of parallelism
     """
-
-    # This now needs to be handled by the caller in all cases
-    # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
-    # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
-
-    compiled_prefixes = collections.OrderedDict({})
-
-    for orig_prefix, new_prefix in prefixes.items():
-        if orig_prefix != new_prefix:
-            orig_prefix_rexp = utf8_path_to_binary_regex(orig_prefix)
-            new_bytes = b"\\1%s\\2" % new_prefix.replace("\\", r"\\").encode("utf-8")
-            compiled_prefixes[orig_prefix_rexp] = new_bytes
-
-    # Do relocations on text that refers to the install tree
-    # multiprocesing.ThreadPool.map requires single argument
-
-    args = []
-    for filename in files:
-        args.append((filename, compiled_prefixes))
-
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-    try:
-        tp.map(llnl.util.lang.star(_replace_prefix_text), args)
-    finally:
-        tp.terminate()
-        tp.join()
+    TextFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(files)
 
 
-def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
-    """Replace null terminated path strings hard coded into binaries.
+def relocate_text_bin(binaries, prefixes):
+    """Replace null terminated path strings hard-coded into binaries.
 
     The new install prefix must be shorter than the original one.
-
-    Note: unsafe when files contains duplicates, such as repeated paths,
-    symlinks, hardlinks.
 
     Args:
         binaries (list): binaries to be relocated
         prefixes (OrderedDict): String prefixes which need to be changed.
-        concurrency (int): Desired degree of parallelism.
 
     Raises:
-      BinaryTextReplaceError: when the new path is longer than the old path
+      spack.relocate_text.BinaryTextReplaceError: when the new path is longer than the old path
     """
-    byte_prefixes = collections.OrderedDict({})
-
-    for orig_prefix, new_prefix in prefixes.items():
-        if orig_prefix != new_prefix:
-            if isinstance(orig_prefix, bytes):
-                orig_bytes = orig_prefix
-            else:
-                orig_bytes = orig_prefix.encode("utf-8")
-            if isinstance(new_prefix, bytes):
-                new_bytes = new_prefix
-            else:
-                new_bytes = new_prefix.encode("utf-8")
-            byte_prefixes[orig_bytes] = new_bytes
-
-    # Do relocations on text in binaries that refers to the install tree
-    # multiprocesing.ThreadPool.map requires single argument
-    args = []
-
-    for binary in binaries:
-        args.append((binary, byte_prefixes))
-
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-
-    try:
-        tp.map(llnl.util.lang.star(_replace_prefix_bin), args)
-    finally:
-        tp.terminate()
-        tp.join()
+    BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
 
 
 def is_relocatable(spec):
@@ -933,30 +701,27 @@ def is_relocatable(spec):
     # Explore the installation prefix of the spec
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in (".spack", "man")]
-        abs_files = [os.path.join(root, f) for f in files]
-        if not all(file_is_relocatable(f) for f in abs_files if is_binary(f)):
-            # If any of the file is not relocatable, the entire
-            # package is not relocatable
+        try:
+            abs_paths = (os.path.join(root, f) for f in files)
+            ensure_binaries_are_relocatable(filter(is_binary, abs_paths))
+        except InstallRootStringError:
             return False
 
     return True
 
 
-def file_is_relocatable(filename, paths_to_relocate=None):
-    """Returns True if the filename passed as argument is relocatable.
+def ensure_binary_is_relocatable(filename, paths_to_relocate=None):
+    """Raises if any given or default absolute path is found in the
+    binary (apart from rpaths / load commands).
 
     Args:
         filename: absolute path of the file to be analyzed
 
-    Returns:
-        True or false
-
     Raises:
-
+        InstallRootStringError: if the binary contains an absolute path
         ValueError: if the filename does not exist or the path is not absolute
     """
-    default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
-    paths_to_relocate = paths_to_relocate or default_paths_to_relocate
+    paths_to_relocate = paths_to_relocate or [spack.store.layout.root, spack.paths.prefix]
 
     if not os.path.exists(filename):
         raise ValueError("{0} does not exist".format(filename))
@@ -987,13 +752,7 @@ def file_is_relocatable(filename, paths_to_relocate=None):
 
     for path_to_relocate in paths_to_relocate:
         if any(path_to_relocate in x for x in set_of_strings):
-            # One binary has the root folder not in the RPATH,
-            # meaning that this spec is not relocatable
-            msg = 'Found "{0}" in {1} strings'
-            tty.debug(msg.format(path_to_relocate, filename), level=2)
-            return False
-
-    return True
+            raise InstallRootStringError(filename, path_to_relocate)
 
 
 def is_binary(filename):
@@ -1064,7 +823,7 @@ def fixup_macos_rpath(root, filename):
 
     # Check for nonexistent rpaths (often added by spack linker overzealousness
     # with both lib/ and lib64/) and duplicate rpaths
-    for (rpath, count) in rpaths.items():
+    for rpath, count in rpaths.items():
         if rpath.startswith("@loader_path") or rpath.startswith("@executable_path"):
             # Allowable relative paths
             pass

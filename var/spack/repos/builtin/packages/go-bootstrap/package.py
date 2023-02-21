@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,11 @@ class GoBootstrap(Package):
 
     depends_on("git", type=("build", "link", "run"))
 
-    conflicts("os=monterey", msg="go-bootstrap won't build on new macOS")
+    conflicts(
+        "os=monterey",
+        msg="go-bootstrap won't build on MacOS Monterey: "
+        "try `brew install go` and `spack external find go`",
+    )
     conflicts("target=aarch64:", msg="Go bootstrap doesn't support aarch64 architectures")
 
     # This virtual package allows a fallback to gccgo for aarch64,
@@ -75,10 +79,7 @@ class GoBootstrap(Package):
             # test files so that these tests don't cause false failures.
             # See: https://github.com/golang/go/issues/15694
             test_suite_file = FileFilter(join_path("src", "run.bash"))
-            test_suite_file.filter(
-                r"^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$",
-                r"# \1\2\3",
-            )
+            test_suite_file.filter(r"^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$", r"# \1\2\3")
 
         # Go uses a hardcoded limit of 4096 bytes for its printf functions.
         # This can cause environment variables to be truncated.

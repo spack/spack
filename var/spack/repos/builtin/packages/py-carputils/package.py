@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,11 @@ class PyCarputils(PythonPackage):
     homepage = "https://www.opencarp.org"
     git = "https://git.opencarp.org/openCARP/carputils.git"
 
-    maintainers = ["MarieHouillon"]
+    maintainers("MarieHouillon")
 
     version("master", branch="master")
     # Version to use with openCARP releases
+    version("oc12.0", commit="4d7a1f0c604a2ad232e70cf9aa3a8daff5ffb195")
     version("oc11.0", commit="a02f9b846c6e852b7315b20e925d55c355f239b8")
     version("oc10.0", commit="a02f9b846c6e852b7315b20e925d55c355f239b8")
     version("oc9.0", commit="e79e66b25c7bfaf405fad595019594ab9aa83392")

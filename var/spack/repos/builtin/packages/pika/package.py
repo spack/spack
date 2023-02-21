@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
     git = "https://github.com/pika-org/pika.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
+    maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.12.0", sha256="daa1422eb73d6a897ce7b8ff8022e09e7b0fec83d92728ed941a92e57dec5da3")
+    version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
     version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
     version("0.9.0", sha256="c349b2a96476d6974d2421288ca4d2e14ef9e5897d44cd7d5343165faa2d1299")
     version("0.8.0", sha256="058e82d7c8f95badabe52bbb4682d55aadf340d67ced1226c0673b4529adc182")
@@ -42,7 +44,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant(
         "malloc",
-        default="tcmalloc",
+        default="mimalloc",
         description="Define which allocator will be linked in",
         values=("system", "jemalloc", "mimalloc", "tbbmalloc", "tcmalloc"),
     )
@@ -65,7 +67,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         "p2300",
         default=False,
         description="Use P2300 reference implementation for sender/receiver functionality",
-        when="@main",
+        when="@0.9:",
     )
 
     # Build dependencies
@@ -82,8 +84,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+p2300", when="cxxstd=17")
 
     # Other dependencies
-    depends_on("hwloc@1.11.5:")
     depends_on("boost@1.71:")
+    depends_on("fmt@9:", when="@0.11:")
+    depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
     depends_on("jemalloc", when="malloc=jemalloc")
@@ -100,11 +103,32 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
     conflicts("tracy-client@0.9:", when="@:0.9")
-    depends_on("whip+rocm", when="@0.9: +rocm")
-    depends_on("whip+cuda", when="@0.9: +cuda")
+    depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
+    depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    with when("+rocm"):
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on(
+                "whip@0.1: amdgpu_target={0}".format(val),
+                when="@0.9: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocsolver amdgpu_target={0}".format(val),
+                when="@0.5: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
+            )
+
+    with when("+cuda"):
+        for val in CudaPackage.cuda_arch_values:
+            depends_on(
+                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
+            )
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
+        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
@@ -126,6 +150,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         sha256="2944f746f5ae4385aba11b7c4a2f991abc108b08ea3dc394bf61c20fc7a2c4f2",
         when="@0.7.0 platform=darwin",
     )
+
+    # Fix constexpr/fmt bug on macOS
+    # Upstream patch is
+    # https://github.com/pika-org/pika/commit/33655188fe4b9bcfad1e98a05e9ebcc22afc7ef8.patch,
+    # but it requires changes to apply to 0.11.0.
+    patch("thread_id_fmt.patch", when="@0.11 platform=darwin")
 
     def cmake_args(self):
         spec, args = self.spec, []

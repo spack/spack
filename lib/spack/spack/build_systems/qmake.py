@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,6 +81,6 @@ class QMakeBuilder(BaseBuilder):
     def check(self):
         """Search the Makefile for a ``check:`` target and runs it if found."""
         with working_dir(self.build_directory):
-            self._if_make_target_execute("check")
+            self.pkg._if_make_target_execute("check")
 
     spack.builder.run_after("build")(execute_build_time_tests)

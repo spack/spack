@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Bolt(CMakePackage):
     homepage = "https://www.bolt-omp.org/"
     url = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
     git = "https://github.com/pmodels/bolt.git"
-    maintainers = ["shintaro-iwasaki"]
+    maintainers("shintaro-iwasaki")
 
     tags = ["e4s"]
 

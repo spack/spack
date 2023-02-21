@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,9 +69,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        args = [
-            "--with-gmp=" + self.spec["gmp"].prefix,
-        ]
+        args = ["--with-gmp=" + self.spec["gmp"].prefix]
         args += self.enable_or_disable("libs")
         if "libs=static" in self.spec:
             args.append("--with-pic")

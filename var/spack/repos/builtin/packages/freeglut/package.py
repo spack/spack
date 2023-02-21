@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
         depends_on("glx")
         depends_on("libx11")
         depends_on("libxi")
+        depends_on("libxxf86vm")
     with when("platform=cray"):
         depends_on("glx")
         depends_on("libx11")

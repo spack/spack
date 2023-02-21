@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class NetcdfC(AutotoolsPackage):
     git = "https://github.com/Unidata/netcdf-c.git"
     url = "https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.8.1.tar.gz"
 
-    maintainers = ["skosukhin", "WardF"]
+    maintainers("skosukhin", "WardF")
 
     version("main", branch="main")
     version("4.9.0", sha256="9f4cb864f3ab54adb75409984c6202323d2fc66c003e5308f3cdf224ed41c0a6")
@@ -68,6 +68,9 @@ class NetcdfC(AutotoolsPackage):
     # See https://github.com/Unidata/netcdf-c/pull/2293
     patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1")
 
+    # See https://github.com/Unidata/netcdf-c/pull/2618
+    patch("4.9.0-no-mpi-yes-pnetcdf.patch", when="@4.9.0: ~mpi+parallel-netcdf")
+
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")
     variant("parallel-netcdf", default=False, description="Enable parallel I/O for classic files")
     variant("hdf4", default=False, description="Enable HDF4 support")
@@ -97,6 +100,10 @@ class NetcdfC(AutotoolsPackage):
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
     depends_on("curl@7.18.0:", when="+dap")
     # depends_on("curl@7.18.0:", when='+cdmremote')
+
+    # Need to include libxml2 when using DAP in 4.9.0 and newer to build
+    # https://github.com/Unidata/netcdf-c/commit/53464e89635a43b812b5fec5f7abb6ff34b9be63
+    depends_on("libxml2", when="@4.9.0:+dap")
 
     depends_on("parallel-netcdf", when="+parallel-netcdf")
 
@@ -209,8 +216,6 @@ class NetcdfC(AutotoolsPackage):
         hdf5_hl = self.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
-        if hdf5_hl.satisfies("~shared"):
-            libs.append(hdf5_hl.libs.link_flags)
 
         if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")

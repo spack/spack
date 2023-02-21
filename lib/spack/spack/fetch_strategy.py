@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,27 +29,20 @@ import os.path
 import re
 import shutil
 import sys
-from typing import List, Optional  # novm
-
-import six
-import six.moves.urllib.parse as urllib_parse
+import urllib.parse
+from typing import List, Optional
 
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    get_single_file,
-    mkdirp,
-    temp_cwd,
-    temp_rename,
-    working_dir,
-)
+from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
 from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto as crypto
+import spack.util.git
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -108,12 +101,12 @@ class FetchStrategy(object):
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr = None  # type: Optional[str]
+    url_attr: Optional[str] = None
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
     # optional attributes in version() args.
-    optional_attrs = []  # type: List[str]
+    optional_attrs: List[str] = []
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
@@ -316,17 +309,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def candidate_urls(self):
-        urls = []
-
-        for url in [self.url] + (self.mirrors or []):
-            # This must be skipped on Windows due to URL encoding
-            # of ':' characters on filepaths on Windows
-            if sys.platform != "win32" and url.startswith("file://"):
-                path = urllib_parse.quote(url[len("file://") :])
-                url = "file://" + path
-            urls.append(url)
-
-        return urls
+        return [self.url] + (self.mirrors or [])
 
     @_needs_stage
     def fetch(self):
@@ -337,7 +320,7 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-            if not web_util.url_exists(url, self.curl):
+            if not web_util.url_exists(url):
                 tty.debug("URL does not exist: " + url)
                 continue
 
@@ -498,7 +481,9 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        web_util.push_to_url(self.archive_file, destination, keep_original=True)
+        web_util.push_to_url(
+            self.archive_file, url_util.path_to_file_url(destination), keep_original=True
+        )
 
     @_needs_stage
     def check(self):
@@ -509,9 +494,14 @@ class URLFetchStrategy(FetchStrategy):
 
         checker = crypto.Checker(self.digest)
         if not checker.check(self.archive_file):
+            # On failure, provide some information about the file size and
+            # contents, so that we can quickly see what the issue is (redirect
+            # was not followed, empty file, text instead of binary, ...)
+            size, contents = fs.filesummary(self.archive_file)
             raise ChecksumError(
-                "%s checksum failed for %s" % (checker.hash_name, self.archive_file),
-                "Expected %s but got %s" % (self.digest, checker.sum),
+                f"{checker.hash_name} checksum failed for {self.archive_file}",
+                f"Expected {self.digest} but got {checker.sum}. "
+                f"File size = {size} bytes. Contents = {contents!r}",
             )
 
     @_needs_stage
@@ -551,8 +541,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        reg_str = r"^file://"
-        path = re.sub(reg_str, "", self.url)
+        path = url_util.file_url_string_to_path(self.url)
 
         # check whether the cache file exists.
         if not os.path.isfile(path):
@@ -620,7 +609,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         patterns = kwargs.get("exclude", None)
         if patterns is not None:
-            if isinstance(patterns, six.string_types):
+            if isinstance(patterns, str):
                 patterns = [patterns]
             for p in patterns:
                 tar.add_default_arg("--exclude=%s" % p)
@@ -776,7 +765,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     @property
     def git(self):
         if not self._git:
-            self._git = which("git", required=True)
+            self._git = spack.util.git.git()
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
@@ -801,7 +790,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     def mirror_id(self):
         repo_ref = self.commit or self.tag or self.branch
         if repo_ref:
-            repo_path = url_util.parse(self.url).path
+            repo_path = urllib.parse.urlparse(self.url).path
             result = os.path.sep.join(["git", repo_path, repo_ref])
             return result
 
@@ -1147,7 +1136,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     def mirror_id(self):
         if self.revision:
-            repo_path = url_util.parse(self.url).path
+            repo_path = urllib.parse.urlparse(self.url).path
             result = os.path.sep.join(["svn", repo_path, self.revision])
             return result
 
@@ -1258,7 +1247,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     def mirror_id(self):
         if self.revision:
-            repo_path = url_util.parse(self.url).path
+            repo_path = urllib.parse.urlparse(self.url).path
             result = os.path.sep.join(["hg", repo_path, self.revision])
             return result
 
@@ -1330,7 +1319,7 @@ class S3FetchStrategy(URLFetchStrategy):
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
 
-        parsed_url = url_util.parse(self.url)
+        parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "s3":
             raise web_util.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
 
@@ -1377,7 +1366,7 @@ class GCSFetchStrategy(URLFetchStrategy):
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
 
-        parsed_url = url_util.parse(self.url)
+        parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "gs":
             raise web_util.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
 
@@ -1544,11 +1533,7 @@ def for_package_version(pkg, version):
         # performance hit for branches on older versions of git.
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
         ref_type = "commit" if version.is_commit else "tag"
-        kwargs = {
-            "git": pkg.git,
-            ref_type: version.ref,
-            "no_cache": True,
-        }
+        kwargs = {"git": pkg.git, ref_type: version.ref, "no_cache": True}
 
         kwargs["submodules"] = getattr(pkg, "submodules", False)
 
@@ -1607,7 +1592,7 @@ def from_url_scheme(url, *args, **kwargs):
     in the given url."""
 
     url = kwargs.get("url", url)
-    parsed_url = urllib_parse.urlparse(url, scheme="file")
+    parsed_url = urllib.parse.urlparse(url, scheme="file")
 
     scheme_mapping = kwargs.get("scheme_mapping") or {
         "file": "url",
@@ -1682,7 +1667,8 @@ class FsCache(object):
 
     def fetcher(self, target_path, digest, **kwargs):
         path = os.path.join(self.root, target_path)
-        return CacheURLFetchStrategy(path, digest, **kwargs)
+        url = url_util.path_to_file_url(path)
+        return CacheURLFetchStrategy(url, digest, **kwargs)
 
     def destroy(self):
         shutil.rmtree(self.root, ignore_errors=True)

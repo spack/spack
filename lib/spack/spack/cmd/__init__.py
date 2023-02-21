@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,9 @@ import re
 import shlex
 import sys
 from textwrap import dedent
-from typing import List, Tuple
+from typing import List, Match, Tuple
 
 import ruamel.yaml as yaml
-import six
 from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
@@ -27,9 +26,11 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.parser
 import spack.paths
 import spack.spec
 import spack.store
+import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.string
@@ -160,23 +161,18 @@ class _UnquotedFlags(object):
     """
 
     flags_arg_pattern = re.compile(
-        r'^({0})=([^\'"].*)$'.format(
-            "|".join(spack.spec.FlagMap.valid_compiler_flags()),
-        )
+        r'^({0})=([^\'"].*)$'.format("|".join(spack.spec.FlagMap.valid_compiler_flags()))
     )
 
-    def __init__(self, all_unquoted_flag_pairs):
-        # type: (List[Tuple[re.Match, str]]) -> None
+    def __init__(self, all_unquoted_flag_pairs: List[Tuple[Match[str], str]]):
         self._flag_pairs = all_unquoted_flag_pairs
 
-    def __bool__(self):
-        # type: () -> bool
+    def __bool__(self) -> bool:
         return bool(self._flag_pairs)
 
     @classmethod
-    def extract(cls, sargs):
-        # type: (str) -> _UnquotedFlags
-        all_unquoted_flag_pairs = []  # type: List[Tuple[re.Match, str]]
+    def extract(cls, sargs: str) -> "_UnquotedFlags":
+        all_unquoted_flag_pairs: List[Tuple[Match[str], str]] = []
         prev_flags_arg = None
         for arg in shlex.split(sargs):
             if prev_flags_arg is not None:
@@ -184,8 +180,7 @@ class _UnquotedFlags(object):
             prev_flags_arg = cls.flags_arg_pattern.match(arg)
         return cls(all_unquoted_flag_pairs)
 
-    def report(self):
-        # type: () -> str
+    def report(self) -> str:
         single_errors = [
             "({0}) {1} {2} => {3}".format(
                 i + 1,
@@ -216,12 +211,12 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get("tests", False)
 
     sargs = args
-    if not isinstance(args, six.string_types):
+    if not isinstance(args, str):
         sargs = " ".join(args)
     unquoted_flags = _UnquotedFlags.extract(sargs)
 
     try:
-        specs = spack.spec.parse(sargs)
+        specs = spack.parser.parse(sargs)
         for spec in specs:
             if concretize:
                 spec.concretize(tests=tests)  # implies normalize
@@ -230,7 +225,6 @@ def parse_specs(args, **kwargs):
         return specs
 
     except spack.error.SpecError as e:
-
         msg = e.message
         if e.long_message:
             msg += e.long_message
@@ -464,11 +458,12 @@ def display_specs(specs, args=None, **kwargs):
         # create the final, formatted versions of all specs
         formatted = []
         for spec in specs:
-            formatted.append((fmt(spec), spec))
             if deps:
-                for depth, dep in spec.traverse(root=False, depth=True):
-                    formatted.append((fmt(dep, depth), dep))
+                for depth, dep in traverse.traverse_tree([spec], depth_first=False):
+                    formatted.append((fmt(dep.spec, depth), dep.spec))
                 formatted.append(("", None))  # mark newlines
+            else:
+                formatted.append((fmt(spec), spec))
 
         # unless any of these are set, we can just colify and be done.
         if not any((deps, paths)):

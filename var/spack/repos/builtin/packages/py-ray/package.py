@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,6 @@ class PyRay(PythonPackage):
     depends_on("py-attrs", when="@2.0.1", type=("build", "run"))
     depends_on("py-click@7:8.0.4", when="@2.0.1", type=("build", "run"))
     depends_on("py-click@7.0:", when="@0.8.7", type=("build", "run"))
-    depends_on("py-dataclasses", when="@2.0.1 ^python@:3.6", type=("build", "run"))
     depends_on("py-filelock", type=("build", "run"))
     depends_on("py-grpcio@1.32:1.43.0", when="@2.0.1 ^python@:3.9", type=("build", "run"))
     depends_on("py-grpcio@1.42:1.43.0", when="@2.0.1 ^python@3.10:", type=("build", "run"))

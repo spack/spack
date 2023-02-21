@@ -1,8 +1,8 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import inspect
 import os
 import platform
 import posixpath
@@ -14,13 +14,10 @@ from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.build_environment
 import spack.config
+import spack.package_base
 import spack.spec
 import spack.util.spack_yaml as syaml
-from spack.build_environment import (
-    _static_to_shared_library,
-    determine_number_of_jobs,
-    dso_suffix,
-)
+from spack.build_environment import _static_to_shared_library, determine_number_of_jobs, dso_suffix
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
@@ -159,7 +156,6 @@ def test_static_to_shared_library(build_environment):
 @pytest.mark.regression("8345")
 @pytest.mark.usefixtures("config", "mock_packages")
 def test_cc_not_changed_by_modules(monkeypatch, working_env):
-
     s = spack.spec.Spec("cmake")
     s.concretize()
     pkg = s.package
@@ -435,20 +431,20 @@ dt-diamond-left:
     assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) & external_lib_paths)
 
 
-def test_parallel_false_is_not_propagating(config, mock_packages):
-    class AttributeHolder(object):
-        pass
+def test_parallel_false_is_not_propagating(default_mock_concretization):
+    """Test that parallel=False is not propagating to dependencies"""
+    # a foobar=bar (parallel = False)
+    # |
+    # b (parallel =True)
+    s = default_mock_concretization("a foobar=bar")
 
-    # Package A has parallel = False and depends on B which instead
-    # can be built in parallel
-    s = spack.spec.Spec("a foobar=bar")
-    s.concretize()
+    spack.build_environment.set_module_variables_for_package(s.package)
+    assert s["a"].package.module.make_jobs == 1
 
-    for spec in s.traverse():
-        expected_jobs = spack.config.get("config:build_jobs") if s.package.parallel else 1
-        m = AttributeHolder()
-        spack.build_environment._set_variables_for_single_module(s.package, m)
-        assert m.make_jobs == expected_jobs
+    spack.build_environment.set_module_variables_for_package(s["b"].package)
+    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        s["b"].package.parallel
+    )
 
 
 @pytest.mark.parametrize(
@@ -521,3 +517,27 @@ def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_mo
     assert mock_module_cmd.calls
     assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
     assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
+
+
+class TestModuleMonkeyPatcher:
+    def test_getting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+        assert module_wrapper.Libelf == s.package.module.Libelf
+
+    def test_setting_attributes(self, default_mock_concretization):
+        s = default_mock_concretization("libelf")
+        module = s.package.module
+        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+
+        # Setting an attribute has an immediate effect
+        module_wrapper.SOME_ATTRIBUTE = 1
+        assert module.SOME_ATTRIBUTE == 1
+
+        # We can also propagate the settings to classes in the MRO
+        module_wrapper.propagate_changes_to_mro()
+        for cls in inspect.getmro(type(s.package)):
+            current_module = cls.module
+            if current_module == spack.package_base:
+                break
+            assert current_module.SOME_ATTRIBUTE == 1

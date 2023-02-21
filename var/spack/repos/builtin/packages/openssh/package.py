@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,6 +57,7 @@ class Openssh(AutotoolsPackage):
     depends_on("ncurses")
     depends_on("zlib")
     depends_on("py-twisted", type="test")
+    depends_on("libxcrypt", type="link")
 
     conflicts(
         "%clang@15.0.0",
@@ -64,8 +65,8 @@ class Openssh(AutotoolsPackage):
         msg="clang-15.0.0 has a bug which enabled -Werror=implicit-function-declaration"
         "Please switch to clang-15.0.1 which fixes this bug or an other compiler.",
     )
-
-    maintainers = ["bernhardkaindl"]
+    
+    maintainers("bernhardkaindl")
     executables = [
         "^ssh$",
         "^scp$",

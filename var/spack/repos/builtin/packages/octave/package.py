@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,10 +24,11 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/octave/"
     gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
-    maintainers = ["mtmiller", "siko1056"]
+    maintainers("mtmiller", "siko1056")
 
     extendable = True
 
+    version("7.3.0", sha256="6e14a4649d70af45ab660f8cbbf645aaf1ec33f25f88bfda4697cb17e440c4f5")
     version("7.2.0", sha256="b12cb652587d31c5c382b39ed73463c22a5259ecb2fa6b323a27da409222dacc")
     version("7.1.0", sha256="d4a9d81f3f67b4a6e07cb7a80dcb10ad5e9176fcc30762c70a81580a64b8b0b6")
     version("6.4.0", sha256="b48f33d4fceaf394cfbea73a8c850000936d83a41739a24f7568b5b0a7b39acd")
@@ -88,7 +89,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on("arpack-ng", when="+arpack")
     depends_on("curl", when="+curl")
-    depends_on("fftw", when="+fftw")
+    depends_on("fftw-api@3", when="+fftw")
     depends_on("fltk", when="+fltk")
     depends_on("fontconfig", when="+fontconfig")
     depends_on("freetype", when="+freetype")
@@ -221,12 +222,13 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             config_args.append("--without-curl")
 
         if "+fftw" in spec:
+            fftw_string = "fftw-api"
             config_args.extend(
                 [
-                    "--with-fftw3-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3-libdir=%s" % spec["fftw"].prefix.lib,
-                    "--with-fftw3f-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3f-libdir=%s" % spec["fftw"].prefix.lib,
+                    "--with-fftw3-includedir=%s" % spec[fftw_string].prefix.include,
+                    "--with-fftw3-libdir=%s" % spec[fftw_string].prefix.lib,
+                    "--with-fftw3f-includedir=%s" % spec[fftw_string].prefix.include,
+                    "--with-fftw3f-libdir=%s" % spec[fftw_string].prefix.lib,
                 ]
             )
         else:

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,6 +46,14 @@ def setup_parser(subparser):
     )
 
 
+def shift(asp_function):
+    """Transforms ``attr("foo", "bar")`` into ``foo("bar")``."""
+    if not asp_function.args:
+        raise ValueError(f"Can't shift ASP function with no arguments: {str(asp_function)}")
+    first, *rest = asp_function.args
+    return asp.AspFunction(first, rest)
+
+
 def compare_specs(a, b, to_string=False, color=None):
     """
     Generate a comparison, including diffs (for each side) and an intersection.
@@ -71,22 +79,14 @@ def compare_specs(a, b, to_string=False, color=None):
     # get facts for specs, making sure to include build dependencies of concrete
     # specs and to descend into dependency hashes so we include all facts.
     a_facts = set(
-        t
-        for t in setup.spec_clauses(
-            a,
-            body=True,
-            expand_hashes=True,
-            concrete_build_deps=True,
-        )
+        shift(func)
+        for func in setup.spec_clauses(a, body=True, expand_hashes=True, concrete_build_deps=True)
+        if func.name == "attr"
     )
     b_facts = set(
-        t
-        for t in setup.spec_clauses(
-            b,
-            body=True,
-            expand_hashes=True,
-            concrete_build_deps=True,
-        )
+        shift(func)
+        for func in setup.spec_clauses(b, body=True, expand_hashes=True, concrete_build_deps=True)
+        if func.name == "attr"
     )
 
     # We want to present them to the user as simple key: values

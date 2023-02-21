@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.package import *
 class Charliecloud(AutotoolsPackage):
     """Lightweight user-defined software stacks for HPC."""
 
-    maintainers = ["j-ogas", "reidpr"]
+    maintainers("j-ogas", "reidpr")
     homepage = "https://hpc.github.io/charliecloud"
     url = "https://github.com/hpc/charliecloud/releases/download/v0.18/charliecloud-0.18.tar.gz"
     git = "https://github.com/hpc/charliecloud.git"
@@ -17,7 +17,12 @@ class Charliecloud(AutotoolsPackage):
     tags = ["e4s"]
 
     version("master", branch="master")
-    version("0.29", sha256="c89562e9dce4c10027434ad52eaca2140e2ba8667aa1ec9eadf789b4d7c1a6db")
+    version("0.30", sha256="97d45b25c9f813d8bae79b16de49503a165bc94c05dd2166975154d9b6ac78e9")
+    version(
+        "0.29",
+        deprecated=True,
+        sha256="c89562e9dce4c10027434ad52eaca2140e2ba8667aa1ec9eadf789b4d7c1a6db",
+    )
     version(
         "0.28",
         deprecated=True,

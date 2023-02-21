@@ -1,24 +1,21 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division
 
+import collections.abc
 import contextlib
 import functools
 import inspect
+import itertools
 import os
 import re
 import sys
 import traceback
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterable, List, Tuple
-
-import six
-from six import string_types
-
-from llnl.util.compat import MutableMapping, MutableSequence, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r"^\.#", "~$"]
@@ -200,14 +197,9 @@ def memoized(func):
             return ret
         except TypeError as e:
             # TypeError is raised when indexing into a dict if the key is unhashable.
-            raise six.raise_from(
-                UnhashableArguments(
-                    "args + kwargs '{}' was not hashable for function '{}'".format(
-                        key, func.__name__
-                    ),
-                ),
-                e,
-            )
+            raise UnhashableArguments(
+                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__)
+            ) from e
 
     return _memoized_function
 
@@ -245,6 +237,7 @@ def decorator_with_or_without_args(decorator):
         @decorator
 
     """
+
     # See https://stackoverflow.com/questions/653368 for more on this
     @functools.wraps(decorator)
     def new_dec(*args, **kwargs):
@@ -312,7 +305,7 @@ def lazy_eq(lseq, rseq):
     # zip_longest is implemented in native code, so use it for speed.
     # use zip_longest instead of zip because it allows us to tell
     # which iterator was longer.
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return False
 
@@ -332,7 +325,7 @@ def lazy_lt(lseq, rseq):
     liter = lseq()
     riter = rseq()
 
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return left is done  # left was shorter than right
 
@@ -482,7 +475,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
 
 @lazy_lexicographic_ordering
-class HashableMap(MutableMapping):
+class HashableMap(collections.abc.MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
 
@@ -574,7 +567,7 @@ def match_predicate(*args):
 
     def match(string):
         for arg in args:
-            if isinstance(arg, string_types):
+            if isinstance(arg, str):
                 if re.search(arg, string):
                     return True
             elif isinstance(arg, list) or isinstance(arg, tuple):
@@ -749,6 +742,18 @@ def pretty_string_to_date(date_str, now=None):
     raise ValueError(msg)
 
 
+def pretty_seconds_formatter(seconds):
+    if seconds >= 1:
+        multiplier, unit = 1, "s"
+    elif seconds >= 1e-3:
+        multiplier, unit = 1e3, "ms"
+    elif seconds >= 1e-6:
+        multiplier, unit = 1e6, "us"
+    else:
+        multiplier, unit = 1e9, "ns"
+    return lambda s: "%.3f%s" % (multiplier * s, unit)
+
+
 def pretty_seconds(seconds):
     """Seconds to string with appropriate units
 
@@ -758,15 +763,7 @@ def pretty_seconds(seconds):
     Returns:
         str: Time string with units
     """
-    if seconds >= 1:
-        value, unit = seconds, "s"
-    elif seconds >= 1e-3:
-        value, unit = seconds * 1e3, "ms"
-    elif seconds >= 1e-6:
-        value, unit = seconds * 1e6, "us"
-    else:
-        value, unit = seconds * 1e9, "ns"
-    return "%.3f%s" % (value, unit)
+    return pretty_seconds_formatter(seconds)(seconds)
 
 
 class RequiredAttributeError(ValueError):
@@ -887,32 +884,28 @@ def load_module_from_file(module_name, module_path):
         ImportError: when the module can't be loaded
         FileNotFoundError: when module_path doesn't exist
     """
+    import importlib.util
+
     if module_name in sys.modules:
         return sys.modules[module_name]
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
-        import importlib.util
 
-        spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-        module = importlib.util.module_from_spec(spec)  # novm
-        # The module object needs to exist in sys.modules before the
-        # loader executes the module code.
-        #
-        # See https://docs.python.org/3/reference/import.html#loading
-        sys.modules[spec.name] = module
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    module = importlib.util.module_from_spec(spec)
+    # The module object needs to exist in sys.modules before the
+    # loader executes the module code.
+    #
+    # See https://docs.python.org/3/reference/import.html#loading
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
         try:
-            spec.loader.exec_module(module)
-        except BaseException:
-            try:
-                del sys.modules[spec.name]
-            except KeyError:
-                pass
-            raise
-    elif sys.version_info[0] == 2:
-        import imp
-
-        module = imp.load_source(module_name, module_path)
+            del sys.modules[spec.name]
+        except KeyError:
+            pass
+        raise
     return module
 
 
@@ -998,10 +991,8 @@ def enum(**kwargs):
 
 
 def stable_partition(
-    input_iterable,  # type: Iterable
-    predicate_fn,  # type: Callable[[Any], bool]
-):
-    # type: (...) -> Tuple[List[Any], List[Any]]
+    input_iterable: Iterable, predicate_fn: Callable[[Any], bool]
+) -> Tuple[List[Any], List[Any]]:
     """Partition the input iterable according to a custom predicate.
 
     Args:
@@ -1030,7 +1021,7 @@ def ensure_last(lst, *elements):
         lst.append(lst.pop(lst.index(elt)))
 
 
-class TypedMutableSequence(MutableSequence):
+class TypedMutableSequence(collections.abc.MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
     Client code can inherit from this base class:
@@ -1073,23 +1064,20 @@ class GroupedExceptionHandler(object):
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
-        self.exceptions = []  # type: List[Tuple[str, Exception, List[str]]]
+        self.exceptions: List[Tuple[str, Exception, List[str]]] = []
 
     def __bool__(self):
         """Whether any exceptions were handled."""
         return bool(self.exceptions)
 
-    def forward(self, context):
-        # type: (str) -> GroupedExceptionForwarder
+    def forward(self, context: str) -> "GroupedExceptionForwarder":
         """Return a contextmanager which extracts tracebacks and prefixes a message."""
         return GroupedExceptionForwarder(context, self)
 
-    def _receive_forwarded(self, context, exc, tb):
-        # type: (str, Exception, List[str]) -> None
+    def _receive_forwarded(self, context: str, exc: Exception, tb: List[str]):
         self.exceptions.append((context, exc, tb))
 
-    def grouped_message(self, with_tracebacks=True):
-        # type: (bool) -> str
+    def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
             "{0} raised {1}: {2}{3}".format(
@@ -1107,8 +1095,7 @@ class GroupedExceptionForwarder(object):
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
-    def __init__(self, context, handler):
-        # type: (str, GroupedExceptionHandler) -> None
+    def __init__(self, context: str, handler: GroupedExceptionHandler):
         self._context = context
         self._handler = handler
 
@@ -1117,11 +1104,7 @@ class GroupedExceptionForwarder(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_value is not None:
-            self._handler._receive_forwarded(
-                self._context,
-                exc_value,
-                traceback.format_tb(tb),
-            )
+            self._handler._receive_forwarded(self._context, exc_value, traceback.format_tb(tb))
 
         # Suppress any exception from being re-raised:
         # https://docs.python.org/3/reference/datamodel.html#object.__exit__.

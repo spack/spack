@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Mgis(CMakePackage):
     homepage = "https://thelfer.github.io/mgis/web/index.html"
     url = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.2.tar.gz"
     git = "https://github.com/thelfer/MFrontGenericInterfaceSupport.git"
-    maintainers = ["thelfer"]
+    maintainers("thelfer")
 
     # development branches
     version("master", branch="master")
@@ -85,7 +85,6 @@ class Mgis(CMakePackage):
                 self._if_ninja_target_execute("check")
 
     def cmake_args(self):
-
         args = []
 
         args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
