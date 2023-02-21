@@ -114,6 +114,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
 
     setup_run_environment = setup_build_environment
 
+    @when("@6.0.0:%oneapi")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("-c", "cd src && autoreconf -ivf")
