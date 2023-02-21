@@ -3545,11 +3545,11 @@ class Spec(object):
 
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
-            deps_strict = strict
-            if self._concrete and not other.name:
-                # We're dealing with existing specs
-                deps_strict = True
-            return self.satisfies_dependencies(other, strict=deps_strict)
+            # deps_strict = strict
+            # if self._concrete and not other.name:
+            #     # We're dealing with existing specs
+            #     deps_strict = True
+            return self.satisfies_dependencies(other, strict=strict)
         else:
             return True
 
@@ -3859,9 +3859,9 @@ class Spec(object):
 
         # if anonymous or same name, we only have to look at the root
         if not spec.name or spec.name == self.name:
-            return self.satisfies(spec)
+            return self.satisfies(spec, strict=True)
         else:
-            return any(s.satisfies(spec) for s in self.traverse(root=False))
+            return any(s.satisfies(spec, strict=True) for s in self.traverse(root=False))
 
     def eq_dag(self, other, deptypes=True, vs=None, vo=None):
         """True if the full dependency DAGs of specs are equal."""

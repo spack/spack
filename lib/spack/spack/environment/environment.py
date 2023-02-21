@@ -349,7 +349,8 @@ def _is_dev_spec_and_has_changed(spec):
 
 def _spec_needs_overwrite(spec, changed_dev_specs):
     """Check whether the current spec needs to be overwritten because either it has
-    changed itself or one of its dependencies have changed"""
+    changed itself or one of its dependencies have changed
+    """
     # if it's not installed, we don't need to overwrite it
     if not spec.installed:
         return False
@@ -359,13 +360,13 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
         return True
 
     # if spec and all deps aren't dev builds, we don't need to overwrite it
-    if not any(spec.satisfies(c) for c in ("dev_path=*", "^dev_path=*")):
+    if not any(spec.satisfies(c, strict=True) for c in ("dev_path=*", "^dev_path=*")):
         return False
 
     # If any dep needs overwrite, or any dep is missing and is a dev build then
     # overwrite this package
     if any(
-        ((not dep.installed) and dep.satisfies("dev_path=*"))
+        ((not dep.installed) and dep.satisfies("dev_path=*", strict=True))
         or _spec_needs_overwrite(dep, changed_dev_specs)
         for dep in spec.traverse(root=False)
     ):
@@ -1723,7 +1724,8 @@ class Environment(object):
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
                 if not spec.installed or (
-                    spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
+                    spec.satisfies("dev_path=*", strict=True)
+                    or spec.satisfies("^dev_path=*", strict=True)
                 ):
                     uninstalled.append(spec)
                 else:
