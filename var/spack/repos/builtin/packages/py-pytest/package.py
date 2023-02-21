@@ -64,19 +64,19 @@ class PyPytest(PythonPackage):
     depends_on("py-pluggy@0.7:", when="@3.7:4.3", type=("build", "run"))
     depends_on("py-pluggy@0.5:0.7", when="@3.6.4:3.6", type=("build", "run"))
     depends_on("py-pluggy@0.5:0.6", when="@:3.6.3", type=("build", "run"))
+    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
+    depends_on("py-exceptiongroup@1:", when="@7: ^python@:3.10", type=("build", "run"))
+    depends_on("py-importlib-metadata@0.12:", when="@4.6:5.0", type=("build", "run"))
+    depends_on("py-importlib-metadata@0.12:", when="@5.1: ^python@:3.7", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@7.1: ^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@7.0", type=("build", "run"))
+
+    # Historic dependencies
     depends_on("py-py@1.8.2:", when="@6:7.1", type=("build", "run"))
     depends_on("py-py@1.5.0:", when="@3.3:5", type=("build", "run"))
     depends_on("py-py@1.4.33:", when="@3.1.2:3.2.3,3.2.5:3.2", type=("build", "run"))
     depends_on("py-py@1.4.33:1.4", when="@3.2.4", type=("build", "run"))
     depends_on("py-py@1.4.29:", when="@:3.1.1", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@7.0", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@7.1: ^python@:3.10", type=("build", "run"))
-    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.12:", when="@4.6:5.0", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.12:", when="@5.1: ^python@:3.7", type=("build", "run"))
-    depends_on("py-exceptiongroup@1:", when="@7: ^python@:3.10", type=("build", "run"))
-
-    # Historic dependencies
     depends_on("py-atomicwrites@1.0:", when="@5.3:7.1.2 platform=windows", type=("build", "run"))
     depends_on("py-atomicwrites@1.0:", when="@3.6:5.2", type=("build", "run"))
     depends_on("py-toml", when="@6", type=("build", "run"))
