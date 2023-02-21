@@ -405,7 +405,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
                 raise ModuleNotFoundError(
-                    "The module for package {} should be at {} but it does not exist!".format(
+                    "The module for package {} should be at {}, but it does not exist".format(
                         spec.format(fmt_str), writer.layout.filename
                     )
                 )
