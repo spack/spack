@@ -116,7 +116,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts(
         "+shared",
-        when="+cuda+raja",
+        when="+cuda+raja ^raja@:0.14",
         msg="umpire+cuda exports device code and requires static libs",
     )
 
