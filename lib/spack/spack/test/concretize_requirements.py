@@ -150,6 +150,31 @@ packages:
     assert s1.satisfies("@2.2")
 
 
+def test_requirement_adds_git_hash_version(
+    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+
+    a_commit_hash = commits[0]
+    conf_str = """\
+packages:
+  v:
+    require: "@{0}"
+""".format(
+        a_commit_hash
+    )
+    update_packages_config(conf_str)
+
+    s1 = Spec("v").concretized()
+    assert s1.satisfies("@{0}".format(a_commit_hash))
+
+
 def test_requirement_adds_multiple_new_versions(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
