@@ -166,7 +166,7 @@ def env_activate(args):
         short_name = os.path.basename(env_path)
         ev.Environment(env).write(regenerate=False)
 
-    # Named environment
+    # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
         env_path = ev.root(env_name_or_dir)
         short_name = env_name_or_dir

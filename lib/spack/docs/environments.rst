@@ -58,9 +58,9 @@ Using Environments
 Here we follow a typical use case of creating, concretizing,
 installing and loading an environment.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating a named Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a managed Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An environment is created by:
 

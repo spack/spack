@@ -271,7 +271,7 @@ def read(name):
 
 
 def create(name, init_file=None, with_view=None, keep_relative=False):
-    """Create a named environment in Spack."""
+    """Create a managed environment in Spack."""
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
     validate_env_name(name)
@@ -303,7 +303,7 @@ def all_environment_names():
 
 
 def all_environments():
-    """Generator for all named Environments."""
+    """Generator for all managed Environments."""
     for name in all_environment_names():
         yield read(name)
 
@@ -878,7 +878,7 @@ class Environment(object):
         """Human-readable representation of the environment.
 
         This is the path for directory environments, and just the name
-        for named environments.
+        for managed environments.
         """
         if self.internal:
             return os.path.basename(self.path)
