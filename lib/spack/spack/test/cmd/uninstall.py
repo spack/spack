@@ -243,6 +243,8 @@ class TestUninstallFromEnv(object):
             TestUninstallFromEnv.concretize()
             install("--fake")
         yield "environment_setup"
+        TestUninstallFromEnv.env("rm", "e1", "-y")
+        TestUninstallFromEnv.env("rm", "e2", "-y")
 
     def test_basic_env_sanity(self, environment_setup):
         for env_name in ["e1", "e2"]:
