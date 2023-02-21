@@ -151,8 +151,7 @@ packages:
   timemory:
     variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
   all:
-    require: "%gcc@12.2.0"
-    target: [skylake]
+    require: "%gcc@12.2.0 target=skylake"
     providers:
       mpi: [hpe-mpi, intel-oneapi-mpi, mvapich2]
       scalapack:: [intel-oneapi-mkl]
