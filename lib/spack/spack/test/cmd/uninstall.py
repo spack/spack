@@ -223,7 +223,7 @@ class TestUninstallFromEnv(object):
     concretize = SpackCommand("concretize")
     find = SpackCommand("find")
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
     def environment_setup(
         self, mutable_mock_env_path, config, mock_packages, mutable_database, install_mockery
     ):
@@ -242,6 +242,7 @@ class TestUninstallFromEnv(object):
             TestUninstallFromEnv.add("dt-diamond-bottom")
             TestUninstallFromEnv.concretize()
             install("--fake")
+        yield "environment_setup"
 
     def test_basic_env_sanity(self, environment_setup):
         for env_name in ["e1", "e2"]:
