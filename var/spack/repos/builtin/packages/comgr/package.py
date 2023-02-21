@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import os
 
 from spack.package import *
 
@@ -113,6 +114,20 @@ class Comgr(CMakePackage):
     # /opt/rocm, and this breaks the build when /opt/rocm exists.
     patch("hip-tests.patch", when="@:4.2.0")
 
+    def check(self):
+        test_dir = join_path(self.build_directory, "test")
+
+        # find all test executables
+        cmd = "find " + test_dir + " -maxdepth 1 -type f -executable -name '*test'"
+        tests_str = os.popen(cmd).read()
+        tests_arr = tests_str.split("\n")[:-1]
+
+        for test in tests_arr:
+            try:
+                self.run_test(test)
+            except ProcessError:
+                print("failed test")
+
     depends_on("cmake@3.2.0:", type="build", when="@:3.8")
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
 
@@ -158,6 +173,12 @@ class Comgr(CMakePackage):
         )
 
     root_cmakelists_dir = join_path("lib", "comgr")
+
+    def cmake_args(self):
+        args = [
+            self.define("BUILD_TESTING", self.run_tests),
+        ]
+        return args
 
     @classmethod
     def determine_version(cls, lib):
