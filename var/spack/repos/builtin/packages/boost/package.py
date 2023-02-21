@@ -257,19 +257,19 @@ class Boost(Package):
     boost_variant(
         "algorithm",
         description="A collection of useful generic algorithms.",
-        default="False",
+        default=False,
         when="@1.50.0:",
     )
     boost_variant(
         "align",
         description="Memory alignment functions, allocators, traits.",
-        default="False",
+        default=False,
         when="@1.56.0:",
     )
     boost_variant(
         "atomic",
         description="C++11-style atomic<>.",
-        default="False",
+        default=False,
         when="@1.53.0:",
         buildable="@1.53.0:",
     )
@@ -277,7 +277,7 @@ class Boost(Package):
         "beast",
         description="Portable HTTP, WebSocket, and network operations using only C++11 "
         "and Boost.Asio",
-        default="False",
+        default=False,
         when="@1.66.0:",
     )
     boost_variant(
@@ -287,30 +287,30 @@ class Boost(Package):
             " header-only C++11 library for the compile-time inspection and manipulation of"
             " all 'callable' types. Additional support for C++17 features."
         ),
-        default="False",
+        default=False,
         when="@1.66.0:",
     )
     boost_variant(
         "chrono",
         description="Useful time utilities. C++11.",
-        default="False",
+        default=False,
         when="@1.47.0:",
         buildable="@1.47.0:",
     )
     boost_variant(
-        "compute", description="Parallel/GPU-computing library", default="False", when="@1.61.0:"
+        "compute", description="Parallel/GPU-computing library", default=False, when="@1.61.0:"
     )
     boost_variant(
         "container",
         description="Standard library containers and extensions.",
-        default="False",
+        default=False,
         when="@1.48.0:",
         buildable="@1.56.0:",
     )
     boost_variant(
         "context",
         description="(C++11) Context switching library.",
-        default="False",
+        default=False,
         when="@1.51.0:",
         buildable="@1.51.0:",
     )
@@ -330,50 +330,50 @@ class Boost(Package):
             " preconditions, customizable actions on assertion failure (e.g., terminate or"
             " throw), optional compilation and checking of assertions, etc."
         ),
-        default="False",
+        default=False,
         when="@1.67.0:",
         buildable="@1.67.0:",
     )
     boost_variant(
         "convert",
         description="An extendible and configurable type-conversion framework.",
-        default="False",
+        default=False,
         when="@1.59.0:",
     )
     boost_variant(
         "core",
         description="A collection of simple core utilities with minimal dependencies.",
-        default="False",
+        default=False,
         when="@1.56.0:",
     )
     boost_variant(
         "coroutine",
         description="Coroutine library.",
-        default="False",
+        default=False,
         when="@1.53.0:",
         buildable="@1.54.0:",
     )
     boost_variant(
         "coroutine2",
         description="(C++11) Coroutine library.",
-        default="False",
+        default=False,
         when="@1.59.0:",
         buildable="@1.59.0:1.64.0",
     )
     boost_variant(
         "date_time",
         description="A set of date-time libraries based on generic programming concepts.",
-        default="False",
+        default=False,
         when="@1.29.0:",
         buildable="@1.29.0:",
     )
     boost_variant(
-        "describe", description="A C++14 reflection library.", default="False", when="@1.77.0:"
+        "describe", description="A C++14 reflection library.", default=False, when="@1.77.0:"
     )
     boost_variant(
         "dll",
         description="Library for comfortable work with DLL and DSO.",
-        default="False",
+        default=False,
         when="@1.61.0:",
     )
     boost_variant(
@@ -382,7 +382,7 @@ class Boost(Package):
             "Types and conversion functions for correct byte ordering and more regardless of"
             " processor endianness."
         ),
-        default="False",
+        default=False,
         when="@1.58.0:",
     )
     boost_variant(
@@ -391,14 +391,14 @@ class Boost(Package):
             "The Boost Exception library supports transporting of arbitrary data in exception"
             " objects, and transporting of exceptions between threads."
         ),
-        default="False",
+        default=False,
         when="@1.36.0:",
         buildable="@1.47.0:",
     )
     boost_variant(
         "fiber",
         description="(C++11) Userland threads library.",
-        default="False",
+        default=False,
         when="@1.62.0:",
         buildable="@1.62.0:",
     )
@@ -408,26 +408,26 @@ class Boost(Package):
             "The Boost Filesystem Library provides portable facilities to query and manipulate"
             " paths, files, and directories."
         ),
-        default="False",
+        default=False,
         when="@1.30.0:",
         buildable="@1.30.0:",
     )
     boost_variant(
         "functional_factory",
         description="Function object templates for dynamic and static object creation",
-        default="False",
+        default=False,
         when="@1.43.0:",
     )
     boost_variant(
         "functional_forward",
         description="Adapters to allow generic function objects to accept arbitrary arguments",
-        default="False",
+        default=False,
         when="@1.43.0:",
     )
     boost_variant(
         "functional_overloaded_function",
         description="Overload different functions into a single function object.",
-        default="False",
+        default=False,
         when="@1.50.0:",
     )
     boost_variant(
@@ -436,7 +436,7 @@ class Boost(Package):
             "The Boost.Geometry library provides geometric algorithms, primitives and spatial"
             " index."
         ),
-        default="False",
+        default=False,
         when="@1.47.0:",
     )
     boost_variant(
@@ -445,7 +445,7 @@ class Boost(Package):
             "The BGL graph interface and graph components are generic, in the same sense as"
             " the Standard Template Library (STL)."
         ),
-        default="False",
+        default=False,
         when="@1.18.0:",
         buildable="@1.18.0:",
     )
@@ -455,7 +455,7 @@ class Boost(Package):
             "The PBGL graph interface and graph components are generic, in the same sense as"
             " the Standard Template Library (STL)."
         ),
-        default="False",
+        default=False,
         when="@1.40.0:",
         buildable="@1.40.0:",
     )
@@ -466,20 +466,20 @@ class Boost(Package):
             " manipulate heterogeneous sequences, allows writing type-level computations with"
             " a natural syntax, provides tools to introspect user-defined types and much more."
         ),
-        default="False",
+        default=False,
         when="@1.61.0:",
     )
     boost_variant(
-        "heap", description="Priority queue data structures.", default="False", when="@1.49.0:"
+        "heap", description="Priority queue data structures.", default=False, when="@1.49.0:"
     )
     boost_variant(
         "histogram",
         description="Fast multi-dimensional histogram with convenient interface for C++14",
-        default="False",
+        default=False,
         when="@1.70.0:",
     )
     boost_variant(
-        "hof", description="Higher-order functions for C++", default="False", when="@1.67.0:"
+        "hof", description="Higher-order functions for C++", default=False, when="@1.67.0:"
     )
     boost_variant(
         "icl",
@@ -487,7 +487,7 @@ class Boost(Package):
             "Interval Container Library, interval sets and maps and aggregation of associated"
             " values"
         ),
-        default="False",
+        default=False,
         when="@1.46.0:",
     )
     boost_variant(
@@ -496,7 +496,7 @@ class Boost(Package):
             "Wrap types within round parenthesis so they can always be passed as macro"
             " parameters."
         ),
-        default="False",
+        default=False,
         when="@1.50.0:",
     )
     boost_variant(
@@ -505,24 +505,24 @@ class Boost(Package):
             "Boost.IOStreams provides a framework for defining streams, stream buffers and i/o"
             " filters."
         ),
-        default="False",
+        default=False,
         when="@1.33.0:",
         buildable="@1.33.0:",
     )
     boost_variant(
         "json",
         description="JSON parsing, serialization, and DOM in C++11",
-        default="False",
+        default=False,
         when="@1.75.0:",
         buildable="@1.75.0:",
     )
     boost_variant(
-        "lambda2", description="A C++14 lambda library.", default="False", when="@1.77.0:"
+        "lambda2", description="A C++14 lambda library.", default=False, when="@1.77.0:"
     )
     boost_variant(
         "leaf",
         description="A lightweight error handling library for C++11.",
-        default="False",
+        default=False,
         when="@1.75.0:",
     )
     boost_variant(
@@ -531,23 +531,23 @@ class Boost(Package):
             "Program functions locally, within other functions, directly within the scope"
             " where they are needed."
         ),
-        default="False",
+        default=False,
         when="@1.50.0:",
     )
     boost_variant(
         "locale",
         description="Provide localization and Unicode handling tools for C++.",
-        default="False",
+        default=False,
         when="@1.48.0:",
         buildable="@1.48.0:",
     )
     boost_variant(
-        "lockfree", description="Lockfree data structures.", default="False", when="@1.53.0:"
+        "lockfree", description="Lockfree data structures.", default=False, when="@1.53.0:"
     )
     boost_variant(
         "log",
         description="Logging library.",
-        default="False",
+        default=False,
         when="@1.54.0:",
         buildable="@1.54.0:",
     )
@@ -564,14 +564,14 @@ class Boost(Package):
             " numbers often used to parameterise rotations in three dimentional space."
             " Octonions, like quaternions, are a relative of complex numbers."
         ),
-        default="False",
+        default=False,
         when="@1.23.0:",
         buildable="@1.23.0:",
     )
     boost_variant(
         "meta_state_machine",
         description=("A very high-performance library for expressive UML2 finite state machines."),
-        default="False",
+        default=False,
         when="@1.44.0:",
     )
     boost_variant(
@@ -580,18 +580,18 @@ class Boost(Package):
             "A library for generating compile time parsers parsing embedded DSL code as part"
             " of the C++ compilation process"
         ),
-        default="False",
+        default=False,
         when="@1.61.0:",
         buildable="@1.61.0:1.65.1",
     )
     boost_variant(
         "move",
         description="Portable move semantics for C++03 and C++11 compilers.",
-        default="False",
+        default=False,
         when="@1.48.0:",
     )
     boost_variant(
-        "mp11", description="A C++11 metaprogramming library.", default="False", when="@1.66.0:"
+        "mp11", description="A C++11 metaprogramming library.", default=False, when="@1.66.0:"
     )
     boost_variant(
         "mpi",
@@ -599,7 +599,7 @@ class Boost(Package):
             "Message Passing Interface library, for use in distributed-memory parallel"
             " application programming."
         ),
-        default="False",
+        default=False,
         when="@1.35.0:",
         buildable="@1.35.0:",
     )
@@ -609,20 +609,20 @@ class Boost(Package):
             "Extended precision arithmetic types for floating point, integer andrational"
             " arithmetic."
         ),
-        default="False",
+        default=False,
         when="@1.53.0:",
     )
     boost_variant(
         "nowide",
         description="Standard library functions with UTF-8 API on Windows.",
-        default="False",
+        default=False,
         when="@1.73.0:",
         buildable="@1.73.0:",
     )
     boost_variant(
         "odeint",
         description="Solving ordinary differential equations.",
-        default="False",
+        default=False,
         when="@1.53.0:",
     )
     boost_variant(
@@ -631,31 +631,31 @@ class Boost(Package):
             "A deterministic failure handling library partially simulating lightweight"
             " exceptions."
         ),
-        default="False",
+        default=False,
         when="@1.70.0:",
     )
     boost_variant(
         "parameter_python_bindings",
         description="Boost.Parameter Library Python bindings.",
-        default="False",
+        default=False,
         when="@1.69.0:",
     )
     boost_variant(
         "pfr",
         description="Basic reflection for user defined types.",
-        default="False",
+        default=False,
         when="@1.75.0:",
     )
     boost_variant(
         "phoenix",
         description="Define small unnamed function objects at the actual call site, and more.",
-        default="False",
+        default=False,
         when="@1.47.0:",
     )
     boost_variant(
         "polycollection",
         description="Fast containers of polymorphic objects.",
-        default="False",
+        default=False,
         when="@1.65.0:",
     )
     boost_variant(
@@ -664,7 +664,7 @@ class Boost(Package):
             "Voronoi diagram construction and booleans/clipping, resizing/offsetting and more"
             " for planar polygons with integral coordinates."
         ),
-        default="False",
+        default=False,
         when="@1.44.0:",
     )
     boost_variant(
@@ -675,13 +675,13 @@ class Boost(Package):
             " Objective C, and Objective C++ predefined macros or those defined in generally"
             " available headers."
         ),
-        default="False",
+        default=False,
         when="@1.55.0:",
     )
     boost_variant(
         "process",
         description="Library to create processes in a portable way.",
-        default="False",
+        default=False,
         when="@1.64.0:",
     )
     boost_variant(
@@ -691,20 +691,20 @@ class Boost(Package):
             " that is (name, value) pairs from the user, via conventional methods such as"
             " command line and config file."
         ),
-        default="False",
+        default=False,
         when="@1.32.0:",
         buildable="@1.32.0:",
     )
     boost_variant(
         "property_map",
         description="Parallel extensions to Property Map for use with Parallel Graph.",
-        default="False",
+        default=False,
         when="@1.77.0:",
     )
     boost_variant(
         "property_tree",
         description="A tree data structure especially suited to storing configuration data.",
-        default="False",
+        default=False,
         when="@1.41.0:",
     )
     boost_variant(
@@ -714,66 +714,66 @@ class Boost(Package):
             " you to quickly and seamlessly expose C++ classes functions and objects to"
             " Python, and vice-versa, using no special tools -- just your C++ compiler."
         ),
-        default="False",
+        default=False,
         when="@1.19.0:",
         buildable="@1.19.0:",
     )
     boost_variant(
         "qvm",
         description="Generic C++ library for working with Quaternions Vectors and Matrices.",
-        default="False",
+        default=False,
         when="@1.62.0:",
     )
     boost_variant(
         "random",
         description="A complete system for random number generation.",
-        default="False",
+        default=False,
         when="@1.15.0:",
         buildable="@1.43.0:",
     )
     boost_variant(
         "ratio",
         description="Compile time rational arithmetic. C++11.",
-        default="False",
+        default=False,
         when="@1.47.0:",
     )
     boost_variant(
         "regex",
         description="Regular expression library.",
-        default="False",
+        default=False,
         when="@1.18.0:",
         buildable="@1.18.0:",
     )
     boost_variant(
         "safe_numerics",
         description="Guaranteed Correct Integer Arithmetic",
-        default="False",
+        default=False,
         when="@1.69.0:",
     )
     boost_variant(
         "serialization",
         description="Serialization for persistence and marshalling.",
-        default="False",
+        default=False,
         when="@1.32.0:",
         buildable="@1.32.0:",
     )
     boost_variant(
         "signals",
         description="REMOVED",
-        default="False",
+        default=False,
         when="@1.29.0:1.68.0",
         buildable="@1.29.0:1.68.0",
     )
     boost_variant(
         "signals2",
         description="Managed signals & slots callback implementation (thread-safe version 2).",
-        default="False",
+        default=False,
         when="@1.39.0:",
     )
     boost_variant(
         "sort",
         description="High-performance templated sort functions.",
-        default="False",
+        default=False,
         when="@1.58.0:",
     )
     boost_variant(
@@ -781,7 +781,7 @@ class Boost(Package):
         description=(
             "LL parser framework represents parsers directly as EBNF grammars in inlined C++."
         ),
-        default="False",
+        default=False,
         when="@1.69.0:",
     )
     boost_variant(
@@ -791,20 +791,20 @@ class Boost(Package):
             " components (primitives, directives, grammars, etc.) for Qi parsers and Karma"
             " generators."
         ),
-        default="False",
+        default=False,
         when="@1.69.0:",
     )
     boost_variant(
         "stacktrace",
         description="Gather, store, copy and print backtraces.",
-        default="False",
+        default=False,
         when="@1.65.0:",
         buildable="@1.65.0:",
     )
     boost_variant(
         "static_string",
         description="A fixed capacity dynamically sized string.",
-        default="False",
+        default=False,
         when="@1.73.0:",
     )
     boost_variant(
@@ -812,16 +812,16 @@ class Boost(Package):
         description=(
             "C++14 and later CRTP templates for defining iterators, views, and containers."
         ),
-        default="False",
+        default=False,
         when="@1.74.0:",
     )
     boost_variant(
-        "string_ref", description="String view templates.", default="False", when="@1.71.0:"
+        "string_ref", description="String view templates.", default=False, when="@1.71.0:"
     )
     boost_variant(
         "system",
         description="Extensible error reporting.",
-        default="False",
+        default=False,
         when="@1.35.0:",
         buildable="@1.35.0:",
     )
@@ -831,57 +831,57 @@ class Boost(Package):
             "Support for simple program testing, full unit testing, and for program execution"
             " monitoring."
         ),
-        default="False",
+        default=False,
         when="@1.21.0:",
         buildable="@1.21.0:",
     )
     boost_variant(
         "thread",
         description="Portable C++ multi-threading. C++03, C++11, C++14, C++17.",
-        default="False",
+        default=False,
         when="@1.25.0:",
         buildable="@1.25.0:",
     )
     boost_variant(
         "throwexception",
         description="A common infrastructure for throwing exceptions from Boost libraries.",
-        default="False",
+        default=False,
         when="@1.56.0:",
     )
     boost_variant(
         "timer",
         description="Event timer, progress timer, and progress display classes.",
-        default="False",
+        default=False,
         when="@1.9.0:",
         buildable="@1.48.0:",
     )
     boost_variant(
-        "tti", description="Type Traits Introspection library.", default="False", when="@1.54.0:"
+        "tti", description="Type Traits Introspection library.", default=False, when="@1.54.0:"
     )
     boost_variant(
         "type_erasure",
         description="Runtime polymorphism based on concepts.",
-        default="False",
+        default=False,
         when="@1.54.0:",
         buildable="@1.60.0:",
     )
     boost_variant(
         "type_index",
         description="Runtime/Compile time copyable type info.",
-        default="False",
+        default=False,
         when="@1.56.0:",
     )
     boost_variant(
-        "uuid", description="A universally unique identifier.", default="False", when="@1.42.0:"
+        "uuid", description="A universally unique identifier.", default=False, when="@1.42.0:"
     )
     boost_variant(
         "variant2",
         description="A never-valueless, strong guarantee implementation of std::variant.",
-        default="False",
+        default=False,
         when="@1.71.0:",
     )
     boost_variant(
-        "vmd", description="Variadic Macro Data library.", default="False", when="@1.60.0:"
+        "vmd", description="Variadic Macro Data library.", default=False, when="@1.60.0:"
     )
     boost_variant(
         "wave",
@@ -890,14 +890,14 @@ class Boost(Package):
             " implementation of the mandated C99/C++ preprocessor functionality packed behind"
             " an easy to use iterator interface."
         ),
-        default="False",
+        default=False,
         when="@1.33.0:",
         buildable="@1.33.0:",
     )
     boost_variant(
         "yap",
         description="An expression template library for C++14 and later.",
-        default="False",
+        default=False,
         when="@1.68.0:",
     )
 
