@@ -3584,6 +3584,18 @@ class Spec(object):
             if not self[name].satisfies(other[name], deps=False):
                 return False
 
+        if self.concrete:
+            # Here we already checked that common dependencies are compatible, so if there are no
+            # nodes in other that are not in self return True, otherwise return False
+            try:
+                _ = [self[x.name] for x in other.traverse() if x.name is not None]
+            except KeyError:
+                # If self is concrete, and some node is not in self, then return False
+                # (since self is immutable and can't satisfy other)
+                return False
+            else:
+                return True
+
         # For virtual dependencies, we need to dig a little deeper.
         self_index = spack.provider_index.ProviderIndex(
             repository=spack.repo.path, specs=self.traverse(), restrict=True
