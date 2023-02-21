@@ -1298,4 +1298,11 @@ def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_co
 def test_satisfies_is_commutative_with_concrete_specs(mock_packages, default_mock_concretization):
     a1 = default_mock_concretization("a@1.0")
     a2 = Spec("a@1.0")
-    assert a1.satisfies(a2) and a2.satisfies(a1)
+
+    # strict=False means non-empty intersection, which is commutative.
+    assert a1.satisfies(a2)
+    assert a2.satisfies(a1)
+
+    # strict=True means set inclusion, which is not commutative.
+    assert a1.satisfies(a2, strict=True)
+    assert not a2.satisfies(a1, strict=True)
