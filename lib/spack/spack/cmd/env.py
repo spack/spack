@@ -399,8 +399,8 @@ def env_view(args):
 def env_status_setup_parser(subparser):
     """print whether there is an active environment"""
     subparser.add_argument(
-        '-x', '--exit_code', action='store_true', default=False,
-        help='Exit with nonzero status if no environment is active')
+        '-e', '--error', action='store_true', default=False,
+        help='Exit with non-zero status if no environment is active')
 
 
 def env_status(args):
