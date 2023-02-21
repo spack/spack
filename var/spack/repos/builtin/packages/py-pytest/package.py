@@ -74,6 +74,7 @@ class PyPytest(PythonPackage):
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
     depends_on("py-importlib-metadata@0.12:", when="@4.6:5.0", type=("build", "run"))
     depends_on("py-importlib-metadata@0.12:", when="@5.1: ^python@:3.7", type=("build", "run"))
+    depends_on("py-exceptiongroup@1:", when="@7: ^python@:3.10", type=("build", "run"))
 
     # Historic dependencies
     depends_on("py-atomicwrites@1.0:", when="@5.3:7.1.2 platform=windows", type=("build", "run"))
