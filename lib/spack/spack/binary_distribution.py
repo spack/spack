@@ -1146,6 +1146,7 @@ def _build_tarball(
     allow_root=False,
     key=None,
     regenerate_index=False,
+    skip_on_error=False,
 ):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -1212,6 +1213,17 @@ def _build_tarball(
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
 
+    # remove all __pycache__ directories and compiled Python files (*.pyc)
+    # to avoid problems like ValueError:bad marshal data
+    cmd = "rm -fr `find {} -type d -name __pycache__` 2>/dev/null"
+    status = os.system(cmd)
+    if status:
+        raise Exception("Failed to execute '{}'".format(cmd))
+    cmd = "rm -fr `find {} -type f -name *.pyc` 2>/dev/null"
+    status = os.system(cmd)
+    if status:
+        raise Exception("Failed to execute '{}'".format(cmd))
+
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if relative:
@@ -1221,7 +1233,11 @@ def _build_tarball(
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
             shutil.rmtree(tmpdir)
-            tty.die(e)
+            if skip_on_error:
+                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
+                return
+            else:
+                tty.die(e)
     else:
         try:
             check_package_relocatable(workdir, spec, allow_root)
@@ -1229,7 +1245,11 @@ def _build_tarball(
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
             shutil.rmtree(tmpdir)
-            tty.die(e)
+            if skip_on_error:
+                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
+                return
+            else:
+                tty.die(e)
 
     # create gzip compressed tarball of the install prefix
     # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
@@ -1609,7 +1629,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec, allow_root):
+def relocate_package(spec):
     """
     Relocate the given package
     """
@@ -1883,7 +1903,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec, allow_root)
+        relocate_package(spec)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
