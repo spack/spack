@@ -1236,30 +1236,20 @@ def _build_tarball(
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    if relative:
-        try:
+    try:
+        if relative:
             make_package_relative(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            if skip_on_error:
-                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
-                return
-            else:
-                tty.die(e)
-    else:
-        try:
-            check_package_relocatable(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            if skip_on_error:
-                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
-                return
-            else:
-                tty.die(e)
+        elif not allow_root:
+            ensure_package_relocatable(workdir, binaries_dir)
+    except Exception as e:
+        shutil.rmtree(workdir)
+        shutil.rmtree(tarfile_dir)
+        shutil.rmtree(tmpdir)
+        if skip_on_error:
+            tty.warn("Error while creating buildcache for '{0}', skip: {1}".format(spec, e))
+            return
+        else:
+            tty.die(e)
 
     # create gzip compressed tarball of the install prefix
     # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
