@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
 import os
+import re
 
 from spack.package import *
 
@@ -175,9 +175,7 @@ class Comgr(CMakePackage):
     root_cmakelists_dir = join_path("lib", "comgr")
 
     def cmake_args(self):
-        args = [
-            self.define("BUILD_TESTING", self.run_tests),
-        ]
+        args = [self.define("BUILD_TESTING", self.run_tests)]
         return args
 
     @classmethod
