@@ -26,6 +26,6 @@ class PyAwkwardCpp(PythonPackage):
     version("2", sha256="5e63f43e3135f76db81e0924a74ecf4870f585c11a9f432568b377c04028868c")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-scikit-build-core@0.2:", type="build")
+    depends_on("py-scikit-build-core@0.1.3:+pyproject", type="build")
     depends_on("py-pybind11", type=("build", "link"))
     depends_on("py-numpy@1.14.5:", type=("build", "run"))
