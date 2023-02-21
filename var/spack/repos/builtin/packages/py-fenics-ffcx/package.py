@@ -48,7 +48,7 @@ class PyFenicsFfcx(PythonPackage):
     depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1.0:0.3")
 
     depends_on("py-fenics-basix@main", type="run", when="@main")
-    depends_on("py-fenics-basix@0.6", type="run", when="@0.6")
+    depends_on("py-fenics-basix@0.6.0:0.6", type="run", when="@0.6")
     depends_on("py-fenics-basix@0.5.1:0.5", type="run", when="@0.5.0:0.5")
     depends_on("py-fenics-basix@0.4.2", type="run", when="@0.4.2")
     depends_on("py-fenics-basix@0.3.0", type="run", when="@0.3.0")
