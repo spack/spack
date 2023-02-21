@@ -177,6 +177,8 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+netloc" in self.spec:
             args.append("--enable-netloc")
+        else:
+            args.append("--disable-netloc")
 
         args.extend(self.enable_or_disable("cairo"))
         args.extend(self.enable_or_disable("nvml"))
