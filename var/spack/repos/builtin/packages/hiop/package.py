@@ -80,14 +80,18 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma {0}".format(cuda_dep), when=cuda_dep)
         depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
         depends_on("ginkgo {0}".format(cuda_dep), when="+ginkgo {0}".format(cuda_dep))
-        depends_on("umpire ~shared {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        depends_on("umpire {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        # Camp GPU arch doesn't get propogated correctly
+        depends_on("camp {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
 
     for arch in ROCmPackage.amdgpu_targets:
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("magma {0}".format(rocm_dep), when=rocm_dep)
         depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
-        depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
         depends_on("ginkgo {0}".format(rocm_dep), when="+ginkgo {0}".format(rocm_dep))
+        depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        # Camp GPU arch doesn't get propogated correctly
+        depends_on("camp {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
     magma_ver_constraints = (("2.5.4", "0.4"), ("2.6.1", "0.4.6"), ("2.6.2", "0.5.4"))
 
@@ -101,9 +105,20 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
 
-    # Umpire > 0.14 and RAJA > 6.0 require c++ std 14
-    depends_on("raja@0.14.0:0.14", when="@0.5.0:0.6.2+raja")
-    depends_on("umpire@6.0.0:", when="@0.5.0:0.6.2+raja")
+    # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
+    # We are working on supporting newer Umpire/RAJA versions
+    depends_on("raja@0.14.0:0.14", when="@0.5.0:+raja")
+    depends_on("umpire@6.0.0:6", when="@0.5.0:+raja")
+    depends_on("camp@0.2.3:0.2", when="@0.5.0:+raja")
+
+    # This is no longer a requirement in RAJA > 0.14
+    depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
+
+    conflicts(
+        "+shared",
+        when="+cuda+raja ^raja@:0.14",
+        msg="umpire+cuda exports device code and requires static libs",
+    )
 
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")
@@ -116,12 +131,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("metis", when="+sparse")
 
     depends_on("ginkgo@1.5.0.glu_experimental", when="+ginkgo")
-
-    conflicts(
-        "+shared",
-        when="+cuda+raja",
-        msg="umpire+cuda exports device code and requires static libs",
-    )
 
     flag_handler = build_system_flags
 
