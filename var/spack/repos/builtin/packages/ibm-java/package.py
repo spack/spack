@@ -56,7 +56,7 @@ class IbmJava(Package):
     # There are separate tar files for big and little-endian machine
     # types.  And no, this won't work cross platform.
 
-    for (ver, mach, sha) in version_list:
+    for ver, mach, sha in version_list:
         if mach == platform.machine():
             version(ver, sha256=sha, expand=False)
 

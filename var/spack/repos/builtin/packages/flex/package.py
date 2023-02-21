@@ -124,7 +124,6 @@ class Flex(AutotoolsPackage):
             (self.prefix.lib64, "libfl.a", "libl.a"),
             (self.prefix.lib64, "libfl." + dso, "libl." + dso),
         ):
-
             if os.path.isdir(dir):
                 with working_dir(dir):
                     if os.path.isfile(flex) and not os.path.lexists(lex):

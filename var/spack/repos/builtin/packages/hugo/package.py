@@ -18,7 +18,10 @@ class Hugo(Package):
 
     maintainers("alecbcs")
 
+    version("0.110.0", sha256="eeb137cefcea1a47ca27dc5f6573df29a8fe0b7f1ed0362faf7f73899e313770")
     version("0.109.0", sha256="35a5ba92057fe2c20b2218c374e762887021e978511d19bbe81ce4d9c21f0c78")
+    version("0.108.0", sha256="dc90e9de22ce87c22063ce9c309cefacba89269a21eb369ed556b90b22b190c5")
+    version("0.107.0", sha256="31d959a3c1633087d338147782d03bdef65323b67ff3efcec7b40241413e270a")
     version("0.106.0", sha256="9219434beb51466487b9f8518edcbc671027c1998e5a5820d76d517e1dfbd96a")
 
     # https://nvd.nist.gov/vuln/detail/CVE-2020-26284

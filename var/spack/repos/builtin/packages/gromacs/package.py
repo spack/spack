@@ -143,16 +143,8 @@ class Gromacs(CMakePackage):
         when="+cp2k",
         msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
     )
-    conflicts(
-        "%intel",
-        when="@2022:",
-        msg="GROMACS %intel support was removed in version 2022",
-    )
-    conflicts(
-        "%gcc@:8",
-        when="@2023:",
-        msg="GROMACS requires GCC 9 or later since version 2023",
-    )
+    conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
+    conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
         "intel-oneapi-mkl@:2021.2",
         when="@2023:",
@@ -326,7 +318,6 @@ class Gromacs(CMakePackage):
                 )
 
     def cmake_args(self):
-
         options = []
 
         if "+mpi" in self.spec:
@@ -428,7 +419,10 @@ class Gromacs(CMakePackage):
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= "zen2":
+        if target >= "zen4":
+            # AMD Family 17h (EPYC Genoa)
+            options.append("-DGMX_SIMD=AVX_512")
+        elif target >= "zen2":
             # AMD Family 17h (EPYC Rome)
             options.append("-DGMX_SIMD=AVX2_256")
         elif target >= "zen":
