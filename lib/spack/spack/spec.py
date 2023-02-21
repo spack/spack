@@ -3472,9 +3472,17 @@ class Spec(object):
 
         other = self._autospec(other)
 
-        # The only way to satisfy a concrete spec is to match its hash exactly.
+        # Optimizations for right-hand side concrete:
+        # 1. For subset (strict=True) tests this means the left-hand side must
+        # be the same singleton with identical hash. Notice that package hashes
+        # can be different for otherwise indistinguishable concrete Spec objects.
+        # 2. For non-empty intersection (strict=False) we only have a fast path
+        # when the left-hand side is also concrete.
         if other.concrete:
-            return self.concrete and self.dag_hash() == other.dag_hash()
+            if strict:
+                return self.concrete and self.dag_hash() == other.dag_hash()
+            elif self.concrete:
+                return self.dag_hash() == other.dag_hash()
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
