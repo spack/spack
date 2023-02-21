@@ -258,7 +258,7 @@ def config_update(args):
     cannot_overwrite, skip_system_scope = [], False
     for scope in updates:
         cfg_file = spack.config.config.get_config_filename(scope.name, args.section)
-        scope_dir = scope.path
+        scope_dir = os.path.dirname(scope.path)
         can_be_updated = _can_update_config_file(scope_dir, cfg_file)
         if not can_be_updated:
             if scope.name == "system":
