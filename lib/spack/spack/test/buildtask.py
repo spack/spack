@@ -39,14 +39,14 @@ def test_build_task_basics(install_mockery):
     task = inst.BuildTask(spec.package, request, False, 0, 0, inst.STATUS_ADDED, [])
     assert task.explicit  # package was "explicitly" requested
     assert task.priority == len(task.uninstalled_deps)
-    assert task.key == (task.priority, task.randomizer, task.sequence)
+    assert task.key == (task.priority, task.attempts, task.random)
 
     # Ensure flagging installed works as expected
     assert len(task.uninstalled_deps) > 0
     assert task.dependencies == task.uninstalled_deps
     task.flag_installed(task.dependencies)
     assert len(task.uninstalled_deps) == 0
-    assert inst.install_priority(task.priority)
+    assert task.priority == 0
 
 
 def test_build_task_strings(install_mockery):

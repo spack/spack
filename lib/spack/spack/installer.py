@@ -264,10 +264,6 @@ def _hms(seconds):
     return " ".join(parts)
 
 
-def install_priority(priority):
-    return priority < 1
-
-
 def _log_prefix(pkg_name):
     """Prefix of the form "[pid]: [pkg name]: ..." when printing a status update during
     the build."""
@@ -1076,7 +1072,7 @@ class PackageInstaller(object):
         if lock_type == "read":
             # Wait until the other process finishes if there are no more
             # build tasks with no uninstalled dependencies.
-            no_p0 = len(self.build_tasks) == 0 or not self._next_has_install_priority()
+            no_p0 = len(self.build_tasks) == 0 or not self._next_is_pri0()
             timeout = None if no_p0 else 3
         else:
             timeout = 1e-9  # Near 0 to iterate through install specs quickly
@@ -1294,7 +1290,7 @@ class PackageInstaller(object):
             tty.debug("{0}{1}".format(pid, str(e)))
             tty.debug("Package stage directory: {0}".format(pkg.stage.source_path))
 
-    def _next_has_install_priority(self):
+    def _next_is_pri0(self):
         """
         Determine if the next build task has has no remaining uninstalled
         dependencies.
@@ -1305,7 +1301,7 @@ class PackageInstaller(object):
         # Leverage the fact that the first entry in the queue is the next
         # one that will be processed
         task = self.build_pq[0][1]
-        return install_priority(task.priority)
+        return task.priority == 0
 
     def _pop_task(self):
         """
@@ -1609,9 +1605,9 @@ class PackageInstaller(object):
             # If the spec has uninstalled dependencies, then there must be
             # a bug in the code (e.g., priority queue or uninstalled
             # dependencies handling).  So terminate under the assumption that
-            # all subsequent tasks will have priorities of one or more or may be
+            # all subsequent tasks will have non-zero priorities or may be
             # dependencies of this task.
-            if not install_priority(task.priority):
+            if task.priority != 0:
                 term_status.clear()
                 tty.error(
                     "Detected uninstalled dependencies for {0}: {1}".format(
@@ -2310,8 +2306,8 @@ class BuildTask(object):
 
     @property
     def key(self):
-        """The key is the tuple (# uninstalled dependencies, randomizer, sequence)."""
-        return (self.priority, self.randomizer, self.sequence)
+        """The key is the tuple (# uninstalled dependencies, # attempts, random number)."""
+        return (self.priority, self.attempts, self.random)
 
     def next_attempt(self, installed):
         """Create a new, updated task for the next installation attempt."""
@@ -2325,13 +2321,6 @@ class BuildTask(object):
     def priority(self):
         """The priority is based on the remaining uninstalled dependencies."""
         return len(self.uninstalled_deps)
-
-    @property
-    def randomizer(self):
-        """The install-ready randomizer, which kicks in when the build task
-        is ready to be installed, and is intended to potentially help speed up
-        finding the next package to install."""
-        return self.attempts + self.random if install_priority(self.priority) else 0
 
 
 class BuildRequest(object):
