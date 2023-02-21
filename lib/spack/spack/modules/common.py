@@ -402,12 +402,19 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
+            fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
-                err_msg = f"The module for package {spec.name}@{spec.version}/{spec.dag_hash()[:10]}\
-                    should be at {writer.layout.filename} but it does not exist!"
-                raise ModuleNotFoundError(err_msg)
+                raise ModuleNotFoundError(
+                    "The module for package {} should be at {} but it does not exist!".format(
+                        spec.format(fmt_str), writer.layout.filename
+                    )
+                )
             elif required:
-                tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))
+                tty.debug(
+                    "The module configuration has excluded {}: omitting it".format(
+                        spec.format(fmt_str)
+                    )
+                )
             else:
                 return None
 
