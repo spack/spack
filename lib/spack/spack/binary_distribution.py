@@ -1291,7 +1291,11 @@ def _build_tarball(
         keep_original=False,
     )
 
-    tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
+    tty.msg(
+        'Buildcache for "{0}/{1}" written to \n {2}'.format(
+            spec.name, spec.dag_hash()[:7], remote_spackfile_path
+        )
+    )
 
     try:
         # push the key to the build cache's _pgp directory so it can be
