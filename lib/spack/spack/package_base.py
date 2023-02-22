@@ -54,13 +54,7 @@ import spack.util.environment
 import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
-from spack.install_test import (
-    TestFailure,
-    TestSuite,
-    package_class,
-    test_functions,
-    virtuals,
-)
+from spack.install_test import TestFailure, TestSuite, package_class, test_functions, virtuals
 from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
