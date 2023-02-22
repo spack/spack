@@ -23,7 +23,7 @@ from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, symlink
 
-from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = _platform == "win32"
@@ -84,6 +84,74 @@ __all__ = [
     "visit_directory_tree",
 ]
 
+if sys.version_info < (3, 7, 4):
+    # monkeypatch shutil.copystat to fix PermissionError when copying read-only
+    # files on Lustre when using Python < 3.7.4
+
+    def copystat(src, dst, follow_symlinks=True):
+        """Copy file metadata
+        Copy the permission bits, last access time, last modification time, and
+        flags from `src` to `dst`. On Linux, copystat() also copies the "extended
+        attributes" where possible. The file contents, owner, and group are
+        unaffected. `src` and `dst` are path names given as strings.
+        If the optional flag `follow_symlinks` is not set, symlinks aren't
+        followed if and only if both `src` and `dst` are symlinks.
+        """
+
+        def _nop(args, ns=None, follow_symlinks=None):
+            pass
+
+        # follow symlinks (aka don't not follow symlinks)
+        follow = follow_symlinks or not (os.path.islink(src) and os.path.islink(dst))
+        if follow:
+            # use the real function if it exists
+            def lookup(name):
+                return getattr(os, name, _nop)
+
+        else:
+            # use the real function only if it exists
+            # *and* it supports follow_symlinks
+            def lookup(name):
+                fn = getattr(os, name, _nop)
+                if sys.version_info >= (3, 3):
+                    if fn in os.supports_follow_symlinks:  # novermin
+                        return fn
+                return _nop
+
+        st = lookup("stat")(src, follow_symlinks=follow)
+        mode = stat.S_IMODE(st.st_mode)
+        lookup("utime")(dst, ns=(st.st_atime_ns, st.st_mtime_ns), follow_symlinks=follow)
+
+        # We must copy extended attributes before the file is (potentially)
+        # chmod()'ed read-only, otherwise setxattr() will error with -EACCES.
+        shutil._copyxattr(src, dst, follow_symlinks=follow)
+
+        try:
+            lookup("chmod")(dst, mode, follow_symlinks=follow)
+        except NotImplementedError:
+            # if we got a NotImplementedError, it's because
+            #   * follow_symlinks=False,
+            #   * lchown() is unavailable, and
+            #   * either
+            #       * fchownat() is unavailable or
+            #       * fchownat() doesn't implement AT_SYMLINK_NOFOLLOW.
+            #         (it returned ENOSUP.)
+            # therefore we're out of options--we simply cannot chown the
+            # symlink.  give up, suppress the error.
+            # (which is what shutil always did in this circumstance.)
+            pass
+        if hasattr(st, "st_flags"):
+            try:
+                lookup("chflags")(dst, st.st_flags, follow_symlinks=follow)
+            except OSError as why:
+                for err in "EOPNOTSUPP", "ENOTSUP":
+                    if hasattr(errno, err) and why.errno == getattr(errno, err):
+                        break
+                else:
+                    raise
+
+    shutil.copystat = copystat
+
 
 def getuid():
     if is_windows:
@@ -117,13 +185,7 @@ def path_contains_subdirectory(path, root):
 @memoized
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
-    try:
-        file_cmd = which("file", required=True)
-    except CommandNotFoundError as e:
-        if is_windows:
-            raise CommandNotFoundError("`file` utility is not available on Windows")
-        else:
-            raise e
+    file_cmd = which("file", required=True)
     for arg in args:
         file_cmd.add_default_arg(arg)
     return file_cmd
@@ -134,7 +196,11 @@ def _get_mime_type():
     """Generate method to call `file` system command to aquire mime type
     for a specified path
     """
-    return file_command("-b", "-h", "--mime-type")
+    if is_windows:
+        # -h option (no-dereference) does not exist in Windows
+        return file_command("-b", "--mime-type")
+    else:
+        return file_command("-b", "-h", "--mime-type")
 
 
 @memoized
@@ -270,7 +336,6 @@ def filter_file(
         regex = re.escape(regex)
     filenames = path_to_os_path(*filenames)
     for filename in filenames:
-
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
         tty.debug(msg.format(filename, regex))
 
@@ -1222,7 +1287,6 @@ def traverse_tree(
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
         if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
-
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
@@ -1664,7 +1728,6 @@ def find(root, files, recursive=True):
 
 @system_path_filter
 def _find_recursive(root, search_files):
-
     # The variable here is **on purpose** a defaultdict. The idea is that
     # we want to poke the filesystem as little as possible, but still maintain
     # stability in the order of the answer. Thus we are recording each library
@@ -2635,3 +2698,28 @@ def temporary_dir(
             yield tmp_dir
     finally:
         remove_directory_contents(tmp_dir)
+
+
+def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
+    """Create a small summary of the given file. Does not error
+    when file does not exist.
+
+    Args:
+        print_bytes (int): Number of bytes to print from start/end of file
+
+    Returns:
+        Tuple of size and byte string containing first n .. last n bytes.
+        Size is 0 if file cannot be read."""
+    try:
+        n = print_bytes
+        with open(path, "rb") as f:
+            size = os.fstat(f.fileno()).st_size
+            if size <= 2 * n:
+                short_contents = f.read(2 * n)
+            else:
+                short_contents = f.read(n)
+                f.seek(-n, 2)
+                short_contents += b"..." + f.read(n)
+        return size, short_contents
+    except OSError:
+        return 0, b""

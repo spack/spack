@@ -13,7 +13,7 @@ class MountPointAttributes(AutotoolsPackage):
     homepage = "https://github.com/LLNL/MountPointAttributes"
     url = "https://github.com/LLNL/MountPointAttributes/files/2270601/mountpointattr-1.1.tar.gz"
     git = "https://github.com/LLNL/MountPointAttributes.git"
-    maintainers = ["lee218llnl"]
+    maintainers("lee218llnl")
 
     version("master", branch="master")
     version(

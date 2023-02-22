@@ -13,7 +13,7 @@ class PyMxfold2(PythonPackage):
     homepage = "https://github.com/keio-bioinformatics/mxfold2"
     url = "https://github.com/keio-bioinformatics/mxfold2/releases/download/v0.1.1/mxfold2-0.1.1.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.1.1", sha256="9f39c6ff4138212d1ad2639005f5c05ffb4df0f7e22f5e7ad49466a05aa047e5")
 

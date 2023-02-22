@@ -15,7 +15,7 @@ class Parallelmergetree(CMakePackage):
     homepage = "https://bitbucket.org/cedmav/parallelmergetree"
     git = "https://bitbucket.org/cedmav/parallelmergetree.git"
 
-    maintainers = ["spetruzza"]
+    maintainers("spetruzza")
 
     version(
         "1.1.2",

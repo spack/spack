@@ -15,7 +15,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Package information
     homepage = "https://www.qmcpack.org/"
     git = "https://github.com/QMCPACK/qmcpack.git"
-    maintainers = ["ye-luo"]
+    maintainers("ye-luo")
     tags = ["ecp", "ecp-apps"]
 
     # This download method is untrusted, and is not recommended by the
@@ -393,7 +393,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     # but still does not install nexus, manual, etc. So, there is no compelling
     # reason to use QMCPACK's built-in version at this time.
     def install(self, spec, prefix):
-
         # create top-level directory
         mkdirp(prefix)
 

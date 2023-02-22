@@ -13,7 +13,7 @@ class PyGoogleCrc32c(PythonPackage):
     homepage = "https://github.com/googleapis/python-crc32c"
     pypi = "google-crc32c/google-crc32c-1.3.0.tar.gz"
 
-    maintainers = ["marcusboden"]
+    maintainers("marcusboden")
 
     version("1.3.0", "276de6273eb074a35bc598f8efbc00c7869c5cf2e29c90748fccc8c898c244df")
 

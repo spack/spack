@@ -16,7 +16,7 @@ class Mgard(CMakePackage, CudaPackage):
     homepage = "https://github.com/CODARcode/MGARD"
     git = "https://github.com/robertu94/MGARD"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("2022-11-18", commit="72dd230ed1af88f62ed3c0f662e2387a6e587748")
     version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")

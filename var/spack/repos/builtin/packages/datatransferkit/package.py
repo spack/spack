@@ -16,7 +16,7 @@ class Datatransferkit(CMakePackage):
 
     tags = ["e4s"]
 
-    maintainers = ["Rombur"]
+    maintainers("Rombur")
 
     version("master", branch="master", submodules=True)
     version("3.1-rc3", commit="691d5a1540f7cd42141a3b3d2a7c8370cbc3560a", submodules=True)

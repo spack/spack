@@ -47,8 +47,7 @@ CDASH_PHASES.add("update")
 
 
 CDashConfiguration = collections.namedtuple(
-    "CDashConfiguration",
-    ["upload_url", "packages", "build", "site", "buildstamp", "track"],
+    "CDashConfiguration", ["upload_url", "packages", "build", "site", "buildstamp", "track"]
 )
 
 
@@ -336,12 +335,7 @@ class CDash(Reporter):
         if reason:
             output += "\n{0}".format(reason)
 
-        package = {
-            "name": spec.name,
-            "id": spec.dag_hash(),
-            "result": "skipped",
-            "stdout": output,
-        }
+        package = {"name": spec.name, "id": spec.dag_hash(), "result": "skipped", "stdout": output}
         self.test_report_for_package(directory_name, package, duration=0.0)
 
     def concretization_report(self, directory_name, msg):

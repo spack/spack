@@ -408,13 +408,7 @@ def config_prefer_upstream(args):
     pkgs = {}
     for spec in pref_specs:
         # Collect all the upstream compilers and versions for this package.
-        pkg = pkgs.get(
-            spec.name,
-            {
-                "version": [],
-                "compiler": [],
-            },
-        )
+        pkg = pkgs.get(spec.name, {"version": [], "compiler": []})
         pkgs[spec.name] = pkg
 
         # We have no existing variant if this is our first added version.

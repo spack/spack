@@ -11,7 +11,7 @@ class Hdf5VolCache(CMakePackage):
     homepage = "https://vol-cache.readthedocs.io"
     git = "https://github.com/hpc-io/vol-cache.git"
 
-    maintainers = ["hyoklee", "lrknox"]
+    maintainers("hyoklee", "lrknox")
 
     version("default", branch="develop")
     version("v1.0", tag="v1.0")

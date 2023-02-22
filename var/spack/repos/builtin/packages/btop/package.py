@@ -13,7 +13,7 @@ class Btop(MakefilePackage):
     homepage = "https://github.com/aristocratos/btop#documents"
     url = "https://github.com/aristocratos/btop/archive/refs/tags/v1.2.13.tar.gz"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("1.2.13", sha256="668dc4782432564c35ad0d32748f972248cc5c5448c9009faeb3445282920e02")
 

@@ -33,7 +33,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ["keitat", "sethrj", "kuberry", "jwillenbring", "psakievich"]
+    maintainers("keitat", "sethrj", "kuberry", "jwillenbring", "psakievich")
 
     tags = ["e4s"]
 
@@ -722,9 +722,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             libs = depspec.libs
             try:
                 options.extend(
-                    [
-                        define(trilinos_name + "_INCLUDE_DIRS", depspec.headers.directories),
-                    ]
+                    [define(trilinos_name + "_INCLUDE_DIRS", depspec.headers.directories)]
                 )
             except NoHeadersError:
                 # Handle case were depspec does not have headers
@@ -813,11 +811,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             )
 
         if spec.satisfies("^superlu-dist@4.0:"):
-            options.extend(
-                [
-                    define("HAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG", True),
-                ]
-            )
+            options.extend([define("HAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG", True)])
 
         if spec.satisfies("^parallel-netcdf"):
             options.extend(
@@ -841,10 +835,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         float_s = spec.variants["float"].value
 
         options.extend(
-            [
-                define("Teuchos_ENABLE_COMPLEX", complex_s),
-                define("Teuchos_ENABLE_FLOAT", float_s),
-            ]
+            [define("Teuchos_ENABLE_COMPLEX", complex_s), define("Teuchos_ENABLE_FLOAT", float_s)]
         )
 
         if "+tpetra +explicit_template_instantiation" in spec:

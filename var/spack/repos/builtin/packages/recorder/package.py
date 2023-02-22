@@ -14,7 +14,7 @@ class Recorder(AutotoolsPackage):
     url = "https://github.com/uiuc-hpc/Recorder/archive/v2.1.4.tar.gz"
     git = "https://github.com/uiuc-hpc/Recorder.git"
 
-    maintainers = ["wangvsa"]
+    maintainers("wangvsa")
 
     version("master", branch="master")
     version("pilgrim", branch="pilgrim")

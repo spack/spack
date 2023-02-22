@@ -12,7 +12,7 @@ class LibgpgError(AutotoolsPackage):
     homepage = "https://www.gnupg.org/related_software/libgpg-error/index.en.html"
     url = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.37.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("1.46", sha256="b7e11a64246bbe5ef37748de43b245abd72cfcd53c9ae5e7fc5ca59f1c81268d")
     version("1.45", sha256="570f8ee4fb4bff7b7495cff920c275002aea2147e9a1d220c068213267f80a26")

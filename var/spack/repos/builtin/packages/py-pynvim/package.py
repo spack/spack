@@ -12,7 +12,7 @@ class PyPynvim(PythonPackage):
     homepage = "https://pynvim.readthedocs.io/en/latest/"
     pypi = "pynvim/pynvim-0.4.3.tar.gz"
 
-    maintainers = ["trws"]
+    maintainers("trws")
 
     version("0.4.3", sha256="3a795378bde5e8092fbeb3a1a99be9c613d2685542f1db0e5c6fd467eed56dff")
 

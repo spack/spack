@@ -19,7 +19,7 @@ class Fj(Package):
 
     homepage = "https://www.fujitsu.com/us/"
 
-    maintainers = ["t-karatsu"]
+    maintainers("t-karatsu")
 
     def install(self, spec, prefix):
         raise InstallError(

@@ -16,7 +16,7 @@ class OmegaH(CMakePackage, CudaPackage):
     url = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
     git = "https://github.com/sandialabs/omega_h.git"
 
-    maintainers = ["cwsmith"]
+    maintainers("cwsmith")
     tags = ["e4s"]
     version("main", branch="main")
     version(

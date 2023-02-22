@@ -14,7 +14,7 @@ class Spiner(CMakePackage, CudaPackage):
     url = "https://github.com/lanl/spiner/archive/refs/tags/1.4.0.tar.gz"
     git = "https://github.com/lanl/spiner.git"
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("main", branch="main")
     version("1.6.0", sha256="afa5526d87c78c1165ead06c09c5c2b9e4a913687443e5adff7b709ea4dd7edf")
@@ -37,11 +37,7 @@ class Spiner(CMakePackage, CudaPackage):
     # When overriding/overloading varaints, the last variant is always used, except for
     # "when" clauses. Therefore, call the whens FIRST then the non-whens.
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#overriding-variants
-    variant(
-        "kokkos",
-        default=False,
-        description="Enable kokkos",
-    )
+    variant("kokkos", default=False, description="Enable kokkos")
     variant("openmp", default=False, description="Enable openmp kokkos backend")
 
     variant("hdf5", default=False, description="Enable hdf5")

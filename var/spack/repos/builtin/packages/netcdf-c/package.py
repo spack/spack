@@ -17,7 +17,7 @@ class NetcdfC(AutotoolsPackage):
     git = "https://github.com/Unidata/netcdf-c.git"
     url = "https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.8.1.tar.gz"
 
-    maintainers = ["skosukhin", "WardF"]
+    maintainers("skosukhin", "WardF")
 
     version("main", branch="main")
     version("4.9.0", sha256="9f4cb864f3ab54adb75409984c6202323d2fc66c003e5308f3cdf224ed41c0a6")
@@ -67,6 +67,9 @@ class NetcdfC(AutotoolsPackage):
 
     # See https://github.com/Unidata/netcdf-c/pull/2293
     patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1")
+
+    # See https://github.com/Unidata/netcdf-c/pull/2618
+    patch("4.9.0-no-mpi-yes-pnetcdf.patch", when="@4.9.0: ~mpi+parallel-netcdf")
 
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")
     variant("parallel-netcdf", default=False, description="Enable parallel I/O for classic files")

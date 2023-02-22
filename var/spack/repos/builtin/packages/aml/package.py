@@ -16,7 +16,7 @@ class Aml(AutotoolsPackage):
 
     homepage = "https://argo-aml.readthedocs.io/"
 
-    maintainers = ["perarnau"]
+    maintainers("perarnau")
 
     test_requires_compiler = True
 

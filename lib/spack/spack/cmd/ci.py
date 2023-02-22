@@ -530,10 +530,9 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    cdash_args = []
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
-        cdash_args.extend(cdash_handler.args())
+        install_args.extend(cdash_handler.args())
 
     slash_hash = "/{}".format(job_spec.dag_hash())
     deps_install_args = install_args
@@ -549,21 +548,7 @@ def ci_rebuild(args):
 
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "bootstrap",
-            "now",
-        ],
-        [
-            SPACK_COMMAND,
-            "-e",
-            env.path,
-            "config",
-            "add",
-            "config:db_lock_timeout:120",  # 2 minutes for processes to fight for a db lock
-        ],
+        [SPACK_COMMAND, "-e", env.path, "bootstrap", "now"],
         [
             SPACK_COMMAND,
             "-e",

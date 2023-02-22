@@ -15,7 +15,7 @@ class Dyninst(CMakePackage):
     homepage = "https://dyninst.org"
     url = "https://github.com/dyninst/dyninst/archive/refs/tags/v12.2.0.tar.gz"
     git = "https://github.com/dyninst/dyninst.git"
-    maintainers = ["hainest"]
+    maintainers("hainest")
 
     tags = ["e4s"]
 

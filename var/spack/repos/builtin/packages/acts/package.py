@@ -32,14 +32,20 @@ class Acts(CMakePackage, CudaPackage):
     homepage = "https://acts.web.cern.ch/ACTS/"
     git = "https://github.com/acts-project/acts.git"
     list_url = "https://github.com/acts-project/acts/releases/"
-    maintainers = ["HadrienG2"]
+    maintainers("HadrienG2")
 
     tags = ["hep"]
 
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("23.2.1", commit="a9fe5167d4d3b6b53b28d3b17060a5f3e380cf3a", submodules=True)
+    version("23.2.0", commit="bc3120d23a72cfdd0ea8f9a0997f59caf311672b", submodules=True)
+    version("23.1.0", commit="4479f182a37650a538344f749b967d6f757bdf60", submodules=True)
+    version("23.0.0", commit="5af1b1b5feb8ca8f4c2c69106a1b9ef612c70d9c", submodules=True)
+    version("22.0.1", commit="a4ac99dd72828c5eb3fac06e146f3391958fca8c", submodules=True)
     version("22.0.0", commit="0fb6f8d2ace65338915451201e9ceb6cee11fb5e", submodules=True)
+    version("21.1.1", commit="8ae825de246e8e574d05d9eaf05ba4a937c69aa9", submodules=True)
     version("21.1.0", commit="3b4b5c741c8541491d496a36b917b00b344d52d1", submodules=True)
     version("21.0.0", commit="d8cb0fac3a44e1d44595a481f977df9bd70195fb", submodules=True)
     version("20.3.0", commit="b1859b322744cb033328fd57d9e74fb5326aa56b", submodules=True)
@@ -199,12 +205,7 @@ class Acts(CMakePackage, CudaPackage):
         description="Enable memory profiling using gperftools",
         when="@19.3:",
     )
-    variant(
-        "sycl",
-        default=False,
-        description="Build the SyCL plugin",
-        when="@1:",
-    )
+    variant("sycl", default=False, description="Build the SyCL plugin", when="@1:")
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
@@ -238,12 +239,7 @@ class Acts(CMakePackage, CudaPackage):
         description="Build python bindings for the examples",
         when="@14: +examples",
     )
-    variant(
-        "svg",
-        default=False,
-        description="Build ActSVG display plugin",
-        when="@20.1:",
-    )
+    variant("svg", default=False, description="Build ActSVG display plugin", when="@20.1:")
     variant(
         "tbb",
         default=True,
@@ -254,7 +250,8 @@ class Acts(CMakePackage, CudaPackage):
 
     # Build dependencies
     depends_on("acts-dd4hep", when="@19 +dd4hep")
-    depends_on("actsvg", when="@20.1: +svg")
+    depends_on("actsvg@0.4.20:", when="@20.1: +svg")
+    depends_on("actsvg@0.4.28:", when="@23.2: +svg")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
@@ -336,6 +333,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
             example_cmake_variant("GEANT4", "geant4"),
+            plugin_cmake_variant("GEANT4", "geant4"),
             example_cmake_variant("HEPMC3", "hepmc3"),
             plugin_cmake_variant("IDENTIFICATION", "identification"),
             cmake_variant(integration_tests_label, "integration_tests"),

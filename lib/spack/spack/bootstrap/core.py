@@ -53,12 +53,7 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
-from ._common import (
-    _executables_in_store,
-    _python_import,
-    _root_spec,
-    _try_import_from_store,
-)
+from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source

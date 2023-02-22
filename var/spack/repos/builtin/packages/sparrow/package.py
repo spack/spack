@@ -27,7 +27,7 @@ class Sparrow(CMakePackage):
     homepage = "https://scine.ethz.ch/"
     url = "https://github.com/qcscine/sparrow/archive/refs/tags/3.0.0.tar.gz"
 
-    maintainers = ["frobnitzem"]
+    maintainers("frobnitzem")
 
     version(
         "3.0.0",
