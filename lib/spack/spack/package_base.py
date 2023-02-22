@@ -117,11 +117,6 @@ def deprecated_version(pkg, version):
     return False
 
 
-def package_directory(cls):
-    """Returns the path to the package class directory."""
-    return os.path.abspath(os.path.dirname(cls.module.__file__))
-
-
 def preferred_version(pkg):
     """
     Returns a sorted list of the preferred versions of the package.
@@ -798,7 +793,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""
-        return package_directory(cls)
+        return os.path.abspath(os.path.dirname(cls.module.__file__))
 
     @classproperty
     def module(cls):
@@ -2493,8 +2488,8 @@ def copy_test_files(pkg, spec):
         tty.debug("{0}: skipping test data copy since no package class found".format(spec.name))
         return
 
-    package_dir = package_directory(pkg_cls)
-    data_source = Prefix(package_dir).test
+    pkg_dir = pkg_cls.package_dir
+    data_source = Prefix(pkg_dir).test
     data_dir = pkg.test_suite.current_test_data_dir
     if os.path.isdir(data_source) and not os.path.exists(data_dir):
         # We assume data dir is used read-only

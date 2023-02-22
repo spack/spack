@@ -111,20 +111,34 @@ def get_test_suite(name):
     return names[0]
 
 
-def package_class(spec):
-    """Return the spec's package class.
+def package_class(spec_or_pkg):
+    """Return the package class for the spec or package.
 
     Args:
-        spec (spack.spec.Spec): spec instance
+        spec_or_pkg (spack.spec.Spec or spack.package_base.PackageBase): spec or
+            package (class)
+
+    Raises: ValueError: If not given a spec, package, or class
     """
-    try:
-        cls = spec.package.__class__
-    except AssertionError:
+    if isinstance(spec_or_pkg, spack.spec.Spec):
+        spec = spec_or_pkg
         try:
-            cls = spec.package_class
-        except spack.repo.UnknownPackageError as e:
-            tty.debug("{0}: Cannot retrieve class from spec: {1}".format(spec.name, str(e)))
-            return None
+            cls = spec.package.__class__
+        except AssertionError:
+            try:
+                cls = spec.package_class
+            except spack.repo.UnknownPackageError as e:
+                tty.debug("{0}: Cannot retrieve class from spec: {1}".format(spec.name, str(e)))
+                return None
+
+    elif isinstance(spec_or_pkg, spack.package_base.PackageBase):
+        cls = spec_or_pkg.__class__
+
+    elif inspect.isclass(spec_or_pkg):
+        cls = spec_or_pkg
+
+    else:
+        raise ValueError("Cannot retrieve package class for {0}".format(spec_or_pkg))
 
     return cls
 
@@ -141,30 +155,23 @@ def test_functions(spec_or_pkg, add_virtuals=False, names=False):
 
     Returns: list of test functions or function names
 
-    Raises: ValueError:
+    Raises: ValueError: If not given a spec, package, or class
     """
-    if isinstance(spec_or_pkg, spack.spec.Spec):
-        spec = spec_or_pkg
-        cls = package_class(spec)
-        if not cls:
-            tty.debug("Skipping {0}: no package class found".format(spec.name))
-            return []
-    elif isinstance(spec_or_pkg, spack.package_base.PackageBase):
+    if add_virtuals and isinstance(spec_or_pkg, spack.package_base.PackageBase):
         pkg = spec_or_pkg
-        cls = pkg.__class__
-        if add_virtuals:
-            methods = []
-            v_names = virtuals(pkg)
-            test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
-            for spec in test_specs:
-                methods.extend(test_functions(spec, names=names))
-            return methods
+        v_names = virtuals(pkg)
+        test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
+        methods = []
+        for spec in test_specs:
+            methods.extend(test_functions(spec, add_virtuals=False, names=names))
+        return methods
 
-    elif inspect.isclass(spec_or_pkg):
-        cls = spec_or_pkg
-
-    else:
-        raise ValueError("Cannot retrieve test methods for {0}".format(spec_or_pkg))
+    cls = package_class(spec_or_pkg)
+    if not cls:
+        tty.debug(
+            "{0}: skipping test function retrieval since no package class found".format(spec.name)
+        )
+        return []
 
     methods = inspect.getmembers(cls, predicate=lambda x: inspect.isfunction(x))
     tests = []
