@@ -24,13 +24,25 @@ class Sartre(CMakePackage):
     depends_on("gsl")
     depends_on("root")
     depends_on("boost@1.39: +thread")
-    depends_on("cuba@4:")
+
+    # FIXME cuba is vendored in 1.39
+    # depends_on("cuba@4:")
 
     def patch(self):
-        for file in ["src/CMakeLists.txt", "gemini/CMakeLists.txt"]:
+        for file in ["CMakeLists.txt", "src/CMakeLists.txt", "gemini/CMakeLists.txt"]:
             filter_file(
                 r"set\(CMAKE_CXX_STANDARD 11\)",
                 'set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ standard")',
+                file,
+            )
+            filter_file(
+                r"\$\{CMAKE_INSTALL_PREFIX\}/sartre",
+                "${CMAKE_INSTALL_PREFIX}",
+                file,
+            )
+            filter_file(
+                r"DESTINATION sartre/",
+                "DESTINATION ",
                 file,
             )
 
