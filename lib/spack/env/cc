@@ -756,7 +756,7 @@ esac
 #
 # Finally, reassemble the command line.
 #
-args_list="$flags_list"
+args_list=""
 
 # Insert include directories just prior to any system include directories
 # NOTE: adding ${lsep} to the prefix here turns every added element into two
@@ -803,6 +803,9 @@ extend args_list other_args_list
 
 # Inject SPACK_LDLIBS, if supplied
 extend args_list libs_list "-l"
+
+# Users manually specified flags must have highest priority, thus added last to override any others
+extend args_list flags_list
 
 full_command_list="$command"
 extend full_command_list args_list
