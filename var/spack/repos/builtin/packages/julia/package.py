@@ -26,7 +26,9 @@ class Julia(MakefilePackage):
     maintainers("glennpj", "vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
-    version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
+    version("1.9.0-beta4", sha256="860263e4c8e3782cc1c39dc8e529e6adc02864e4f258dc4529d3717598a92810")
+    version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031",
+            preferred=True)
     version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
     version("1.8.3", sha256="4d8d460fcae5c6f8306a3e3c14371635c1a26f47c3ce62b2950cf9234b6ec849")
     version("1.8.2", sha256="3e2cea35bf5df963ed7b75a83e8febfc000acf1e664ecd657a0772508eb1fb5d")
@@ -57,6 +59,18 @@ class Julia(MakefilePackage):
     # Do not use internal unwind.  We need to use a conflict, because
     # `internal_unwind` is defined only when `+clang`.
     conflicts("^llvm+internal_unwind")
+
+    with when("@1.9.0:1.9"):
+        # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
+        # openlibm.so.4, libblastrampoline.so.5, libgit2.so.1.5, libnghttp2.so.14,
+        # libcurl.so.4
+        depends_on("libblastrampoline@5.4.0:5")
+        depends_on("libgit2@1.5.0:1.5")
+        depends_on("libssh2@1.10.0:1.10")
+        depends_on("llvm@14.0.6 +lld shlib_symbol_version=jl")
+        depends_on("mbedtls@2.28.0:2.28")
+        depends_on("openlibm@0.8.1:0.8", when="+openlibm")
+        depends_on("nghttp2@1.48.0:1.48")
 
     with when("@1.8.0:1.8"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -118,6 +132,14 @@ class Julia(MakefilePackage):
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
             sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
+        ),
+    )
+    depends_on(
+        "llvm",
+        when="^llvm@14.0.6",
+        patches=patch(
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...63feb57573d16e7c64d99c971659dd98971ad06c.patch",
+            sha256="c22a598c61524915bf2e3dd4e643265bb6f5059e68941a10afdd9a1e8d6ea0b0",
         ),
     )
 
