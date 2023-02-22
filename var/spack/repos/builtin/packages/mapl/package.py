@@ -35,7 +35,7 @@ class Mapl(CMakePackage):
 
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake. This works with mapl@2.22.0
-    # and latest Apple M1 processors.
+    # and latest Apple M1 and M2 processors.
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
