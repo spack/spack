@@ -13,13 +13,10 @@ properties = {
             r"\w[\w-]*": {
                 "type": "object",
                 "additionalProperties": False,
-                "properties": {
-                    "spec": {"type": "string"},
-                    "path": {"type": "string"},
-                },
-            },
+                "properties": {"spec": {"type": "string"}, "path": {"type": "string"}},
+            }
         },
-    },
+    }
 }
 
 

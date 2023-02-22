@@ -24,10 +24,7 @@ def setup_parser(subparser):
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
     subparser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=scopes_metavar,
-        help="configuration scope to modify",
+        "--scope", choices=scopes, metavar=scopes_metavar, help="configuration scope to modify"
     )
 
     arguments.add_common_arguments(subparser, ["specs"])

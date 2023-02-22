@@ -39,10 +39,7 @@ def setup_parser(subparser):
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
     subparser.add_argument(
-        "--scope",
-        choices=scopes,
-        metavar=scopes_metavar,
-        help="configuration scope to modify",
+        "--scope", choices=scopes, metavar=scopes_metavar, help="configuration scope to modify"
     )
 
     subparser.add_argument(
@@ -63,9 +60,7 @@ def _update_config(spec, path, abspath, modify_scope):
     else:
         tty.msg("New development spec: {0}".format(str(spec)))
 
-    entry = {
-        "spec": str(spec),
-    }
+    entry = {"spec": str(spec)}
     if path != spec.name:
         entry["path"] = path
     dev_specs[spec.name] = entry
