@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,11 @@ import pytest
 
 import spack.error
 import spack.package_base
+import spack.parser
+import spack.repo
 import spack.util.hash as hashutil
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.spec import Spec
-from spack.util.mock_package import MockPackageMultiRepo
 
 
 def check_links(spec_to_check):
@@ -55,7 +56,7 @@ def set_dependency(saved_deps, monkeypatch):
 
 
 @pytest.mark.usefixtures("config")
-def test_test_deptype():
+def test_test_deptype(tmpdir):
     """Ensure that test-only dependencies are only included for specified
     packages in the following spec DAG::
 
@@ -67,19 +68,14 @@ def test_test_deptype():
 
     w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     """
-    default = ("build", "link")
-    test_only = ("test",)
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("x")
+    builder.add_package("z")
+    builder.add_package("y", dependencies=[("z", "test", None)])
+    builder.add_package("w", dependencies=[("x", "test", None), ("y", None, None)])
 
-    mock_repo = MockPackageMultiRepo()
-    x = mock_repo.add_package("x", [], [])
-    z = mock_repo.add_package("z", [], [])
-    y = mock_repo.add_package("y", [z], [test_only])
-    w = mock_repo.add_package("w", [x, y], [test_only, default])
-
-    with spack.repo.use_repositories(mock_repo):
-        spec = Spec("w")
-        spec.concretize(tests=(w.name,))
-
+    with spack.repo.use_repositories(builder.root):
+        spec = Spec("w").concretized(tests=("w",))
         assert "x" in spec
         assert "z" not in spec
 
@@ -129,7 +125,7 @@ def test_installed_deps(monkeypatch, mock_packages):
     # use the installed C.  It should *not* force A to use the installed D
     # *if* we're doing a fresh installation.
     a_spec = Spec(a)
-    a_spec._add_dependency(c_spec, ("build", "link"))
+    a_spec._add_dependency(c_spec, deptypes=("build", "link"))
     a_spec.concretize()
     assert spack.version.Version("2") == a_spec[c][d].version
     assert spack.version.Version("2") == a_spec[e].version
@@ -138,25 +134,21 @@ def test_installed_deps(monkeypatch, mock_packages):
 
 
 @pytest.mark.usefixtures("config")
-def test_specify_preinstalled_dep():
+def test_specify_preinstalled_dep(tmpdir, monkeypatch):
     """Specify the use of a preinstalled package during concretization with a
     transitive dependency that is only supplied by the preinstalled package.
     """
-    default = ("build", "link")
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("c")
+    builder.add_package("b", dependencies=[("c", None, None)])
+    builder.add_package("a", dependencies=[("b", None, None)])
 
-    mock_repo = MockPackageMultiRepo()
-    c = mock_repo.add_package("c", [], [])
-    b = mock_repo.add_package("b", [c], [default])
-    mock_repo.add_package("a", [b], [default])
-
-    with spack.repo.use_repositories(mock_repo):
-        b_spec = Spec("b")
-        b_spec.concretize()
-        for spec in b_spec.traverse():
-            setattr(spec.package, "installed", True)
+    with spack.repo.use_repositories(builder.root):
+        b_spec = Spec("b").concretized()
+        monkeypatch.setattr(Spec, "installed", property(lambda x: x.name != "a"))
 
         a_spec = Spec("a")
-        a_spec._add_dependency(b_spec, default)
+        a_spec._add_dependency(b_spec, deptypes=("build", "link"))
         a_spec.concretize()
 
         assert set(x.name for x in a_spec.traverse()) == set(["a", "b", "c"])
@@ -167,32 +159,21 @@ def test_specify_preinstalled_dep():
     "spec_str,expr_str,expected",
     [("x ^y@2", "y@2", True), ("x@1", "y", False), ("x", "y@3", True)],
 )
-def test_conditional_dep_with_user_constraints(spec_str, expr_str, expected):
+def test_conditional_dep_with_user_constraints(tmpdir, spec_str, expr_str, expected):
     """This sets up packages X->Y such that X depends on Y conditionally. It
     then constructs a Spec with X but with no constraints on X, so that the
     initial normalization pass cannot determine whether the constraints are
     met to add the dependency; this checks whether a user-specified constraint
     on Y is applied properly.
     """
-    # FIXME: We need to tweak optimization rules to make this test
-    # FIXME: not prefer a DAG with fewer nodes wrt more recent
-    # FIXME: versions of the package
-    if spack.config.get("config:concretizer") == "clingo":
-        pytest.xfail("Clingo optimization rules prefer to trim a node")
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("y")
+    builder.add_package("x", dependencies=[("y", None, "x@2:")])
 
-    default = ("build", "link")
-
-    mock_repo = MockPackageMultiRepo()
-    y = mock_repo.add_package("y", [], [])
-    x_on_y_conditions = {y.name: {"x@2:": "y"}}
-    mock_repo.add_package("x", [y], [default], conditions=x_on_y_conditions)
-
-    with spack.repo.use_repositories(mock_repo):
-        spec = Spec(spec_str)
-        spec.concretize()
-
-    result = expr_str in spec
-    assert result is expected, "{0} in {1}".format(expr_str, spec)
+    with spack.repo.use_repositories(builder.root):
+        spec = Spec(spec_str).concretized()
+        result = expr_str in spec
+        assert result is expected, "{0} in {1}".format(expr_str, spec)
 
 
 @pytest.mark.usefixtures("mutable_mock_repo", "config")
@@ -981,7 +962,7 @@ class TestSpecDag(object):
 
     def test_invalid_literal_spec(self):
         # Can't give type 'build' to a top-level spec
-        with pytest.raises(spack.spec.SpecParseError):
+        with pytest.raises(spack.parser.SpecSyntaxError):
             Spec.from_literal({"foo:build": None})
 
         # Can't use more than one ':' separator
@@ -1011,9 +992,9 @@ def test_synthetic_construction_of_split_dependencies_from_same_package(mock_pac
     link_run_spec = Spec("c@1.0").concretized()
     build_spec = Spec("c@2.0").concretized()
 
-    root.add_dependency_edge(link_run_spec, deptype="link")
-    root.add_dependency_edge(link_run_spec, deptype="run")
-    root.add_dependency_edge(build_spec, deptype="build")
+    root.add_dependency_edge(link_run_spec, deptypes="link")
+    root.add_dependency_edge(link_run_spec, deptypes="run")
+    root.add_dependency_edge(build_spec, deptypes="build")
 
     # Check dependencies from the perspective of root
     assert len(root.dependencies()) == 2
@@ -1039,7 +1020,7 @@ def test_synthetic_construction_bootstrapping(mock_packages, config):
     root = Spec("b@2.0").concretized()
     bootstrap = Spec("b@1.0").concretized()
 
-    root.add_dependency_edge(bootstrap, deptype="build")
+    root.add_dependency_edge(bootstrap, deptypes="build")
 
     assert len(root.dependencies()) == 1
     assert root.dependencies()[0].name == "b"
@@ -1058,7 +1039,7 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
     bootstrap = Spec("b@1.0").concretized()
 
     for current_deptype in ("build", "link", "run"):
-        root.add_dependency_edge(bootstrap, deptype=current_deptype)
+        root.add_dependency_edge(bootstrap, deptypes=current_deptype)
 
         # Check edges in dependencies
         assert len(root.edges_to_dependencies()) == 1
@@ -1085,6 +1066,41 @@ def test_adding_same_deptype_with_the_same_name_raises(
     c1 = Spec("b@1.0").concretized()
     c2 = Spec("b@2.0").concretized()
 
-    p.add_dependency_edge(c1, deptype=c1_deptypes)
+    p.add_dependency_edge(c1, deptypes=c1_deptypes)
     with pytest.raises(spack.error.SpackError):
-        p.add_dependency_edge(c2, deptype=c2_deptypes)
+        p.add_dependency_edge(c2, deptypes=c2_deptypes)
+
+
+@pytest.mark.regression("33499")
+def test_indexing_prefers_direct_or_transitive_link_deps():
+    # Test whether spec indexing prefers direct/transitive link type deps over deps of
+    # build/run/test deps, and whether it does fall back to a full dag search.
+    root = Spec("root")
+
+    # Use a and z to since we typically traverse by edges sorted alphabetically.
+    a1 = Spec("a1")
+    a2 = Spec("a2")
+    z1 = Spec("z1")
+    z2 = Spec("z2")
+
+    # Same package, different spec.
+    z3_flavor_1 = Spec("z3 +through_a1")
+    z3_flavor_2 = Spec("z3 +through_z1")
+
+    root.add_dependency_edge(a1, deptypes=("build", "run", "test"))
+
+    # unique package as a dep of a build/run/test type dep.
+    a1.add_dependency_edge(a2, deptypes="all")
+    a1.add_dependency_edge(z3_flavor_1, deptypes="all")
+
+    # chain of link type deps root -> z1 -> z2 -> z3
+    root.add_dependency_edge(z1, deptypes="link")
+    z1.add_dependency_edge(z2, deptypes="link")
+    z2.add_dependency_edge(z3_flavor_2, deptypes="link")
+
+    # Indexing should prefer the link-type dep.
+    assert "through_z1" in root["z3"].variants
+    assert "through_a1" in a1["z3"].variants
+
+    # Ensure that the full DAG is still searched
+    assert root["a2"]

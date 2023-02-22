@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -113,7 +113,7 @@ class TestTcl(object):
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
-        assert len([x for x in content if "is-loaded foo/bar" in x]) == 1
+        assert len([x for x in content if "is-loaded 'foo/bar'" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 

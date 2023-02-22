@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,13 +8,13 @@
 from spack.package import *
 
 
-class Timemory(CMakePackage, PythonPackage):
+class Timemory(CMakePackage, PythonExtension):
     """Modular profiling toolkit and suite of libraries and tools
     for C/C++/Fortran/CUDA/Python"""
 
     homepage = "https://timemory.readthedocs.io/en/latest/"
     git = "https://github.com/NERSC/timemory.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
 
     version("master", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)

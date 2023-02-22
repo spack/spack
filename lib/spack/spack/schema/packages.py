@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,6 +80,15 @@ properties = {
                             "group": {
                                 "type": "string",
                             },
+                        },
+                    },
+                    # If 'get_full_repo' is promoted to a Package-level
+                    # attribute, it could be useful to set it here
+                    "package_attributes": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "patternProperties": {
+                            r"\w+": {},
                         },
                     },
                     "providers": {

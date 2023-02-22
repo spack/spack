@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,7 @@ def test_it_just_runs(pkg):
 
 
 def test_info_noversion(mock_packages, print_buffer):
-    """Check that a mock package with no versions or variants outputs None."""
+    """Check that a mock package with no versions outputs None."""
     info("noversion")
 
     line_iter = iter(print_buffer)
@@ -52,7 +52,7 @@ def test_info_noversion(mock_packages, print_buffer):
             has = [desc in line for desc in ["Preferred", "Safe", "Deprecated"]]
             if not any(has):
                 continue
-        elif "Variants" not in line:
+        else:
             continue
 
         assert "None" in next(line_iter).strip()

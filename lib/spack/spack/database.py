@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,9 +26,7 @@ import os
 import socket
 import sys
 import time
-from typing import Dict  # novm
-
-import six
+from typing import Dict
 
 try:
     import uuid
@@ -48,9 +46,11 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from spack.directory_layout import DirectoryLayoutError
+from spack.directory_layout import (
+    DirectoryLayoutError,
+    InconsistentInstallDirectoryError,
+)
 from spack.error import SpackError
-from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.version import Version
 
@@ -105,6 +105,14 @@ default_install_record_fields = [
     "installation_time",
     "deprecated_for",
 ]
+
+
+def reader(version):
+    reader_cls = {
+        Version("5"): spack.spec.SpecfileV1,
+        Version("6"): spack.spec.SpecfileV3,
+    }
+    return reader_cls[version]
 
 
 def _now():
@@ -304,10 +312,10 @@ class Database(object):
 
     """Per-process lock objects for each install prefix."""
 
-    _prefix_locks = {}  # type: Dict[str, lk.Lock]
+    _prefix_locks: Dict[str, lk.Lock] = {}
 
     """Per-process failure (lock) objects for each install prefix."""
-    _prefix_failures = {}  # type: Dict[str, lk.Lock]
+    _prefix_failures: Dict[str, lk.Lock] = {}
 
     def __init__(
         self,
@@ -674,7 +682,7 @@ class Database(object):
         except (TypeError, ValueError) as e:
             raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
-    def _read_spec_from_dict(self, hash_key, installs, hash=ht.dag_hash):
+    def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -692,7 +700,7 @@ class Database(object):
             spec_dict[hash.name] = hash_key
 
         # Build spec from dict first.
-        spec = spack.spec.Spec.from_node_dict(spec_dict)
+        spec = spec_reader.from_node_dict(spec_dict)
         return spec
 
     def db_for_spec_hash(self, hash_key):
@@ -723,7 +731,16 @@ class Database(object):
                 return True, db._data[hash_key]
         return False, None
 
-    def _assign_dependencies(self, hash_key, installs, data):
+    def query_local_by_spec_hash(self, hash_key):
+        """Get a spec by hash in the local database
+
+        Return:
+            (InstallRecord or None): InstallRecord when installed
+                locally, otherwise None."""
+        with self.read_transaction():
+            return self._data.get(hash_key, None)
+
+    def _assign_dependencies(self, spec_reader, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
@@ -733,7 +750,7 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _ in spack.spec.Spec.read_yaml_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -756,7 +773,7 @@ class Database(object):
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, dtypes)
+                spec._add_dependency(child, deptypes=dtypes)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -768,10 +785,7 @@ class Database(object):
             with open(filename, "r") as f:
                 fdata = sjson.load(f)
         except Exception as e:
-            raise six.raise_from(
-                CorruptDatabaseError("error parsing database:", str(e)),
-                e,
-            )
+            raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
         if fdata is None:
             return
@@ -791,6 +805,7 @@ class Database(object):
 
         # TODO: better version checking semantics.
         version = Version(db["version"])
+        spec_reader = reader(version)
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
@@ -826,7 +841,7 @@ class Database(object):
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
-                spec = self._read_spec_from_dict(hash_key, installs)
+                spec = self._read_spec_from_dict(spec_reader, hash_key, installs)
 
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
@@ -842,7 +857,7 @@ class Database(object):
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
             try:
-                self._assign_dependencies(hash_key, installs, data)
+                self._assign_dependencies(spec_reader, hash_key, installs, data)
             except MissingDependenciesError:
                 raise
             except Exception as e:
@@ -1063,7 +1078,14 @@ class Database(object):
         elif self.is_upstream:
             tty.warn("upstream not found: {0}".format(self._index_path))
 
-    def _add(self, spec, directory_layout=None, explicit=False, installation_time=None):
+    def _add(
+        self,
+        spec,
+        directory_layout=None,
+        explicit=False,
+        installation_time=None,
+        allow_missing=False,
+    ):
         """Add an install record for this spec to the database.
 
         Assumes spec is installed in ``layout.path_for_spec(spec)``.
@@ -1074,19 +1096,18 @@ class Database(object):
         Args:
             spec: spec to be added
             directory_layout: layout of the spec installation
-            **kwargs:
+            explicit:
+                Possible values: True, False, any
 
-                explicit
-                    Possible values: True, False, any
+                A spec that was installed following a specific user
+                request is marked as explicit. If instead it was
+                pulled-in as a dependency of a user requested spec
+                it's considered implicit.
 
-                    A spec that was installed following a specific user
-                    request is marked as explicit. If instead it was
-                    pulled-in as a dependency of a user requested spec
-                    it's considered implicit.
-
-                installation_time
-                    Date and time of installation
-
+            installation_time:
+                Date and time of installation
+            allow_missing: if True, don't warn when installation is not found on on disk
+                This is useful when installing specs without build deps.
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
@@ -1100,11 +1121,22 @@ class Database(object):
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for dep in spec.dependencies(deptype=_tracked_deps):
-            dkey = dep.dag_hash()
-            if dkey not in self._data:
-                extra_args = {"explicit": False, "installation_time": installation_time}
-                self._add(dep, directory_layout, **extra_args)
+        for edge in spec.edges_to_dependencies(deptype=_tracked_deps):
+            if edge.spec.dag_hash() in self._data:
+                continue
+            # allow missing build-only deps. This prevents excessive
+            # warnings when a spec is installed, and its build dep
+            # is missing a build dep; there's no need to install the
+            # build dep's build dep first, and there's no need to warn
+            # about it missing.
+            dep_allow_missing = allow_missing or edge.deptypes == ("build",)
+            self._add(
+                edge.spec,
+                directory_layout,
+                explicit=False,
+                installation_time=installation_time,
+                allow_missing=dep_allow_missing,
+            )
 
         # Make sure the directory layout agrees whether the spec is installed
         if not spec.external and directory_layout:
@@ -1115,13 +1147,14 @@ class Database(object):
                 installed = True
                 self._installed_prefixes.add(path)
             except DirectoryLayoutError as e:
-                msg = (
-                    "{0} is being {1} in the database with prefix {2}, "
-                    "but this directory does not contain an installation of "
-                    "the spec, due to: {3}"
-                )
-                action = "updated" if key in self._data else "registered"
-                tty.warn(msg.format(spec.short_spec, action, path, str(e)))
+                if not (allow_missing and isinstance(e, InconsistentInstallDirectoryError)):
+                    msg = (
+                        "{0} is being {1} in the database with prefix {2}, "
+                        "but this directory does not contain an installation of "
+                        "the spec, due to: {3}"
+                    )
+                    action = "updated" if key in self._data else "registered"
+                    tty.warn(msg.format(spec.short_spec, action, path, str(e)))
         elif spec.external_path:
             path = spec.external_path
             installed = True
@@ -1143,7 +1176,7 @@ class Database(object):
             for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, dep.deptypes)
+                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
                 if not upstream:
                     record.ref_count += 1
 
@@ -1357,23 +1390,6 @@ class Database(object):
         for spec in self.query():
             if spec.package.extends(extendee_spec):
                 yield spec.package
-
-    @_autospec
-    def activated_extensions_for(self, extendee_spec, extensions_layout=None):
-        """
-        Return the specs of all packages that extend
-        the given spec
-        """
-        if extensions_layout is None:
-            view = YamlFilesystemView(extendee_spec.prefix, spack.store.layout)
-            extensions_layout = view.extensions_layout
-        for spec in self.query():
-            try:
-                extensions_layout.check_activated(extendee_spec, spec)
-                yield spec.package
-            except spack.directory_layout.NoSuchExtensionError:
-                continue
-            # TODO: conditional way to do this instead of catching exceptions
 
     def _get_by_hash_local(self, dag_hash, default=None, installed=any):
         # hash is a full hash and is in the data somewhere

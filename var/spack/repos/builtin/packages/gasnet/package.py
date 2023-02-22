@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,14 +29,16 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     url = "https://gasnet.lbl.gov/EX/GASNet-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/gasnet.git"
 
-    maintainers = ["PHHargrove", "bonachea"]
+    maintainers("PHHargrove", "bonachea")
 
-    tags = ["e4s"]
+    tags = ["e4s", "ecp"]
 
     version("develop", branch="develop")
     version("main", branch="stable")
     version("master", branch="master")
 
+    version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
+    version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
     version("2022.3.0", sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09")
     version("2021.9.0", sha256="1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee")
     version("2021.3.0", sha256="8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747")
@@ -53,9 +55,9 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         description="The hardware-dependent network backends to enable.\n"
         + "(smp) = SMP conduit for single-node operation ;\n"
         + "(ibv) = Native InfiniBand verbs conduit ;\n"
+        + "(ofi) = OFI conduit over libfabric, for HPE Cray Slingshot and Intel Omni-Path ;\n"
         + "(udp) = Portable UDP conduit, for Ethernet networks ;\n"
         + "(mpi) = Low-performance/portable MPI conduit ;\n"
-        + "(ofi) = EXPERIMENTAL Portable OFI conduit over libfabric ;\n"
         + "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n"
         + "For detailed recommendations, consult https://gasnet.lbl.gov",
     )
@@ -86,6 +88,12 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         if spec.satisfies("@master:"):
             bootstrapsh = Executable("./Bootstrap")
             bootstrapsh()
+            # Record git-describe when fetched from git:
+            try:
+                git = which("git")
+                git("describe", "--long", "--always", output="version.git")
+            except spack.util.executable.ProcessError:
+                spack.main.send_warning_to_tty("Omitting version stamp due to git error")
 
         # The GASNet-EX library has a highly multi-dimensional configure space,
         # to accomodate the varying behavioral requirements of each client runtime.
@@ -164,6 +172,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         }
 
         os.environ["GASNET_VERBOSEENV"] = "1"  # include diagnostic info
+        os.environ["GASNET_SPAWN_VERBOSE"] = "1"  # include spawning diagnostics
         if "GASNET_SSH_SERVERS" not in os.environ:
             os.environ["GASNET_SSH_SERVERS"] = "localhost " * 4
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,6 +45,8 @@ class Vasp(MakefilePackage):
         description="Enable VASPsol implicit solvation model\n"
         "https://github.com/henniggroup/VASPsol",
     )
+
+    variant("shmem", default=True, description="Enable use_shmem build flag")
 
     depends_on("rsync", type="build")
     depends_on("blas")
@@ -151,8 +153,11 @@ class Vasp(MakefilePackage):
             "-Davoidalloc",
             "-Duse_bse_te",
             "-Dtbdyn",
-            "-Duse_shmem",
         ]
+
+        if "+shmem" in spec:
+            cpp_options.append("-Duse_shmem")
+
         if "%nvhpc" in self.spec:
             cpp_options.extend(['-DHOST=\\"LinuxPGI\\"', "-DPGI16", "-Dqd_emulate"])
         elif "%aocc" in self.spec:

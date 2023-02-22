@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/lbann.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("develop", branch="develop")
     version("0.102", sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a")
@@ -167,7 +167,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("dihydrogen +cuda", when="+dihydrogen +cuda")
     depends_on("dihydrogen ~al", when="+dihydrogen ~al")
     depends_on("dihydrogen +al", when="+dihydrogen +al")
-    depends_on("dihydrogen +distconv +cuda", when="+distconv")
+    depends_on("dihydrogen +distconv +cuda", when="+distconv +cuda")
+    depends_on("dihydrogen +distconv +rocm", when="+distconv +rocm")
     depends_on("dihydrogen ~half", when="+dihydrogen ~half")
     depends_on("dihydrogen +half", when="+dihydrogen +half")
     depends_on("dihydrogen ~nvshmem", when="+dihydrogen ~nvshmem")
@@ -190,6 +191,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("hydrogen amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
         depends_on("aluminum amdgpu_target=%s" % val, when="+al amdgpu_target=%s" % val)
         depends_on("dihydrogen amdgpu_target=%s" % val, when="+dihydrogen amdgpu_target=%s" % val)
+
+    depends_on("roctracer-dev", when="+rocm +distconv")
 
     depends_on("cudnn", when="@0.90:0.100 +cuda")
     depends_on("cudnn@8.0.2:", when="@:0.90,0.101: +cuda")
@@ -240,7 +243,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("python@3: +shared", type=("build", "run"), when="@:0.90,0.99: +pfe")
     extends("python", when="+pfe")
     depends_on("py-setuptools", type="build", when="+pfe")
-    depends_on("py-argparse", type="run", when="@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1")
     depends_on("py-protobuf+cpp@3.10.0:", type=("build", "run"), when="@:0.90,0.99: +pfe")
 
     depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")
@@ -334,6 +336,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 "-DLBANN_WITH_ONNX:BOOL=%s" % ("+onnx" in spec),
                 "-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s" % ("+python" in spec),
                 "-DLBANN_WITH_PYTHON_FRONTEND:BOOL=%s" % ("+pfe" in spec),
+                "-DLBANN_WITH_ROCTRACER:BOOL=%s" % ("+rocm +distconv" in spec),
                 "-DLBANN_WITH_TBINF=OFF",
                 "-DLBANN_WITH_UNIT_TESTING:BOOL=%s" % ("+unit_tests" in spec),
                 "-DLBANN_WITH_VISION:BOOL=%s" % ("+vision" in spec),
@@ -424,6 +427,12 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                     "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
                 ]
             )
+            if "platform=cray" in spec:
+                args.extend(
+                    [
+                        "-DMPI_ASSUME_NO_BUILTIN_MPI=ON",
+                    ]
+                )
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)

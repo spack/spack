@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,6 @@ import sys
 from copy import copy
 
 import pytest
-from six import iteritems
 
 import llnl.util.filesystem as fs
 
@@ -73,7 +72,7 @@ def test_get_compiler_duplicates(config):
     )
 
     assert len(cfg_file_to_duplicates) == 1
-    cfg_file, duplicates = next(iteritems(cfg_file_to_duplicates))
+    cfg_file, duplicates = next(iter(cfg_file_to_duplicates.items()))
     assert len(duplicates) == 1
 
 
@@ -84,7 +83,6 @@ def test_all_compilers(config):
     assert len(filtered) == 1
 
 
-@pytest.mark.skipif(sys.version_info[0] == 2, reason="make_args_for_version requires python 3")
 @pytest.mark.parametrize(
     "input_version,expected_version,expected_error",
     [(None, None, "Couldn't get version for compiler /usr/bin/gcc"), ("4.9", "4.9", None)],

@@ -1,17 +1,17 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 import os
-import re
 import shutil
 import sys
 import textwrap
+from typing import List
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
+from llnl.util import lang, tty
 
 import spack.build_environment
 import spack.cmd
@@ -32,33 +32,6 @@ section = "build"
 level = "short"
 
 
-# Pass in the value string passed to use-buildcache and get back
-# the package and dependencies values.
-def parse_use_buildcache(opt):
-    bc_keys = ["package:", "dependencies:", ""]
-    bc_values = ["only", "never", "auto"]
-    kv_list = re.findall("([a-z]+:)?([a-z]+)", opt)
-
-    # Verify keys and values
-    bc_map = {k: v for k, v in kv_list if k in bc_keys and v in bc_values}
-    if not len(kv_list) == len(bc_map):
-        tty.error("Unrecognized arguments passed to use-buildcache")
-        tty.error(
-            "Expected: --use-buildcache "
-            "[[auto|only|never],[package:[auto|only|never]],[dependencies:[auto|only|never]]]"
-        )
-        exit(1)
-
-    for _group in ["package:", "dependencies:"]:
-        if _group not in bc_map:
-            if "" in bc_map:
-                bc_map[_group] = bc_map[""]
-            else:
-                bc_map[_group] = "auto"
-
-    return bc_map["package:"], bc_map["dependencies:"]
-
-
 # Determine value of cache flag
 def cache_opt(default_opt, use_buildcache):
     if use_buildcache == "auto":
@@ -73,8 +46,7 @@ def install_kwargs_from_args(args):
     """Translate command line arguments into a dictionary that will be passed
     to the package installer.
     """
-
-    pkg_use_bc, dep_use_bc = parse_use_buildcache(args.use_buildcache)
+    pkg_use_bc, dep_use_bc = args.use_buildcache
 
     return {
         "fail_fast": args.fail_fast,
@@ -169,6 +141,7 @@ the dependencies""",
     cache_group.add_argument(
         "--use-buildcache",
         dest="use_buildcache",
+        type=arguments.use_buildcache,
         default="package:auto,dependencies:auto",
         metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
         help="""select the mode of buildcache for the 'package' and 'dependencies'.
@@ -221,14 +194,22 @@ which is useful for CI pipeline troubleshooting""",
         default=False,
         help="(with environment) only install already concretized specs",
     )
-    subparser.add_argument(
-        "--no-add",
+
+    updateenv_group = subparser.add_mutually_exclusive_group()
+    updateenv_group.add_argument(
+        "--add",
         action="store_true",
         default=False,
-        help="""(with environment) partially install an environment, limiting
-to concrete specs in the environment matching the arguments.
-Non-roots remain installed implicitly.""",
+        help="""(with environment) add spec to the environment as a root.""",
     )
+    updateenv_group.add_argument(
+        "--no-add",
+        action="store_false",
+        dest="add",
+        help="""(with environment) do not add spec to the environment as a
+root (the default behavior).""",
+    )
+
     subparser.add_argument(
         "-f",
         "--file",
@@ -252,12 +233,7 @@ installation for top-level packages (but skip tests for dependencies).
 if 'all' is chosen, run package tests during installation for all
 packages. If neither are chosen, don't run tests for any packages.""",
     )
-    subparser.add_argument(
-        "--log-format",
-        default=None,
-        choices=spack.report.valid_formats,
-        help="format to be used for log files",
-    )
+    arguments.add_common_arguments(subparser, ["log_format"])
     subparser.add_argument(
         "--log-file",
         default=None,
@@ -280,6 +256,12 @@ def default_log_file(spec):
     dirname = fs.os.path.join(spack.paths.reports_path, "junit")
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
+
+
+def report_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
+    """Return the filename to be used for reporting to JUnit or CDash format."""
+    result = args.log_file or args.cdash_upload_url or default_log_file(specs[0])
+    return result
 
 
 def install_specs(specs, install_kwargs, cli_args):
@@ -317,11 +299,12 @@ def install_specs_inside_environment(specs, install_kwargs, cli_args):
         # the matches.  Getting to this point means there were either
         # no matches or exactly one match.
 
-        if not m_spec and cli_args.no_add:
+        if not m_spec and not cli_args.add:
             msg = (
-                "You asked to install {0} without adding it (--no-add), but no such spec "
-                "exists in environment"
-            ).format(abstract.name)
+                "Cannot install '{0}' because it is not in the current environment."
+                " You can add it to the environment with 'spack add {0}', or as part"
+                " of the install command with 'spack install --add {0}'"
+            ).format(str(abstract))
             tty.die(msg)
 
         if not m_spec:
@@ -331,14 +314,16 @@ def install_specs_inside_environment(specs, install_kwargs, cli_args):
 
         tty.debug("exactly one match for {0} in env -> {1}".format(m_spec.name, m_spec.dag_hash()))
 
-        if m_spec in env.roots() or cli_args.no_add:
-            # either the single match is a root spec (and --no-add is
-            # the default for roots) or --no-add was stated explicitly
+        if m_spec in env.roots() or not cli_args.add:
+            # either the single match is a root spec (in which case
+            # the spec is not added to the env again), or the user did
+            # not specify --add (in which case it is assumed we are
+            # installing already-concretized specs in the env)
             tty.debug("just install {0}".format(m_spec.name))
             specs_to_install.append(m_spec)
         else:
             # the single match is not a root (i.e. it's a dependency),
-            # and --no-add was not specified, so we'll add it as a
+            # and --add was specified, so we'll add it as a
             # root before installing
             tty.debug("add {0} then install it".format(m_spec.name))
             specs_to_add.append((abstract, concrete))
@@ -378,19 +363,8 @@ SPACK_CDASH_AUTH_TOKEN
     parser.print_help()
 
 
-def _create_log_reporter(args):
-    # TODO: remove args injection to spack.report.collect_info, since a class in core
-    # TODO: shouldn't know what are the command line arguments a command use.
-    reporter = spack.report.collect_info(
-        spack.package_base.PackageInstaller, "_install_task", args.log_format, args
-    )
-    if args.log_file:
-        reporter.filename = args.log_file
-    return reporter
-
-
 def install_all_specs_from_active_environment(
-    install_kwargs, only_concrete, cli_test_arg, reporter
+    install_kwargs, only_concrete, cli_test_arg, reporter_factory
 ):
     """Install all specs from the active environment
 
@@ -432,12 +406,10 @@ def install_all_specs_from_active_environment(
         tty.msg(msg)
         return
 
-    if not reporter.filename:
-        reporter.filename = default_log_file(specs[0])
-    reporter.specs = specs
+    reporter = reporter_factory(specs) or lang.nullcontext()
 
     tty.msg("Installing environment {0}".format(env.name))
-    with reporter("build"):
+    with reporter:
         env.install_all(**install_kwargs)
 
     tty.debug("Regenerating environment views for {0}".format(env.name))
@@ -456,7 +428,7 @@ def compute_tests_install_kwargs(specs, cli_test_arg):
     return False
 
 
-def specs_from_cli(args, install_kwargs, reporter):
+def specs_from_cli(args, install_kwargs):
     """Return abstract and concrete spec parsed from the command line."""
     abstract_specs = spack.cmd.parse_specs(args.spec)
     install_kwargs["tests"] = compute_tests_install_kwargs(abstract_specs, args.test)
@@ -466,7 +438,9 @@ def specs_from_cli(args, install_kwargs, reporter):
         )
     except SpackError as e:
         tty.debug(e)
-        reporter.concretization_report(e.message)
+        if args.log_format is not None:
+            reporter = args.reporter()
+            reporter.concretization_report(report_filename(args, abstract_specs), e.message)
         raise
     return abstract_specs, concrete_specs
 
@@ -531,7 +505,17 @@ def install(parser, args):
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
 
-    reporter = _create_log_reporter(args)
+    def reporter_factory(specs):
+        if args.log_format is None:
+            return None
+
+        context_manager = spack.report.build_context_manager(
+            reporter=args.reporter(),
+            filename=report_filename(args, specs=specs),
+            specs=specs,
+        )
+        return context_manager
+
     install_kwargs = install_kwargs_from_args(args)
 
     if not args.spec and not args.specfiles:
@@ -540,12 +524,12 @@ def install(parser, args):
             install_kwargs=install_kwargs,
             only_concrete=args.only_concrete,
             cli_test_arg=args.test,
-            reporter=reporter,
+            reporter_factory=reporter_factory,
         )
         return
 
     # Specs from CLI
-    abstract_specs, concrete_specs = specs_from_cli(args, install_kwargs, reporter)
+    abstract_specs, concrete_specs = specs_from_cli(args, install_kwargs)
 
     # Concrete specs from YAML or JSON files
     specs_from_file = concrete_specs_from_file(args)
@@ -555,11 +539,8 @@ def install(parser, args):
     if len(concrete_specs) == 0:
         tty.die("The `spack install` command requires a spec to install.")
 
-    if not reporter.filename:
-        reporter.filename = default_log_file(concrete_specs[0])
-    reporter.specs = concrete_specs
-
-    with reporter("build"):
+    reporter = reporter_factory(concrete_specs) or lang.nullcontext()
+    with reporter:
         if args.overwrite:
             require_user_confirmation_for_overwrite(concrete_specs, args)
             install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]

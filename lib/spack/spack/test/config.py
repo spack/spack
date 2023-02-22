@@ -1,23 +1,26 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
 import getpass
+import io
 import os
 import sys
 import tempfile
+from datetime import date
 
 import pytest
-from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
 
 import spack.config
+import spack.directory_layout
 import spack.environment as ev
 import spack.main
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.compilers
@@ -26,6 +29,7 @@ import spack.schema.env
 import spack.schema.mirrors
 import spack.schema.packages
 import spack.schema.repos
+import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 
@@ -378,6 +382,17 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
     )
 
+    # test architecture information is in replacements
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$platform", "bar")
+    ) == os.path.abspath(os.path.join("foo", "test", "bar"))
+
+    host_target = spack.platforms.host().target("default_target")
+    host_target_family = str(host_target.microarchitecture.family)
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$target_family", "bar")
+    ) == os.path.abspath(os.path.join("foo", host_target_family, "bar"))
+
 
 packages_merge_low = {"packages": {"foo": {"variants": ["+v1"]}, "bar": {"variants": ["+v2"]}}}
 
@@ -431,9 +446,16 @@ def test_substitute_tempdir(mock_low_high_config):
     )
 
 
-PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
-MAX_PATH_LEN = spack.util.path.get_system_path_max()
-MAX_PADDED_LEN = MAX_PATH_LEN - spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+def test_substitute_date(mock_low_high_config):
+    test_path = os.path.join("hello", "world", "on", "$date")
+    new_path = spack_path.canonicalize_path(test_path)
+    assert "$date" in test_path
+    assert date.today().strftime("%Y-%m-%d") in new_path
+
+
+PAD_STRING = spack_path.SPACK_PATH_PADDING_CHARS
+MAX_PATH_LEN = spack_path.get_system_path_max()
+MAX_PADDED_LEN = MAX_PATH_LEN - spack_path.SPACK_MAX_INSTALL_PATH_LENGTH
 reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
 full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDED_LEN]
 
@@ -992,7 +1014,7 @@ def test_write_empty_single_file_scope(tmpdir):
 
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
-    f = StringIO(file_contents)
+    f = io.StringIO(file_contents)
     data = syaml.load_config(f)
     spack.config.validate(data, name)
 
@@ -1170,13 +1192,13 @@ def test_license_dir_config(mutable_config, mock_packages):
     """Ensure license directory is customizable"""
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
-    assert spack.package.Package.global_license_dir == expected_dir
+    assert spack.package_base.PackageBase.global_license_dir == expected_dir
     assert spack.repo.path.get_pkg_class("a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
-    assert spack.package.Package.global_license_dir == rel_path
+    assert spack.package_base.PackageBase.global_license_dir == rel_path
     assert spack.repo.path.get_pkg_class("a").global_license_dir == rel_path
 
 
@@ -1232,6 +1254,13 @@ def test_user_config_path_is_overridable(working_env):
 def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
+
+
+def test_default_install_tree(monkeypatch):
+    s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
+    monkeypatch.setattr(s, "dag_hash", lambda: "abc123")
+    projection = spack.config.get("config:install_tree:projections:all", scope="defaults")
+    assert s.format(projection) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
 
 
 def test_local_config_can_be_disabled(working_env):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -237,8 +237,7 @@ def test_test_list_all(mock_packages):
             "simple-standalone-test",
             "test-error",
             "test-fail",
-            "test-build-callbacks",
-            "test-install-callbacks",
+            "fail-test-audit",
         ]
     )
 
@@ -259,7 +258,7 @@ def test_has_test_method_fails(capsys):
     assert "is not a class" in captured
 
 
-def test_read_old_results(mock_test_stage):
+def test_read_old_results(mock_packages, mock_test_stage):
     """Take test data generated before the switch to full hash everywhere
     and make sure we can still read it in"""
     # Test data was generated with:

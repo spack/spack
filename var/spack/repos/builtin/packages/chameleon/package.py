@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Chameleon(CMakePackage, CudaPackage):
     homepage = "https://gitlab.inria.fr/solverstack/chameleon"
     url = "https://gitlab.inria.fr/solverstack/chameleon/uploads/b299d6037d7636c6be16108c89bc2aab/chameleon-1.1.0.tar.gz"
     git = "https://gitlab.inria.fr/solverstack/chameleon.git"
-    maintainers = ["fpruvost"]
+    maintainers("fpruvost")
 
     version("master", branch="master", submodules=True)
     version("1.1.0", "e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df")
@@ -54,8 +54,11 @@ class Chameleon(CMakePackage, CudaPackage):
         depends_on("starpu~cuda", when="~cuda")
         depends_on("starpu+cuda", when="+cuda")
         with when("+simgrid"):
+            depends_on("simgrid+msg")
             depends_on("starpu+simgrid")
             depends_on("starpu+mpi~shared+simgrid", when="+mpi")
+            conflicts("^simgrid@:3.31", when="@:1.1.0")
+            conflicts("+shared", when="+simgrid")
         with when("~simgrid"):
             depends_on("mpi", when="+mpi")
             depends_on("cuda", when="+cuda")
@@ -90,9 +93,9 @@ class Chameleon(CMakePackage, CudaPackage):
         if spec.satisfies("+mpi +simgrid"):
             args.extend(
                 [
-                    self.define("MPI_C_COMPILER", self.spec["simgrid"].smpicc),
-                    self.define("MPI_CXX_COMPILER", self.spec["simgrid"].smpicxx),
-                    self.define("MPI_Fortran_COMPILER", self.spec["simgrid"].smpifc),
+                    self.define("CMAKE_C_COMPILER", self.spec["simgrid"].smpicc),
+                    self.define("CMAKE_CXX_COMPILER", self.spec["simgrid"].smpicxx),
+                    self.define("CMAKE_Fortran_COMPILER", self.spec["simgrid"].smpifc),
                 ]
             )
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Zstd(MakefilePackage):
     url = "https://github.com/facebook/zstd/archive/v1.4.3.tar.gz"
     git = "https://github.com/facebook/zstd.git"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("develop", branch="dev")
     version("1.5.2", sha256="f7de13462f7a82c29ab865820149e778cbfe01087b3a55b5332707abf9db4a6e")

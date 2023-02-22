@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,3 +135,15 @@ class TestFlagHandlers(object):
             "-DCMAKE_CXX_STANDARD_LIBRARIES=-lfoo",
             "-DCMAKE_Fortran_STANDARD_LIBRARIES=-lfoo",
         }
+
+    def test_flag_handler_no_modify_specs(self, temp_env):
+        def test_flag_handler(self, name, flags):
+            flags.append("-foo")
+            return (flags, None, None)
+
+        s = spack.spec.Spec("cmake-client").concretized()
+        s.package.flag_handler = test_flag_handler
+        spack.build_environment.setup_package(s.package, False)
+
+        assert not s.compiler_flags["cflags"]
+        assert os.environ["SPACK_CFLAGS"] == "-foo"

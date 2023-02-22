@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyGeocube(PythonPackage):
     homepage = "https://github.com/corteva/geocube"
     pypi = "geocube/geocube-0.0.17.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("0.3.2", sha256="71ff0228f1ef44e3a649d29a045ff7e2a2094a5cfca30fadab8f88f4ec23a41d")
     version("0.3.1", sha256="5c97131010cd8d556a5fad2a3824452120640ac33a6a45b6ca9ee3c28f2e266f")

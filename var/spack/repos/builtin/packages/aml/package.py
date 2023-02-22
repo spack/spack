@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Aml(AutotoolsPackage):
 
     homepage = "https://argo-aml.readthedocs.io/"
 
-    maintainers = ["perarnau"]
+    maintainers("perarnau")
 
     test_requires_compiler = True
 
@@ -76,6 +76,7 @@ class Aml(AutotoolsPackage):
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
         # Required to have pkg config macros in configure.
+        # Note: This does NOT work with pkg-config but requires pkgconf!
         depends_on("pkgconf", type="build")
         # Required to generate AML version in configure.
         depends_on("git", type="build")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Hpddm(Package):
     url = "https://github.com/hpddm/hpddm"
     git = "https://github.com/hpddm/hpddm.git"
 
-    maintainers = ["corentin-dev"]
+    maintainers("corentin-dev")
 
     version("main", branch="main")
     version("2.1.2", commit="e58205623814f59bf2aec2e2bab8eafcfbd22466")

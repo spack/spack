@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,11 +19,12 @@ class PyPoetryCore(PythonPackage):
 
     depends_on("python@2.7,3.5:3", type=("build", "run"))
     depends_on("python@3.7:3", when="@1.1.0:", type=("build", "run"))
-    depends_on(
-        "py-importlib-metadata@1.7:1", when="@:1.0 ^python@2.7,3.5:3.7", type=("build", "run")
-    )
+    depends_on("py-importlib-metadata@1.7:1", when="@:1.0 ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@1.7:", when="@1.1: ^python@:3.7", type=("build", "run"))
-    depends_on("py-pathlib2@2.3.5:2", when="^python@2.7", type=("build", "run"))
-    depends_on("py-typing@3.7.4.1:3", when="^python@2.7", type=("build", "run"))
-    depends_on("py-enum34@1.1.10:1", when="^python@2.7", type=("build", "run"))
-    depends_on("py-functools32@3.2.3-2:3", when="^python@2.7", type=("build", "run"))
+
+    # https://github.com/python-poetry/poetry/issues/5547
+    def setup_build_environment(self, env):
+        env.set("GIT_DIR", join_path(self.stage.source_path, ".git"))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set("GIT_DIR", join_path(dependent_spec.package.stage.source_path, ".git"))

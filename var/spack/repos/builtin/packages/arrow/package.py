@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,11 +47,13 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on("rapidjson")
     depends_on("re2+shared", when="+compute")
     depends_on("re2+shared", when="+gandiva")
+    depends_on("re2+shared", when="+python")
     depends_on("snappy~shared", when="+snappy @9:")
     depends_on("snappy~shared", when="@8:")
     depends_on("thrift+pic", when="+parquet")
     depends_on("utf8proc@2.7.0: +shared", when="+compute")
     depends_on("utf8proc@2.7.0: +shared", when="+gandiva")
+    depends_on("utf8proc@2.7.0: +shared", when="+python")
     depends_on("xsimd@8.1.0:", when="@9.0.0:")
     depends_on("zlib+pic", when="+zlib @9:")
     depends_on("zlib+pic", when="@:8")
@@ -99,19 +101,19 @@ class Arrow(CMakePackage, CudaPackage):
             r"(include_directories\()SYSTEM ", r"\1", "cpp/cmake_modules/ThirdpartyToolchain.cmake"
         )
 
-        filter_file(
-            r'set\(ARROW_LLVM_VERSIONS "10" "9" "8" "7"\)',
-            'set(ARROW_LLVM_VERSIONS "11" "10" "9" "8" "7")',
-            "cpp/CMakeLists.txt",
-            when="@:2.0.0",
-        )
-
-        filter_file(
-            r"#include <llvm/Support/DynamicLibrary\.h>",
-            r"#include <llvm/Support/DynamicLibrary.h>" + "\n" + r"#include <llvm/Support/Host.h>",
-            "cpp/src/gandiva/engine.cc",
-            when="@2.0.0",
-        )
+        if self.spec.satisfies("@:2.0.0"):
+            filter_file(
+                r'set\(ARROW_LLVM_VERSIONS "10" "9" "8" "7"\)',
+                'set(ARROW_LLVM_VERSIONS "11" "10" "9" "8" "7")',
+                "cpp/CMakeLists.txt",
+            )
+            filter_file(
+                r"#include <llvm/Support/DynamicLibrary\.h>",
+                r"#include <llvm/Support/DynamicLibrary.h>"
+                + "\n"
+                + r"#include <llvm/Support/Host.h>",
+                "cpp/src/gandiva/engine.cc",
+            )
 
     def cmake_args(self):
         args = ["-DARROW_DEPENDENCY_SOURCE=SYSTEM", "-DARROW_NO_DEPRECATED_API=ON"]
@@ -145,7 +147,12 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
         with when("@:8"):
-            for dep in ("flatbuffers", "rapidjson", "snappy", "zlib", "zstd"):
+            dep_list = ("flatbuffers", "rapidjson", "zlib", "zstd")
+
+            if self.spec.satisfies("+snappy"):
+                dep_list.append("snappy")
+
+            for dep in dep_list:
                 args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
             args.append("-DZLIB_LIBRARIES={0}".format(self.spec["zlib"].libs))
 

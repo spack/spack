@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://bitbucket.org/icl/blaspp"
     git = homepage
     url = "https://bitbucket.org/icl/blaspp/downloads/blaspp-2020.09.00.tar.gz"
-    maintainers = ["teonnik", "Sely85", "G-Ragghianti", "mgates3"]
+    maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
     version("master", branch="master")
     version(

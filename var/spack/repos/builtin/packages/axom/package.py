@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     """Axom provides a robust, flexible software infrastructure for the development
     of multi-physics applications and computational tools."""
 
-    maintainers = ["white238"]
+    maintainers("white238")
 
     homepage = "https://github.com/LLNL/axom"
     git = "https://github.com/LLNL/axom.git"
@@ -91,8 +91,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Dependencies
     # -----------------------------------------------------------------------
     # Basics
-    depends_on("cmake@3.8.2:", type="build")
-    depends_on("cmake@3.16.8:", type="build", when="+rocm")
+    depends_on("cmake@3.14:", type="build")
+    depends_on("cmake@3.21:", type="build", when="+rocm")
 
     depends_on("blt", type="build")
     depends_on("blt@0.5.1:", type="build", when="@0.6.2:")
@@ -117,7 +117,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire@6.0.0", when="@0.6.0")
         depends_on("umpire@5:5.0.1", when="@:0.5.0")
         depends_on("umpire +openmp", when="+openmp")
-        depends_on("umpire +cuda", when="+cuda")
 
     with when("+raja"):
         depends_on("raja@2022.03.0:", when="@0.7.0:")
@@ -125,15 +124,18 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("raja@:0.13.0", when="@:0.5.0")
         depends_on("raja~openmp", when="~openmp")
         depends_on("raja+openmp", when="+openmp")
-        depends_on("raja+cuda", when="+cuda")
 
     for val in CudaPackage.cuda_arch_values:
-        depends_on("raja cuda_arch={0}".format(val), when="+raja cuda_arch={0}".format(val))
-        depends_on("umpire cuda_arch={0}".format(val), when="+umpire cuda_arch={0}".format(val))
+        raja_cuda = "raja +cuda cuda_arch={0}".format(val)
+        umpire_cuda = "umpire +cuda cuda_arch={0}".format(val)
+        depends_on(raja_cuda, when="+{0}".format(raja_cuda))
+        depends_on(umpire_cuda, when="+{0}".format(umpire_cuda))
 
     for val in ROCmPackage.amdgpu_targets:
-        depends_on("raja amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
-        depends_on("umpire amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
+        raja_rocm = "raja +rocm amdgpu_target={0}".format(val)
+        umpire_rocm = "umpire +rocm amdgpu_target={0}".format(val)
+        depends_on(raja_rocm, when="+{0}".format(raja_rocm))
+        depends_on(umpire_rocm, when="+{0}".format(umpire_rocm))
 
     depends_on("mfem", when="+mfem")
     depends_on("mfem~mpi", when="+mfem~mpi")
@@ -449,7 +451,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append("# ClangFormat disabled due to disabled devtools\n")
             entries.append(cmake_cache_option("ENABLE_CLANGFORMAT", False))
 
-        if spec.satisfies("^python") or "+devtools" in spec:
+        if "+python" in spec or "+devtools" in spec:
             python_path = os.path.realpath(spec["python"].command.path)
             for key in path_replacements:
                 python_path = python_path.replace(key, path_replacements[key])

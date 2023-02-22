@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Bcftools(AutotoolsPackage):
     homepage = "https://samtools.github.io/bcftools/"
     url = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
 
+    version("1.16", sha256="293010736b076cf684d2873928924fcc3d2c231a091084c2ac23a8045c7df982")
+    version("1.15.1", sha256="f21f9564873eb27ccf22d13b91a64acb8fbbfe4f9e4c37933a54b9a95857f2d7")
     version("1.14", sha256="b7ef88ae89fcb55658c5bea2e8cb8e756b055e13860036d6be13756782aa19cb")
     version("1.13", sha256="13bfa1da2a5edda8fa51196a47a0b4afb3fef17516451e4f0e78477f3dd30b90")
     version("1.12", sha256="7a0e6532b1495b9254e38c6698d955e5176c1ee08b760dfea2235ee161a024f5")
@@ -46,6 +48,7 @@ class Bcftools(AutotoolsPackage):
     depends_on("perl", when="@1.8:~perl-filters", type="run")
     depends_on("perl", when="@1.8:+perl-filters", type=("build", "run"))
 
+    depends_on("htslib@1.15", when="@1.15")
     depends_on("htslib@1.14", when="@1.14")
     depends_on("htslib@1.13", when="@1.13")
     depends_on("htslib@1.12", when="@1.12")

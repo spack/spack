@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,11 @@ class Shortbred(Package):
     homepage = "https://huttenhower.sph.harvard.edu/shortbred"
     url = "https://bitbucket.org/biobakery/shortbred/get/0.9.4.tar.gz"
 
-    version("0.9.4", sha256="a85e5609db79696d3f2d478408fc6abfeea7628de9f533c4e1e0ea3622b397ba")
+    version(
+        "0.9.4",
+        sha256="a85e5609db79696d3f2d478408fc6abfeea7628de9f533c4e1e0ea3622b397ba",
+        deprecated=True,
+    )
 
     depends_on("blast-plus@2.2.28:")
     depends_on("cdhit@4.6:")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,12 @@ import shutil
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+import spack
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.paths
+import spack.util.git
 import spack.util.gpg
-from spack.util.executable import which
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"
@@ -24,7 +25,7 @@ level = "long"
 
 
 # tutorial configuration parameters
-tutorial_branch = "releases/v0.18"
+tutorial_branch = "releases/v0.19"
 tutorial_mirror = "file:///mirror"
 tutorial_key = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
@@ -83,7 +84,7 @@ def tutorial(parser, args):
     # If you don't put this last, you'll get import errors for the code
     # that follows (exacerbated by the various lazy singletons we use)
     tty.msg("Ensuring we're on the releases/v{0}.{1} branch".format(*spack.spack_version_info[:2]))
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
     with working_dir(spack.paths.prefix):
         git("checkout", tutorial_branch)
     # NO CODE BEYOND HERE

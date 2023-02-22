@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
+import spack.build_systems.autotools
 from spack.package import *
 
 
@@ -19,17 +20,21 @@ class LibtoolDeletion(AutotoolsPackage):
     def do_stage(self):
         mkdirp(self.stage.source_path)
 
-    def autoreconf(self, spec, prefix):
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    install_libtool_archives = False
+
+    def autoreconf(self, pkg, spec, prefix):
         mkdirp(os.path.dirname(self.configure_abs_path))
         touch(self.configure_abs_path)
 
-    def configure(self, spec, prefix):
+    def configure(self, pkg, spec, prefix):
         pass
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         pass
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         mkdirp(os.path.dirname(self.libtool_archive_file))
         touch(self.libtool_archive_file)
 

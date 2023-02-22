@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,11 @@ class Votca(CMakePackage):
     homepage = "https://www.votca.org"
     url = "https://github.com/votca/votca/tarball/v2022-rc.1"
     git = "https://github.com/votca/votca.git"
-    maintainers = ["junghans"]
+    maintainers("junghans")
 
     version("master", branch="master")
     version("stable", branch="stable")
+    version("2022.1", sha256="358119b2645fe60f88ca621aed508c49fb61f88d29d3e3fa24b5b831ed4a66ec")
     version("2022", sha256="7991137098ff4511f4ca2c6f1b6c45f53d92d9f84e5c0d0e32fbc31768f73a83")
 
     variant("mkl", default=False, description="Build with MKL support")

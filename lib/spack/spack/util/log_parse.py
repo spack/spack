@@ -1,14 +1,14 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
+import io
 import sys
 
 from ctest_log_parser import BuildError, BuildWarning, CTestLogParser
-from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
@@ -86,7 +86,7 @@ def make_log_context(log_events, width=None):
         width = sys.maxsize
     wrap_width = width - num_width - 6
 
-    out = StringIO()
+    out = io.StringIO()
     next_line = 1
     for event in log_events:
         start = event.start

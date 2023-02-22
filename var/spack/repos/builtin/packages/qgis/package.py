@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Qgis(CMakePackage):
     homepage = "https://qgis.org"
     url = "https://qgis.org/downloads/qgis-3.8.1.tar.bz2"
 
-    maintainers = ["adamjstewart", "Sinan81"]
+    maintainers("adamjstewart", "Sinan81")
 
     version("3.22.0", sha256="cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b")
     version("3.18.2", sha256="1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d")
@@ -110,7 +110,6 @@ class Qgis(CMakePackage):
     depends_on("py-pyqt4", when="@2")
     depends_on("py-pyqt5@5.3:", when="@3")
     depends_on("py-requests", type=("build", "run"))  # TODO: is build dependency necessary?
-    depends_on("python@2.7:2.8", type=("build", "run"), when="@2")
     depends_on("python@3.0.0:", type=("build", "run"), when="@3")
     depends_on("python@3.6:", type=("build", "run"), when="@3.18:")
     depends_on("python@3.7:", type=("build", "run"), when="@3.20:")
@@ -157,7 +156,6 @@ class Qgis(CMakePackage):
     depends_on("qt@:4", when="@2")
     # Help concretizer
     # +qsci_api is implied by qscintilla+python dependency
-    depends_on("py-pyqt4 +qsci_api", when="@2")
     depends_on("py-pyqt5@5.3: +qsci_api", when="@3")
 
     patch("pyqt5.patch", when="@:3.14 ^qt@5")
@@ -239,6 +237,11 @@ class Qgis(CMakePackage):
         else:
             args.append("-DWITH_GRASS7=OFF")
         return args
+
+    def setup_run_environment(self, env):
+        if "+bindings" in self.spec:
+            # python module isn't located at the standard path
+            env.prepend_path("PYTHONPATH", self.prefix.share.qgis.python)
 
     def check(self):
         """The tests of fail without access to an X server, cant run on build servers"""

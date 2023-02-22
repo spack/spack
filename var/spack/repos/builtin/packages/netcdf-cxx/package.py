@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,9 @@ class NetcdfCxx(AutotoolsPackage):
     depends_on("netcdf-c")
 
     variant("netcdf4", default=True, description="Compile with netCDF4 support")
+
+    # https://github.com/Unidata/netcdf-cxx4/pull/112
+    patch("macos.patch")
 
     @property
     def libs(self):
