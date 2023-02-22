@@ -1374,7 +1374,6 @@ def test_config_fetch_remote_configs_skip(
     def check_contents(filename, expected):
         with open(filename, "r") as fd:
             lines = fd.readlines()
-            print("%s (expect %s):\n%s\n" % (filename, expected, lines))
             if expected:
                 assert lines[0] == expected
             else:
