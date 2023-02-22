@@ -35,16 +35,8 @@ class Sartre(CMakePackage):
                 'set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ standard")',
                 file,
             )
-            filter_file(
-                r"\$\{CMAKE_INSTALL_PREFIX\}/sartre",
-                "${CMAKE_INSTALL_PREFIX}",
-                file,
-            )
-            filter_file(
-                r"DESTINATION sartre/",
-                "DESTINATION ",
-                file,
-            )
+            filter_file(r"\$\{CMAKE_INSTALL_PREFIX\}/sartre", "${CMAKE_INSTALL_PREFIX}", file)
+            filter_file(r"DESTINATION sartre/", "DESTINATION ", file)
 
     def cmake_args(self):
         args = [
