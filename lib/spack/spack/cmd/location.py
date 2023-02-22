@@ -95,7 +95,7 @@ def location(parser, args):
             spack.cmd.require_active_env("location -e")
             path = ev.active_environment().path
         else:
-            # Get named environment path
+            # Get path of requested environment
             if not ev.exists(args.location_env):
                 tty.die("no such environment: '%s'" % args.location_env)
             path = ev.root(args.location_env)

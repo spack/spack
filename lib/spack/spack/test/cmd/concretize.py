@@ -9,8 +9,7 @@ import pytest
 import spack.environment as ev
 from spack.main import SpackCommand
 
-# everything here uses the mock_env_path
-pytestmark = pytest.mark.usefixtures("mutable_mock_env_path", "config", "mutable_mock_repo")
+pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
 
 env = SpackCommand("env")
 add = SpackCommand("add")
@@ -21,7 +20,7 @@ unification_strategies = [False, True, "when_possible"]
 
 
 @pytest.mark.parametrize("unify", unification_strategies)
-def test_concretize_all_test_dependencies(unify):
+def test_concretize_all_test_dependencies(unify, mutable_mock_env_path):
     """Check all test dependencies are concretized."""
     env("create", "test")
 
@@ -33,7 +32,7 @@ def test_concretize_all_test_dependencies(unify):
 
 
 @pytest.mark.parametrize("unify", unification_strategies)
-def test_concretize_root_test_dependencies_not_recursive(unify):
+def test_concretize_root_test_dependencies_not_recursive(unify, mutable_mock_env_path):
     """Check that test dependencies are not concretized recursively."""
     env("create", "test")
 
@@ -45,7 +44,7 @@ def test_concretize_root_test_dependencies_not_recursive(unify):
 
 
 @pytest.mark.parametrize("unify", unification_strategies)
-def test_concretize_root_test_dependencies_are_concretized(unify):
+def test_concretize_root_test_dependencies_are_concretized(unify, mutable_mock_env_path):
     """Check that root test dependencies are concretized."""
     env("create", "test")
 
