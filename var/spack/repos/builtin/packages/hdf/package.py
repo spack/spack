@@ -170,6 +170,7 @@ class Hdf(AutotoolsPackage):
             # We should not specify '--disable-hdf4-xdr' due to a bug in the
             # configure script.
             config_args.append("LIBS=%s" % self.spec["rpc"].libs.link_flags)
+            config_args.append("LDFLAGS=%s" % self.spec["rpc"].libs.search_flags)
 
         # https://github.com/Parallel-NetCDF/PnetCDF/issues/61
         if self.spec.satisfies("%gcc@10:"):
