@@ -1332,7 +1332,7 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs):
+def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, **kwargs):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
