@@ -5,6 +5,7 @@
 import os
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
+import spack.util.executable
 from spack.version import ver
 
 
@@ -145,7 +146,7 @@ class Cce(Compiler):
     @property
     def prefix(self):
         # CCE craycc/crayCC (cc/CC) reports its install prefix when running `-print-search-dirs`
-        # crayftn/ftn should be installed at the same location as the C/C++ compilers 
+        # crayftn/ftn should be installed at the same location as the C/C++ compilers
         cxx = spack.util.executable.Executable(self.cxx)
         with self.compiler_environment():
             cce_output = cxx("-print-search-dirs", output=str, error=str)
@@ -153,8 +154,7 @@ class Cce(Compiler):
             for line in cce_output.splitlines():
                 if line.startswith("programs:"):
                     cce_prefix = line.split(":")[1].strip()
-                    print(cce_prefix)
-                    return ancestor(cce_prefix, 3)
+                    return cce_prefix
 
             raise RuntimeError(
                 "could not find install prefix of CCE from output:\n\t{}".format(cce_output)
