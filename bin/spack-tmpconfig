@@ -72,6 +72,7 @@ config:
     root: $TMP_DIR/install
   misc_cache: $$user_cache_path/cache
   source_cache: $$user_cache_path/source
+  environments_root: $TMP_DIR/envs
 EOF
 cat >"$SPACK_USER_CONFIG_PATH/bootstrap.yaml" <<EOF
 bootstrap:
