@@ -168,9 +168,12 @@ def test_functions(spec_or_pkg, add_virtuals=False, names=False):
 
     cls = package_class(spec_or_pkg)
     if not cls:
-        tty.debug(
-            "{0}: skipping test function retrieval since no package class found".format(spec.name)
+        name = (
+            "{0}: ".format(spec_or_pkg.name)
+            if isinstance(spec_or_pkg, (spack.package_base.PackageBase, spack.spec.Spec))
+            else ""
         )
+        tty.debug("{0}skipping test function retrieval since no package class found".format(name))
         return []
 
     methods = inspect.getmembers(cls, predicate=lambda x: inspect.isfunction(x))
