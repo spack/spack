@@ -141,6 +141,8 @@ class Dd4hep(CMakePackage):
     depends_on("boost +system +filesystem", when="%gcc@:7")
     depends_on("root @6.08: +gdml +math +python")
     depends_on("root @6.08: +gdml +math +python +x +opengl", when="+ddeve")
+    depends_on("root @6.08:6.27", when="@:1.23 +ddeve")
+    # also: when +ddeve, +webgui is required for root @6.28:, see conflicts
     depends_on("root @6.08: +gdml +math +python +x +opengl", when="+utilityapps")
 
     extends("python")
@@ -163,6 +165,7 @@ class Dd4hep(CMakePackage):
         msg="cmake version with buggy FindPython breaks dd4hep cmake config",
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
+    conflicts("+ddeve ^root@6.28: ~webgui", msg="DDEve requires +webgui for ROOT 6.28 and later.")
 
     def cmake_args(self):
         spec = self.spec
