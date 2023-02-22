@@ -166,14 +166,14 @@ class Hpctoolkit(AutotoolsPackage):
 
     patch(
         "https://gitlab.com/hpctoolkit/hpctoolkit/-/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch",
-        sha256="8da18df88a80847c092da8d0892de51ea2bf2523124148b6305ab8717707d897",
+        sha256="c8371b929f45dafae37d2ef17880fcfb86de893beebaec501a282bc04b61ef64",
         when="@2019.08.01:2021.03 %gcc@11.0:",
     )
 
     # Update configure for rocm 5.3.0
     patch(
         "https://gitlab.com/hpctoolkit/hpctoolkit/-/commit/411d62544717873432c49ef45c7cb99cc5de2fb8.patch",
-        sha256="484045891a665cdba3b0f141540c89f0d691ed32c5912ef62a93670d44c2786c",
+        sha256="7eb3a21c9bf9e1b65ef0375609665d36e5f7a74c664eb474cba728faada9baeb",
         when="@2022.04:2022.10 +rocm ^hip@5.3.0:",
     )
 
