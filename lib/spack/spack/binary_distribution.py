@@ -21,6 +21,7 @@ import urllib.parse
 import urllib.request
 import warnings
 from contextlib import closing
+from gzip import GzipFile
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -1235,18 +1236,22 @@ def _build_tarball(
         shutil.rmtree(tmpdir)
         tty.die(e)
 
-    # create gzip compressed tarball of the install prefix
-    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # Create gzip compressed tarball of the install prefix
+    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility
+    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
     # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
     # So we follow gzip.
-    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
+    with open(tarfile_path, "wb") as fileobj, closing(
+        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=fileobj)
+    ) as gzip_file, tarfile.TarFile(name="", mode="w", fileobj=gzip_file) as tar:
         tar.add(name=binaries_dir, arcname=pkg_dir)
         if not relative:
-            # Add buildinfo file
-            buildinfo_path = buildinfo_file_name(workdir)
-            buildinfo_arcname = buildinfo_file_name(pkg_dir)
-            tar.add(name=buildinfo_path, arcname=buildinfo_arcname)
+            # Add buildinfo file with tarfile mtime set to 0.
+            with open(buildinfo_file_name(workdir), "rb") as f:
+                buildinfo = tar.gettarinfo(arcname=buildinfo_file_name(pkg_dir), fileobj=f)
+                buildinfo.mtime = 0
+                tar.addfile(buildinfo, f)
 
     # remove copy of install directory
     shutil.rmtree(workdir)
