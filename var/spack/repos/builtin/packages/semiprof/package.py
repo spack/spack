@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Semiprof(CMakePackage):
-    """Simple thread safe annotation based C++ profiler. """
+    """Simple thread safe annotation based C++ profiler."""
 
     homepage = "https://github.com/bcumming/semiprof"
     url = "https://github.com/bcumming/semiprof/archive/refs/tags/v0.1.tar.gz"
@@ -20,6 +20,8 @@ class Semiprof(CMakePackage):
     version("0.1", sha256="4fb3823c65a4f5dfbe05e8cbe1911dfd25cd7740597f82c7b3a84472de26f0dc")
 
     def cmake_args(self):
-        return [self.define("SEMIPROF_WITH_INSTALL", True),
-                self.define_from_variant("SEMIPROF_WITH_EXAMPLES", "examples"),
-                self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        return [
+            self.define("SEMIPROF_WITH_INSTALL", True),
+            self.define_from_variant("SEMIPROF_WITH_EXAMPLES", "examples"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+        ]

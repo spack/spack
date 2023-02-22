@@ -6,13 +6,14 @@
 
 from spack.package import *
 
+
 class Costa(CMakePackage):
     """
     Distributed Communication-Optimal Matrix Transpose and Reshuffle Library
     Based on the paper: https://arxiv.org/abs/2106.06601
     """
 
-    maintainers = ["haampie", "kabicm"]
+    maintainers("haampie", "kabicm", "RMeli", "mtaillefumier")
     homepage = "https://github.com/eth-cscs/COSTA"
     url = "https://github.com/eth-cscs/COSTA/releases/download/v2.0/COSTA-v2.0.tar.gz"
     git = "https://github.com/eth-cscs/COSTA.git"
@@ -36,11 +37,11 @@ class Costa(CMakePackage):
     depends_on("scalapack", when="+scalapack")
 
     def url_for_version(self, version):
-        if version <= Version('2.0'):
+        if version <= Version("2.0"):
             return "https://github.com/eth-cscs/COSTA/releases/download/v{0}/COSTA-v{1}.tar.gz".format(
                 version, version
             )
-        return "https://github.com/eth-cscs/COSTA/archive/refs/tags/v{0}.tar.gz" .format(version)
+        return "https://github.com/eth-cscs/COSTA/archive/refs/tags/v{0}.tar.gz".format(version)
 
     def setup_build_environment(self, env):
         return

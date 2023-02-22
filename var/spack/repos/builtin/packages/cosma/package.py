@@ -12,7 +12,7 @@ class Cosma(CMakePackage):
     Distributed Communication-Optimal Matrix-Matrix Multiplication Library
     """
 
-    maintainers = ["haampie", "kabicm", "teonnik", "simonpintarelli"]
+    maintainers = ["haampie", "kabicm", "teonnik", "simonpintarelli", "mtaillefumier"]
     homepage = "https://github.com/eth-cscs/COSMA"
     url = "https://github.com/eth-cscs/COSMA/releases/download/v2.5.1/COSMA-v2.5.1.tar.gz"
     git = "https://github.com/eth-cscs/COSMA.git"
@@ -20,10 +20,16 @@ class Cosma(CMakePackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=False)
-    version("2.6.3", sha256="8ca96ca41458f1e9d0da70d524c5a03c677dba7238d23a578f852163b6d45ac9",
-            url="https://github.com/eth-cscs/COSMA/releases/download/v2.6.3/cosma.tar.gz")
-    version("2.6.2", sha256="2debb5123cc35aeebc5fd2f8a46cfd6356d1e27618c9bb57129ecd09aa400940",
-            url="https://github.com/eth-cscs/COSMA/releases/download/v2.6.2/cosma.tar.gz")
+    version(
+        "2.6.3",
+        sha256="8ca96ca41458f1e9d0da70d524c5a03c677dba7238d23a578f852163b6d45ac9",
+        url="https://github.com/eth-cscs/COSMA/releases/download/v2.6.3/cosma.tar.gz",
+    )
+    version(
+        "2.6.2",
+        sha256="2debb5123cc35aeebc5fd2f8a46cfd6356d1e27618c9bb57129ecd09aa400940",
+        url="https://github.com/eth-cscs/COSMA/releases/download/v2.6.2/cosma.tar.gz",
+    )
     version("2.6.1", sha256="69aa6634a030674f0d9be61e7b0bf0dc17acf0fc9e7a90b40e3179e2254c8d67")
     version("2.5.1", sha256="085b7787597374244bbb1eb89bc69bf58c35f6c85be805e881e1c0b25166c3ce")
     version("2.5.0", sha256="7f68bb0ee5c80f9b8df858afcbd017ad4ed87ac09439d13d7d890844dbdd3d54")
@@ -96,7 +102,7 @@ class Cosma(CMakePackage):
                 [("^blis", "BLIS"), ("^amdblis", "BLIS"), ("^atlas", "ATLAS")]
             )
 
-        for (query, cmake_arg) in query_to_cmake_arg:
+        for query, cmake_arg in query_to_cmake_arg:
             if query in self.spec:
                 return cmake_arg
 

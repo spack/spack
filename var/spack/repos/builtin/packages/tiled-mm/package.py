@@ -7,9 +7,11 @@ from spack.package import *
 
 
 class TiledMm(CMakePackage, CudaPackage, ROCmPackage):
-    """Matrix multiplication on GPUs for matrices stored on a CPU. Similar to cublasXt, but ported to both NVIDIA and AMD GPUs."""
+    """Matrix multiplication on GPUs for matrices stored on a CPU. Similar to cublasXt,
+    but ported to both NVIDIA and AMD GPUs."""
 
-    homepage =  "https://github.com/eth-cscs/Tiled-MM/"
+    maintainers = ["mtaillefumier", "simonpintarelli"]
+    homepage = "https://github.com/eth-cscs/Tiled-MM/"
     url = "https://github.com/eth-cscs/Tiled-MM/archive/refs/tags/v2.0.tar.gz"
     git = "https://github.com/eth-cscs/Tiled-MM.git"
 
@@ -24,7 +26,6 @@ class TiledMm(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("cxxopts", when="+tests")
     depends_on("cxxopts", when="+examples")
-
 
     conflicts("~cuda~rocm")
 
