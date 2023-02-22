@@ -189,7 +189,8 @@ class Julia(MakefilePackage):
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
-    patch("use-add-rpath-2.patch", when="@1.8.1:")
+    patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
+    patch("use-add-rpath-3.patch", when="@1.9.0-beta4:")
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
