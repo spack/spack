@@ -94,16 +94,14 @@ class Liggghts(MakefilePackage):
             makefile.filter(r'^(USE_PROFILE = ).*', r'\1"ON"')
 
         # Determine how to build libs in LIGGGHTS way
-        libs_in_spec = spec.variants['libs'].value
-        if libs_in_spec != None:
-            if 'shared' in libs_in_spec and 'static' in libs_in_spec:
-                libs_in_makefile = 'ALL'
-            elif 'shared' in libs_in_spec:
-                libs_in_makefile = 'SHARED'
-            elif 'static' in libs_in_spec:
-                libs_in_makefile = 'STATIC'
-            makefile.filter(r'^(BUILD_LIBRARIES = ).*',
-                            r'\1"{0}"'.format(libs_in_makefile))
+        if spec.satisfies("libs=shared") and spec.satisfies("libs=static"):
+            libs_in_makefile = 'ALL'
+        elif spec.satisfies("libs=shared"):
+            libs_in_makefile = 'SHARED'
+        elif spec.satisfies("libs=static"):
+            libs_in_makefile = 'STATIC'
+        makefile.filter(r'^(BUILD_LIBRARIES = ).*',
+                        r'\1"{0}"'.format(libs_in_makefile))
 
         # Enable debug output of Makefile.auto in the log file
         # src/Obj_auto/make_auto.log to quickly troubleshoot if
@@ -115,12 +113,10 @@ class Liggghts(MakefilePackage):
         install(os.path.join('src', 'lmp_auto'), prefix.bin.liggghts)
 
         # Install libs
-        libs_in_spec = spec.variants['libs'].value
-        if libs_in_spec != None:
-            mkdir(prefix.lib)
-            if spec.satisfies("libs=shared"):
-                install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
-            if 'static' in libs_in_spec:
-                install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
+        mkdir(prefix.lib)
+        if spec.satisfies("libs=shared"):
+            install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
+        if spec.satisfies("libs=static"):
+            install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
 
         install_tree('src', prefix.src, symlinks=True)
