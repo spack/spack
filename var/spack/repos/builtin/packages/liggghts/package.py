@@ -118,7 +118,7 @@ class Liggghts(MakefilePackage):
         libs_in_spec = spec.variants['libs'].value
         if libs_in_spec != None:
             mkdir(prefix.lib)
-            if 'shared' in libs_in_spec:
+            if spec.satisfies("libs=shared"):
                 install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
             if 'static' in libs_in_spec:
                 install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
