@@ -1323,11 +1323,9 @@ def test_abstract_provider_in_spec(abstract_spec, spec_str, default_mock_concret
     assert abstract_spec in s
 
 
-@pytest.mark.parametrize('lhs,rhs,expected', [
-    ('a', 'a', True),
-    ('a', 'a@1.0', True),
-    ('a@1.0', 'a', False),
-])
+@pytest.mark.parametrize(
+    "lhs,rhs,expected", [("a", "a", True), ("a", "a@1.0", True), ("a@1.0", "a", False)]
+)
 def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
     s, t = Spec(lhs), Spec(rhs)
     result = s in t

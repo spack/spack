@@ -364,7 +364,7 @@ class ArchSpec(object):
 
         self._target = value
 
-    def satisfies(self, other, strict=False):
+    def satisfies(self, other, strict):
         """Predicate to check if this spec satisfies a constraint.
 
         Args:
