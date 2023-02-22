@@ -67,6 +67,7 @@ properties = {
             "license_dir": {"type": "string"},
             "source_cache": {"type": "string"},
             "misc_cache": {"type": "string"},
+            "environments_root": {"type": "string"},
             "connect_timeout": {"type": "integer", "minimum": 0},
             "verify_ssl": {"type": "boolean"},
             "suppress_gpg_warnings": {"type": "boolean"},
