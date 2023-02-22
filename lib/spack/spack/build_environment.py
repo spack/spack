@@ -356,7 +356,7 @@ def set_compiler_environment_variables(pkg, env):
 
     # Set the target parameters that the compiler will add
     # Don't set on cray platform because the targeting module handles this
-    if spec.satisfies("platform=cray"):
+    if spec.placeholder_satisfies("platform=cray"):
         isa_arg = ""
     else:
         isa_arg = spec.architecture.target.optimization_flags(compiler)

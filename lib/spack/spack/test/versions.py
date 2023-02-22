@@ -617,20 +617,20 @@ def test_git_hash_comparisons(mock_git_version_info, install_mockery, mock_packa
     # Spec based on earliest commit
     spec0 = spack.spec.Spec("git-test-commit@%s" % commits[-1])
     spec0.concretize()
-    assert spec0.satisfies("@:0")
-    assert not spec0.satisfies("@1.0")
+    assert spec0.placeholder_satisfies("@:0")
+    assert not spec0.placeholder_satisfies("@1.0")
 
     # Spec based on second commit (same as version 1.0)
     spec1 = spack.spec.Spec("git-test-commit@%s" % commits[-2])
     spec1.concretize()
-    assert spec1.satisfies("@1.0")
-    assert not spec1.satisfies("@1.1:")
+    assert spec1.placeholder_satisfies("@1.0")
+    assert not spec1.placeholder_satisfies("@1.1:")
 
     # Spec based on 4th commit (in timestamp order)
     spec4 = spack.spec.Spec("git-test-commit@%s" % commits[-4])
     spec4.concretize()
-    assert spec4.satisfies("@1.1")
-    assert spec4.satisfies("@1.0:1.2")
+    assert spec4.placeholder_satisfies("@1.1")
+    assert spec4.placeholder_satisfies("@1.0:1.2")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
@@ -644,15 +644,15 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     # Spec based on tag v1.0
     spec_tag = spack.spec.Spec("git-test-commit@git.v1.0")
     spec_tag.concretize()
-    assert spec_tag.satisfies("@1.0")
-    assert not spec_tag.satisfies("@1.1:")
+    assert spec_tag.placeholder_satisfies("@1.0")
+    assert not spec_tag.placeholder_satisfies("@1.1:")
     assert str(spec_tag.version) == "git.v1.0"
 
     # Spec based on branch 1.x
     spec_branch = spack.spec.Spec("git-test-commit@git.1.x")
     spec_branch.concretize()
-    assert spec_branch.satisfies("@1.2")
-    assert spec_branch.satisfies("@1.1:1.3")
+    assert spec_branch.placeholder_satisfies("@1.2")
+    assert spec_branch.placeholder_satisfies("@1.1:1.3")
     assert str(spec_branch.version) == "git.1.x"
 
 

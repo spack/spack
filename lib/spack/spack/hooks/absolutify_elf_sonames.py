@@ -141,7 +141,9 @@ def post_install(spec):
         return
 
     # Only enable on platforms using ELF.
-    if not spec.satisfies("platform=linux") and not spec.satisfies("platform=cray"):
+    if not spec.placeholder_satisfies("platform=linux") and not spec.placeholder_satisfies(
+        "platform=cray"
+    ):
         return
 
     # Disable this hook when bootstrapping, to avoid recursion.

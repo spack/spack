@@ -412,7 +412,7 @@ class InstallationPhase(object):
                 continue
 
             # If we have no condition or the callback satisfies a condition, register it
-            if condition is None or self.builder.pkg.spec.satisfies(condition):
+            if condition is None or self.builder.pkg.spec.placeholder_satisfies(condition):
                 result.append(fn)
         return result
 

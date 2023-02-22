@@ -111,7 +111,9 @@ def test_exclude_specs(mock_packages, config):
     )
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
-    assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
+    assert not any(
+        spec.placeholder_satisfies(y) for spec in mirror_specs for y in expected_exclude
+    )
 
 
 def test_exclude_file(mock_packages, tmpdir, config):
@@ -132,7 +134,9 @@ mpich@1.0
     )
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
-    assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
+    assert not any(
+        spec.placeholder_satisfies(y) for spec in mirror_specs for y in expected_exclude
+    )
 
 
 def test_mirror_crud(mutable_config, capsys):
@@ -326,7 +330,7 @@ class TestMirrorCreate(object):
     )
     def test_exclude_specs_from_user(self, cli_args, not_expected, config):
         specs = spack.cmd.mirror.concrete_specs_from_user(MockMirrorArgs(**cli_args))
-        assert not any(s.satisfies(y) for s in specs for y in not_expected)
+        assert not any(s.placeholder_satisfies(y) for s in specs for y in not_expected)
 
     @pytest.mark.parametrize("abstract_specs", [("bowtie", "callpath")])
     def test_specs_from_cli_are_the_same_as_from_file(self, abstract_specs, config, tmpdir):

@@ -244,7 +244,7 @@ class CMakeBuilder(BaseBuilder):
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
-        if pkg.spec.satisfies("^cmake@3.9:"):
+        if pkg.spec.placeholder_satisfies("^cmake@3.9:"):
             args.append(define("CMAKE_INTERPROCEDURAL_OPTIMIZATION", ipo))
 
         if primary_generator == "Unix Makefiles":

@@ -366,8 +366,8 @@ env:
 
     # Ensure variants set properly; ensure build_dir is absolute and normalized
     for dep in (dep_spec, spec["dev-build-test-install"]):
-        assert dep.satisfies("dev_path=%s" % build_dir)
-    assert spec.satisfies("^dev_path=*")
+        assert dep.placeholder_satisfies("dev_path=%s" % build_dir)
+    assert spec.placeholder_satisfies("^dev_path=*")
 
 
 @pytest.mark.parametrize("test_spec", ["dev-build-test-install", "dependent-of-dev-build"])

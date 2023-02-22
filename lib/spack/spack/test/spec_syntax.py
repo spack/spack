@@ -1047,11 +1047,11 @@ def test_git_ref_spec_equivalences(mock_packages):
     s3 = SpecParser("develop-branch-version@git.0.2.15=develop").next_spec()
     s_no_git = SpecParser("develop-branch-version@develop").next_spec()
 
-    assert s1.satisfies(s_no_git)
-    assert s2.satisfies(s_no_git)
-    assert not s_no_git.satisfies(s1)
-    assert not s2.satisfies(s1)
-    assert not s3.satisfies(s1)
+    assert s1.intersects(s_no_git)
+    assert s2.intersects(s_no_git)
+    assert not s_no_git.intersects(s1)
+    assert not s2.intersects(s1)
+    assert not s3.intersects(s1)
 
 
 @pytest.mark.regression("32471")

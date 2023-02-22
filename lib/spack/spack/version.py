@@ -347,6 +347,9 @@ class VersionBase(object):
 
         return False
 
+    def intersects(self, other):
+        return self.satisfies(other)
+
     @coerced
     def satisfies(self, other):
         """A Version 'satisfies' another if it is at least as specific and has

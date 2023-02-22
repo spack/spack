@@ -360,13 +360,13 @@ def _spec_needs_overwrite(spec, changed_dev_specs):
         return True
 
     # if spec and all deps aren't dev builds, we don't need to overwrite it
-    if not any(spec.satisfies(c, strict=True) for c in ("dev_path=*", "^dev_path=*")):
+    if not any(spec.placeholder_satisfies(c) for c in ("dev_path=*", "^dev_path=*")):
         return False
 
     # If any dep needs overwrite, or any dep is missing and is a dev build then
     # overwrite this package
     if any(
-        ((not dep.installed) and dep.satisfies("dev_path=*", strict=True))
+        ((not dep.installed) and dep.placeholder_satisfies("dev_path=*"))
         or _spec_needs_overwrite(dep, changed_dev_specs)
         for dep in spec.traverse(root=False)
     ):
@@ -418,10 +418,10 @@ class ViewDescriptor(object):
         self.link = link
 
     def select_fn(self, spec):
-        return any(spec.satisfies(s) for s in self.select)
+        return any(spec.placeholder_satisfies(s) for s in self.select)
 
     def exclude_fn(self, spec):
-        return not any(spec.satisfies(e) for e in self.exclude)
+        return not any(spec.placeholder_satisfies(e) for e in self.exclude)
 
     def __eq__(self, other):
         return all(
@@ -1155,7 +1155,7 @@ class Environment(object):
                 " specify a named list that is not a matrix"
             )
 
-        matches = list(x for x in list_to_change if x.satisfies(match_spec))
+        matches = list(x for x in list_to_change if x.placeholder_satisfies(match_spec))
         if len(matches) == 0:
             raise ValueError(
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
@@ -1165,7 +1165,7 @@ class Environment(object):
 
         new_speclist = SpecList(list_name)
         for i, spec in enumerate(list_to_change):
-            if spec.satisfies(match_spec):
+            if spec.placeholder_satisfies(match_spec):
                 new_speclist.add(Spec.override(spec, change_spec))
             else:
                 new_speclist.add(spec)
@@ -1181,7 +1181,7 @@ class Environment(object):
         matches = []
 
         if not query_spec.concrete:
-            matches = [s for s in list_to_change if s.satisfies(query_spec)]
+            matches = [s for s in list_to_change if s.placeholder_satisfies(query_spec)]
 
         if not matches:
             # concrete specs match against concrete specs in the env
@@ -1517,7 +1517,9 @@ class Environment(object):
         else:
             # spec might be in the user_specs, but not installed.
             # TODO: Redo name-based comparison for old style envs
-            spec = next(s for s in self.user_specs if s.satisfies(user_spec))
+            spec = next(
+                s for s in self.user_specs if s.placeholder_satisfies(user_spec)
+            )  # FIXME: double check
             concrete = self.specs_by_hash.get(spec.dag_hash())
             if not concrete:
                 concrete = spec.concretized(tests=tests)
@@ -1724,8 +1726,8 @@ class Environment(object):
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
                 if not spec.installed or (
-                    spec.satisfies("dev_path=*", strict=True)
-                    or spec.satisfies("^dev_path=*", strict=True)
+                    spec.placeholder_satisfies("dev_path=*")
+                    or spec.placeholder_satisfies("^dev_path=*")
                 ):
                     uninstalled.append(spec)
                 else:
@@ -1895,10 +1897,10 @@ class Environment(object):
                     matches[spec] = spec
                 continue
 
-            if concretized_user_spec.satisfies(spec):
+            if concretized_user_spec.placeholder_satisfies(spec):
                 matches[concretized_user_spec] = user_spec
             for dep_spec in concretized_user_spec.traverse(root=False):
-                if dep_spec.satisfies(spec):
+                if dep_spec.placeholder_satisfies(spec):
                     # Don't overwrite the abstract spec if present
                     # If not present already, set to None
                     matches[dep_spec] = matches.get(dep_spec, None)
@@ -2315,7 +2317,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_deps = [
                 c
                 for c in spec_constraints
-                if any(c.satisfies(invd, strict=True) for invd in invalid_deps_string)
+                if any(c.placeholder_satisfies(invd) for invd in invalid_deps_string)
             ]
             if len(invalid_deps) != len(invalid_deps_string):
                 raise e

@@ -364,7 +364,7 @@ class ArchSpec(object):
 
         self._target = value
 
-    def satisfies(self, other, strict):
+    def satisfies(self, other, strict=False):
         """Predicate to check if this spec satisfies a constraint.
 
         Args:
@@ -593,6 +593,9 @@ class CompilerSpec(object):
             return compiler_spec_like
         return CompilerSpec(compiler_spec_like)
 
+    def intersects(self, other):
+        return self.satisfies(other, strict=False)
+
     def satisfies(self, other, strict=False):
         other = self._autospec(other)
         return self.name == other.name and self.versions.satisfies(other.versions, strict=strict)
@@ -605,7 +608,7 @@ class CompilerSpec(object):
         other = self._autospec(other)
 
         # ensure that other will actually constrain this spec.
-        if not other.satisfies(self):
+        if not other.intersects(self):
             raise UnsatisfiableCompilerSpecError(other, self)
 
         return self.versions.intersect(other.versions)
@@ -1058,7 +1061,7 @@ def _libs_default_handler(descriptor, spec, cls):
     home = getattr(spec.package, "home")
 
     # Avoid double 'lib' for packages whose names already start with lib
-    if not name.startswith("lib") and not spec.satisfies("platform=windows"):
+    if not name.startswith("lib") and not spec.placeholder_satisfies("platform=windows"):
         name = "lib" + name
 
     # If '+shared' search only for shared library; if '~shared' search only for
@@ -2613,9 +2616,9 @@ class Spec(object):
                 # it's possible to build that configuration with Spack
                 continue
             for conflict_spec, when_list in x.package_class.conflicts.items():
-                if x.satisfies(conflict_spec, strict=True):
+                if x.placeholder_satisfies(conflict_spec):
                     for when_spec, msg in when_list:
-                        if x.satisfies(when_spec, strict=True):
+                        if x.placeholder_satisfies(when_spec):
                             when = when_spec.copy()
                             when.name = x.name
                             matches.append((x, conflict_spec, when, msg))
@@ -2625,7 +2628,7 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         # No need on platform=cray because of the targeting modules
-        if not self.satisfies("platform=cray"):
+        if not self.placeholder_satisfies("platform=cray"):
             self.architecture.target.optimization_flags(self.compiler)
 
     def _patches_assigned(self):
@@ -2667,7 +2670,7 @@ class Spec(object):
             # Add any patches from the package to the spec.
             patches = []
             for cond, patch_list in s.package_class.patches.items():
-                if s.satisfies(cond, strict=True):
+                if s.placeholder_satisfies(cond):
                     for patch in patch_list:
                         patches.append(patch)
             if patches:
@@ -2685,7 +2688,9 @@ class Spec(object):
             patches = []
             for cond, dependency in pkg_deps[dspec.spec.name].items():
                 for pcond, patch_list in dependency.patches.items():
-                    if dspec.parent.satisfies(cond, strict=True) and dspec.spec.satisfies(pcond):
+                    if dspec.parent.placeholder_satisfies(
+                        cond
+                    ) and dspec.spec.placeholder_satisfies(pcond):
                         patches.extend(patch_list)
             if patches:
                 all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
@@ -2943,7 +2948,7 @@ class Spec(object):
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
         for when_spec, dependency in conditions.items():
-            if self.satisfies(when_spec, strict=True):
+            if self.placeholder_satisfies(when_spec):
                 if dep is None:
                     dep = dp.Dependency(self.name, Spec(name), type=())
                 try:
@@ -2978,7 +2983,7 @@ class Spec(object):
             # result.
             for provider in providers:
                 for spec in providers:
-                    if spec is not provider and provider.satisfies(spec):
+                    if spec is not provider and provider.intersects(spec):
                         providers.remove(spec)
             # Can't have multiple providers for the same thing in one spec.
             if len(providers) > 1:
@@ -3303,7 +3308,7 @@ class Spec(object):
         # already satisfies the constraint (and the method returns False)
         # or it raises an exception
         if self.concrete:
-            if self.satisfies(other):
+            if self.intersects(other):
                 return False
             else:
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
@@ -3389,7 +3394,7 @@ class Spec(object):
         # TODO: might want more detail than this, e.g. specific deps
         # in violation. if this becomes a priority get rid of this
         # check and be more specific about what's wrong.
-        if not other.satisfies_dependencies(self):
+        if not other._intersects_dependencies(self):
             raise UnsatisfiableDependencySpecError(other, self)
 
         if any(not d.name for d in other.traverse(root=False)):
@@ -3451,25 +3456,140 @@ class Spec(object):
             return spec_like
         return Spec(spec_like)
 
-    def satisfies(self, other, deps=True, strict=False):
-        """Determine if this spec satisfies all constraints of another.
+    def intersects(self, other: "Spec", deps: bool = True) -> bool:
+        """Return True if there exists at least one concrete spec that matches both
+        self and other, otherwise False.
 
-        There are two senses for satisfies, depending on the ``strict``
-        argument.
+        This operation is commutative, and if two specs intersect it means that one
+        can constrain the other.
 
-          * ``strict=False``: the left-hand side and right-hand side have
-            non-empty intersection. For example ``zlib`` satisfies
-            ``zlib@1.2.3`` and ``zlib@1.2.3`` satisfies ``zlib``. In this
-            sense satisfies is a commutative operation: ``x.satisfies(y)``
-            if and only if ``y.satisfies(x)``.
-
-          * ``strict=True``: the left-hand side is a subset of the right-hand
-            side. For example ``zlib@1.2.3`` satisfies ``zlib``, but ``zlib``
-            does not satisfy ``zlib@1.2.3``. In this sense satisfies is not
-            commutative: the left-hand side should be at least as constrained
-            as the right-hand side.
+        Args:
+            other: spec to be checked for compatibility
+            deps: if True check compatibility of dependency nodes too, if False only check root
         """
+        # return self._satisfies(other, strict=False, deps=deps)
+        other = self._autospec(other)
 
+        # Optimizations concrete specs
+        if other.concrete and self.concrete:
+            return self.dag_hash() == other.dag_hash()
+
+        # FIXME (INTERSECTS): the lines below are not commutative
+        # If the names are different, we need to consider virtuals
+        if self.name != other.name and self.name and other.name:
+            # A provider can satisfy a virtual dependency.
+            if not self.virtual and other.virtual:
+                try:
+                    # Here we might get an abstract spec
+                    pkg_cls = spack.repo.path.get_pkg_class(self.fullname)
+                    pkg = pkg_cls(self)
+                except spack.repo.UnknownEntityError:
+                    # If we can't get package info on this spec, don't treat
+                    # it as a provider of this vdep.
+                    return False
+
+                if pkg.provides(other.name):
+                    for provided, when_specs in pkg.provided.items():
+                        if any(self.intersects(when, deps=False) for when in when_specs):
+                            if provided.intersects(other):
+                                return True
+            return False
+
+        # namespaces either match, or other doesn't require one.
+        if (
+            other.namespace is not None
+            and self.namespace is not None
+            and self.namespace != other.namespace
+        ):
+            return False
+
+        if self.versions and other.versions:
+            if not self.versions.satisfies(other.versions, strict=False):
+                return False
+
+        # None indicates no constraints when not strict.
+        if self.compiler and other.compiler:
+            if not self.compiler.satisfies(other.compiler, strict=False):
+                return False
+
+        var_strict = False
+        if (not self.name) or (not other.name):
+            var_strict = True
+        if not self.variants.satisfies(other.variants, strict=var_strict):
+            return False
+
+        # Architecture satisfaction is currently just string equality.
+        # If not strict, None means unconstrained.
+        if self.architecture and other.architecture:
+            if not self.architecture.satisfies(other.architecture, strict=False):
+                return False
+
+        if not self.compiler_flags.satisfies(other.compiler_flags, strict=False):
+            return False
+
+        # If we need to descend into dependencies, do it, otherwise we're done.
+        if deps:
+            return self._intersects_dependencies(other)
+        else:
+            return True
+
+    def _intersects_dependencies(self, other):
+        other = self._autospec(other)
+
+        if not other._dependencies or not self._dependencies:
+            # one spec *could* eventually satisfy the other
+            return True
+
+        # Handle first-order constraints directly
+        for name in self.common_dependencies(other):
+            if not self[name].intersects(other[name], deps=False):
+                return False
+
+        # FIXME (INTERSECTS): Remove this or generalize to other.concrete ?
+        if self.concrete:
+            # Here we already checked that common dependencies are compatible, so if there are no
+            # nodes in other that are not in self return True, otherwise return False
+            try:
+                _ = [self[x.name] for x in other.traverse() if x.name is not None]
+            except KeyError:
+                # If self is concrete, and some node is not in self, then return False
+                # (since self is immutable and can't satisfy other)
+                return False
+            else:
+                return True
+
+        # For virtual dependencies, we need to dig a little deeper.
+        self_index = spack.provider_index.ProviderIndex(
+            repository=spack.repo.path, specs=self.traverse(), restrict=True
+        )
+        other_index = spack.provider_index.ProviderIndex(
+            repository=spack.repo.path, specs=other.traverse(), restrict=True
+        )
+
+        # This handles cases where there are already providers for both vpkgs
+        if not self_index.satisfies(other_index):
+            return False
+
+        # These two loops handle cases where there is an overly restrictive
+        # vpkg in one spec for a provider in the other (e.g., mpi@3: is not
+        # compatible with mpich2)
+        for spec in self.virtual_dependencies():
+            if spec.name in other_index and not other_index.providers_for(spec):
+                return False
+
+        for spec in other.virtual_dependencies():
+            if spec.name in self_index and not self_index.providers_for(spec):
+                return False
+
+        return True
+
+    def placeholder_satisfies(self, other: "Spec", deps: bool = True) -> bool:
+        """Return True if all concrete specs matching self also match other, otherwise False.
+
+        Args:
+            other: spec to be satisfied
+            deps: if True descend to dependencies, otherwise only check root node
+        """
         other = self._autospec(other)
 
         # Optimizations for right-hand side concrete:
@@ -3479,10 +3599,7 @@ class Spec(object):
         # 2. For non-empty intersection (strict=False) we only have a fast path
         # when the left-hand side is also concrete.
         if other.concrete:
-            if strict:
-                return self.concrete and self.dag_hash() == other.dag_hash()
-            elif self.concrete:
-                return self.dag_hash() == other.dag_hash()
+            return self.concrete and self.dag_hash() == other.dag_hash()
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
@@ -3500,9 +3617,9 @@ class Spec(object):
                 if pkg.provides(other.name):
                     for provided, when_specs in pkg.provided.items():
                         if any(
-                            self.satisfies(when, deps=False, strict=strict) for when in when_specs
+                            self.placeholder_satisfies(when, deps=False) for when in when_specs
                         ):
-                            if provided.satisfies(other):
+                            if provided.intersects(other):
                                 return True
             return False
 
@@ -3514,74 +3631,58 @@ class Spec(object):
         ):
             return False
         if self.versions and other.versions:
-            if not self.versions.satisfies(other.versions, strict=strict):
+            if not self.versions.satisfies(other.versions, strict=True):
                 return False
-        elif strict and (self.versions or other.versions):
+        elif self.versions or other.versions:
             return False
 
         # None indicates no constraints when not strict.
         if self.compiler and other.compiler:
-            if not self.compiler.satisfies(other.compiler, strict=strict):
+            if not self.compiler.satisfies(other.compiler, strict=True):
                 return False
-        elif strict and (other.compiler and not self.compiler):
+        elif other.compiler and not self.compiler:
             return False
 
-        var_strict = strict
-        if (not self.name) or (not other.name):
-            var_strict = True
-        if not self.variants.satisfies(other.variants, strict=var_strict):
+        if not self.variants.satisfies(other.variants, strict=True):
             return False
 
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
         if self.architecture and other.architecture:
-            if not self.architecture.satisfies(other.architecture, strict):
+            if not self.architecture.satisfies(other.architecture, strict=True):
                 return False
-        elif strict and (other.architecture and not self.architecture):
+        elif other.architecture and not self.architecture:
             return False
 
-        if not self.compiler_flags.satisfies(other.compiler_flags, strict=strict):
+        if not self.compiler_flags.satisfies(other.compiler_flags, strict=True):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
-            # deps_strict = strict
-            # if self._concrete and not other.name:
-            #     # We're dealing with existing specs
-            #     deps_strict = True
-            return self.satisfies_dependencies(other, strict=strict)
+            return self._satisfies_dependencies(other)
         else:
             return True
 
-    def satisfies_dependencies(self, other, strict=False):
-        """
-        This checks constraints on common dependencies against each other.
-        """
+    def _satisfies_dependencies(self, other):
         other = self._autospec(other)
 
         # If there are no constraints to satisfy, we're done.
         if not other._dependencies:
             return True
 
-        if strict:
-            # if we have no dependencies, we can't satisfy any constraints.
-            if not self._dependencies:
-                return False
+        # If we have no dependencies, we can't satisfy any constraints.
+        if not self._dependencies:
+            return False
 
-            # use list to prevent double-iteration
-            selfdeps = list(self.traverse(root=False))
-            otherdeps = list(other.traverse(root=False))
-            if not all(any(d.satisfies(dep, strict=True) for d in selfdeps) for dep in otherdeps):
-                return False
-
-        elif not self._dependencies:
-            # if not strict, this spec *could* eventually satisfy the
-            # constraints on other.
-            return True
+        # use list to prevent double-iteration
+        selfdeps = list(self.traverse(root=False))
+        otherdeps = list(other.traverse(root=False))
+        if not all(any(d.placeholder_satisfies(dep) for d in selfdeps) for dep in otherdeps):
+            return False
 
         # Handle first-order constraints directly
         for name in self.common_dependencies(other):
-            if not self[name].satisfies(other[name], deps=False):
+            if not self[name].placeholder_satisfies(other[name], deps=False):
                 return False
 
         if self.concrete:
@@ -3859,9 +3960,9 @@ class Spec(object):
 
         # if anonymous or same name, we only have to look at the root
         if not spec.name or spec.name == self.name:
-            return self.satisfies(spec, strict=True)
+            return self.placeholder_satisfies(spec)
         else:
-            return any(s.satisfies(spec, strict=True) for s in self.traverse(root=False))
+            return any(s.placeholder_satisfies(spec) for s in self.traverse(root=False))
 
     def eq_dag(self, other, deptypes=True, vs=None, vo=None):
         """True if the full dependency DAGs of specs are equal."""

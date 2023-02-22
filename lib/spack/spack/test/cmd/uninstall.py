@@ -85,9 +85,9 @@ def test_recursive_uninstall(mutable_database):
     all_specs = spack.store.layout.all_specs()
     assert len(all_specs) == 9
     # query specs with multiple configurations
-    mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
-    callpath_specs = [s for s in all_specs if s.satisfies("callpath")]
-    mpi_specs = [s for s in all_specs if s.satisfies("mpi")]
+    mpileaks_specs = [s for s in all_specs if s.placeholder_satisfies("mpileaks")]
+    callpath_specs = [s for s in all_specs if s.placeholder_satisfies("callpath")]
+    mpi_specs = [s for s in all_specs if s.placeholder_satisfies("mpi")]
 
     assert len(mpileaks_specs) == 0
     assert len(callpath_specs) == 0
@@ -171,9 +171,9 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
         all_specs = spack.store.layout.all_specs()
         return (
             all_specs,
-            [s for s in all_specs if s.satisfies("mpileaks")],
-            [s for s in all_specs if s.satisfies("callpath")],
-            [s for s in all_specs if s.satisfies("mpi")],
+            [s for s in all_specs if s.placeholder_satisfies("mpileaks")],
+            [s for s in all_specs if s.placeholder_satisfies("callpath")],
+            [s for s in all_specs if s.placeholder_satisfies("mpi")],
         )
 
     all_specs, mpileaks_specs, callpath_specs, mpi_specs = db_specs()

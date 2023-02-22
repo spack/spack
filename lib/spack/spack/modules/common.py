@@ -207,7 +207,7 @@ def merge_config_rules(configuration, spec):
     # evaluated in order of appearance in the module file
     spec_configuration = module_specific_configuration.pop("all", {})
     for constraint, action in module_specific_configuration.items():
-        if spec.satisfies(constraint, strict=True):
+        if spec.placeholder_satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
@@ -509,12 +509,12 @@ class BaseConfiguration(object):
         # Compute the list of include rules that match
         # DEPRECATED: remove 'whitelist' in v0.20
         include_rules = get_deprecated(conf, "include", "whitelist", [])
-        include_matches = [x for x in include_rules if spec.satisfies(x)]
+        include_matches = [x for x in include_rules if spec.placeholder_satisfies(x)]
 
         # Compute the list of exclude rules that match
         # DEPRECATED: remove 'blacklist' in v0.20
         exclude_rules = get_deprecated(conf, "exclude", "blacklist", [])
-        exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
+        exclude_matches = [x for x in exclude_rules if spec.placeholder_satisfies(x)]
 
         # Should I exclude the module because it's implicit?
         # DEPRECATED: remove 'blacklist_implicits' in v0.20
@@ -915,7 +915,7 @@ class BaseModuleFileWriter(object):
         self.update_module_defaults()
 
     def update_module_defaults(self):
-        if any(self.spec.satisfies(default) for default in self.conf.defaults):
+        if any(self.spec.placeholder_satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing
             # symlinks do not cause an error.

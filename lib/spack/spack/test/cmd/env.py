@@ -82,8 +82,8 @@ def test_change_match_spec():
 
         change("--match-spec", "mpileaks@2.2", "mpileaks@2.3")
 
-    assert not any(x.satisfies("mpileaks@2.2") for x in e.user_specs)
-    assert any(x.satisfies("mpileaks@2.3") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.2") for x in e.user_specs)
+    assert any(x.intersects("mpileaks@2.3") for x in e.user_specs)
 
 
 def test_change_multiple_matches():
@@ -97,8 +97,8 @@ def test_change_multiple_matches():
 
         change("--match-spec", "mpileaks", "-a", "mpileaks%gcc")
 
-    assert all(x.satisfies("%gcc") for x in e.user_specs if x.name == "mpileaks")
-    assert any(x.satisfies("%clang") for x in e.user_specs if x.name == "libelf")
+    assert all(x.intersects("%gcc") for x in e.user_specs if x.name == "mpileaks")
+    assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
 def test_env_add_virtual():
@@ -111,7 +111,7 @@ def test_env_add_virtual():
     hashes = e.concretized_order
     assert len(hashes) == 1
     spec = e.specs_by_hash[hashes[0]]
-    assert spec.satisfies("mpi")
+    assert spec.intersects("mpi")
 
 
 def test_env_add_nonexistant_fails():
@@ -687,7 +687,7 @@ env:
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
 def test_with_config_bad_include():
@@ -750,8 +750,8 @@ def test_env_with_include_config_files_same_basename():
 
     environment_specs = e._get_environment_specs(False)
 
-    assert environment_specs[0].satisfies("libelf@0.8.10")
-    assert environment_specs[1].satisfies("mpileaks@2.2")
+    assert environment_specs[0].placeholder_satisfies("libelf@0.8.10")
+    assert environment_specs[1].placeholder_satisfies("mpileaks@2.2")
 
 
 @pytest.fixture(scope="function")
@@ -796,7 +796,7 @@ def test_env_with_included_config_file(packages_file):
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.placeholder_satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
 def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
@@ -858,7 +858,7 @@ def test_env_with_included_config_scope(tmpdir, packages_file):
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.placeholder_satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
 def test_env_with_included_config_var_path(packages_file):
@@ -878,7 +878,7 @@ def test_env_with_included_config_var_path(packages_file):
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.placeholder_satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
 def test_env_config_precedence():
@@ -910,10 +910,10 @@ packages:
         e.concretize()
 
     # ensure included scope took effect
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.placeholder_satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
     # ensure env file takes precedence
-    assert any(x.satisfies("libelf@0.8.12") for x in e._get_environment_specs())
+    assert any(x.placeholder_satisfies("libelf@0.8.12") for x in e._get_environment_specs())
 
 
 def test_included_config_precedence():
@@ -951,9 +951,9 @@ packages:
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.placeholder_satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
-    assert any([x.satisfies("libelf@0.8.10") for x in e._get_environment_specs()])
+    assert any([x.placeholder_satisfies("libelf@0.8.10") for x in e._get_environment_specs()])
 
 
 def test_bad_env_yaml_format(tmpdir):
@@ -1630,9 +1630,9 @@ env:
             assert concrete.concrete
             assert not user.concrete
             if user.name == "libelf":
-                assert not concrete.satisfies("^mpi", strict=True)
+                assert not concrete.placeholder_satisfies("^mpi")
             elif user.name == "mpileaks":
-                assert concrete.satisfies("^mpi", strict=True)
+                assert concrete.placeholder_satisfies("^mpi")
 
 
 def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
@@ -1954,7 +1954,7 @@ env:
 
         test = ev.read("test")
         for spec in test._get_environment_specs():
-            if spec.satisfies("%gcc"):
+            if spec.placeholder_satisfies("%gcc"):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
@@ -1994,7 +1994,7 @@ env:
 
         test = ev.read("test")
         for spec in test._get_environment_specs():
-            if not spec.satisfies("callpath"):
+            if not spec.placeholder_satisfies("callpath"):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
@@ -2037,7 +2037,7 @@ env:
 
         test = ev.read("test")
         for spec in test._get_environment_specs():
-            if spec.satisfies("%gcc") and not spec.satisfies("callpath"):
+            if spec.placeholder_satisfies("%gcc") and not spec.placeholder_satisfies("callpath"):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
@@ -2080,7 +2080,7 @@ env:
         test = ev.read("test")
         for spec in test._get_environment_specs():
             if spec in test.roots() and (
-                spec.satisfies("%gcc") and not spec.satisfies("callpath")
+                spec.placeholder_satisfies("%gcc") and not spec.placeholder_satisfies("callpath")
             ):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
@@ -2195,7 +2195,7 @@ env:
 
         test = ev.read("test")
         for spec in test._get_environment_specs():
-            if spec.satisfies("%gcc") and not spec.satisfies("callpath"):
+            if spec.placeholder_satisfies("%gcc") and not spec.placeholder_satisfies("callpath"):
                 assert os.path.exists(
                     os.path.join(viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name))
                 )
@@ -2313,7 +2313,7 @@ env:
 
         test = ev.read("test")
         for spec in test._get_environment_specs():
-            if not spec.satisfies("callpath%gcc"):
+            if not spec.placeholder_satisfies("callpath%gcc"):
                 assert os.path.exists(
                     os.path.join(
                         combin_viewdir, spec.name, "%s-%s" % (spec.version, spec.compiler.name)
@@ -3190,10 +3190,10 @@ def test_unify_when_possible_works_around_conflicts():
 
     e.concretize()
 
-    assert len([x for x in e.all_specs() if x.satisfies("mpileaks")]) == 2
-    assert len([x for x in e.all_specs() if x.satisfies("mpileaks+opt")]) == 1
-    assert len([x for x in e.all_specs() if x.satisfies("mpileaks~opt")]) == 1
-    assert len([x for x in e.all_specs() if x.satisfies("mpich")]) == 1
+    assert len([x for x in e.all_specs() if x.placeholder_satisfies("mpileaks")]) == 2
+    assert len([x for x in e.all_specs() if x.placeholder_satisfies("mpileaks+opt")]) == 1
+    assert len([x for x in e.all_specs() if x.placeholder_satisfies("mpileaks~opt")]) == 1
+    assert len([x for x in e.all_specs() if x.placeholder_satisfies("mpich")]) == 1
 
 
 def test_env_include_packages_url(

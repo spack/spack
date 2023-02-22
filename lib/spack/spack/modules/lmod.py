@@ -155,7 +155,7 @@ class LmodConfiguration(BaseConfiguration):
         requirements.
         """
         # If it's a core_spec, lie and say it requires a core compiler
-        if any(self.spec.satisfies(core_spec) for core_spec in self.core_specs):
+        if any(self.spec.placeholder_satisfies(core_spec) for core_spec in self.core_specs):
             return {"compiler": self.core_compilers[0]}
 
         # Keep track of the requirements that this package has in terms

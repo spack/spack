@@ -1304,14 +1304,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if spec.name not in self.extendees:
             return False
         s = self.extendee_spec
-        return s and spec.satisfies(s)
+        return s and spec.placeholder_satisfies(s)
 
     def provides(self, vpkg_name):
         """
         True if this package provides a virtual package with the specified name
         """
         return any(
-            any(self.spec.satisfies(c) for c in constraints)
+            any(self.spec.intersects(c) for c in constraints)
             for s, constraints in self.provided.items()
             if s.name == vpkg_name
         )
@@ -1324,7 +1324,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return [
             vspec
             for vspec, constraints in self.provided.items()
-            if any(self.spec.satisfies(c) for c in constraints)
+            if any(self.spec.placeholder_satisfies(c) for c in constraints)
         ]
 
     @property
@@ -1780,7 +1780,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 # conflict with the spec, so we need to invoke
                 # when_spec.satisfies(self.spec) vs.
                 # self.spec.satisfies(when_spec)
-                if when_spec.satisfies(self.spec, strict=False):
+                if when_spec.intersects(self.spec):
                     resources.extend(resource_list)
         # Sorts the resources by the length of the string representing their
         # destination. Since any nested resource must contain another
@@ -2526,7 +2526,7 @@ def test_process(pkg, kwargs):
         c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
         if pkg.name in c_names:
             v_names.extend(["c", "cxx", "fortran"])
-        if pkg.spec.satisfies("llvm+clang"):
+        if pkg.spec.placeholder_satisfies("llvm+clang"):
             v_names.extend(["c", "cxx"])
 
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
