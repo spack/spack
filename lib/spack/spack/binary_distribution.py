@@ -28,7 +28,7 @@ import ruamel.yaml as yaml
 import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_tree
+from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_tree, working_dir
 
 import spack.cmd
 import spack.config as config
@@ -1223,16 +1223,17 @@ def _build_tarball(
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
 
-    # remove all __pycache__ directories and compiled Python files (*.pyc)
-    # to avoid problems like ValueError:bad marshal data
-    cmd = "rm -fr `find {} -type d -name __pycache__` 2>/dev/null"
-    status = os.system(cmd)
-    if status:
-        raise Exception("Failed to execute '{}'".format(cmd))
-    cmd = "rm -fr `find {} -type f -name *.pyc` 2>/dev/null"
-    status = os.system(cmd)
-    if status:
-        raise Exception("Failed to execute '{}'".format(cmd))
+    with working_dir(workdir):
+        # remove all __pycache__ directories and compiled Python files (*.pyc)
+        # to avoid problems like ValueError:bad marshal data
+        cmd = "rm -fr `find . -type d -name __pycache__`"
+        status = os.system(cmd)
+        if status:
+            raise Exception("Failed to execute '{}'".format(cmd))
+        cmd = "rm -fr `find . -type f -name *.pyc`"
+        status = os.system(cmd)
+        if status:
+            raise Exception("Failed to execute '{}'".format(cmd))
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
@@ -1366,6 +1367,7 @@ def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
     for node in nodes:
+        tty.msg('Creating buildcache for "{0}"'.format(node.format()))
         try:
             _build_tarball(node, push_url, **kwargs)
         except NoOverwriteException as e:
