@@ -459,7 +459,7 @@ def make_argument_parser(**kwargs):
         dest="env_dir",
         metavar="DIR",
         action="store",
-        help="run with an environment directory (ignore named environments)",
+        help="run with an environment directory (ignore managed environments)",
     )
     env_group.add_argument(
         "-E",

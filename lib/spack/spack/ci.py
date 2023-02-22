@@ -1502,10 +1502,7 @@ def copy_files_to_artifacts(src, artifacts_dir):
     try:
         fs.copy(src, artifacts_dir)
     except Exception as err:
-        msg = ("Unable to copy files ({0}) to artifacts {1} due to " "exception: {2}").format(
-            src, artifacts_dir, str(err)
-        )
-        tty.error(msg)
+        tty.warn(f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to: {err}")
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
