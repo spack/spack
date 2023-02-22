@@ -460,7 +460,7 @@ specification. The operations available to modify the environment are ``set``, `
            LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
 Finally, if you intend to compile for a different target, you need to adjust the
-concretizer setting as documented in :ref:`_selection-of-the-target-microarchitectures`,
+concretizer setting as documented in :ref:`<selection-of-the-target-microarchitectures>`,
 then add the appropriate compiler specification as needed.
 For example, to set up an ``aarch64`` cross-compiler on an ``x86_64`` host:
 
