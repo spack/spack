@@ -68,6 +68,8 @@ class Mpifileutils(Package):
     variant("experimental", default=False, description="Install experimental tools")
     conflicts("+experimental", when="@:0.6")
 
+    variant("daos", default=False, description="Enable DAOS support", when="@0.11:")
+
     def flag_handler(self, name, flags):
         spec = self.spec
         iflags = []
@@ -101,6 +103,9 @@ class Mpifileutils(Package):
             args.append("-DENABLE_EXPERIMENTAL=ON")
         else:
             args.append("-DENABLE_EXPERIMENTAL=OFF")
+
+        if "+daos" in self.spec:
+            args.append("-DENABLE_DAOS=ON")
 
         return args
 
