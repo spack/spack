@@ -303,7 +303,7 @@ class BinaryCacheIndex(object):
         and none of the remote buildcache indices have changed, calling this
         method will only result in fetching the index hash from each mirror
         to confirm it is the same as what is stored locally.  Otherwise, the
-        buildcache ``index.json`` and ``index.json.hash`` files are retrieved
+        buildcache ``index.sqlite`` and ``index.sqlite.hash`` files are retrieved
         from each configured mirror and stored locally (both in memory and
         on disk under ``_index_cache_root``)."""
         self._init_local_index_cache()
@@ -438,14 +438,14 @@ class BinaryCacheIndex(object):
                 ``etag``
 
         Returns:
-            True if the local index.json was updated.
+            True if the local index.sqlite was updated.
 
         Throws:
             FetchIndexError
         """
         # TODO: get rid of this request, handle 404 better
         if not web_util.url_exists(
-            url_util.join(mirror_url, _build_cache_relative_path, "index.json")
+            url_util.join(mirror_url, _build_cache_relative_path, "index.sqlite")
         ):
             return False
 
@@ -463,11 +463,11 @@ class BinaryCacheIndex(object):
         if result.fresh:
             return False
 
-        # Persist new index.json
+        # Persist new index.sqlite
         url_hash = compute_hash(mirror_url)
-        cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
+        cache_key = "{}_{}.sqlite".format(url_hash[:10], result.hash[:10])
         self._index_file_cache.init_entry(cache_key)
-        with self._index_file_cache.write_transaction(cache_key) as (old, new):
+        with self._index_file_cache.write_transaction(cache_key, binary=True) as (old, new):
             new.write(result.data)
 
         self._local_index_cache[mirror_url] = {
@@ -857,7 +857,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
             and which reads the spec file at that location, and returns the spec.
         cache_prefix (str): prefix of the build cache on s3 where index should be pushed.
         db: A spack database used for adding specs and then writing the index.
-        temp_dir (str): Location to write index.json and hash for pushing
+        temp_dir (str): Location to write index.sqlite and hash for pushing
         concurrency (int): Number of parallel processes to use when fetching
 
     Return:
@@ -868,7 +868,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         spec_file_contents = read_method(spec_url)
 
         if spec_file_contents:
-            # Need full spec.json name or this gets confused with index.json.
+            # Need full spec.json name or this gets confused with index.sqlite.
             if spec_url.endswith(".json.sig"):
                 specfile_json = Spec.extract_json_from_clearsig(spec_file_contents)
                 return Spec.from_dict(specfile_json)
@@ -888,34 +888,30 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         db.add(fetched_spec, None)
         db.mark(fetched_spec, "in_buildcache", True)
 
+    db.sql_con.commit()
+
     # Now generate the index, compute its hash, and push the two files to
     # the mirror.
-    index_json_path = os.path.join(temp_dir, "index.json")
-    with open(index_json_path, "w") as f:
-        db._write_to_file(f)
+    index_path = db._sqlite_path
 
     # Read the index back in and compute its hash
-    with open(index_json_path) as f:
-        index_string = f.read()
-        index_hash = compute_hash(index_string)
+    with open(index_path, "rb") as f:
+        index_hash = compute_hash(f.read())
 
     # Write the hash out to a local file
-    index_hash_path = os.path.join(temp_dir, "index.json.hash")
+    index_hash_path = os.path.join(temp_dir, "index.sqlite.hash")
     with open(index_hash_path, "w") as f:
         f.write(index_hash)
 
     # Push the index itself
     web_util.push_to_url(
-        index_json_path,
-        url_util.join(cache_prefix, "index.json"),
-        keep_original=False,
-        extra_args={"ContentType": "application/json"},
+        index_path, url_util.join(cache_prefix, "index.sqlite"), keep_original=False
     )
 
     # Push the hash
     web_util.push_to_url(
         index_hash_path,
-        url_util.join(cache_prefix, "index.json.hash"),
+        url_util.join(cache_prefix, "index.sqlite.hash"),
         keep_original=False,
         extra_args={"ContentType": "text/plain"},
     )
@@ -2372,7 +2368,7 @@ FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fr
 
 
 class DefaultIndexFetcher:
-    """Fetcher for index.json, using separate index.json.hash as cache invalidation strategy"""
+    """Fetcher for index.sqlite, using separate index.sqlite.hash as cache invalidation strategy"""
 
     def __init__(self, url, local_hash, urlopen=web_util.urlopen):
         self.url = url
@@ -2381,8 +2377,8 @@ class DefaultIndexFetcher:
         self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
 
     def get_remote_hash(self):
-        # Failure to fetch index.json.hash is not fatal
-        url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.json.hash")
+        # Failure to fetch index.sqlite.hash is not fatal
+        url_index_hash = url_util.join(self.url, _build_cache_relative_path, "index.sqlite.hash")
         try:
             response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
         except urllib.error.URLError:
@@ -2402,26 +2398,23 @@ class DefaultIndexFetcher:
         if self.local_hash and self.local_hash == self.get_remote_hash():
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
-        # Otherwise, download index.json
-        url_index = url_util.join(self.url, _build_cache_relative_path, "index.json")
+        # Otherwise, download index.sqlite
+        url_index = url_util.join(self.url, _build_cache_relative_path, "index.sqlite")
 
         try:
             response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
         except urllib.error.URLError as e:
             raise FetchIndexError("Could not fetch index from {}".format(url_index), e)
 
-        try:
-            result = codecs.getreader("utf-8")(response).read()
-        except ValueError as e:
-            return FetchCacheError("Remote index {} is invalid".format(url_index), e)
+        result = response.read()
 
         computed_hash = compute_hash(result)
 
         # We don't handle computed_hash != remote_hash here, which can happen
-        # when remote index.json and index.json.hash are out of sync, or if
+        # when remote index.sqlite and index.sqlite.hash are out of sync, or if
         # the hash algorithm changed.
-        # The most likely scenario is that we got index.json got updated
-        # while we fetched index.json.hash. Warning about an issue thus feels
+        # The most likely scenario is that we got index.sqlite got updated
+        # while we fetched index.sqlite.hash. Warning about an issue thus feels
         # wrong, as it's more of an issue with race conditions in the cache
         # invalidation strategy.
 
@@ -2438,7 +2431,7 @@ class DefaultIndexFetcher:
 
 
 class EtagIndexFetcher:
-    """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
+    """Fetcher for index.sqlite, using ETags headers as cache invalidation strategy"""
 
     def __init__(self, url, etag, urlopen=web_util.urlopen):
         self.url = url
@@ -2447,7 +2440,7 @@ class EtagIndexFetcher:
 
     def conditional_fetch(self):
         # Just do a conditional fetch immediately
-        url = url_util.join(self.url, _build_cache_relative_path, "index.json")
+        url = url_util.join(self.url, _build_cache_relative_path, "index.sqlite")
         headers = {
             "User-Agent": web_util.SPACK_USER_AGENT,
             "If-None-Match": '"{}"'.format(self.etag),
@@ -2464,7 +2457,7 @@ class EtagIndexFetcher:
             raise FetchIndexError("Could not fetch index {}".format(url), e) from e
 
         try:
-            result = codecs.getreader("utf-8")(response).read()
+            result = response.read()
         except ValueError as e:
             raise FetchIndexError("Remote index {} is invalid".format(url), e) from e
 
