@@ -26,7 +26,7 @@ class Liggghts(MakefilePackage):
     variant('profile', default=False,
             description='Generate profiling code')
 
-    variant('libs', default='shared, static',
+    variant('libs', default='shared,static',
             description='Build shared or/and static libs',
             values=('shared', 'static'), multi=True)
 
