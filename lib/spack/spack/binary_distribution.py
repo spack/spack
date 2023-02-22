@@ -20,7 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import warnings
-from contextlib import closing
+from contextlib import closing, contextmanager
 from gzip import GzipFile
 from urllib.error import HTTPError, URLError
 
@@ -1140,6 +1140,21 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
+@contextmanager
+def gzip_compressed_tarfile(path):
+    """Create a reproducible, compressed tarfile"""
+    # Create gzip compressed tarball of the install prefix
+    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility
+    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with open(path, "wb") as fileobj, closing(
+        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=fileobj)
+    ) as gzip_file, tarfile.TarFile(name="", mode="w", fileobj=gzip_file) as tar:
+        yield tar
+
+
 def _build_tarball(
     spec,
     out_url,
@@ -1236,15 +1251,7 @@ def _build_tarball(
         shutil.rmtree(tmpdir)
         tty.die(e)
 
-    # Create gzip compressed tarball of the install prefix
-    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility
-    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
-    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
-    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
-    # So we follow gzip.
-    with open(tarfile_path, "wb") as fileobj, closing(
-        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=fileobj)
-    ) as gzip_file, tarfile.TarFile(name="", mode="w", fileobj=gzip_file) as tar:
+    with gzip_compressed_tarfile(tarfile_path) as tar:
         tar.add(name=binaries_dir, arcname=pkg_dir)
         if not relative:
             # Add buildinfo file with tarfile mtime set to 0.
