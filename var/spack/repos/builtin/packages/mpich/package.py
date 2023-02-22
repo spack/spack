@@ -488,7 +488,7 @@ spack package at this time.""",
         ]
 
         # see https://github.com/pmodels/mpich/issues/5530
-        if sys.platform == "darwin":
+        if spec.platform == "darwin":
             config_args.append("--enable-two-level-namespace")
 
         # hwloc configure option changed in 4.0
