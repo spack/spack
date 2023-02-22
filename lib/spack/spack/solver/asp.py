@@ -758,7 +758,8 @@ class PyclingoDriver(object):
         cores = []  # unsatisfiable cores if they do not
 
         def on_model(model):
-            models.append((model.cost, model.priority, model.symbols(shown=True, terms=True)))
+            priorities = getattr(model, "priority", None)
+            models.append((model.cost, priorities, model.symbols(shown=True, terms=True)))
 
         solve_kwargs = {
             "assumptions": self.assumptions,
@@ -799,8 +800,6 @@ class PyclingoDriver(object):
             criteria = extract_functions(best_model, "opt_criterion")
             depths = extract_functions(best_model, "depth")
             max_depth = max(d.args[1] for d in depths)
-
-            print("PRIO:", priorities)
 
             result.criteria = build_criteria_names(min_cost, criteria, max_depth)
 
