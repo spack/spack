@@ -459,8 +459,10 @@ specification. The operations available to modify the environment are ``set``, `
          prepend_path: # Similar for append|remove_path
            LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
-Finally, if you intend to cross-compile for a different system architecture,
-you can specify the ``target``. For example, to set up an ``aarch64`` cross-compiler on an ``x86_64`` host:
+Finally, if you intend to compile for a different target, you need to adjust the
+concretizer setting as documented in :ref:`_selection-of-the-target-microarchitectures`,
+then add the appropriate compiler specification as needed.
+For example, to set up an ``aarch64`` cross-compiler on an ``x86_64`` host:
 
 .. code-block:: yaml
 
@@ -478,10 +480,6 @@ you can specify the ``target``. For example, to set up an ``aarch64`` cross-comp
        modules: []
        environment: {}
        extra_rpaths: []
-
-You might also need to adjust the concretizer setting to allow building for a
-different architecture than the host architecture using
-``spack config add concretizer:targets:host_compatible:false``
 
 .. _build-your-own-compiler:
 
