@@ -154,6 +154,7 @@ class Cce(Compiler):
             for line in cce_output.splitlines():
                 if line.startswith("programs:"):
                     cce_prefix = line.split(":")[1].strip()
+                    cce_prefix = cce_prefix.strip('=')
                     return cce_prefix
 
             raise RuntimeError(
