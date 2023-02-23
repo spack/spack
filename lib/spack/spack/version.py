@@ -347,15 +347,26 @@ class VersionBase(object):
 
         return False
 
-    def intersects(self, other):
-        return self.satisfies(other)
+    @coerced
+    def intersects(self, other: "VersionBase") -> bool:
+        """Return True it self intersects with other, False otherwise.
+
+        Two versions intersect if one can be constrained by the other. For instance
+        @4.7 and @4.7.3 intersect (the intersection being @4.7.3).
+
+        Arg:
+            other: version to be checked for intersection
+        """
+        return self.placeholder_satisfies(other) or other.placeholder_satisfies(self)
 
     @coerced
-    def satisfies(self, other):
-        """A Version 'satisfies' another if it is at least as specific and has
-        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
-        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler.
+    def placeholder_satisfies(self, other: "VersionBase") -> bool:
+        """Return True if self is at least as specific and share a common prefix with other.
+
+        For instance, @4.7.3 satisfies @4.7 but not vice-versa.
+
+        Arg:
+            other: version to be checked for intersection
         """
         nself = len(self.version)
         nother = len(other.version)
@@ -591,13 +602,9 @@ class GitVersion(VersionBase):
         return self.version
 
     @coerced
-    def satisfies(self, other):
-        """A Version 'satisfies' another if it is at least as specific and has
-        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
-        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler. In the case of two GitVersions we require the ref_versions
-        to satisfy one another and the versions to be an exact match.
-        """
+    def placeholder_satisfies(self, other):
+        # In the case of two GitVersions we require the ref_versions
+        # to satisfy one another and the versions to be an exact match.
 
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
@@ -809,24 +816,36 @@ class VersionRange(object):
         return in_upper
 
     @coerced
-    def satisfies(self, other):
-        """
-        x.satisfies(y) in general means that x and y have a
-        non-zero intersection. For VersionRange this means they overlap.
+    def intersects(self, other) -> bool:
+        """Return two if two version ranges overlap with each other, False otherwise.
 
-        `satisfies` is a commutative binary operator, meaning that
-        x.satisfies(y) if and only if y.satisfies(x).
+        This is a commutative operation.
 
-        Note: in some cases we have the keyword x.satisfies(y, strict=True)
-        to mean strict set inclusion, which is not commutative. However, this
-        lacks in VersionRange for unknown reasons.
-
-        Examples
+        Examples:
         - 1:3 satisfies 2:4, as their intersection is 2:3.
         - 1:2 does not satisfy 3:4, as their intersection is empty.
         - 4.5:4.7 satisfies 4.7.2:4.8, as their intersection is 4.7.2:4.7
+
+        Args:
+            other: version range to be checked for intersection
         """
+        # FIXME (INTERSECTS): "intersects" is called "overlap" in versions
         return self.overlaps(other)
+
+    @coerced
+    def placeholder_satisfies(self, other):
+        """A version range satisfies another if it is a subset of the other.
+
+        FIXME (INTERSECTS): issues with 1:4.5 and 1:4.5.3
+
+        Examples:
+        - 1:2 does not satisfy 3:4, as their intersection is empty.
+        - 1:3 does not satisfy 2:4, as they overlap but neither is a subset of the other
+        - 1:3 satisfies 1:4.
+        """
+        # FIXME (INTERSECTS): "intersects" is called "overlap" in versions
+        return self.overlaps(other)
+        #return self in other
 
     @coerced
     def overlaps(self, other):
@@ -1025,6 +1044,9 @@ class VersionList(object):
                 o += 1
         return False
 
+    def intersects(self, other):
+        return self.overlaps(other)
+
     def to_dict(self):
         """Generate human-readable dict for YAML."""
         if self.concrete:
@@ -1043,31 +1065,11 @@ class VersionList(object):
             raise ValueError("Dict must have 'version' or 'versions' in it.")
 
     @coerced
-    def satisfies(self, other, strict=False):
-        """A VersionList satisfies another if some version in the list
-        would satisfy some version in the other list.  This uses
-        essentially the same algorithm as overlaps() does for
-        VersionList, but it calls satisfies() on member Versions
-        and VersionRanges.
-
-        If strict is specified, this version list must lie entirely
-        *within* the other in order to satisfy it.
-        """
+    def placeholder_satisfies(self, other) -> bool:
         if not other or not self:
             return False
 
-        if strict:
-            return self in other
-
-        s = o = 0
-        while s < len(self) and o < len(other):
-            if self[s].satisfies(other[o]):
-                return True
-            elif self[s] < other[o]:
-                s += 1
-            else:
-                o += 1
-        return False
+        return self in other
 
     @coerced
     def update(self, other):

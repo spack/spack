@@ -598,7 +598,9 @@ class CompilerSpec(object):
 
     def satisfies(self, other, strict=False):
         other = self._autospec(other)
-        return self.name == other.name and self.versions.satisfies(other.versions, strict=strict)
+        if strict is True:
+            return self.name == other.name and self.versions.placeholder_satisfies(other.versions)
+        return self.name == other.name and self.versions.intersects(other.versions)
 
     def constrain(self, other):
         """Intersect self's versions with other.
@@ -3504,7 +3506,7 @@ class Spec(object):
             return False
 
         if self.versions and other.versions:
-            if not self.versions.satisfies(other.versions, strict=False):
+            if not self.versions.intersects(other.versions):
                 return False
 
         # None indicates no constraints when not strict.
@@ -3631,7 +3633,7 @@ class Spec(object):
         ):
             return False
         if self.versions and other.versions:
-            if not self.versions.satisfies(other.versions, strict=True):
+            if not self.versions.placeholder_satisfies(other.versions):
                 return False
         elif self.versions or other.versions:
             return False

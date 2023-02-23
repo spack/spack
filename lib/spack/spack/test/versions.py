@@ -79,12 +79,12 @@ def assert_no_overlap(v1, v2):
 
 def assert_satisfies(v1, v2):
     """Asserts that 'v1' satisfies 'v2'."""
-    assert ver(v1).satisfies(ver(v2))
+    assert ver(v1).placeholder_satisfies(ver(v2))
 
 
 def assert_does_not_satisfy(v1, v2):
     """Asserts that 'v1' does not satisfy 'v2'."""
-    assert not ver(v1).satisfies(ver(v2))
+    assert not ver(v1).placeholder_satisfies(ver(v2))
 
 
 def check_intersection(expected, a, b):
@@ -700,8 +700,8 @@ def test_version_wrong_idx_type():
 def test_version_range_satisfies_means_nonempty_intersection():
     x = VersionRange("3.7.0", "3")
     y = VersionRange("3.6.0", "3.6.0")
-    assert not x.satisfies(y)
-    assert not y.satisfies(x)
+    assert not x.placeholder_satisfies(y)
+    assert not y.placeholder_satisfies(x)
 
 
 @pytest.mark.regression("26482")

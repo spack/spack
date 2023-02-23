@@ -554,7 +554,7 @@ class IntelPackage(Package):
             ["vtune_profiler", ":2019", "vtune_amplifier"],
             ["itac", ":", "itac", [os.sep + standalone_glob]],
         ]:
-            if cs == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
+            if cs == rename_rule[0] and v.placeholder_satisfies(ver(rename_rule[1])):
                 cs = rename_rule[2]
                 if len(rename_rule) > 3:
                     normalize_kwargs = {"version_globs": rename_rule[3]}
@@ -655,7 +655,7 @@ class IntelPackage(Package):
             "intel-mpi": ["mpi/{libarch}/bin/mpivars", None],
         }
         key = self.name
-        if self.version_yearlike.satisfies(ver(":2015")):
+        if self.version_yearlike.placeholder_satisfies(ver(":2015")):
             # Same file as 'intel' but 'None' for component_suite_dir will
             # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.
