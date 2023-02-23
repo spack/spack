@@ -32,7 +32,7 @@ setup_environment:
     # Proprietary sources
     DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
     # This date should increment for new deployments — about once a year
-    DEPLOYMENT_DATE: "2022-11-29"
+    DEPLOYMENT_DATE: "2023-02-23"
     # Global base directory
     # TODO: remove pulls/${CI_EXTERNAL_PULL_REQUEST_IID}
     DEPLOYMENT_BASE: "/gpfs/bbp.cscs.ch/ssd/apps/bsd/pulls/${CI_EXTERNAL_PULL_REQUEST_IID}"
