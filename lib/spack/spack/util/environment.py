@@ -25,14 +25,12 @@ import spack.spec
 import spack.util.executable as executable
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows = sys.platform == "win32"
-
 system_paths = (
     ["/", "/usr", "/usr/local"]
-    if not is_windows
+    if sys.platform != "win32"
     else ["C:\\", "C:\\Program Files", "C:\\Program Files (x86)", "C:\\Users", "C:\\ProgramData"]
 )
-suffixes = ["bin", "bin64", "include", "lib", "lib64"] if not is_windows else []
+suffixes = ["bin", "bin64", "include", "lib", "lib64"] if sys.platform != "win32" else []
 system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + system_paths
 
 
