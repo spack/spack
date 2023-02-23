@@ -30,6 +30,10 @@ spec_list_schema = {
                         "type": "array",
                         "items": {"type": "array", "items": {"type": "string"}},
                     },
+                    "broadcast": {
+                        "type": "array",
+                        "items": {"type": "array", "items": {"type": "string"}},
+                    },
                     "exclude": {"type": "array", "items": {"type": "string"}},
                 },
             },
