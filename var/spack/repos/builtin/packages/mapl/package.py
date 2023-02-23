@@ -122,10 +122,10 @@ class Mapl(CMakePackage):
               r'\1 %s '%nc_flags, "pfio/CMakeLists.txt")
 
     def setup_build_environment(self, env):
-        # This is really, really bad. esma_cmake, an internal
-        # dependency of mapl, is looking for the cmake argument
-        # -DBASEDIR, and if it doesn't find it, it's looking
-        # for an environment variable with the same name. This
-        # name is common and used all over the place, and if
-        # it is set it breaks the mapl build. Unset it here ...
+        # esma_cmake, an internal dependency of mapl, is
+        # looking for the cmake argument -DBASEDIR, and
+        # if it doesn't find it, it's looking for an
+        # environment variable with the same name. This
+        # name is common and used all over the place,
+        # and if it is set it breaks the mapl build.
         env.unset("BASEDIR")
