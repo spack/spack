@@ -1336,16 +1336,16 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
 
 
 @pytest.mark.parametrize(
-    "installed,staged,verbose",
+    "installed,staged,verbose,fails",
     [
-        (False, False, False),  # no output file available
-        (False, True, False),  # staged log file, don't print contents
-        (False, True, True),  # staged log file, print contents
-        (True, False, True),  # install log file, print contents
+        (False, False, False, False),  # no output file available
+        (False, True, False, True),  # staged log file, don't print contents
+        (False, True, True, False),  # staged log file, print contents
+        (True, False, True, False),  # install log file, print contents
     ],
 )
 def test_print_install_test_log(
-    tmpdir, mock_packages, install_mockery, capsys, monkeypatch, installed, staged, verbose
+    tmpdir, mock_packages, install_mockery, capsys, monkeypatch, installed, staged, verbose, fails
 ):
     pkg = "py-test-callback"
     content = """
@@ -1373,8 +1373,10 @@ def test_print_install_test_log(
     expected = []
     if verbose:
         expected.extend(["Testing package {0}".format(pkg), "RUN-TESTS: install-time tests"])
+
     if installed or staged:
-        expected.append("See test results")
+        if fails:
+            expected.append("See test results")
     else:
         monkeypatch.setattr(tty, "_debug", 1)
         expected.append("There is no test log file")
@@ -1383,6 +1385,8 @@ def test_print_install_test_log(
     write_outputs(s.package)
 
     s.package.run_tests = True
+    if fails:
+        s.package.test_failures = [(AssertionError("Fake failure"), "Fake test failure")]
     inst._print_install_test_log(s.package, verbose)
     captured = str(capsys.readouterr())
 

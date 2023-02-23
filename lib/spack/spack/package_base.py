@@ -1888,7 +1888,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         with tty.log.log_output(self.test_log_file, verbose) as logger:
             with logger.force_echo():
-                tty.msg("Testing package {0}".format(pkg_id))
+                tty.info("Testing package {0}".format(pkg_id), format="*g")
 
             # use debug print levels for log file to record commands
             old_debug = tty.is_debug()
@@ -2446,6 +2446,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     print_test_message(logger, msg, True)
 
                     fn()
+
                 except AttributeError as e:
                     msg = "RUN-TESTS: method not implemented [{0}]".format(name)
                     print_test_message(logger, msg, True)
@@ -2453,6 +2454,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     builder.pkg.test_failures.append((e, msg))
                     if fail_fast:
                         break
+
+            if "test" in method_names:
+                print_test_message(logger, "Completed testing", True)
 
             # Raise any collected failures here
             if builder.pkg.test_failures:
@@ -2480,9 +2484,9 @@ def has_test_method(pkg):
 def print_test_message(logger, msg, verbose):
     if verbose:
         with logger.force_echo():
-            tty.msg(msg)
+            tty.info(msg, format="*g")
     else:
-        tty.msg(msg)
+        tty.info(msg, format="*g")
 
 
 def _copy_cached_test_files(pkg, spec):

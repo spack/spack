@@ -280,13 +280,14 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
-def _print_install_test_log(pkg, verbose):
+def _print_install_test_log(pkg: "spack.package_base.PackageBase", verbose: bool):
     """Output install test log file information.
 
     Args:
-        pkg (spack.package.PackageBase): package of interest
-        verbose (bool): True if the test log contents are to be printed
+        pkg: package of interest
+        verbose: True if the test log contents are to be printed
     """
+
     if not pkg.run_tests:
         # The tests were not run
         return
@@ -301,9 +302,12 @@ def _print_install_test_log(pkg, verbose):
     if verbose:
         with open(log, "r") as f:
             for ln in f.readlines():
+                if ln.startswith("==>"):
+                    ln = colorize("@*g{==>}") + ln[3:]
                 print(ln.strip("\n"))
 
-    print("\nSee test results at:\n  {0}".format(log))
+    if pkg.test_failures:
+        print("\nSee test results at:\n  {0}".format(log))
 
 
 def _print_timer(pre, pkg_id, timer):
@@ -1962,16 +1966,18 @@ class BuildProcessInstaller(object):
 
                 self._real_install()
 
+            # Run post install hooks before build stage is removed.
+            self.timer.start("post-install")
+            spack.hooks.post_install(self.pkg.spec)
+            self.timer.stop("post-install")
+
             # Stop the timer and save results
             self.timer.stop()
             with open(self.pkg.times_log_path, "w") as timelog:
                 self.timer.write_json(timelog)
 
-            # Run post install hooks before build stage is removed.
-            spack.hooks.post_install(self.pkg.spec)
-
-        _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_install_test_log(self.pkg, self.verbose)
+        _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 
         # Send final status that install is successful
