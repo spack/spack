@@ -364,7 +364,7 @@ class ArchSpec(object):
 
         self._target = value
 
-    def placeholder_satisfies(self, other):
+    def satisfies(self, other):
         return self._satisfies(other, strict=True)
 
     def intersects(self, other):
@@ -603,9 +603,9 @@ class CompilerSpec(object):
         other = self._autospec(other)
         return self.name == other.name and self.versions.intersects(other.versions)
 
-    def placeholder_satisfies(self, other):
+    def satisfies(self, other):
         other = self._autospec(other)
-        return self.name == other.name and self.versions.placeholder_satisfies(other.versions)
+        return self.name == other.name and self.versions.satisfies(other.versions)
 
     def constrain(self, other):
         """Intersect self's versions with other.
@@ -748,7 +748,7 @@ class FlagMap(lang.HashableMap):
         super(FlagMap, self).__init__()
         self.spec = spec
 
-    def placeholder_satisfies(self, other):
+    def satisfies(self, other):
         return all(f in self and set(self[f]) == set(other[f]) for f in other)
 
     def intersects(self, other):
@@ -1071,7 +1071,7 @@ def _libs_default_handler(descriptor, spec, cls):
     home = getattr(spec.package, "home")
 
     # Avoid double 'lib' for packages whose names already start with lib
-    if not name.startswith("lib") and not spec.placeholder_satisfies("platform=windows"):
+    if not name.startswith("lib") and not spec.satisfies("platform=windows"):
         name = "lib" + name
 
     # If '+shared' search only for shared library; if '~shared' search only for
@@ -2626,9 +2626,9 @@ class Spec(object):
                 # it's possible to build that configuration with Spack
                 continue
             for conflict_spec, when_list in x.package_class.conflicts.items():
-                if x.placeholder_satisfies(conflict_spec):
+                if x.satisfies(conflict_spec):
                     for when_spec, msg in when_list:
-                        if x.placeholder_satisfies(when_spec):
+                        if x.satisfies(when_spec):
                             when = when_spec.copy()
                             when.name = x.name
                             matches.append((x, conflict_spec, when, msg))
@@ -2638,7 +2638,7 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         # No need on platform=cray because of the targeting modules
-        if not self.placeholder_satisfies("platform=cray"):
+        if not self.satisfies("platform=cray"):
             self.architecture.target.optimization_flags(self.compiler)
 
     def _patches_assigned(self):
@@ -2680,7 +2680,7 @@ class Spec(object):
             # Add any patches from the package to the spec.
             patches = []
             for cond, patch_list in s.package_class.patches.items():
-                if s.placeholder_satisfies(cond):
+                if s.satisfies(cond):
                     for patch in patch_list:
                         patches.append(patch)
             if patches:
@@ -2698,9 +2698,7 @@ class Spec(object):
             patches = []
             for cond, dependency in pkg_deps[dspec.spec.name].items():
                 for pcond, patch_list in dependency.patches.items():
-                    if dspec.parent.placeholder_satisfies(
-                        cond
-                    ) and dspec.spec.placeholder_satisfies(pcond):
+                    if dspec.parent.satisfies(cond) and dspec.spec.satisfies(pcond):
                         patches.extend(patch_list)
             if patches:
                 all_patches = spec_to_patches.setdefault(id(dspec.spec), [])
@@ -2958,7 +2956,7 @@ class Spec(object):
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
         for when_spec, dependency in conditions.items():
-            if self.placeholder_satisfies(when_spec):
+            if self.satisfies(when_spec):
                 if dep is None:
                     dep = dp.Dependency(self.name, Spec(name), type=())
                 try:
@@ -3521,9 +3519,6 @@ class Spec(object):
             if not self.compiler.intersects(other.compiler):
                 return False
 
-        var_strict = False
-        if (not self.name) or (not other.name):
-            var_strict = True
         if not self.variants.intersects(other.variants):
             return False
 
@@ -3592,7 +3587,7 @@ class Spec(object):
 
         return True
 
-    def placeholder_satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3625,9 +3620,7 @@ class Spec(object):
 
                 if pkg.provides(other.name):
                     for provided, when_specs in pkg.provided.items():
-                        if any(
-                            self.placeholder_satisfies(when, deps=False) for when in when_specs
-                        ):
+                        if any(self.satisfies(when, deps=False) for when in when_specs):
                             if provided.intersects(other):
                                 return True
             return False
@@ -3640,30 +3633,30 @@ class Spec(object):
         ):
             return False
         if self.versions and other.versions:
-            if not self.versions.placeholder_satisfies(other.versions):
+            if not self.versions.satisfies(other.versions):
                 return False
         elif self.versions or other.versions:
             return False
 
         # None indicates no constraints when not strict.
         if self.compiler and other.compiler:
-            if not self.compiler.placeholder_satisfies(other.compiler):
+            if not self.compiler.satisfies(other.compiler):
                 return False
         elif other.compiler and not self.compiler:
             return False
 
-        if not self.variants.placeholder_satisfies(other.variants):
+        if not self.variants.satisfies(other.variants):
             return False
 
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
         if self.architecture and other.architecture:
-            if not self.architecture.placeholder_satisfies(other.architecture):
+            if not self.architecture.satisfies(other.architecture):
                 return False
         elif other.architecture and not self.architecture:
             return False
 
-        if not self.compiler_flags.placeholder_satisfies(other.compiler_flags):
+        if not self.compiler_flags.satisfies(other.compiler_flags):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
@@ -3686,12 +3679,12 @@ class Spec(object):
         # use list to prevent double-iteration
         selfdeps = list(self.traverse(root=False))
         otherdeps = list(other.traverse(root=False))
-        if not all(any(d.placeholder_satisfies(dep) for d in selfdeps) for dep in otherdeps):
+        if not all(any(d.satisfies(dep) for d in selfdeps) for dep in otherdeps):
             return False
 
         # Handle first-order constraints directly
         for name in self.common_dependencies(other):
-            if not self[name].placeholder_satisfies(other[name], deps=False):
+            if not self[name].satisfies(other[name], deps=False):
                 return False
 
         if self.concrete:
@@ -3969,9 +3962,9 @@ class Spec(object):
 
         # if anonymous or same name, we only have to look at the root
         if not spec.name or spec.name == self.name:
-            return self.placeholder_satisfies(spec)
+            return self.satisfies(spec)
         else:
-            return any(s.placeholder_satisfies(spec) for s in self.traverse(root=False))
+            return any(s.satisfies(spec) for s in self.traverse(root=False))
 
     def eq_dag(self, other, deptypes=True, vs=None, vo=None):
         """True if the full dependency DAGs of specs are equal."""

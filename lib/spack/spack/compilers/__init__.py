@@ -62,7 +62,7 @@ package_name_to_compiler_name = {
 def pkg_spec_for_compiler(cspec):
     """Return the spec of the package that provides the compiler."""
     for spec, package in _compiler_to_pkg.items():
-        if cspec.placeholder_satisfies(spec):
+        if cspec.satisfies(spec):
             spec_str = "%s@%s" % (package, cspec.versions)
             break
     else:
@@ -315,9 +315,7 @@ def supported(compiler_spec):
 def find(compiler_spec, scope=None, init_config=True):
     """Return specs of available compilers that match the supplied
     compiler spec.  Return an empty list if nothing found."""
-    return [
-        c for c in all_compiler_specs(scope, init_config) if c.placeholder_satisfies(compiler_spec)
-    ]
+    return [c for c in all_compiler_specs(scope, init_config) if c.satisfies(compiler_spec)]
 
 
 @_auto_compiler_spec

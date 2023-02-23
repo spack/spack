@@ -118,11 +118,7 @@ class TestDevelop(object):
             self.check_develop(e, spack.spec.Spec("mpich@1.0"), path)
 
             # Check modifications actually worked
-            assert (
-                spack.spec.Spec("mpich@1.0")
-                .concretized()
-                .placeholder_satisfies("dev_path=%s" % abspath)
-            )
+            assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
 
     def test_develop_canonicalize_path_no_args(self, monkeypatch, config):
         env("create", "test")
@@ -149,8 +145,4 @@ class TestDevelop(object):
             self.check_develop(e, spack.spec.Spec("mpich@1.0"), path)
 
             # Check modifications actually worked
-            assert (
-                spack.spec.Spec("mpich@1.0")
-                .concretized()
-                .placeholder_satisfies("dev_path=%s" % abspath)
-            )
+            assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)

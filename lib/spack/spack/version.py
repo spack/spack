@@ -357,10 +357,10 @@ class VersionBase(object):
         Arg:
             other: version to be checked for intersection
         """
-        return self.placeholder_satisfies(other) or other.placeholder_satisfies(self)
+        return self.satisfies(other) or other.satisfies(self)
 
     @coerced
-    def placeholder_satisfies(self, other: "VersionBase") -> bool:
+    def satisfies(self, other: "VersionBase") -> bool:
         """Return True if self is at least as specific and share a common prefix with other.
 
         For instance, @4.7.3 satisfies @4.7 but not vice-versa.
@@ -602,7 +602,7 @@ class GitVersion(VersionBase):
         return self.version
 
     @coerced
-    def placeholder_satisfies(self, other):
+    def satisfies(self, other):
         # In the case of two GitVersions we require the ref_versions
         # to satisfy one another and the versions to be an exact match.
 
@@ -833,7 +833,7 @@ class VersionRange(object):
         return self.overlaps(other)
 
     @coerced
-    def placeholder_satisfies(self, other):
+    def satisfies(self, other):
         """A version range satisfies another if it is a subset of the other.
 
         FIXME (INTERSECTS): issues with 1:4.5 and 1:4.5.3
@@ -1065,7 +1065,7 @@ class VersionList(object):
             raise ValueError("Dict must have 'version' or 'versions' in it.")
 
     @coerced
-    def placeholder_satisfies(self, other) -> bool:
+    def satisfies(self, other) -> bool:
         if not other or not self:
             return False
 

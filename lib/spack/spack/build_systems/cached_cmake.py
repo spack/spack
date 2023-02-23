@@ -135,7 +135,7 @@ class CachedCMakeBuilder(CMakeBuilder):
     def initconfig_mpi_entries(self):
         spec = self.pkg.spec
 
-        if not spec.placeholder_satisfies("^mpi"):
+        if not spec.satisfies("^mpi"):
             return []
 
         entries = [
@@ -151,7 +151,7 @@ class CachedCMakeBuilder(CMakeBuilder):
         # Check for slurm
         using_slurm = False
         slurm_checks = ["+slurm", "schedulers=slurm", "process_managers=slurm"]
-        if any(spec["mpi"].placeholder_satisfies(variant) for variant in slurm_checks):
+        if any(spec["mpi"].satisfies(variant) for variant in slurm_checks):
             using_slurm = True
 
         # Determine MPIEXEC
@@ -173,7 +173,7 @@ class CachedCMakeBuilder(CMakeBuilder):
         else:
             # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
             # vs the older versions which expect MPIEXEC
-            if self.pkg.spec["cmake"].placeholder_satisfies("@3.10:"):
+            if self.pkg.spec["cmake"].satisfies("@3.10:"):
                 entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE", mpiexec))
             else:
                 entries.append(cmake_cache_path("MPIEXEC", mpiexec))
@@ -195,7 +195,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        if spec.placeholder_satisfies("^cuda"):
+        if spec.satisfies("^cuda"):
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# Cuda")
             entries.append("#------------------{0}\n".format("-" * 30))

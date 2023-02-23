@@ -807,11 +807,11 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
 
     # First find and remember some target concrete specs in the environment
     for e_spec in env_specs:
-        if e_spec.placeholder_satisfies(Spec("a ~bvv")):
+        if e_spec.satisfies(Spec("a ~bvv")):
             a_spec = e_spec
         elif e_spec.name == "b":
             b_spec = e_spec
-        elif e_spec.placeholder_satisfies(Spec("mpi")):
+        elif e_spec.satisfies(Spec("mpi")):
             mpi_spec = e_spec
 
     assert a_spec

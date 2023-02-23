@@ -465,27 +465,27 @@ def test_010_all_install_sanity(database):
     assert len(all_specs) == 15
 
     # Query specs with multiple configurations
-    mpileaks_specs = [s for s in all_specs if s.placeholder_satisfies("mpileaks")]
-    callpath_specs = [s for s in all_specs if s.placeholder_satisfies("callpath")]
-    mpi_specs = [s for s in all_specs if s.placeholder_satisfies("mpi")]
+    mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
+    callpath_specs = [s for s in all_specs if s.satisfies("callpath")]
+    mpi_specs = [s for s in all_specs if s.satisfies("mpi")]
 
     assert len(mpileaks_specs) == 3
     assert len(callpath_specs) == 3
     assert len(mpi_specs) == 3
 
     # Query specs with single configurations
-    dyninst_specs = [s for s in all_specs if s.placeholder_satisfies("dyninst")]
-    libdwarf_specs = [s for s in all_specs if s.placeholder_satisfies("libdwarf")]
-    libelf_specs = [s for s in all_specs if s.placeholder_satisfies("libelf")]
+    dyninst_specs = [s for s in all_specs if s.satisfies("dyninst")]
+    libdwarf_specs = [s for s in all_specs if s.satisfies("libdwarf")]
+    libelf_specs = [s for s in all_specs if s.satisfies("libelf")]
 
     assert len(dyninst_specs) == 1
     assert len(libdwarf_specs) == 1
     assert len(libelf_specs) == 1
 
     # Query by dependency
-    assert len([s for s in all_specs if s.placeholder_satisfies("mpileaks ^mpich")]) == 1
-    assert len([s for s in all_specs if s.placeholder_satisfies("mpileaks ^mpich2")]) == 1
-    assert len([s for s in all_specs if s.placeholder_satisfies("mpileaks ^zmpi")]) == 1
+    assert len([s for s in all_specs if s.satisfies("mpileaks ^mpich")]) == 1
+    assert len([s for s in all_specs if s.satisfies("mpileaks ^mpich2")]) == 1
+    assert len([s for s in all_specs if s.satisfies("mpileaks ^zmpi")]) == 1
 
 
 def test_015_write_and_read(mutable_database):

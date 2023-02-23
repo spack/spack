@@ -169,9 +169,9 @@ class AutotoolsBuilder(BaseBuilder):
         system ``config.guess`` and ``config.sub`` files.
         """
         return (
-            self.pkg.spec.placeholder_satisfies("target=ppc64le:")
-            or self.pkg.spec.placeholder_satisfies("target=aarch64:")
-            or self.pkg.spec.placeholder_satisfies("target=riscv64:")
+            self.pkg.spec.satisfies("target=ppc64le:")
+            or self.pkg.spec.satisfies("target=aarch64:")
+            or self.pkg.spec.satisfies("target=riscv64:")
         )
 
     @property
@@ -204,11 +204,11 @@ class AutotoolsBuilder(BaseBuilder):
         # TODO: Expand this to select the 'config.sub'-compatible architecture
         # for each platform (e.g. 'config.sub' doesn't accept 'power9le', but
         # does accept 'ppc64le').
-        if self.pkg.spec.placeholder_satisfies("target=ppc64le:"):
+        if self.pkg.spec.satisfies("target=ppc64le:"):
             config_arch = "ppc64le"
-        elif self.pkg.spec.placeholder_satisfies("target=aarch64:"):
+        elif self.pkg.spec.satisfies("target=aarch64:"):
             config_arch = "aarch64"
-        elif self.pkg.spec.placeholder_satisfies("target=riscv64:"):
+        elif self.pkg.spec.satisfies("target=riscv64:"):
             config_arch = "riscv64"
         else:
             config_arch = "local"

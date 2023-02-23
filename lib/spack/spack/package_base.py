@@ -1304,7 +1304,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if spec.name not in self.extendees:
             return False
         s = self.extendee_spec
-        return s and spec.placeholder_satisfies(s)
+        return s and spec.satisfies(s)
 
     def provides(self, vpkg_name):
         """
@@ -1324,7 +1324,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return [
             vspec
             for vspec, constraints in self.provided.items()
-            if any(self.spec.placeholder_satisfies(c) for c in constraints)
+            if any(self.spec.satisfies(c) for c in constraints)
         ]
 
     @property
@@ -2526,7 +2526,7 @@ def test_process(pkg, kwargs):
         c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
         if pkg.name in c_names:
             v_names.extend(["c", "cxx", "fortran"])
-        if pkg.spec.placeholder_satisfies("llvm+clang"):
+        if pkg.spec.satisfies("llvm+clang"):
             v_names.extend(["c", "cxx"])
 
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]

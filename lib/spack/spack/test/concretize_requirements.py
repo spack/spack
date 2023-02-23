@@ -133,7 +133,7 @@ def test_requirement_is_successfully_applied(concretize_scope, test_repo):
 
     s1 = Spec("x").concretized()
     # Without any requirements/preferences, the later version is preferred
-    assert s1.placeholder_satisfies("@1.1")
+    assert s1.satisfies("@1.1")
 
     conf_str = """\
 packages:
@@ -143,7 +143,7 @@ packages:
     update_packages_config(conf_str)
     s2 = Spec("x").concretized()
     # The requirement forces choosing the eariler version
-    assert s2.placeholder_satisfies("@1.0")
+    assert s2.satisfies("@1.0")
 
 
 def test_multiple_packages_requirements_are_respected(concretize_scope, test_repo):
@@ -162,8 +162,8 @@ packages:
 """
     update_packages_config(conf_str)
     spec = Spec("x").concretized()
-    assert spec["x"].placeholder_satisfies("@1.0")
-    assert spec["y"].placeholder_satisfies("@2.4")
+    assert spec["x"].satisfies("@1.0")
+    assert spec["y"].satisfies("@2.4")
 
 
 def test_oneof(concretize_scope, test_repo):
@@ -183,7 +183,7 @@ packages:
     spec = Spec("x").concretized()
     # The concretizer only has to satisfy one of @2.4/~shared, and @2.4
     # comes first so it is prioritized
-    assert spec["y"].placeholder_satisfies("@2.4+shared")
+    assert spec["y"].satisfies("@2.4+shared")
 
 
 def test_one_package_multiple_oneof_groups(concretize_scope, test_repo):
@@ -203,10 +203,10 @@ packages:
     update_packages_config(conf_str)
 
     s1 = Spec("y@2.5").concretized()
-    assert s1.placeholder_satisfies("%clang~shared")
+    assert s1.satisfies("%clang~shared")
 
     s2 = Spec("y@2.4").concretized()
-    assert s2.placeholder_satisfies("%gcc+shared")
+    assert s2.satisfies("%gcc+shared")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
@@ -232,7 +232,7 @@ packages:
     update_packages_config(conf_str)
 
     s1 = Spec("v").concretized()
-    assert s1.placeholder_satisfies("@2.1")
+    assert s1.satisfies("@2.1")
 
 
 def test_oneof_ordering(concretize_scope, test_repo):
@@ -252,10 +252,10 @@ packages:
     update_packages_config(conf_str)
 
     s1 = Spec("y").concretized()
-    assert s1.placeholder_satisfies("@2.4")
+    assert s1.satisfies("@2.4")
 
     s2 = Spec("y@2.5").concretized()
-    assert s2.placeholder_satisfies("@2.5")
+    assert s2.satisfies("@2.5")
 
 
 def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database, fake_installs):
@@ -277,7 +277,7 @@ packages:
 
         with spack.config.override("concretizer:reuse", True):
             s2 = Spec("y").concretized()
-            assert not s2.placeholder_satisfies("@2.5 %gcc")
+            assert not s2.satisfies("@2.5 %gcc")
 
 
 def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
@@ -296,8 +296,8 @@ packages:
     update_packages_config(conf_str)
 
     s1 = Spec("y").concretized()
-    assert s1.placeholder_satisfies("@2.3")
-    assert s1.placeholder_satisfies("%gcc")
+    assert s1.satisfies("@2.3")
+    assert s1.satisfies("%gcc")
 
 
 @pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])
@@ -317,7 +317,7 @@ packages:
 
     spec = Spec(spec_str).concretized()
     for s in spec.traverse():
-        assert s.placeholder_satisfies(requirement_str)
+        assert s.satisfies(requirement_str)
 
 
 @pytest.mark.parametrize(
@@ -347,9 +347,9 @@ packages:
     update_packages_config(conf_str)
 
     spec = Spec("x").concretized()
-    assert spec.placeholder_satisfies(specific_exp)
+    assert spec.satisfies(specific_exp)
     for s in spec.traverse(root=False):
-        assert s.placeholder_satisfies(generic_exp)
+        assert s.satisfies(generic_exp)
 
 
 @pytest.mark.parametrize("mpi_requirement", ["mpich", "mpich2", "zmpi"])
@@ -393,7 +393,7 @@ packages:
     spec = Spec("callpath").concretized()
     assert "mpi" in spec
     assert mpi_requirement in spec
-    assert spec["mpi"].placeholder_satisfies(specific_requirement)
+    assert spec["mpi"].satisfies(specific_requirement)
 
 
 def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages):

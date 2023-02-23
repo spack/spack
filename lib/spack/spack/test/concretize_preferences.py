@@ -465,7 +465,7 @@ mpich:
         """
         s = Spec("version-test-root").concretized()
 
-        assert s.placeholder_satisfies("^version-test-pkg@2.4.6")
+        assert s.satisfies("^version-test-pkg@2.4.6")
         assert "version-test-dependency-preferred" not in s
 
     @pytest.mark.regression("26598")
@@ -488,4 +488,4 @@ mpich:
     def test_sticky_variant_accounts_for_packages_yaml(self):
         with spack.config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = Spec("sticky-variant %gcc").concretized()
-            assert s.placeholder_satisfies("%gcc") and s.placeholder_satisfies("+allow-gcc")
+            assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")

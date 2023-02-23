@@ -116,7 +116,7 @@ class SpecMultiMethod(object):
         given spec, if one exists
         """
         for condition, method in self.method_list:
-            if spec.placeholder_satisfies(condition):
+            if spec.satisfies(condition):
                 return method
         return self.default or None
 

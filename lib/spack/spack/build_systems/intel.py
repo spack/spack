@@ -337,7 +337,7 @@ class IntelPackage(Package):
             # Shoehorn Major into release year until we know better.
             v_year += 2000
             for spec, year in self.version_years.items():
-                if self.spec.placeholder_satisfies(spec):
+                if self.spec.satisfies(spec):
                     v_year = year
                     break
 
@@ -554,7 +554,7 @@ class IntelPackage(Package):
             ["vtune_profiler", ":2019", "vtune_amplifier"],
             ["itac", ":", "itac", [os.sep + standalone_glob]],
         ]:
-            if cs == rename_rule[0] and v.placeholder_satisfies(ver(rename_rule[1])):
+            if cs == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
                 cs = rename_rule[2]
                 if len(rename_rule) > 3:
                     normalize_kwargs = {"version_globs": rename_rule[3]}
@@ -655,7 +655,7 @@ class IntelPackage(Package):
             "intel-mpi": ["mpi/{libarch}/bin/mpivars", None],
         }
         key = self.name
-        if self.version_yearlike.placeholder_satisfies(ver(":2015")):
+        if self.version_yearlike.satisfies(ver(":2015")):
             # Same file as 'intel' but 'None' for component_suite_dir will
             # resolve differently. Listed as a separate entry to serve as
             # example and to avoid pitfalls upon possible refactoring.
@@ -786,16 +786,16 @@ class IntelPackage(Package):
 
         mkl_integer = "libmkl_intel_" + self.intel64_int_suffix
 
-        if self.spec.placeholder_satisfies("threads=openmp"):
+        if self.spec.satisfies("threads=openmp"):
             if "%intel" in self.spec:
                 mkl_threading = "libmkl_intel_thread"
             elif "%gcc" in self.spec or "%clang" in self.spec:
                 mkl_threading = "libmkl_gnu_thread"
             threading_engine_libs = self.openmp_libs
-        elif self.spec.placeholder_satisfies("threads=tbb"):
+        elif self.spec.satisfies("threads=tbb"):
             mkl_threading = "libmkl_tbb_thread"
             threading_engine_libs = self.tbb_libs
-        elif self.spec.placeholder_satisfies("threads=none"):
+        elif self.spec.satisfies("threads=none"):
             mkl_threading = "libmkl_sequential"
             threading_engine_libs = LibraryList([])
         else:
@@ -1373,7 +1373,7 @@ class IntelPackage(Package):
             # in compiler releases, then we need to search for libimf.so instead
             # of this static path.
             for lib in LLVMgold_libs:
-                if not self.spec.placeholder_satisfies("^patchelf"):
+                if not self.spec.satisfies("^patchelf"):
                     raise spack.error.SpackError(
                         "Attempting to patch RPATH in LLVMgold.so."
                         + "`patchelf` dependency should be set in package.py"

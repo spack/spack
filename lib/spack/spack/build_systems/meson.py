@@ -184,7 +184,7 @@ class MesonBuilder(BaseBuilder):
     def meson(self, pkg, spec, prefix):
         """Run ``meson`` in the build directory"""
         options = []
-        if self.spec["meson"].placeholder_satisfies("@0.64:"):
+        if self.spec["meson"].satisfies("@0.64:"):
             options.append("setup")
         options.append(os.path.abspath(self.root_mesonlists_dir))
         options += self.std_meson_args

@@ -292,8 +292,8 @@ class TestSpecSematics(object):
         a = Spec("a foobar=bar")
         a.concretize()
 
-        assert a.placeholder_satisfies("foobar=bar")
-        assert a.placeholder_satisfies("foobar=*")
+        assert a.satisfies("foobar=bar")
+        assert a.satisfies("foobar=*")
 
         # Assert that an autospec generated from a literal
         # gives the right result for a single valued variant
@@ -329,8 +329,8 @@ class TestSpecSematics(object):
         a = make_spec('multivalue-variant foo="bar"', concrete=True)
         spec_str = 'multivalue-variant foo="bar,baz"'
         b = Spec(spec_str)
-        assert not a.placeholder_satisfies(b)
-        assert not a.placeholder_satisfies(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
         # A concrete spec cannot be constrained further
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
@@ -339,16 +339,16 @@ class TestSpecSematics(object):
         spec_str = 'multivalue-variant foo="bar,baz"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
-        assert a.placeholder_satisfies(b)
-        assert a.placeholder_satisfies(spec_str)
+        assert a.satisfies(b)
+        assert a.satisfies(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
         a = make_spec('multivalue-variant foo="bar,baz"', concrete=True)
         spec_str = 'multivalue-variant foo="bar,baz,quux"'
         b = Spec(spec_str)
-        assert not a.placeholder_satisfies(b)
-        assert not a.placeholder_satisfies(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
         # A concrete spec cannot be constrained further
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
@@ -463,8 +463,8 @@ class TestSpecSematics(object):
         spec.concretize()
         copy = spec.copy()
         for s in spec.traverse():
-            assert s.placeholder_satisfies(copy[s.name])
-            assert copy[s.name].placeholder_satisfies(s)
+            assert s.satisfies(copy[s.name])
+            assert copy[s.name].satisfies(s)
 
     def test_unsatisfiable_compiler_flag_mismatch(self):
         # No match in specs
@@ -491,16 +491,16 @@ class TestSpecSematics(object):
         s1 = Spec("mpileaks").concretized()
         s2 = s1.copy()
 
-        assert s1.placeholder_satisfies(s2)
-        assert s2.placeholder_satisfies(s1)
+        assert s1.satisfies(s2)
+        assert s2.satisfies(s1)
         assert s1.intersects(s2)
 
         # Simulate specs that were installed before and after a change to
         # Spack's hashing algorithm.  This just reverses s2's hash.
         s2._hash = s1.dag_hash()[-1::-1]
 
-        assert not s1.placeholder_satisfies(s2)
-        assert not s2.placeholder_satisfies(s1)
+        assert not s1.satisfies(s2)
+        assert not s2.satisfies(s1)
         assert not s1.intersects(s2)
 
     # ========================================================================
@@ -1108,7 +1108,7 @@ class TestSpecSematics(object):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
         s._add_dependency(d, deptypes=())
-        assert s.placeholder_satisfies("mpileaks ^zmpi ^fake")
+        assert s.satisfies("mpileaks ^zmpi ^fake")
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names(self, default_mock_concretization, transitive):
@@ -1305,9 +1305,9 @@ def test_satisfies_is_commutative_with_concrete_specs(default_mock_concretizatio
     assert a1.intersects(a2)
     assert a2.intersects(a1)
 
-    # Spec.placeholder_satisfies means set inclusion, which is not commutative.
-    assert a1.placeholder_satisfies(a2)
-    assert not a2.placeholder_satisfies(a1)
+    # Spec.satisfies means set inclusion, which is not commutative.
+    assert a1.satisfies(a2)
+    assert not a2.satisfies(a1)
 
 
 @pytest.mark.parametrize(

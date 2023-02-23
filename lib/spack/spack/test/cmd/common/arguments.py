@@ -82,14 +82,14 @@ def test_match_spec_env(mock_packages, mutable_mock_env_path):
     # Initial sanity check: we are planning on choosing a non-default
     # value, so make sure that is in fact not the default.
     check_defaults = spack.cmd.parse_specs(["a"], concretize=True)[0]
-    assert not check_defaults.placeholder_satisfies("foobar=baz")
+    assert not check_defaults.satisfies("foobar=baz")
 
     e = ev.create("test")
     e.add("a foobar=baz")
     e.concretize()
     with e:
         env_spec = spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(["a"])[0])
-        assert env_spec.placeholder_satisfies("foobar=baz")
+        assert env_spec.satisfies("foobar=baz")
         assert env_spec.concrete
 
 
@@ -116,7 +116,7 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
         # This query matches the root b and b as a dependency of a. In that
         # case the root instance should be preferred.
         env_spec1 = spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(["b"])[0])
-        assert env_spec1.placeholder_satisfies("@0.9")
+        assert env_spec1.satisfies("@0.9")
 
         env_spec2 = spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(["b@1.0"])[0])
         assert env_spec2

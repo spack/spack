@@ -2346,7 +2346,7 @@ class BinaryCacheQuery(object):
 
         if not self.all_architectures:
             arch = spack.spec.Spec.default_arch()
-            specs = [s for s in specs if s.placeholder_satisfies(arch)]
+            specs = [s for s in specs if s.satisfies(arch)]
 
         self.possible_specs = specs
 
@@ -2360,7 +2360,7 @@ class BinaryCacheQuery(object):
                     matches.append(candidate_spec)
         else:
             # Matching a spec constraint
-            matches = [s for s in self.possible_specs if s.placeholder_satisfies(spec)]
+            matches = [s for s in self.possible_specs if s.satisfies(spec)]
         return matches
 
 

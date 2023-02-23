@@ -414,7 +414,7 @@ class SpecNodeParser:
                         f"Multiple packages specify hash beginning '{dag_hash}'.", *matches
                     )
                 spec_by_hash = matches[0]
-                if not spec_by_hash.placeholder_satisfies(initial_spec):
+                if not spec_by_hash.satisfies(initial_spec):
                     raise spack.spec.InvalidHashError(initial_spec, spec_by_hash.dag_hash())
                 initial_spec._dup(spec_by_hash)
 

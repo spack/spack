@@ -62,7 +62,7 @@ def test_deprecate_install(mock_packages, mock_archive, mock_fetch, install_mock
     deprecated = spack.store.db.query(installed=InstallStatuses.DEPRECATED)
     assert deprecated == to_deprecate
     assert len(non_deprecated) == 1
-    assert non_deprecated[0].placeholder_satisfies("libelf@0.8.13")
+    assert non_deprecated[0].satisfies("libelf@0.8.13")
 
 
 def test_deprecate_deps(mock_packages, mock_archive, mock_fetch, install_mockery):

@@ -1927,7 +1927,7 @@ class SpackSolverSetup(object):
         compiler_list = list(sorted(set(compiler_list)))
         for constraint in sorted(self.compiler_version_constraints):
             for compiler in compiler_list:
-                if compiler.placeholder_satisfies(constraint):
+                if compiler.satisfies(constraint):
                     self.gen.fact(
                         fn.compiler_version_satisfies(
                             constraint.name, constraint.versions, compiler.version
@@ -2498,7 +2498,7 @@ class Solver(object):
                     [
                         s
                         for s in spack.store.db.query(installed=True)
-                        if not s.placeholder_satisfies("dev_path=*")
+                        if not s.satisfies("dev_path=*")
                     ]
                 )
 
