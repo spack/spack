@@ -24,11 +24,10 @@ class GribUtil(CMakePackage):
     depends_on("jasper")
     depends_on("libpng")
     depends_on("zlib")
-    depends_on("w3emc", when="@1.2.4:")
-    depends_on("w3nco", when="@:1.2.3")
+    depends_on("w3nco")
     depends_on("g2")
     depends_on("bacio")
-    depends_on("ip@:3.3.3")
+    depends_on("ip")
     depends_on("sp")
 
     def cmake_args(self):
