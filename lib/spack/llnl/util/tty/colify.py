@@ -11,6 +11,7 @@ from __future__ import division, unicode_literals
 import io
 import os
 import sys
+from typing import IO, Any, List, Optional
 
 from llnl.util.tty import terminal_size
 from llnl.util.tty.color import cextra, clen
@@ -97,7 +98,16 @@ def config_uniform_cols(elts, console_width, padding, cols=0):
     return config
 
 
-def colify(elts, **options):
+def colify(
+    elts: List[Any],
+    cols: int = 0,
+    output: Optional[IO] = None,
+    indent: int = 0,
+    padding: int = 2,
+    tty: Optional[bool] = None,
+    method: str = "variable",
+    console_cols: Optional[int] = None,
+):
     """Takes a list of elements as input and finds a good columnization
     of them, similar to how gnu ls does. This supports both
     uniform-width and variable-width (tighter) columns.
@@ -106,31 +116,21 @@ def colify(elts, **options):
     using ``str()``.
 
     Keyword Arguments:
-        output (typing.IO): A file object to write to. Default is ``sys.stdout``
-        indent (int): Optionally indent all columns by some number of spaces
-        padding (int): Spaces between columns. Default is 2
-        width (int): Width of the output. Default is 80 if tty not detected
-        cols (int): Force number of columns. Default is to size to terminal, or
+        output: A file object to write to. Default is ``sys.stdout``
+        indent: Optionally indent all columns by some number of spaces
+        padding: Spaces between columns. Default is 2
+        width: Width of the output. Default is 80 if tty not detected
+        cols: Force number of columns. Default is to size to terminal, or
             single-column if no tty
-        tty (bool): Whether to attempt to write to a tty. Default is to autodetect a
+        tty: Whether to attempt to write to a tty. Default is to autodetect a
             tty. Set to False to force single-column output
-        method (str): Method to use to fit columns. Options are variable or uniform.
+        method: Method to use to fit columns. Options are variable or uniform.
             Variable-width columns are tighter, uniform columns are all the same width
             and fit less data on the screen
+        console_cols: number of columns on this console (default: autodetect)
     """
-    # Get keyword arguments or set defaults
-    cols = options.pop("cols", 0)
-    output = options.pop("output", sys.stdout)
-    indent = options.pop("indent", 0)
-    padding = options.pop("padding", 2)
-    tty = options.pop("tty", None)
-    method = options.pop("method", "variable")
-    console_cols = options.pop("width", None)
-
-    if options:
-        raise TypeError(
-            "'%s' is an invalid keyword argument for this function." % next(options.iterkeys())
-        )
+    if output is None:
+        output = sys.stdout
 
     # elts needs to be an array of strings so we can count the elements
     elts = [str(elt) for elt in elts]
@@ -153,10 +153,11 @@ def colify(elts, **options):
             cols = 1
 
     # Specify the number of character columns to use.
-    if not console_cols:
+    if console_cols is None:
         console_rows, console_cols = terminal_size()
-    elif type(console_cols) != int:
+    elif not isinstance(console_cols, int):
         raise ValueError("Number of columns must be an int")
+
     console_cols = max(1, console_cols - indent)
 
     # Choose a method.  Variable-width colums vs uniform-width.
@@ -192,7 +193,13 @@ def colify(elts, **options):
     return (config.cols, tuple(config.widths))
 
 
-def colify_table(table, **options):
+def colify_table(
+    table: List[List[Any]],
+    output: Optional[IO] = None,
+    indent: int = 0,
+    padding: int = 2,
+    console_cols: Optional[int] = None,
+):
     """Version of ``colify()`` for data expressed in rows, (list of lists).
 
     Same as regular colify but:
@@ -218,20 +225,38 @@ def colify_table(table, **options):
             for row in table:
                 yield row[i]
 
-    if "cols" in options:
-        raise ValueError("Cannot override columsn in colify_table.")
-    options["cols"] = columns
+    colify(
+        transpose(),
+        cols=columns,  # this is always the number of cols in the table
+        tty=True,  # don't reduce to 1 column for non-tty
+        output=output,
+        indent=indent,
+        padding=padding,
+        console_cols=console_cols,
+    )
 
-    # don't reduce to 1 column for non-tty
-    options["tty"] = True
 
-    colify(transpose(), **options)
-
-
-def colified(elts, **options):
+def colified(
+    elts: List[Any],
+    cols: int = 0,
+    output: Optional[IO] = None,
+    indent: int = 0,
+    padding: int = 2,
+    tty: Optional[bool] = None,
+    method: str = "variable",
+    console_cols: Optional[int] = None,
+):
     """Invokes the ``colify()`` function but returns the result as a string
     instead of writing it to an output string."""
     sio = io.StringIO()
-    options["output"] = sio
-    colify(elts, **options)
+    colify(
+        elts,
+        cols=cols,
+        output=sio,
+        indent=indent,
+        padding=padding,
+        tty=tty,
+        method=method,
+        console_cols=console_cols,
+    )
     return sio.getvalue()
