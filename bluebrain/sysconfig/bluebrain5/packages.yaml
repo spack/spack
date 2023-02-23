@@ -132,7 +132,8 @@ packages:
   range-v3:
     variants: ~doc
   reportinglib:
-    require: "%intel"
+    require:
+    - one_of: ["%intel", "%gcc"]
   slurm:
     buildable: false
     version: [21.08.3]
