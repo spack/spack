@@ -14,6 +14,7 @@ import textwrap
 import traceback
 from datetime import datetime
 from sys import platform as _platform
+from typing import Optional
 
 if _platform != "win32":
     import fcntl
@@ -163,14 +164,13 @@ def get_timestamp(force=False):
         return ""
 
 
-def msg(message, *args, **kwargs):
+def msg(message, *args, newline=True):
     if not msg_enabled():
         return
 
     if isinstance(message, Exception):
         message = "%s: %s" % (message.__class__.__name__, str(message))
 
-    newline = kwargs.get("newline", True)
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(2)
@@ -182,19 +182,18 @@ def msg(message, *args, **kwargs):
         print(indent + _output_filter(str(arg)))
 
 
-def info(message, *args, **kwargs):
+def info(
+    message, *args, format="*b", stream=None, wrap=False, break_long_words=False, countback=3
+):
     if isinstance(message, Exception):
         message = "%s: %s" % (message.__class__.__name__, str(message))
 
-    format = kwargs.get("format", "*b")
-    stream = kwargs.get("stream", sys.stdout)
-    wrap = kwargs.get("wrap", False)
-    break_long_words = kwargs.get("break_long_words", False)
-    st_countback = kwargs.get("countback", 3)
+    if stream is None:
+        stream = sys.stdout
 
     st_text = ""
     if _stacktrace:
-        st_text = process_stacktrace(st_countback)
+        st_text = process_stacktrace(countback)
     cprint(
         "@%s{%s==>} %s%s"
         % (format, st_text, get_timestamp(), cescape(_output_filter(str(message)))),
@@ -252,10 +251,7 @@ def die(message, *args, **kwargs):
     sys.exit(1)
 
 
-def get_number(prompt, **kwargs):
-    default = kwargs.get("default", None)
-    abort = kwargs.get("abort", None)
-
+def get_number(prompt, default=None, abort=None):
     if default is not None and abort is not None:
         prompt += " (default is %s, %s to abort) " % (default, abort)
     elif default is not None:
@@ -283,14 +279,12 @@ def get_number(prompt, **kwargs):
     return number
 
 
-def get_yes_or_no(prompt, **kwargs):
-    default_value = kwargs.get("default", None)
-
-    if default_value is None:
+def get_yes_or_no(prompt, default: Optional[bool] = None):
+    if default is None:
         prompt += " [y/n] "
-    elif default_value is True:
+    elif default is True:
         prompt += " [Y/n] "
-    elif default_value is False:
+    elif default is False:
         prompt += " [y/N] "
     else:
         raise ValueError("default for get_yes_no() must be True, False, or None.")
@@ -300,7 +294,7 @@ def get_yes_or_no(prompt, **kwargs):
         msg(prompt, newline=False)
         ans = input().lower()
         if not ans:
-            result = default_value
+            result = default
             if result is None:
                 print("Please enter yes or no.")
         else:
@@ -311,20 +305,13 @@ def get_yes_or_no(prompt, **kwargs):
     return result
 
 
-def hline(label=None, **kwargs):
+def hline(label=None, char="-", max_width=64):
     """Draw a labeled horizontal line.
 
     Keyword Arguments:
         char (str): Char to draw the line with.  Default '-'
         max_width (int): Maximum width of the line.  Default is 64 chars.
     """
-    char = kwargs.pop("char", "-")
-    max_width = kwargs.pop("max_width", 64)
-    if kwargs:
-        raise TypeError(
-            "'%s' is an invalid keyword argument for this function." % next(kwargs.iterkeys())
-        )
-
     rows, cols = terminal_size()
     if not cols:
         cols = max_width
