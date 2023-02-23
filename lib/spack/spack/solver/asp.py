@@ -1927,7 +1927,7 @@ class SpackSolverSetup(object):
         compiler_list = list(sorted(set(compiler_list)))
         for constraint in sorted(self.compiler_version_constraints):
             for compiler in compiler_list:
-                if compiler.satisfies(constraint):
+                if compiler.placeholder_satisfies(constraint):
                     self.gen.fact(
                         fn.compiler_version_satisfies(
                             constraint.name, constraint.versions, compiler.version

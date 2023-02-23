@@ -514,8 +514,8 @@ class TestConcretize(object):
     def test_compiler_inheritance(self, compiler_str):
         spec_str = "mpileaks %{0}".format(compiler_str)
         spec = Spec(spec_str).concretized()
-        assert spec["libdwarf"].compiler.satisfies(compiler_str)
-        assert spec["libelf"].compiler.satisfies(compiler_str)
+        assert spec["libdwarf"].compiler.placeholder_satisfies(compiler_str)
+        assert spec["libelf"].compiler.placeholder_satisfies(compiler_str)
 
     def test_external_package(self):
         spec = Spec("externaltool%gcc")
@@ -524,7 +524,7 @@ class TestConcretize(object):
             "path", "to", "external_tool"
         )
         assert "externalprereq" not in spec
-        assert spec["externaltool"].compiler.satisfies("gcc")
+        assert spec["externaltool"].compiler.placeholder_satisfies("gcc")
 
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
@@ -538,7 +538,7 @@ class TestConcretize(object):
         spec.concretize()
         assert spec["externalmodule"].external_modules == ["external-module"]
         assert "externalprereq" not in spec
-        assert spec["externalmodule"].compiler.satisfies("gcc")
+        assert spec["externalmodule"].compiler.placeholder_satisfies("gcc")
 
     def test_nobuild_package(self):
         """Test that a non-buildable package raise an error if no specs
@@ -557,8 +557,8 @@ class TestConcretize(object):
         assert spec["stuff"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_virtual_gcc"
         )
-        assert spec["externaltool"].compiler.satisfies("gcc")
-        assert spec["stuff"].compiler.satisfies("gcc")
+        assert spec["externaltool"].compiler.placeholder_satisfies("gcc")
+        assert spec["stuff"].compiler.placeholder_satisfies("gcc")
 
     def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization."""

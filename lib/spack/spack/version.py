@@ -845,7 +845,7 @@ class VersionRange(object):
         """
         # FIXME (INTERSECTS): "intersects" is called "overlap" in versions
         return self.overlaps(other)
-        #return self in other
+        # return self in other
 
     @coerced
     def overlaps(self, other):

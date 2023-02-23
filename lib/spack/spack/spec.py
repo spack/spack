@@ -594,13 +594,12 @@ class CompilerSpec(object):
         return CompilerSpec(compiler_spec_like)
 
     def intersects(self, other):
-        return self.satisfies(other, strict=False)
-
-    def satisfies(self, other, strict=False):
         other = self._autospec(other)
-        if strict is True:
-            return self.name == other.name and self.versions.placeholder_satisfies(other.versions)
         return self.name == other.name and self.versions.intersects(other.versions)
+
+    def placeholder_satisfies(self, other):
+        other = self._autospec(other)
+        return self.name == other.name and self.versions.placeholder_satisfies(other.versions)
 
     def constrain(self, other):
         """Intersect self's versions with other.
@@ -3469,7 +3468,6 @@ class Spec(object):
             other: spec to be checked for compatibility
             deps: if True check compatibility of dependency nodes too, if False only check root
         """
-        # return self._satisfies(other, strict=False, deps=deps)
         other = self._autospec(other)
 
         # Optimizations concrete specs
@@ -3511,7 +3509,7 @@ class Spec(object):
 
         # None indicates no constraints when not strict.
         if self.compiler and other.compiler:
-            if not self.compiler.satisfies(other.compiler, strict=False):
+            if not self.compiler.intersects(other.compiler):
                 return False
 
         var_strict = False
@@ -3640,7 +3638,7 @@ class Spec(object):
 
         # None indicates no constraints when not strict.
         if self.compiler and other.compiler:
-            if not self.compiler.satisfies(other.compiler, strict=True):
+            if not self.compiler.placeholder_satisfies(other.compiler):
                 return False
         elif other.compiler and not self.compiler:
             return False

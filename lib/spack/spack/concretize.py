@@ -200,7 +200,7 @@ class Concretizer(object):
 
         # List of versions we could consider, in sorted order
         pkg_versions = spec.package_class.versions
-        usable = [v for v in pkg_versions if any(v.satisfies(sv) for sv in spec.versions)]
+        usable = [v for v in pkg_versions if any(v.intersects(sv) for sv in spec.versions)]
 
         yaml_prefs = PackagePrefs(spec.name, "version")
 
