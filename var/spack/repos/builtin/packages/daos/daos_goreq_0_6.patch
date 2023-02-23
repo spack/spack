@@ -1,0 +1,56 @@
+diff --git a/SConstruct b/SConstruct
+index 2f20c217..2a89395d 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -47,7 +47,7 @@ def preload_prereqs(prereqs):
+     prereqs.define('readline', libs=['readline', 'history'],
+                    package='readline')
+     reqs = ['cart', 'argobots', 'pmdk', 'cmocka',
+-            'uuid', 'crypto', 'fuse', 'protobufc']
++            'uuid', 'crypto', 'fuse', 'protobufc', 'hwloc', 'ompi', 'go']
+     if not is_platform_arm():
+         reqs.extend(['spdk', 'isal'])
+     prereqs.load_definitions(prebuild=reqs)
+
+diff --git a/scons_local/components/__init__.py b/scons_local/components/__init__.py
+index 3ddf2c0..8603906 100644
+--- a/scons_local/components/__init__.py
++++ b/scons_local/components/__init__.py
+@@ -134,6 +134,8 @@ def define_common(reqs):
+     reqs.define('crypto', libs=['crypto'], headers=['openssl/md5.h'],
+                 package='openssl-devel')
+ 
++    reqs.define('go', package='golang')
++
+     if reqs.get_env('PLATFORM') == 'darwin':
+         reqs.define('uuid', headers=['uuid/uuid.h'])
+     else:
+
+diff --git a/src/control/SConscript b/src/control/SConscript
+index af9b0059..824403e5 100644
+--- a/src/control/SConscript
++++ b/src/control/SConscript
+@@ -62,9 +62,13 @@ def install_go_bin(denv, gosrc, gopath, libs, name, install_name):
+     src = [mod_src]
+     if libs is not None:
+         src.extend(libs)
++    if denv.subst("$GO_PREFIX"):
++        gobin = join(denv.subst("$GO_PREFIX"), "bin", "go")
++    else:
++        gobin = "go"
+     denv.Command(bin_path, src,
+                  cmd_build(path, gosrc,
+-                           "go install %s" % install_src))
++                           "%s install %s" % (gobin, install_src)))
+     denv.InstallAs(install_bin, bin_path)
+ #pylint: enable=too-many-arguments
+ 
+@@ -75,7 +79,7 @@ def scons():
+     env.AppendUnique(LIBPATH=[Dir('.')])
+ 
+     denv = env.Clone()
+-    prereqs.require(denv, 'spdk')
++    prereqs.require(denv, 'spdk', 'go')
+ 
+     # if SPDK_PREFIX differs from PREFIX, copy dir so files can be accessed at
+     # runtime

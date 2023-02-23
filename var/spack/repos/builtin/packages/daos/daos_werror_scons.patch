@@ -1,0 +1,15 @@
+diff --git a/scons_local/prereq_tools/base.py b/scons_local/prereq_tools/base.py
+index d177935..8e409de 100644
+--- a/scons_local/prereq_tools/base.py
++++ b/scons_local/prereq_tools/base.py
+@@ -699,8 +699,8 @@ class PreReqComponent(object):
+         self.replace_env(LIBTOOLIZE=libtoolize)
+         self.__env.Replace(ENV=real_env)
+         warning_level = GetOption('warning_level')
+-        if warning_level == 'error':
+-            env.Append(CCFLAGS=['-Werror'])
++        # if warning_level == 'error':
++        #     env.Append(CCFLAGS=['-Werror'])
+         pre_path = GetOption('prepend_path')
+         if pre_path:
+             old_path = self.__env['ENV']['PATH']

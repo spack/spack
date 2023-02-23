@@ -1,0 +1,12 @@
+diff --git a/src/client/SConscript b/src/client/SConscript
+index 950502866..52c5e2dc8 100644
+--- a/src/client/SConscript
++++ b/src/client/SConscript
+@@ -8,7 +8,6 @@ def scons():
+     SConscript('api/SConscript')
+     SConscript('dfs/SConscript')
+     SConscript('dfuse/SConscript')
+-    SConscript('pydaos/SConscript')
+ 
+ if __name__ == "SCons.Script":
+     scons()

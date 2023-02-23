@@ -1,0 +1,71 @@
+diff --git a/SConstruct b/SConstruct
+index 819c55afa..371b495c5 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -129,7 +129,7 @@ def preload_prereqs(prereqs):
+     prereqs.define('readline', libs=['readline', 'history'],
+                    package='readline')
+     reqs = ['cart', 'argobots', 'pmdk', 'cmocka', 'ofi', 'hwloc',
+-            'uuid', 'crypto', 'fuse', 'protobufc']
++            'uuid', 'crypto', 'fuse', 'protobufc', 'go']
+     if not is_platform_arm():
+         reqs.extend(['spdk', 'isal'])
+     prereqs.load_definitions(prebuild=reqs)
+diff --git a/src/control/SConscript b/src/control/SConscript
+index dd2383a7f..a5d2ca040 100644
+--- a/src/control/SConscript
++++ b/src/control/SConscript
+@@ -66,6 +66,10 @@ def install_go_bin(denv, gosrc, gopath, libs, name, install_name):
+     src = [mod_src]
+     if libs is not None:
+         src.extend(libs)
++    if denv.subst("$GO_PREFIX"):
++        gobin = join(denv.subst("$GO_PREFIX"), "bin", "go")
++    else:
++        gobin = "go"
+     # generate a unique build id per binary for use by RPM
+     # https://fedoraproject.org/wiki/PackagingDrafts/Go#Build_ID
+     def gen_build_id():
+@@ -86,7 +90,7 @@ def install_go_bin(denv, gosrc, gopath, libs, name, install_name):
+                          '-B %s"' % gen_build_id()])
+     denv.Command(bin_path, src,
+                  cmd_build(path, gosrc,
+-                           'go install -v %s %s' % (go_ldflags(), install_src)))
++                           '%s install -v %s %s' % (gobin, go_ldflags(), install_src)))
+     denv.InstallAs(install_bin, bin_path)
+ #pylint: enable=too-many-arguments
+ 
+@@ -120,7 +124,10 @@ def scons():
+     def check_go_version(context):
+         """Check GO Version"""
+         context.Display('Checking for Go compiler in $PATH... ')
+-        go_path = context.env.WhereIs(GO_COMPILER)
++        if denv.subst("$GO_PREFIX"):
++            go_path = join(denv.subst("$GO_PREFIX"), "bin", "go")
++        else:
++            go_path = context.env.WhereIs(GO_COMPILER)
+         if go_path:
+             context.Display(go_path + '\n')
+         else:
+@@ -180,7 +187,7 @@ def scons():
+     SConscript('lib/spdk/SConscript', exports='denv')
+ 
+     senv = denv.Clone()
+-    prereqs.require(senv, 'pmdk', 'spdk', 'ofi', 'hwloc')
++    prereqs.require(senv, 'pmdk', 'spdk', 'ofi', 'hwloc', 'go')
+ 
+     cgolibdirs = senv.subst("-L%s/lib/spdk -L$PREFIX/lib64 -L$SPDK_PREFIX/lib "
+                             "-L$HWLOC_PREFIX/lib -L$OFI_PREFIX/lib "
+diff --git a/scons_local/components/__init__.py b/scons_local/components/__init__.py
+index 14637d2..ad9fdab 100644
+--- a/scons_local/components/__init__.py
++++ b/scons_local/components/__init__.py
+@@ -206,6 +206,8 @@ def define_common(reqs):
+     reqs.define('crypto', libs=['crypto'], headers=['openssl/md5.h'],
+                 package='openssl-devel')
+ 
++    reqs.define('go', package='golang')
++
+     if reqs.get_env('PLATFORM') == 'darwin':
+         reqs.define('uuid', headers=['uuid/uuid.h'])
+     else:

@@ -1,0 +1,42 @@
+diff --git a/src/client/SConscript b/src/client/SConscript
+index 3c1aa9e58..90858d22d 100644
+--- a/src/client/SConscript
++++ b/src/client/SConscript
+@@ -8,7 +8,7 @@ def scons():
+     SConscript('api/SConscript')
+     SConscript('dfs/SConscript')
+     SConscript('dfuse/SConscript')
+-    SConscript('pydaos/SConscript')
++#    SConscript('pydaos/SConscript')
+     SConscript('storage_estimator/SConscript')
+ 
+ if __name__ == "SCons.Script":
+diff --git a/utils/sl/components/__init__.py b/utils/sl/components/__init__.py
+index 8f182c12b..151dd0f4e 100644
+--- a/utils/sl/components/__init__.py
++++ b/utils/sl/components/__init__.py
+@@ -280,8 +280,8 @@ def define_components(reqs):
+                 libs=['abt'],
+                 headers=['abt.h'])
+ 
+-    reqs.define('fuse', libs=['fuse3'], defines=["FUSE_USE_VERSION=35"],
+-                headers=['fuse3/fuse.h'], package='fuse3-devel')
++    reqs.define('fuse', retriever=retriever,
++                libs=['fuse3'], defines=["FUSE_USE_VERSION=35"])
+ 
+     retriever = GitRepoRetriever("https://github.com/spdk/spdk.git", True)
+     reqs.define('spdk',
+@@ -301,11 +301,10 @@ def define_components(reqs):
+         'v1.3.0/protobuf-c-1.3.0.tar.gz'
+     web_retriever = WebRetriever(url, "08804f8bdbb3d6d44c2ec9e71e47ef6f")
+     reqs.define('protobufc',
+-                retriever=web_retriever,
++                retriever=retriever,
+                 commands=['./configure --prefix=$PROTOBUFC_PREFIX '
+                           '--disable-protoc', 'make $JOBS_OPT',
+                           'make install'],
+-                libs=['protobuf-c'],
+-                headers=['protobuf-c/protobuf-c.h'])
++                libs=['protobuf-c'])
+ 
+ __all__ = ['define_components']

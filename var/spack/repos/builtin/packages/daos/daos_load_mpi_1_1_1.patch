@@ -1,0 +1,73 @@
+From 6b81cca0cc43b65b6c758be8a5d0ec4cc9c5b626 Mon Sep 17 00:00:00 2001
+From: Jerome Soumagne <jsoumagne@hdfgroup.org>
+Date: Thu, 19 Nov 2020 17:40:04 -0600
+Subject: [PATCH] Prevent MPI from being loaded
+
+---
+ SConstruct                       | 4 ++--
+ src/rdb/tests/rdb_test_runner.py | 4 ++--
+ utils/daos_build.py              | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/SConstruct b/SConstruct
+index 82aafebe3..04af3f07a 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -369,8 +369,8 @@ def scons(): # pylint: disable=too-many-locals
+         commits_file = None
+ 
+     prereqs = PreReqComponent(env, opts, commits_file)
+-    if not GetOption('help') and not GetOption('clean'):
+-        daos_build.load_mpi_path(env)
++    #if not GetOption('help') and not GetOption('clean'):
++    #    daos_build.load_mpi_path(env)
+     preload_prereqs(prereqs)
+     if prereqs.check_component('valgrind_devel'):
+         env.AppendUnique(CPPDEFINES=["DAOS_HAS_VALGRIND"])
+diff --git a/src/rdb/tests/rdb_test_runner.py b/src/rdb/tests/rdb_test_runner.py
+index c43f07451..738a19221 100755
+--- a/src/rdb/tests/rdb_test_runner.py
++++ b/src/rdb/tests/rdb_test_runner.py
+@@ -61,7 +61,7 @@ import string
+ build_root = os.path.join(sys.path[0], "../../../")
+ sys.path.insert(0, os.path.join(build_root, "utils/sl"))
+ from build_info import BuildInfo
+-from env_modules import load_mpi
++#from env_modules import load_mpi
+ from distutils.spawn import find_executable
+ 
+ urifile = "/tmp/urifile"
+@@ -238,7 +238,7 @@ if __name__ == "__main__":
+     binfo = BuildInfo(os.path.join(build_root, ".build_vars.json"));
+     debug_cmds = "-x D_LOG_MASK=DEBUG,RPC=ERR,MEM=ERR " + \
+                  "-x DD_SUBSYS=all -x DD_MASK=all"
+-    load_mpi('openmpi')
++    #load_mpi('openmpi')
+     orterun = find_executable('orterun')
+     if orterun is None:
+         raise ServerFailedToStart("No orterun installed")
+diff --git a/utils/daos_build.py b/utils/daos_build.py
+index d85867b04..6b8365705 100644
+--- a/utils/daos_build.py
++++ b/utils/daos_build.py
+@@ -1,7 +1,7 @@
+ """Common DAOS build functions"""
+ from SCons.Subst import Literal
+ from SCons.Script import GetOption
+-from env_modules import load_mpi
++#from env_modules import load_mpi
+ from distutils.spawn import find_executable
+ import os
+ 
+@@ -143,7 +143,7 @@ def configure_mpi(env, libs, required=None):
+             mpis = required
+ 
+     for mpi in mpis:
+-        load_mpi(mpi)
++        #load_mpi(mpi)
+         comp = mpi
+         if mpi == "openmpi":
+             comp = "ompi"
+-- 
+2.26.2
+

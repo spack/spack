@@ -1,0 +1,37 @@
+diff --git a/src/control/cmd/daos_admin/main.go b/src/control/cmd/daos_admin/main.go
+index aff18f6b6..46d4eae54 100644
+--- a/src/control/cmd/daos_admin/main.go
++++ b/src/control/cmd/daos_admin/main.go
+@@ -84,14 +84,14 @@ func main() {
+ 
+ 	checkParentName(log)
+ 
+-	if os.Geteuid() != 0 {
+-		exitWithError(log, errors.Errorf("%s not setuid root", binName))
+-	}
++//	if os.Geteuid() != 0 {
++//		exitWithError(log, errors.Errorf("%s not setuid root", binName))
++//	}
+ 
+ 	// hack for stuff that doesn't use geteuid() (e.g. ipmctl)
+-	if err := setuid(0); err != nil {
+-		exitWithError(log, errors.Wrap(err, "unable to setuid(0)"))
+-	}
++//	if err := setuid(0); err != nil {
++//		exitWithError(log, errors.Wrap(err, "unable to setuid(0)"))
++//	}
+ 
+ 	conn := pbin.NewStdioConn(binName, "daos_server", os.Stdin, os.Stdout)
+ 	req, err := readRequest(log, conn)
+diff --git a/src/control/lib/ipmctl/nvm.go b/src/control/lib/ipmctl/nvm.go
+index 2b72b9b2e..bdf9d4938 100644
+--- a/src/control/lib/ipmctl/nvm.go
++++ b/src/control/lib/ipmctl/nvm.go
+@@ -64,6 +64,7 @@ type NvmMgmt struct{}
+ // for each.
+ func (n *NvmMgmt) Discover() (devices []DeviceDiscovery, err error) {
+ 	var count C.uint
++	return
+ 	if err = Rc2err(
+ 		"get_number_of_devices",
+ 		C.nvm_get_number_of_devices(&count)); err != nil {
