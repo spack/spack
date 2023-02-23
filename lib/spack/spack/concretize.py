@@ -344,7 +344,7 @@ class Concretizer(object):
                     new_target_arch = spack.spec.ArchSpec((None, None, str(new_target)))
                     curr_target_arch = spack.spec.ArchSpec((None, None, str(curr_target)))
 
-                    if not new_target_arch.satisfies(curr_target_arch):
+                    if not new_target_arch.intersects(curr_target_arch):
                         # new_target is an incorrect guess based on preferences
                         # and/or default
                         valid_target_ranges = str(curr_target).split(",")

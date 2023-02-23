@@ -25,7 +25,7 @@ class ABI(object):
         return (
             not target.architecture
             or not constraint.architecture
-            or target.architecture.satisfies(constraint.architecture, strict=False)
+            or target.architecture.intersects(constraint.architecture)
         )
 
     @memoized

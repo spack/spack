@@ -364,7 +364,13 @@ class ArchSpec(object):
 
         self._target = value
 
-    def satisfies(self, other, strict=False):
+    def placeholder_satisfies(self, other):
+        return self._satisfies(other, strict=True)
+
+    def intersects(self, other):
+        return self._satisfies(other, strict=False)
+
+    def _satisfies(self, other, strict):
         """Predicate to check if this spec satisfies a constraint.
 
         Args:
@@ -481,7 +487,7 @@ class ArchSpec(object):
         """
         other = self._autospec(other)
 
-        if not other.satisfies(self):
+        if not other.intersects(self):
             raise UnsatisfiableArchitectureSpecError(other, self)
 
         constrained = False
@@ -3524,7 +3530,7 @@ class Spec(object):
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
         if self.architecture and other.architecture:
-            if not self.architecture.satisfies(other.architecture, strict=False):
+            if not self.architecture.intersects(other.architecture):
                 return False
 
         if not self.compiler_flags.intersects(other.compiler_flags):
@@ -3652,7 +3658,7 @@ class Spec(object):
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
         if self.architecture and other.architecture:
-            if not self.architecture.satisfies(other.architecture, strict=True):
+            if not self.architecture.placeholder_satisfies(other.architecture):
                 return False
         elif other.architecture and not self.architecture:
             return False
