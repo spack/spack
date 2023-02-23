@@ -22,6 +22,26 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "23.1": {
+        "Linux-aarch64": ("5b430e03752954ea62ac1c745b1735cfdaa43b2e981a9412c1465ecb0412fff6", "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_aarch64_cuda_multi.tar.gz"),
+        "Linux-ppc64le": ("81759e7c747bf4f552b75e7657301f76ecc0828b94fe860f81108c6e83e6ad2b", "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_ppc64le_cuda_multi.tar.gz"),
+        "Linux-x86_64": ("55a064415f6d4ce6a01823ee27ebd266f4fb579679871e7c1a7c054bdc18e9f5", "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_231_Linux_x86_64_cuda_multi.tar.gz")},
+    "22.11": {
+        "Linux-aarch64": ("e60e798657c33b06754d33dfd5ab3bea2882d4a9b9476102303edf2bbe3b7a95", "https://developer.download.nvidia.com/hpc-sdk/22.11/nvhpc_2022_2211_Linux_aarch64_cuda_multi.tar.gz"),
+        "Linux-ppc64le": ("ef800203cf6040b3a5df24f19944b272f62caee8362875bcb394e86dc1de2353", "https://developer.download.nvidia.com/hpc-sdk/22.11/nvhpc_2022_2211_Linux_ppc64le_cuda_multi.tar.gz"),
+        "Linux-x86_64": ("cb91b3a04368457d5cfe3c0e9c0611591fdc8076b01ea977343fe7db7fdcfa3c", "https://developer.download.nvidia.com/hpc-sdk/22.11/nvhpc_2022_2211_Linux_x86_64_cuda_multi.tar.gz")},
+    "22.9": {
+        "Linux-aarch64": ("bc4473f04b49bc9a26f08c17a72360650ddf48a3b6eefacdc525d79c8d730f30", "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_aarch64_cuda_multi.tar.gz"),
+        "Linux-ppc64le": ("9aac31d36bb09f6653544978021f5b78c272112e7748871566f7e930f5e7475b", "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_ppc64le_cuda_multi.tar.gz"),
+        "Linux-x86_64": ("aebfeb826ace3dabf9699f72390ca0340f8789a8ef6fe4032e3c7b794f073ea3", "https://developer.download.nvidia.com/hpc-sdk/22.9/nvhpc_2022_229_Linux_x86_64_cuda_multi.tar.gz")},
+    '22.7': {
+        'Linux-aarch64': ('2aae3fbfd2d0d2d09448a36166c42311368f5600c7c346f159c280b412fe924a', 'https://developer.download.nvidia.com/hpc-sdk/22.7/nvhpc_2022_227_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('6dd4fd382c22769e4fa9508714119abd7d1df3dc58c69414a14b0b0dbc34564f', 'https://developer.download.nvidia.com/hpc-sdk/22.7/nvhpc_2022_227_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('3ce1c346f8bc7e50defb41c545c8907fdc012ff60b27eb8985cf3213f19d863a', 'https://developer.download.nvidia.com/hpc-sdk/22.7/nvhpc_2022_227_Linux_x86_64_cuda_multi.tar.gz')},
+    '22.5': {
+        'Linux-aarch64': ('ceeee84e6227e973ad1beded6008d330e3790f7c4598b948fa530fedfa830a16', 'https://developer.download.nvidia.com/hpc-sdk/22.5/nvhpc_2022_225_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('54d1e45664352d0f9f85ab476dd39496dd1b290e0e1221d3bf63afb940dbe16d', 'https://developer.download.nvidia.com/hpc-sdk/22.5/nvhpc_2022_225_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('7674bcf7a77570fafee5b8299959c9e998a9a10bb27904335cf1a58b71766137', 'https://developer.download.nvidia.com/hpc-sdk/22.5/nvhpc_2022_225_Linux_x86_64_cuda_multi.tar.gz')},
     '22.3': {
         'Linux-aarch64': ('e0ea1cbb726556f6879f4b5dfe17238f8e7680c772368577945a85c0e08328f0', 'https://developer.download.nvidia.com/hpc-sdk/22.3/nvhpc_2022_223_Linux_aarch64_cuda_multi.tar.gz'),
         'Linux-ppc64le': ('5e80db6010adc85fe799dac961ae69e43fdf18d35243666c96a70ecdb80bd280', 'https://developer.download.nvidia.com/hpc-sdk/22.3/nvhpc_2022_223_Linux_ppc64le_cuda_multi.tar.gz'),
@@ -176,10 +196,10 @@ class Nvhpc(Package):
                                           'Linux_%s' % self.spec.target.family,
                                           self.version, 'comm_libs', 'mpi'))
 
-            self.spec.mpicc  = join_path(mpi_prefix.bin, 'mpicc')
+            self.spec.mpicc = join_path(mpi_prefix.bin, 'mpicc')
             self.spec.mpicxx = join_path(mpi_prefix.bin, 'mpicxx')
             self.spec.mpif77 = join_path(mpi_prefix.bin, 'mpif77')
-            self.spec.mpifc  = join_path(mpi_prefix.bin, 'mpif90')
+            self.spec.mpifc = join_path(mpi_prefix.bin, 'mpif90')
 
     @property
     def libs(self):
