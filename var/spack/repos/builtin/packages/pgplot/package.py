@@ -49,7 +49,6 @@ class Pgplot(MakefilePackage):
     depends_on("libpng", when="+png")
 
     def edit(self, spec, prefix):
-
         libs = ""
         if "+X" in spec:
             libs += " " + self.spec["libx11"].libs.ld_flags

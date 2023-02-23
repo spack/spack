@@ -215,13 +215,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         configure_args.extend(self.enable_or_disable("debug"))
 
         if "+cuda" in spec:
-            configure_args.extend(
-                [
-                    "--with-cuda",
-                    "--enable-curand",
-                    "--enable-cusparse",
-                ]
-            )
+            configure_args.extend(["--with-cuda", "--enable-curand", "--enable-cusparse"])
             cuda_arch_vals = spec.variants["cuda_arch"].value
             if cuda_arch_vals:
                 cuda_arch_sorted = list(sorted(cuda_arch_vals, reverse=True))
@@ -234,13 +228,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             else:
                 configure_args.append("--enable-cub")
         else:
-            configure_args.extend(
-                [
-                    "--without-cuda",
-                    "--disable-curand",
-                    "--disable-cusparse",
-                ]
-            )
+            configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if "@:2.20.99" in spec:
                 configure_args.append("--disable-cub")
 
@@ -264,13 +252,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 rocm_arch = rocm_arch_sorted[0]
                 configure_args.append("--with-gpu-arch={0}".format(rocm_arch))
         else:
-            configure_args.extend(
-                [
-                    "--without-hip",
-                    "--disable-rocrand",
-                    "--disable-rocsparse",
-                ]
-            )
+            configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
         if "+sycl" in spec:
             configure_args.append("--with-scyl")

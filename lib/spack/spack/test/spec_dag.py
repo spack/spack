@@ -342,9 +342,7 @@ class TestSpecDag(object):
         spec.normalize()
         spec.normalize()
 
-    def test_normalize_with_virtual_spec(
-        self,
-    ):
+    def test_normalize_with_virtual_spec(self):
         dag = Spec.from_literal(
             {
                 "mpileaks": {
@@ -484,7 +482,7 @@ class TestSpecDag(object):
                         mpich: None,
                     },
                     mpich: None,
-                },
+                }
             }
         )
 
@@ -826,7 +824,6 @@ class TestSpecDag(object):
         ].deptypes == ("build", "link", "run")
 
     def check_diamond_normalized_dag(self, spec):
-
         dag = Spec.from_literal(
             {
                 "dt-diamond": {

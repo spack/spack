@@ -57,10 +57,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            "--with-ssl={0}".format(spec.variants["ssl"].value),
-            "--without-included-regex",
-        ]
+        args = ["--with-ssl={0}".format(spec.variants["ssl"].value), "--without-included-regex"]
 
         if "+zlib" in spec:
             args.append("--with-zlib")
