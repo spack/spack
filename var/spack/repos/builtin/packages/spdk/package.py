@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package import *
+from spack import *
 
 
 class Spdk(AutotoolsPackage):
@@ -45,7 +45,12 @@ class Spdk(AutotoolsPackage):
         "virtio", default=False, description="Build vhost initiator and virtio-pci bdev modules"
     )
     variant("pmdk", default=False, description="Build persistent memory bdev")
-    variant("reduce", default=False, description="Build vbdev compression module")
+    variant(
+        "reduce",
+        when="@18.07:22.01.2",
+        default=False,
+        description="Build vbdev compression module",
+    )
     variant("rbd", default=False, description="Build Ceph RBD bdev module")
     variant(
         "rdma", default=False, description="Build RDMA transport for NVMf target and initiator"
@@ -58,7 +63,7 @@ class Spdk(AutotoolsPackage):
         description="Required to profile I/O under Intel VTune Amplifier XE",
     )
     variant("ocf", default=False, description="Build OCF library and bdev module")
-    variant("isal", default=False, description="Build with ISA-L")
+    variant("isal", when="@18.07:22.01.2", default=False, description="Build with ISA-L")
     variant("uring", default=False, description="Build I/O uring bdev")
 
     mods = (
@@ -66,27 +71,30 @@ class Spdk(AutotoolsPackage):
         "vhost",
         "virtio",
         "pmdk",
-        "reduce",
         "rbd",
         "rdma",
         "shared",
         "iscsi-initiator",
         "vtune",
         "ocf",
-        "isal",
         "uring",
     )
 
+    depends_on("dpdk@main")
     depends_on("nasm@2.12.02:", type="build")
     depends_on("fio@3.3", when="+fio")
+    depends_on("meson")
     depends_on("numactl")
     depends_on("libaio")
+    depends_on("py-pyelftools")
+    depends_on("rdma-core", when="+rdma")
 
     def configure_args(self):
         spec = self.spec
-        config_args = [
-            "--disable-tests",
-        ]
+        config_args = ["--disable-tests"]
+
+        if spec.satisfies("@18.07:22.01.2"):
+            self.mods = self.mods + ("reduce", "isal")
 
         if spec.satisfies("@21.07:"):
             config_args.append("--disable-unit-tests")
