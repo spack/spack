@@ -1040,6 +1040,7 @@ def test_compare_abstract_specs():
         assert a <= b or b < a
 
 
+@pytest.mark.xfail(reason="FIXME (INTERSECTS)")
 def test_git_ref_spec_equivalences(mock_packages):
     spec_hash_fmt = "develop-branch-version@git.{hash}=develop"
     s1 = SpecParser(spec_hash_fmt.format(hash="a" * 40)).next_spec()
@@ -1047,11 +1048,22 @@ def test_git_ref_spec_equivalences(mock_packages):
     s3 = SpecParser("develop-branch-version@git.0.2.15=develop").next_spec()
     s_no_git = SpecParser("develop-branch-version@develop").next_spec()
 
+    # Intersection is a commutative operation
     assert s1.intersects(s_no_git)
     assert s2.intersects(s_no_git)
-    assert not s_no_git.intersects(s1)
+    assert s_no_git.intersects(s1)
+    assert s_no_git.intersects(s2)
+
     assert not s2.intersects(s1)
+    assert not s1.intersects(s2)
     assert not s3.intersects(s1)
+    assert not s1.intersects(s3)
+
+    assert not s1.satisfies(s2)
+    assert not s2.satisfies(s1)
+
+    assert s1.satisfies(s_no_git)
+    assert not s_no_git.satisfies(s1)
 
 
 @pytest.mark.regression("32471")

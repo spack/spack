@@ -602,6 +602,10 @@ class GitVersion(VersionBase):
         return self.version
 
     @coerced
+    def overlaps(self, other):
+        return self.satisfies(other) or other.satisfies(self)
+
+    @coerced
     def satisfies(self, other):
         # In the case of two GitVersions we require the ref_versions
         # to satisfy one another and the versions to be an exact match.

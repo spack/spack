@@ -364,23 +364,11 @@ class ArchSpec(object):
 
         self._target = value
 
-    def satisfies(self, other):
-        return self._satisfies(other, strict=True)
-
-    def intersects(self, other):
-        return self._satisfies(other, strict=False)
-
-    def _satisfies(self, other, strict):
-        """Predicate to check if this spec satisfies a constraint.
+    def satisfies(self, other: "ArchSpec") -> bool:
+        """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
-            other (ArchSpec or str): constraint on the current instance
-            strict (bool): if ``False`` the function checks if the current
-                instance *might* eventually satisfy the constraint. If
-                ``True`` it check if the constraint is satisfied right now.
-
-        Returns:
-            True if the constraint is satisfied, False otherwise.
+            other: spec to be satisfied
         """
         other = self._autospec(other)
 
@@ -388,30 +376,46 @@ class ArchSpec(object):
         for attribute in ("platform", "os"):
             other_attribute = getattr(other, attribute)
             self_attribute = getattr(self, attribute)
-            if strict or self.concrete:
-                if other_attribute and self_attribute != other_attribute:
-                    return False
-            else:
-                if other_attribute and self_attribute and self_attribute != other_attribute:
-                    return False
+            if other_attribute and self_attribute != other_attribute:
+                return False
 
-        # Check target
-        return self.target_satisfies(other, strict=strict)
+        return self._target_satisfies(other, strict=True)
 
-    def target_satisfies(self, other, strict):
-        need_to_check = (
-            bool(other.target) if strict or self.concrete else bool(other.target and self.target)
-        )
+    def intersects(self, other: "ArchSpec") -> bool:
+        """Return True if there exists at least one concrete spec that matches both
+        self and other, otherwise False.
 
-        # If there's no need to check we are fine
+        This operation is commutative, and if two specs intersect it means that one
+        can constrain the other.
+
+        Args:
+            other: spec to be checked for compatibility
+        """
+        other = self._autospec(other)
+
+        # Check platform and os
+        for attribute in ("platform", "os"):
+            other_attribute = getattr(other, attribute)
+            self_attribute = getattr(self, attribute)
+            if other_attribute and self_attribute and self_attribute != other_attribute:
+                return False
+
+        return self._target_satisfies(other, strict=False)
+
+    def _target_satisfies(self, other, strict):
+        if strict is True:
+            need_to_check = bool(other.target)
+        else:
+            need_to_check = bool(other.target and self.target)
+
         if not need_to_check:
             return True
 
-        # self is not concrete, but other_target is there and strict=True
+        # other_target is there and strict=True
         if self.target is None:
             return False
 
-        return bool(self.target_intersection(other))
+        return bool(self._target_intersection(other))
 
     def target_constrain(self, other):
         if not other.target_satisfies(self, strict=False):
@@ -419,16 +423,18 @@ class ArchSpec(object):
 
         if self.target_concrete:
             return False
+
         elif other.target_concrete:
             self.target = other.target
             return True
 
         # Compute the intersection of every combination of ranges in the lists
-        results = self.target_intersection(other)
+        results = self._target_intersection(other)
         # Do we need to dedupe here?
         self.target = ",".join(results)
+        return True
 
-    def target_intersection(self, other):
+    def _target_intersection(self, other):
         results = []
 
         if not self.target or not other.target:
@@ -472,7 +478,7 @@ class ArchSpec(object):
                         results.append("%s:%s" % (n_min, n_max))
         return results
 
-    def constrain(self, other):
+    def constrain(self, other: "ArchSpec") -> bool:
         """Projects all architecture fields that are specified in the given
         spec onto the instance spec if they're missing from the instance
         spec.
@@ -497,7 +503,7 @@ class ArchSpec(object):
                 setattr(self, attr, ovalue)
                 constrained = True
 
-        self.target_constrain(other)
+        constrained |= self.target_constrain(other)
 
         return constrained
 
@@ -599,15 +605,31 @@ class CompilerSpec(object):
             return compiler_spec_like
         return CompilerSpec(compiler_spec_like)
 
-    def intersects(self, other):
+    def intersects(self, other: "CompilerSpec") -> bool:
+        """Return True if all concrete specs matching self also match other, otherwise False.
+
+        For compiler specs this means that the name of the compiler must be the same for
+        self and other, and that the versions ranges should intersect.
+
+        Args:
+            other: spec to be satisfied
+        """
         other = self._autospec(other)
         return self.name == other.name and self.versions.intersects(other.versions)
 
-    def satisfies(self, other):
+    def satisfies(self, other: "CompilerSpec") -> bool:
+        """Return True if all concrete specs matching self also match other, otherwise False.
+
+        For compiler specs this means that the name of the compiler must be the same for
+        self and other, and that the version range of self is a subset of that of other.
+
+        Args:
+            other: spec to be satisfied
+        """
         other = self._autospec(other)
         return self.name == other.name and self.versions.satisfies(other.versions)
 
-    def constrain(self, other):
+    def constrain(self, other: "CompilerSpec") -> bool:
         """Intersect self's versions with other.
 
         Return whether the CompilerSpec changed.
@@ -752,6 +774,7 @@ class FlagMap(lang.HashableMap):
         return all(f in self and set(self[f]) == set(other[f]) for f in other)
 
     def intersects(self, other):
+        # FIXME (INTERSECTS): this is not commutative
         if self.spec and self.spec._concrete:
             return all(f in self and set(self[f]) == set(other[f]) for f in other)
         else:
