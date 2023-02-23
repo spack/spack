@@ -907,7 +907,10 @@ class SpackSolverSetup(object):
         assert spec.name, msg
 
         if spec.versions.concrete:
-            if isinstance(spec.version, spack.version.GitVersion) and spec.version.user_supplied_reference:
+            if (
+                isinstance(spec.version, spack.version.GitVersion)
+                and spec.version.user_supplied_reference
+            ):
                 hash_ver, _ = str(spec.version).split("=")
                 constraint_version = hash_ver
             else:
@@ -2281,8 +2284,12 @@ class SpecBuilder(object):
             if pkg_name == spec.name:
                 cmd_spec = spec
         # If the command line spec defines a git version
-        if (cmd_spec and cmd_spec.versions and cmd_spec.versions.concrete and
-            isinstance(cmd_spec.version, spack.version.GitVersion)):
+        if (
+            cmd_spec
+            and cmd_spec.versions
+            and cmd_spec.versions.concrete
+            and isinstance(cmd_spec.version, spack.version.GitVersion)
+        ):
 
             asp_version_spec = spack.spec.Spec("@{0}".format(str(version)))
             if not asp_version_spec.satisfies(cmd_spec, strict=False):
