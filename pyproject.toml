@@ -113,6 +113,7 @@ namespace_packages = true
 # globally, then turn back on in spack and spack submodules
 ignore_errors = true
 ignore_missing_imports = true
+check_untyped_defs = true
 
   [[tool.mypy.overrides]]
   module = 'spack.*'
