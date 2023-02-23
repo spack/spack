@@ -575,7 +575,13 @@ class VariantMap(lang.HashableMap):
         # Set the item
         super(VariantMap, self).__setitem__(vspec.name, vspec)
 
-    def satisfies(self, other, strict=False):
+    def placeholder_satisfies(self, other):
+        return self._satisfies(other, strict=True)
+
+    def intersects(self, other):
+        return self._satisfies(other, strict=False)
+
+    def _satisfies(self, other, strict):
         """Returns True if this VariantMap is more constrained than other,
         False otherwise.
 

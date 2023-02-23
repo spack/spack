@@ -3524,7 +3524,7 @@ class Spec(object):
         var_strict = False
         if (not self.name) or (not other.name):
             var_strict = True
-        if not self.variants.satisfies(other.variants, strict=var_strict):
+        if not self.variants.intersects(other.variants):
             return False
 
         # Architecture satisfaction is currently just string equality.
@@ -3652,7 +3652,7 @@ class Spec(object):
         elif other.compiler and not self.compiler:
             return False
 
-        if not self.variants.satisfies(other.variants, strict=True):
+        if not self.variants.placeholder_satisfies(other.variants):
             return False
 
         # Architecture satisfaction is currently just string equality.
