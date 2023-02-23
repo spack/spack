@@ -69,7 +69,7 @@ spack:
     # keep the x.y.z versions in sync with the llvm versions that we install
     # and the pN version in sync with the clang-tools recipe
     - clang-tools@15.0.4
-    - nvhpc@22.11
+    - nvhpc@23.1
     - arm-forge+accept-eula
     - apptainer
     - bison
