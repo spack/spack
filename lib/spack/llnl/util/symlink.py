@@ -32,9 +32,9 @@ def symlink(real_path, link_path):
         try:
             # Try to use junctions
             _win32_junction(real_path, link_path)
-        except OSError:
+        except Exception as e:
             # If all else fails, fall back to copying files
-            shutil.copyfile(real_path, link_path)
+            shutil.copytree(real_path, link_path)
 
 
 def islink(path):
@@ -57,7 +57,7 @@ def _win32_junction(path, link):
         path = os.path.join(parent, path)
         path = os.path.abspath(path)
 
-    CreateHardLink(link, path)
+    CreateHardLink(link, path) # Hard Link is for files, junctions are for directories. This will only work for files
 
 
 @lang.memoized

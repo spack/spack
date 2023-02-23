@@ -103,7 +103,7 @@ def rename(src, dst):
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
         if os.path.exists(dst) or os.path.islink(dst):
-            os.remove(dst)
+            shutil.rmtree(dst)
     os.rename(src, dst)
 
 
