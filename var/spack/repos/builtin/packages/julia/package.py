@@ -280,6 +280,7 @@ class Julia(MakefilePackage):
             "USE_SYSTEM_LIBUNWIND:=1",
             "USE_SYSTEM_LIBUV:=1",
             "USE_SYSTEM_LIBWHICH:=1",
+            "USE_SYSTEM_LLD:=1", # @1.9:
             "USE_SYSTEM_LLVM:=1",
             "USE_SYSTEM_MBEDTLS:=1",
             "USE_SYSTEM_MPFR:=1",
