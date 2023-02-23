@@ -20,6 +20,8 @@ class Onednn(CMakePackage):
     maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("3.0", sha256="b93ac6d12651c060e65086396d85191dabecfbc01f30eb1f139c6dd56bf6e34c")
+    version("2.7.3", sha256="a50993aa6265b799b040fe745e0010502f9f7103cc53a9525d59646aef006633")
     version("2.5.2", sha256="11d50235afa03571dc70bb6d96a98bfb5d9b53e8c00cc2bfbde78588bd01f6a3")
     version("2.1-rc", sha256="13d293e7368a8fdd8dd3c11c73352cf5f564398658dd027ce0acde947440b4cb")
     version("2.0", sha256="922b42c3ea7a7122a77c61568dc4512aa8130c264c0489283c989919d1f59a6d")
@@ -85,12 +87,14 @@ class Onednn(CMakePackage):
         values=("ocl", "none"),
         multi=False,
     )
+    variant("acl", default=False, description="Use Arm Compute Library", when="target=aarch64:")
 
     # https://github.com/oneapi-src/oneDNN#requirements-for-building-from-source
     depends_on("cmake@2.8.11:", type="build")
     depends_on("tbb@2017:", when="cpu_runtime=tbb")
     depends_on("llvm-openmp", when="%apple-clang cpu_runtime=omp")
     depends_on("opencl@1.2:", when="gpu_runtime=ocl")
+    depends_on("armcomputelibrary", when="+acl")
 
     def cmake_args(self):
         args = [
@@ -125,4 +129,11 @@ class Onednn(CMakePackage):
         if self.spec.satisfies("gpu_runtime=ocl"):
             args.append("-DOPENCLROOT=" + self.spec["opencl"].prefix)
 
+        if self.spec.satisfies("+acl"):
+            args.append("-DDNNL_AARCH64_USE_ACL=1")
+
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+acl"):
+            env.set("ACL_ROOT_DIR", self.spec["armcomputelibrary"].prefix)
