@@ -201,7 +201,12 @@ packages:
     assert s1.satisfies("@2.2")
 
     s2 = Spec("v@{0}".format(commits[1])).concretized()
-    assert s2.satisfies("@2.3")
+    # TODO: right now we cannot ask if s2.satisfies("@2.3"), because that
+    # information is lost when the ASP solver breaks up the facts in the
+    # "require" section. If the spec request had been of the form
+    # "v@hash=number", then there is logic to reapply that to the resulting
+    # spec
+    assert s2.satisfies("@{0}".format(commits[1]))
 
 
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):

@@ -2273,8 +2273,24 @@ class SpecBuilder(object):
 
         self._specs[pkg].update_variant_validate(name, value)
 
-    def version(self, pkg, version):
-        self._specs[pkg].versions = spack.version.ver([version])
+    def version(self, pkg_name, version):
+        version = spack.version.ver([version])
+
+        cmd_spec = None
+        for spec in self._command_line_specs:
+            if pkg_name == spec.name:
+                cmd_spec = spec
+        # If the command line spec defines a git version
+        if (cmd_spec and cmd_spec.versions and cmd_spec.versions.concrete and
+            isinstance(cmd_spec.version, spack.version.GitVersion)):
+
+            asp_version_spec = spack.spec.Spec("@{0}".format(str(version)))
+            if not asp_version_spec.satisfies(cmd_spec, strict=False):
+                raise spack.error.SpackError("Internal error")
+
+            version = spack.version.ver([str(cmd_spec.version)])
+
+        self._specs[pkg_name].versions = version
 
     def node_compiler(self, pkg, compiler):
         self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
