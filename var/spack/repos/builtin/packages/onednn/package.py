@@ -130,8 +130,7 @@ class Onednn(CMakePackage):
         if self.spec.satisfies("gpu_runtime=ocl"):
             args.append("-DOPENCLROOT=" + self.spec["opencl"].prefix)
 
-        if self.spec.satisfies("+acl"):
-            args.append("-DDNNL_AARCH64_USE_ACL=1")
+        args.append(self.define_from_variant("DNNL_AARCH64_USE_ACL", "acl"))
 
         return args
 
