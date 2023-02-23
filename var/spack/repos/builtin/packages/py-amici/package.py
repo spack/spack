@@ -18,11 +18,11 @@ class PyAmici(PythonPackage):
     variant("boost", default=False, description="Enable boost support")
     variant("hdf5", default=False, description="Enable HDF5 support")
 
-    depends_on("py-setuptools@48:", type="build")
+    depends_on("py-setuptools@48:", type=("build", "run"))
 
     depends_on("blas", type=("build", "run"))
     depends_on("boost", when="+boost", type=("build", "run"))
-    depends_on("hdf5", type=("build", "run"))
+    depends_on("hdf5", when="+hdf5", type=("build", "run"))
     depends_on("swig@3.0:", type=("build", "run"))
 
     depends_on("python@3.8:", type=("build", "run"))
