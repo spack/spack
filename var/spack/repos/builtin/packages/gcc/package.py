@@ -575,7 +575,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "languages=d": "d",
             "languages=fortran": "fortran",
         }.items():
-            if spec.satisfies(constraint, strict=True):
+            if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
                 assert key in compilers, msg.format(key, spec)
 

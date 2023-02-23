@@ -1652,7 +1652,7 @@ class SpackSolverSetup(object):
 
                 known_versions = self.possible_versions[dep.name]
                 if not isinstance(dep.version, spack.version.GitVersion) and any(
-                    v.intersects(dep.version) for v in known_versions
+                    v.satisfies(dep.version) for v in known_versions
                 ):
                     # some version we know about satisfies this constraint, so we
                     # should use that one. e.g, if the user asks for qt@5 and we

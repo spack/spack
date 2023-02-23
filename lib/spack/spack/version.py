@@ -349,7 +349,7 @@ class VersionBase(object):
 
     @coerced
     def intersects(self, other: "VersionBase") -> bool:
-        """Return True it self intersects with other, False otherwise.
+        """Return True if self intersects with other, False otherwise.
 
         Two versions intersect if one can be constrained by the other. For instance
         @4.7 and @4.7.3 intersect (the intersection being @4.7.3).
