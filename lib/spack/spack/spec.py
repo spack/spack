@@ -742,8 +742,11 @@ class FlagMap(lang.HashableMap):
         super(FlagMap, self).__init__()
         self.spec = spec
 
-    def satisfies(self, other, strict=False):
-        if strict or (self.spec and self.spec._concrete):
+    def placeholder_satisfies(self, other):
+        return all(f in self and set(self[f]) == set(other[f]) for f in other)
+
+    def intersects(self, other):
+        if self.spec and self.spec._concrete:
             return all(f in self and set(self[f]) == set(other[f]) for f in other)
         else:
             if not all(
@@ -3524,7 +3527,7 @@ class Spec(object):
             if not self.architecture.satisfies(other.architecture, strict=False):
                 return False
 
-        if not self.compiler_flags.satisfies(other.compiler_flags, strict=False):
+        if not self.compiler_flags.intersects(other.compiler_flags):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
@@ -3654,7 +3657,7 @@ class Spec(object):
         elif other.architecture and not self.architecture:
             return False
 
-        if not self.compiler_flags.satisfies(other.compiler_flags, strict=True):
+        if not self.compiler_flags.placeholder_satisfies(other.compiler_flags):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
