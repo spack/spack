@@ -15,6 +15,7 @@ is_windows = _platform == "win32"
 
 if is_windows:
     from win32file import CreateHardLink
+    from pywintypes import error
 
 
 def symlink(real_path, link_path):
@@ -32,7 +33,7 @@ def symlink(real_path, link_path):
         try:
             # Try to use junctions
             _win32_junction(real_path, link_path)
-        except Exception as e:
+        except error:
             # If all else fails, fall back to copying files
             shutil.copytree(real_path, link_path)
 
@@ -57,7 +58,7 @@ def _win32_junction(path, link):
         path = os.path.join(parent, path)
         path = os.path.abspath(path)
 
-    CreateHardLink(link, path) # Hard Link is for files, junctions are for directories. This will only work for files
+    CreateHardLink(link, path)
 
 
 @lang.memoized
