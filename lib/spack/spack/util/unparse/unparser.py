@@ -413,6 +413,7 @@ class Unparser:
                 self.dispatch(node.finalbody)
 
     def visit_TryExcept(self, node):
+        # this construct only exists in Python < 3.3
         self.fill("try")
         with self.block():
             self.dispatch(node.body)
@@ -425,7 +426,8 @@ class Unparser:
                 self.dispatch(node.orelse)
 
     def visit_TryFinally(self, node):
-        if len(node.body) == 1 and isinstance(node.body[0], ast.TryExcept):
+        # this construct only exists in Python < 3.3
+        if len(node.body) == 1 and isinstance(node.body[0], ast.TryExcept):  # type: ignore
             # try-except-finally
             self.dispatch(node.body)
         else:
