@@ -216,10 +216,13 @@ class TestSpecList(object):
         assert libdwarf_spec in speclist.specs[0]
 
     def test_spec_list_broadcast(self, mock_packages):
-        matrix = {"matrix": [["mpileaks"], ["^callpath"]], "broadcast": [["%gcc", "%clang"]]}
+        matrix = {
+            "matrix": [["mpileaks"], ["^callpath"]],
+            "broadcast": [["%gcc", "%clang"], ["+debug", "~debug"]]}
         speclist = SpecList("specs", [matrix])
 
-        assert len(speclist) == 2
+        assert len(speclist) == 4
         for spec in speclist:
             for node in spec.traverse():
                 assert node.compiler.name == spec.compiler.name
+                assert node.variants["debug"].value == spec.variants["debug"].value
