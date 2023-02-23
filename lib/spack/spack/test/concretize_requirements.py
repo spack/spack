@@ -200,9 +200,8 @@ packages:
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
 
-    # TODO: this fails now and it shouldn't
-    # s2 = Spec("v@{0}".format(commits[1])).concretized()
-    # assert s2.satisfies("@2.3")
+    s2 = Spec("v@{0}".format(commits[1])).concretized()
+    assert s2.satisfies("@2.3")
 
 
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):
