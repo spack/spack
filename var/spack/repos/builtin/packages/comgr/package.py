@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import re
 
 from spack.package import *
@@ -113,23 +112,6 @@ class Comgr(CMakePackage):
     # Disable the hip compile tests.  Spack should not be using
     # /opt/rocm, and this breaks the build when /opt/rocm exists.
     patch("hip-tests.patch", when="@:4.2.0")
-
-    def check(self):
-        test_dir = join_path(self.build_directory, "test")
-
-        # find all test executables
-        test_dir_files = os.listdir(test_dir)
-        tests_arr = []
-        for dir_file in test_dir_files:
-            if dir_file.endswith("test"):
-                tests_arr.append(dir_file)
-
-        for test in tests_arr:
-            exe = join_path(test_dir, test)
-            try:
-                self.run_test(exe)
-            except ProcessError:
-                print("failed test")
 
     depends_on("cmake@3.2.0:", type="build", when="@:3.8")
     depends_on("cmake@3.13.4:", type="build", when="@3.9.0:")
