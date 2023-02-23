@@ -24,6 +24,7 @@ class IsaL(AutotoolsPackage):
     homepage = "https://github.com/intel/isa-l"
     url = "https://github.com/intel/isa-l/archive/v2.25.0.tar.gz"
     git = "https://github.com/intel/isa-l.git"
+    maintainers("hyoklee")
 
     version("master", branch="master")
 
