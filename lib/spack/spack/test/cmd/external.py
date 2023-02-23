@@ -383,13 +383,7 @@ def test_new_entries_are_reported_correctly(
     assert "No new external packages detected" in output
 
 
-@pytest.mark.parametrize(
-    "command_args",
-    [
-        ("-t", "build-tools"),
-        ("-t", "build-tools", "cmake"),
-    ],
-)
+@pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
 def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake cmake
     cmake_exe = mock_executable("cmake", output="echo cmake version 3.19.1")

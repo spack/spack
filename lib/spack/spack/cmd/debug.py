@@ -96,8 +96,5 @@ def report(args):
 
 
 def debug(parser, args):
-    action = {
-        "create-db-tarball": create_db_tarball,
-        "report": report,
-    }
+    action = {"create-db-tarball": create_db_tarball, "report": report}
     action[args.debug_command](args)

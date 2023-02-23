@@ -14,7 +14,6 @@ class AttributesFoo(BundlePackage):
     provides("baz")
 
     def install(self, spec, prefix):
-
         lib_suffix = ".so"
         if sys.platform == "win32":
             lib_suffix = ".dll"

@@ -23,14 +23,7 @@ class Hdf5(CMakePackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git = "https://github.com/HDFGroup/hdf5.git"
-    maintainers(
-        "lrknox",
-        "brtnfld",
-        "byrnHDF",
-        "gheber",
-        "hyoklee",
-        "lkurz",
-    )
+    maintainers("lrknox", "brtnfld", "byrnHDF", "gheber", "hyoklee", "lkurz")
 
     tags = ["e4s", "windows"]
     executables = ["^h5cc$", "^h5pcc$"]
@@ -442,11 +435,7 @@ class Hdf5(CMakePackage):
                 "libhdf5_java",
                 "libhdf5",
             ],
-            ("cxx", "hl"): [
-                "libhdf5_hl_cpp",
-                "libhdf5_hl",
-                "libhdf5",
-            ],
+            ("cxx", "hl"): ["libhdf5_hl_cpp", "libhdf5_hl", "libhdf5"],
             ("fortran", "hl"): [
                 "libhdf5_hl_fortran",
                 "libhdf5_hl_f90cstub",
@@ -455,29 +444,11 @@ class Hdf5(CMakePackage):
                 "libhdf5_f90cstub",
                 "libhdf5",
             ],
-            ("hl",): [
-                "libhdf5_hl",
-                "libhdf5",
-            ],
-            ("cxx", "fortran"): [
-                "libhdf5_fortran",
-                "libhdf5_f90cstub",
-                "libhdf5_cpp",
-                "libhdf5",
-            ],
-            ("cxx",): [
-                "libhdf5_cpp",
-                "libhdf5",
-            ],
-            ("fortran",): [
-                "libhdf5_fortran",
-                "libhdf5_f90cstub",
-                "libhdf5",
-            ],
-            ("java",): [
-                "libhdf5_java",
-                "libhdf5",
-            ],
+            ("hl",): ["libhdf5_hl", "libhdf5"],
+            ("cxx", "fortran"): ["libhdf5_fortran", "libhdf5_f90cstub", "libhdf5_cpp", "libhdf5"],
+            ("cxx",): ["libhdf5_cpp", "libhdf5"],
+            ("fortran",): ["libhdf5_fortran", "libhdf5_f90cstub", "libhdf5"],
+            ("java",): ["libhdf5_java", "libhdf5"],
         }
 
         # Turn the query into the appropriate key

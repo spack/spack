@@ -28,12 +28,7 @@ spec_list_schema = {
                 "properties": {
                     "matrix": {
                         "type": "array",
-                        "items": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            },
-                        },
+                        "items": {"type": "array", "items": {"type": "string"}},
                     },
                     "exclude": {"type": "array", "items": {"type": "string"}},
                 },
@@ -61,11 +56,7 @@ schema = {
                 spack.schema.merged.properties,
                 # extra environment schema properties
                 {
-                    "include": {
-                        "type": "array",
-                        "default": [],
-                        "items": {"type": "string"},
-                    },
+                    "include": {"type": "array", "default": [], "items": {"type": "string"}},
                     "develop": {
                         "type": "object",
                         "default": {},
@@ -78,7 +69,7 @@ schema = {
                                     "spec": {"type": "string"},
                                     "path": {"type": "string"},
                                 },
-                            },
+                            }
                         },
                     },
                     "definitions": {

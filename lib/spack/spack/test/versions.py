@@ -16,14 +16,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.package_base
 import spack.spec
-from spack.version import (
-    GitVersion,
-    Version,
-    VersionBase,
-    VersionList,
-    VersionRange,
-    ver,
-)
+from spack.version import GitVersion, Version, VersionBase, VersionList, VersionRange, ver
 
 
 def assert_ver_lt(a, b):

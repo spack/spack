@@ -18,7 +18,7 @@ class Barrier:
 
     Python 2 doesn't have multiprocessing barriers so we implement this.
 
-    See http://greenteapress.com/semaphores/downey08semaphores.pdf, p. 41.
+    See https://greenteapress.com/semaphores/LittleBookOfSemaphores.pdf, p. 41.
     """
 
     def __init__(self, n, timeout=None):

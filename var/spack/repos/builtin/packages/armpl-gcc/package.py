@@ -208,7 +208,6 @@ class ArmplGcc(Package):
 
     @property
     def blas_libs(self):
-
         armpl_prefix = get_armpl_prefix(self.spec)
 
         libname = "libarmpl" + self.lib_suffix

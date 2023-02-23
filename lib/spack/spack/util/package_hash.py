@@ -309,10 +309,7 @@ def canonical_source(spec, filter_multimethods=True, source=None):
             AST if they are known statically to be unused. Supply False to disable.
         source (str): Optionally provide a string to read python code from.
     """
-    return unparse(
-        package_ast(spec, filter_multimethods, source=source),
-        py_ver_consistent=True,
-    )
+    return unparse(package_ast(spec, filter_multimethods, source=source), py_ver_consistent=True)
 
 
 def package_hash(spec, source=None):

@@ -84,7 +84,6 @@ class FakeWebResponder(object):
         return self._resp_code
 
     def read(self, length=None):
-
         if len(self._content) <= 0:
             return None
 
@@ -103,11 +102,7 @@ class FakeWebResponder(object):
 
 
 def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
-    os.environ.update(
-        {
-            "GITLAB_PRIVATE_TOKEN": "faketoken",
-        }
-    )
+    os.environ.update({"GITLAB_PRIVATE_TOKEN": "faketoken"})
 
     url = "https://www.nosuchurlexists.itsfake/artifacts.zip"
     working_dir = os.path.join(tmpdir.strpath, "repro")
@@ -234,24 +229,14 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     assert "Unable to merge {0}".format(c1) in err
 
 
-@pytest.mark.parametrize(
-    "obj, proto",
-    [
-        ({}, []),
-    ],
-)
+@pytest.mark.parametrize("obj, proto", [({}, [])])
 def test_ci_opt_argument_checking(obj, proto):
     """Check that matches() and subkeys() return False when `proto` is not a dict."""
     assert not ci_opt.matches(obj, proto)
     assert not ci_opt.subkeys(obj, proto)
 
 
-@pytest.mark.parametrize(
-    "yaml",
-    [
-        {"extends": 1},
-    ],
-)
+@pytest.mark.parametrize("yaml", [{"extends": 1}])
 def test_ci_opt_add_extends_non_sequence(yaml):
     """Check that add_extends() exits if 'extends' is not a sequence."""
     yaml_copy = yaml.copy()
@@ -263,10 +248,7 @@ def test_ci_workarounds():
     fake_root_spec = "x" * 544
     fake_spack_ref = "x" * 40
 
-    common_variables = {
-        "SPACK_COMPILER_ACTION": "NONE",
-        "SPACK_IS_PR_PIPELINE": "False",
-    }
+    common_variables = {"SPACK_COMPILER_ACTION": "NONE", "SPACK_IS_PR_PIPELINE": "False"}
 
     common_before_script = [
         'git clone "https://github.com/spack/spack"',
@@ -307,7 +289,6 @@ def test_ci_workarounds():
         return {name: result}
 
     def make_rebuild_index_job(use_artifact_buildcache, optimize, use_dependencies):
-
         result = {
             "stage": "stage-rebuild-index",
             "script": "spack buildcache update-index --mirror-url s3://mirror",
