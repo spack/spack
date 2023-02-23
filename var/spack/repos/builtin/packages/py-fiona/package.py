@@ -59,4 +59,5 @@ class PyFiona(PythonPackage):
     # Historical dependencies
     depends_on("py-six@1.7:", when="@:1.8", type=("build", "run"))
 
+    # error: implicit declaration of function 'OSRFixup' is invalid in C99
     conflicts("%apple-clang@12:", when="@:1.8.9")
