@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install trove-pdsyev
-#
-# You can edit this file again by typing:
-#
-#     spack edit trove-pdsyev
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 import os
 
@@ -34,12 +17,13 @@ class TrovePdsyev(MakefilePackage):
     version("v1.0.0", branch="main")
     # version("v1.0.0", tag="v1.0.0")
 
+    variant("ipp", default=True, description="enable use of intel optimized headers")
+
     executables = [r"^diag_generic.x$"]
 
-    # depends_on("mpi")
-    # depends_on("mkl")
-    # depends_on("scalapack")
-    depends_on("ipp")
+    depends_on("mpi")
+    depends_on("mkl")
+    depends_on("ipp", when="+ipp")
 
     parallel=False
 
@@ -58,14 +42,14 @@ class TrovePdsyev(MakefilePackage):
 
         makefile = FileFilter("Makefile")
         makefile.filter(r'PLAT\s*=.*', 'PLAT = _generic')
-        makefile.filter(r'FOR\s*= .*', 'ifort')
+        makefile.filter(r'FOR\s*= .*', 'FOR = mpiifort')
 
         if "~ipp" in spec:
-            makefile.filter(r'(.*)-use-intel-optimized-headers(.*)', r'\1 \2')
+            makefile.filter(r'(.*) -use-intel-optimized-headers (.*)', r'\1 \2')
 
     def build(self, spec, prefix):
 
-        make('')
+        make()
 
     def install(self, spec, prefix):
 
