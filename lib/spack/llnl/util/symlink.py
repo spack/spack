@@ -72,6 +72,7 @@ def _win32_can_symlink():
 
     import llnl.util.filesystem as fs
 
+    fs.mkdirp(dpath)
     fs.touchp(fpath)
 
     try:
