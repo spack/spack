@@ -3,12 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import contextlib
 import errno
 import os
 import socket
 import sys
 import time
 from datetime import datetime
+from typing import Callable, Optional, Union
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
@@ -546,11 +548,11 @@ class Lock(object):
         else:
             raise LockUpgradeError(self.path)
 
-    def release_read(self, release_fn=None):
+    def release_read(self, release_fn: Callable = None):
         """Releases a read lock.
 
         Arguments:
-            release_fn (typing.Callable): function to call *before* the last recursive
+            release_fn (Callable): function to call *before* the last recursive
                 lock (read or write) is released.
 
         If the last recursive lock will be released, then this will call
@@ -586,7 +588,7 @@ class Lock(object):
         """Releases a write lock.
 
         Arguments:
-            release_fn (typing.Callable): function to call before the last recursive
+            release_fn (Callable): function to call before the last recursive
                 write is released.
 
         If the last recursive *write* lock will be released, then this
@@ -684,18 +686,6 @@ class Lock(object):
 class LockTransaction(object):
     """Simple nested transaction context manager that uses a file lock.
 
-    Arguments:
-        lock (Lock): underlying lock for this transaction to be accquired on
-            enter and released on exit
-        acquire (typing.Callable or contextlib.contextmanager): function to be called
-            after lock is acquired, or contextmanager to enter after acquire and leave
-            before release.
-        release (typing.Callable): function to be called before release. If
-            ``acquire`` is a contextmanager, this will be called *after*
-            exiting the nexted context and before the lock is released.
-        timeout (float): number of seconds to set for the timeout when
-            accquiring the lock (default no timeout)
-
     If the ``acquire_fn`` returns a value, it is used as the return value for
     ``__enter__``, allowing it to be passed as the ``as`` argument of a
     ``with`` statement.
@@ -709,7 +699,27 @@ class LockTransaction(object):
 
     """
 
-    def __init__(self, lock, acquire=None, release=None, timeout=None):
+    def __init__(
+        self,
+        lock: Lock,
+        acquire: Optional[Union[Callable, contextlib.contextmanager]] = None,
+        release: Optional[Callable] = None,
+        timeout: Optional[float] = None,
+    ):
+        """
+        Arguments:
+            lock: underlying lock for this transaction to be accquired on
+                enter and released on exit
+            acquire: function to be called
+                after lock is acquired, or contextmanager to enter after acquire and leave
+                before release.
+            release: function to be called before release. If
+                ``acquire`` is a contextmanager, this will be called *after*
+                exiting the nexted context and before the lock is released.
+            timeout: number of seconds to set for the timeout when
+                accquiring the lock (default no timeout)
+        """
+
         self._lock = lock
         self._timeout = timeout
         self._acquire_fn = acquire
