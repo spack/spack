@@ -48,7 +48,7 @@ class Daos(SConsPackage):
     depends_on("hwloc@master")
     depends_on("go", type="build")
     depends_on("isa-l")
-    depends_on("isa-l_crypto", when="@1.1.0:")
+    depends_on("isa-l-crypto", when="@1.1.0:")
     depends_on("libfabric", when="@0.7.0:")
     depends_on("libuuid")
     depends_on("libunwind")
