@@ -1213,17 +1213,6 @@ def _build_tarball(
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
 
-    # remove all __pycache__ directories and compiled Python files (*.pyc)
-    # to avoid problems like ValueError:bad marshal data
-    cmd = "rm -fr `find {} -type d -name __pycache__` 2>/dev/null"
-    status = os.system(cmd)
-    if status:
-        raise Exception("Failed to execute '{}'".format(cmd))
-    cmd = "rm -fr `find {} -type f -name *.pyc` 2>/dev/null"
-    status = os.system(cmd)
-    if status:
-        raise Exception("Failed to execute '{}'".format(cmd))
-
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if relative:
@@ -1373,6 +1362,7 @@ def push(specs, push_url, specs_kwargs=None, **kwargs):
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
     for node in nodes:
+        tty.msg('Creating buildcache for "{0}"'.format(node.format()))
         try:
             _build_tarball(node, push_url, **kwargs)
         except NoOverwriteException as e:
