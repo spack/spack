@@ -10,6 +10,7 @@ import spack.error
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
     ArchSpec,
+    CompilerSpec,
     Spec,
     SpecFormatSigilError,
     SpecFormatStringError,
@@ -1347,6 +1348,11 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (ArchSpec, "darwin-None-None", "linux-None-None", (False, False, False)),
         (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu20.04-None", (True, True, True)),
         (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu22.04-None", (False, False, False)),
+        # Compiler
+        (CompilerSpec, "gcc", "clang", (False, False, False)),
+        (CompilerSpec, "gcc", "gcc@5", (True, False, True)),
+        (CompilerSpec, "gcc@5", "gcc@5.3", (True, False, True)),
+        (CompilerSpec, "gcc@5", "gcc@5-tag", (True, False, True)),
     ],
 )
 def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
@@ -1384,6 +1390,9 @@ def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
             False,
             "None-ubuntu20.04-nocona,haswell",
         ),
+        # Compiler
+        (CompilerSpec, "gcc@5", "gcc@5-tag", True,  "gcc@5-tag"),
+        (CompilerSpec, "gcc@5", "gcc@5", False,  "gcc@5")
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
