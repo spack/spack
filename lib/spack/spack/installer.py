@@ -280,16 +280,15 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
-def _print_install_test_log(pkg: "spack.package_base.PackageBase", verbose: bool):
+def _print_install_test_log(pkg: "spack.package_base.PackageBase"):
     """Output install test log file information.
 
     Args:
         pkg: package of interest
-        verbose: True if the test log contents are to be printed
     """
 
-    if not pkg.run_tests:
-        # The tests were not run
+    if not pkg.run_tests or not pkg.test_failures:
+        # The tests were not run or there were no test failures
         return
 
     log = pkg.install_test_install_log_path
@@ -299,15 +298,7 @@ def _print_install_test_log(pkg: "spack.package_base.PackageBase", verbose: bool
             tty.debug("There is no test log file (staged or installed)")
             return
 
-    if verbose:
-        with open(log, "r") as f:
-            for ln in f.readlines():
-                if ln.startswith("==>"):
-                    ln = colorize("@*g{==>}") + ln[3:]
-                print(ln.strip("\n"))
-
-    if pkg.test_failures:
-        print("\nSee test results at:\n  {0}".format(log))
+    print("\nSee test results at:\n  {0}".format(log))
 
 
 def _print_timer(pre, pkg_id, timer):
@@ -1976,7 +1967,7 @@ class BuildProcessInstaller(object):
             with open(self.pkg.times_log_path, "w") as timelog:
                 self.timer.write_json(timelog)
 
-        _print_install_test_log(self.pkg, self.verbose)
+        _print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 

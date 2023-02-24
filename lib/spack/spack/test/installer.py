@@ -1336,16 +1336,16 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
 
 
 @pytest.mark.parametrize(
-    "installed,staged,verbose,fails",
+    "installed,staged,fails",
     [
-        (False, False, False, False),  # no output file available
-        (False, True, False, True),  # staged log file, don't print contents
-        (False, True, True, False),  # staged log file, print contents
-        (True, False, True, False),  # install log file, print contents
+        (False, False, True),  # no output file available
+        (False, True, True),  # staged log file, print path
+        (False, True, False),  # staged log file, don't print path
+        (True, False, True),  # install log file, print path
     ],
 )
 def test_print_install_test_log(
-    tmpdir, mock_packages, install_mockery, capsys, monkeypatch, installed, staged, verbose, fails
+    tmpdir, mock_packages, install_mockery, capsys, monkeypatch, installed, staged, fails
 ):
     pkg = "py-test-callback"
     content = """
@@ -1371,24 +1371,20 @@ def test_print_install_test_log(
             f.write("{0}\n".format(content))
 
     expected = []
-    if verbose:
-        expected.extend(["Testing package {0}".format(pkg), "RUN-TESTS: install-time tests"])
-
+    s = spack.spec.Spec(pkg).concretized()
     if installed or staged:
+        write_outputs(s.package)
         if fails:
             expected.append("See test results")
     else:
         monkeypatch.setattr(tty, "_debug", 1)
         expected.append("There is no test log file")
 
-    s = spack.spec.Spec(pkg).concretized()
-    write_outputs(s.package)
-
     s.package.run_tests = True
     if fails:
         s.package.test_failures = [(AssertionError("Fake failure"), "Fake test failure")]
-    inst._print_install_test_log(s.package, verbose)
+    inst._print_install_test_log(s.package)
     captured = str(capsys.readouterr())
 
     for e in expected:
-        assert e in captured, "Expected {0} to be printed".format(e)
+        assert e in captured, "Expected '{0}' to be printed".format(e)

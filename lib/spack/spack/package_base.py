@@ -33,6 +33,7 @@ import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
+from llnl.util.tty.color import colorize
 
 import spack.compilers
 import spack.config
@@ -1885,10 +1886,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_id = self.spec.format("{name}-{version}-{hash:7}")
 
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+        fsys.set_install_permissions(self.test_log_file)
 
         with tty.log.log_output(self.test_log_file, verbose) as logger:
-            with logger.force_echo():
-                tty.info("Testing package {0}".format(pkg_id), format="*g")
+            tty.msg("Testing package " + colorize("@*g{0}".format(pkg_id)))
 
             # use debug print levels for log file to record commands
             old_debug = tty.is_debug()
@@ -1914,8 +1915,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 return
 
         kwargs = {"dirty": dirty, "fake": False, "context": "test", "externals": externals}
-        if tty.is_verbose():
-            kwargs["verbose"] = True
+        kwargs["verbose"] = tty.is_verbose()
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
@@ -2020,7 +2020,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         options = [options] if isinstance(options, str) else options
 
         if purpose:
-            tty.msg(purpose)
+            tty.info(purpose, format="g")
         else:
             tty.debug("test: {0}: expect command status in {1}".format(runner.name, status))
 
@@ -2429,9 +2429,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return
 
         fail_fast = spack.config.get("config:fail_fast", False)
-        with builder.pkg._setup_test(verbose=False, externals=False) as logger:
+        verbose = tty.is_verbose()
+        with builder.pkg._setup_test(verbose=verbose, externals=False) as logger:
             # Report running each of the methods in the build log
-            print_test_message(logger, "Running {0}-time tests".format(callback_type), True)
+            print_test_message(logger, "Running {0}-time tests".format(callback_type), verbose)
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
@@ -2443,20 +2444,20 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     fn = getattr(builder, name)
 
                     msg = "RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name)
-                    print_test_message(logger, msg, True)
+                    print_test_message(logger, msg, verbose)
 
                     fn()
 
                 except AttributeError as e:
                     msg = "RUN-TESTS: method not implemented [{0}]".format(name)
-                    print_test_message(logger, msg, True)
+                    print_test_message(logger, msg, verbose)
 
                     builder.pkg.test_failures.append((e, msg))
                     if fail_fast:
                         break
 
             if "test" in method_names:
-                print_test_message(logger, "Completed testing", True)
+                print_test_message(logger, "Completed testing", verbose)
 
             # Raise any collected failures here
             if builder.pkg.test_failures:
@@ -2484,9 +2485,9 @@ def has_test_method(pkg):
 def print_test_message(logger, msg, verbose):
     if verbose:
         with logger.force_echo():
-            tty.info(msg, format="*g")
+            tty.info(msg, format="g")
     else:
-        tty.info(msg, format="*g")
+        tty.info(msg, format="g")
 
 
 def _copy_cached_test_files(pkg, spec):
@@ -2509,7 +2510,7 @@ def _copy_cached_test_files(pkg, spec):
 
 
 def test_process(pkg, kwargs):
-    verbose = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", True)
     externals = kwargs.get("externals", False)
 
     with pkg._setup_test(verbose, externals) as logger:
