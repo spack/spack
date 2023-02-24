@@ -1557,7 +1557,7 @@ class Spec(object):
 
     def _add_dependency(self, spec: "Spec", *, deptypes: dp.DependencyArgument):
         """Called by the parser to add another spec as a dependency."""
-        if spec.name not in self._dependencies:
+        if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(spec, deptypes=deptypes)
             return
 
@@ -4350,7 +4350,7 @@ class Spec(object):
         return self.format(*args, **kwargs)
 
     def __str__(self):
-        sorted_nodes = [self] + sorted(self.traverse(root=False), key=lambda x: x.name)
+        sorted_nodes = [self] + sorted(self.traverse(root=False), key=lambda x: x.name or x.abstract_hash)
         spec_str = " ^".join(d.format() for d in sorted_nodes)
         return spec_str.strip()
 
