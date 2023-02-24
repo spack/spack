@@ -209,7 +209,7 @@ def _expand_matrix_constraints(matrix_config):
             spack.variant.substitute_abstract_variants(test_spec)
         except spack.variant.UnknownVariantError:
             pass
-        if any(test_spec.intersects(x) for x in excludes):
+        if any(test_spec.satisfies(x) for x in excludes):
             continue
 
         if sigil:

@@ -638,8 +638,7 @@ class TestVariantMapTest(object):
         b["foobar"] = SingleValuedVariant("foobar", "fee")
         b["shared"] = BoolValuedVariant("shared", True)
 
-        # FIXME (INTERSECTS): this is an issue with symmetry
-        assert not a.intersects(b)
+        assert a.intersects(b)
         assert b.intersects(a)
 
         assert not a.satisfies(b)

@@ -349,6 +349,9 @@ class AbstractVariant(object):
         # (`foo=bar` will never satisfy `baz=bar`)
         return other.name == self.name
 
+    def intersects(self, other):
+        return self.compatible(other)
+
     @implicit_variant_conversion
     def compatible(self, other):
         """Returns True if self and other are compatible, False otherwise.
@@ -576,34 +579,10 @@ class VariantMap(lang.HashableMap):
         super(VariantMap, self).__setitem__(vspec.name, vspec)
 
     def satisfies(self, other):
-        return self._satisfies(other, strict=True)
+        return all(k in self and self[k].satisfies(other[k]) for k in other)
 
     def intersects(self, other):
-        return self._satisfies(other, strict=False)
-
-    def _satisfies(self, other, strict):
-        """Returns True if this VariantMap is more constrained than other,
-        False otherwise.
-
-        Args:
-            other (VariantMap): VariantMap instance to satisfy
-            strict (bool): if True return False if a key is in other and
-                not in self, otherwise discard that key and proceed with
-                evaluation
-
-        Returns:
-            bool: True or False
-        """
-        to_be_checked = [k for k in other]
-
-        strict_or_concrete = strict
-        if self.spec is not None:
-            strict_or_concrete |= self.spec._concrete
-
-        if not strict_or_concrete:
-            to_be_checked = filter(lambda x: x in self, to_be_checked)
-
-        return all(k in self and self[k].satisfies(other[k]) for k in to_be_checked)
+        return all(self[k].intersects(other[k]) for k in other if k in self)
 
     def constrain(self, other):
         """Add all variants in other that aren't in self to self. Also

@@ -3335,15 +3335,21 @@ class Spec(object):
         pkg_variant.validate_or_raise(self.variants[variant_name], pkg_cls)
 
     def constrain(self, other, deps=True):
-        """Merge the constraints of other with self.
+        """Intersect self with other in-place. Return True if self changed, False otherwise.
 
-        Returns True if the spec changed as a result, False if not.
+        Args:
+            other: constraint to be added to self
+            deps: if False, constrain only the root node, otherwise constrain dependencies
+                as well.
+
+        Raises:
+             UnsatisfiableSpecError: when self cannot be constrained
         """
         # If we are trying to constrain a concrete spec, either the spec
         # already satisfies the constraint (and the method returns False)
         # or it raises an exception
         if self.concrete:
-            if self.intersects(other):
+            if self.satisfies(other):
                 return False
             else:
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
