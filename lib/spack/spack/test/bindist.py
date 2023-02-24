@@ -2,11 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import filecmp
 import glob
 import io
 import os
 import platform
 import sys
+import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
@@ -952,3 +954,44 @@ def test_correct_specs_are_pushed(
     bindist.push([spec], push_url, include_root=root, include_dependencies=deps)
 
     assert packages_to_push == expected
+
+
+def test_reproducible_tarball_is_reproducible(tmpdir):
+    p = tmpdir.mkdir("prefix")
+    p.mkdir("bin")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+
+    tarball_1 = str(tmpdir.join("prefix-1.tar.gz"))
+    tarball_2 = str(tmpdir.join("prefix-2.tar.gz"))
+
+    with open(app, "w") as f:
+        f.write("hello world")
+
+    buildinfo = {"metadata": "yes please"}
+
+    # Create a tarball with a certain mtime of bin/app
+    os.utime(app, times=(0, 0))
+    bindist._do_create_tarball(tarball_1, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
+
+    # Do it another time with different mtime of bin/app
+    os.utime(app, times=(10, 10))
+    bindist._do_create_tarball(tarball_2, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
+
+    # They should be bitwise identical:
+    assert filecmp.cmp(tarball_1, tarball_2, shallow=False)
+
+    # Sanity check for contents:
+    with tarfile.open(tarball_1, mode="r") as f:
+        for m in f.getmembers():
+            assert m.uid == m.gid == m.mtime == 0
+            assert m.uname == m.gname == ""
+
+        assert set(f.getnames()) == {
+            "pkg",
+            "pkg/bin",
+            "pkg/bin/app",
+            "pkg/.spack",
+            "pkg/.spack/binary_distribution",
+        }

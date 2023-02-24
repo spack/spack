@@ -6,6 +6,8 @@
 import codecs
 import collections
 import hashlib
+import io
+import itertools
 import json
 import multiprocessing.pool
 import os
@@ -740,34 +742,31 @@ def get_buildfile_manifest(spec):
     return data
 
 
-def write_buildinfo_file(spec, workdir, rel=False):
-    """
-    Create a cache file containing information
-    required for the relocation
-    """
+def prefixes_to_hashes(spec):
+    return {
+        str(s.prefix): s.dag_hash()
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+    }
+
+
+def get_buildinfo_dict(spec, rel=False):
+    """Create metadata for a tarball"""
     manifest = get_buildfile_manifest(spec)
 
-    prefix_to_hash = dict()
-    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
-    deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps + spec.dependencies(deptype="run"):
-        prefix_to_hash[str(d.prefix)] = d.dag_hash()
-
-    # Create buildinfo data and write it to disk
-    buildinfo = {}
-    buildinfo["sbang_install_path"] = spack.hooks.sbang.sbang_install_path()
-    buildinfo["relative_rpaths"] = rel
-    buildinfo["buildpath"] = spack.store.layout.root
-    buildinfo["spackprefix"] = spack.paths.prefix
-    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
-    buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
-    buildinfo["relocate_links"] = manifest["link_to_relocate"]
-    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
-    buildinfo["prefix_to_hash"] = prefix_to_hash
-    filename = buildinfo_file_name(workdir)
-    with open(filename, "w") as outfile:
-        outfile.write(syaml.dump(buildinfo, default_flow_style=True))
+    return {
+        "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
+        "relative_rpaths": rel,
+        "buildpath": spack.store.layout.root,
+        "spackprefix": spack.paths.prefix,
+        "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
+        "relocate_textfiles": manifest["text_to_relocate"],
+        "relocate_binaries": manifest["binary_to_relocate"],
+        "relocate_links": manifest["link_to_relocate"],
+        "hardlinks_deduped": manifest["hardlinks_deduped"],
+        "prefix_to_hash": prefixes_to_hashes(spec),
+    }
 
 
 def tarball_directory_name(spec):
@@ -1178,6 +1177,20 @@ def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
     return tarinfo
 
 
+def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
+    # Serialize buildinfo for the tarball
+    bstring = syaml.dump(data, default_flow_style=True).encode("utf-8")
+    tarinfo = tarfile.TarInfo(name=path)
+    tarinfo.size = len(bstring)
+    tar.addfile(deterministic_tarinfo(tarinfo), io.BytesIO(bstring))
+
+
+def _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo):
+    with gzip_compressed_tarfile(tarfile_path) as tar:
+        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo)
+        tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
+
+
 def _build_tarball(
     spec,
     out_url,
@@ -1256,34 +1269,28 @@ def _build_tarball(
         os.remove(temp_tarfile_path)
     else:
         binaries_dir = spec.prefix
-        mkdirp(os.path.join(workdir, ".spack"))
 
     # create info for later relocation and create tar
-    write_buildinfo_file(spec, workdir, relative)
+    buildinfo = get_buildinfo_dict(spec, relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     try:
         if relative:
-            make_package_relative(workdir, spec, allow_root)
+            make_package_relative(workdir, spec, buildinfo, allow_root)
         elif not allow_root:
-            ensure_package_relocatable(workdir, binaries_dir)
+            ensure_package_relocatable(buildinfo, binaries_dir)
     except Exception as e:
         shutil.rmtree(workdir)
         shutil.rmtree(tarfile_dir)
         shutil.rmtree(tmpdir)
         tty.die(e)
 
-    with gzip_compressed_tarfile(tarfile_path) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo)
-        if not relative:
-            # Add buildinfo file
-            buildinfo_path = buildinfo_file_name(workdir)
-            buildinfo_arcname = buildinfo_file_name(pkg_dir)
-            tar.add(name=buildinfo_path, arcname=buildinfo_arcname, filter=deterministic_tarinfo)
+    _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
     # remove copy of install directory
-    shutil.rmtree(workdir)
+    if relative:
+        shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -1570,13 +1577,12 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     return None
 
 
-def make_package_relative(workdir, spec, allow_root):
+def make_package_relative(workdir, spec, buildinfo, allow_root):
     """
     Change paths in binaries to relative paths. Change absolute symlinks
     to relative symlinks.
     """
     prefix = spec.prefix
-    buildinfo = read_buildinfo_file(workdir)
     old_layout_root = buildinfo["buildpath"]
     orig_path_names = list()
     cur_path_names = list()
@@ -1600,9 +1606,8 @@ def make_package_relative(workdir, spec, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def ensure_package_relocatable(workdir, binaries_dir):
+def ensure_package_relocatable(buildinfo, binaries_dir):
     """Check if package binaries are relocatable."""
-    buildinfo = read_buildinfo_file(workdir)
     binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
     relocate.ensure_binaries_are_relocatable(binaries)
 
