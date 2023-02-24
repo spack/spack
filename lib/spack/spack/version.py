@@ -819,7 +819,6 @@ class VersionRange(object):
         )
         return in_upper
 
-    @coerced
     def intersects(self, other) -> bool:
         """Return two if two version ranges overlap with each other, False otherwise.
 
@@ -833,23 +832,18 @@ class VersionRange(object):
         Args:
             other: version range to be checked for intersection
         """
-        # FIXME (INTERSECTS): "intersects" is called "overlap" in versions
         return self.overlaps(other)
 
     @coerced
     def satisfies(self, other):
         """A version range satisfies another if it is a subset of the other.
 
-        FIXME (INTERSECTS): issues with 1:4.5 and 1:4.5.3
-
         Examples:
         - 1:2 does not satisfy 3:4, as their intersection is empty.
         - 1:3 does not satisfy 2:4, as they overlap but neither is a subset of the other
         - 1:3 satisfies 1:4.
         """
-        # FIXME (INTERSECTS): "intersects" is called "overlap" in versions
-        return self.overlaps(other)
-        # return self in other
+        return self.overlaps(other) and self.intersection(other) == self
 
     @coerced
     def overlaps(self, other):

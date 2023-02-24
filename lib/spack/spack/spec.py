@@ -778,24 +778,20 @@ class FlagMap(lang.HashableMap):
         return all(f in self and set(self[f]) == set(other[f]) for f in other)
 
     def intersects(self, other):
-        # FIXME (INTERSECTS): this is not commutative
-        if self.spec and self.spec._concrete:
-            return all(f in self and set(self[f]) == set(other[f]) for f in other)
-        else:
+        if not all(
+            set(self[f]) == set(other[f]) for f in other if (other[f] != [] and f in self)
+        ):
+            return False
+
+        # Check that the propagation values match
+        for flag_type in other:
             if not all(
-                set(self[f]) == set(other[f]) for f in other if (other[f] != [] and f in self)
+                other[flag_type][i].propagate == self[flag_type][i].propagate
+                for i in range(len(other[flag_type]))
+                if flag_type in self
             ):
                 return False
-
-            # Check that the propagation values match
-            for flag_type in other:
-                if not all(
-                    other[flag_type][i].propagate == self[flag_type][i].propagate
-                    for i in range(len(other[flag_type]))
-                    if flag_type in self
-                ):
-                    return False
-            return True
+        return True
 
     def constrain(self, other):
         """Add all flags in other that aren't in self to self.

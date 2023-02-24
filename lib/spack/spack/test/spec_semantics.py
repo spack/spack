@@ -167,7 +167,6 @@ class TestSpecSematics(object):
         check_cannot_constrain("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6")
 
         constrain_or_raise("foo %gcc@4.7.3", "%gcc@4.7")
-        # FIXME (INTERSECTS) check_unsatisfiable("foo %gcc@4.7", "%gcc@4.7.3")
 
     def test_satisfies_architecture(self):
         constrain_or_raise("foo platform=test", "platform=test")
