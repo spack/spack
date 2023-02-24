@@ -204,6 +204,9 @@ packages:
     assert s1.satisfies("@2.2")
 
     s2 = Spec("v@{0}".format(commits[1])).concretized()
+    # Note: s2 will not satisfy @2.3 since the command line version overrides
+    # the info in the package requirements (effectively discarding the
+    # equivalence described between the hash and numbered versions)
     assert s2.satisfies("@{0}".format(commits[1]))
 
 
