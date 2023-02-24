@@ -131,12 +131,10 @@ class DeclaredVersion(object):
             return False
         n_gitversions = sum(1 for x in [self.version, other.version] if isinstance(x, spack.version.GitVersion))
         if n_gitversions == 1:
-            # A GitVersion contains a hash and is therefore not considered
-            # equivalent in the sense that it provides more information. In
-            # that sense this notion of equality is different than comparing
-            # a Version with a GitVersion (e.g. `2.2 == hash=2.2` would
-            # return true when comparing Version objects, but not when
-            # comparing Version and GitVersion)
+            # GitVersion(hash=x) and Version(y) compare equal if x == y, but
+            # we do not want that to be true for DeclaredVersion, which is
+            # tracking how much information is provided: in that sense, the
+            # GitVersion provides more information and is therefore not equal.
             return False
         return (self.version, self.idx, self.origin) == (other.version, other.idx, other.origin)
 
