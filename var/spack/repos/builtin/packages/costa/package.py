@@ -65,5 +65,5 @@ class Costa(CMakePackage):
             self.define_from_variant("COSTA_WITH_TESTS", "tests"),
             self.define_from_variant("COSTA_WITH_PROFILING", "profiling"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define("COSTA_SCALAPACK_IMPLEMENTATION", self.costa_scalapack_cmake_arg()),
+            self.define("COSTA_SCALAPACK", self.costa_scalapack_cmake_arg()),
         ]
