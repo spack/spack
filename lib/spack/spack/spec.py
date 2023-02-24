@@ -1851,14 +1851,31 @@ class Spec(object):
         return matches[0]
 
     def lookup_hash(self):
+        if self.concrete:
+            return self
 
-        spec = self.copy()
+        spec = self.copy(deps=False)
 
-        nodes = [node for node in spec.traverse(order="post") if node.abstract_hash]
-        if self.name == 'mpileaks':
-            print(nodes)
-        for node in nodes:
-            spec[node.name]._dup(node._lookup_hash())
+        # root spec is replaced
+        if spec.abstract_hash:
+            new = spec._lookup_hash()
+            if not new._satisfies(self):
+                raise BaseException
+            spec._dup(new)
+            return spec
+
+        # Get dependencies that need to be replaced
+        for node in self.traverse(root=False):
+            if node.abstract_hash:
+                new = node._lookup_hash()  # do we need a defensive copy here?
+                if not new._satisfies(node):
+                    raise BaseException
+                spec._add_dependency(new, deptypes=())
+
+        # reattach nodes that were not otherwise satisfied by new dependencies
+        for node in self.traverse(root=False):
+            if not any(n._satisfies(node) for n in spec.traverse()):
+                spec._add_dependency(node, deptypes=())
 
         return spec
 
