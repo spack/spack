@@ -778,9 +778,7 @@ class FlagMap(lang.HashableMap):
         return all(f in self and set(self[f]) == set(other[f]) for f in other)
 
     def intersects(self, other):
-        if not all(
-            set(self[f]) == set(other[f]) for f in other if (other[f] != [] and f in self)
-        ):
+        if not all(set(self[f]) == set(other[f]) for f in other if (other[f] != [] and f in self)):
             return False
 
         # Check that the propagation values match
@@ -3510,7 +3508,7 @@ class Spec(object):
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
-        # FIXME (INTERSECTS): the lines below are not commutative
+        # TODO (INTERSECTS): the lines below are not commutative
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
             # A provider can satisfy a virtual dependency.
@@ -3577,19 +3575,6 @@ class Spec(object):
         for name in self.common_dependencies(other):
             if not self[name].intersects(other[name], deps=False):
                 return False
-
-        # FIXME (INTERSECTS): Remove this or generalize to other.concrete ?
-        if self.concrete:
-            # Here we already checked that common dependencies are compatible, so if there are no
-            # nodes in other that are not in self return True, otherwise return False
-            try:
-                _ = [self[x.name] for x in other.traverse() if x.name is not None]
-            except KeyError:
-                # If self is concrete, and some node is not in self, then return False
-                # (since self is immutable and can't satisfy other)
-                return False
-            else:
-                return True
 
         # For virtual dependencies, we need to dig a little deeper.
         self_index = spack.provider_index.ProviderIndex(
