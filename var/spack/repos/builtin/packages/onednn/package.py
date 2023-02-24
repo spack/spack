@@ -95,7 +95,9 @@ class Onednn(CMakePackage):
         values=("ocl", "none", conditional("dpcpp", when="@2:"), conditional("sycl", when="@2:")),
         multi=False,
     )
-    variant("acl", default=False, description="Use Arm Compute Library", when="@1.7: target=aarch64:")
+    variant(
+        "acl", default=False, description="Use Arm Compute Library", when="@1.7: target=aarch64:"
+    )
 
     # https://github.com/oneapi-src/oneDNN#requirements-for-building-from-source
     depends_on("cmake@2.8.12:", when="@2.3:", type="build")
