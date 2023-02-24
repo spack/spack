@@ -116,8 +116,33 @@ version_provenance = collections.namedtuple(  # type: ignore
     version_origin_fields,
 )(**{name: i for i, name in enumerate(version_origin_fields)})
 
-#: Named tuple to contain information on declared versions
-DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
+
+class DeclaredVersion(object):
+    def __init__(self, version, idx, origin):
+        if not isinstance(version, spack.version.VersionBase):
+            raise ValueError("Unexpected type for declared version: {0}"
+                             .format(type(version)))
+        self.version = version
+        self.idx = idx
+        self.origin = origin
+
+    def __eq__(self, other):
+        if not isinstance(other, DeclaredVersion):
+            return False
+        n_gitversions = sum(1 for x in [self.version, other.version] if isinstance(x, spack.version.GitVersion))
+        if n_gitversions == 1:
+            # A GitVersion contains a hash and is therefore not considered
+            # equivalent in the sense that it provides more information. In
+            # that sense this notion of equality is different than comparing
+            # a Version with a GitVersion (e.g. `2.2 == hash=2.2` would
+            # return true when comparing Version objects, but not when
+            # comparing Version and GitVersion)
+            return False
+        return (self.version, self.idx, self.origin) == (other.version, other.idx, other.origin)
+
+    def __hash__(self):
+        return hash((self.version, self.idx, self.origin))
+
 
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
@@ -878,7 +903,6 @@ class SpackSolverSetup(object):
             if (
                 isinstance(v.version, spack.version.GitVersion)
                 and v.version.user_supplied_reference
-                and v.origin != version_provenance.packages_yaml
             ):
                 ref_version = spack.version.Version(v.version.ref_version_str)
                 self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
