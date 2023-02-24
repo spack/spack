@@ -78,17 +78,17 @@ class IntelMpiBenchmarks(MakefilePackage):
         targets = []
         if "+mpi1" in spec:
             targets.append("MPI1")
-        elif "+ext" in spec:
+        if "+ext" in spec:
             targets.append("EXT")
-        elif "+io" in spec:
+        if "+io" in spec:
             targets.append("IO")
-        elif "+nbc" in spec:
+        if "+nbc" in spec:
             targets.append("NBC")
-        elif "+p2p" in spec:
+        if "+p2p" in spec:
             targets.append("P2P")
-        elif "+rma" in spec:
+        if "+rma" in spec:
             targets.append("RMA")
-        elif "+mt" in spec:
+        if "+mt" in spec:
             targets.append("MT")
 
         if self.spec.satisfies("@2019:"):
@@ -106,15 +106,15 @@ class IntelMpiBenchmarks(MakefilePackage):
         with working_dir(self.build_directory):
             if "+mpi1" in spec:
                 install("IMB-MPI1", prefix.bin)
-            elif "+ext" in spec:
+            if "+ext" in spec:
                 install("IMB-EXT", prefix.bin)
-            elif "+io" in spec:
+            if "+io" in spec:
                 install("IMB-IO", prefix.bin)
-            elif "+nbc" in spec:
+            if "+nbc" in spec:
                 install("IMB-NBC", prefix.bin)
-            elif "+p2p" in spec:
+            if "+p2p" in spec:
                 install("IMB-P2P", prefix.bin)
-            elif "+rma" in spec:
+            if "+rma" in spec:
                 install("IMB-RMA", prefix.bin)
-            elif "+mt" in spec:
+            if "+mt" in spec:
                 install("IMB-MT", prefix.bin)
