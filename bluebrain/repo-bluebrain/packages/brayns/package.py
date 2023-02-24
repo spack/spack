@@ -39,7 +39,7 @@ class Brayns(CMakePackage):
 
     patch(
         "https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/1133.patch?full_index=1",
-        sha256="a698a881dc2353dcf60a165f283017612d728c87a1b0abf8c24ec76a60bb8e6b",
+        sha256="e97840784211f363e3aeea556816422d0b9c5ca8bed8bc62bcce829b543cb86e",
         when="@3.0.0%gcc@12:",
     )
 
