@@ -20,6 +20,7 @@ class EcmwfAtlas(CMakePackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("0.32.1", sha256="3d1a46cb7f50e1a6ae9e7627c158760e132cc9f568152358e5f78460f1aaf01b")
     version("0.31.1", sha256="fa9274c74c40c2115b9c6120a7040e357b0c7f37b20b601b684d2a83a479cdfb")
     version("0.31.0", sha256="fa4ff8665544b8e19f79d171c540a9ca8bfc4127f52a3c4d4d618a2fe23354d7")
     version("0.30.0", commit="d81887206fc49c83fd5eb2e0e17457bdcd04731a")
