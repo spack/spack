@@ -7,30 +7,42 @@ from spack import *
 import os
 
 class Trove(MakefilePackage):
-    """FIXME: Put a proper description of your package here."""
+    """trove benchmark for DiRAC."""
 
     homepage = "https://github.com/UniOfLeicester/benchmark-trove"
     git = "ssh://git@github.com/UniOfLeicester/benchmark-trove.git"
 
     maintainers = ["TomMelt"]
 
-    version("v1.0.0", tag="v1.0.0")
+    version("v1.0.0", branch="update-makefile")
+    # version("v1.0.0", tag="v1.0.0")
 
-    variant("mpi", default=True, description="Enable MPI support")
-    depends_on("intel-oneapi-mpi", when="+mpi")
+    executables = [r"^j-trove.x$"]
+
+    depends_on("mpi")
     depends_on("intel-oneapi-mkl")
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    parallel=False
+
+    def edit(self, spec, prefix):
+
+        self.fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
+
+        env['PREFIX'] = prefix
+
+        env['FOR'] = self.fc
+        if self.compiler.name == 'intel':
+            env['FFLAGS'] = self.compiler.openmp_flag +" -mavx2 -mfma -O3 -ip -Ofast"
+        else:
+            msg  = "The compiler you are building with, "
+            msg += "'{0}', is not supported by sphng yet."
+            raise InstallError(msg.format(self.compiler.name))
+        env['LAPACK'] = "-qmkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64"
 
     def build(self, spec, prefix):
-        if "+mpi" in spec:
-            fc = spec["mpi"].mpifc
-        else:
-            fc = os.environ["FC"]
 
-        make(f'FOR={fc}')
+        make('goal')
 
     def install(self, spec, prefix):
 
-        make('install','PREFIX='+prefix+'/bin')
+        make('install')
