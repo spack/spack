@@ -1826,18 +1826,11 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.process_hash(), bits)
 
-    def lookup_hash(self):
-        """Given a spec with nothing but a DAG hash, attempt to populate the values by looking up
-        the hash in the environment, store, or finally, binary caches."""
+    def _lookup_hash(self):
         import spack.environment
 
-        if not hasattr(self, 'abstract_hash'):
-            print("spec {} doesn't even know what an abstract hash is!".format(self))
-            return
-
-        if not getattr(self, 'abstract_hash', None):
-            return
         print("lookup is trying abstract hash {}".format(self.abstract_hash))
+
         matches = []
         active_env = spack.environment.active_environment()
         if active_env:
@@ -1846,7 +1839,7 @@ class Spec(object):
             matches = spack.store.db.get_by_hash(self.abstract_hash)
         if not matches:
             query = spack.binary_distribution.BinaryCacheQuery(True)
-            matches = query(self.ctx.current_token.value)
+            matches = query("/"+self.abstract_hash)
         if not matches:
             raise spack.spec.NoSuchHashError(self.abstract_hash)
 
@@ -1854,16 +1847,41 @@ class Spec(object):
             raise spack.spec.AmbiguousHashError(
                 f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
             )
+
         return matches[0]
 
+    def lookup_hash(self):
+
+        spec = self.copy()
+
+        nodes = [node for node in spec.traverse(order="post") if node.abstract_hash]
+        if self.name == 'mpileaks':
+            print(nodes)
+        for node in nodes:
+            spec[node.name]._dup(node._lookup_hash())
+
+        return spec
+
     def replace_hash(self):
-        if not self.abstract_hash:
+        """Given a spec with nothing but an abstract hash, attempt to populate the values by
+        looking up the hash in the environment, store, or finally, binary caches."""
+
+        if not any(node for node in self.traverse(order="post") if node.abstract_hash):
             return
+
+        # print([spec.abstract_hash for spec in lookup_specs])
+
+        # for lookup_spec in lookup_specs:
+        #     spec_by_hash = lookup_spec.lookup_hash()
+        #     if not spec_by_hash._satisfies(lookup_spec):
+        #         raise spack.spec.InvalidHashError(lookup_spec, spec_by_hash.dag_hash())  # abstract?
+        #     lookup_spec._dup(spec_by_hash)
+        #     print("I found {0} with dag hash {1}".format(self, self.dag_hash()))
+
         spec_by_hash = self.lookup_hash()
         if not spec_by_hash._satisfies(self):
-            raise spack.spec.InvalidHashError(self, spec_by_hash.dag_hash())
+            raise spack.spec.InvalidHashError(self, spec_by_hash.dag_hash())  # abstract?
         self._dup(spec_by_hash)
-        print("I found {0} with dag hash {1}".format(self, self.dag_hash()))
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -3872,7 +3890,7 @@ class Spec(object):
         self._concrete = other._concrete
 
         if self.abstract_hash:
-            print("Replacing dup abstract hash: {0} for spec {1}".format(other.abstract_hash, other.name))
+            print("Replacing dup abstract hash: {0} for spec {1}".format(self.abstract_hash, other.name))
         self.abstract_hash = other.abstract_hash
 
         if self._concrete:
@@ -4074,7 +4092,10 @@ class Spec(object):
 
     def _cmp_iter(self):
         """Lazily yield components of self for comparison."""
-        for item in self._cmp_node():
+
+        cmp_spec = self.lookup_hash() or self
+
+        for item in cmp_spec._cmp_node():
             yield item
 
         # This needs to be in _cmp_iter so that no specs with different process hashes
@@ -4085,10 +4106,10 @@ class Spec(object):
         # TODO: they exist for speed.  We should benchmark whether it's really worth
         # TODO: having two types of hashing now that we use `json` instead of `yaml` for
         # TODO: spec hashing.
-        yield self.process_hash() if self.concrete else None
+        yield cmp_spec.process_hash() if cmp_spec.concrete else None
 
         def deps():
-            for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
+            for dep in sorted(itertools.chain.from_iterable(cmp_spec._dependencies.values())):
                 yield dep.spec.name
                 yield tuple(sorted(dep.deptypes))
                 yield hash(dep.spec)

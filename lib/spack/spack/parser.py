@@ -391,14 +391,11 @@ class SpecNodeParser:
                 initial_spec._add_flag(name, value, propagate=True)
             elif not self.has_hash and self.ctx.accept(TokenType.DAG_HASH):
                 initial_spec.abstract_hash = self.ctx.current_token.value[1:]
-                print("found abstract hash: setting {}".format(self.ctx.current_token.value[1:]))
                 self.has_hash = True
             else:
                 break
         if self.has_hash:
             print("final parsed abstract hash is {}".format(initial_spec.abstract_hash))
-            print("final parsed spec is {}".format(initial_spec))
-            print("type of parsed spec is {}".format(type(initial_spec)))
 
         return initial_spec
 

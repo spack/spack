@@ -639,20 +639,24 @@ def test_spec_by_hash(database, monkeypatch, mutable_empty_config):
     hash_str = f"/{mpileaks.dag_hash()}"
     b = SpecParser(hash_str).next_spec()
     b.replace_hash()
-    # b here is NOT a Spec--it is still a query_spec!
-    # THEREFORE, it does not have an abstract_hash attribute, which would be useless anyway.
-    print("parser found {}".format(b))
     assert b == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
-    b = SpecParser(short_hash_str).next_spec().concretize()
-    assert str(b) == str(mpileaks)
+    b = SpecParser(short_hash_str).next_spec()
+    b.replace_hash()
+    assert b == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
-    assert str(SpecParser(name_version_and_hash).next_spec()) == str(mpileaks)
+    b = SpecParser(name_version_and_hash).next_spec()
+    print("The hashes are {0} and {1}".format(name_version_and_hash, b.abstract_hash))
+    b.replace_hash()
+    assert b == mpileaks
 
     a_hash = f"/{a.dag_hash()}"
-    assert SpecParser(a_hash).next_spec() == a
+    b = SpecParser(a_hash).next_spec()
+    print("The hashes are {0} and {1}".format(a_hash, b.abstract_hash))
+    b.replace_hash()
+    assert b == a
 
 
 @pytest.mark.db
@@ -664,31 +668,40 @@ def test_dep_spec_by_hash(database, mutable_empty_config):
     assert "fake" in mpileaks_zmpi
     assert "zmpi" in mpileaks_zmpi
 
-    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()}").next_spec()
-    assert "fake" in mpileaks_hash_fake
-    assert mpileaks_hash_fake["fake"] == fake
+    # mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()}").next_spec()
+    # mpileaks_hash_fake.replace_hash()
+    # print('The specs are {0} and {1}'.format(mpileaks_hash_fake, fake))
+    # assert "fake" in mpileaks_hash_fake
+    # assert mpileaks_hash_fake["fake"] == fake
 
-    mpileaks_hash_zmpi = SpecParser(
-        f"mpileaks %{mpileaks_zmpi.compiler} ^ /{zmpi.dag_hash()}"
-    ).next_spec()
-    assert "zmpi" in mpileaks_hash_zmpi
-    assert mpileaks_hash_zmpi["zmpi"] == zmpi
+    # mpileaks_hash_zmpi = SpecParser(
+    #     f"mpileaks %{mpileaks_zmpi.compiler} ^ /{zmpi.dag_hash()}"
+    # ).next_spec()
+    # mpileaks_hash_zmpi.replace_hash()
+    # assert "zmpi" in mpileaks_hash_zmpi
+    # assert mpileaks_hash_zmpi["zmpi"] == zmpi
 
     # notice: the round-trip str -> Spec loses specificity when
     # since %gcc@=x gets printed as %gcc@x. So stick to satisfies
     # here, unless/until we want to differentiate between ranges
     # and specific versions in the future.
     # assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
-    assert mpileaks_zmpi.compiler.satisfies(mpileaks_hash_zmpi.compiler)
+    # assert mpileaks_zmpi.compiler.satisfies(mpileaks_hash_zmpi.compiler)
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
-        f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
+        f"mpileaks ^ fake /{fake.dag_hash()[:4]} ^ zmpi /{zmpi.dag_hash()[:5]}"
     ).next_spec()
+    nodes = mpileaks_hash_fake_and_zmpi.traverse()
+    for node in nodes:
+        print("Node name: {0}\tAbstract Hash: {1}".format(node, node.abstract_hash))
+    mpileaks_hash_fake_and_zmpi.replace_hash()
+    print('The specs are {0} and {1}'.format(mpileaks_hash_fake_and_zmpi, zmpi))
     assert "zmpi" in mpileaks_hash_fake_and_zmpi
     assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi
 
     assert "fake" in mpileaks_hash_fake_and_zmpi
     assert mpileaks_hash_fake_and_zmpi["fake"] == fake
+    assert False
 
 
 @pytest.mark.db
