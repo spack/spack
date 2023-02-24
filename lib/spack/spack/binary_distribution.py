@@ -1155,6 +1155,29 @@ def gzip_compressed_tarfile(path):
         yield tar
 
 
+def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
+    # We only add files, symlinks, hardlinks, and directories
+    # No character devices, block devices and FIFOs should ever enter a tarball.
+    if tarinfo.isdev():
+        return None
+
+    # For distribution, it makes no sense to user/group data; since (a) they don't exist
+    # on other machines, and (b) they lead to surprises as `tar x` run as root will change
+    # ownership if it can. We want to extract as the current user. By setting owner to root,
+    # root will extract as root, and non-privileged user will extract as themselves.
+    tarinfo.uid = 0
+    tarinfo.gid = 0
+    tarinfo.uname = ""
+    tarinfo.gname = ""
+
+    # Reset mtime to epoch time, our prefixes are not truly immutable, so files may get
+    # touched; as long as the content does not change, this ensures we get stable tarballs.
+    tarinfo.mtime = 0
+    # tarinfo.mode = ? # todo: should we normalize permissions?
+
+    return tarinfo
+
+
 def _build_tarball(
     spec,
     out_url,
@@ -1252,13 +1275,12 @@ def _build_tarball(
         tty.die(e)
 
     with gzip_compressed_tarfile(tarfile_path) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir)
+        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo)
         if not relative:
-            # Add buildinfo file with tarfile mtime set to 0.
-            with open(buildinfo_file_name(workdir), "rb") as f:
-                buildinfo = tar.gettarinfo(arcname=buildinfo_file_name(pkg_dir), fileobj=f)
-                buildinfo.mtime = 0
-                tar.addfile(buildinfo, f)
+            # Add buildinfo file
+            buildinfo_path = buildinfo_file_name(workdir)
+            buildinfo_arcname = buildinfo_file_name(pkg_dir)
+            tar.add(name=buildinfo_path, arcname=buildinfo_arcname, filter=deterministic_tarinfo)
 
     # remove copy of install directory
     shutil.rmtree(workdir)
