@@ -326,8 +326,7 @@ class ColorStream(object):
         self._stream = stream
         self._color = color
 
-    def write(self, string, **kwargs):
-        raw = kwargs.get("raw", False)
+    def write(self, string, raw=False):
         raw_write = getattr(self._stream, "write")
 
         color = self._color
@@ -338,7 +337,6 @@ class ColorStream(object):
                 color = get_color_when()
         raw_write(colorize(string, color=color))
 
-    def writelines(self, sequence, **kwargs):
-        raw = kwargs.get("raw", False)
+    def writelines(self, sequence, raw=False):
         for string in sequence:
-            self.write(string, self.color, raw=raw)
+            self.write(string, raw=raw)
