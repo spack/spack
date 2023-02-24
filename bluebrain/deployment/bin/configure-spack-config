@@ -57,8 +57,7 @@ config:
     projections:
       all: install_{compiler.name}-{compiler.version}-{target}/{name}-{version}-{hash:6}
   source_cache: \$user_cache_path/sources
-  environments:
-    root: \$user_cache_path/environments
+  environment_root: \$user_cache_path/environments
   # This seems to be the optimum for GPFS, according to @olupton
   build_jobs: 8
 EOF
