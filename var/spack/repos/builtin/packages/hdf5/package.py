@@ -587,11 +587,7 @@ class Hdf5(CMakePackage):
             )
 
             if "+fortran" in spec:
-                args.extend(
-                    [
-                        "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc,
-                    ]
-                )
+                args.extend(["-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc])
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
         if spec.satisfies("@1.10.8,1.13.0"):
