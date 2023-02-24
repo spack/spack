@@ -277,9 +277,10 @@ class Gromacs(CMakePackage):
         if self.spec.satisfies("@2023"):
             filter_file(
                 "        if (std::filesystem::equivalent(searchPath, buildBinPath))",
-                "        if (std::error_code c; std::filesystem::equivalent(searchPath, buildBinPath, c))",
+                "        if (std::error_code c; std::filesystem::equivalent(searchPath,"
+                " buildBinPath, c))",
                 "src/gromacs/commandline/cmdlineprogramcontext.cpp",
-                string=True
+                string=True,
             )
 
         if "+plumed" in self.spec:
