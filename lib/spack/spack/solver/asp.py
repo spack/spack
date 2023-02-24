@@ -2290,7 +2290,6 @@ class SpecBuilder(object):
             and cmd_spec.versions.concrete
             and isinstance(cmd_spec.version, spack.version.GitVersion)
         ):
-
             asp_version_spec = spack.spec.Spec("@{0}".format(str(version)))
             if not asp_version_spec.satisfies(cmd_spec, strict=False):
                 raise spack.error.SpackError("Internal error")
