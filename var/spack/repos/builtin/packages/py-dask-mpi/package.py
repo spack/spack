@@ -12,7 +12,7 @@ class PyDaskMpi(PythonPackage):
     homepage = "https://github.com/dask/dask-mpi"
     pypi = "dask-mpi/dask-mpi-2.21.0.tar.gz"
 
-    import_modules = ["dask_mpi"]
+    skip_modules = ["dask_mpi.tests"]
 
     version("2022.4.0", sha256="0a04f1d7d35a06cdff506593330d4414ea242c9172498ce191f5742eac499e17")
     version("2.21.0", sha256="76e153fc8c58047d898970b33ede0ab1990bd4e69cc130c6627a96f11b12a1a7")
