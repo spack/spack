@@ -1353,6 +1353,12 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (CompilerSpec, "gcc", "gcc@5", (True, False, True)),
         (CompilerSpec, "gcc@5", "gcc@5.3", (True, False, True)),
         (CompilerSpec, "gcc@5", "gcc@5-tag", (True, False, True)),
+        # Flags (flags are a map, so for convenience we initialize a full Spec)
+        # Note: the semantic is that of sv variants, not mv variants
+        (Spec, "cppflags=-foo", "cppflags=-bar", (False, False, False)),
+        (Spec, "cppflags='-bar -foo'", "cppflags=-bar", (False, False, False)),
+        (Spec, "cppflags=-foo", "cppflags=-foo", (True, True, True)),
+        (Spec, "cppflags=-foo", "cflags=-foo", (True, False, False)),
     ],
 )
 def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
@@ -1374,7 +1380,13 @@ def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
         # Architecture
         (ArchSpec, "None-ubuntu20.04-None", "None-None-x86_64", True, "None-ubuntu20.04-x86_64"),
         (ArchSpec, "None-None-x86_64", "None-None-x86_64", False, "None-None-x86_64"),
-        (ArchSpec, "None-None-x86_64:icelake", "None-None-x86_64:icelake", False, "None-None-x86_64:icelake"),
+        (
+            ArchSpec,
+            "None-None-x86_64:icelake",
+            "None-None-x86_64:icelake",
+            False,
+            "None-None-x86_64:icelake",
+        ),
         (ArchSpec, "None-ubuntu20.04-None", "linux-None-x86_64", True, "linux-ubuntu20.04-x86_64"),
         (
             ArchSpec,
@@ -1391,8 +1403,11 @@ def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
             "None-ubuntu20.04-nocona,haswell",
         ),
         # Compiler
-        (CompilerSpec, "gcc@5", "gcc@5-tag", True,  "gcc@5-tag"),
-        (CompilerSpec, "gcc@5", "gcc@5", False,  "gcc@5")
+        (CompilerSpec, "gcc@5", "gcc@5-tag", True, "gcc@5-tag"),
+        (CompilerSpec, "gcc@5", "gcc@5", False, "gcc@5"),
+        # Flags
+        (Spec, "cppflags=-foo", "cppflags=-foo", False, "cppflags=-foo"),
+        (Spec, "cppflags=-foo", "cflags=-foo", True, "cppflags=-foo cflags=-foo"),
     ],
 )
 def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
@@ -1401,3 +1416,9 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
 
     assert lhs.constrain(rhs) is result
     assert lhs == factory(constrained_str)
+
+    # The intersection must be the same, so check that invariant too
+    lhs = factory(lhs_str)
+    rhs = factory(rhs_str)
+    rhs.constrain(lhs)
+    assert rhs == factory(constrained_str)
