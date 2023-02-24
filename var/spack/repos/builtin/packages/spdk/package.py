@@ -5,7 +5,7 @@
 
 import os
 
-from spack.package import *
+from spack import *
 
 
 class Spdk(AutotoolsPackage):
@@ -24,19 +24,6 @@ class Spdk(AutotoolsPackage):
 
     version("master", branch="master", submodules=True)
     version("23.01", tag="v23.01", submodules=True)
-    version("22.01.2", tag="v22.01.2", submodules=True)
-    version("21.07", tag="v21.07", submodules=True)
-    version("20.01.2", tag="v20.01.2", submodules=True)
-    version("20.01.1", tag="v20.01.1", submodules=True)
-    version("19.04.1", tag="v19.04.1", submodules=True)
-    version("19.04", tag="v19.04", submodules=True)
-    version("19.01.1", tag="v19.01.1", submodules=True)
-    version("19.01", tag="v19.01", submodules=True)
-    version("18.10.2", tag="v18.10.2", submodules=True)
-    version("18.10.1", tag="v18.10.1", submodules=True)
-    version("18.10", tag="v18.10", submodules=True)
-    version("18.07.1", tag="v18.07.1", submodules=True)
-    version("18.07", tag="v18.07", submodules=True)
 
     variant("crypto", default=False, description="Build vbdev crypto module")
     variant("fio", default=False, description="Build fio plugin")
@@ -45,25 +32,14 @@ class Spdk(AutotoolsPackage):
         "virtio", default=False, description="Build vhost initiator and virtio-pci bdev modules"
     )
     variant("pmdk", default=False, description="Build persistent memory bdev")
-    variant(
-        "reduce",
-        when="@18.07:22.01.2",
-        default=False,
-        description="Build vbdev compression module",
-    )
     variant("rbd", default=False, description="Build Ceph RBD bdev module")
     variant(
         "rdma", default=False, description="Build RDMA transport for NVMf target and initiator"
     )
     variant("shared", default=False, description="Build spdk shared libraries")
     variant("iscsi-initiator", default=False, description="Build with iscsi bdev module")
-    variant(
-        "vtune",
-        default=False,
-        description="Required to profile I/O under Intel VTune Amplifier XE",
-    )
+    variant("vtune", default=False, description="Profile I/O under Intel VTune Amplifier XE")
     variant("ocf", default=False, description="Build OCF library and bdev module")
-    variant("isal", when="@18.07:22.01.2", default=False, description="Build with ISA-L")
     variant("uring", default=False, description="Build I/O uring bdev")
 
     mods = (
@@ -80,7 +56,7 @@ class Spdk(AutotoolsPackage):
         "uring",
     )
 
-    depends_on("dpdk@main")
+    depends_on("dpdk@22.11:")
     depends_on("nasm@2.12.02:", type="build")
     depends_on("fio@3.3", when="+fio")
     depends_on("meson")
@@ -91,14 +67,7 @@ class Spdk(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ["--disable-tests"]
-
-        if spec.satisfies("@18.07:22.01.2"):
-            self.mods = self.mods + ("reduce", "isal")
-
-        if spec.satisfies("@21.07:"):
-            config_args.append("--disable-unit-tests")
-            config_args.append("--disable-apps")
+        config_args = ["--disable-tests", "--disable-unit-tests", "--disable-apps"]
 
         if "+fio" in spec:
             config_args.append("--with-fio={0}".format(spec["fio"].prefix))
@@ -113,25 +82,17 @@ class Spdk(AutotoolsPackage):
 
     @run_after("install")
     def install_additional_files(self):
-        spec = self.spec
         prefix = self.prefix
 
-        if spec.satisfies("@19.04:20.01"):
-            for file in os.listdir(join_path(self.stage.source_path, "dpdk", "build", "lib")):
+        dpdk_build_dir = join_path(self.stage.source_path, "dpdk", "build", "lib")
+        install_tree(join_path(dpdk_build_dir, "pkgconfig"), join_path(prefix.lib, "pkgconfig"))
+        for file in os.listdir(dpdk_build_dir):
+            if os.path.isfile(join_path("dpdk", "build", "lib", file)):
                 install(join_path("dpdk", "build", "lib", file), prefix.lib)
+        mkdir(join_path(prefix.include, "dpdk"))
+        install_tree("dpdk/build/include", join_path(prefix.include, "dpdk"))
 
-        if spec.satisfies("@21.07:"):
-            dpdk_build_dir = join_path(self.stage.source_path, "dpdk", "build", "lib")
-            install_tree(
-                join_path(dpdk_build_dir, "pkgconfig"), join_path(prefix.lib, "pkgconfig")
-            )
-            for file in os.listdir(dpdk_build_dir):
-                if os.path.isfile(join_path("dpdk", "build", "lib", file)):
-                    install(join_path("dpdk", "build", "lib", file), prefix.lib)
-            mkdir(join_path(prefix.include, "dpdk"))
-            install_tree("dpdk/build/include", join_path(prefix.include, "dpdk"))
-
-        # Copy the config.h file, as some packages might require it
+        # Copy the config.h file, as some packages might require it.
         mkdir(prefix.share)
         mkdir(join_path(prefix.share, "spdk"))
         install_tree("examples/nvme/fio_plugin", join_path(prefix.share, "spdk", "fio_plugin"))
