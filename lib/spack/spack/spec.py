@@ -193,9 +193,7 @@ def colorize_spec(spec):
 
 @lang.lazy_lexicographic_ordering
 class ArchSpec(object):
-    """Aggregate the target platform, the operating system and the target
-    microarchitecture into an architecture spec..
-    """
+    """Aggregate the target platform, the operating system and the target microarchitecture."""
 
     @staticmethod
     def _return_arch(os_tag, target_tag):
@@ -402,7 +400,7 @@ class ArchSpec(object):
 
         return self._target_satisfies(other, strict=False)
 
-    def _target_satisfies(self, other, strict):
+    def _target_satisfies(self, other: "ArchSpec", strict: bool) -> bool:
         if strict is True:
             need_to_check = bool(other.target)
         else:
@@ -417,8 +415,8 @@ class ArchSpec(object):
 
         return bool(self._target_intersection(other))
 
-    def target_constrain(self, other):
-        if not other.target_satisfies(self, strict=False):
+    def _target_constrain(self, other: "ArchSpec") -> bool:
+        if not other._target_satisfies(self, strict=False):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         if self.target_concrete:
@@ -430,8 +428,12 @@ class ArchSpec(object):
 
         # Compute the intersection of every combination of ranges in the lists
         results = self._target_intersection(other)
-        # Do we need to dedupe here?
-        self.target = ",".join(results)
+        attribute_str = ",".join(results)
+
+        if self.target == attribute_str:
+            return False
+
+        self.target = attribute_str
         return True
 
     def _target_intersection(self, other):
@@ -503,7 +505,7 @@ class ArchSpec(object):
                 setattr(self, attr, ovalue)
                 constrained = True
 
-        constrained |= self.target_constrain(other)
+        constrained |= self._target_constrain(other)
 
         return constrained
 
@@ -519,7 +521,9 @@ class ArchSpec(object):
     @property
     def target_concrete(self):
         """True if the target is not a range or list."""
-        return ":" not in str(self.target) and "," not in str(self.target)
+        return (
+            self.target is not None and ":" not in str(self.target) and "," not in str(self.target)
+        )
 
     def to_dict(self):
         d = syaml.syaml_dict(

@@ -9,6 +9,7 @@ import spack.directives
 import spack.error
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
+    ArchSpec,
     Spec,
     SpecFormatSigilError,
     SpecFormatStringError,
@@ -1332,3 +1333,62 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
     s, t = Spec(lhs), Spec(rhs)
     result = s in t
     assert result is expected
+
+
+@pytest.mark.parametrize(
+    "factory,lhs_str,rhs_str,results",
+    [
+        # Architecture
+        (ArchSpec, "None-ubuntu20.04-None", "None-None-x86_64", (True, False, False)),
+        (ArchSpec, "None-ubuntu20.04-None", "linux-None-x86_64", (True, False, False)),
+        (ArchSpec, "None-None-x86_64:", "linux-None-haswell", (True, False, True)),
+        (ArchSpec, "None-None-x86_64:haswell", "linux-None-icelake", (False, False, False)),
+        (ArchSpec, "linux-None-None", "linux-None-None", (True, True, True)),
+        (ArchSpec, "darwin-None-None", "linux-None-None", (False, False, False)),
+        (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu20.04-None", (True, True, True)),
+        (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu22.04-None", (False, False, False)),
+    ],
+)
+def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
+    lhs = factory(lhs_str)
+    rhs = factory(rhs_str)
+
+    intersects, lhs_satisfies_rhs, rhs_satisfies_lhs = results
+
+    assert lhs.intersects(rhs) is intersects
+    assert rhs.intersects(lhs) is lhs.intersects(rhs)
+
+    assert lhs.satisfies(rhs) is lhs_satisfies_rhs
+    assert rhs.satisfies(lhs) is rhs_satisfies_lhs
+
+
+@pytest.mark.parametrize(
+    "factory,lhs_str,rhs_str,result,constrained_str",
+    [
+        # Architecture
+        (ArchSpec, "None-ubuntu20.04-None", "None-None-x86_64", True, "None-ubuntu20.04-x86_64"),
+        (ArchSpec, "None-None-x86_64", "None-None-x86_64", False, "None-None-x86_64"),
+        (ArchSpec, "None-None-x86_64:icelake", "None-None-x86_64:icelake", False, "None-None-x86_64:icelake"),
+        (ArchSpec, "None-ubuntu20.04-None", "linux-None-x86_64", True, "linux-ubuntu20.04-x86_64"),
+        (
+            ArchSpec,
+            "None-ubuntu20.04-nocona:haswell",
+            "None-None-x86_64:icelake",
+            False,
+            "None-ubuntu20.04-nocona:haswell",
+        ),
+        (
+            ArchSpec,
+            "None-ubuntu20.04-nocona,haswell",
+            "None-None-x86_64:icelake",
+            False,
+            "None-ubuntu20.04-nocona,haswell",
+        ),
+    ],
+)
+def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
+    lhs = factory(lhs_str)
+    rhs = factory(rhs_str)
+
+    assert lhs.constrain(rhs) is result
+    assert lhs == factory(constrained_str)
