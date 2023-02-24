@@ -15,6 +15,7 @@ class Emsim(CMakePackage):
     generator = 'Ninja'
 
     version('develop', branch='master')
+    version('1.0.2', tag='v1.0.2')
     version('1.0.1', tag='v1.0.1')
 
     depends_on('cmake@3.1:', type='build')

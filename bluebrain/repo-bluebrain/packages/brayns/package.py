@@ -7,8 +7,7 @@ from spack.package import *
 
 
 class Brayns(CMakePackage):
-    """Interactive visualizer for large-scale scientific data
-    """
+    """Interactive visualizer for large-scale scientific data"""
 
     homepage = "https://github.com/BlueBrain/Brayns"
     git = "https://github.com/BlueBrain/Brayns.git"
@@ -17,6 +16,7 @@ class Brayns(CMakePackage):
 
     version('develop', branch='develop')
     version('3.0.0', tag='3.0.0')
+    version('3.1.0', tag='3.1.0')
 
     variant('blueconfig', default=True, description='BlueConfig support')
 
@@ -26,7 +26,8 @@ class Brayns(CMakePackage):
     depends_on('git', type='build')
 
     depends_on('brion@3.3.9:', when='+blueconfig')
-    depends_on('libsonata@0.1.16:')
+    depends_on('libsonata@:0.1.16', when='@:3.1.0')
+    depends_on('libsonata@0.1.17:', when='@3.1.1:')
     depends_on('morphio@3.3.3:')
     depends_on('mvdtool@2.4.2:')
     depends_on('ospray@2.10.0')

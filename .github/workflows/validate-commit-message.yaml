@@ -9,34 +9,41 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
+      - name: Get diff with base branch
+        id: changed-files
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} | jq -sR 'split("\n") | map(select(. != "")) | @json' | sed -r 's/^"|"$//g' | tr -s /)
+          echo "changed-files=\"${CHANGED_FILES}\"" >> $GITHUB_OUTPUT
+
 
       - name: Validate commit messages
         id: commit-message-validator
         continue-on-error: true
         run: |
-          echo "Deepening shallow clone to ${{ github.event.pull_request.commits }} commits"
-          echo "PR number is ${{ github.event.pull_request.number }}"
-          git fetch --deepen=$((${{ github.event.pull_request.commits }} - 1))
           pip install gitpython
-          python ./.github/workflows/validate-commit-message.py --title "${{ github.event.pull_request.title }}" || true
+          set -x
+          python ./.github/workflows/validate-commit-message.py --title "${{ github.event.pull_request.title }}" --changed-files "${{ steps.changed-files.outputs.changed-files }}" --commits "${{ github.event.pull_request.commits }}"
 
       - name: Show output
         run: |
-          echo "Output: ${{ steps.commit-message-validator.outputs.faulty-commits }}"
+          echo "Faulty commits: ${{ steps.commit-message-validator.outputs.faulty-commits }}"
+          echo "Script failure: ${{ steps.commit-message-validator.outputs.script-failure }}"
 
       - name: Add comment to PR
         if: ${{ steps.commit-message-validator.outputs.faulty-commits == 'true' }}
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: faulty_commits.txt
+          filePath: message_issues.txt
           reactions: eyes, confused, rocket
 
       - name: Fail the action
-        if: ${{ steps.commit-message-validator.outputs.faulty-commits == 'true' }}
+        if: ${{ steps.commit-message-validator.outputs.faulty-commits == 'true' || steps.commit-message-validator.outputs.script-failure == 'true' }}
         run: |
-          echo "Faulty commit messages found - failing"
+          echo "Something is not right - failing"
           exit 1

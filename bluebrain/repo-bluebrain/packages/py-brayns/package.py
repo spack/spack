@@ -19,6 +19,7 @@ class PyBrayns(PythonPackage):
 
     version('develop', branch='develop')
     version('3.0.0', tag='3.0.0')
+    version('3.1.0', tag='3.1.0')
 
     depends_on('py-setuptools', type=('build'))
     depends_on('py-websockets@10.3:', type=('build', 'run'))

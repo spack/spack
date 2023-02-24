@@ -31,6 +31,8 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("9.0.a4", commit="de2c927")
+    version("9.0.a3", commit="afce1ef")
     version("9.0.a2", commit="89f7dab")
     version("9.0.a1", commit="b3c4b4f")
     version("8.2.2", tag="8.2.2")
@@ -161,6 +163,11 @@ class Neuron(CMakePackage):
                                                              "+rx3d",
                                                              "+coreneuron",
                                                              "+tests"]]
+        if self.spec.satisfies("@9.0.a3:+tests"):
+            # The +tests variant is primarily used for CI pipelines, which do
+            # not run on exclusive resources and do not give reliable results
+            # for tests that test performance scaling
+            args.append(self.define('NRN_ENABLE_PERFORMANCE_TESTS', False))
         compilation_flags = []
         if self.spec.variants['model_tests'].value != ("None",):
             args.append('-DNRN_ENABLE_MODEL_TESTS=' + ",".join(
