@@ -97,6 +97,8 @@ class Hipfort(CMakePackage):
 
     depends_on("rocm-cmake@3.8.0:", type="build")
 
+    depends_on("binutils", when="%cce")
+
     for ver in [
         "3.8.0",
         "3.9.0",
@@ -130,5 +132,13 @@ class Hipfort(CMakePackage):
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
+
+        if self.spec.satisfies("%cce"):
+            args.append("-DHIPFORT_COMPILER={}".format(spack_fc))
+            args.append("-DHIPFORT_AR=" + join_path(self.spec["binutils"].prefix.bin, "ar"))
+            args.append(
+                "-DHIPFORT_RANLIB=" + join_path(self.spec["binutils"].prefix.bin, "ranlib")
+            )
+            args.append("-DHIPFORT_COMPILER_FLAGS='-ffree -eT'")
 
         return args

@@ -1437,9 +1437,8 @@ def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
     hashes = env.all_hashes() if env else None
     matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
     push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
-    spec_kwargs = {"include_root": True, "include_dependencies": False}
     kwargs = {"force": True, "allow_root": True, "unsigned": unsigned}
-    bindist.push(matches, push_url, spec_kwargs, **kwargs)
+    bindist.push(matches, push_url, include_root=True, include_dependencies=False, **kwargs)
 
 
 def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
@@ -1502,10 +1501,7 @@ def copy_files_to_artifacts(src, artifacts_dir):
     try:
         fs.copy(src, artifacts_dir)
     except Exception as err:
-        msg = ("Unable to copy files ({0}) to artifacts {1} due to " "exception: {2}").format(
-            src, artifacts_dir, str(err)
-        )
-        tty.error(msg)
+        tty.warn(f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to: {err}")
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):

@@ -58,9 +58,9 @@ Using Environments
 Here we follow a typical use case of creating, concretizing,
 installing and loading an environment.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating a named Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a managed Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An environment is created by:
 
@@ -72,7 +72,8 @@ Spack then creates the directory ``var/spack/environments/myenv``.
 
 .. note::
 
-   All named environments are stored in the ``var/spack/environments`` folder.
+   All managed environments by default are stored in the ``var/spack/environments`` folder.
+   This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
 
 In the ``var/spack/environments/myenv`` directory, Spack creates the
 file ``spack.yaml`` and the hidden directory ``.spack-env``.
