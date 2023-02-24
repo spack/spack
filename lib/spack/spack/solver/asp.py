@@ -2177,6 +2177,7 @@ def _get_versioned_specs_from_pkg_requirements():
             req_version_specs.extend(_specs_from_requires(pkg_name, d["require"]))
     return req_version_specs
 
+
 def _specs_from_requires(pkg_name, section):
     if isinstance(section, str):
         spec = spack.spec.Spec(section)
