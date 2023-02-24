@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Spdk(AutotoolsPackage):
@@ -27,41 +27,41 @@ class Spdk(AutotoolsPackage):
 
     variant("crypto", default=False, description="Build vbdev crypto module")
     variant("fio", default=False, description="Build fio plugin")
-    variant("vhost", default=False, description="Build vhost target")
-    variant(
-        "virtio", default=False, description="Build vhost initiator and virtio-pci bdev modules"
-    )
+    variant("iscsi-initiator", default=False, description="Build with iscsi bdev module")
+    variant("ocf", default=False, description="Build OCF library and bdev module")
     variant("pmdk", default=False, description="Build persistent memory bdev")
     variant("rbd", default=False, description="Build Ceph RBD bdev module")
     variant(
         "rdma", default=False, description="Build RDMA transport for NVMf target and initiator"
     )
     variant("shared", default=False, description="Build spdk shared libraries")
-    variant("iscsi-initiator", default=False, description="Build with iscsi bdev module")
-    variant("vtune", default=False, description="Profile I/O under Intel VTune Amplifier XE")
-    variant("ocf", default=False, description="Build OCF library and bdev module")
     variant("uring", default=False, description="Build I/O uring bdev")
+    variant(
+        "virtio", default=False, description="Build vhost initiator and virtio-pci bdev modules"
+    )
+    variant("vhost", default=False, description="Build vhost target")
+    variant("vtune", default=False, description="Profile I/O under Intel VTune Amplifier XE")
 
     mods = (
         "crypto",
-        "vhost",
-        "virtio",
+        "iscsi-initiator",
+        "ocf",
         "pmdk",
         "rbd",
         "rdma",
         "shared",
-        "iscsi-initiator",
-        "vtune",
-        "ocf",
         "uring",
+        "vhost",
+        "virtio",
+        "vtune",
     )
 
     depends_on("dpdk@22.11:")
-    depends_on("nasm@2.12.02:", type="build")
     depends_on("fio@3.3", when="+fio")
-    depends_on("meson")
-    depends_on("numactl")
     depends_on("libaio")
+    depends_on("meson")
+    depends_on("nasm@2.12.02:", type="build")
+    depends_on("numactl")
     depends_on("py-pyelftools")
     depends_on("rdma-core", when="+rdma")
 
