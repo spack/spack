@@ -66,7 +66,6 @@ class Steps(CMakePackage):
     depends_on("py-numpy", type=("build", "test", "run"))
     depends_on("py-pip-tools", type="build")
     depends_on("py-scipy", type=("build", "test", "run"))
-    depends_on("py-unittest2", type=("build", "test"))
     depends_on("python", type=("build", "test", "run"))
     depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("gmsh", when="+distmesh")
@@ -88,6 +87,8 @@ class Steps(CMakePackage):
             r'-Wno-error \1',
             'src/steps/util/CMakeLists.txt'
         )
+        # unittest2 is unmaintained, shan't be used and does not build with modern Python
+        filter_file("unittest2", "", "requirements.txt", ignore_absent=True)
 
     def cmake_args(self):
         args = []
