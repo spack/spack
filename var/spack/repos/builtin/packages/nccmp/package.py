@@ -11,6 +11,8 @@ class Nccmp(CMakePackage):
 
     homepage = "http://nccmp.sourceforge.net/"
     url = "https://gitlab.com/remikz/nccmp/-/archive/1.9.0.1/nccmp-1.9.0.1.tar.gz"
+    
+    maintainers("ulmononian", "climbfuji")
 
     version("1.9.0.1", sha256="81e9753cf451afe8248d44c841e102349e07cde942b11d1f91b5f85feb622b99")
     version("1.8.9.0", sha256="da5d2b4dcd52aec96e7d96ba4d0e97efebbd40fe9e640535e5ee3d5cd082ae50")
