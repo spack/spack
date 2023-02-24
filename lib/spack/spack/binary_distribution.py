@@ -1172,7 +1172,15 @@ def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
     # Reset mtime to epoch time, our prefixes are not truly immutable, so files may get
     # touched; as long as the content does not change, this ensures we get stable tarballs.
     tarinfo.mtime = 0
-    # tarinfo.mode = ? # todo: should we normalize permissions?
+
+    # Normalize mode
+    if tarinfo.isfile() or tarinfo.islnk():
+        # If user can execute, use 0o755; else 0o644
+        # This is to avoid potentially unsafe world writable & exeutable files that may get
+        # extracted when Python or tar is run with privileges
+        tarinfo.mode = 0o644 if tarinfo.mode & 0o100 == 0 else 0o755
+    else:  # symbolic link and directories
+        tarinfo.mode = 0o755
 
     return tarinfo
 
