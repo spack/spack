@@ -20,4 +20,4 @@ class PyPythonLibsbml(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("swig", type="build")
-    depends_on("cmake", type="build")
+    depends_on("cmake", type=("build", "run"))
