@@ -106,6 +106,9 @@ class Onednn(CMakePackage):
     depends_on("llvm-openmp", when="%apple-clang cpu_runtime=omp")
     depends_on("opencl@1.2:", when="gpu_runtime=ocl")
     depends_on("armcomputelibrary", when="+acl")
+    depends_on("tbb", when="cpu_runtime=sycl")
+    depends_on("opencl@1.2:", when="gpu_runtime=sycl")
+    depends_on("openapi-level-zero", when="gpu_runtime=sycl")
 
     def cmake_args(self):
         args = [
