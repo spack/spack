@@ -1281,8 +1281,6 @@ def _build_tarball(
         elif not allow_root:
             ensure_package_relocatable(buildinfo, binaries_dir)
     except Exception as e:
-        shutil.rmtree(workdir)
-        shutil.rmtree(tarfile_dir)
         shutil.rmtree(tmpdir)
         tty.die(e)
 
