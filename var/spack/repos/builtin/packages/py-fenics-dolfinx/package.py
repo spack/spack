@@ -81,7 +81,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-pybind11@2.7.0:", type=("build", "run"), when="@0.4:")
     depends_on("py-pybind11@2.2.4:", type=("build", "run"))
     depends_on("xtensor@0.23.10:", type="build", when="@:0.5")
-    
+ 
     depends_on("py-setuptools@42:", type=("build", "run"), when="@0.4:")
     depends_on("py-setuptools@40:", type=("build", "run"))
 
