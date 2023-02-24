@@ -1860,7 +1860,7 @@ class Spec(object):
         if spec.abstract_hash:
             new = spec._lookup_hash()
             if not new._satisfies(self):
-                raise BaseException
+                raise InvalidHashError(spec, spec.abstract_hash)
             spec._dup(new)
             return spec
 
@@ -1869,7 +1869,7 @@ class Spec(object):
             if node.abstract_hash:
                 new = node._lookup_hash()  # do we need a defensive copy here?
                 if not new._satisfies(node):
-                    raise BaseException
+                    raise InvalidHashError(node, node.abstract_hash)
                 spec._add_dependency(new, deptypes=())
 
         # reattach nodes that were not otherwise satisfied by new dependencies
@@ -1897,7 +1897,7 @@ class Spec(object):
 
         spec_by_hash = self.lookup_hash()
         if not spec_by_hash._satisfies(self):
-            raise spack.spec.InvalidHashError(self, spec_by_hash.dag_hash())  # abstract?
+            raise spack.spec.InvalidHashError(self, spec_by_hash.abstract_hash)
         self._dup(spec_by_hash)
 
     def to_node_dict(self, hash=ht.dag_hash):

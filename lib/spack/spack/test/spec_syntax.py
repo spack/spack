@@ -684,7 +684,6 @@ def test_dep_spec_by_hash(database, mutable_empty_config):
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
     ).next_spec()
-    nodes = mpileaks_hash_fake_and_zmpi.traverse()
     mpileaks_hash_fake_and_zmpi.replace_hash()
     assert "zmpi" in mpileaks_hash_fake_and_zmpi
     assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi
@@ -736,11 +735,13 @@ def test_ambiguous_hash(mutable_database, default_mock_concretization, mutable_e
 
     # ambiguity in first hash character
     with pytest.raises(spack.spec.AmbiguousHashError):
-        SpecParser("/x").next_spec()
+        b = SpecParser("/x").next_spec()
+        b.replace_hash()
 
     # ambiguity in first hash character AND spec name
     with pytest.raises(spack.spec.AmbiguousHashError):
-        SpecParser("a/x").next_spec()
+        b = SpecParser("a/x").next_spec()
+        b.replace_hash()
 
 
 @pytest.mark.db
@@ -750,13 +751,16 @@ def test_invalid_hash(database, mutable_empty_config):
 
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
+        b = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
+        b.replace_hash()
     with pytest.raises(spack.spec.InvalidHashError):
-        SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
+        b = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
+        b.replace_hash()
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
+        b = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
+        b.replace_hash()
 
 
 @pytest.mark.db
@@ -770,7 +774,8 @@ def test_nonexistent_hash(database, mutable_empty_config):
     assert no_such_hash not in [h[: len(no_such_hash)] for h in hashes]
 
     with pytest.raises(spack.spec.NoSuchHashError):
-        SpecParser(f"/{no_such_hash}").next_spec()
+        b = SpecParser(f"/{no_such_hash}").next_spec()
+        b.replace_hash()
 
 
 @pytest.mark.db
@@ -788,7 +793,8 @@ def test_redundant_spec(query_str, text_fmt, database):
     spec = database.query_one(query_str)
     text = text_fmt.format(spec, hash=spec.dag_hash())
     with pytest.raises(spack.spec.RedundantSpecError):
-        SpecParser(text).next_spec()
+        b = SpecParser(text).next_spec()
+        b.replace_hash()
 
 
 @pytest.mark.parametrize(
