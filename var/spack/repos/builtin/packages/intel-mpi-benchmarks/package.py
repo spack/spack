@@ -58,6 +58,14 @@ class IntelMpiBenchmarks(MakefilePackage):
     variant("rma", default=True, description="Build MPI1 benchmark")
     variant("mt", default=True, description="Build MPI1 benchmark")
 
+    # Handle missing variants in previous versions
+    conflicts("+p2p", when="@:2019")
+    conflicts("+mt", when="@:2019")
+
+    # No parallel build before 2019
+    with when("@:2019"):
+        parallel = False
+
     def url_for_version(self, version):
         if version <= Version("2019.1"):
             url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/v{0}.tar.gz"
