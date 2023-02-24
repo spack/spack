@@ -120,8 +120,7 @@ version_provenance = collections.namedtuple(  # type: ignore
 class DeclaredVersion(object):
     def __init__(self, version, idx, origin):
         if not isinstance(version, spack.version.VersionBase):
-            raise ValueError("Unexpected type for declared version: {0}"
-                             .format(type(version)))
+            raise ValueError("Unexpected type for declared version: {0}".format(type(version)))
         self.version = version
         self.idx = idx
         self.origin = origin
@@ -129,7 +128,9 @@ class DeclaredVersion(object):
     def __eq__(self, other):
         if not isinstance(other, DeclaredVersion):
             return False
-        n_gitversions = sum(1 for x in [self.version, other.version] if isinstance(x, spack.version.GitVersion))
+        n_gitversions = sum(
+            1 for x in [self.version, other.version] if isinstance(x, spack.version.GitVersion)
+        )
         if n_gitversions == 1:
             # GitVersion(hash=x) and Version(y) compare equal if x == y, but
             # we do not want that to be true for DeclaredVersion, which is
