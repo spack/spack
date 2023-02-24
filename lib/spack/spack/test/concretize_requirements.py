@@ -148,6 +148,9 @@ packages:
 
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
+    # Make sure the git commit info is retained
+    assert isinstance(s1.version, spack.version.GitVersion)
+    assert s1.version.ref == a_commit_hash
 
 
 def test_requirement_adds_git_hash_version(
@@ -201,11 +204,6 @@ packages:
     assert s1.satisfies("@2.2")
 
     s2 = Spec("v@{0}".format(commits[1])).concretized()
-    # TODO: right now we cannot ask if s2.satisfies("@2.3"), because that
-    # information is lost when the ASP solver breaks up the facts in the
-    # "require" section. If the spec request had been of the form
-    # "v@hash=number", then there is logic to reapply that to the resulting
-    # spec
     assert s2.satisfies("@{0}".format(commits[1]))
 
 

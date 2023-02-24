@@ -2088,7 +2088,7 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(specs, version_provenance.spec)
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
-        req_version_specs = self._get_versioned_specs_from_pkg_requirements()
+        req_version_specs = _get_versioned_specs_from_pkg_requirements()
         self.add_concrete_versions_from_specs(req_version_specs, version_provenance.packages_yaml)
 
         self.gen.h1("Concrete input spec definitions")
@@ -2146,50 +2146,6 @@ class SpackSolverSetup(object):
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
 
-    def _get_versioned_specs_from_pkg_requirements(self):
-        """If package requirements mention versions that are not mentioned
-        elsewhere, then we need to collect those to mark them as possible
-        versions.
-        """
-        req_version_specs = list()
-        config = spack.config.get("packages")
-        for pkg_name, d in config.items():
-            if pkg_name == "all":
-                continue
-            if "require" in d:
-                req_version_specs.extend(self._specs_from_requires(pkg_name, d["require"]))
-        return req_version_specs
-
-    def _specs_from_requires(self, pkg_name, section):
-        if isinstance(section, str):
-            spec = spack.spec.Spec(section)
-            if not spec.name:
-                spec.name = pkg_name
-            extracted_specs = [spec]
-        else:
-            spec_strs = []
-            # Each of these will be one_of or any_of
-            for spec_group in section:
-                (x,) = spec_group.values()
-                spec_strs.extend(x)
-
-            extracted_specs = []
-            for spec_str in spec_strs:
-                spec = spack.spec.Spec(spec_str)
-                if not spec.name:
-                    spec.name = pkg_name
-                extracted_specs.append(spec)
-
-        version_specs = []
-        for spec in extracted_specs:
-            try:
-                spec.version
-                version_specs.append(spec)
-            except spack.error.SpecError:
-                pass
-
-        return version_specs
-
     def literal_specs(self, specs):
         for idx, spec in enumerate(specs):
             self.gen.h2("Spec: %s" % str(spec))
@@ -2205,6 +2161,51 @@ class SpackSolverSetup(object):
 
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())
+
+
+def _get_versioned_specs_from_pkg_requirements():
+    """If package requirements mention versions that are not mentioned
+    elsewhere, then we need to collect those to mark them as possible
+    versions.
+    """
+    req_version_specs = list()
+    config = spack.config.get("packages")
+    for pkg_name, d in config.items():
+        if pkg_name == "all":
+            continue
+        if "require" in d:
+            req_version_specs.extend(_specs_from_requires(pkg_name, d["require"]))
+    return req_version_specs
+
+def _specs_from_requires(pkg_name, section):
+    if isinstance(section, str):
+        spec = spack.spec.Spec(section)
+        if not spec.name:
+            spec.name = pkg_name
+        extracted_specs = [spec]
+    else:
+        spec_strs = []
+        # Each of these will be one_of or any_of
+        for spec_group in section:
+            (x,) = spec_group.values()
+            spec_strs.extend(x)
+
+        extracted_specs = []
+        for spec_str in spec_strs:
+            spec = spack.spec.Spec(spec_str)
+            if not spec.name:
+                spec.name = pkg_name
+            extracted_specs.append(spec)
+
+    version_specs = []
+    for spec in extracted_specs:
+        try:
+            spec.version
+            version_specs.append(spec)
+        except spack.error.SpecError:
+            pass
+
+    return version_specs
 
 
 class SpecBuilder(object):
@@ -2235,6 +2236,11 @@ class SpecBuilder(object):
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
+
+        pkg_to_required_version = collections.defaultdict(list)
+        for spec in _get_versioned_specs_from_pkg_requirements():
+            pkg_to_required_version[spec.name].append(spec)
+        self.pkg_to_required_version = pkg_to_required_version
 
     def hash(self, pkg, h):
         if pkg not in self._specs:
@@ -2283,7 +2289,7 @@ class SpecBuilder(object):
         for spec in self._command_line_specs:
             if pkg_name == spec.name:
                 cmd_spec = spec
-        # If the command line spec defines a git version
+
         if (
             cmd_spec
             and cmd_spec.versions
@@ -2291,10 +2297,21 @@ class SpecBuilder(object):
             and isinstance(cmd_spec.version, spack.version.GitVersion)
         ):
             asp_version_spec = spack.spec.Spec("@{0}".format(str(version)))
+            # If the command line spec defines a git version of the form hash=number
+            # then we want to preserve that info in the final spec (the solver
+            # dissociates the two pieces of information)
             if not asp_version_spec.satisfies(cmd_spec, strict=False):
                 raise spack.error.SpackError("Internal error")
 
             version = spack.version.ver([str(cmd_spec.version)])
+        elif pkg_name in self.pkg_to_required_version:
+            # Likewise, if the packages.yaml requirements section encodes a
+            # hash=number version, restore that here.
+            for spec in self.pkg_to_required_version[pkg_name]:
+                req_version = spec.version
+                if isinstance(req_version, spack.version.GitVersion) and req_version == version:
+                    version = spack.version.ver([str(req_version)])
+                    break
 
         self._specs[pkg_name].versions = version
 
