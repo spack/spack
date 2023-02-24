@@ -3337,7 +3337,7 @@ class Spec(object):
                 as well.
 
         Raises:
-             UnsatisfiableSpecError: when self cannot be constrained
+             spack.error.UnsatisfiableSpecError: when self cannot be constrained
         """
         # If we are trying to constrain a concrete spec, either the spec
         # already satisfies the constraint (and the method returns False)

@@ -1200,7 +1200,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # one element (the root package). In case there are resources
         # associated with the package, append their fetcher to the
         # composite.
-        root_fetcher = fs.for_package_version(self, self.version)
+        root_fetcher = fs.for_package_version(self)
         fetcher = fs.FetchStrategyComposite()  # Composite fetcher
         fetcher.append(root_fetcher)  # Root fetcher is always present
         resources = self._get_needed_resources()
@@ -1617,7 +1617,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # TODO: resources
         if self.spec.versions.concrete:
             try:
-                source_id = fs.for_package_version(self, self.version).source_id()
+                source_id = fs.for_package_version(self).source_id()
             except (fs.ExtrapolationError, fs.InvalidArgsError):
                 # ExtrapolationError happens if the package has no fetchers defined.
                 # InvalidArgsError happens when there are version directives with args,

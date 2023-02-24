@@ -1503,7 +1503,7 @@ def _from_merged_attrs(fetcher, pkg, version):
     return fetcher(**attrs)
 
 
-def for_package_version(pkg, version):
+def for_package_version(pkg, version=None):
     """Determine a fetch strategy based on the arguments supplied to
     version() in the package description."""
 
@@ -1514,8 +1514,15 @@ def for_package_version(pkg, version):
 
     check_pkg_attributes(pkg)
 
-    if not isinstance(version, spack.version.VersionBase):
-        version = spack.version.Version(version)
+    if version is not None:
+        if not isinstance(version, spack.version.VersionBase):
+            version = spack.version.Version(version)
+
+        version_list = spack.version.VersionList()
+        version_list.add(version)
+        pkg.spec.versions = version_list
+    else:
+        version = pkg.version
 
     # if it's a commit, we must use a GitFetchStrategy
     if isinstance(version, spack.version.GitVersion):

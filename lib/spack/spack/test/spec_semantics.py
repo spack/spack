@@ -1358,6 +1358,8 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "cppflags='-bar -foo'", "cppflags=-bar", (False, False, False)),
         (Spec, "cppflags=-foo", "cppflags=-foo", (True, True, True)),
         (Spec, "cppflags=-foo", "cflags=-foo", (True, False, False)),
+        # Versions
+        (Spec, "@0.94h", "@:0.94i", (True, True, False)),
     ],
 )
 def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
