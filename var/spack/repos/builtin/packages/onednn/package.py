@@ -77,14 +77,22 @@ class Onednn(CMakePackage):
         "cpu_runtime",
         default=default_cpu_runtime,
         description="CPU threading runtime to use",
-        values=("omp", "tbb", "seq"),
+        values=(
+            conditional("none", when="@2.3:"),
+            "omp",
+            "tbb",
+            "seq",
+            conditional("threadpool", when="@1.4:"),
+            conditional("dpcpp", when="@2:"),
+            conditional("sycl", when="@2:"),
+        ),
         multi=False,
     )
     variant(
         "gpu_runtime",
         default="none",
         description="Runtime to use for GPU engines",
-        values=("ocl", "none"),
+        values=("ocl", "none", conditional("dpcpp", when="@2:"), conditional("sycl", when="@2:")),
         multi=False,
     )
     variant("acl", default=False, description="Use Arm Compute Library", when="target=aarch64:")
