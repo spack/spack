@@ -61,10 +61,12 @@ class PyUproot(PythonPackage):
 
     depends_on("python@2.6:2,3.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@4.2.0:")
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@42:", type=("build", "run"), when="@4.1.8:")
+    depends_on("py-hatchling", when="@5:", type="build")
+    depends_on("py-setuptools", when="@:4", type=("build", "run"))
+    depends_on("py-setuptools@42:", type=("build", "run"), when="@4.1.8:4")
     depends_on("py-awkward@2:", type=("build", "run"), when="@5:")
-    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-importlib-metadata", when="@5: ^python@:3.7", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))                                   depends_on("py-packaging", when="@5:", type=("build", "run"))
 
     depends_on("xrootd", when="+xrootd")
 
