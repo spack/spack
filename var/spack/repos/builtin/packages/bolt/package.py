@@ -5,8 +5,6 @@
 
 import os
 
-from llnl.util import tty
-
 from spack.package import *
 
 
@@ -25,6 +23,8 @@ class Bolt(CMakePackage):
     url = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
     git = "https://github.com/pmodels/bolt.git"
     maintainers("shintaro-iwasaki")
+
+    test_requires_compiler = True
 
     tags = ["e4s"]
 
@@ -55,20 +55,20 @@ class Bolt(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples"])
 
-    def run_sample_nested_example(self):
-        """Run stand alone test: sample_nested"""
+    def test_sample_nested_example(self):
+        """build and run sample_nested"""
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, "examples")
         exe = "sample_nested"
-        source_file = "sample_nested.c"
+        source_file = "{0}.c".format(exe)
 
-        if not os.path.isfile(join_path(test_dir, source_file)):
-            tty.warn("Skipping bolt test:" "{0} does not exist".format(source_file))
-            return
+        path = find_required_file(
+            self.test_suite.current_test_cache_dir, source_file, expected=1, recursive=True
+        )
 
-        self.run_test(
-            exe=os.environ["CXX"],
-            options=[
+        test_dir = os.path.dirname(path)
+        with working_dir(test_dir):
+            cxx = which(os.environ["CXX"])
+            cxx(
                 "-L{0}".format(self.prefix.lib),
                 "-I{0}".format(self.prefix.include),
                 "{0}".format(join_path(test_dir, source_file)),
@@ -76,12 +76,7 @@ class Bolt(CMakePackage):
                 exe,
                 "-lomp",
                 "-lbolt",
-            ],
-            purpose="test: compile {0} example".format(exe),
-            work_dir=test_dir,
-        )
+            )
 
-        self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
-
-    def test(self):
-        self.run_sample_nested_example()
+            sample_nested = which(exe)
+            sample_nested()
