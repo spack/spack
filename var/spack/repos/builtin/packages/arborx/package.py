@@ -17,6 +17,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("aprokop")
 
+    test_requires_compiler = True
+
     version("master", branch="master")
     version("1.3", sha256="3f1e17f029a460ab99f8396e2772cec908eefc4bf3868c8828907624a2d0ce5d")
     version("1.2", sha256="ed1939110b2330b7994dcbba649b100c241a2353ed2624e627a200a398096c20")
@@ -116,8 +118,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-    def build_tests(self):
-        """Build the stand-alone/smoke test."""
+    def test_run_ctest(self):
+        """run ctest tests on the installed package"""
 
         arborx_dir = self.spec["arborx"].prefix
         cmake_prefix_path = "-DCMAKE_PREFIX_PATH={0}".format(arborx_dir)
@@ -136,22 +138,12 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             ),
         ]
 
-        self.run_test(
-            "cmake", cmake_args, purpose="test: calling cmake", work_dir=self.cached_tests_work_dir
-        )
+        with working_dir(self.cached_tests_work_dir):
+            cmake = which(self.spec["cmake"].prefix.bin.cmake)
+            cmake(*cmake_args)
 
-        self.run_test(
-            "make", [], purpose="test: building the tests", work_dir=self.cached_tests_work_dir
-        )
+            make = which("make")
+            make()
 
-    def test(self):
-        """Perform stand-alone/smoke tests on the installed package."""
-        self.build_tests()
-
-        self.run_test(
-            "ctest",
-            ["-V"],
-            purpose="test: running the tests",
-            installed=False,
-            work_dir=self.cached_tests_work_dir,
-        )
+            ctest = which("ctest")
+            ctest("-V")
