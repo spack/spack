@@ -281,7 +281,7 @@ def _print_installed_pkg(message):
 
 
 def _print_install_test_log(pkg: "spack.package_base.PackageBase"):
-    """Output install test log file information.
+    """Output install test log path.
 
     Args:
         pkg: package of interest
@@ -1967,7 +1967,6 @@ class BuildProcessInstaller(object):
             with open(self.pkg.times_log_path, "w") as timelog:
                 self.timer.write_json(timelog)
 
-        _print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 

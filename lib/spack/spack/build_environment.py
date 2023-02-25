@@ -43,6 +43,7 @@ import types
 from typing import List, Tuple
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
@@ -1346,6 +1347,15 @@ class ChildError(InstallError):
         if have_log:
             out.write("See {0} log for details:\n".format(self.log_type))
             out.write("  {0}\n".format(self.log_name))
+
+            # Also output the test log path IF it exists
+            if self.context != "test":
+                test_log = join_path(
+                    os.path.dirname(self.log_name), spack.package_base._spack_install_test_log
+                )
+                if os.path.exists(test_log):
+                    out.write("\nSee test log for details:\n")
+                    out.write("  {0}\n".format(test_log))
 
         return out.getvalue()
 
