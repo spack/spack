@@ -111,6 +111,17 @@ def setup_parser(subparser):
             " or only the dependencies"
         ),
     )
+    create.add_argument(
+        "--skip-on-error",
+        action="store_true",
+        default=False,
+        help=(
+            "Ignore errors when creating buildcaches."
+            " This option is useful when creating buildcaches"
+            " for multiple specs at once (e.g. all specs in"
+            " an environment)"
+        ),
+    )
     arguments.add_common_arguments(create, ["specs"])
     create.set_defaults(func=create_fn)
 
@@ -399,6 +410,7 @@ def create_fn(args):
         "unsigned": args.unsigned,
         "allow_root": args.allow_root,
         "regenerate_index": args.rebuild_index,
+        "skip_on_error": args.skip_on_error,
     }
     bindist.push(matches, push_url, specs_kwargs, **kwargs)
 

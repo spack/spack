@@ -85,3 +85,11 @@ class Ecflow(CMakePackage):
             self.define("Python3_EXECUTABLE", self.spec["python"].package.command),
             self.define("BOOST_ROOT", self.spec["boost"].prefix),
         ]
+
+    # A recursive link in the ecflow source code causes the binary cache
+    # creation to fail. This file is only in the install tree if the
+    # --source option is set when installing the package, but force_remove
+    # acts like "rm -f" and won't abort if the file doesn't exist.
+    @run_after("install")
+    def remove_recursive_symlink_in_source_code(self):
+        force_remove(join_path(self.prefix, "share/ecflow/src/cereal/cereal"))
