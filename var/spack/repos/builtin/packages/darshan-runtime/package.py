@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack.package import *
 
@@ -144,70 +145,61 @@ class DarshanRuntime(AutotoolsPackage):
         test_inputs = [join_path(self.basepath, "mpi-io-test.c")]
         self.cache_extra_test_sources(test_inputs)
 
-    def _test_intercept(self):
+    def test_mpi_io_test(self):
+        """build, run, and check outputs of mpi-io-test"""
+        if "+mpi" not in self.spec:
+            raise SkipTest("Test requires +mpi build")
+
         testdir = "intercept-test"
-        with working_dir(testdir, create=True):
-            if "+mpi" in self.spec:
-                # compile a test program
-                logname = join_path(os.getcwd(), "test.darshan")
-                fname = join_path(
-                    self.test_suite.current_test_cache_dir,
-                    join_path(self.basepath, "mpi-io-test.c"),
-                )
-                cc = Executable(self.spec["mpi"].mpicc)
-                compile_opt = ["-c", fname]
-                link_opt = ["-o", "mpi-io-test", "mpi-io-test.o"]
-                cc(*(compile_opt))
-                cc(*(link_opt))
+        testexe = "mpi-io-test"
+        logname = join_path(os.getcwd(), testdir, "test.darshan")
 
-                # run test program and intercept
-                purpose = "Test running code built against darshan"
-                exe = "./mpi-io-test"
-                options = ["-f", "tmp.dat"]
-                status = [0]
-                installed = False
-                expected_output = [
-                    r"Write bandwidth = \d+.\d+ Mbytes/sec",
-                    r"Read bandwidth = \d+.\d+ Mbytes/sec",
-                ]
-                env["LD_PRELOAD"] = "libdarshan.so"
-                env["DARSHAN_LOGFILE"] = logname
-                self.run_test(
-                    exe,
-                    options,
-                    expected_output,
-                    status,
-                    installed,
-                    purpose,
-                    skip_missing=False,
-                    work_dir=None,
-                )
-                env.pop("LD_PRELOAD")
+        env["LD_PRELOAD"] = join_path(self.prefix.lib, "libdarshan.so")
+        env["DARSHAN_LOGFILE"] = logname
 
-                import llnl.util.tty as tty
+        with test_part(
+            self,
+            "test_mpi_io_test_run",
+            purpose="build, run and check mpi-io-test",
+            work_dir=testdir,
+        ):
+            # compile a test program
+            fname = join_path(
+                self.test_suite.current_test_cache_dir,
+                join_path(self.basepath, "{0}.c".format(testexe)),
+            )
+            cc = Executable(self.spec["mpi"].mpicc)
+            compile_opt = ["-c", fname]
+            link_opt = ["-o", testexe, "{0}.o".format(testexe)]
+            cc(*(compile_opt))
+            cc(*(link_opt))
 
-                # verify existence of log and size is > 0
-                tty.msg("Test for existince of log:")
-                if os.path.exists(logname):
-                    sr = os.stat(logname)
-                    print("PASSED")
-                    tty.msg("Test for size of log:")
-                    if not sr.st_size > 0:
-                        exc = BaseException("log size is 0")
-                        m = None
-                        if spack.config.get("config:fail_fast", False):
-                            raise TestFailure([(exc, m)])
-                        else:
-                            self.test_failures.append((exc, m))
-                    else:
-                        print("PASSED")
-                else:
-                    exc = BaseException("log does not exist")
-                    m = None
-                    if spack.config.get("config:fail_fast", False):
-                        raise TestFailure([(exc, m)])
-                    else:
-                        self.test_failures.append((exc, m))
+            # run test program and intercept
+            mpi_io_test = which(join_path(".", testexe))
+            output = mpi_io_test("-f", "tmp.dat", output=str.split, error=str.split)
 
-    def test(self):
-        self._test_intercept()
+            expected_output = [
+                r"Write bandwidth = \d+.\d+ Mbytes/sec",
+                r"Read bandwidth = \d+.\d+ Mbytes/sec",
+            ]
+            for expected in expected_output:
+                assert re.search(expected, output), "Expected '{0}' in output".format(expected)
+
+        env.pop("LD_PRELOAD")
+
+        with test_part(
+            self,
+            "test_mpi_io_test_log_exists",
+            purpose="Ensure the log file exists",
+            work_dir=testdir,
+        ):
+            assert os.path.exists(logname)
+
+        with test_part(
+            self,
+            "test_mpi_io_test_log_non_empty",
+            purpose="Ensure the log file is non-empty",
+            work_dir=testdir,
+        ):
+            sr = os.stat(logname)
+            assert sr.st_size > 0
