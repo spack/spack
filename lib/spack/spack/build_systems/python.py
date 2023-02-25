@@ -169,7 +169,7 @@ class PythonExtension(spack.package_base.PackageBase):
         view.remove_files(to_remove)
 
     def test_imports(self):
-        """Attempts to import modules of the installed package."""
+        """Import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
