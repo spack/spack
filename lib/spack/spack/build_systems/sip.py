@@ -87,18 +87,20 @@ class SIPPackage(spack.package_base.PackageBase):
         """The python ``Executable``."""
         inspect.getmodule(self).python(*args, **kwargs)
 
-    def test(self):
+    def test_imports(self):
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
+        python = inspect.getmodule(self).python
         for module in self.import_modules:
-            self.run_test(
-                inspect.getmodule(self).python.path,
-                ["-c", "import {0}".format(module)],
+            with test_part(
+                self,
+                "test_imports_{0}".format(module),
                 purpose="checking import of {0}".format(module),
                 work_dir="spack-test",
-            )
+            ):
+                python("-c", "import {0}".format(module))
 
 
 @spack.builder.builder("sip")
