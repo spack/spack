@@ -26,7 +26,7 @@ class PyScikitBuildCore(PythonPackage):
     # Build system
     depends_on("py-hatchling", type="build")
     depends_on("py-hatch-vcs", type="build")
-    
+
     # Dependencies
     depends_on("py-exceptiongroup", when="^python@:3.10", type=("build", "run"))
     depends_on("py-importlib-resources@1.3:", when="^python@:3.8", type=("build", "run"))
