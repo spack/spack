@@ -36,16 +36,18 @@ class PyScikitBuildCore(PythonPackage):
     depends_on("cmake@3.15:", type=("build", "run"))
 
     # Optional dependencies
-    depends_on("py-pyproject-metadata@0.5:", when="+pyproject", type=("build", "run", "test"))
-    depends_on("py-pathspec@0.10.1:", when="+pyproject", type=("build", "run", "test"))
+    depends_on("py-pyproject-metadata@0.5:", when="+pyproject", type=("build", "run"))
+    depends_on("py-pathspec@0.10.1:", when="+pyproject", type=("build", "run"))
 
     # Test dependencies
     depends_on("py-build +virtualenv", type="test")
-    depends_on("py-pytest@7:", type="test")
-    depends_on("py-pytest-subprocess@1.5:", type="test")
     depends_on("py-cattrs@22.2:", type="test")
     depends_on("py-importlib-metadata", when="^python@:3.7", type="test")
+    depends_on("py-pathspec@0.10.1:", type="test")
     depends_on("py-pybind11", type="test")
+    depends_on("py-pyproject-metadata@0.5:", type="test")
+    depends_on("py-pytest@7:", type="test")
+    depends_on("py-pytest-subprocess@1.5:", type="test")
     depends_on("py-setuptools", type="test")
     depends_on("py-wheel", type="test")
 
