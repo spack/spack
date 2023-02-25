@@ -1146,6 +1146,7 @@ def _build_tarball(
     allow_root=False,
     key=None,
     regenerate_index=False,
+    skip_on_error=False,
 ):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -1221,7 +1222,11 @@ def _build_tarball(
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
             shutil.rmtree(tmpdir)
-            tty.die(e)
+            if skip_on_error:
+                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
+                return
+            else:
+                tty.die(e)
     else:
         try:
             check_package_relocatable(workdir, spec, allow_root)
@@ -1229,7 +1234,11 @@ def _build_tarball(
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
             shutil.rmtree(tmpdir)
-            tty.die(e)
+            if skip_on_error:
+                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
+                return
+            else:
+                tty.die(e)
 
     # create gzip compressed tarball of the install prefix
     # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
@@ -1353,6 +1362,7 @@ def push(specs, push_url, specs_kwargs=None, **kwargs):
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
     for node in nodes:
+        tty.msg('Creating buildcache for "{0}"'.format(node.format()))
         try:
             _build_tarball(node, push_url, **kwargs)
         except NoOverwriteException as e:
@@ -1609,7 +1619,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec, allow_root):
+def relocate_package(spec):
     """
     Relocate the given package
     """
@@ -1883,7 +1893,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec, allow_root)
+        relocate_package(spec)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
