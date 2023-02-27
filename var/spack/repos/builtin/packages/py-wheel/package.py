@@ -10,11 +10,12 @@ class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url = "https://files.pythonhosted.org/packages/bd/7c/d38a0b30ce22fc26ed7dbc087c6d00851fb3395e9d0dac40bec1f905030c/wheel-0.38.4-py3-none-any.whl"
+    url = "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
     list_url = "https://pypi.org/simple/wheel/"
 
     version(
         "0.38.4",
+        url="https://files.pythonhosted.org/packages/bd/7c/d38a0b30ce22fc26ed7dbc087c6d00851fb3395e9d0dac40bec1f905030c/wheel-0.38.4-py3-none-any.whl",
         sha256="b60533f3f5d530e971d6737ca6d58681ee434818fab630c83a734bb10c083ce8",
         expand=False,
     )
@@ -79,10 +80,6 @@ class PyWheel(Package, PythonExtension):
     depends_on("python@2.7:2.8,3.4:", when="@0.30:", type=("build", "run"))
     depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
     depends_on("py-pip", type="build")
-
-    def url_for_version(self, version):
-        if version < Version("0.37.1"):
-            url = "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
 
     def install(self, spec, prefix):
         # To build wheel from source, you need setuptools and wheel already installed.
