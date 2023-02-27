@@ -13,10 +13,6 @@ packages:
     variants: +gas+gold+ld+plugins~libiberty
   boost:
     variants: +filesystem+pic+test
-  coreneuron:
-    variants: ~gpu
-    require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   cuda:
     # Should match what is provided by NVHPC, too
     # version: [11.6.1]
@@ -67,33 +63,26 @@ packages:
   mxnet:
     version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
   neurodamus-core:
-    variants: ~gpu
+    variants: ~~gpu
     require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-hippocampus:
-    variants: ~gpu
+    variants: ~~gpu
     require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-model:
-    variants: ~gpu
+    variants: ~~gpu
     require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-mousify:
-    variants: ~gpu
+    variants: ~~gpu
     require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-neocortex:
-    variants: ~gpu
+    variants: ~~gpu
     require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   neurodamus-thalamus:
-    variants: ~gpu
+    variants: ~~gpu
     require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   neuron:
-    variants: ~gpu
-    require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
+    require:
+      - one_of: ["%intel", "%nvhpc"]
   omega-h:
     variants: ~kokkos~trilinos
   opencv:
