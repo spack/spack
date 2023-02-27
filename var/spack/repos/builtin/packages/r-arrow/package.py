@@ -16,7 +16,7 @@ class RArrow(RPackage):
 
     cran = "arrow"
 
-    maintainers = ["viniciusvgp"]
+    maintainers("viniciusvgp")
 
     version("11.0.0.2", sha256="6b179a2fceb62b676a032d19f9b880a1b6aecb92a5b39669f397385d82201a74")
     version("10.0.0", sha256="e855b5ea913e93935d20be11b342f45193437404945c9fc39e9c61fd91911a13")
