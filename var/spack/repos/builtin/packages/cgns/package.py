@@ -53,8 +53,8 @@ class Cgns(CMakePackage):
     depends_on("hdf5+mpi", when="+hdf5+mpi")
     depends_on("mpi", when="+mpi")
 
-    # cgnsview requires `spack load tk` to run
-    depends_on("tk", when="+tools")
+    # cgnsview requires tk to run
+    depends_on("tk", when="+tools", type=("build", "link", "run"))
     depends_on("tcl", when="+tools")
     depends_on("gl", when="+tools")
     depends_on("glu", when="+tools")
