@@ -8,11 +8,11 @@ from spack.package import *
 
 class RArrow(RPackage):
     """'Apache' 'Arrow' <https://arrow.apache.org/> is a cross-language
-development platform for in-memory data. It specifies a standardized
-language-independent columnar memory format for flat and hierarchical
-data, organized for efficient analytic operations on modern
-hardware. This package provides an interface to the 'Arrow C++'
-library."""
+    development platform for in-memory data. It specifies a standardized
+    language-independent columnar memory format for flat and hierarchical
+    data, organized for efficient analytic operations on modern
+    hardware. This package provides an interface to the 'Arrow C++'
+    library."""
 
     cran = "arrow"
 
@@ -45,18 +45,17 @@ library."""
     version("0.14.1.1", sha256="2da7962b7c32ec1f108b27ca614764c3bde6fd88519520a5ba6eff0327ce59d4")
     version("0.14.1", sha256="612255f149a79f58cf464599faea6e42dbb65886d3565aa2ea5f08b90e689a33")
 
-    variant('notcran', description="Enable full-featured build.", default=False)
+    variant("notcran", description="Enable full-featured build.", default=False)
 
     depends_on("r-purrr", type=("build", "run"))
-    depends_on("r-r6", type=("build", "run"))    
+    depends_on("r-r6", type=("build", "run"))
     depends_on("r-tidyselect", type=("build", "run"))
-    depends_on("r-bit64", type=("build", "run"))    
+    depends_on("r-bit64", type=("build", "run"))
     depends_on("r-assertthat", type=("build", "run"))
     depends_on("r-bit64", type=("build", "run"))
     depends_on("r-vctrs", type=("build", "run"))
     depends_on("r-cpp11", type=("build", "run"))
 
-
     def setup_build_environment(self, env):
-        if self.spec.satisfies('+notcran'):
-            env.set('NOT_CRAN', True)
+        if self.spec.satisfies("+notcran"):
+            env.set("NOT_CRAN", True)

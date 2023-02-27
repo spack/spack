@@ -25,14 +25,14 @@ from spack.package import *
 
 class RStarvz(RPackage):
     """Performance analysis workflow that combines the power of the R
-language (and the tidyverse realm) and many auxiliary tools to provide
-a consistent, flexible, extensible, fast, and versatile framework for
-the performance analysis of task-based applications that run on top of
-the StarPU runtime (with its MPI (Message Passing Interface) layer for
-multi-node support). Its goal is to provide a fruitful prototypical
-environment to conduct performance analysis hypothesis-checking for
-task-based applications that run on heterogeneous (multi-GPU,
-multi-core) multi-node HPC (High-performance computing) platforms."""
+    language (and the tidyverse realm) and many auxiliary tools to provide
+    a consistent, flexible, extensible, fast, and versatile framework for
+    the performance analysis of task-based applications that run on top of
+    the StarPU runtime (with its MPI (Message Passing Interface) layer for
+    multi-node support). Its goal is to provide a fruitful prototypical
+    environment to conduct performance analysis hypothesis-checking for
+    task-based applications that run on heterogeneous (multi-GPU,
+    multi-core) multi-node HPC (High-performance computing) platforms."""
 
     cran = "starvz"
     git = "https://github.com/schnorr/starvz.git"
@@ -44,14 +44,14 @@ multi-core) multi-node HPC (High-performance computing) platforms."""
     version("0.6.0", sha256="734377721dc2d51f6ecc55f153a97724d5672e72df807a889b380320a98caf62")
     version("0.5.0", sha256="fc2106f420e7348417249be219f6eb6db2ec8f06969dd63e24b24a2284361e61")
     version("0.4.0", sha256="d354dab59860d8939bbed158ff1adf7a59c41225671e633a51246ab7dbbeeedb")
-    version("develop", branch = "master")
+    version("develop", branch="master")
 
     depends_on("r@3.6.0:")
     depends_on("r-ggplot2")
-    depends_on("r-dplyr")    
+    depends_on("r-dplyr")
     depends_on("r-lpsolve")
     depends_on("r-rcpp@1.0.6:")
-    depends_on("r-zoo") 
+    depends_on("r-zoo")
     depends_on("r-tidyr")
     depends_on("r-tibble")
     depends_on("r-stringr")

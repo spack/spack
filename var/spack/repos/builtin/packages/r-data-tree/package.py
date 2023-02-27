@@ -8,12 +8,12 @@ from spack.package import *
 
 class RDataTree(RPackage):
     """Create tree structures from hierarchical data, and traverse the
-tree in various orders. Aggregate, cumulate, print, plot, convert to
-and from data.frame and more. Useful for decision trees, machine
-learning, finance, conversion from and to JSON, and many other
-applications."""
+    tree in various orders. Aggregate, cumulate, print, plot, convert to
+    and from data.frame and more. Useful for decision trees, machine
+    learning, finance, conversion from and to JSON, and many other
+    applications."""
 
-    cran="data.tree"
+    cran = "data.tree"
 
     maintainers = ["viniciusvgp"]
 
@@ -37,4 +37,3 @@ applications."""
 
     depends_on("r-stringi", type=("build", "run"))
     depends_on("r-r6", type=("build", "run"))
-
