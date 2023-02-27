@@ -203,8 +203,7 @@ def implicit_variant_conversion(method):
 
     @functools.wraps(method)
     def convert(self, other):
-        # We don't care if types are different as long as I can convert
-        # other to type(self)
+        # We don't care if types are different as long as I can convert other to type(self)
         try:
             other = type(self)(other.name, other._original_value)
         except (error.SpecError, ValueError):

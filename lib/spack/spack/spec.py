@@ -3508,24 +3508,33 @@ class Spec(object):
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
-        # TODO (INTERSECTS): the lines below are not commutative
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
+            if self.virtual and other.virtual:
+                # Two virtual specs intersect only if there are providers for both
+                lhs = spack.repo.path.providers_for(str(self))
+                rhs = spack.repo.path.providers_for(str(other))
+                intersection = [s for s in lhs if any(s.intersects(z) for z in rhs)]
+                return bool(intersection)
+
             # A provider can satisfy a virtual dependency.
-            if not self.virtual and other.virtual:
+            elif self.virtual or other.virtual:
+                virtual_spec, non_virtual_spec = (self, other) if self.virtual else (other, self)
                 try:
                     # Here we might get an abstract spec
-                    pkg_cls = spack.repo.path.get_pkg_class(self.fullname)
-                    pkg = pkg_cls(self)
+                    pkg_cls = spack.repo.path.get_pkg_class(non_virtual_spec.fullname)
+                    pkg = pkg_cls(non_virtual_spec)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
                     # it as a provider of this vdep.
                     return False
 
-                if pkg.provides(other.name):
+                if pkg.provides(virtual_spec.name):
                     for provided, when_specs in pkg.provided.items():
-                        if any(self.intersects(when, deps=False) for when in when_specs):
-                            if provided.intersects(other):
+                        if any(
+                            non_virtual_spec.intersects(when, deps=False) for when in when_specs
+                        ):
+                            if provided.intersects(virtual_spec):
                                 return True
             return False
 
