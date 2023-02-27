@@ -37,6 +37,8 @@ multi-core) multi-node HPC (High-performance computing) platforms."""
     cran = "starvz"
     git = "https://github.com/schnorr/starvz.git"
 
+    maintainers("viniciusvgp")
+
     version("0.7.1", sha256="523b35dd3e7679c96087e7e94050c749c55e70ea23a2434f70d701b80b304248")
     version("0.7.0", sha256="9916d5f22052313208b1bdaea2b5e1dc1f4dc804750e9d49d710cc15f3bdd598")
     version("0.6.0", sha256="734377721dc2d51f6ecc55f153a97724d5672e72df807a889b380320a98caf62")
