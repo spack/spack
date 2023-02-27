@@ -12,19 +12,19 @@ import spack.cmd
 import spack.util.git
 from spack.cmd import spack_is_git_repo
 
-description = "run git inside of the spack repo"
+description = "run a program inside of the spack repo"
 section = "system"
-level = "short"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        "subcommand", nargs=argparse.REMAINDER, help="git command to run within spack repo"
+        "subcommand", nargs=argparse.REMAINDER, help="program and args to run within spack repo"
     )
 
 
 def git(parser, args):
     # this is a placeholder shell for spack help
-    # spack git is located in the bash start up script
+    # spack run is located in the bash start up script
     # we should never reach this point of execution
     pass
