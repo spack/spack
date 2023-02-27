@@ -13,7 +13,7 @@ class PyCarputils(PythonPackage):
     homepage = "https://www.opencarp.org"
     git = "https://git.opencarp.org/openCARP/carputils.git"
 
-    maintainers = ["MarieHouillon"]
+    maintainers("MarieHouillon")
 
     version("master", branch="master")
     # Version to use with openCARP releases

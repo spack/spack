@@ -13,7 +13,7 @@ class PyAzuremlSdk(PythonPackage):
     homepage = "https://docs.microsoft.com/en-us/azure/machine-learning/service/"
     url = "https://pypi.io/packages/py3/a/azureml_sdk/azureml_sdk-1.11.0-py3-none-any.whl"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version(
         "1.23.0",

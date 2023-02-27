@@ -16,7 +16,7 @@ class Garfieldpp(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["mirguest"]
+    maintainers("mirguest")
 
     variant("examples", default=False, description="Build garfield examples")
 

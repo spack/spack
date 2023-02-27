@@ -17,7 +17,7 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     tags = ["hep"]
 
-    maintainers = ["drbenmorgan", "sethrj"]
+    maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master")
     version("1.2.1", sha256="2b47f0d23f6d25ca4fc0601b93a98167bbfb4b8aa6a1bba16d0391569e99e6f0")
@@ -140,11 +140,6 @@ class Vecgeom(CMakePackage, CudaPackage):
             )
 
         if spec.satisfies("@:0.5.2"):
-            args.extend(
-                [
-                    define("USOLIDS", True),
-                    define("USOLIDS_VECGEOM", True),
-                ]
-            )
+            args.extend([define("USOLIDS", True), define("USOLIDS_VECGEOM", True)])
 
         return args

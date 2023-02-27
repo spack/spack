@@ -22,7 +22,7 @@ class IqTree(CMakePackage):
     variant("mpi", default=False, description="Enable MPI support.")
     variant("lsd2", default=True, description="Activate Least Squares Dating.")
 
-    maintainers = ["ilbiondo"]
+    maintainers("ilbiondo")
 
     # Depends on Eigen3 and zlib
 
@@ -32,7 +32,6 @@ class IqTree(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
-
         spec = self.spec
         args = []
         iqflags = []

@@ -13,7 +13,7 @@ class Mesa18(AutotoolsPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers = ["v-dobrev", "chuckatkins", "ChristianTackeGSI"]
+    maintainers("v-dobrev", "chuckatkins", "ChristianTackeGSI")
 
     # Note that we always want to build from the git repo instead of a
     # tarball since the tarball has pre-generated files for certain versions
@@ -45,14 +45,7 @@ class Mesa18(AutotoolsPackage):
     variant(
         "swr",
         values=spack.variant.DisjointSetsOfValues(
-            ("none",),
-            ("auto",),
-            (
-                "avx",
-                "avx2",
-                "knl",
-                "skx",
-            ),
+            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
         )
         .with_non_feature_values("auto")
         .with_non_feature_values("none")

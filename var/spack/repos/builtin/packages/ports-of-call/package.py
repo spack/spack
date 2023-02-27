@@ -13,7 +13,7 @@ class PortsOfCall(CMakePackage):
     url = "https://github.com/lanl/ports-of-call/archive/refs/tags/v1.1.0.tar.gz"
     git = "https://github.com/lanl/ports-of-call.git"
 
-    maintainers = ["rbberger"]
+    maintainers("rbberger")
 
     version("main", branch="main")
     version("1.4.1", sha256="82d2c75fcca8bd613273fd4126749df68ccc22fbe4134ba673b4275f9972b78d")

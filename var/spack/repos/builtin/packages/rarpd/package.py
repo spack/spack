@@ -15,7 +15,7 @@ class Rarpd(MakefilePackage):
     homepage = "https://github.com/fermitools/rarpd"
     url = "https://github.com/fermitools/rarpd/archive/refs/tags/0.981107-fixes.tar.gz"
 
-    maintainers = ["jcpunk"]
+    maintainers("jcpunk")
 
     version(
         "0.981107-fixes", sha256="92b44adc4a061dcedeb01f7e1c1700374199cccceef1a798de97303d387bb4c2"

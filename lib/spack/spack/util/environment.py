@@ -138,7 +138,7 @@ def dump_environment(path, environment=None):
     use_env = environment or os.environ
     hidden_vars = set(["PS1", "PWD", "OLDPWD", "TERM_SESSION_ID"])
 
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT, 0o600)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as env_file:
         for var, val in sorted(use_env.items()):
             env_file.write(
@@ -912,7 +912,7 @@ def inspect_path(root, inspections, exclude=None):
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
     for relative_path, variables in inspections.items():
-        expected = os.path.join(root, relative_path)
+        expected = os.path.join(root, os.path.normpath(relative_path))
 
         if os.path.isdir(expected) and not exclude(expected):
             for variable in variables:
@@ -1004,12 +1004,7 @@ def environment_after_sourcing_files(*files, **kwargs):
 
         # Try to source the file
         source_file_arguments = " ".join(
-            [
-                source_file,
-                suppress_output,
-                concatenate_on_success,
-                dump_environment,
-            ]
+            [source_file, suppress_output, concatenate_on_success, dump_environment]
         )
         output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
         return json.loads(output)

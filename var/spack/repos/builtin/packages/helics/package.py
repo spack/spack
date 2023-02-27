@@ -16,7 +16,7 @@ class Helics(CMakePackage):
     url = "https://github.com/GMLC-TDC/HELICS/releases/download/v2.4.1/Helics-v2.4.1-source.tar.gz"
     git = "https://github.com/GMLC-TDC/HELICS.git"
 
-    maintainers = ["nightlark"]
+    maintainers("nightlark")
 
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)
@@ -125,10 +125,7 @@ class Helics(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
-        args = [
-            "-DHELICS_BUILD_EXAMPLES=OFF",
-            "-DHELICS_BUILD_TESTS=OFF",
-        ]
+        args = ["-DHELICS_BUILD_EXAMPLES=OFF", "-DHELICS_BUILD_TESTS=OFF"]
 
         # HELICS core type CMake options
         # Options were renamed in v3

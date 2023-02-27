@@ -13,7 +13,7 @@ class Dftd4(MesonPackage):
     url = "https://github.com/dftd4/dftd4/releases/download/v3.5.0/dftd4-3.5.0-source.tar.xz"
     git = "https://github.com/dftd4/dftd4.git"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("main", branch="main")
     version("3.5.0", "d2bab992b5ef999fd13fec8eb1da9e9e8d94b8727a2e624d176086197a00a46f")

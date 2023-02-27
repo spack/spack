@@ -17,25 +17,55 @@ class PyJaxlib(PythonPackage, CudaPackage):
     tmp_path = ""
     buildtmp = ""
 
+    version("0.4.3", sha256="2104735dc22be2b105e5517bd5bc6ae97f40e8e9e54928cac1585c6112a3d910")
     version("0.3.22", sha256="680a6f5265ba26d5515617a95ae47244005366f879a5c321782fde60f34e6d0d")
     version("0.1.74", sha256="bbc78c7a4927012dcb1b7cd135c7521f782d7dad516a2401b56d3190f81afe35")
 
-    # see jaxlib/setup.py for dependencies
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    variant("cuda", default=True, description="Build with CUDA")
 
-    depends_on("py-numpy@1.18:", type=("build", "run"), when="@0.1.74")
-    depends_on("py-numpy@1.20:", type=("build", "run"), when="@0.3.22")
+    # jaxlib/setup.py
+    depends_on("python@3.8:", when="@0.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.20:", when="@0.3:", type=("build", "run"))
+    depends_on("py-numpy@1.18:", type=("build", "run"))
     depends_on("py-scipy@1.5:", type=("build", "run"))
-    depends_on("py-absl-py", type=("build", "run"))
-    depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@0.1.74")
-    # Bazel 5 not yet supported: https://github.com/google/jax/issues/8440
-    depends_on("bazel@4.1.0:4", type=("build"), when="@0.1.74")
-    # Bazel 5 support starts here
-    depends_on("bazel@5.1.1:", type=("build"), when="@0.3.22")
+
+    # .bazelversion
+    depends_on("bazel@5.1.1:", when="@0.3:", type="build")
+    # https://github.com/google/jax/issues/8440
+    depends_on("bazel@4.1:4", when="@0.1", type="build")
+
+    # README.md
+    depends_on("cuda@11.4:", when="@0.4:+cuda")
+    depends_on("cuda@11.1:", when="@0.3+cuda")
+    # https://github.com/google/jax/issues/12614
+    depends_on("cuda@11.1:11.7.0", when="@0.1+cuda")
+    depends_on("cudnn@8.2:", when="@0.4:+cuda")
     depends_on("cudnn@8.0.5:", when="+cuda")
-    depends_on("cuda@11.1:11.7.0", when="@0.1.74+cuda")
-    depends_on("cuda@11.1:", when="@0.3.22+cuda")
+
+    # Historical dependencies
+    depends_on("py-absl-py", when="@:0.3", type=("build", "run"))
+    depends_on("py-flatbuffers@1.12:2", when="@0.1", type=("build", "run"))
+
+    def patch(self):
+        self.tmp_path = tempfile.mkdtemp(prefix="spack")
+        self.buildtmp = tempfile.mkdtemp(prefix="spack")
+        # triple quotes necessary because of a variety
+        # of other embedded quote(s)
+        filter_file(
+            """f"--output_path={output_path}",""",
+            """f"--output_path={output_path}","""
+            """f"--sources_path=%s","""
+            """f"--nohome_rc'","""
+            """f"--nosystem_rc'",""" % self.tmp_path,
+            "build/build.py",
+        )
+        filter_file(
+            "args = parser.parse_args()",
+            "args,junk = parser.parse_known_args()",
+            "build/build_wheel.py",
+            string=True,
+        )
 
     def install(self, spec, prefix):
         args = []
@@ -58,23 +88,3 @@ class PyJaxlib(PythonPackage, CudaPackage):
             pip(*args)
         remove_linked_tree(self.wrapped_package_object.tmp_path)
         remove_linked_tree(self.wrapped_package_object.buildtmp)
-
-    def patch(self):
-        self.tmp_path = tempfile.mkdtemp(prefix="spack")
-        self.buildtmp = tempfile.mkdtemp(prefix="spack")
-        # triple quotes necessary because of a variety
-        # of other embedded quote(s)
-        filter_file(
-            """f"--output_path={output_path}",""",
-            """f"--output_path={output_path}","""
-            """f"--sources_path=%s","""
-            """f"--nohome_rc'","""
-            """f"--nosystem_rc'",""" % self.tmp_path,
-            "build/build.py",
-        )
-        filter_file(
-            "args = parser.parse_args()",
-            "args,junk = parser.parse_known_args()",
-            "build/build_wheel.py",
-            string=True,
-        )

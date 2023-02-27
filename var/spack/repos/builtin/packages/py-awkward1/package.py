@@ -13,7 +13,7 @@ class PyAwkward1(PythonPackage):
     url = "https://github.com/scikit-hep/awkward-1.0/archive/0.3.1.tar.gz"
     homepage = "https://awkward-array.org"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version(
         "1.1.2",

@@ -13,7 +13,7 @@ class Googletest(CMakePackage):
     url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz"
     git = "https://github.com/google/googletest"
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     version("main", branch="main")
     version("1.12.1", sha256="81964fe578e9bd7c94dfdb09c8e4d6e6759e19967e397dbea48d1c10e45d0df2")

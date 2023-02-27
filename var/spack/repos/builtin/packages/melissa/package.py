@@ -16,7 +16,7 @@ class Melissa(CMakePackage):
     git = "https://gitlab.inria.fr/melissa/melissa.git"
 
     # attention: Git**Hub**.com accounts
-    maintainers = ["christoph-conrads", "raffino"]
+    maintainers("christoph-conrads", "raffino")
 
     version("master", branch="master")
     version("develop", branch="develop")

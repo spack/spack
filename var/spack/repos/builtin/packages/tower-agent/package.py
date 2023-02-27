@@ -15,7 +15,7 @@ class TowerAgent(Package):
     """
 
     homepage = "https://github.com/seqeralabs/tower-agent"
-    maintainers = ["marcodelapierre"]
+    maintainers("marcodelapierre")
 
     if platform.machine() == "x86_64":
         if platform.system() == "Linux":

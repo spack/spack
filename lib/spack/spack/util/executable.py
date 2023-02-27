@@ -196,12 +196,7 @@ class Executable(object):
 
         try:
             proc = subprocess.Popen(
-                cmd,
-                stdin=istream,
-                stderr=estream,
-                stdout=ostream,
-                env=env,
-                close_fds=False,
+                cmd, stdin=istream, stderr=estream, stdout=ostream, env=env, close_fds=False
             )
             out, err = proc.communicate()
 

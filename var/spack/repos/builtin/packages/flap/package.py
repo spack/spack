@@ -13,7 +13,7 @@ class Flap(CMakePackage):
     url = "https://github.com/szaghi/FLAP.git"
     git = "https://github.com/szaghi/FLAP.git"
 
-    maintainers = ["fluidnumerics-joe"]
+    maintainers("fluidnumerics-joe")
 
     version("master", branch="master", submodules=True)
 

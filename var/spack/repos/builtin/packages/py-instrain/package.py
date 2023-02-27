@@ -17,7 +17,7 @@ class PyInstrain(PythonPackage):
     homepage = "https://github.com/MrOlm/instrain"
     pypi = "inStrain/inStrain-1.5.7.tar.gz"
 
-    maintainers = ["MrOlm"]
+    maintainers("MrOlm")
 
     variant("prodigal", default=False, description="Enables profiling on a gene by gene level")
 

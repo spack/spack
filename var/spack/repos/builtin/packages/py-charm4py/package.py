@@ -21,7 +21,7 @@ class PyCharm4py(PythonPackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["payerle"]
+    maintainers("payerle")
 
     version("1.0", sha256="8ddb9f021b7379fde94b28c31f4ab6a60ced2c2a207a2d75ce57cb91b6be92bc")
 

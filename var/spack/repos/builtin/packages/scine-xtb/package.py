@@ -25,6 +25,12 @@ class ScineXtb(CMakePackage):
         placement="_dev",
     )
 
+    patch(
+        "https://raw.githubusercontent.com/conda-forge/scine-xtb-feedstock/4ac2b70/recipe/patches/pkgconfig.patch",
+        level=1,
+        sha256="8650abf9dca269f62b60733aabfac0681d9d1cfd721bec728752fb4cbca44452",
+    )
+
     variant("python", default=False, description="Build Python extension module")
 
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")

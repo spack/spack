@@ -403,9 +403,7 @@ def specfile_for(default_mock_concretization):
         # Key value pairs with ":" and "," in the value
         (
             r"target=:broadwell,icelake",
-            [
-                Token(TokenType.KEY_VALUE_PAIR, value="target=:broadwell,icelake"),
-            ],
+            [Token(TokenType.KEY_VALUE_PAIR, value="target=:broadwell,icelake")],
             r"arch=None-None-:broadwell,icelake",
         ),
         # Hash pair version followed by a variant
@@ -480,13 +478,7 @@ def specfile_for(default_mock_concretization):
             [Token(TokenType.VERSION, value="@1.2 : 1.4 , 1.6")],
             "@1.2:1.4,1.6",
         ),
-        (
-            "@1.2 :   develop",
-            [
-                Token(TokenType.VERSION, value="@1.2 :   develop"),
-            ],
-            "@1.2:develop",
-        ),
+        ("@1.2 :   develop", [Token(TokenType.VERSION, value="@1.2 :   develop")], "@1.2:develop"),
         (
             "@1.2 :   develop   = foo",
             [
@@ -522,10 +514,7 @@ def specfile_for(default_mock_concretization):
         ),
         (
             "@:0.4 % nvhpc",
-            [
-                Token(TokenType.VERSION, value="@:0.4"),
-                Token(TokenType.COMPILER, value="% nvhpc"),
-            ],
+            [Token(TokenType.VERSION, value="@:0.4"), Token(TokenType.COMPILER, value="% nvhpc")],
             "@:0.4%nvhpc",
         ),
     ],
@@ -847,39 +836,23 @@ def test_error_conditions(text, exc_cls):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
-        pytest.param(
-            "../../libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
-        ),
-        pytest.param(
-            "./libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
-        ),
+        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
+        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
-            "/bogus/path/libdwarf.yamlfoobar",
-            spack.spec.SpecFilenameError,
-            marks=FAIL_ON_WINDOWS,
+            "/bogus/path/libdwarf.yamlfoobar", spack.spec.SpecFilenameError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
@@ -887,34 +860,20 @@ def test_error_conditions(text, exc_cls):
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
-        pytest.param(
-            "..\\..\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
-        ),
-        pytest.param(
-            ".\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
-        ),
+        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",

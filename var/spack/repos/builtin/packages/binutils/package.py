@@ -14,7 +14,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     tags = ["build-tools", "core-packages"]
 
@@ -168,11 +168,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
-        known_targets = {
-            "x86_64": "x86_64",
-            "aarch64": "aarch64",
-            "ppc64le": "powerpc",
-        }
+        known_targets = {"x86_64": "x86_64", "aarch64": "aarch64", "ppc64le": "powerpc"}
         known_platforms = {"linux": "linux-gnu", "cray": "linux-gnu", "darwin": "apple-darwin"}
 
         family = str(self.spec.target.family)

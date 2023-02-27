@@ -15,7 +15,7 @@ class AwsParallelcluster(PythonPackage):
     homepage = "https://github.com/aws/aws-parallelcluster"
     pypi = "aws-parallelcluster/aws-parallelcluster-2.11.9.tar.gz"
 
-    maintainers = [
+    maintainers(
         "charlesg3",
         "chenwany",
         "demartinofra",
@@ -24,7 +24,7 @@ class AwsParallelcluster(PythonPackage):
         "gmarciani",
         "hanwen-pcluste",
         "lukeseawalker",
-    ]
+    )
 
     version("2.11.9", sha256="615de4d59d9fd56a31d4feb3aeefe685346538a8dd0c1c35b660029f891d4dfd")
     version("2.11.8", sha256="acf33f48f8e48b0bc7be20f539d61baa1e27248765ba355df753bdfca4abd3cb")

@@ -14,7 +14,7 @@ class Sw4(MakefilePackage):
     homepage = "https://github.com/geodynamics/sw4"
     git = "https://github.com/geodynamics/sw4.git"
 
-    maintainers = ["houjun", "andersp"]
+    maintainers("houjun", "andersp")
 
     version("master", branch="master")
     version("developer", branch="developer")

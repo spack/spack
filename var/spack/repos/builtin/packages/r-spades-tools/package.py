@@ -17,7 +17,7 @@ class RSpadesTools(RPackage):
 
     cran = "SpaDES.tools"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.0.0", sha256="1172b96ada7052fcaa3a113ed31eeb1b67dba70f40fa74cbb378c6e75e9235dc")
     version("0.3.10", sha256="ba4c075b534caaca413e2e97711b5475c2679d9546c8fee4a07fb2bb94d52c94")

@@ -49,9 +49,9 @@ spec expression syntax:
       @r{-variant} or @r{~variant}          disable <variant>
       @r{--variant} or @r{~~variant}        propagate disable <variant>
       @B{variant=value}                 set non-boolean <variant> to <value>
-      @B{variant==value}                 propagate non-boolean <variant> to <value>
+      @B{variant==value}                propagate non-boolean <variant> to <value>
       @B{variant=value1,value2,value3}  set multi-value <variant> values
-      @B{variant==value1,value2,value3}  propagate multi-value <variant> values
+      @B{variant==value1,value2,value3} propagate multi-value <variant> values
 
     architecture variants:
       @m{platform=platform}             linux, darwin, cray, etc.
@@ -87,9 +87,7 @@ spec expression syntax:
 """
 
 
-guides = {
-    "spec": spec_guide,
-}
+guides = {"spec": spec_guide}
 
 
 def setup_parser(subparser):

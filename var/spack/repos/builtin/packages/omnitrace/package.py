@@ -13,7 +13,7 @@ class Omnitrace(CMakePackage):
 
     homepage = "https://amdresearch.github.io/omnitrace"
     git = "https://github.com/AMDResearch/omnitrace.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
 
     version("main", branch="main", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)

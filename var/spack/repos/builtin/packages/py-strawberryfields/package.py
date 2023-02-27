@@ -13,7 +13,7 @@ class PyStrawberryfields(PythonPackage):
     homepage = "https://github.com/XanaduAI/StrawberryFields"
     pypi = "StrawberryFields/StrawberryFields-0.23.0.tar.gz"
 
-    maintainers = PythonPackage.maintainers + ["marcodelapierre"]
+    maintainers("marcodelapierre")
 
     version("0.23.0", sha256="bfe94867cdee8e2904752573f1ff46b78d9f373da16a1cfa31e1bd6cdf2e3cb0")
 
