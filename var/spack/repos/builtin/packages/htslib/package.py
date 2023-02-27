@@ -52,6 +52,10 @@ class Htslib(AutotoolsPackage):
     depends_on("automake", when="@1.2")
     depends_on("libtool", when="@1.2")
 
+    @property
+    def libs(self):
+        return find_libraries("libhts", root=self.prefix, recursive=True)
+
     # v1.2 uses the automagically assembled tarball from .../archive/...
     # everything else uses the tarballs uploaded to the release
     def url_for_version(self, version):

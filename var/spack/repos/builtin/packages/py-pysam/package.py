@@ -26,11 +26,18 @@ class PyPysam(PythonPackage):
     depends_on("py-cython@0.21:", when="@0.14:", type="build")
     depends_on("py-cython@0.17:", type="build")
     depends_on("curl")
-    depends_on("bcftools")
-    depends_on("htslib")
-    depends_on("samtools")
-
+    depends_on("xz")
     depends_on("htslib@:1.6", when="@:0.13")
+    depends_on("htslib")
 
     def setup_build_environment(self, env):
         env.set("LDFLAGS", self.spec["curl"].libs.search_flags)
+        # this flag is supposed to be removed by cy_build.py, but for some reason isn't
+        if self.spec.platform == "darwin":
+            env.remove_flags("LDSHARED", "-bundle")
+        # linking htslib, see:
+        # http://pysam.readthedocs.org/en/latest/installation.html#external
+        # https://github.com/pysam-developers/pysam/blob/v0.9.0/setup.py#L79
+        env.set("HTSLIB_MODE", "external")
+        env.set("HTSLIB_LIBRARY_DIR", self.spec["htslib"].libs.directories[0])
+        env.set("HTSLIB_INCLUDE_DIR", self.spec["htslib"].headers.directories[0])
