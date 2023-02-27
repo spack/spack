@@ -1,0 +1,91 @@
+From 411d62544717873432c49ef45c7cb99cc5de2fb8 Mon Sep 17 00:00:00 2001
+From: "Mark W. Krentel" <krentel@rice.edu>
+Date: Thu, 15 Dec 2022 16:43:43 -0600
+Subject: [PATCH] Add a temporary hack to allow both ROCM 5.2/5.3 to build
+ cleanly.
+
+There were some corner cases (build 5.3 pieces from spack and feed
+into autotools) that didn't work.  After the next release, I will want
+to rework ROCM configure more extensively.
+---
+ configure    | 21 +++++++++++++--------
+ configure.ac | 17 +++++++++++------
+ 2 files changed, 24 insertions(+), 14 deletions(-)
+
+diff --git a/configure b/configure
+index 1760e678e8..814376b3bd 100755
+--- a/configure
++++ b/configure
+@@ -23891,10 +23891,13 @@ $as_echo "$as_me: found $ROCM/rocprofiler/lib/librocprofiler64.so" >&6;}
+     fi
+ 
+     # HSA
+-    if test -f "$ROCM/include/hsa/hsa.h" ; then
+-      { $as_echo "$as_me:${as_lineno-$LINENO}: found $ROCM/include/hsa/hsa.h" >&5
+-$as_echo "$as_me: found $ROCM/include/hsa/hsa.h" >&6;}
+-      ROCM_HSA_IFLAGS="-I$ROCM/include/hsa"
++    # FIXME: as of rocm 5.2/5.3, this was not fully switched over,
++    # so temporarily use both paths.
++    if test -f "$ROCM/include/hsa/hsa.h" || test -f "$ROCM/include/hsa.h"
++    then
++      { $as_echo "$as_me:${as_lineno-$LINENO}: found $ROCM: hsa.h" >&5
++$as_echo "$as_me: found $ROCM: hsa.h" >&6;}
++      ROCM_HSA_IFLAGS="-I$ROCM/include -I$ROCM/include/hsa"
+       ROCM_HSA_INC_MESG="$ROCM/hsa"
+       found=yes
+     fi
+@@ -24020,10 +24023,12 @@ case "$ROCM_HSA" in
+     require_rocm=yes
+     found=no
+ 
+-    if test -f "$ROCM_HSA/include/hsa/hsa.h" ; then
+-      { $as_echo "$as_me:${as_lineno-$LINENO}: found $ROCM_HSA/include/hsa/hsa.h" >&5
+-$as_echo "$as_me: found $ROCM_HSA/include/hsa/hsa.h" >&6;}
+-      ROCM_HSA_IFLAGS="-I$ROCM_HSA/include/hsa"
++    # FIXME: again, temporarily use both paths
++    if test -f "$ROCM_HSA/include/hsa/hsa.h" || test -f "$ROCM_HSA/include/hsa.h"
++    then
++      { $as_echo "$as_me:${as_lineno-$LINENO}: found $ROCM_HSA: hsa.h" >&5
++$as_echo "$as_me: found $ROCM_HSA: hsa.h" >&6;}
++      ROCM_HSA_IFLAGS="-I$ROCM_HSA/include -I$ROCM_HSA/include/hsa"
+       ROCM_HSA_INC_MESG="$ROCM_HSA"
+       found=yes
+     fi
+diff --git a/configure.ac b/configure.ac
+index a14b15835f..9d5ed46134 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -4885,9 +4885,12 @@ case "$ROCM" in
+     fi
+ 
+     # HSA
+-    if test -f "$ROCM/include/hsa/hsa.h" ; then
+-      AC_MSG_NOTICE([found $ROCM/include/hsa/hsa.h])
+-      ROCM_HSA_IFLAGS="-I$ROCM/include/hsa"
++    # FIXME: as of rocm 5.2/5.3, this was not fully switched over,
++    # so temporarily use both paths.
++    if test -f "$ROCM/include/hsa/hsa.h" || test -f "$ROCM/include/hsa.h"
++    then
++      AC_MSG_NOTICE([found $ROCM: hsa.h])
++      ROCM_HSA_IFLAGS="-I$ROCM/include -I$ROCM/include/hsa"
+       ROCM_HSA_INC_MESG="$ROCM/hsa"
+       found=yes
+     fi
+@@ -5002,9 +5005,11 @@ case "$ROCM_HSA" in
+     require_rocm=yes
+     found=no
+ 
+-    if test -f "$ROCM_HSA/include/hsa/hsa.h" ; then
+-      AC_MSG_NOTICE([found $ROCM_HSA/include/hsa/hsa.h])
+-      ROCM_HSA_IFLAGS="-I$ROCM_HSA/include/hsa"
++    # FIXME: again, temporarily use both paths
++    if test -f "$ROCM_HSA/include/hsa/hsa.h" || test -f "$ROCM_HSA/include/hsa.h"
++    then
++      AC_MSG_NOTICE([found $ROCM_HSA: hsa.h])
++      ROCM_HSA_IFLAGS="-I$ROCM_HSA/include -I$ROCM_HSA/include/hsa"
+       ROCM_HSA_INC_MESG="$ROCM_HSA"
+       found=yes
+     fi
+-- 
+GitLab
+
