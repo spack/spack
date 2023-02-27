@@ -244,7 +244,6 @@ class RocmTensile(CMakePackage):
             return arch
 
     def cmake_args(self):
-        arches = 
         args = [
             self.define("amd_comgr_DIR", self.spec["comgr"].prefix),
             self.define("Tensile_COMPILER", "hipcc"),
