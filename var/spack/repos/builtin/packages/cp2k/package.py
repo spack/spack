@@ -50,11 +50,11 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         values=("libxsmm", "libsmm", "blas"),
         description="Library for small matrix multiplications",
     )
-    variant("plumed", default=False, description="Enable PLUMED support",)
+    variant("plumed", default=False, description="Enable PLUMED support")
     variant(
         "libint", default=True,  description="Use libint, required for HFX (and possibly others)",
     )
-    variant("libxc",  default=True,  description="Support additional functionals via libxc",)
+    variant("libxc", default=True,  description="Support additional functionals via libxc",)
     variant(
         "pexsi",
         default=False,
@@ -821,30 +821,30 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             args += ["-DCP2K_WITH_GPU={0}".format(gpuver), "-DCP2K_USE_ACCEL=hip"]
 
         args += [
-             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
-             self.define_from_variant("CP2K_USE_LIBINT", "libint"),
-             self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
-             self.define_from_variant("CP2K_USE_SPLA", "spla"),
-             self.define_from_variant("CP2K_USE_COSMA", "cosma"),
-             self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
+            self.define_from_variant("CP2K_USE_ELPA", "elpa"),
+            self.define_from_variant("CP2K_USE_LIBINT", "libint"),
+            self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_COSMA", "cosma"),
+            self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
         ]
 
         if spec.satisfies("+pytorch"):
             args += ["-DCP2K_USE_LIBTORCH=ON"]
 
         args += [
-             self.define_from_variant("CP2K_USE_METIS", "metis"),
-             self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
-             self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
-             self.define_from_variant("CP2K_USE_VORI", "libvori"),
-             self.define_from_variant("CP2K_USE_SUPERLU", "superlu-dist"),
-             self.define_from_variant("CP2K_USE_SPLA", "spla"),
-             self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            self.define_from_variant("CP2K_USE_METIS", "metis"),
+            self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
+            self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
+            self.define_from_variant("CP2K_USE_VORI", "libvori"),
+            self.define_from_variant("CP2K_USE_SUPERLU", "superlu-dist"),
+            self.define_from_variant("CP2K_USE_SPLA", "spla"),
+            self.define_from_variant("CP2K_USE_QUIP", "quip"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
         if (spec.satisfies("+openmp") and spec.satisfies("+elpa")) or spec.satisfies(
-                "^elpa+openmp"
+            "^elpa+openmp"
         ):
             args += ["-DCP2K_ENABLE_ELPA_OPENMP_SUPPORT=ON"]
 
