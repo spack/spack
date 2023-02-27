@@ -1336,6 +1336,10 @@ class CommitLookup(object):
             # won't properly update the local rev-list)
             self.fetcher.git("fetch", "--tags", output=os.devnull, error=os.devnull)
 
+            # We need to do an attempt at fetching the commit in order to
+            # be sure to get it in case it comes from a PR in a fork.
+            self.fetcher.git("fetch", "%s^{commit}" % ref, output=os.devnull, error=os.devnull)
+
             # Ensure ref is a commit object known to git
             # Note the brackets are literals, the ref replaces the format string
             try:
