@@ -51,7 +51,9 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         description="Library for small matrix multiplications",
     )
     variant("plumed", default=False, description="Enable PLUMED support",)
-    variant("libint", default=True,  description="Use libint, required for HFX (and possibly others)",)
+    variant(
+        "libint", default=True,  description="Use libint, required for HFX (and possibly others)",
+    )
     variant("libxc",  default=True,  description="Support additional functionals via libxc",)
     variant(
         "pexsi",
@@ -69,22 +71,22 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         default=False,
         description="Enable planewave electronic structure" " calculations via SIRIUS",
     )
-    variant("cosma", default=False, description="Use COSMA for p?gemm",)
+    variant("cosma", default=False, description="Use COSMA for p?gemm")
     variant(
         "libvori",
         default=False,
         description="Enable support for Voronoi integration" " and BQB compression",
     )
-    variant("spglib", default=False, description="Enable support for spglib",)
+    variant("spglib", default=False, description="Enable support for spglib")
     variant(
         "spla",
         default=False,
         description="Use SPLA off-loading functionality. Only relevant when CUDA or ROCM are enabled",
     )
-    variant("pytorch", default=False, description="Enable libtorch support",)
-    variant("metis", default=False, description="Enable (par)metis support",)
-    variant("quip", default=False, description=("Enable quip support"),)
-    variant("superlu-dist", default=False, description=("Enable superlu support"),)
+    variant("pytorch", default=False, description="Enable libtorch support")
+    variant("metis", default=False, description="Enable (par)metis support")
+    variant("quip", default=False, description=("Enable quip support"))
+    variant("superlu-dist", default=False, description=("Enable superlu support"))
 
     with when("+cuda"):
         variant(
@@ -786,6 +788,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             with working_dir(self.build_directory):
                 make("test", *self.build_targets)
 
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     """Use the new cmake build system to build cp2k. It is the default when
     building the master branch of cp2k."""
@@ -804,7 +807,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
 
-            gpu_map = { "35": "K40", "37": "K80", "60": "P100", "70": "V100", "80": "A100",}
+            gpu_map = {"35": "K40", "37": "K80", "60": "P100", "70": "V100", "80": "A100"}
 
             gpuver = gpu_map[cuda_arch]
 
@@ -840,7 +843,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
-        if (spec.satisfies("+openmp") and spec.satisfies("+elpa")) or spec.satisfies("^elpa+openmp"):
+        if (spec.satisfies("+openmp") and spec.satisfies("+elpa")) or spec.satisfies(
+                "^elpa+openmp"
+        ):
             args += ["-DCP2K_ENABLE_ELPA_OPENMP_SUPPORT=ON"]
 
         if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
