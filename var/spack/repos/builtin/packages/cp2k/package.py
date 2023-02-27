@@ -50,25 +50,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         values=("libxsmm", "libsmm", "blas"),
         description="Library for small matrix multiplications",
     )
-    variant(
-        "plumed",
-        default=False,
-        description="Enable PLUMED support",
-    )
-    variant(
-        "libint",
-        default=True,
-        description="Use libint, required for HFX (and possibly others)",
-    )
-    variant(
-        "libxc",
-        default=True,
-        description="Support additional functionals via libxc",
-    )
+    variant("plumed", default=False, description="Enable PLUMED support",)
+    variant("libint", default=True,  description="Use libint, required for HFX (and possibly others)",)
+    variant("libxc",  default=True,  description="Support additional functionals via libxc",)
     variant(
         "pexsi",
         default=False,
-        description = "Enable the alternative PEXSI method" "for density matrix evaluation",
+        description="Enable the alternative PEXSI method" "for density matrix evaluation",
     )
     variant(
         "elpa",
@@ -79,48 +67,24 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     variant(
         "sirius",
         default=False,
-        description = "Enable planewave electronic structure" " calculations via SIRIUS",
+        description="Enable planewave electronic structure" " calculations via SIRIUS",
     )
-    variant(
-        "cosma",
-        default=False,
-        description="Use COSMA for p?gemm",
-    )
+    variant("cosma", default=False, description="Use COSMA for p?gemm",)
     variant(
         "libvori",
         default=False,
         description="Enable support for Voronoi integration" " and BQB compression",
     )
-    variant(
-        "spglib",
-        default=False,
-        description="Enable support for spglib",
-    )
+    variant("spglib", default=False, description="Enable support for spglib",)
     variant(
         "spla",
         default=False,
         description="Use SPLA off-loading functionality. Only relevant when CUDA or ROCM are enabled",
     )
-    variant(
-        "pytorch",
-        default=False,
-        description="Enable libtorch support",
-    )
-    variant(
-        "metis",
-        default=False,
-        description="Enable (par)metis support",
-    )
-    variant(
-        "quip",
-        default=False,
-        description=("Enable quip support"),
-    )
-    variant(
-        "superlu-dist",
-        default=False,
-        description=("Enable superlu support"),
-    )
+    variant("pytorch", default=False, description="Enable libtorch support",)
+    variant("metis", default=False, description="Enable (par)metis support",)
+    variant("quip", default=False, description=("Enable quip support"),)
+    variant("superlu-dist", default=False, description=("Enable superlu support"),)
 
     with when("+cuda"):
         variant(
@@ -840,13 +804,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
 
-            gpu_map = {
-                "35": "K40",
-                "37": "K80",
-                "60": "P100",
-                "70": "V100",
-                "80": "A100",
-            }
+            gpu_map = { "35": "K40", "37": "K80", "60": "P100", "70": "V100", "80": "A100",}
 
             gpuver = gpu_map[cuda_arch]
 
@@ -860,52 +818,52 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             args += ["-DCP2K_WITH_GPU={0}".format(gpuver), "-DCP2K_USE_ACCEL=hip"]
 
         args += [
-                self.define_from_variant("CP2K_USE_ELPA", "elpa"),
-                self.define_from_variant("CP2K_USE_LIBINT", "libint"),
-                self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
-                self.define_from_variant("CP2K_USE_SPLA", "spla"),
-                self.define_from_variant("CP2K_USE_COSMA", "cosma"),
-                self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
-            ]
+             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
+             self.define_from_variant("CP2K_USE_LIBINT", "libint"),
+             self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
+             self.define_from_variant("CP2K_USE_SPLA", "spla"),
+             self.define_from_variant("CP2K_USE_COSMA", "cosma"),
+             self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
+        ]
 
         if spec.satisfies("+pytorch"):
             args += ["-DCP2K_USE_LIBTORCH=ON"]
 
         args += [
-                self.define_from_variant("CP2K_USE_METIS", "metis"),
-                self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
-                self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
-                self.define_from_variant("CP2K_USE_VORI", "libvori"),
-                self.define_from_variant("CP2K_USE_SUPERLU", "superlu-dist"),
-                self.define_from_variant("CP2K_USE_SPLA", "spla"),
-                self.define_from_variant("CP2K_USE_QUIP", "quip"),
-            ]
+             self.define_from_variant("CP2K_USE_METIS", "metis"),
+             self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
+             self.define_from_variant("CP2K_USE_SPGLIB", "spglib"),
+             self.define_from_variant("CP2K_USE_VORI", "libvori"),
+             self.define_from_variant("CP2K_USE_SUPERLU", "superlu-dist"),
+             self.define_from_variant("CP2K_USE_SPLA", "spla"),
+             self.define_from_variant("CP2K_USE_QUIP", "quip"),
+        ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
         if (spec.satisfies("+openmp") and spec.satisfies("+elpa")) or spec.satisfies("^elpa+openmp"):
-            args += [ "-DCP2K_ENABLE_ELPA_OPENMP_SUPPORT=ON" ]
+            args += ["-DCP2K_ENABLE_ELPA_OPENMP_SUPPORT=ON"]
 
         if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
-            args += [ "-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON" ]
+            args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
 
         if "fftw" in spec:
-            args += [ "-DCP2K_USE_FFTW=ON" ]
+            args += ["-DCP2K_USE_FFTW=ON"]
 
         with when("smm=libxsmm"):
-            args += [ "-DCP2K_USE_LIBXSMM=ON" ]
+            args += ["-DCP2K_USE_LIBXSMM=ON"]
 
         if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "cray-libsci", "openblas"]:
             if spec["blas"].name in ["intel-mkl", "intel-parallel-studio"]:
-                args += [ "-DCP2K_BLAS_VENDOR=MKL" ]
-                args += [ "-DCP2K_SCALAPACK_VENDOR=MKL" ]
+                args += ["-DCP2K_BLAS_VENDOR=MKL"]
+                args += ["-DCP2K_SCALAPACK_VENDOR=MKL"]
 
             if "^cray-libsci" in spec:
-                args += [ "-DCP2K_BLAS_VENDOR=SCI" ]
-                args += [ "-DCP2K_SCALAPACK_VENDOR=SCI" ]
+                args += ["-DCP2K_BLAS_VENDOR=SCI"]
+                args += ["-DCP2K_SCALAPACK_VENDOR=SCI"]
 
             if "^openblas" in spec:
-                args += [ "-DCP2K_BLAS_VENDOR=OpenBLAS" ]
-                args += [ "-DCP2K_SCALAPACK_VENDOR=GENERIC" ]
+                args += ["-DCP2K_BLAS_VENDOR=OpenBLAS"]
+                args += ["-DCP2K_SCALAPACK_VENDOR=GENERIC"]
         else:
             lapack = spec["lapack"]
             blas = spec["blas"]
@@ -918,9 +876,12 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
                     self.define("CP2K_SCALAPACK_FOUND", "true"),
                     self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                    self.define("CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
                 ]
             )
 
         return args
+
     pass
