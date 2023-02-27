@@ -39,5 +39,5 @@ class PyPysam(PythonPackage):
         # http://pysam.readthedocs.org/en/latest/installation.html#external
         # https://github.com/pysam-developers/pysam/blob/v0.9.0/setup.py#L79
         env.set("HTSLIB_MODE", "external")
-        env.set("HTSLIB_LIBRARY_DIR", self.spec["htslib"].prefix.lib)
-        env.set("HTSLIB_INCLUDE_DIR", self.spec["htslib"].prefix.include)
+        env.set("HTSLIB_LIBRARY_DIR", self.spec["htslib"].libs.directories[0])
+        env.set("HTSLIB_INCLUDE_DIR", self.spec["htslib"].headers.directories[0])
