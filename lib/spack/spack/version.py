@@ -242,9 +242,9 @@ class VersionBase(object):
         if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
-        self.separators, self.version = self._generate_seperators_and_components(string)
+        self.separators, self.version = self._generate_separators_and_components(string)
 
-    def _generate_seperators_and_components(self, string):
+    def _generate_separators_and_components(self, string):
         segments = SEGMENT_REGEX.findall(string)
         components = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
         separators = tuple(m[2] for m in segments)
@@ -562,7 +562,7 @@ class GitVersion(VersionBase):
 
         if "=" in pruned_string:
             self.ref, self.ref_version_str = pruned_string.split("=")
-            _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
+            _, self.ref_version = self._generate_separators_and_components(self.ref_version_str)
             self.user_supplied_reference = True
         else:
             self.ref = pruned_string
@@ -591,6 +591,9 @@ class GitVersion(VersionBase):
             ref_info = ref_lookup.get(self.ref)
             if ref_info:
                 prev_version, distance = ref_info
+
+                if prev_version is None:
+                    prev_version = "0"
 
                 # Extend previous version by empty component and distance
                 # If commit is exactly a known version, no distance suffix
@@ -745,7 +748,7 @@ class VersionRange(object):
         # means the range [1.2.3, 1.3), which is non-empty.
         min_len = min(len(start), len(end))
         if end.up_to(min_len) < start.up_to(min_len):
-            raise ValueError("Invalid Version range: %s" % self)
+            raise ValueError(f"Invalid Version range: {self}")
 
     def lowest(self):
         return self.start
@@ -902,33 +905,32 @@ class VersionRange(object):
 
     @coerced
     def intersection(self, other):
-        if self.overlaps(other):
-            if self.start is None:
-                start = other.start
-            else:
-                start = self.start
-                if other.start is not None:
-                    if other.start > start or other.start in start:
-                        start = other.start
-
-            if self.end is None:
-                end = other.end
-            else:
-                end = self.end
-                # TODO: does this make sense?
-                # This is tricky:
-                #     1.6.5 in 1.6 = True  (1.6.5 is more specific)
-                #     1.6 < 1.6.5  = True  (lexicographic)
-                # Should 1.6 NOT be less than 1.6.5?  Hmm.
-                # Here we test (not end in other.end) first to avoid paradox.
-                if other.end is not None and end not in other.end:
-                    if other.end < end or other.end in end:
-                        end = other.end
-
-            return VersionRange(start, end)
-
-        else:
+        if not self.overlaps(other):
             return VersionList()
+
+        if self.start is None:
+            start = other.start
+        else:
+            start = self.start
+            if other.start is not None:
+                if other.start > start or other.start in start:
+                    start = other.start
+
+        if self.end is None:
+            end = other.end
+        else:
+            end = self.end
+            # TODO: does this make sense?
+            # This is tricky:
+            #     1.6.5 in 1.6 = True  (1.6.5 is more specific)
+            #     1.6 < 1.6.5  = True  (lexicographic)
+            # Should 1.6 NOT be less than 1.6.5?  Hmm.
+            # Here we test (not end in other.end) first to avoid paradox.
+            if other.end is not None and end not in other.end:
+                if other.end < end or other.end in end:
+                    end = other.end
+
+        return VersionRange(start, end)
 
     def __hash__(self):
         return hash((self.start, self.end))
@@ -1064,10 +1066,11 @@ class VersionList(object):
 
     @coerced
     def satisfies(self, other) -> bool:
-        if not other or not self:
+        for x in self:
+            if any(x.satisfies(t) for t in other):
+                continue
             return False
-
-        return self in other
+        return True
 
     @coerced
     def update(self, other):

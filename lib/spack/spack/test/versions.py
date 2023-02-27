@@ -600,6 +600,7 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
 
         with working_dir(repo_path):
             git("checkout", commit)
+
         with open(os.path.join(repo_path, filename), "r") as f:
             expected = f.read()
 
@@ -607,30 +608,38 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-def test_git_hash_comparisons(mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+@pytest.mark.parametrize(
+    "commit_idx,expected_satisfies,expected_not_satisfies",
+    [
+        # Spec based on earliest commit
+        (-1, ("@:0",), ("@1.0",)),
+        # Spec based on second commit (same as version 1.0)
+        (-2, ("@1.0",), ("@1.1:",)),
+        # Spec based on 4th commit (in timestamp order)
+        (-4, ("@1.1", "@1.0:1.2"), tuple()),
+    ],
+)
+def test_git_hash_comparisons(
+    mock_git_version_info,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    commit_idx,
+    expected_satisfies,
+    expected_not_satisfies,
+):
     """Check that hashes compare properly to versions"""
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
 
-    # Spec based on earliest commit
-    spec0 = spack.spec.Spec("git-test-commit@%s" % commits[-1])
-    spec0.concretize()
-    assert spec0.satisfies("@:0")
-    assert not spec0.satisfies("@1.0")
+    spec = spack.spec.Spec(f"git-test-commit@{commits[commit_idx]}").concretized()
+    for item in expected_satisfies:
+        assert spec.satisfies(item)
 
-    # Spec based on second commit (same as version 1.0)
-    spec1 = spack.spec.Spec("git-test-commit@%s" % commits[-2])
-    spec1.concretize()
-    assert spec1.satisfies("@1.0")
-    assert not spec1.satisfies("@1.1:")
-
-    # Spec based on 4th commit (in timestamp order)
-    spec4 = spack.spec.Spec("git-test-commit@%s" % commits[-4])
-    spec4.concretize()
-    assert spec4.satisfies("@1.1")
-    assert spec4.satisfies("@1.0:1.2")
+    for item in expected_not_satisfies:
+        assert not spec.satisfies(item)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
