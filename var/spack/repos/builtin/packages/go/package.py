@@ -116,6 +116,7 @@ class Go(Package):
         # internal Spack wrappers and fail.
         env.set("CC_FOR_TARGET", self.compiler.cc)
         env.set("CXX_FOR_TARGET", self.compiler.cxx)
+        env.set("GOMAXPROCS", make_jobs)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before go modules' install() methods.
