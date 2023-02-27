@@ -80,9 +80,9 @@ class PyWheel(Package, PythonExtension):
     depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
     depends_on("py-pip", type="build")
 
-    def url_for_version(self,version):
+    def url_for_version(self, version):
         if version < Version("0.37.1"):
-            url="https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
+            url = "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
 
     def install(self, spec, prefix):
         # To build wheel from source, you need setuptools and wheel already installed.
