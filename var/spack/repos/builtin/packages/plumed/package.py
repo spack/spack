@@ -167,7 +167,6 @@ class Plumed(AutotoolsPackage):
     parallel = False
 
     def apply_patch(self, other):
-
         # The name of MD engines differ slightly from the ones used in Spack
         format_strings = collections.defaultdict(lambda: "{0.name}-{0.version}")
         format_strings["espresso"] = "q{0.name}-{0.version}"

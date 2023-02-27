@@ -70,10 +70,7 @@ class Ffte(Package):
             else:
                 lbnm = "libfftempi.a"
 
-            for spc, vrf, rs, ip in (
-                ("+vector", vf, "v", 2),
-                ("+cuda", cuf, "cu", 3),
-            ):
+            for spc, vrf, rs, ip in (("+vector", vf, "v", 2), ("+cuda", cuf, "cu", 3)):
                 if spc in spec:
                     for f in vrf:  # replace with variant versions
                         orgf = f[:ip].replace(rs, "") + f[ip:]
