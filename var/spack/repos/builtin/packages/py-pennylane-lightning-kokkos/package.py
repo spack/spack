@@ -56,23 +56,30 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     variant("cpptests", default=False, description="Build CPP tests")
     variant("native", default=False, description="Build natively for given hardware")
     variant("sanitize", default=False, description="Build with address sanitization")
-    variant("verbose", default=False, description="Build with full verbosity")
+    # variant("verbose", default=False, description="Build with full verbosity")
     # variant("warnings", default=False, description="Build with Kokkos warnings")
 
     extends("python")
 
     # hard dependencies
-    depends_on("cmake@3.21:3.24,3.25.2:", type="build")
-    depends_on("ninja", type=("run", "build"))
+    depends_on("ninja", type=("build", "run"))
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pybind11", type=("build"))
-    depends_on("py-pip", type="build")
-    depends_on("py-wheel", type="build")
-    depends_on("py-pennylane", type=("run"))
+    depends_on("cmake@3.21:3.24,3.25.2:", type="build")
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
+
+    depends_on("py-pybind11", type="build")
+    depends_on("py-pip", type="build")
+    depends_on("py-wheel", type="build")
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pennylane", type="run")
+
+    # Test deps
+    depends_on("py-pytest", type=("test"))
+    depends_on("py-pytest-cov", type=("test"))
+    depends_on("py-pytest-mock", type=("test"))
+    depends_on("py-flaky", type=("test"))
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -84,7 +91,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         """
         args = [
             self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"),
-            self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
+            # self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
             self.define_from_variant("PLKOKKOS_ENABLE_NATIVE", "native"),
             self.define_from_variant("PLKOKKOS_BUILD_TESTS", "cpptests"),
             # self.define_from_variant("PLKOKKOS_ENABLE_WARNINGS", "warnings"),
@@ -105,9 +112,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         pip(*pip_args)
         super().install(pkg, spec, prefix)
 
-    # @run_after("install")
-    # @on_package_attributes(run_tests=True)
-    # def test_lightning_build(self):
-    #     with working_dir(self.stage.source_path):
-    #         pl_runner = Executable(join_path(self.prefix, "bin", "pennylane_lightning_test_runner"))
-    #         pl_runner()
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
+        pytest = which("pytest")
+        pytest("tests")
