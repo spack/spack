@@ -250,6 +250,7 @@ class RocmTensile(CMakePackage):
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
             self.define("Boost_USE_STATIC_LIBS", "OFF"),
+            self.define_from_variant("TENSILE_USE_OPENMP", "openmp"),
             self.define("BUILD_WITH_TENSILE_HOST", "ON" if "@3.7.0:" in self.spec else "OFF"),
         ]
 
