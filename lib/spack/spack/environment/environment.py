@@ -1856,23 +1856,24 @@ class Environment(object):
         and multiple dependency specs match, then this raises an error
         and reports all matching specs.
         """
-        roots = [root for _, root in self.concretized_specs()]
+        env_roots = [root for _, root in self.concretized_specs()]
         by_hash = lambda s: s.dag_hash()
-        root_matches = []
-        dep_matches = []
+        root_matches, dep_matches = [], []
 
         for i, env_spec in enumerate(
-            spack.traverse.traverse_nodes(specs=roots, key=by_hash, order="breadth")
+            spack.traverse.traverse_nodes(specs=env_roots, key=by_hash, order="breadth")
         ):
             if not env_spec.satisfies(spec):
                 continue
 
-            # Early exit for concrete specs, exploit uniqueness of dag hash.
+            # If the spec is concrete, then there is no possibility of multiple matches,
+            # and we immediately return the single match
             if spec.concrete:
                 return env_spec
 
-            # Distinguish between matching roots and deps of roots.
-            if i < len(self.concretized_user_specs):
+            # Distinguish between environment roots and deps. Specs that are both
+            # are classified as environment roots.
+            if i < len(env_roots):
                 root_matches.append((env_spec, self.concretized_user_specs[i]))
             else:
                 dep_matches.append(env_spec)
