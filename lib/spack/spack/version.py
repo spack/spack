@@ -1338,7 +1338,7 @@ class CommitLookup(object):
 
             # We need to do an attempt at fetching the commit in order to
             # be sure to get it in case it comes from a PR in a fork.
-            self.fetcher.git("fetch", "origin", "%s^{commit}" % ref, output=os.devnull, error=os.devnull)
+            self.fetcher.git("fetch", "origin", "%s" % ref, output=os.devnull, error=os.devnull)
 
             # Ensure ref is a commit object known to git
             # Note the brackets are literals, the ref replaces the format string
