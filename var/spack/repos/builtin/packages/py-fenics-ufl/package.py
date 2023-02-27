@@ -39,5 +39,4 @@ class PyFenicsUfl(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@58:", type=("build", "run"), when="@2022.1.0:")
     depends_on("py-setuptools@40:", type=("build", "run"))
-    depends_on("py-numpy@1.21:", type=("build", "run"), when="@2022.1.0:")
-    depends_on("py-numpy@1.15:", type=("build", "run"))
+    depends_on("py-numpy@1.21:", type=("build", "run"))
