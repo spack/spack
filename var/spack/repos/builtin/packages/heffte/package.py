@@ -165,6 +165,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                 "-Drocfft_DIR=" + join_path(self.spec["rocfft"].prefix, "lib", "cmake", "rocfft")
             )
 
+        # Provide the path to the MPI dependency so that the test can find an MPI launcher
+        options.append("-DCMAKE_PREFIX_PATH=" + self.spec['mpi'].prefix)
+
         if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
             tty.msg("Skipping heffte test: failed to generate Makefile")
             return
