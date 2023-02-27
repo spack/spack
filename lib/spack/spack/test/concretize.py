@@ -339,6 +339,8 @@ class TestConcretize(object):
 
         # Get the compiler that matches the spec (
         compiler = spack.compilers.compiler_for_spec("clang@12.2.0", spec.architecture)
+        # Clear cache for compiler config since it has its own cache mechanism outside of config
+        spack.compilers._cache_config_file = []
 
         # Configure spack to have two identical compilers with different flags
         default_dict = spack.compilers._to_dict(compiler)
