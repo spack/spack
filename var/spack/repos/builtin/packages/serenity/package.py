@@ -63,7 +63,7 @@ class Serenity(CMakePackage):
         )
 
         filter_file(
-            "^    (xc|xcfun|libint2-static)\s*$",
+            r"^    (xc|xcfun|libint2-static)\s*$",
             "",
             "CMakeLists.txt",
             start_at="# Add all targets to the build-tree export set",
@@ -121,7 +121,6 @@ class Serenity(CMakePackage):
         )
 
         if self.spec["lapack"].libs.names[0].startswith("mkl"):
-
             filter_file(
                 "# Find libraries",
                 "# Find libraries\n"
@@ -131,22 +130,28 @@ class Serenity(CMakePackage):
             )
 
             filter_file(
-                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core.so libmkl_core.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
-                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core.so libmkl_core.so.1 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_CORE_LIBRARY NAMES libmkl_core "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
                 "cmake/FindMKL.cmake",
                 string=True,
             )
 
             filter_file(
-                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2.so libmkl_avx2.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
-                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2.so libmkl_avx2.so.1 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_AVX2_LIBRARY NAMES libmkl_avx2 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
                 "cmake/FindMKL.cmake",
                 string=True,
             )
 
             filter_file(
-                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2.so libmkl_vml_avx2.so.1 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
-                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2 PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2.so libmkl_vml_avx2.so.1 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
+                "find_library(MKL_VML_AVX2_LIBRARY NAMES libmkl_vml_avx2 "
+                "PATHS ${MKL_ROOT}/${MKL_LIB_ARCH})",
                 "cmake/FindMKL.cmake",
                 string=True,
             )
