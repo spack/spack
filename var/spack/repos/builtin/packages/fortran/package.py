@@ -14,18 +14,18 @@ class Fortran(Package):
     homepage = "https://wg5-fortran.org/"
     virtual = True
 
-    def test(self):
+    def test_hello(self):
+        """build and run hello examples"""
         test_source = self.test_suite.current_test_data_dir
+        expected = ["Hello world", "YES!"]
 
         for test in os.listdir(test_source):
-            filepath = os.path.join(test_source, test)
             exe_name = "%s.exe" % test
 
-            fc_exe = os.environ["FC"]
-            fc_opts = ["-o", exe_name, filepath]
+            filepath = os.path.join(test_source, test)
+            fc = which(os.environ["FC"])
+            fc("-o", exe_name, filepath)
 
-            compiled = self.run_test(fc_exe, options=fc_opts, installed=True)
-
-            if compiled:
-                expected = ["Hello world", "YES!"]
-                self.run_test(exe_name, expected=expected)
+            exe = which(exe_name)
+            out = exe(output=str.split, error=str.split)
+            checkoutputs(expected, out)
