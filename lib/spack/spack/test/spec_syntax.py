@@ -637,26 +637,24 @@ def test_spec_by_hash(database, monkeypatch, mutable_empty_config):
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [a])
 
     hash_str = f"/{mpileaks.dag_hash()}"
-    b = SpecParser(hash_str).next_spec()
-    b.replace_hash()
-    assert b == mpileaks
+    parsed_spec = SpecParser(hash_str).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
-    b = SpecParser(short_hash_str).next_spec()
-    b.replace_hash()
-    assert b == mpileaks
+    parsed_spec = SpecParser(short_hash_str).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
-    b = SpecParser(name_version_and_hash).next_spec()
-    print("The hashes are {0} and {1}".format(name_version_and_hash, b.abstract_hash))
-    b.replace_hash()
-    assert b == mpileaks
+    parsed_spec = SpecParser(name_version_and_hash).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == mpileaks
 
     a_hash = f"/{a.dag_hash()}"
-    b = SpecParser(a_hash).next_spec()
-    print("The hashes are {0} and {1}".format(a_hash, b.abstract_hash))
-    b.replace_hash()
-    assert b == a
+    parsed_spec = SpecParser(a_hash).next_spec()
+    parsed_spec.replace_hash()
+    assert parsed_spec == a
 
 
 @pytest.mark.db
@@ -735,13 +733,13 @@ def test_ambiguous_hash(mutable_database, default_mock_concretization, mutable_e
 
     # ambiguity in first hash character
     with pytest.raises(spack.spec.AmbiguousHashError):
-        b = SpecParser("/x").next_spec()
-        b.replace_hash()
+        parsed_spec = SpecParser("/x").next_spec()
+        parsed_spec.replace_hash()
 
     # ambiguity in first hash character AND spec name
     with pytest.raises(spack.spec.AmbiguousHashError):
-        b = SpecParser("a/x").next_spec()
-        b.replace_hash()
+        parsed_spec = SpecParser("a/x").next_spec()
+        parsed_spec.replace_hash()
 
 
 @pytest.mark.db
@@ -751,16 +749,16 @@ def test_invalid_hash(database, mutable_empty_config):
 
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        b = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
-        b.replace_hash()
+        parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec.replace_hash()
     with pytest.raises(spack.spec.InvalidHashError):
-        b = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
-        b.replace_hash()
+        parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
+        parsed_spec.replace_hash()
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        b = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
-        b.replace_hash()
+        parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
+        parsed_spec.replace_hash()
 
 
 @pytest.mark.db
@@ -774,8 +772,8 @@ def test_nonexistent_hash(database, mutable_empty_config):
     assert no_such_hash not in [h[: len(no_such_hash)] for h in hashes]
 
     with pytest.raises(spack.spec.NoSuchHashError):
-        b = SpecParser(f"/{no_such_hash}").next_spec()
-        b.replace_hash()
+        parsed_spec = SpecParser(f"/{no_such_hash}").next_spec()
+        parsed_spec.replace_hash()
 
 
 @pytest.mark.db
@@ -783,7 +781,7 @@ def test_nonexistent_hash(database, mutable_empty_config):
     "query_str,text_fmt",
     [
         ("mpileaks ^zmpi", r"/{hash}%{0.compiler}"),
-        ("callpath ^zmpi", r"callpath /{hash} ^libelf"),
+        ("callpath ^zmpi", r"callpath /{hash} ^a"),
         ("dyninst", r'/{hash} cflags="-O3 -fPIC"'),
         ("mpileaks ^mpich2", r"mpileaks/{hash} @{0.version}"),
     ],
@@ -793,8 +791,8 @@ def test_redundant_spec(query_str, text_fmt, database):
     spec = database.query_one(query_str)
     text = text_fmt.format(spec, hash=spec.dag_hash())
     with pytest.raises(spack.spec.RedundantSpecError):
-        b = SpecParser(text).next_spec()
-        b.replace_hash()
+        parsed_spec = SpecParser(text).next_spec()
+        parsed_spec.replace_hash()
 
 
 @pytest.mark.parametrize(

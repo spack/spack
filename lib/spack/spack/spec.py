@@ -1264,7 +1264,7 @@ class Spec(object):
         normal=False,
         concrete=False,
         external_path=None,
-        external_modules=None
+        external_modules=None,
     ):
         """Create a new Spec.
 
@@ -1827,9 +1827,9 @@ class Spec(object):
         return spack.util.hash.base32_prefix_bits(self.process_hash(), bits)
 
     def _lookup_hash(self):
+        """Lookup just one spec with an abstract hash, returning a spec from the the environment,
+        store, or finally, binary caches."""
         import spack.environment
-
-        print("lookup is trying abstract hash {}".format(self.abstract_hash))
 
         matches = []
         active_env = spack.environment.active_environment()
@@ -1839,7 +1839,7 @@ class Spec(object):
             matches = spack.store.db.get_by_hash(self.abstract_hash)
         if not matches:
             query = spack.binary_distribution.BinaryCacheQuery(True)
-            matches = query("/"+self.abstract_hash)
+            matches = query("/" + self.abstract_hash)
         if not matches:
             raise spack.spec.NoSuchHashError(self.abstract_hash)
 
@@ -1851,6 +1851,9 @@ class Spec(object):
         return matches[0]
 
     def lookup_hash(self):
+        """Given a spec with an abstract hash, return a copy of the spec with all properties and
+        dependencies by looking up the hash in the environment, store, or finally, binary caches.
+        This is non-destructive."""
         if self.concrete:
             return self
 
@@ -1862,6 +1865,9 @@ class Spec(object):
             if not new._satisfies(self):
                 raise InvalidHashError(spec, spec.abstract_hash)
             spec._dup(new)
+            for dep in self.traverse():
+                if not any(node._satisfies(dep) for node in spec.traverse()):
+                    raise RedundantSpecError(self, self.abstract_hash)
             return spec
 
         # Get dependencies that need to be replaced
@@ -1880,24 +1886,18 @@ class Spec(object):
         return spec
 
     def replace_hash(self):
-        """Given a spec with nothing but an abstract hash, attempt to populate the values by
-        looking up the hash in the environment, store, or finally, binary caches."""
+        """Given a spec with an abstract hash, attempt to populate all properties and dependencies
+        by looking up the hash in the environment, store, or finally, binary caches.
+        This is destructive."""
 
         if not any(node for node in self.traverse(order="post") if node.abstract_hash):
             return
 
-        # print([spec.abstract_hash for spec in lookup_specs])
-
-        # for lookup_spec in lookup_specs:
-        #     spec_by_hash = lookup_spec.lookup_hash()
-        #     if not spec_by_hash._satisfies(lookup_spec):
-        #         raise spack.spec.InvalidHashError(lookup_spec, spec_by_hash.dag_hash())  # abstract?
-        #     lookup_spec._dup(spec_by_hash)
-        #     print("I found {0} with dag hash {1}".format(self, self.dag_hash()))
-
         spec_by_hash = self.lookup_hash()
+
         if not spec_by_hash._satisfies(self):
-            raise spack.spec.InvalidHashError(self, spec_by_hash.abstract_hash)
+            raise InvalidHashError(self, spec_by_hash.abstract_hash)
+
         self._dup(spec_by_hash)
 
     def to_node_dict(self, hash=ht.dag_hash):
@@ -3906,8 +3906,6 @@ class Spec(object):
 
         self._concrete = other._concrete
 
-        if self.abstract_hash:
-            print("Replacing dup abstract hash: {0} for spec {1}".format(self.abstract_hash, other.name))
         self.abstract_hash = other.abstract_hash
 
         if self._concrete:
@@ -4367,7 +4365,9 @@ class Spec(object):
         return self.format(*args, **kwargs)
 
     def __str__(self):
-        sorted_nodes = [self] + sorted(self.traverse(root=False), key=lambda x: x.name or x.abstract_hash)
+        sorted_nodes = [self] + sorted(
+            self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
+        )
         spec_str = " ^".join(d.format() for d in sorted_nodes)
         return spec_str.strip()
 
