@@ -85,7 +85,6 @@ class Scotch(CMakePackage, MakefilePackage):
 
     @property
     def libs(self):
-
         shared = "+shared" in self.spec
         libraries = ["libscotch", "libscotcherr"]
         zlibs = []
@@ -130,12 +129,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
     def edit(self, pkg, spec, prefix):
         makefile_inc = []
-        cflags = [
-            "-O3",
-            "-DCOMMON_RANDOM_FIXED_SEED",
-            "-DSCOTCH_DETERMINISTIC",
-            "-DSCOTCH_RENAME",
-        ]
+        cflags = ["-O3", "-DCOMMON_RANDOM_FIXED_SEED", "-DSCOTCH_DETERMINISTIC", "-DSCOTCH_RENAME"]
 
         if "+int64" in self.spec:
             # SCOTCH_Num typedef: size of integers in arguments

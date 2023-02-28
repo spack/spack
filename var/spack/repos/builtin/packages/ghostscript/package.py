@@ -87,11 +87,7 @@ class Ghostscript(AutotoolsPackage):
         )
 
     def configure_args(self):
-        args = [
-            "--disable-compile-inits",
-            "--enable-dynamic",
-            "--with-system-libtiff",
-        ]
+        args = ["--disable-compile-inits", "--enable-dynamic", "--with-system-libtiff"]
 
         if self.spec.satisfies("@9.53:"):
             args.extend(self.with_or_without("tesseract"))

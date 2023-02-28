@@ -72,11 +72,7 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     variant("zstd", default=False, description="use libzstd", when="@4.0.10:")
     variant("webp", default=False, description="use libwebp", when="@4.0.10:")
 
-    build_system(
-        conditional("cmake", when="@4.0.5:"),
-        "autotools",
-        default="cmake",
-    )
+    build_system(conditional("cmake", when="@4.0.5:"), "autotools", default="cmake")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.9:", when="@4.3:", type="build")

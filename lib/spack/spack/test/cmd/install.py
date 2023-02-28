@@ -51,7 +51,6 @@ def noop_install(monkeypatch):
 def test_install_package_and_dependency(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-
     log = "test"
     with tmpdir.as_cwd():
         install("--log-format=junit", "--log-file={0}".format(log), "libdwarf")
@@ -96,7 +95,6 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
 def test_install_package_already_installed(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-
     with tmpdir.as_cwd():
         install("libdwarf")
         install("--log-format=junit", "--log-file=test.xml", "libdwarf")
@@ -242,11 +240,7 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, inst
 
 
 def test_install_overwrite_not_installed(
-    mock_packages,
-    mock_archive,
-    mock_fetch,
-    config,
-    install_mockery,
+    mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec("libdwarf")
@@ -342,11 +336,7 @@ def test_install_overwrite_multiple(
 
 
 @pytest.mark.usefixtures(
-    "mock_packages",
-    "mock_archive",
-    "mock_fetch",
-    "config",
-    "install_mockery",
+    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
 )
 def test_install_conflicts(conflict_spec):
     # Make sure that spec with conflicts raises a SpackError
@@ -355,11 +345,7 @@ def test_install_conflicts(conflict_spec):
 
 
 @pytest.mark.usefixtures(
-    "mock_packages",
-    "mock_archive",
-    "mock_fetch",
-    "config",
-    "install_mockery",
+    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
 )
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
@@ -378,7 +364,6 @@ def test_install_invalid_spec(invalid_spec):
     ],
 )
 def test_install_from_file(spec, concretize, error_code, tmpdir):
-
     if concretize:
         spec.concretize()
 
@@ -508,7 +493,6 @@ def test_junit_output_with_errors(
     ],
 )
 def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
-
     args = clispecs
 
     for spec in filespecs:
@@ -556,10 +540,7 @@ def test_cdash_report_concretization_error(
             assert "<UpdateReturnStatus>" in content
             # The message is different based on using the
             # new or the old concretizer
-            expected_messages = (
-                "Conflicts in concretized spec",
-                "conflicts with",
-            )
+            expected_messages = ("Conflicts in concretized spec", "conflicts with")
             assert any(x in content for x in expected_messages)
 
 
@@ -650,7 +631,6 @@ def test_cdash_install_from_spec_json(
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-
             spec_json_path = str(tmpdir.join("spec.json"))
 
             pkg_spec = Spec("a")

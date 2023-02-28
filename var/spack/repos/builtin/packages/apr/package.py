@@ -23,7 +23,5 @@ class Apr(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ["libapr-{0}".format(self.version.up_to(1))],
-            root=self.prefix,
-            recursive=True,
+            ["libapr-{0}".format(self.version.up_to(1))], root=self.prefix, recursive=True
         )

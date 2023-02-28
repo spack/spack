@@ -48,9 +48,7 @@ class Hpctoolkit(AutotoolsPackage):
     # version of hpcprof.  Cray needs a separate option because an
     # external MPI module in packages.yaml doesn't work.
     variant(
-        "cray",
-        default=False,
-        description="Build hpcprof-mpi for Cray systems (requires --dirty).",
+        "cray", default=False, description="Build hpcprof-mpi for Cray systems (requires --dirty)."
     )
 
     variant(
@@ -164,17 +162,11 @@ class Hpctoolkit(AutotoolsPackage):
     # Fix the build for old revs with gcc 10.x.
     patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
 
-    patch(
-        "https://gitlab.com/hpctoolkit/hpctoolkit/-/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch",
-        sha256="8da18df88a80847c092da8d0892de51ea2bf2523124148b6305ab8717707d897",
-        when="@2019.08.01:2021.03 %gcc@11.0:",
-    )
+    patch("511afd95b01d743edc5940c84e0079f462b2c23e.patch", when="@2019.08.01:2021.03 %gcc@11.0:")
 
     # Update configure for rocm 5.3.0
     patch(
-        "https://gitlab.com/hpctoolkit/hpctoolkit/-/commit/411d62544717873432c49ef45c7cb99cc5de2fb8.patch",
-        sha256="484045891a665cdba3b0f141540c89f0d691ed32c5912ef62a93670d44c2786c",
-        when="@2022.04:2022.10 +rocm ^hip@5.3.0:",
+        "411d62544717873432c49ef45c7cb99cc5de2fb8.patch", when="@2022.04:2022.10 +rocm ^hip@5.3.0:"
     )
 
     # Change python to python3 for some old revs that use a script

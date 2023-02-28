@@ -90,7 +90,6 @@ def test_query_arguments():
 @pytest.mark.db
 @pytest.mark.usefixtures("database", "mock_display")
 def test_tag1(parser, specs):
-
     args = parser.parse_args(["--tag", "tag1"])
     spack.cmd.find.find(parser, args)
 
@@ -196,12 +195,7 @@ def test_find_json_deps(database):
 @pytest.mark.db
 def test_display_json(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs)
@@ -216,12 +210,7 @@ def test_display_json(database, capsys):
 @pytest.mark.db
 def test_display_json_deps(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs, deps=True)
@@ -237,31 +226,19 @@ def test_display_json_deps(database, capsys):
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-zmpi",
-            "mpileaks-mpich",
-            "mpileaks-mpich2",
-        ]
+        ["mpileaks-zmpi", "mpileaks-mpich", "mpileaks-mpich2"]
     )
 
     output = find("--format", "{name}-{version}-{compiler.name}-{^mpi.name}", "mpileaks")
     assert "installed package" not in output
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-2.3-gcc-zmpi",
-            "mpileaks-2.3-gcc-mpich",
-            "mpileaks-2.3-gcc-mpich2",
-        ]
+        ["mpileaks-2.3-gcc-zmpi", "mpileaks-2.3-gcc-mpich", "mpileaks-2.3-gcc-mpich2"]
     )
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
     assert set(e[:-7] for e in elements) == set(
-        [
-            "mpileaks-zmpi-",
-            "mpileaks-mpich-",
-            "mpileaks-mpich2-",
-        ]
+        ["mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"]
     )
 
     # hashes are in base32
@@ -317,12 +294,7 @@ def test_find_very_long(database, config):
     output = find("-L", "--no-groups", "mpileaks")
 
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     assert set(output.strip().split("\n")) == set(
