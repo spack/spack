@@ -102,47 +102,42 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         return match.group(1) if match else None
 
     @property
-    def _installed_exe(self):
-        return join_path(self.prefix, "bin", "swig")
+    def _swig(self):
+        return Executable(join_path(self.prefix, "bin", "swig"))
 
-    def _test_version(self):
+    @property
+    def _swiglib(self):
+        return self._swig("-swiglib", output=str).strip()
+
+    def test_version(self):
+        """check swig version"""
         version = str(self.version)
         if version.endswith("-fortran"):
             version = version.replace("-", r"\+")
         elif version in ("fortran", "master"):
             version = r".*"
 
-        self.run_test(
-            self._installed_exe,
-            "-version",
-            expected=[r"SWIG Version {0}".format(version)],
-            purpose="test: version",
+        out = self._swig("-version", output=str.split, error=str.split)
+        assert "SWIG Version {0}" in out
+
+    def test_swiglib(self):
+        """check that the lib dir exists"""
+        assert os.path.isdir(self._swiglib), "SWIG library does not exist at '{0}'".format(swiglib)
+
+    def test_swig_swg(self):
+        """check that swig.swg exists"""
+        swigfile = join_path(self._swiglib, "swig.swg")
+        assert os.path.exists(swigfile), "SWIG runtime does not exist at '{0}'".format(swigfile)
+
+    def test_fortran_swg(self):
+        """check that fortran.swg exists"""
+        if "fortran" not in str(self.version):
+            raise SkipTest("Test does not apply to version {0}".format(self.version))
+
+        swigfile = join_path(self._swiglib, "fortran", "fortran.swg")
+        assert os.path.exists(swigfile), "SWIG+Fortran runtime does not exist at '{0}'".format(
+            swigfile
         )
-
-    def _test_swiglib(self):
-        # Get SWIG's alleged path to library files
-        swig = Executable(self._installed_exe)
-        swiglib = swig("-swiglib", output=str).strip()
-
-        # Check that the lib dir exists
-        if not os.path.isdir(swiglib):
-            msg = "SWIG library does not exist at '{0}'".format(swiglib)
-            self.test_failures.append([None, msg])
-
-        # Check for existence of other critical SWIG library files
-        swigfile = join_path(swiglib, "swig.swg")
-        if not os.path.exists(swigfile):
-            msg = "SWIG runtime does not exist at '{0}'".format(swigfile)
-            self.test_failures.append([None, msg])
-        if "fortran" in str(self.version):
-            swigfile = join_path(swiglib, "fortran", "fortran.swg")
-            if not os.path.exists(swigfile):
-                msg = "SWIG+Fortran runtime does not exist at '{0}'".format(swigfile)
-                self.test_failures.append([None, msg])
-
-    def test(self):
-        self._test_version()
-        self._test_swiglib()
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
