@@ -20,7 +20,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     maintainers("vincentmr")
 
     version("main", branch="main")
-    version("develop", commit="551edca8cb0d83c7ea5139ef91a25fe9780864ca")
+    version("develop", commit="fd6feb9b2c961d6f8d93f31b6015b37e9aeac759")
     version("0.28.0", sha256="1d6f0ad9658e70cc6875e9df5710d1fa83a0ccbe21c5fc8daf4e76ab3ff59b73")
 
     # patch(
@@ -56,28 +56,26 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     variant("cpptests", default=False, description="Build CPP tests")
     variant("native", default=False, description="Build natively for given hardware")
     variant("sanitize", default=False, description="Build with address sanitization")
-    # variant("verbose", default=False, description="Build with full verbosity")
+    variant("verbose", default=False, description="Build with full verbosity")
     # variant("warnings", default=False, description="Build with Kokkos warnings")
 
     extends("python")
 
     # hard dependencies
-    depends_on("ninja", type=("build", "run"))
-    depends_on("python@3.8:", type=("build", "run"))
     depends_on("cmake@3.21:3.24,3.25.2:", type="build")
+    depends_on("ninja", type=("run", "build"))
+    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pybind11", type=("build"))
+    depends_on("py-pip", type=("build", "run"))
+    depends_on("py-wheel", type="build")
+    depends_on("py-pennylane", type=("run"))
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
-    depends_on("py-pybind11", type="build")
-    depends_on("py-pip", type="build")
-    depends_on("py-wheel", type="build")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-pennylane", type="run")
-
     # Test deps
     depends_on("py-pytest", type=("test"))
-    depends_on("py-pytest-cov", type=("test"))
     depends_on("py-pytest-mock", type=("test"))
     depends_on("py-flaky", type=("test"))
 
@@ -91,7 +89,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         """
         args = [
             self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"),
-            # self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
+            self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
             self.define_from_variant("PLKOKKOS_ENABLE_NATIVE", "native"),
             self.define_from_variant("PLKOKKOS_BUILD_TESTS", "cpptests"),
             # self.define_from_variant("PLKOKKOS_ENABLE_WARNINGS", "warnings"),
