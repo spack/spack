@@ -14,7 +14,8 @@ class Cxx(Package):
     homepage = "https://isocpp.org/std/the-standard"
     virtual = True
 
-    def test(self):
+    def test_cxx_exes(self):
+        """build and run basic Cxx executables"""
         test_source = self.test_suite.current_test_data_dir
 
         for test in os.listdir(test_source):
@@ -34,8 +35,17 @@ class Cxx(Package):
             cxx_opts = [compiler.cxx11_flag] if "c++11" in test else []
 
             cxx_opts += ["-o", exe_name, filepath]
-            compiled = self.run_test(cxx_exe, options=cxx_opts, installed=True)
 
-            if compiled:
+            with test_part(
+                self,
+                "test_cxx_exes_{0}".format(exe_name),
+                purpose="build and run {0}".format(exe_name),
+            ):
+                cxx = which(cxx_exe)
+                cxx(*cxx_opts)
+
+                exe = which(exe_name)
+                out = exe(output=str.split, error=str.split)
+
                 expected = ["Hello world", "YES!"]
-                self.run_test(exe_name, expected=expected)
+                check_outputs(expected, out)
