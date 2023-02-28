@@ -23,28 +23,20 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     version("develop", commit="fd6feb9b2c961d6f8d93f31b6015b37e9aeac759")
     version("0.28.0", sha256="1d6f0ad9658e70cc6875e9df5710d1fa83a0ccbe21c5fc8daf4e76ab3ff59b73")
 
-    # patch(
-    #     "v0.28-spack_support.patch",
-    #     when="@0.28.0",
-    #     sha256="26e79a0a01fbd1d9364d2328ccdbdcdd5109ea289a4e79f86f7a8206bcb35419",
-    # )
-
     backends = {
-        "serial": (False, "enable Serial Kokkos backend (default)"),
-        "openmp": (False, "enable OpenMP Kokkos backend"),
-        "pthread": (False, "enable Pthread Kokkos backend"),
-        "cuda": (False, "enable Cuda Kokkos backend"),
+        "cuda": [False, "Whether to build CUDA backend"],
+        "openmp": [False, "Whether to build OpenMP backend"],
+        "openmptarget": [False, "Whether to build the OpenMPTarget backend"],
+        "pthread": [False, "Whether to build Pthread backend"],
+        "rocm": [False, "Whether to build HIP backend"],
+        "serial": [True, "Whether to build serial backend"],
+        "sycl": [False, "Whether to build the SYCL backend"],
     }
 
     for backend in backends:
         deflt_bool, descr = backends[backend]
         variant(backend.lower(), default=deflt_bool, description=descr)
-        depends_on(
-            "kokkos+%s" % backend.lower(), when="+%s" % backend.lower(), type=("run", "build")
-        )
-
-    # variant("serial", default=True, description="Build serial backend")
-    # variant("openmp", default=True, description="Build with OpenMP support")
+        depends_on(f"kokkos+{backend.lower()}", when=f"+{backend.lower()}", type=("run", "build"))
 
     variant(
         "build_type",
@@ -115,3 +107,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def install_test(self):
         pytest = which("pytest")
         pytest("tests")
+        # with working_dir(self.stage.source_path):
+        #     pl_runner = Executable(join_path(self.prefix, "bin", "pl-device-test"))
+        #     pl_runner("--device", "lightning.kokkos", "--shots", "None", "--skip-ops")
