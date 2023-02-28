@@ -115,6 +115,8 @@ packages:
   python:
     variants: +tk
     version: [3.10.8]
+  py-setuptools:
+    version: [63.0.0]  # required by py-numpy
   qt:
     version: [5.14.2]
     variants: ~ssl~sql~tools
