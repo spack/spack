@@ -24,7 +24,7 @@ class Daos(SConsPackage):
     depends_on("argobots")
     depends_on("boost@develop+python", type="build")
     depends_on("cmocka", type="build")
-    depends_on("dpdk@main")
+    depends_on("dpdk@22.11:")
     depends_on("go", type="build")
     depends_on("hwloc")
     depends_on("isa-l")
@@ -42,7 +42,7 @@ class Daos(SConsPackage):
     depends_on("py-distro")
     depends_on("readline")
     depends_on("scons@4.4.0:")
-    depends_on("spdk+shared+rdma")
+    depends_on("spdk@23.01:+shared+rdma")
 
     def build_args(self, spec, prefix):
         args = ["PREFIX={0}".format(prefix), "--build-deps=yes"]
