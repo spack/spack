@@ -821,7 +821,12 @@ def _url_etag_group(url):
     if isinstance(url, str):
         parsed_url = urllib.parse.urlparse(url)
 
-    return parsed_url.geturl()
+    if parsed_url.scheme == "s3":
+        return "s3"
+    if parsed_url.scheme == "file":
+        return "file"
+    else:
+        return parsed_url.host()
 
 
 def select_signing_key(key=None):
