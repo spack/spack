@@ -821,14 +821,7 @@ def _url_etag_group(url):
     if isinstance(url, str):
         parsed_url = urllib.parse.urlparse(url)
 
-    if "http" in parsed_url.scheme:
-        # HTTP mirrors may have host specific etags
-        etag_group = parsed_url.host
-    else:
-        # s3:// and file:// use a consistent ETag method
-        etag_group = parsed_url.scheme
-
-    return etag_group
+    return parsed_url.geturl()
 
 
 def select_signing_key(key=None):
@@ -1270,7 +1263,7 @@ def _build_tarball(
 
     # push tarball to remote mirror
     # do this first in order to attempt to get an etag for the uploaded resource
-    web_util.push_to_url(
+    spackfile_etag = web_util.push_to_url(
         spackfile_path,
         remote_spackfile_path,
         keep_original=False,
@@ -1279,11 +1272,6 @@ def _build_tarball(
     )
     # Try to get the ETag of the uploaded tarball. This must happen after uploading the
     # tarball since it is not possible to pre-compute the resource etag
-    try:
-        spackfile_etag = web_util.read_etag(remote_spackfile_path)
-    except web_util.FetchError:
-        spackfile_etag = None
-
     if spackfile_etag:
         etag_group = _url_etag_group(remote_spackfile_path)
 
@@ -1299,7 +1287,6 @@ def _build_tarball(
     bchecksum["hash_algorithm"] = "sha256"
     bchecksum["hash"] = checksum
     # Store the etag if it was found
-    # Partition by netloc to avoid mismatch if copied
     if spackfile_etag:
         bchecksum["etag"] = {etag_group: spackfile_etag}
     spec_dict["binary_cache_checksum"] = bchecksum

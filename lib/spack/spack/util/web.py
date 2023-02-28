@@ -86,27 +86,6 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-def read_etag(url):
-    if isinstance(url, str):
-        remote_url = urllib.parse.urlparse(url)
-
-    if remote_url.scheme == "s3":
-        s3 = s3_util.get_s3_session(remote_url, method="push")
-        remote_path = remote_url.path
-        while remote_path.startswith("/"):
-            remote_path = remote_path[1:]
-        obj = s3.get_object(Bucket=remote_url.netloc, Key=remote_path)
-        if not obj:
-            raise FetchError("Could not obtain etag or s3 resource")
-        return obj["ETag"]
-    elif remote_url.scheme == "file":
-        return hashlib.md5(open(remote_url.path, "rb").read()).hexdigest()
-    else:
-        # TODO: Add a better way for handling getting etag from
-        # different resource hosts.
-        return None
-
-
 def read_from_url(url, accept_content_type=None):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
@@ -138,6 +117,9 @@ def read_from_url(url, accept_content_type=None):
 
 
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
+    """Push file to URL and get back the ETag of the remote file if supported by
+       remote location.
+    """
     remote_url = urllib.parse.urlparse(remote_path)
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
@@ -157,6 +139,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
                     os.remove(local_file_path)
                 else:
                     raise
+        return read_etag(local_file_path)
 
     elif remote_url.scheme == "s3":
         if extra_args is None:
@@ -167,10 +150,16 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             remote_path = remote_path[1:]
 
         s3 = s3_util.get_s3_session(remote_url, method="push")
-        s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
+        reponse = s3.put_object(
+            Body=open(local_file_path, "rb"),
+            Bucket=remote_url.netloc,
+            Key=remote_path,
+            **extra_args)
 
         if not keep_original:
             os.remove(local_file_path)
+
+        return parse_etag(reponse["ETag"])
 
     elif remote_url.scheme == "gs":
         gcs = gcs_util.GCSBlob(remote_url)
@@ -182,6 +171,9 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         raise NotImplementedError(
             "Unrecognized URL scheme: {SCHEME}".format(SCHEME=remote_url.scheme)
         )
+
+    # By default, assume no ETag
+    return None
 
 
 def base_curl_fetch_args(url, timeout=0):
@@ -833,6 +825,27 @@ def parse_etag(header_value):
     valid = re.match(r"([\x21\x23-\x7e\x80-\xFF]+)$", header_value)
 
     return valid.group(1) if valid else None
+
+
+def read_etag(url):
+    if isinstance(url, str):
+        remote_url = urllib.parse.urlparse(url)
+
+    if remote_url.scheme == "s3":
+        s3 = s3_util.get_s3_session(remote_url, method="push")
+        remote_path = remote_url.path
+        while remote_path.startswith("/"):
+            remote_path = remote_path[1:]
+        obj = s3.get_object(Bucket=remote_url.netloc, Key=remote_path)
+        if not obj:
+            raise FetchError("Could not obtain etag or s3 resource")
+        return parse_etag(obj["ETag"])
+    elif remote_url.scheme == "file":
+        return hashlib.md5(open(remote_url.path, "rb").read()).hexdigest()
+    else:
+        # TODO: Add a better way for handling getting etag from
+        # different resource hosts.
+        return None
 
 
 class FetchError(spack.error.SpackError):
