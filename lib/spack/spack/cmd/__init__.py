@@ -245,7 +245,7 @@ def matching_spec_from_env(spec):
         return spec.concretized()
 
 
-def disambiguate_spec(spec, env, local=False, installed=True, first=False, best_arch=False):
+def disambiguate_spec(spec, env, local=False, installed=True, best=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
@@ -256,13 +256,14 @@ def disambiguate_spec(spec, env, local=False, installed=True, first=False, best_
         installed (bool or spack.database.InstallStatus or typing.Iterable):
             install status argument passed to database query.
             See ``spack.database.Database._query`` for details.
+        best (bool): load the best matching spec for the current architecture
     """
     hashes = env.all_hashes() if env else None
-    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first, best_arch)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed, best)
 
 
 def disambiguate_spec_from_hashes(
-    spec, hashes, local=False, installed=True, first=False, best_arch=False
+    spec, hashes, local=False, installed=True, best=False
 ):
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
@@ -273,6 +274,7 @@ def disambiguate_spec_from_hashes(
         installed (bool or spack.database.InstallStatus or typing.Iterable):
             install status argument passed to database query.
             See ``spack.database.Database._query`` for details.
+        best (bool): load the best matching spec for the current architecture
     """
     if local:
         matching_specs = spack.store.STORE.db.query_local(spec, hashes=hashes, installed=installed)
@@ -281,18 +283,14 @@ def disambiguate_spec_from_hashes(
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
-    elif first:
-        return matching_specs[0]
-
-    if best_arch:
+    elif best:
         import archspec.cpu
 
         # Figure out the arch then select spec by best arch matching spec
         platform = spack.platforms.host()
         uarch = archspec.cpu.TARGETS.get(platform.default)
         candidate_targets = [uarch] + uarch.ancestors
-        # Filter specs matching platform arch
-        supported_specs = []
+        # Return the first spec matching the platform's architecture
         for spec in matching_specs:
             for target in candidate_targets:
                 name = spec.architecture.target.name
@@ -300,8 +298,7 @@ def disambiguate_spec_from_hashes(
                     name, archspec.cpu.generic_microarchitecture(name)
                 )
                 if spec_target <= target:
-                    supported_specs.append(spec)
-        return supported_specs[0]
+                    return spec
 
     ensure_single_spec_or_die(spec, matching_specs)
 
