@@ -34,7 +34,7 @@ class PyGmxapi(spack.build_systems.python.PythonPackage):
 
     conflicts("gromacs+mdrun_only", msg="gmxapi requires the full GROMACS library installation.")
     conflicts("gromacs~shared", msg="gmxapi requires the full GROMACS library installation.")
-    conflicts("gromacs@:2022", when="@0.4:", msg="Use GROMACS 2022.1 or newer for gmxapi 0.4.")
+    conflicts("gromacs@:2022.0", when="@0.4:", msg="Use GROMACS 2022.1 or newer for gmxapi 0.4.")
     conflicts(
         "gromacs+mpi", when="@:0.3.2", msg="Use gmxapi 0.4 or higher for MPI-enabled GROMACS."
     )
