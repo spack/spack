@@ -273,6 +273,15 @@ class Gromacs(CMakePackage):
                 "#include <queue>\n#include <limits>",
                 "src/gromacs/modularsimulator/modularsimulator.h",
             )
+        # Ref: https://gitlab.com/gromacs/gromacs/-/merge_requests/3504
+        if self.spec.satisfies("@2023"):
+            filter_file(
+                "        if (std::filesystem::equivalent(searchPath, buildBinPath))",
+                "        if (std::error_code c; std::filesystem::equivalent(searchPath,"
+                " buildBinPath, c))",
+                "src/gromacs/commandline/cmdlineprogramcontext.cpp",
+                string=True,
+            )
 
         if "+plumed" in self.spec:
             self.spec["plumed"].package.apply_patch(self)
