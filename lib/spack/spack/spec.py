@@ -3670,7 +3670,6 @@ class Spec(object):
             return True
 
     def satisfies(self, other, deps=True, strict=False):
-
         other = self._autospec(other)
 
         lhs = self.lookup_hash() or self
