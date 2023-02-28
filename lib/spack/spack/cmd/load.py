@@ -107,7 +107,7 @@ def load(parser, args):
         return
 
     specs = [
-        spack.cmd.disambiguate_spec(spec, env, best=args.load_best)
+        spack.cmd.disambiguate_spec(spec, env, first=args.load_best)
         for spec in spack.cmd.parse_specs(args.constraint)
     ]
 

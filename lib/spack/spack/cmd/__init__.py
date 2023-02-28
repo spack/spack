@@ -245,7 +245,7 @@ def matching_spec_from_env(spec):
         return spec.concretized()
 
 
-def disambiguate_spec(spec, env, local=False, installed=True, best=False):
+def disambiguate_spec(spec, env, local=False, installed=True, first=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
@@ -256,13 +256,13 @@ def disambiguate_spec(spec, env, local=False, installed=True, best=False):
         installed (bool or spack.database.InstallStatus or typing.Iterable):
             install status argument passed to database query.
             See ``spack.database.Database._query`` for details.
-        best (bool): load the best matching spec for the current architecture
+        first (bool): load the best matching spec for the current architecture
     """
     hashes = env.all_hashes() if env else None
-    return disambiguate_spec_from_hashes(spec, hashes, local, installed, best)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
 
 
-def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, best=False):
+def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, first=False):
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
     Arguments:
@@ -272,7 +272,7 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, bes
         installed (bool or spack.database.InstallStatus or typing.Iterable):
             install status argument passed to database query.
             See ``spack.database.Database._query`` for details.
-        best (bool): load the best matching spec for the current architecture
+        first (bool): load the best matching spec for the current architecture
     """
     if local:
         matching_specs = spack.store.STORE.db.query_local(spec, hashes=hashes, installed=installed)
@@ -281,7 +281,7 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, bes
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
-    elif best:
+    elif first:
         import archspec.cpu
 
         # Figure out the arch then select spec by best arch matching spec
