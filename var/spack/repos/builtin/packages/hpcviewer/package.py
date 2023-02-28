@@ -47,6 +47,8 @@ class Hpcviewer(Package):
     maintainers("mwkrentel")
 
     darwin_sha = {
+        ("2023.02", "aarch64"): "05356fcd0a84f70b07f556b55a02954aae05419d9fa12f0f64f8e2399566e622",
+        ("2023.02", "x86_64"): "90fc0ac7dfbe4c29b1a3516d125b18ea368421789f16ba6cd34cf9ad1b5b7d0b",
         ("2023.01", "aarch64"): "97af564945799652cf3efc46146297ebc0f7ebe44258876a6995cbdb5b469990",
         ("2023.01", "x86_64"): "8efbb7234f86bfc8eedfd8c3b73f148eab298d63d988f95a87b75f91d35bba8b",
         ("2022.10", "aarch64"): "4c5b4d94d5d2d82c4e583cf2229ccfde7c74741416fdb31c94cfd13c8e940b12",
@@ -61,6 +63,9 @@ class Hpcviewer(Package):
     }
 
     viewer_sha = {
+        ("2023.02", "aarch64"): "f0fbf4bf1fce05cd19ddbeed0a4e8f44a83958c796e28709591926daa28cc6ba",
+        ("2023.02", "ppc64le"): "a77c1e1de5b2f71cdf2bf2daaa8298278422121d9c7fbc7008a259010d552c7d",
+        ("2023.02", "x86_64"): "dbd2bcdd20a616fe9f796ad36385809078539d84336e6d955b094e6755bc969f",
         ("2023.01", "aarch64"): "686ca752c3b1c362108ead984862170f4a48c70afd437210f367f2c1a35ad5e5",
         ("2023.01", "ppc64le"): "95980b48a783cd8c9a2b961525bad6d0ab576f70e035cf17a2c6b9cd553955d8",
         ("2023.01", "x86_64"): "3c4686d64c2e27c05a8e4012e4f24f86602e353263aab5bf5930a85d53919841",
