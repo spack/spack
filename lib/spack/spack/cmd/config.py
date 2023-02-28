@@ -92,6 +92,17 @@ def setup_parser(subparser):
         help="Set packages preferences based on local installs, rather " "than upstream.",
     )
 
+    require_upstream_parser = sp.add_parser(
+        "require-upstream", help="require package specs from upstream"
+    )
+
+    require_upstream_parser.add_argument(
+        "--local",
+        action="store_true",
+        default=False,
+        help="Require package specs based on local installs, rather " "than upstream.",
+    )
+
     remove_parser = sp.add_parser("remove", aliases=["rm"], help="remove configuration parameters")
     remove_parser.add_argument(
         "path",
@@ -461,6 +472,60 @@ def config_prefer_upstream(args):
 
     tty.msg("Updated config at {0}".format(config_file))
 
+def config_require_upstream(args):
+    """Generate a strict packages config based on the configuration of all
+    upstream installs."""
+
+    scope = args.scope
+    if scope is None:
+        scope = spack.config.default_modify_scope("packages")
+
+    all_specs = set(spack.store.db.query(installed=True))
+    local_specs = set(spack.store.db.query_local(installed=True))
+    req_specs = local_specs if args.local else all_specs - local_specs
+
+    pkgs = {}
+    for spec in req_specs:
+        # Require specs by version, compiler, and variants.
+        pkg = pkgs.get(spec.name, {"require": [{"any_of": []}]})
+        pkgs[spec.name] = pkg
+
+        version = spec.version.string
+        compiler = str(spec.compiler)
+
+        # Get and list all the variants that differ from the default.
+        variants = []
+        for var_name, variant in spec.variants.items():
+            if var_name in ["patches"] or var_name not in spec.package.variants:
+                continue
+
+            variant_desc, _ = spec.package.variants[var_name]
+            if variant.value != variant_desc.default:
+                variants.append(str(variant))
+        variants.sort()
+        variants = " ".join(variants)
+
+        pkg["require"][0]["any_of"].append(
+            "@{0} %{1} {2}".format(
+                version, compiler, variants
+            )
+        )
+
+    # Clean up entries so the package listing is a simple
+    #       require: "@{version} %{compiler} {variants}"
+    # entry if a package has only one spec.
+    for spec, pkg in pkgs.items():
+        if len(pkg["require"][0]["any_of"]) == 1:
+            required_spec = pkg["require"][0]["any_of"][0]
+            pkg["require"] = required_spec
+
+    # Simply write the config to the specified file.
+    existing = spack.config.get("packages", scope=scope)
+    new = spack.config.merge_yaml(existing, pkgs)
+    spack.config.set("packages", new, scope)
+    config_file = spack.config.config.get_config_filename(scope, section)
+
+    tty.msg("Updated config at {0}".format(config_file))
 
 def config(parser, args):
     action = {
@@ -474,5 +539,6 @@ def config(parser, args):
         "update": config_update,
         "revert": config_revert,
         "prefer-upstream": config_prefer_upstream,
+        "require-upstream": config_require_upstream,
     }
     action[args.config_command](args)
