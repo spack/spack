@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import codecs
 import errno
+import hashlib
 import multiprocessing.pool
 import os
 import os.path
@@ -83,6 +84,27 @@ class LinkParser(HTMLParser):
             for attr, val in attrs:
                 if attr == "href":
                     self.links.append(val)
+
+
+def read_etag(url):
+    if isinstance(url, str):
+        remote_url = urllib.parse.urlparse(url)
+
+    if remote_url.scheme == "s3":
+        s3 = s3_util.get_s3_session(remote_url, method="push")
+        remote_path = remote_url.path
+        while remote_path.startswith("/"):
+            remote_path = remote_path[1:]
+        obj = s3.get_object(Bucket=remote_url.netloc, Key=remote_path)
+        if not obj:
+            raise FetchError("Could not obtain etag or s3 resource")
+        return obj["ETag"]
+    elif remote_url.scheme == "file":
+        return hashlib.md5(open(remote_url.path, "rb").read()).hexdigest()
+    else:
+        # TODO: Add a better way for handling getting etag from
+        # different resource hosts.
+        return None
 
 
 def read_from_url(url, accept_content_type=None):
