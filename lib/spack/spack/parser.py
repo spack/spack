@@ -394,8 +394,6 @@ class SpecNodeParser:
                 self.has_hash = True
             else:
                 break
-        if self.has_hash:
-            print("final parsed abstract hash is {}".format(initial_spec.abstract_hash))
 
         return initial_spec
 
