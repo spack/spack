@@ -263,6 +263,10 @@ class QuantumEspresso(CMakePackage, Package):
         "build_system=generic", when="@6.8: %aocc", msg="Please use CMake to build with AOCC"
     )
 
+    conflicts(
+        "~openmp", when="^amdlibflame", msg="amdlibflame requires OpenMP"
+    )
+
     # QMCPACK converter patches for QE 6.8, 6.7, 6.4.1, 6.4, and 6.3
     conflicts(
         "@:6.2,6.5:6.6",
