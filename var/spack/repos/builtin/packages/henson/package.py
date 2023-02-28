@@ -14,6 +14,8 @@ class Henson(CMakePackage):
 
     version("master", branch="master")
 
+    maintainers("mrzv")
+
     depends_on("mpi")
 
     variant("python", default=False, description="Build Python bindings")
