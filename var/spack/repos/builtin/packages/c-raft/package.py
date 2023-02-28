@@ -33,6 +33,5 @@ class CRaft(AutotoolsPackage):
 
     def configure_args(self):
         args = ["--disable-lz4"]
-        if "+uv" not in self.spec:
-            args.append("--disable-uv")
+        args += self.enable_or_disable("uv")
         return args
