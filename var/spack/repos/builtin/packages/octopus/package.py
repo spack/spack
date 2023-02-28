@@ -295,36 +295,26 @@ class Octopus(AutotoolsPackage, CudaPackage):
         """Function stub to run tests after install if desired
         (for example through `spack install --test=root octopus`)
         """
-        self.smoke_tests()
+        self.test_version()
+        self.test_recipe()
+        self.test_he()
 
-    def test(self):
-        """Entry point for smoke tests run through `spack test run octopus`."""
-        self.smoke_tests()
-
-    def smoke_tests(self):
-        """Actual smoke tests for Octopus."""
+    def test_version(self):
+        """check version output"""
         #
         # run "octopus --version"
         #
-        exe = join_path(self.spec.prefix.bin, "octopus")
-        options = ["--version"]
-        purpose = "Check octopus can execute (--version)"
         # Example output:
         #
         # spack-v0.17.2$ octopus --version
         # octopus 11.3 (git commit )
-        expected = ["octopus "]
+        #
+        octopus = which(self.prefix.bin.octopus)
+        out = octopus("--version", output=str.split, error=str.split)
+        assert "octopus " in out
 
-        self.run_test(
-            exe,
-            options=options,
-            expected=expected,
-            status=[0],
-            installed=False,
-            purpose=purpose,
-            skip_missing=False,
-        )
-
+    def test_recipe(self):
+        """run recipe example"""
         # Octopus expects a file with name `inp` in the current working
         # directory to read configuration information for a simulation run from
         # that file. We copy the relevant configuration file in a dedicated
@@ -335,35 +325,24 @@ class Octopus(AutotoolsPackage, CudaPackage):
         # self.test_suite.current_test_data_dir, and need to copy the test
         # input files manually (see below).
 
-        #
-        # run recipe example
-        #
-
         expected = [
-            "Running octopus",
-            "CalculationMode = recipe",
-            "DISCLAIMER: The authors do not " "guarantee that the implementation",
-            "recipe leads to an edible dish, " 'for it is clearly "system-dependent".',
-            "Calculation ended on",
+            r"Running octopus",
+            r"CalculationMode = recipe",
+            r"DISCLAIMER: The authors do not guarantee that the implementation",
+            r"recipe leads to an edible dish, for it is clearly \"system-dependent\".",
+            r"Calculation ended on",
         ]
-        options = []
-        purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
+            print("copying he.inp from %s" % join_path(os.path.dirname(__file__), "test"))
             fs.copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
-            self.run_test(
-                exe,
-                options=options,
-                expected=expected,
-                status=[0],
-                installed=False,
-                purpose=purpose,
-                skip_missing=False,
-            )
 
-        #
-        # run He example
-        #
+            octopus = which(self.prefix.bin.octopus)
+            out = octopus(output=str.split, error=str.split)
+            check_outputs(expected, out)
+
+    def test_he(self):
+        """run tiny calculation for He"""
         expected = [
             "Running octopus",
             "Info: Starting calculation mode.",
@@ -372,17 +351,11 @@ class Octopus(AutotoolsPackage, CudaPackage):
             "Info: Writing states.",
             "Calculation ended on",
         ]
-        options = []
-        purpose = "Run tiny calculation for He"
         with working_dir("example-he", create=True):
             print("Current working directory (in example-he)")
+            print("copying he.inp from %s" % join_path(os.path.dirname(__file__), "test"))
             fs.copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
-            self.run_test(
-                exe,
-                options=options,
-                expected=expected,
-                status=[0],
-                installed=False,
-                purpose=purpose,
-                skip_missing=False,
-            )
+
+            octopus = which(self.prefix.bin.octopus)
+            out = octopus(output=str.split, error=str.split)
+            check_outputs(expected, out)
