@@ -37,8 +37,8 @@ class PyFenicsFfcx(PythonPackage):
     )
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools@58:", type="build", when="@0.4:")
-    depends_on("py-setuptools@40:", type="build")
+    depends_on("py-setuptools@58:", type=("build", "run"), when="@0.4:")
+    depends_on("py-setuptools@40:", type=("build", "run"))
 
     depends_on("py-cffi", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
