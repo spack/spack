@@ -14,8 +14,10 @@ class Met(AutotoolsPackage):
     homepage = "https://dtcenter.org/community-code/model-evaluation-tools-met"
     url      = "https://github.com/dtcenter/MET/releases/download/v10.1.0/met-10.1.0.20220314.tar.gz"
 
-    maintainers = ['kgerheiser']
+    maintainers = ['AlexanderRichert-NOAA']
 
+    version('11.0.1', sha256='48d471ad4634f1b969d9358c51925ce36bf0a1cec5312a6755203a4794b81646')
+    version('11.0.0', sha256='648ebb54d07ca099680f4fc23b7ef5095c1a8ac5537c0a5d0e8587bf15991cff')
     version('10.1.1', sha256='9827e65fbd1c64e776525bae072bc2d37d14465e85a952778dcc32a26d8b5c9e')
     version('10.1.0', sha256='8d4c1fb2311d8481ffd24e30e407a1b1bc72a6add9658d76b9c323f1733db336')
     version('10.0.1', sha256='8e965bb0eb8353229a730af511c5fa62bad9744606ab6a218d741d29eb5f3acd')
@@ -56,15 +58,19 @@ class Met(AutotoolsPackage):
     patch('openmp_shape_patch.patch', when='@10.1.0')
 
     def url_for_version(self, version):
-        release_date = {
-            '10.1.1': '20220419',
-            '10.1.0': '20220314',
-            '10.0.1': '20211201',
-            '10.0.0': '20210510',
-            '9.1.3':  '20210319'
-        }
-        url = "https://github.com/dtcenter/MET/releases/download/v{0}/met-{0}.{1}.tar.gz"
-        return url.format(version, release_date[str(version)])
+        if version < Version("11"):
+            release_date = {
+                '10.1.1': '20220419',
+                '10.1.0': '20220314',
+                '10.0.1': '20211201',
+                '10.0.0': '20210510',
+                '9.1.3':  '20210319'
+            }
+            url = "https://github.com/dtcenter/MET/releases/download/v{0}/met-{0}.{1}.tar.gz"
+            return url.format(version, release_date[str(version)])
+        else:
+            url = "https://github.com/dtcenter/MET/archive/refs/tags/v{0}.tar.gz"
+            return url.format(version)
 
     def setup_build_environment(self, env):
         spec = self.spec
