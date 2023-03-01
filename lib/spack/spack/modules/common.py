@@ -801,11 +801,21 @@ class BaseContext(tengine.Context):
     def _create_module_list_of(self, what):
         m = self.conf.module
         name = self.conf.name
-        return [
-            use_name
-            for x in getattr(self.conf, what)
-            for use_name in m.make_layout(x, name).use_names
-        ]
+        external_modules = []
+        local_modules = []
+        for spec in getattr(self.conf, what):
+            if spec.external_modules:
+                external_modules.extend(spec.external_modules)
+            else:
+                local_modules.append(m.make_layout(spec, name).use_name)
+
+        return external_modules + local_modules
+
+        #return [
+        #    use_name
+        #    for x in getattr(self.conf, what)
+        #    for use_name in m.make_layout(x, name).use_names
+        #]
 
     @tengine.context_property
     def verbose(self):
