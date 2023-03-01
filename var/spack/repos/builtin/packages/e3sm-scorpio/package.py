@@ -7,7 +7,9 @@ from spack.package import *
 
 
 class E3smScorpio(CMakePackage):
-    """The SCORPIO (Software for Caching Output and Reads for Parallel I/O) library is used by all the model components in DOE's Energy Exascale Earth System Model (E3SM) for reading input data and writing model output"""
+    """The SCORPIO (Software for Caching Output and Reads for Parallel I/O)
+    library is used by all the model components in DOE's Energy Exascale Earth
+    System Model (E3SM) for reading input data and writing model output"""
 
     homepage = "https://e3sm.org/scorpio-parallel-io-library/"
     url = "https://github.com/E3SM-Project/scorpio/archive/refs/tags/scorpio-v1.4.1.tar.gz"
@@ -16,7 +18,7 @@ class E3smScorpio(CMakePackage):
 
     variant("timing", default="False", description="Enable timing")
     variant("mpi", default="True", description="Enable MPI")
-    
+
     depends_on("cmake", type="build")
     depends_on("gptl", when="+timing")
     depends_on("mpi", when="+mpi")
