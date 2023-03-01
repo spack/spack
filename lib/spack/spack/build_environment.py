@@ -1008,6 +1008,10 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
         should_setup_run_env |= Mode.ROOT
         should_be_runnable |= Mode.ROOT
 
+    # I guess everything that calls setup_run_environemnt and setup_dependent_* should have our
+    # horrible globals available too.
+    should_populate_package_py_globals = should_setup_dependent_build_env | should_setup_run_env
+
     def make_buildtime_detectable(dep, env):
         if is_system_path(dep.prefix):
             return
@@ -1028,28 +1032,39 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
                 env.prepend_path("PATH", bin_dir)
 
     for dspec, flag in chain(external, nonexternal):
-        tty.debug("Adding env modifications for {0}".format(dspec.name))
-        if should_setup_dependent_build_env & flag:
-            if not custom_mods_only:
-                make_buildtime_detectable(dspec, env)
+        tty.debug(f"Adding env modifications for {dspec.name}")
+        # First set our default globals, which are ... mostly really
+        # build env things and typically not useful in other contexts,
+        # but well.
+        if set_package_py_globals and (should_populate_package_py_globals & flag):
+            set_module_variables_for_package(dspec.package)
 
-            if set_package_py_globals:
-                set_module_variables_for_package(dspec.package)
-
+        # Annoyingly, this setup_dependent_package globals may be used
+        # by setup_run_environment, meaning that in practice we may need
+        # to traverse to *all* dependents... or we should forbid using
+        # opaque globals in setup_run_environment.
+        if set_package_py_globals:
             for spec in specs:
                 current_module = ModuleChangePropagator(spec.package)
                 dspec.package.setup_dependent_package(current_module, spec)
                 current_module.propagate_changes_to_mro()
 
+        # Finally do environment variable changes. Here setup_dependent
+        # clearly applies just to the root, no traversal is necessary.
+        if should_setup_dependent_build_env & flag:
+            if not custom_mods_only:
+                make_buildtime_detectable(dspec, env)
+
+            for spec in specs:
                 builder = spack.builder.create(dspec.package)
                 builder.setup_dependent_build_environment(env, spec)
 
-        if should_be_runnable & flag:
-            if not custom_mods_only:
-                make_runnable(dspec, env)
+        if not custom_mods_only and (should_be_runnable & flag):
+            make_runnable(dspec, env)
 
+        # This also does not require traversal since it doesn't mutate
+        # dependents.
         if should_setup_run_env & flag:
-            # we should get rid of setup_dependent_run_environment
             for spec in specs:
                 dspec.package.setup_dependent_run_environment(env, spec)
             dspec.package.setup_run_environment(env)
