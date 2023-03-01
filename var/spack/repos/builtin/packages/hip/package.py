@@ -630,8 +630,11 @@ class Hip(CMakePackage):
                         make()
                         # itterate through the files in dir to find the newly built binary
                         for file in os.listdir("."):
-                            if (file not in files and os.path.isfile(file) and
-                                    os.access(file, os.X_OK)):
+                            if (
+                                file not in files
+                                and os.path.isfile(file)
+                                and os.access(file, os.X_OK)
+                            ):
                                 print("Executing test binary: " + file)
                                 self.run_test(file)
                         make("clean")
