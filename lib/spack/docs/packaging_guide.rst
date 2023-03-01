@@ -1575,7 +1575,7 @@ other similar operations:
             values=disjoint_sets(
                 ("auto",), ("slurm",), ("hydra", "gforker", "remshell")
             ).prohibit_empty_set().with_error(
-                ""slurm" or "auto" cannot be activated along with "
+                "'slurm' or 'auto' cannot be activated along with "
                 "other process managers"
             ).with_default("auto").with_non_feature_values("auto"),
         )
@@ -2746,7 +2746,7 @@ from being linked in a view.
 
    You can call *either* ``depends_on`` or ``extends`` on any one
    package, but not both.  For example you cannot both
-   ``depends_on("python")`` and ``extends(python)`` in the same
+   ``depends_on("python")`` and ``extends("python")`` in the same
    package.  ``extends`` implies ``depends_on``.
 
 -----
@@ -4051,7 +4051,7 @@ do that, e.g.:
    ]
 
    if spec.satisfies("@1.2:1.4"):
-       configure_args.append("CXXFLAGS="-DWITH_FEATURE"")
+       configure_args.append("CXXFLAGS='-DWITH_FEATURE'")
 
    configure(*configure_args)
 
