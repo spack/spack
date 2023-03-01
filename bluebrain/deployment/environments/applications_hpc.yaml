@@ -34,6 +34,7 @@ spack:
     - asciitoh5@1.0
     - neuron%intel+tests+coreneuron
     - neuron%intel+tests+nmodl+sympy+coreneuron
+    - neuron%nvhpc+coreneuron+tests+gpu
     - neuron%nvhpc+tests+gpu+openmp+coreneuron
     - neuron%nvhpc+tests+gpu+openmp+nmodl+sympy+coreneuron
     - nest@2.20.1
