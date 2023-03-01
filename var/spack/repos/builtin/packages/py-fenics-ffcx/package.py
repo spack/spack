@@ -15,6 +15,7 @@ class PyFenicsFfcx(PythonPackage):
     maintainers("chrisrichardson", "garth-wells", "jhale")
 
     version("main", branch="main")
+    version("0.6.0", sha256="076fad61d406afffd41019ae1abf6da3f76406c035c772abad2156127667980e")
     version(
         "0.5.0.post0", sha256="039908c9998b51ba53e5deb3a97016062c262f0a4285218644304f7d3cd35882"
     )
@@ -36,19 +37,22 @@ class PyFenicsFfcx(PythonPackage):
     )
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools@58:", type="build", when="@0.4:")
+    depends_on("py-setuptools@58:", type=("build", "run"), when="@0.4:")
+    depends_on("py-setuptools@40:", type=("build", "run"))
 
-    depends_on("py-cffi", type="run")
-    depends_on("py-numpy", type="run")
+    depends_on("py-cffi", type=("build", "run"))
+    depends_on("py-numpy@1.21:", type=("build", "run"))
 
-    depends_on("py-fenics-ufl@main", type="run", when="@main")
-    depends_on("py-fenics-ufl@2022.2.0", type="run", when="@0.5.0:0.5")
-    depends_on("py-fenics-ufl@2022.1.0", type="run", when="@0.4.2")
-    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1.0:0.3")
+    depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
+    depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
+    depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.2")
+    depends_on("py-fenics-ufl@2021.1.0", type=("build", "run"), when="@0.1.0:0.3")
 
-    depends_on("py-fenics-basix@main", type="run", when="@main")
-    depends_on("py-fenics-basix@0.5.1:0.5", type="run", when="@0.5.0:0.5")
-    depends_on("py-fenics-basix@0.4.2", type="run", when="@0.4.2")
-    depends_on("py-fenics-basix@0.3.0", type="run", when="@0.3.0")
-    depends_on("py-fenics-basix@0.2.0", type="run", when="@0.2.0")
-    depends_on("py-fenics-basix@0.1.0", type="run", when="@0.1.0")
+    depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-basix@0.6.0:0.6", type=("build", "run"), when="@0.6.0:0.6")
+    depends_on("py-fenics-basix@0.5.1:0.5", type=("build", "run"), when="@0.5.0:0.5")
+    depends_on("py-fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
+    depends_on("py-fenics-basix@0.3.0", type=("build", "run"), when="@0.3.0")
+    depends_on("py-fenics-basix@0.2.0", type=("build", "run"), when="@0.2.0")
+    depends_on("py-fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")

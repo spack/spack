@@ -15,6 +15,7 @@ class FenicsDolfinx(CMakePackage):
     maintainers("chrisrichardson", "garth-wells", "nate-sime", "jhale")
 
     version("main", branch="main")
+    version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
     version("0.5.1", sha256="a570e3f6ed8e7c570e7e61d0e6fd44fa9dad2c5f8f1f48a6dc9ad22bacfbc973")
     version("0.5.0", sha256="503c70c01a44d1ffe48e052ca987693a49f8d201877652cabbe2a44eb3b7c040")
     version("0.4.1", sha256="68dcf29a26c750fcea5e02d8d58411e3b054313c3bf6fcbc1d0f08dd2851117f")
@@ -88,6 +89,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("pugixml", when="@0.5.0:")
 
     depends_on("fenics-ufcx@main", when="@main")
+    depends_on("fenics-ufcx@0.6.0:0.6", when="@0.6.0:0.6")
     depends_on("fenics-ufcx@0.5.0", when="@0.5.1:0.5")
     depends_on("fenics-ufcx@0.4.2", when="@0.4.1")
     depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0")
@@ -96,6 +98,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
 
     depends_on("fenics-basix@main", when="@main")
+    depends_on("fenics-basix@0.6.0:0.6", when="@0.6.0:0.6")
     depends_on("fenics-basix@0.5.1:0.5", when="@0.5.0:0.5")
     depends_on("fenics-basix@0.4.2", when="@0.4.1")
     depends_on("fenics-basix@0.3.0", when="@0.3.0")
