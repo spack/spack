@@ -270,7 +270,7 @@ def generate_module_index(root, modules, overwrite=False):
             entries = yaml_content["module_index"]
 
     for m in modules:
-        entry = {"path": m.layout.filename, "use_name": m.layout.use_names[0]}
+        entry = {"path": m.layout.filename, "use_name": m.layout.use_name}
         entries[m.spec.dag_hash()] = entry
     index = {"module_index": entries}
     llnl.util.filesystem.mkdirp(root)
@@ -398,7 +398,7 @@ def get_modules(module_type, spec, get_full_path, module_set_name="default", req
         if get_full_path:
             return [module.path]
         else:
-            return module.use_names
+            return [module.use_name]
     elif spec.external_modules:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if writer.conf.excluded:
@@ -428,7 +428,7 @@ def get_modules(module_type, spec, get_full_path, module_set_name="default", req
         if get_full_path:
             return [writer.layout.filename]
         else:
-            return writer.layout.use_names
+            return [writer.layout.use_name]
 
 
 class BaseConfiguration(object):
@@ -617,14 +617,10 @@ class BaseFileLayout(object):
         return root_path(module_system, self.conf.name)
 
     @property
-    def use_names(self):
-        """Returns a list of the 'use' names of the module i.e. the names you
+    def use_name(self):
+        """Returns a list of the 'use' name of the module i.e. the names you
         have to type to console to use it. This implementation fits the needs of
-        most non-hierarchical layouts. Most specs will only have one use name;
-        currently only external packages may have multiple modulefiles per spec.
-        """
-        if self.spec.external_modules:
-            return self.spec.external_modules
+        most non-hierarchical layouts."""
         projection = proj.get_projection(self.conf.projections, self.spec)
         if not projection:
             projection = self.conf.default_projections["all"]
@@ -635,15 +631,15 @@ class BaseFileLayout(object):
         name = os.path.join(*parts)
         # Add optional suffixes based on constraints
         path_elements = [name] + self.conf.suffixes
-        return ["-".join(path_elements)]
+        return "-".join(path_elements)
 
     @property
     def filename(self):
         """Name of the module file for the current spec."""
         # Just the name of the file
-        filename = self.use_names[0]
+        filename = self.use_name
         if self.extension:
-            filename = "{0}.{1}".format(self.use_names[0], self.extension)
+            filename = "{0}.{1}".format(self.use_name, self.extension)
         # Architecture sub-folder
         arch_folder_conf = spack.config.get("modules:%s:arch_folder" % self.conf.name, True)
         if arch_folder_conf:
@@ -810,12 +806,6 @@ class BaseContext(tengine.Context):
                 local_modules.append(m.make_layout(spec, name).use_name)
 
         return external_modules + local_modules
-
-        #return [
-        #    use_name
-        #    for x in getattr(self.conf, what)
-        #    for use_name in m.make_layout(x, name).use_names
-        #]
 
     @tengine.context_property
     def verbose(self):
