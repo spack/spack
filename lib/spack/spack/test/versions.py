@@ -747,3 +747,27 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
     assert v.is_ref
     assert not v._ref_lookup
     assert v_equivalent.version == v.ref_version
+
+
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str,expected",
+    [
+        # VersionBase
+        ("4.7.3", "4.7.3", (True, True, True)),
+        ("4.7.3", "4.7", (True, True, False)),
+        ("4.7.3", "4", (True, True, False)),
+        ("4.7.3", "4.8", (False, False, False)),
+        # GitVersion
+        (f"git.{'a' * 40}=develop", "develop", (True, True, False)),
+        (f"git.{'a' * 40}=develop", f"git.{'a' * 40}=develop", (True, True, True)),
+        (f"git.{'a' * 40}=develop", f"git.{'b' * 40}=develop", (False, False, False)),
+    ],
+)
+def test_version_intersects_satisfies_semantic(lhs_str, rhs_str, expected):
+    lhs, rhs = ver(lhs_str), ver(rhs_str)
+    intersect, lhs_sat_rhs, rhs_sat_lhs = expected
+
+    assert lhs.intersects(rhs) is intersect
+    assert lhs.intersects(rhs) is rhs.intersects(lhs)
+    assert lhs.satisfies(rhs) is lhs_sat_rhs
+    assert rhs.satisfies(lhs) is rhs_sat_lhs

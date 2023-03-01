@@ -133,6 +133,9 @@ class VersionStrComponent(object):
     def __str__(self):
         return self.data
 
+    def __repr__(self):
+        return f"VersionStrComponent('{self.data}')"
+
     def __eq__(self, other):
         if isinstance(other, VersionStrComponent):
             return self.data == other.data
@@ -357,7 +360,8 @@ class VersionBase(object):
         Arg:
             other: version to be checked for intersection
         """
-        return self.satisfies(other) or other.satisfies(self)
+        n = min(len(self.version), len(other.version))
+        return self.version[:n] == other.version[:n]
 
     @coerced
     def satisfies(self, other: "VersionBase") -> bool:
@@ -480,9 +484,8 @@ class VersionBase(object):
     def is_successor(self, other):
         return other.is_predecessor(self)
 
-    @coerced
     def overlaps(self, other):
-        return self in other or other in self
+        return self.intersects(other)
 
     @coerced
     def union(self, other):
@@ -605,8 +608,16 @@ class GitVersion(VersionBase):
         return self.version
 
     @coerced
-    def overlaps(self, other):
-        return self.satisfies(other) or other.satisfies(self)
+    def intersects(self, other):
+        # If they are both references, they must match exactly
+        if self.is_ref and other.is_ref:
+            return self.version == other.version
+
+        # Otherwise the ref_version of the reference must intersect with the version of the other
+        v1 = self.ref_version if self.is_ref else self.version
+        v2 = other.ref_version if other.is_ref else other.version
+        n = min(len(v1), len(v2))
+        return v1[:n] == v2[:n]
 
     @coerced
     def satisfies(self, other):
@@ -846,7 +857,7 @@ class VersionRange(object):
         - 1:3 does not satisfy 2:4, as they overlap but neither is a subset of the other
         - 1:3 satisfies 1:4.
         """
-        return self.overlaps(other) and self.intersection(other) == self
+        return self.intersection(other) == self
 
     @coerced
     def overlaps(self, other):
@@ -1066,11 +1077,9 @@ class VersionList(object):
 
     @coerced
     def satisfies(self, other) -> bool:
-        for x in self:
-            if any(x.satisfies(t) for t in other):
-                continue
-            return False
-        return True
+        # This exploits the fact that version lists are "reduced" and normalized, so we can
+        # never have a list like [1:3, 2:4] since that would be normalized to [1:4]
+        return all(any(lhs.satisfies(rhs) for rhs in other) for lhs in self)
 
     @coerced
     def update(self, other):
