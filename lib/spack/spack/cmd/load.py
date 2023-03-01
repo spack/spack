@@ -109,15 +109,8 @@ def load(parser, args):
         return 1
 
     with spack.store.STORE.db.read_transaction():
-        if "dependencies" in args.things_to_load:
-            include_roots = "package" in args.things_to_load
-            specs = [
-                dep for spec in specs for dep in spec.traverse(root=include_roots, order="post")
-            ]
-
-        env_mod = spack.util.environment.EnvironmentModifications()
+        env_mod = uenv.environment_modifications_for_specs(specs)
         for spec in specs:
-            env_mod.extend(uenv.environment_modifications_for_spec(spec))
             env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
         cmds = env_mod.shell_modifications(args.shell)
 

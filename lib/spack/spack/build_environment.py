@@ -417,10 +417,10 @@ def set_wrapper_variables(pkg, env):
     This determines the injected -L/-I/-rpath options; each
     of these specifies a search order and this function computes these
     options in a manner that is intended to match the DAG traversal order
-    in `modifications_from_dependencies`: that method uses a post-order
+    in `modifications_from_dag`: that method uses a post-order
     traversal so that `PrependPath` actions from dependencies take lower
     precedence; we use a post-order traversal here to match the visitation
-    order of `modifications_from_dependencies` (so we are visiting the
+    order of `modifications_from_dag` (so we are visiting the
     lowest priority packages first).
     """
     # Set environment variables if specified for
@@ -750,7 +750,7 @@ def setup_package(pkg, dirty, context="build"):
         set_wrapper_variables(pkg, env_mods)
 
     tty.debug("setup_package: grabbing modifications from dependencies")
-    env_mods.extend(modifications_from_dependencies(pkg.spec, context, custom_mods_only=False))
+    env_mods.extend(modifications_from_dag(pkg.spec, context, custom_mods_only=False))
     tty.debug("setup_package: collected all modifications from dependencies")
 
     # architecture specific setup
@@ -944,9 +944,7 @@ def effective_deptypes(specs: list, context="build"):
     return nodes_with_type
 
 
-def modifications_from_dependencies(
-    spec, context, custom_mods_only=True, set_package_py_globals=True
-):
+def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py_globals=True):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
@@ -988,10 +986,16 @@ def modifications_from_dependencies(
     if context not in ("build", "run", "test"):
         raise ValueError(f"Expecting context to be one of build, run, test. Got {context}")
 
+    if not isinstance(specs, list):
+        specs = [specs]
+
+    if context == "build" and not len(specs) == 1:
+        raise ValueError("Cannot setup build env for multiple specs")
+
     env = EnvironmentModifications()
 
     # Reverse so we go from leaf to root
-    specs_with_type = reversed(effective_deptypes([spec], context))
+    specs_with_type = reversed(effective_deptypes(specs, context))
 
     # Split into non-external and extenal
     external, nonexternal = stable_partition(specs_with_type, lambda t: t[0].external)
@@ -999,6 +1003,10 @@ def modifications_from_dependencies(
     should_be_runnable = Mode.BUILDTIME_DIRECT | Mode.RUNTIME_EXECUTABLE
     should_setup_dependent_build_env = Mode.BUILDTIME | Mode.BUILDTIME_DIRECT
     should_setup_run_env = Mode.RUNTIME | Mode.RUNTIME_EXECUTABLE
+
+    if context in ("run", "test"):
+        should_setup_run_env |= Mode.ROOT
+        should_be_runnable |= Mode.ROOT
 
     def make_buildtime_detectable(dep, env):
         if is_system_path(dep.prefix):
@@ -1028,19 +1036,22 @@ def modifications_from_dependencies(
             if set_package_py_globals:
                 set_module_variables_for_package(dspec.package)
 
-            current_module = ModuleChangePropagator(spec.package)
-            dspec.package.setup_dependent_package(current_module, spec)
-            current_module.propagate_changes_to_mro()
+            for spec in specs:
+                current_module = ModuleChangePropagator(spec.package)
+                dspec.package.setup_dependent_package(current_module, spec)
+                current_module.propagate_changes_to_mro()
 
-            builder = spack.builder.create(dspec.package)
-            builder.setup_dependent_build_environment(env, spec)
+                builder = spack.builder.create(dspec.package)
+                builder.setup_dependent_build_environment(env, spec)
 
         if should_be_runnable & flag:
             if not custom_mods_only:
                 make_runnable(dspec, env)
 
         if should_setup_run_env & flag:
-            dspec.package.setup_dependent_run_environment(env, spec)
+            # we should get rid of setup_dependent_run_environment
+            for spec in specs:
+                dspec.package.setup_dependent_run_environment(env, spec)
             dspec.package.setup_run_environment(env)
 
     return env

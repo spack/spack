@@ -4,11 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import sys
+from contextlib import contextmanager
+
+from llnl.util.lang import nullcontext
 
 import spack.build_environment
 import spack.config
 import spack.util.environment as environment
 import spack.util.prefix as prefix
+from spack import traverse
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
@@ -62,7 +66,30 @@ def unconditional_environment_modifications(view):
     return env
 
 
-def environment_modifications_for_spec(spec, view=None, set_package_py_globals=True):
+@contextmanager
+def temporary_projected_prefix(specs, projection):
+    prefixes = dict()
+    for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
+        if s.external:
+            continue
+        prefixes[s.dag_hash()] = s.prefix
+        s.prefix = prefix.Prefix(projection(s))
+
+    yield
+
+    for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
+        s.prefix = prefixes.get(s.dag_hash(), s.prefix)
+
+
+def get_projection_context_manager(view):
+    # If we have a view, project prefixes to the view
+    if not view:
+        return lambda specs: nullcontext()
+
+    return lambda specs: temporary_projected_prefix(specs, view.get_projection_for_spec)
+
+
+def environment_modifications_for_specs(specs, view=None, set_package_py_globals=True):
     """List of environment (shell) modifications to be processed for spec.
 
     This list is specific to the location of the spec or its projection in
@@ -75,27 +102,28 @@ def environment_modifications_for_spec(spec, view=None, set_package_py_globals=T
             package.py files (this may be problematic when using buildcaches that have
             been built on a different but compatible OS)
     """
-    spec = spec.copy()
-    if view and not spec.external:
-        spec.prefix = prefix.Prefix(view.get_projection_for_spec(spec))
+    if not isinstance(specs, list):
+        specs = [specs]
 
-    # generic environment modifications determined by inspecting the spec
-    # prefix
-    env = environment.inspect_path(
-        spec.prefix, prefix_inspections(spec.platform), exclude=environment.is_system_path
-    )
+    env = environment.EnvironmentModifications()
 
-    # Let the extendee/dependency modify their extensions/dependents
-    # before asking for package-specific modifications
-    env.extend(
-        spack.build_environment.modifications_from_dependencies(
-            spec, context="run", set_package_py_globals=set_package_py_globals
+    # Default ones.
+    for s in traverse.traverse_nodes(specs, root=True, deptype=("run", "link")):
+        env.extend(
+            environment.inspect_path(
+                s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
+            )
         )
-    )
 
-    if set_package_py_globals:
-        spack.build_environment.set_module_variables_for_package(spec.package)
-
-    spec.package.setup_run_environment(env)
+    # Do setup_run_env etc.
+    with get_projection_context_manager(view)(specs):
+        env.extend(
+            spack.build_environment.modifications_from_dag(
+                specs,
+                context="run",
+                set_package_py_globals=set_package_py_globals,
+                custom_mods_only=False,
+            )
+        )
 
     return env

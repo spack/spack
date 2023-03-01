@@ -718,10 +718,9 @@ class BaseContext(tengine.Context):
 
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
-        env.extend(spack.build_environment.modifications_from_dependencies(spec, context="run"))
+        env.extend(spack.build_environment.modifications_from_dag(spec, context="run"))
         # Package specific modifications
         spack.build_environment.set_module_variables_for_package(spec.package)
-        spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
