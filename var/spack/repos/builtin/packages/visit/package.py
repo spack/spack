@@ -91,7 +91,7 @@ class Visit(CMakePackage):
     patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
     patch("cmake-findvtkh-3.3.patch", when="@3.3.0:+vtkm")
     patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
-    patch("cmake-findjpeg-3.3.patch", when="@3.3.0:")
+    patch("cmake-findjpeg-3.3.patch", when="@3.3.0")
 
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
