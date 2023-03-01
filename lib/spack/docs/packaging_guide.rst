@@ -5299,7 +5299,7 @@ with those provided in the package itself when executing stand-alone tests.
    * - `Mpi
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/mpi>`_
      - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
-   * - `PythonPackage <build_systems/pythonpackage>`
+   * - :ref:`PythonPackage <pythonpackage>`
      - Imports installed modules
 
 These tests are very generic so it is important that package
