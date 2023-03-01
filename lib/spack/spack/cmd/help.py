@@ -87,9 +87,7 @@ spec expression syntax:
 """
 
 
-guides = {
-    "spec": spec_guide,
-}
+guides = {"spec": spec_guide}
 
 
 def setup_parser(subparser):

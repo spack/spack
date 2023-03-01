@@ -56,9 +56,7 @@ class Dakota(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-        ]
+        args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         if "+mpi" in spec:
             args.extend(
@@ -67,5 +65,8 @@ class Dakota(CMakePackage):
                     "-DMPI_CXX_COMPILER:STRING=%s" % join_path(spec["mpi"].mpicxx),
                 ]
             )
+
+        if self.run_tests:
+            args += ["-DCMAKE_CTEST_ARGUMENTS=-L;Accept"]
 
         return args

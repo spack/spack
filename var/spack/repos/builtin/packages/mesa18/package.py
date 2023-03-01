@@ -45,14 +45,7 @@ class Mesa18(AutotoolsPackage):
     variant(
         "swr",
         values=spack.variant.DisjointSetsOfValues(
-            ("none",),
-            ("auto",),
-            (
-                "avx",
-                "avx2",
-                "knl",
-                "skx",
-            ),
+            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
         )
         .with_non_feature_values("auto")
         .with_non_feature_values("none")

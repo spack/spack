@@ -25,7 +25,7 @@ class Cmake(Package):
 
     tags = ["build-tools", "windows"]
 
-    executables = ["^cmake$"]
+    executables = ["^cmake[0-9]*$"]
 
     version("master", branch="master")
     version("3.25.2", sha256="c026f22cb931dd532f648f087d587f07a1843c6e66a3dfca4fb0ea21944ed33c")

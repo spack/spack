@@ -168,7 +168,6 @@ class Slurm(AutotoolsPackage):
         return (wrapper_flags, None, flags)
 
     def configure_args(self):
-
         spec = self.spec
 
         args = [

@@ -32,10 +32,7 @@ schema = {
         },
         "binary_cache_checksum": {
             "type": "object",
-            "properties": {
-                "hash_algorithm": {"type": "string"},
-                "hash": {"type": "string"},
-            },
+            "properties": {"hash_algorithm": {"type": "string"}, "hash": {"type": "string"}},
         },
         "buildcache_layout_version": {"type": "number"},
     },

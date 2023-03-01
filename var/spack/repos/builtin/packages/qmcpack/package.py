@@ -393,7 +393,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     # but still does not install nexus, manual, etc. So, there is no compelling
     # reason to use QMCPACK's built-in version at this time.
     def install(self, spec, prefix):
-
         # create top-level directory
         mkdirp(prefix)
 

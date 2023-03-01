@@ -128,12 +128,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 ]
             )
         else:
-            args.extend(
-                [
-                    "CC=%s" % self.compiler.cc,
-                    "FC=%s" % self.compiler.fc,
-                ]
-            )
+            args.extend(["CC=%s" % self.compiler.cc, "FC=%s" % self.compiler.fc])
 
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
@@ -164,9 +159,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
             )
         if "+arpack" in spec:
             arpack_libs = spec["arpack-ng"].libs.joined()
-            args.append(
-                "--with-arpack={0}".format(arpack_libs),
-            )
+            args.append("--with-arpack={0}".format(arpack_libs))
             if "+mpi" in spec["arpack-ng"]:
                 args.append("--with-parpack={0}".format(arpack_libs))
 
@@ -185,9 +178,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
             args.append("--with-likwid-prefix=%s" % spec["likwid"].prefix)
 
         if "+pfft" in spec:
-            args.append(
-                "--with-pfft-prefix=%s" % spec["pfft"].prefix,
-            )
+            args.append("--with-pfft-prefix=%s" % spec["pfft"].prefix)
 
         # if '+poke' in spec:
         #     args.extend([
