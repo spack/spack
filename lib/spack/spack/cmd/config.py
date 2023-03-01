@@ -472,6 +472,7 @@ def config_prefer_upstream(args):
 
     tty.msg("Updated config at {0}".format(config_file))
 
+
 def config_require_upstream(args):
     """Generate a strict packages config based on the configuration of all
     upstream installs."""
@@ -505,11 +506,7 @@ def config_require_upstream(args):
         variants.sort()
         variants = " ".join(variants)
 
-        pkg["require"][0]["any_of"].append(
-            "@{0} %{1} {2}".format(
-                version, compiler, variants
-            )
-        )
+        pkg["require"][0]["any_of"].append("@{0} %{1}{2}".format(version, compiler, "" if not variants else " " + variants))
 
     # Clean up entries so the package listing is a simple
     #       require: "@{version} %{compiler} {variants}"
@@ -526,6 +523,7 @@ def config_require_upstream(args):
     config_file = spack.config.config.get_config_filename(scope, section)
 
     tty.msg("Updated config at {0}".format(config_file))
+
 
 def config(parser, args):
     action = {

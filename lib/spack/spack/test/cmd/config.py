@@ -648,3 +648,41 @@ def test_config_prefer_upstream(
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output
+
+
+def test_config_require_upstream(
+    tmpdir_factory, install_mockery, mock_fetch, mutable_config, gen_mock_layout, monkeypatch
+):
+    """Check that when a dependency package is recorded as installed in
+    an upstream database that it is not reinstalled.
+    """
+
+    mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout("/a/")
+
+    for spec in ["hdf5 +mpi", "hdf5 ~mpi", "boost+debug~icu+graph", "dependency-install", "patch"]:
+        dep = spack.spec.Spec(spec)
+        dep.concretize()
+        prepared_db.add(dep, upstream_layout)
+
+    downstream_db_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
+    db_for_test = spack.database.Database(downstream_db_root, upstream_dbs=[prepared_db])
+    monkeypatch.setattr(spack.store, "db", db_for_test)
+
+    output = config("require-upstream")
+    scope = spack.config.default_modify_scope("packages")
+    cfg_file = spack.config.config.get_config_filename(scope, "packages")
+    packages = syaml.load(open(cfg_file))["packages"]
+
+    # Make sure version, compiler, and non-default variants are set.
+    assert packages["boost"] == {
+        "require": "@1.63.0 %gcc@10.2.1 +debug +graph"
+    }
+    # Need trailing whitespace after a spec with no variants
+    assert packages["dependency-install"] == {"require": "@2.0 %gcc@10.2.1"}
+    # Ensure that hdf5 has two specs required with any_of
+    assert "any_of" in packages["hdf5"]["require"][0]
+    assert "@2.3 %gcc@10.2.1" in packages["hdf5"]["require"][0]["any_of"]
+    assert "@2.3 %gcc@10.2.1 ~mpi" in packages["hdf5"]["require"][0]["any_of"]
