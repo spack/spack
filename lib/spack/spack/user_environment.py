@@ -107,16 +107,16 @@ def environment_modifications_for_specs(specs, view=None, set_package_py_globals
 
     env = environment.EnvironmentModifications()
 
-    # Default ones.
-    for s in traverse.traverse_nodes(specs, root=True, deptype=("run", "link")):
-        env.extend(
-            environment.inspect_path(
-                s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
-            )
-        )
-
-    # Do setup_run_env etc.
     with get_projection_context_manager(view)(specs):
+        # Default ones.
+        for s in traverse.traverse_nodes(specs, root=True, deptype=("run", "link")):
+            env.extend(
+                environment.inspect_path(
+                    s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
+                )
+            )
+
+        # Do setup_run_env etc.
         env.extend(
             spack.build_environment.modifications_from_dag(
                 specs,
