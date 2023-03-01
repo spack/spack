@@ -27,7 +27,7 @@ class PyGmxapi(PythonPackage):
     depends_on("py-importlib-metadata", type="test", when="^python@:3.7")
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-networkx@2.0:", type=("build", "run"))
-    depends_on("py-numpy@1.7:", type=("build", "run"))
+    depends_on("py-numpy@1.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-pybind11@2.6:", type="build")
