@@ -13,6 +13,7 @@ class Elk(MakefilePackage):
     homepage = "https://elk.sourceforge.io/"
     url = "https://sourceforge.net/projects/elk/files/elk-3.3.17.tgz"
 
+    version("8.3.22", sha256="1c31f09b7c09d6b24e775d4f0d5e1e8871f95a7656ee4ca21ac17dbe7ea16277")
     version("7.2.42", sha256="73f03776dbf9b2147bfcc5b7c062af5befa0944608f6fc4b6a1e590615400fc6")
     version("7.1.14", sha256="7c2ff30f4b1d72d5dc116de9d70761f2c206700c69d85dd82a17a5a6374453d2")
     version("7.0.12", sha256="9995387c681d0e5a9bd52cb274530b23c0370468b6be86f6c90a6ec445cb8a01")
@@ -112,6 +113,8 @@ class Elk(MakefilePackage):
             flags = "-O3 -ip -unroll -no-prec-div"
         elif self.compiler.name == "gcc":
             flags = "-O3 -ffast-math -funroll-loops"
+            if spec.satisfies("%gcc@10:"):
+                flags += " -fallow-argument-mismatch "
         elif self.compiler.name == "pgi":
             flags = "-O3 -lpthread"
         elif self.compiler.name == "g95":
@@ -127,6 +130,10 @@ class Elk(MakefilePackage):
             config["F90"] = spec["mpi"].mpifc
             config["F77"] = spec["mpi"].mpif77
             config["SRC_MPI"] = " "
+        else:
+            config["F90"] = spack_fc
+            config["F77"] = spack_f77
+            config["SRC_MPI"] = "mpi_stub.f90"
 
         # OpenMP support
         if "+openmp" in spec:
@@ -137,6 +144,9 @@ class Elk(MakefilePackage):
         # BLAS/LAPACK support
         # Note: openblas must be compiled with OpenMP support
         # if the +openmp variant is chosen
+        if "linalg=internal" in spec:
+            self.build_targets.append("blas")
+            self.build_targets.append("lapack")
         if "linalg=generic" in spec:
             blas = spec["blas"].libs.joined()
             lapack = spec["lapack"].libs.joined()
@@ -151,27 +161,23 @@ class Elk(MakefilePackage):
             config["LIB_LPK"] = " ".join(["lapack.a ", spec["blis"].libs.ld_flags])
             config["SRC_BLIS"] = " "
         # FFT
-        if "fft=fftw" in spec:
+        if "fft=internal" in spec:
+            self.build_targets.append("fft")
+        elif "fft=fftw" in spec:
             config["LIB_FFT"] = spec["fftw"].libs.ld_flags
             config["SRC_FFT"] = "zfftifc_fftw.f90"
-        if "fftw=mkl" in spec:
+        elif "fft=mkl" in spec:
             config["LIB_FFT"] = spec["mkl"].libs.ld_flags
-            config["SRC_FFT"] = " "
+            config["SRC_FFT"] = "mkl_dfti.f90 zfftifc_mkl.f90"
+            cp = which("cp")
+            cp(
+                "{}/mkl/include/mkl_dfti.f90".format(spec["mkl"].prefix),
+                self.build_directory + "/src",
+            )
 
-        # MPI support
-        if "+mpi" in spec:
-            config["F90"] = spec["mpi"].mpifc
-            config["F77"] = spec["mpi"].mpif77
-        else:
-            config["F90"] = spack_fc
-            config["F77"] = spack_f77
-            config["SRC_MPI"] = "mpi_stub.f90"
-        # OpenMP support
-        if "+openmp" in spec:
-            config["F90_OPTS"] += " " + self.compiler.openmp_flag
-            config["F77_OPTS"] += " " + self.compiler.openmp_flag
-            config["SRC_OMP"] = " "
-
+        # Define targets
+        self.build_targets.append("elk")
+        print(self.build_targets)
         # Libxc support
         if "+libxc" in spec:
             config["LIB_libxc"] = " ".join(
@@ -189,6 +195,12 @@ class Elk(MakefilePackage):
         with open("make.inc", "w") as inc:
             for key in config:
                 inc.write("{0} = {1}\n".format(key, config[key]))
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory + "/src"):
+            make(*self.build_targets)
+            make("-C", "eos")
+            make("-C", "spacegroup")
 
     def install(self, spec, prefix):
         # The Elk Makefile does not provide an install target
