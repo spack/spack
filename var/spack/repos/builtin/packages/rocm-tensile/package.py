@@ -160,7 +160,7 @@ class RocmTensile(CMakePackage):
         depends_on("llvm-amdgpu@" + ver + "~openmp", when="@" + ver + "~openmp")
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
 
-for ver in [
+    for ver in [
         "5.1.0",
         "5.1.3",
         "5.2.0",
