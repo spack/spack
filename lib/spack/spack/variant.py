@@ -348,10 +348,11 @@ class AbstractVariant(object):
         # (`foo=bar` will never satisfy `baz=bar`)
         return other.name == self.name
 
-    def intersects(self, other):
-        return self.compatible(other)
-
     @implicit_variant_conversion
+    def intersects(self, other):
+        """Returns True if there are variant matching both self and other, False otherwise."""
+        return other.name == self.name
+
     def compatible(self, other):
         """Returns True if self and other are compatible, False otherwise.
 
@@ -366,7 +367,7 @@ class AbstractVariant(object):
         """
         # If names are different then `self` is not compatible with `other`
         # (`foo=bar` is incompatible with `baz=bar`)
-        return other.name == self.name
+        return self.intersects(other)
 
     @implicit_variant_conversion
     def constrain(self, other):
@@ -476,6 +477,9 @@ class SingleValuedVariant(AbstractVariant):
         return abstract_sat and (
             self.value == other.value or other.value == "*" or self.value == "*"
         )
+
+    def intersects(self, other):
+        return self.satisfies(other)
 
     def compatible(self, other):
         return self.satisfies(other)
