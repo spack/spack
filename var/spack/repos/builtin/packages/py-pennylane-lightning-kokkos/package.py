@@ -30,7 +30,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
         "pthread": [False, "Whether to build Pthread backend"],
         "rocm": [False, "Whether to build HIP backend"],
         "serial": [True, "Whether to build serial backend"],
-        "sycl": [False, "Whether to build the SYCL backend"],
+        # "sycl": [False, "Whether to build the SYCL backend"],
     }
 
     for backend in backends:
@@ -49,7 +49,6 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     variant("native", default=False, description="Build natively for given hardware")
     variant("sanitize", default=False, description="Build with address sanitization")
     variant("verbose", default=False, description="Build with full verbosity")
-    # variant("warnings", default=False, description="Build with Kokkos warnings")
 
     extends("python")
 
@@ -62,6 +61,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     depends_on("py-pip", type=("build", "run"))
     depends_on("py-wheel", type="build")
     depends_on("py-pennylane", type=("run"))
+    depends_on("py-pennylane-lightning~kokkos", type=("run"))
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
@@ -84,10 +84,14 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
             self.define_from_variant("PLKOKKOS_ENABLE_NATIVE", "native"),
             self.define_from_variant("PLKOKKOS_BUILD_TESTS", "cpptests"),
-            # self.define_from_variant("PLKOKKOS_ENABLE_WARNINGS", "warnings"),
             self.define_from_variant("PLKOKKOS_ENABLE_SANITIZER", "sanitize"),
         ]
         args.append("-DCMAKE_PREFIX_PATH=" + self.spec["kokkos"].prefix)
+        if "+rocm" in self.spec:
+            args.append("-DCMAKE_CXX_COMPILER=" + self.spec["hip"].prefix.bin.hipcc)
+        args.append(
+            "-DPLKOKKOS_ENABLE_WARNINGS=OFF"
+        )  # otherwise build might fail due to Kokkos::InitArguments deprecated
         return args
 
     def build(self, pkg, spec, prefix):
