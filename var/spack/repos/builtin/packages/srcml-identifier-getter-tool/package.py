@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class SrcmlIdentifierGetterTool(CMakePackage):
@@ -23,9 +23,4 @@ class SrcmlIdentifierGetterTool(CMakePackage):
     def install(self, spec, prefix):
         super(SrcmlIdentifierGetterTool, self).install(spec, prefix)
         mkdir(prefix.bin)
-        install(
-            join_path(
-                self.build_directory,
-                "bin",
-                "grabidentifiers"),
-            prefix.bin)
+        install(join_path(self.build_directory, "bin", "grabidentifiers"), prefix.bin)
