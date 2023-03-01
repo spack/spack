@@ -17,6 +17,7 @@ class Hdf5VolAsync(CMakePackage):
     tags = ["e4s"]
 
     version("develop", branch="develop")
+    version("1.5", tag="v1.5")
     version("1.4", tag="v1.4")
     version("1.3", tag="v1.3")
     version("1.2", tag="v1.2")
