@@ -52,7 +52,9 @@ class Ascent(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=True)
 
-    version("0.8.0", tag="v0.8.0", submodules=True, preferred=True)
+    version("0.9.0", tag="v0.9.0", submodules=True, preferred=True)
+
+    version("0.8.0", tag="v0.8.0", submodules=True)
 
     version("0.7.1", tag="v0.7.1", submodules=True)
 
@@ -80,10 +82,15 @@ class Ascent(CMakePackage, CudaPackage):
     variant("vtkh", default=True, description="Build VTK-h filter and rendering support")
 
     variant("openmp", default=(sys.platform != "darwin"), description="build openmp support")
+    variant("raja", default=True, description="Build with RAJA support")
+    variant("umpire", default=True, description="Build with Umpire support")
     variant("mfem", default=False, description="Build MFEM filter support")
     variant("dray", default=False, description="Build with Devil Ray support")
     variant("adios2", default=False, description="Build Adios2 filter support")
     variant("fides", default=False, description="Build Fides filter support")
+
+    # caliper
+    variant("caliper", default=False, description="Build Caliper support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Ascent's documentation")
@@ -119,6 +126,7 @@ class Ascent(CMakePackage, CudaPackage):
     #######################
     depends_on("conduit@:0.7.2", when="@:0.7.1")
     depends_on("conduit@0.8.2:", when="@0.8:")
+    depends_on("conduit@0.8.6:", when="@0.9:")
     depends_on("conduit+python", when="+python")
     depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")
@@ -141,30 +149,56 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("py-mpi4py", when="+mpi+python")
 
+    #############################
+    # TPLs for Runtime Features
+    #############################
+
+    #######################
+    # RAJA and Umpire
+    #######################
+    depends_on("raja", when="+raja")
+    depends_on("umpire", when="+umpire")
+
     #######################
     # BabelFlow
     #######################
     depends_on("babelflow", when="+babelflow+mpi")
     depends_on("parallelmergetree", when="+babelflow+mpi")
 
-    #############################
-    # TPLs for Runtime Features
-    #############################
+    #######################
+    # VTK-m
+    #######################
 
-    depends_on("vtk-h", when="+vtkh")
+    depends_on("vtk-m@1.9:", when="@0.9.0:")
+
+    depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
+    depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")
+    depends_on("vtk-m~openmp", when="@0.9.0: +vtkh~openmp")
+    depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")
+    depends_on("vtk-m~openmp", when="@0.9.0: +vtkh~openmp")
+    depends_on("vtk-m~cuda", when="@0.9.0: +vtkh~cuda")
+    depends_on("vtk-m+cuda", when="@0.9.0: +vtkh+cuda")
+    depends_on("vtk-m+fpic", when="@0.8.0: +vtkh")
+    depends_on("vtk-m~shared+fpic", when="@0.8.0: +vtkh~shared")
+
+    #######################
+    # VTK-h
+    #######################
+    # Ascent 0.9.0 includes VTK-h, prior to 0.9.0
+    # VTK-h was developed externally
     depends_on("vtk-h@:0.7", when="@:0.7 +vtkh")
     depends_on("vtk-h@0.8.1:", when="@0.8: +vtkh")
     # propagate relevent variants to vtk-h
-    depends_on("vtk-h+openmp", when="+vtkh+openmp")
-    depends_on("vtk-h~openmp", when="+vtkh~openmp")
-    depends_on("vtk-h+cuda", when="+vtkh+cuda")
-    depends_on("vtk-h~cuda", when="+vtkh~cuda")
-    propagate_cuda_arch("vtk-h", "+vtkh")
-    depends_on("vtk-h+shared", when="+vtkh+shared")
-    depends_on("vtk-h~shared", when="+vtkh~shared")
+    depends_on("vtk-h+openmp", when="@:0.8.0 +vtkh+openmp")
+    depends_on("vtk-h~openmp", when="@:0.8.0 +vtkh~openmp")
+    depends_on("vtk-h+cuda", when="@:0.8.0 +vtkh+cuda")
+    depends_on("vtk-h~cuda", when="@:0.8.0 +vtkh~cuda")
+    propagate_cuda_arch("vtk-h", "@:0.8.0 +vtkh")
+    depends_on("vtk-h+shared", when="@:0.8.0 +vtkh+shared")
+    depends_on("vtk-h~shared", when="@:0.8.0 +vtkh~shared")
     # When using VTK-h ascent also needs VTK-m
-    depends_on("vtk-m@:1.7", when="+vtkh")
-    depends_on("vtk-m+testlib", when="+vtkh+test^vtk-m")
+    depends_on("vtk-m@:1.7", when="@:0.8.0 +vtkh")
+    depends_on("vtk-m+testlib", when="@:0.8.0 +vtkh+test^vtk-m")
 
     # mfem
     depends_on("mfem~threadsafe~openmp+conduit", when="+mfem")
@@ -177,20 +211,25 @@ class Ascent(CMakePackage, CudaPackage):
     # fides
     depends_on("fides", when="+fides")
 
+    #######################
+    # Devil Ray
+    #######################
+    # Ascent 0.9.0 includes Devil Ray, prior to 0.9.0
+    # Devil Ray was developed externally
     # devil ray variants with mpi
     # we have to specify both because mfem makes us
-    depends_on("dray~test~utils", when="+dray")
-    depends_on("dray@0.1.8:", when="@0.8: +dray")
+    depends_on("dray~test~utils", when="@:0.8.0  +dray")
+    depends_on("dray@0.1.8:", when="@:0.8.0 +dray")
     # propagate relevent variants to dray
-    depends_on("dray+cuda", when="+dray+cuda")
-    depends_on("dray~cuda", when="+dray~cuda")
-    propagate_cuda_arch("dray", "+dray")
-    depends_on("dray+mpi", when="+dray+mpi")
-    depends_on("dray~mpi", when="+dray~mpi")
-    depends_on("dray+shared", when="+dray+shared")
-    depends_on("dray~shared", when="+dray~shared")
-    depends_on("dray+openmp", when="+dray+openmp")
-    depends_on("dray~openmp", when="+dray~openmp")
+    depends_on("dray+cuda", when="@:0.8.0 +dray+cuda")
+    depends_on("dray~cuda", when="@:0.8.0 +dray~cuda")
+    propagate_cuda_arch("dray", "@:0.8.0 +dray")
+    depends_on("dray+mpi", when="@:0.8.0 +dray+mpi")
+    depends_on("dray~mpi", when="@:0.8.0 +dray~mpi")
+    depends_on("dray+shared", when="@:0.8.0 +dray+shared")
+    depends_on("dray~shared", when="@:0.8.0 +dray~shared")
+    depends_on("dray+openmp", when="@:0.8.0 +dray+openmp")
+    depends_on("dray~openmp", when="@:0.8.0 +dray~openmp")
 
     # Adios2
     depends_on("adios2", when="+adios2")
@@ -199,6 +238,11 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("adios2~mpi", when="+adios2~mpi")
     depends_on("adios2+shared", when="+adios2+shared")
     depends_on("adios2~shared", when="+adios2~shared")
+
+    #######################
+    # Caliper
+    #######################
+    depends_on("caliper", when="+caliper")
 
     #######################
     # Documentation related
@@ -502,15 +546,17 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         # VTK-h (and deps)
         #######################
-
         cfg.write("# vtk-h support \n")
 
         if "+vtkh" in spec:
+            cfg.write("# vtk-h\n")
+            if self.spec.satisfies("@0.8.1:"):
+                cfg.write(cmake_cache_entry("ENABLE_VTKH", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("VTKH_DIR", spec["vtk-h"].prefix))
+
             cfg.write("# vtk-m from spack\n")
             cfg.write(cmake_cache_entry("VTKM_DIR", spec["vtk-m"].prefix))
-
-            cfg.write("# vtk-h from spack\n")
-            cfg.write(cmake_cache_entry("VTKH_DIR", spec["vtk-h"].prefix))
 
             if "+cuda" in spec:
                 cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "ON"))
@@ -519,7 +565,38 @@ class Ascent(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "OFF"))
 
         else:
-            cfg.write("# vtk-h not built by spack \n")
+            if self.spec.satisfies("@0.8.1:"):
+                cfg.write("# vtk-h\n")
+                cfg.write(cmake_cache_entry("ENABLE_VTKH", "OFF"))
+            else:
+                cfg.write("# vtk-h not build by spack\n")
+
+        #######################
+        # RAJA
+        #######################
+        if "+raja" in spec:
+            cfg.write("# RAJA from spack \n")
+            cfg.write(cmake_cache_entry("RAJA_DIR", spec["raja"].prefix))
+        else:
+            cfg.write("# RAJA not built by spack \n")
+
+        #######################
+        # Umpire
+        #######################
+        if "+umpire" in spec:
+            cfg.write("# umpire from spack \n")
+            cfg.write(cmake_cache_entry("UMPIRE_DIR", spec["umpire"].prefix))
+        else:
+            cfg.write("# umpire not built by spack \n")
+
+        #######################
+        # Camp
+        #######################
+        if "+umpire" in spec or "+raja" in spec:
+            cfg.write("# camp from spack \n")
+            cfg.write(cmake_cache_entry("CAMP_DIR", spec["camp"].prefix))
+        else:
+            cfg.write("# camp not built by spack \n")
 
         #######################
         # MFEM
@@ -534,10 +611,20 @@ class Ascent(CMakePackage, CudaPackage):
         # Devil Ray
         #######################
         if "+dray" in spec:
-            cfg.write("# devil ray from spack \n")
-            cfg.write(cmake_cache_entry("DRAY_DIR", spec["dray"].prefix))
+            cfg.write("# devil ray\n")
+            if self.spec.satisfies("@0.8.1:"):
+                cfg.write(cmake_cache_entry("ENABLE_DRAY", "ON"))
+                cfg.write(cmake_cache_entry("ENABLE_APCOMP", "ON"))
+            else:
+                cfg.write("# devil ray from spack \n")
+                cfg.write(cmake_cache_entry("DRAY_DIR", spec["dray"].prefix))
         else:
-            cfg.write("# devil ray not built by spack \n")
+            if self.spec.satisfies("@0.8.1:"):
+                cfg.write("# devil ray\n")
+                cfg.write(cmake_cache_entry("ENABLE_DRAY", "OFF"))
+                cfg.write(cmake_cache_entry("ENABLE_APCOMP", "OFF"))
+            else:
+                cfg.write("# devil ray not build by spack\n")
 
         #######################
         # Adios2
@@ -558,6 +645,16 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("FIDES_DIR", spec["fides"].prefix))
         else:
             cfg.write("# fides not built by spack \n")
+
+        #######################
+        # Caliper
+        #######################
+        cfg.write("# caliper from spack \n")
+        if "+caliper" in spec:
+            cfg.write(cmake_cache_entry("CALIPER_DIR", spec["caliper"].prefix))
+            cfg.write(cmake_cache_entry("ADIAK_DIR", spec["adiak"].prefix))
+        else:
+            cfg.write("# caliper not built by spack \n")
 
         #######################
         # Finish host-config
