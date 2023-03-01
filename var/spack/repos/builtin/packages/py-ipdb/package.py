@@ -20,14 +20,10 @@ class PyIpdb(PythonPackage):
 
     # Dependencies gathered from:
     #     https://github.com/gotcha/ipdb/blob/master/setup.py
+    depends_on("py-setuptools", type="build")
     depends_on("py-ipython@7.17:", when="@0.13.7: ^python@3.6:", type=("build", "run"))
     depends_on("py-toml@0.10.2:", when="@0.13.7: ^python@3.6:", type=("build", "run"))
 
     depends_on("py-ipython@7.31.1:", type=("build", "run"))
     depends_on("py-tomli", when="@0.13.1: ^python@3.6:3.10", type=("build", "run"))
-
     depends_on("py-decorator", type=("build", "run"))
-    depends_on("py-traitlets", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
-    depends_on("py-pexpect", type=("build", "run"))
-    depends_on("py-prompt-toolkit", type=("build", "run"))
