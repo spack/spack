@@ -841,7 +841,8 @@ def read_etag(url):
             raise FetchError("Could not obtain etag or s3 resource")
         return parse_etag(obj["ETag"])
     elif remote_url.scheme == "file":
-        return hashlib.md5(open(remote_url.path, "rb").read()).hexdigest()
+        remote_url_path = url_util.file_url_string_to_path(url)
+        return spack.util.crypto.checksum(hashlib.md5, remote_url_path)
     else:
         # TODO: Add a better way for handling getting etag from
         # different resource hosts.
