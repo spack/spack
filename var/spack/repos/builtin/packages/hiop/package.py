@@ -5,8 +5,6 @@
 
 import os
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 
@@ -232,42 +230,54 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
+    def _run_test_example(self, test_exe, options):
+        """Run the provided test executable with the provided options."""
+
+        exe_path = os.path.join(self.prefix.bin, test_exe)
+        if not os.path.exists(exe_path):
+            raise SkipTest("{0} is not installed".format(test_exe))
+
+        exe = which(exe_path)
+        exe(*options)
+
     # If testing on a cluster without access to home directory in a job, you may
     # set the following environment variables to prevent related errors:
     #
     # export SPACK_USER_CACHE_PATH=/tmp/spack
     # export SPACK_DISABLE_LOCAL_CONFIG=true
-    def test(self):
-        if not self.spec.satisfies("@develop") or not os.path.isdir(self.prefix.bin):
-            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
-            return
+    def test_nlpmdsex1(self):
+        """run NlpMDsEx1.exe selfchecks"""
+        # TODO: These tests should build and run against the installed software.
+        # TODO: Set `test_requires_compiler = True` to pick up them and cmake.
+        # TODO: These tests should *never* run in the installation prefix.
 
         tests = [
-            ["NlpMdsEx1.exe", "400", "100", "0", "-selfcheck"],
-            ["NlpMdsEx1.exe", "400", "100", "1", "-selfcheck"],
-            ["NlpMdsEx1.exe", "400", "100", "0", "-empty_sp_row", "-selfcheck"],
+            ("NlpMdsEx1.exe", ["400", "100", "0", "-selfcheck"]),
+            ("NlpMdsEx1.exe", ["400", "100", "1", "-selfcheck"]),
+            ("NlpMdsEx1.exe", ["400", "100", "0", "-empty_sp_row", "-selfcheck"]),
         ]
+        for exe, args in tests:
+            with test_part(
+                self,
+                "test_nlpmdsex1_{0}".format("".join(args[2:-1])),
+                purpose="run example selfcheck",
+            ):
+                self._run_test_example(exe, args)
 
-        if "+raja" in self.spec:
-            tests.extend(
-                [
-                    ["NlpMdsEx1Raja.exe", "400", "100", "0", "-selfcheck"],
-                    ["NlpMdsEx1Raja.exe", "400", "100", "1", "-selfcheck"],
-                    ["NlpMdsEx1Raja.exe", "400", "100", "0", "-empty_sp_row", "-selfcheck"],
-                ]
-            )
+    def test_nlpmdsex1raja(self):
+        """run NlpMDsEx1Raja.exe selfchecks"""
+        if "+raja" not in self.spec:
+            raise SkipTest("Tests require +raja")
 
-        for i, test in enumerate(tests):
-            exe = os.path.join(self.prefix.bin, test[0])
-            args = test[1:]
-            reason = 'test {0}: "{1}"'.format(i, " ".join(test))
-            self.run_test(
-                exe,
-                args,
-                [],
-                0,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self.prefix.bin,
-            )
+        tests = [
+            ("NlpMdsEx1Raja.exe", ["400", "100", "0", "-selfcheck"]),
+            ("NlpMdsEx1Raja.exe", ["400", "100", "1", "-selfcheck"]),
+            ("NlpMdsEx1Raja.exe", ["400", "100", "0", "-empty_sp_row", "-selfcheck"]),
+        ]
+        for exe, args in tests:
+            with test_part(
+                self,
+                "test_nlpmdsex1raja_{0}".format("".join(args[2:-1])),
+                purpose="run raja example selfcheck",
+            ):
+                self._run_test_example(exe, args)
