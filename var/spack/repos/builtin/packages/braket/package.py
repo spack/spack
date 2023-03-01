@@ -11,12 +11,12 @@ class Braket(MakefilePackage):
 
     homepage = "https://github.com/naoki-yoshioka/braket"
     git = "https://github.com/naoki-yoshioka/braket.git"
-    maintainers = ['naoki-yoshioka']
+    maintainers = ["naoki-yoshioka"]
 
-    version('master', branch='master', submodules=True)
-    version('1.6.0', tag='v1.6.0', submodules=True)
+    version("master", branch="master", submodules=True)
+    version("1.6.0", tag="v1.6.0", submodules=True)
 
-    variant('mpi', default=True, description='Enables MPI support')
+    variant("mpi", default=True, description="Enables MPI support")
     variant(
         "build",
         default="release",
@@ -32,66 +32,40 @@ class Braket(MakefilePackage):
         multi=False,
     )    
 
-    depends_on('boost', type=("build", "link"))
-    depends_on('mpi', when="+mpi", type=("build", "run"))
+    depends_on("boost", type=("build", "link"))
+    depends_on("mpi", when="+mpi", type=("build", "run"))
 
-    build_directory = 'bra'
+    build_directory = "bra"
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('bra/Makefile')
+        makefile = FileFilter("bra/Makefile")
         if spec.satisfies("%fj"):
-           if '~mpi' in self.spec:
-               makefile.filter('g\+\+', 'FCC')
+           if "~mpi" in self.spec:
+               makefile.filter("g\+\+", "FCC")
            else:
-               makefile.filter('mpiCC', 'mpiFCC')
+               makefile.filter("mpiCC", "mpiFCC")
 
         else:
-           if '~mpi' in self.spec:
-              makefile.filter('FCCpx', 'g++')
+           if "~mpi" in self.spec:
+              makefile.filter("FCCpx", "g++")
            else:
-              makefile.filter('mpiFCCpx', 'mpicxx')
-              makefile.filter('mpiCC', 'mpicxx')
+              makefile.filter("mpiFCCpx", "mpicxx")
+              makefile.filter("mpiCC", "mpicxx")
 
-           makefile.filter('-Nclang', '')
+           makefile.filter("-Nclang", "")
 
     @property
     def build_targets(self):
-        args = []
         build = self.spec.variants["build"].value
         fp = self.spec.variants["fp"].value
-        if '+mpi' in self.spec:
-           if 'release' in build:
-               if 'single' in fp:
-                  args = ['release-float']
-               elif 'double' in fp:
-                  args = ['release']
-               elif 'long-double' in fp:
-                  args = ['release-long']
-           elif 'debug' in build:
-               if 'single' in fp:
-                  args = ['debug-float']
-               elif 'double' in fp:
-                  args = ['debug']
-               elif 'long-double' in fp:
-                  args = ['debug-long']
-        else:
-           if 'release' in build:
-               if 'single' in fp:
-                  args = ['nompi-release-float']
-               elif 'double' in fp:
-                  args = ['nompi-release']
-               elif 'long-double' in fp:
-                  args = ['nompi-release-long']
-           elif 'debug' in build:
-               if 'single' in fp:
-                  args = ['nompi-debug-float']
-               elif 'double' in fp:
-                  args = ['nompi-debug']
-               elif 'long-double' in fp:
-                  args = ['nompi-debug-long']
-
-        return args
+        mpi_part = "" if "+mpi" in self.spec else "nompi-"
+        prec_part = {
+            "single": "-float",
+            "double": "",
+            "long-double": "-long",
+        }
+        return ["{0}{1}{2}".format(mpi_part, build, prec_part[fp])]
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('bra/bin/bra', prefix.bin)
+        install("bra/bin/bra", prefix.bin)
