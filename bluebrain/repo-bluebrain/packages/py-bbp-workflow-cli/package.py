@@ -12,13 +12,13 @@ class PyBbpWorkflowCli(PythonPackage):
     homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-workflow-cli'
     git = 'ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow-cli.git'
 
-    version('3.1.0', tag='bbp-workflow-cli-v3.1.0')
+    version('3.1.1', tag='bbp-workflow-cli-v3.1.1')
 
     depends_on('py-setuptools', type=('build'))
 
     depends_on('py-requests', type='run')
     depends_on('py-click', type='run')
-    depends_on('py-sh', type='run')
+    depends_on('py-sh@:1', type='run')
     depends_on('py-python-keycloak', type='run')
     depends_on('py-kubernetes', type='run')
     depends_on('py-pyjwt', type='run')
