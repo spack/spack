@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,10 +57,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            "--with-ssl={0}".format(spec.variants["ssl"].value),
-            "--without-included-regex",
-        ]
+        args = ["--with-ssl={0}".format(spec.variants["ssl"].value), "--without-included-regex"]
 
         if "+zlib" in spec:
             args.append("--with-zlib")

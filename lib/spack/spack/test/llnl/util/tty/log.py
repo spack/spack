@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,8 @@ import os
 import signal
 import sys
 import time
-from typing import TYPE_CHECKING, Optional  # novm
-
-if TYPE_CHECKING:
-    from types import ModuleType  # novm
+from types import ModuleType
+from typing import Optional
 
 import pytest
 
@@ -24,7 +22,7 @@ import llnl.util.tty.pty as pty
 
 from spack.util.executable import which
 
-termios = None  # type: Optional[ModuleType]
+termios: Optional[ModuleType] = None
 try:
     import termios as term_mod
 
@@ -452,10 +450,7 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
 @pytest.mark.skipif(not termios, reason="requires termios support")
 @pytest.mark.parametrize(
     "test_fn,termios_on_or_off",
-    [
-        (mock_shell_v_v, lang.nullcontext),
-        (mock_shell_v_v_no_termios, no_termios),
-    ],
+    [(mock_shell_v_v, lang.nullcontext), (mock_shell_v_v_no_termios, no_termios)],
 )
 @pytest.mark.xfail(reason="Fails almost consistently when run with coverage and xdist")
 def test_foreground_background_output(test_fn, capfd, termios_on_or_off, tmpdir):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,8 +77,7 @@ def unload(parser, args):
         specs_str = " ".join(args.specs) or "SPECS"
 
         spack.cmd.common.shell_init_instructions(
-            "spack unload",
-            "    eval `spack unload {sh_arg}` %s" % specs_str,
+            "spack unload", "    eval `spack unload {sh_arg}` %s" % specs_str
         )
         return 1
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
     url = url_prefix + "archive/v2020.1.tar.gz"
     git = "https://github.com/oneapi-src/oneTBB.git"
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
@@ -255,7 +255,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang"):
+        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%rocmcc"):
             tbb_compiler = "clang"
         elif spec.satisfies("%intel"):
             tbb_compiler = "icc"

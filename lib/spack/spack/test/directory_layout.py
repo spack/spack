@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,7 @@ import pytest
 
 import spack.paths
 import spack.repo
-from spack.directory_layout import (
-    DirectoryLayout,
-    InvalidDirectoryLayoutParametersError,
-)
+from spack.directory_layout import DirectoryLayout, InvalidDirectoryLayoutParametersError
 from spack.spec import Spec
 from spack.util.path import path_to_os_path
 
@@ -59,7 +56,7 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     arch_scheme = (
         "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"
     )
-    ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"
+    ns_scheme = "{architecture}/{namespace}/{name}-{version}-{hash:7}"
     arch_ns_scheme_projections = {"all": arch_scheme, "python": ns_scheme}
     layout_arch_ns = DirectoryLayout(str(tmpdir), projections=arch_ns_scheme_projections)
 

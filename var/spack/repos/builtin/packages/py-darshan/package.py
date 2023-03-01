@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,10 @@ class PyDarshan(PythonPackage):
     homepage = "https://www.mcs.anl.gov/research/projects/darshan"
     pypi = "darshan/darshan-3.4.0.1.tar.gz"
 
-    maintainers = ["jeanbez", "shanedsnyder"]
+    maintainers("jeanbez", "shanedsnyder")
 
+    version("3.4.2.0", sha256="eb00eb758c96899c0d523b71eb00caa3b967509c27fd504c579ac8c9b521845c")
+    version("3.4.1.0", sha256="41a033ebac6fcd0ca05b8ccf07e11191286dee923ec334b876a7ec8e8a6add84")
     version("3.4.0.1", sha256="0142fc7c0b12a9e5c22358aa26cca7083d28af42aeea7dfcc5698c56b6aee6b7")
 
     depends_on("python@3.6:", type=("build", "run"))

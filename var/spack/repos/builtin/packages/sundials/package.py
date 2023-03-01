@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["radiuss", "e4s"]
     test_requires_compiler = True
 
-    maintainers = ["balos1", "cswoodward", "gardner48"]
+    maintainers("balos1", "cswoodward", "gardner48")
 
     # ==========================================================================
     # Versions
@@ -479,10 +479,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+superlu-mt" in spec:
             if spec.satisfies("@3:"):
                 args.extend(
-                    [
-                        define("BLAS_ENABLE", True),
-                        define("BLAS_LIBRARIES", spec["blas"].libs),
-                    ]
+                    [define("BLAS_ENABLE", True), define("BLAS_LIBRARIES", spec["blas"].libs)]
                 )
             args.extend(
                 [
@@ -743,7 +740,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                     ("cvode/cuda/cvAdvDiff_kry_cuda", [], "Test CVODE with CUDA", True)
                 )
 
-        if "+hip" in self.spec:
+        if "+rocm" in self.spec:
             smoke_tests.append(
                 ("nvector/hip/test_nvector_hip", ["10", "0", "0"], "Test HIP N_Vector", True)
             )

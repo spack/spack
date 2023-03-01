@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Sensei(CMakePackage):
     homepage = "https://sensei-insitu.org"
     url = "https://github.com/SENSEI-insitu/SENSEI/releases/download/v3.2.1/SENSEI-3.2.1.tar.gz"
     git = "https://github.com/SENSEI-insitu/SENSEI.git"
-    maintainers = ["sshudler", "kwryankrattiger"]
+    maintainers("sshudler", "kwryankrattiger")
 
     version("develop", branch="develop")
     version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")
@@ -100,6 +100,11 @@ class Sensei(CMakePackage):
     patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
     patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")
     patch("sensei-version-detection-pr75.patch", when="@4.0.0")
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/SENSEI-insitu/SENSEI/pull/88.patch?full_index=1",
+        sha256="6e5a190d4d3275c248b11b9258b79ddf2e5f0dc1b028b23dcdbdc13f9ea46813",
+        when="@4.0.0 +python ^swig@4.1:",
+    )
 
     def cmake_args(self):
         spec = self.spec
@@ -139,6 +144,8 @@ class Sensei(CMakePackage):
 
         if "+python" in spec:
             args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))
+            args.append(self.define("Python_EXECUTABLE", spec["python"].command.path))
+            args.append(self.define("Python3_EXECUTABLE", spec["python"].command.path))
             if spec.satisfies("@3:"):
                 args.append(self.define("SENSEI_PYTHON_VERSION", 3))
             args.append(self.define_from_variant("ENABLE_CATALYST_PYTHON", "catalyst"))

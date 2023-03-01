@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,7 @@ from shutil import copy
 from typing import Dict, List
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    is_nonsymlink_exe_with_shebang,
-    path_contains_subdirectory,
-)
+from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_subdirectory
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
@@ -35,15 +32,17 @@ class Python(Package):
     url = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
+    tags = ["windows"]
 
-    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "pradyunsg"]
+    maintainers("adamjstewart", "skosukhin", "scheibelp", "pradyunsg")
 
     phases = ["configure", "build", "install"]
 
     #: phase
     install_targets = ["install"]
-    build_targets = []  # type: List[str]
+    build_targets: List[str] = []
 
+    version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version(
         "3.10.8",
@@ -226,7 +225,7 @@ class Python(Package):
     conflicts("%nvhpc")
 
     # Used to cache various attributes that are expensive to compute
-    _config_vars = {}  # type: Dict[str, Dict[str, str]]
+    _config_vars: Dict[str, Dict[str, str]] = {}
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = "spack-build"
@@ -291,11 +290,12 @@ class Python(Package):
             variants += "~pyexpat"
 
         # Some variant names do not match module names
-        try:
-            python("-c", "import tkinter.tix", error=os.devnull)
-            variants += "+tix"
-        except ProcessError:
-            variants += "~tix"
+        if "+tkinter" in variants:
+            try:
+                python("-c", "import tkinter.tix", error=os.devnull)
+                variants += "+tix"
+            except ProcessError:
+                variants += "~tix"
 
         # Some modules are platform-dependent
         if not is_windows:
@@ -468,7 +468,11 @@ class Python(Package):
 
         if "+optimizations" in spec:
             config_args.append("--enable-optimizations")
-            config_args.append("--with-lto")
+            # Prefer thin LTO for faster compilation times.
+            if "@3.11.0: %clang@3.9:" in spec or "@3.11.0: %apple-clang@8:" in spec:
+                config_args.append("--with-lto=thin")
+            else:
+                config_args.append("--with-lto")
             config_args.append("--with-computed-gotos")
 
         if spec.satisfies("@3.7 %intel", strict=True):
@@ -727,6 +731,12 @@ class Python(Package):
                 return Executable(path)
 
         else:
+            # Give a last try at rhel8 platform python
+            if self.spec.external and self.prefix == "/usr" and self.spec.satisfies("os=rhel8"):
+                path = os.path.join(self.prefix, "libexec", "platform-python")
+                if os.path.exists(path):
+                    return Executable(path)
+
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
 
@@ -861,13 +871,7 @@ print(json.dumps(config))
         win_bin_dir = self.config_vars["BINDIR"]
         win_root_dir = self.config_vars["prefix"]
 
-        directories = [
-            libdir,
-            frameworkprefix,
-            macos_developerdir,
-            win_bin_dir,
-            win_root_dir,
-        ]
+        directories = [libdir, frameworkprefix, macos_developerdir, win_bin_dir, win_root_dir]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
@@ -901,18 +905,14 @@ print(json.dumps(config))
             shared_libs = []
         else:
             shared_libs = [self.config_vars["LDLIBRARY"]]
-        shared_libs += [
-            "{}python{}.{}".format(lib_prefix, py_version, dso_suffix),
-        ]
+        shared_libs += ["{}python{}.{}".format(lib_prefix, py_version, dso_suffix)]
         # Like LDLIBRARY for Python on Mac OS, LIBRARY may refer to an un-linkable object
         file_extension_static = os.path.splitext(self.config_vars["LIBRARY"])[-1]
         if file_extension_static == "":
             static_libs = []
         else:
             static_libs = [self.config_vars["LIBRARY"]]
-        static_libs += [
-            "{}python{}.{}".format(lib_prefix, py_version, stat_suffix),
-        ]
+        static_libs += ["{}python{}.{}".format(lib_prefix, py_version, stat_suffix)]
 
         # The +shared variant isn't reliable, as `spack external find` currently can't
         # detect it. If +shared, prefer the shared libraries, but check for static if
@@ -1035,9 +1035,6 @@ print(json.dumps(config))
         if path.startswith(prefix):
             return path.replace(prefix, "")
         return os.path.join("include", "python{}".format(self.version.up_to(2)))
-
-    def setup_run_environment(self, env):
-        env.prepend_path("CPATH", os.pathsep.join(self.spec["python"].headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the

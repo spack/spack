@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -65,9 +65,7 @@ from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
+    Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
 ]
 FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
@@ -546,6 +544,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
 
+    #: Keep -Werror flags, matches config:flags:keep_werror to override config
+    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
+    keep_werror: Optional[str] = None
+
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
 
@@ -560,17 +562,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: for it. Note: accepts both file names and directory names, for example
     #: ``["libcuda.so", "stubs"]`` will ensure libcuda.so and all libraries in the
     #: stubs directory are not bound by path."""
-    non_bindable_shared_objects = []  # type: List[str]
+    non_bindable_shared_objects: List[str] = []
 
     #: List of prefix-relative file paths (or a single path). If these do
     #: not exist after install, or if they exist but are not files,
     #: sanity checks fail.
-    sanity_check_is_file = []  # type: List[str]
+    sanity_check_is_file: List[str] = []
 
     #: List of prefix-relative directory paths (or a single path). If
     #: these do not exist after install, or if they exist but are not
     #: directories, sanity checks will fail.
-    sanity_check_is_dir = []  # type: List[str]
+    sanity_check_is_dir: List[str] = []
 
     #: Boolean. Set to ``True`` for packages that require a manual download.
     #: This is currently used by package sanity tests and generation of a
@@ -578,7 +580,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     manual_download = False
 
     #: Set of additional options used when fetching package versions.
-    fetch_options = {}  # type: Dict[str, Any]
+    fetch_options: Dict[str, Any] = {}
 
     #
     # Set default licensing information
@@ -596,12 +598,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: looking for a license. All file paths must be relative to the
     #: installation directory. More complex packages like Intel may require
     #: multiple licenses for individual components. Defaults to the empty list.
-    license_files = []  # type: List[str]
+    license_files: List[str] = []
 
     #: List of strings. Environment variables that can be set to tell the
     #: software where to look for a license if it is not in the usual location.
     #: Defaults to the empty list.
-    license_vars = []  # type: List[str]
+    license_vars: List[str] = []
 
     #: String. A URL pointing to license setup instructions for the software.
     #: Defaults to the empty string.
@@ -614,17 +616,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     _patches_by_hash = None
 
     #: Package homepage where users can find more information about the package
-    homepage = None  # type: str
+    homepage: Optional[str] = None
 
     #: Default list URL (place to find available versions)
-    list_url = None  # type: str
+    list_url: Optional[str] = None
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0
 
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
-    maintainers = []  # type: List[str]
+    maintainers: List[str] = []
 
     #: List of attributes to be excluded from a package's hash.
     metadata_attrs = [
@@ -647,9 +649,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: List of test failures encountered during a smoke/install test run.
     test_failures = None
 
-    #: TestSuite instance used to manage smoke/install tests for one or more
-    #: specs.
+    #: TestSuite instance used to manage smoke/install tests for one or more specs.
     test_suite = None
+
+    #: Path to the log file used for tests
+    test_log_file = None
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -908,7 +912,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return self._implement_all_urls_for_version(version)[0]
 
-    def update_external_dependencies(self):
+    def update_external_dependencies(self, extendee_spec=None):
         """
         Method to override in package classes to handle external dependencies
         """
@@ -1699,11 +1703,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             "don't know how to make {0}. Stop",
         ]
 
-        kwargs = {
-            "fail_on_error": False,
-            "output": os.devnull,
-            "error": str,
-        }
+        kwargs = {"fail_on_error": False, "output": os.devnull, "error": str}
 
         stderr = make("-n", target, **kwargs)
 
@@ -1880,7 +1880,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_id = self.test_suite.test_pkg_id(self.spec)
         else:
             self.test_log_file = fsys.join_path(self.stage.path, _spack_install_test_log)
+            self.test_suite = TestSuite([self.spec])
+            self.test_suite.stage = self.stage.path
             pkg_id = self.spec.format("{name}-{version}-{hash:7}")
+
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         with tty.log.log_output(self.test_log_file, verbose) as logger:
@@ -2069,24 +2072,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return self.install_log_path if self.spec.installed else self.log_path
 
     @classmethod
-    def inject_flags(cls, name, flags):
-        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
+    def inject_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
         return flags, None, None
 
     @classmethod
-    def env_flags(cls, name, flags):
-        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
+    def env_flags(cls: Type, name: str, flags: Iterable[str]):
         """
         flag_handler that adds all flags to canonical environment variables.
         """
         return None, flags, None
 
     @classmethod
-    def build_system_flags(cls, name, flags):
-        # type: (Type, str, Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE
+    def build_system_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that passes flags to the build system arguments.  Any
         package using `build_system_flags` must also implement
@@ -2165,18 +2165,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         pass
 
-    _flag_handler = None  # type: Optional[FLAG_HANDLER_TYPE]
+    _flag_handler: Optional[FLAG_HANDLER_TYPE] = None
 
     @property
-    def flag_handler(self):
-        # type: () -> FLAG_HANDLER_TYPE
+    def flag_handler(self) -> FLAG_HANDLER_TYPE:
         if self._flag_handler is None:
             self._flag_handler = PackageBase.inject_flags
         return self._flag_handler
 
     @flag_handler.setter
-    def flag_handler(self, var):
-        # type: (FLAG_HANDLER_TYPE) -> None
+    def flag_handler(self, var: FLAG_HANDLER_TYPE):
         self._flag_handler = var
 
     # The flag handler method is called for each of the allowed compiler flags.
@@ -2216,10 +2214,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         if not force:
             dependents = spack.store.db.installed_relatives(
-                spec,
-                direction="parents",
-                transitive=True,
-                deptype=("link", "run"),
+                spec, direction="parents", transitive=True, deptype=("link", "run")
             )
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
@@ -2232,7 +2227,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # Pre-uninstall hook runs first.
         with spack.store.db.prefix_write_lock(spec):
-
             if pkg is not None:
                 try:
                     spack.hooks.pre_uninstall(spec)
@@ -2395,11 +2389,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                self.all_urls,
-                self.list_url,
-                self.list_depth,
-                concurrency,
-                reference_package=self,
+                self.all_urls, self.list_url, self.list_depth, concurrency, reference_package=self
             )
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url, e.message)
@@ -2442,6 +2432,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         with builder.pkg._setup_test(verbose=False, externals=False) as logger:
             # Report running each of the methods in the build log
             print_test_message(logger, "Running {0}-time tests".format(callback_type), True)
+            builder.pkg.test_suite.current_test_spec = builder.pkg.spec
+            builder.pkg.test_suite.current_base_spec = builder.pkg.spec
+
+            if "test" in method_names:
+                _copy_cached_test_files(builder.pkg, builder.pkg.spec)
 
             for name in method_names:
                 try:
@@ -2490,6 +2485,25 @@ def print_test_message(logger, msg, verbose):
         tty.msg(msg)
 
 
+def _copy_cached_test_files(pkg, spec):
+    """Copy any cached stand-alone test-related files."""
+
+    # copy installed test sources cache into test cache dir
+    if spec.concrete:
+        cache_source = spec.package.install_test_root
+        cache_dir = pkg.test_suite.current_test_cache_dir
+        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
+            fsys.install_tree(cache_source, cache_dir)
+
+    # copy test data into test data dir
+    data_source = Prefix(spec.package.package_dir).test
+    data_dir = pkg.test_suite.current_test_data_dir
+    if os.path.isdir(data_source) and not os.path.exists(data_dir):
+        # We assume data dir is used read-only
+        # maybe enforce this later
+        shutil.copytree(data_source, data_dir)
+
+
 def test_process(pkg, kwargs):
     verbose = kwargs.get("verbose", False)
     externals = kwargs.get("externals", False)
@@ -2528,20 +2542,7 @@ def test_process(pkg, kwargs):
                     except spack.repo.UnknownPackageError:
                         continue
 
-                    # copy installed test sources cache into test cache dir
-                    if spec.concrete:
-                        cache_source = spec_pkg.install_test_root
-                        cache_dir = pkg.test_suite.current_test_cache_dir
-                        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
-                            fsys.install_tree(cache_source, cache_dir)
-
-                    # copy test data into test data dir
-                    data_source = Prefix(spec_pkg.package_dir).test
-                    data_dir = pkg.test_suite.current_test_data_dir
-                    if os.path.isdir(data_source) and not os.path.exists(data_dir):
-                        # We assume data dir is used read-only
-                        # maybe enforce this later
-                        shutil.copytree(data_source, data_dir)
+                    _copy_cached_test_files(pkg, spec)
 
                     # grab the function for each method so we can call
                     # it with the package

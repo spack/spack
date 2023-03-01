@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
-    maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
+    maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     # Most recent tagged snapshot is the preferred version when profiling.
     version("0.7.1", commit="8064ef6b2249ad2feca92a9d1e90060bad3eebc7", submodules=True)
@@ -63,8 +63,12 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         description="Ultra safety checks - " "used for increased robustness and self-diagnostics",
     )
     variant("ginkgo", default=False, description="Enable/disable ginkgo solver")
-    variant("cusolver", default=False, description="Enable/disable cuSovler")
-
+    variant(
+        "cusolver_lu",
+        default=False,
+        when="+cuda @0.7.1:",
+        description="Enable/disable cuSovler LU refactorization",
+    )
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
@@ -76,54 +80,57 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma {0}".format(cuda_dep), when=cuda_dep)
         depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
         depends_on("ginkgo {0}".format(cuda_dep), when="+ginkgo {0}".format(cuda_dep))
-        depends_on("umpire ~shared {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        depends_on("umpire {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+        # Camp GPU arch doesn't get propogated correctly
+        depends_on("camp {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
 
     for arch in ROCmPackage.amdgpu_targets:
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("magma {0}".format(rocm_dep), when=rocm_dep)
         depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
-        depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
         depends_on("ginkgo {0}".format(rocm_dep), when="+ginkgo {0}".format(rocm_dep))
+        depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        # Camp GPU arch doesn't get propogated correctly
+        depends_on("camp {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
-    magma_ver_constraints = (
-        ("2.5.4", "0.4"),
-        ("2.6.1", "0.4.6"),
-        ("2.6.2", "0.5.4"),
-    )
+    magma_ver_constraints = (("2.5.4", "0.4"), ("2.6.1", "0.4.6"), ("2.6.2", "0.5.4"))
 
     # Depends on Magma when +rocm or +cuda
-    for (magma_v, hiop_v) in magma_ver_constraints:
+    for magma_v, hiop_v in magma_ver_constraints:
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+cuda".format(hiop_v))
         depends_on("magma@{0}:".format(magma_v), when="@{0}:+rocm".format(hiop_v))
 
     depends_on("cuda@11:", when="@develop:+cuda")
-
     depends_on("raja", when="+raja")
     depends_on("umpire", when="+raja")
     depends_on("raja+openmp", when="+raja~cuda~rocm")
 
-    # Umpire > 0.14 and RAJA > 6.0 require c++ std 14
-    depends_on("raja@0.14.0:0.14", when="@0.5.0:0.6.2+raja")
-    depends_on("umpire@6.0.0:", when="@0.5.0:0.6.2+raja")
+    # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
+    # We are working on supporting newer Umpire/RAJA versions
+    depends_on("raja@0.14.0:0.14", when="@0.5.0:+raja")
+    depends_on("umpire@6.0.0:6", when="@0.5.0:+raja")
+    depends_on("camp@0.2.3:0.2", when="@0.5.0:+raja")
+
+    # This is no longer a requirement in RAJA > 0.14
+    depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
+
+    conflicts(
+        "+shared",
+        when="+cuda+raja ^raja@:0.14",
+        msg="umpire+cuda exports device code and requires static libs",
+    )
 
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
 
     depends_on("suite-sparse", when="+kron")
+    depends_on("suite-sparse", when="+cusolver_lu")
 
     depends_on("coinhsl+blas", when="+sparse")
     depends_on("metis", when="+sparse")
 
     depends_on("ginkgo@1.5.0.glu_experimental", when="+ginkgo")
-
-    conflicts(
-        "+shared",
-        when="+cuda+raja",
-        msg="umpire+cuda exports device code and requires static libs",
-    )
-    conflicts("+cusolver", when="~cuda", msg="Cusolver requires CUDA")
-    conflicts("+cusolver", when="@:0.5", msg="Cusolver support was introduced in HiOp 0.6")
 
     flag_handler = build_system_flags
 
@@ -159,7 +166,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_COINHSL", "sparse"),
                 self.define_from_variant("HIOP_TEST_WITH_BSUB", "jsrun"),
                 self.define_from_variant("HIOP_USE_GINKGO", "ginkgo"),
-                self.define_from_variant("HIOP_USE_CUSOLVER", "cusolver"),
+                self.define_from_variant("HIOP_USE_CUSOLVER_LU", "cusolver_lu"),
             ]
         )
 

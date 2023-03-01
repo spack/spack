@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://ginkgo-project.github.io/"
     git = "https://github.com/ginkgo-project/ginkgo.git"
 
-    maintainers = ["tcojean", "hartwiganzt"]
+    maintainers("tcojean", "hartwiganzt")
 
     tags = ["e4s"]
 
@@ -86,6 +86,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     # initial Ginkgo oneAPI support.
     patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @master")
     patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @1.4.0")
+
+    # Add missing include statement
+    patch("thrust-count-header.patch", when="+rocm @1.5.0:")
 
     def setup_build_environment(self, env):
         spec = self.spec

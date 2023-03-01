@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ import spack.package_base
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.url as url_util
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
@@ -35,7 +36,7 @@ from spack.relocate import (
     needs_binary_relocation,
     needs_text_relocation,
     relocate_links,
-    unsafe_relocate_text,
+    relocate_text,
 )
 from spack.spec import Spec
 
@@ -89,7 +90,7 @@ echo $PATH"""
     spack.mirror.create(mirror_path, specs=[])
 
     # register mirror with spack config
-    mirrors = {"spack-mirror-test": "file://" + mirror_path}
+    mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_path)}
     spack.config.set("mirrors", mirrors)
 
     stage = spack.stage.Stage(mirrors["spack-mirror-test"], name="build_cache", keep=True)
@@ -189,7 +190,7 @@ echo $PATH"""
 
 
 @pytest.mark.usefixtures("install_mockery")
-def test_unsafe_relocate_text(tmpdir):
+def test_relocate_text(tmpdir):
     spec = Spec("trivial-install-test-package")
     spec.concretize()
     with tmpdir.as_cwd():
@@ -202,7 +203,7 @@ def test_unsafe_relocate_text(tmpdir):
         filenames = [filename]
         new_dir = "/opt/rh/devtoolset/"
         # Singleton dict doesn't matter if Ordered
-        unsafe_relocate_text(filenames, {old_dir: new_dir})
+        relocate_text(filenames, {old_dir: new_dir})
         with open(filename, "r") as script:
             for line in script:
                 assert new_dir in line
@@ -251,7 +252,6 @@ def test_relocate_links(tmpdir):
 
 
 def test_needs_relocation():
-
     assert needs_binary_relocation("application", "x-sharedlib")
     assert needs_binary_relocation("application", "x-executable")
     assert not needs_binary_relocation("application", "x-octet-stream")

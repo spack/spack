@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Gperftools(AutotoolsPackage):
 
     homepage = "https://github.com/gperftools/gperftools"
     url = "https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz"
-    maintainers = ["albestro", "eschnett", "msimberg", "teonnik"]
+    maintainers("albestro", "eschnett", "msimberg", "teonnik")
 
     version("2.10", sha256="83e3bfdd28b8bcf53222c3798d4d395d52dadbbae59e8730c4a6d31a9c3732d8")
     version("2.9.1", sha256="ea566e528605befb830671e359118c2da718f721c27225cbbc93858c7520fee3")

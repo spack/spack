@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -160,6 +160,21 @@ def test_find_external_cmd_full_repo(
     pkg_externals = pkg_cfg["externals"]
 
     assert {"spec": "find-externals1@1.foo", "prefix": prefix} in pkg_externals
+
+
+def test_find_external_cmd_exclude(
+    mutable_config, working_env, mock_executable, mutable_mock_repo, _platform_executables
+):
+    """Test invoking 'spack external find --all --exclude', to ensure arbitary
+    external packages can be ignored.
+    """
+    exe_path1 = mock_executable("find-externals1-exe", output="echo find-externals1 version 1.foo")
+    os.environ["PATH"] = os.pathsep.join([os.path.dirname(exe_path1)])
+    external("find", "--all", "--exclude=find-externals1")
+
+    pkgs_cfg = spack.config.get("packages")
+
+    assert "find-externals1" not in pkgs_cfg.keys()
 
 
 def test_find_external_no_manifest(
@@ -347,7 +362,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     assert "externals" in packages_yaml["gcc"]
     externals = packages_yaml["gcc"]["externals"]
     assert len(externals) == 1
-    assert externals[0]["prefix"] == "/opt/gcc/bin"
+    assert externals[0]["prefix"] == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
 def test_new_entries_are_reported_correctly(
@@ -368,13 +383,7 @@ def test_new_entries_are_reported_correctly(
     assert "No new external packages detected" in output
 
 
-@pytest.mark.parametrize(
-    "command_args",
-    [
-        ("-t", "build-tools"),
-        ("-t", "build-tools", "cmake"),
-    ],
-)
+@pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
 def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake cmake
     cmake_exe = mock_executable("cmake", output="echo cmake version 3.19.1")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ def setup_parser(subparser):
         "-r",
         "--rel",
         action="store_true",
-        help="make all rpaths relative" + " before creating tarballs.",
+        help="make all rpaths relative before creating tarballs.",
     )
     create.add_argument(
         "-f", "--force", action="store_true", help="overwrite tarball if it exists."
@@ -54,48 +54,56 @@ def setup_parser(subparser):
         "-u",
         "--unsigned",
         action="store_true",
-        help="create unsigned buildcache" + " tarballs for testing",
+        help="create unsigned buildcache tarballs for testing",
     )
     create.add_argument(
         "-a",
         "--allow-root",
         action="store_true",
-        help="allow install root string in binary files " + "after RPATH substitution",
+        help="allow install root string in binary files after RPATH substitution",
     )
     create.add_argument(
         "-k", "--key", metavar="key", type=str, default=None, help="Key for signing."
     )
-    output = create.add_mutually_exclusive_group(required=True)
+    output = create.add_mutually_exclusive_group(required=False)
+    # TODO: remove from Spack 0.21
     output.add_argument(
         "-d",
         "--directory",
         metavar="directory",
-        type=str,
-        help="local directory where " + "buildcaches will be written.",
+        dest="mirror_flag",
+        type=arguments.mirror_directory,
+        help="local directory where buildcaches will be written. (deprecated)",
     )
+    # TODO: remove from Spack 0.21
     output.add_argument(
         "-m",
         "--mirror-name",
         metavar="mirror-name",
-        type=str,
-        help="name of the mirror where " + "buildcaches will be written.",
+        dest="mirror_flag",
+        type=arguments.mirror_name,
+        help="name of the mirror where buildcaches will be written. (deprecated)",
     )
+    # TODO: remove from Spack 0.21
     output.add_argument(
         "--mirror-url",
         metavar="mirror-url",
-        type=str,
-        help="URL of the mirror where " + "buildcaches will be written.",
+        dest="mirror_flag",
+        type=arguments.mirror_url,
+        help="URL of the mirror where buildcaches will be written. (deprecated)",
     )
+    # Unfortunately we cannot add this to the mutually exclusive group above,
+    # because we have further positional arguments.
+    # TODO: require from Spack 0.21
+    create.add_argument("mirror", type=str, help="Mirror name, path, or URL.", nargs="?")
     create.add_argument(
         "--rebuild-index",
         action="store_true",
         default=False,
-        help="Regenerate buildcache index " + "after building package(s)",
+        help="Regenerate buildcache index after building package(s)",
     )
     create.add_argument(
-        "--spec-file",
-        default=None,
-        help=("Create buildcache entry for spec from json or " + "yaml file"),
+        "--spec-file", default=None, help="Create buildcache entry for spec from json or yaml file"
     )
     create.add_argument(
         "--only",
@@ -124,19 +132,19 @@ def setup_parser(subparser):
         "-a",
         "--allow-root",
         action="store_true",
-        help="allow install root string in binary files " + "after RPATH substitution",
+        help="allow install root string in binary files after RPATH substitution",
     )
     install.add_argument(
         "-u",
         "--unsigned",
         action="store_true",
-        help="install unsigned buildcache" + " tarballs for testing",
+        help="install unsigned buildcache tarballs for testing",
     )
     install.add_argument(
         "-o",
         "--otherarch",
         action="store_true",
-        help="install specs from other architectures" + " instead of default platform and OS",
+        help="install specs from other architectures instead of default platform and OS",
     )
 
     arguments.add_common_arguments(install, ["specs"])
@@ -155,7 +163,7 @@ def setup_parser(subparser):
         "-a",
         "--allarch",
         action="store_true",
-        help="list specs for all available architectures" + " instead of default platform and OS",
+        help="list specs for all available architectures instead of default platform and OS",
     )
     arguments.add_common_arguments(listcache, ["specs"])
     listcache.set_defaults(func=list_fn)
@@ -178,7 +186,7 @@ def setup_parser(subparser):
         "-m",
         "--mirror-url",
         default=None,
-        help="Override any configured mirrors with this mirror url",
+        help="Override any configured mirrors with this mirror URL",
     )
 
     check.add_argument(
@@ -204,7 +212,7 @@ def setup_parser(subparser):
     check.add_argument(
         "--spec-file",
         default=None,
-        help=("Check single spec from json or yaml file instead of release " + "specs file"),
+        help=("Check single spec from json or yaml file instead of release specs file"),
     )
 
     check.set_defaults(func=check_fn)
@@ -217,7 +225,7 @@ def setup_parser(subparser):
     download.add_argument(
         "--spec-file",
         default=None,
-        help=("Download built tarball for spec (from json or yaml file) " + "from mirror"),
+        help=("Download built tarball for spec (from json or yaml file) from mirror"),
     )
     download.add_argument(
         "-p", "--path", default=None, help="Path to directory where tarball should be downloaded"
@@ -234,7 +242,7 @@ def setup_parser(subparser):
     getbuildcachename.add_argument(
         "--spec-file",
         default=None,
-        help=("Path to spec json or yaml file for which buildcache name is " + "desired"),
+        help=("Path to spec json or yaml file for which buildcache name is desired"),
     )
     getbuildcachename.set_defaults(func=get_buildcache_name_fn)
 
@@ -265,36 +273,109 @@ def setup_parser(subparser):
         help="A quoted glob pattern identifying copy manifest files",
     )
     source = sync.add_mutually_exclusive_group(required=False)
+    # TODO: remove in Spack 0.21
     source.add_argument(
-        "--src-directory", metavar="DIRECTORY", type=str, help="Source mirror as a local file path"
+        "--src-directory",
+        metavar="DIRECTORY",
+        dest="src_mirror_flag",
+        type=arguments.mirror_directory,
+        help="Source mirror as a local file path (deprecated)",
     )
+    # TODO: remove in Spack 0.21
     source.add_argument(
-        "--src-mirror-name", metavar="MIRROR_NAME", type=str, help="Name of the source mirror"
+        "--src-mirror-name",
+        metavar="MIRROR_NAME",
+        dest="src_mirror_flag",
+        type=arguments.mirror_name,
+        help="Name of the source mirror (deprecated)",
     )
+    # TODO: remove in Spack 0.21
     source.add_argument(
-        "--src-mirror-url", metavar="MIRROR_URL", type=str, help="URL of the source mirror"
+        "--src-mirror-url",
+        metavar="MIRROR_URL",
+        dest="src_mirror_flag",
+        type=arguments.mirror_url,
+        help="URL of the source mirror (deprecated)",
+    )
+    # TODO: only support this in 0.21
+    source.add_argument(
+        "src_mirror",
+        metavar="source mirror",
+        type=arguments.mirror_name_or_url,
+        help="Source mirror name, path, or URL",
+        nargs="?",
     )
     dest = sync.add_mutually_exclusive_group(required=False)
+    # TODO: remove in Spack 0.21
     dest.add_argument(
         "--dest-directory",
         metavar="DIRECTORY",
-        type=str,
-        help="Destination mirror as a local file path",
+        dest="dest_mirror_flag",
+        type=arguments.mirror_directory,
+        help="Destination mirror as a local file path (deprecated)",
     )
+    # TODO: remove in Spack 0.21
     dest.add_argument(
         "--dest-mirror-name",
         metavar="MIRROR_NAME",
-        type=str,
-        help="Name of the destination mirror",
+        type=arguments.mirror_name,
+        dest="dest_mirror_flag",
+        help="Name of the destination mirror (deprecated)",
     )
+    # TODO: remove in Spack 0.21
     dest.add_argument(
-        "--dest-mirror-url", metavar="MIRROR_URL", type=str, help="URL of the destination mirror"
+        "--dest-mirror-url",
+        metavar="MIRROR_URL",
+        dest="dest_mirror_flag",
+        type=arguments.mirror_url,
+        help="URL of the destination mirror (deprecated)",
+    )
+    # TODO: only support this in 0.21
+    dest.add_argument(
+        "dest_mirror",
+        metavar="destination mirror",
+        type=arguments.mirror_name_or_url,
+        help="Destination mirror name, path, or URL",
+        nargs="?",
     )
     sync.set_defaults(func=sync_fn)
 
     # Update buildcache index without copying any additional packages
     update_index = subparsers.add_parser("update-index", help=update_index_fn.__doc__)
-    update_index.add_argument("-d", "--mirror-url", default=None, help="Destination mirror url")
+    update_index_out = update_index.add_mutually_exclusive_group(required=True)
+    # TODO: remove in Spack 0.21
+    update_index_out.add_argument(
+        "-d",
+        "--directory",
+        metavar="directory",
+        dest="mirror_flag",
+        type=arguments.mirror_directory,
+        help="local directory where buildcaches will be written (deprecated)",
+    )
+    # TODO: remove in Spack 0.21
+    update_index_out.add_argument(
+        "-m",
+        "--mirror-name",
+        metavar="mirror-name",
+        dest="mirror_flag",
+        type=arguments.mirror_name,
+        help="name of the mirror where buildcaches will be written (deprecated)",
+    )
+    # TODO: remove in Spack 0.21
+    update_index_out.add_argument(
+        "--mirror-url",
+        metavar="mirror-url",
+        dest="mirror_flag",
+        type=arguments.mirror_url,
+        help="URL of the mirror where buildcaches will be written (deprecated)",
+    )
+    # TODO: require from Spack 0.21
+    update_index_out.add_argument(
+        "mirror",
+        type=arguments.mirror_name_or_url,
+        help="Destination mirror name, path, or URL",
+        nargs="?",
+    )
     update_index.add_argument(
         "-k",
         "--keys",
@@ -305,27 +386,27 @@ def setup_parser(subparser):
     update_index.set_defaults(func=update_index_fn)
 
 
-def _matching_specs(args):
+def _matching_specs(specs, spec_file):
     """Return a list of matching specs read from either a spec file (JSON or YAML),
     a query over the store or a query over the active environment.
     """
     env = ev.active_environment()
     hashes = env.all_hashes() if env else None
-    if args.spec_file:
-        return spack.store.specfile_matches(args.spec_file, hashes=hashes)
+    if spec_file:
+        return spack.store.specfile_matches(spec_file, hashes=hashes)
 
-    if args.specs:
-        constraints = spack.cmd.parse_specs(args.specs)
+    if specs:
+        constraints = spack.cmd.parse_specs(specs)
         return spack.store.find(constraints, hashes=hashes)
 
     if env:
-        return [env.specs_by_hash[h] for h in env.concretized_order]
+        return [concrete for _, concrete in env.concretized_specs()]
 
     tty.die(
         "build cache file creation requires at least one"
-        + " installed package spec, an active environment,"
-        + " or else a path to a json or yaml file containing a spec"
-        + " to install"
+        " installed package spec, an active environment,"
+        " or else a path to a json or yaml file containing a spec"
+        " to install"
     )
 
 
@@ -353,23 +434,31 @@ def _concrete_spec_from_args(args):
 
 def create_fn(args):
     """create a binary package and push it to a mirror"""
-    if args.directory:
-        push_url = spack.mirror.push_url_from_directory(args.directory)
+    if args.mirror_flag:
+        mirror = args.mirror_flag
+    elif not args.mirror:
+        raise ValueError("No mirror provided")
+    else:
+        mirror = arguments.mirror_name_or_url(args.mirror)
 
-    if args.mirror_name:
-        push_url = spack.mirror.push_url_from_mirror_name(args.mirror_name)
+    if args.mirror_flag:
+        tty.warn(
+            "Using flags to specify mirrors is deprecated and will be removed in "
+            "Spack 0.21, use positional arguments instead."
+        )
 
-    if args.mirror_url:
-        push_url = spack.mirror.push_url_from_mirror_url(args.mirror_url)
+    # TODO: remove this in 0.21. If we have mirror_flag, the first
+    # spec is in the positional mirror arg due to argparse limitations.
+    specs = args.specs
+    if args.mirror_flag and args.mirror:
+        specs.insert(0, args.mirror)
 
-    matches = _matching_specs(args)
+    url = mirror.push_url
 
-    msg = "Pushing binary packages to {0}/build_cache".format(push_url)
+    matches = _matching_specs(specs, args.spec_file)
+
+    msg = "Pushing binary packages to {0}/build_cache".format(url)
     tty.msg(msg)
-    specs_kwargs = {
-        "include_root": "package" in args.things_to_install,
-        "include_dependencies": "dependencies" in args.things_to_install,
-    }
     kwargs = {
         "key": args.key,
         "force": args.force,
@@ -378,7 +467,13 @@ def create_fn(args):
         "allow_root": args.allow_root,
         "regenerate_index": args.rebuild_index,
     }
-    bindist.push(matches, push_url, specs_kwargs, **kwargs)
+    bindist.push(
+        matches,
+        url,
+        include_root="package" in args.things_to_install,
+        include_dependencies="dependencies" in args.things_to_install,
+        **kwargs,
+    )
 
 
 def install_fn(args):
@@ -571,51 +666,24 @@ def sync_fn(args):
         manifest_copy(glob.glob(args.manifest_glob))
         return 0
 
-    # Figure out the source mirror
-    source_location = None
-    if args.src_directory:
-        source_location = args.src_directory
-        scheme = url_util.parse(source_location, scheme="<missing>").scheme
-        if scheme != "<missing>":
-            raise ValueError('"--src-directory" expected a local path; got a URL, instead')
-        # Ensure that the mirror lookup does not mistake this for named mirror
-        source_location = "file://" + source_location
-    elif args.src_mirror_name:
-        source_location = args.src_mirror_name
-        result = spack.mirror.MirrorCollection().lookup(source_location)
-        if result.name == "<unnamed>":
-            raise ValueError('no configured mirror named "{name}"'.format(name=source_location))
-    elif args.src_mirror_url:
-        source_location = args.src_mirror_url
-        scheme = url_util.parse(source_location, scheme="<missing>").scheme
-        if scheme == "<missing>":
-            raise ValueError('"{url}" is not a valid URL'.format(url=source_location))
+    # If no manifest_glob, require a source and dest mirror.
+    # TODO: Simplify in Spack 0.21
+    if not (args.src_mirror_flag or args.src_mirror) or not (
+        args.dest_mirror_flag or args.dest_mirror
+    ):
+        raise ValueError("Source and destination mirror are required.")
 
-    src_mirror = spack.mirror.MirrorCollection().lookup(source_location)
-    src_mirror_url = url_util.format(src_mirror.fetch_url)
+    if args.src_mirror_flag or args.dest_mirror_flag:
+        tty.warn(
+            "Using flags to specify mirrors is deprecated and will be removed in "
+            "Spack 0.21, use positional arguments instead."
+        )
 
-    # Figure out the destination mirror
-    dest_location = None
-    if args.dest_directory:
-        dest_location = args.dest_directory
-        scheme = url_util.parse(dest_location, scheme="<missing>").scheme
-        if scheme != "<missing>":
-            raise ValueError('"--dest-directory" expected a local path; got a URL, instead')
-        # Ensure that the mirror lookup does not mistake this for named mirror
-        dest_location = "file://" + dest_location
-    elif args.dest_mirror_name:
-        dest_location = args.dest_mirror_name
-        result = spack.mirror.MirrorCollection().lookup(dest_location)
-        if result.name == "<unnamed>":
-            raise ValueError('no configured mirror named "{name}"'.format(name=dest_location))
-    elif args.dest_mirror_url:
-        dest_location = args.dest_mirror_url
-        scheme = url_util.parse(dest_location, scheme="<missing>").scheme
-        if scheme == "<missing>":
-            raise ValueError('"{url}" is not a valid URL'.format(url=dest_location))
+    src_mirror = args.src_mirror_flag if args.src_mirror_flag else args.src_mirror
+    dest_mirror = args.dest_mirror_flag if args.dest_mirror_flag else args.dest_mirror
 
-    dest_mirror = spack.mirror.MirrorCollection().lookup(dest_location)
-    dest_mirror_url = url_util.format(dest_mirror.fetch_url)
+    src_mirror_url = src_mirror.fetch_url
+    dest_mirror_url = dest_mirror.push_url
 
     # Get the active environment
     env = spack.cmd.require_active_env(cmd_name="buildcache sync")
@@ -676,15 +744,14 @@ def manifest_copy(manifest_file_list):
             copy_buildcache_file(copy_file["src"], copy_file["dest"])
 
 
-def update_index(mirror_url, update_keys=False):
-    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
-    outdir = url_util.format(mirror.push_url)
+def update_index(mirror: spack.mirror.Mirror, update_keys=False):
+    url = mirror.push_url
 
-    bindist.generate_package_index(url_util.join(outdir, bindist.build_cache_relative_path()))
+    bindist.generate_package_index(url_util.join(url, bindist.build_cache_relative_path()))
 
     if update_keys:
         keys_url = url_util.join(
-            outdir, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
+            url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
         )
 
         bindist.generate_key_index(keys_url)
@@ -692,11 +759,13 @@ def update_index(mirror_url, update_keys=False):
 
 def update_index_fn(args):
     """Update a buildcache index."""
-    outdir = "file://."
-    if args.mirror_url:
-        outdir = args.mirror_url
-
-    update_index(outdir, update_keys=args.keys)
+    if args.mirror_flag:
+        tty.warn(
+            "Using flags to specify mirrors is deprecated and will be removed in "
+            "Spack 0.21, use positional arguments instead."
+        )
+    mirror = args.mirror_flag if args.mirror_flag else args.mirror
+    update_index(mirror, update_keys=args.keys)
 
 
 def buildcache(parser, args):

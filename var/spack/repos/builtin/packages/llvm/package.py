@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Llvm(CMakePackage, CudaPackage):
     url = "https://github.com/llvm/llvm-project/archive/llvmorg-7.1.0.tar.gz"
     list_url = "https://releases.llvm.org/download.html"
     git = "https://github.com/llvm/llvm-project"
-    maintainers = ["trws", "haampie"]
+    maintainers("trws", "haampie")
 
     tags = ["e4s"]
 
@@ -35,6 +35,9 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     version("main", branch="main")
+    version("15.0.7", sha256="42a0088f148edcf6c770dfc780a7273014a9a89b66f357c761b4ca7c8dfa10ba")
+    version("15.0.6", sha256="4d857d7a180918bdacd09a5910bf9743c9861a1e49cb065a85f7a990f812161d")
+    version("15.0.5", sha256="c47640269e0251e009ae18a25162df4e20e175885286e21d28c054b084b991a4")
     version("15.0.4", sha256="e24b4d3bf7821dcb1c901d1e09096c1f88fb00095c5a6ef893baab4836975e52")
     version("15.0.3", sha256="8ac8e4c0982bf236526d737d385db5e1e66543ab217a9355d54159659eae3774")
     version("15.0.2", sha256="dc11d35e60ab61792baa607dff080c993b39de23fb93b3d3369ba15b0601c307")
@@ -73,9 +76,7 @@ class Llvm(CMakePackage, CudaPackage):
     # to save space, build with `build_type=Release`.
 
     variant(
-        "clang",
-        default=True,
-        description="Build the LLVM C/C++/Objective-C compiler frontend",
+        "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
     )
     variant(
         "flang",
@@ -93,10 +94,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant("lld", default=True, description="Build the LLVM linker")
     variant("mlir", default=False, when="@10:", description="Build with MLIR support")
     variant(
-        "internal_unwind",
-        default=True,
-        when="+clang",
-        description="Build the libcxxabi libunwind",
+        "internal_unwind", default=True, when="+clang", description="Build the libcxxabi libunwind"
     )
     variant(
         "polly",
@@ -104,10 +102,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM polyhedral optimization plugin, " "only builds for 3.7.0+",
     )
     variant(
-        "libcxx",
-        default=True,
-        when="+clang",
-        description="Build the LLVM C++ standard library",
+        "libcxx", default=True, when="+clang", description="Build the LLVM C++ standard library"
     )
     variant(
         "compiler-rt",
@@ -120,11 +115,7 @@ class Llvm(CMakePackage, CudaPackage):
         default=(sys.platform != "darwin"),
         description="Add support for LTO with the gold linker plugin",
     )
-    variant(
-        "split_dwarf",
-        default=False,
-        description="Build with split dwarf information",
-    )
+    variant("split_dwarf", default=False, description="Build with split dwarf information")
     variant(
         "llvm_dylib",
         default=True,
@@ -234,7 +225,8 @@ class Llvm(CMakePackage, CudaPackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
-    depends_on("libelf", when="+cuda")  # libomptarget
+    depends_on("hwloc@2.0.1:", when="@9:")
+    depends_on("elf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+cuda")  # libomptarget
 
     # llvm-config --system-libs libraries.
@@ -596,9 +588,7 @@ class Llvm(CMakePackage, CudaPackage):
                     [
                         define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
                         # work around bad libelf detection in libomptarget
-                        define(
-                            "LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["libelf"].prefix.include
-                        ),
+                        define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include),
                     ]
                 )
         else:
@@ -735,9 +725,7 @@ class Llvm(CMakePackage, CudaPackage):
                 cmake_args.extend(
                     [
                         define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
-                        define(
-                            "LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["libelf"].prefix.include
-                        ),
+                        define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR", spec["elf"].prefix.include),
                         self.stage.source_path + "/openmp",
                     ]
                 )

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class RRapiserialize(RPackage):
 
     cran = "RApiSerialize"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.1.2", sha256="9cc0bbb918eeadb394339c64b15324e8123fbb0061692f40102b111417a2600a")
     version("0.1.0", sha256="324d42c655c27b4647d194bfcd7c675da95c67ea3a74ce99853502022792a23e")

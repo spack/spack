@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
-    url = "https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz"
+    url = "https://github.com/xianyi/OpenBLAS/releases/download/v0.2.19/OpenBLAS-0.2.19.tar.gz"
     git = "https://github.com/xianyi/OpenBLAS.git"
 
     libraries = ["libopenblas"]
@@ -94,6 +94,7 @@ class Openblas(MakefilePackage):
 
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
+    patch("f_check-intel.patch", when="@0.3.21 %intel")
 
     # OpenBLAS >=3.0 has an official way to disable internal parallel builds
     patch("make.patch", when="@0.2.16:0.2.20")
@@ -181,8 +182,14 @@ class Openblas(MakefilePackage):
         when="@0.3.21 %gcc@:9",
     )
 
+    # Generic fix (https://github.com/xianyi/OpenBLAS/pull/3902) so we don't
+    # have to build tests
+    patch("fix-shared-tests-prereqs.patch", when="@0.2.20:0.3.21")
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
-    conflicts("%gcc@7.0.0:7.3,8.0.0:8.2", when="@0.3.11:")
+    # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
+    # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
+    conflicts("%gcc@7:7.3.0,8:8.2", when="@0.3.11:")
 
     # See https://github.com/xianyi/OpenBLAS/issues/3074
     conflicts("%gcc@:10.1", when="@0.3.13 target=ppc64le:")
@@ -460,10 +467,7 @@ class Openblas(MakefilePackage):
 
     @property
     def install_targets(self):
-        make_args = [
-            "install",
-            "PREFIX={0}".format(self.prefix),
-        ]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")

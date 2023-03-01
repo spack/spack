@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from typing import Callable, Dict  # novm
+from typing import Callable, Dict
 
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
@@ -13,7 +13,7 @@ section = "user environment"
 level = "short"
 
 
-_subcommands = {}  # type: Dict[str, Callable]
+_subcommands: Dict[str, Callable] = {}
 
 
 def setup_parser(subparser):

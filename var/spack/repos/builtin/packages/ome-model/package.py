@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class OmeModel(CMakePackage):
     url = "https://gitlab.com/codelibre/ome/ome-model/-/archive/v6.0.0/ome-model-v6.0.0.tar.gz"
     git = "https://gitlab.com/codelibre/ome/ome-model.git"
 
-    maintainers = ["omsai"]
+    maintainers("omsai")
 
     version("master", branch="master")
     version("6.0.0", sha256="d6644ff722411d3a8ac9f26a49c1afda30e4d4102e37b31593d2a9fdc8f96700")
@@ -35,7 +35,4 @@ class OmeModel(CMakePackage):
     depends_on("googletest", type="test")
 
     def cmake_args(self):
-        return [
-            "-DCMAKE_CXX_STANDARD=17",
-            "-DCMAKE_CXX_STANDARD_REQUIRED=ON",
-        ]
+        return ["-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_STANDARD_REQUIRED=ON"]

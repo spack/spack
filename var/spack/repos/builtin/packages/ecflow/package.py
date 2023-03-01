@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Ecflow(CMakePackage):
     homepage = "https://confluence.ecmwf.int/display/ECFLOW/"
     url = "https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-4.11.1-Source.tar.gz"
 
-    maintainers = ["climbfuji"]
+    maintainers("climbfuji")
 
     # https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-5.8.3-Source.tar.gz?api=v2
     version("5.8.3", sha256="1d890008414017da578dbd5a95cb1b4d599f01d5a3bb3e0297fe94a87fbd81a6")
@@ -60,19 +60,27 @@ class Ecflow(CMakePackage):
 
     depends_on("openssl@1:", when="@5:")
     depends_on("qt@5:", when="+ui")
-    depends_on("cmake@2.12.11:", type="build")
+    # Requirement to use the Python3_EXECUTABLE variable
+    depends_on("cmake@3.16:", type="build")
+
+    @when("@:4.13.0")
+    def patch(self):
+        version = str(self.spec["python"].version[:2])
+        filter_file(
+            r"REQUIRED COMPONENTS python3",
+            rf"REQUIRED COMPONENTS python{version}",
+            "Pyext/CMakeLists.txt",
+        )
 
     def cmake_args(self):
         boost_lib = self.spec["boost"].prefix.lib
-        args = ["-DBoost_PYTHON_LIBRARY_RELEASE=" + boost_lib]
-
-        # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
-        use_static_boost = "ON" if "+static_boost" in self.spec else "OFF"
-        args.append("-DENABLE_STATIC_BOOST_LIBS=" + use_static_boost)
-
-        ssl = "ON" if "+ssl" in self.spec else "OFF"
-        args.append("-DENABLE_SSL=" + ssl)
-
-        ecflow_ui = "ON" if "+ui" in self.spec else "OFF"
-        args.extend(["-DENABLE_UI=" + ecflow_ui, "-DENABLE_GUI=" + ecflow_ui])
-        return args
+        return [
+            self.define("Boost_PYTHON_LIBRARY_RELEASE", boost_lib),
+            self.define_from_variant("ENABLE_UI", "ui"),
+            self.define_from_variant("ENABLE_GUI", "ui"),
+            self.define_from_variant("ENABLE_SSL", "ssl"),
+            # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
+            self.define_from_variant("ENABLE_STATIC_BOOST_LIBS", "static_boost"),
+            self.define("Python3_EXECUTABLE", self.spec["python"].package.command),
+            self.define("BOOST_ROOT", self.spec["boost"].prefix),
+        ]

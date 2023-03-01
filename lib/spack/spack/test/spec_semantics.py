@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,6 @@ def _specify(spec_like):
 
 
 def check_satisfies(target_spec, constraint_spec, target_concrete=False):
-
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
@@ -55,7 +54,6 @@ def check_satisfies(target_spec, constraint_spec, target_concrete=False):
 
 
 def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False):
-
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
@@ -325,7 +323,6 @@ class TestSpecSematics(object):
         assert "a@1.0" not in spec
 
     def test_unsatisfiable_multi_value_variant(self):
-
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
@@ -707,12 +704,8 @@ class TestSpecSematics(object):
         )
 
     def test_exceptional_paths_for_constructor(self):
-
         with pytest.raises(TypeError):
             Spec((1, 2))
-
-        with pytest.raises(ValueError):
-            Spec("")
 
         with pytest.raises(ValueError):
             Spec("libelf foo")
@@ -1112,7 +1105,7 @@ class TestSpecSematics(object):
     def test_satisfies_dependencies_ordered(self):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
-        s._add_dependency(d, ())
+        s._add_dependency(d, deptypes=())
         assert s.satisfies("mpileaks ^zmpi ^fake", strict=True)
 
     @pytest.mark.parametrize("transitive", [True, False])
@@ -1160,7 +1153,9 @@ def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
 
 def test_malformed_spec_dict():
     with pytest.raises(SpecError, match="malformed"):
-        Spec.from_dict({"spec": {"nodes": [{"dependencies": {"name": "foo"}}]}})
+        Spec.from_dict(
+            {"spec": {"_meta": {"version": 2}, "nodes": [{"dependencies": {"name": "foo"}}]}}
+        )
 
 
 def test_spec_dict_hashless_dep():
@@ -1168,9 +1163,10 @@ def test_spec_dict_hashless_dep():
         Spec.from_dict(
             {
                 "spec": {
+                    "_meta": {"version": 2},
                     "nodes": [
                         {"name": "foo", "hash": "thehash", "dependencies": [{"name": "bar"}]}
-                    ]
+                    ],
                 }
             }
         )
@@ -1256,7 +1252,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
-    top.add_dependency_edge(bottom, ())
+    top.add_dependency_edge(bottom, deptypes=())
 
     # concretize with the already-concrete dependency
     top.concretize()
@@ -1297,3 +1293,16 @@ def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_co
     assert hash(a1) != hash(a2)
     assert a1.dag_hash() != a2.dag_hash()
     assert a1.process_hash() != a2.process_hash()
+
+
+def test_satisfies_is_commutative_with_concrete_specs(mock_packages, default_mock_concretization):
+    a1 = default_mock_concretization("a@1.0")
+    a2 = Spec("a@1.0")
+
+    # strict=False means non-empty intersection, which is commutative.
+    assert a1.satisfies(a2)
+    assert a2.satisfies(a1)
+
+    # strict=True means set inclusion, which is not commutative.
+    assert a1.satisfies(a2, strict=True)
+    assert not a2.satisfies(a1, strict=True)

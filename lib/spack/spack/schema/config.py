@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,12 @@ properties = {
         "type": "object",
         "default": {},
         "properties": {
+            "flags": {
+                "type": "object",
+                "properties": {
+                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]}
+                },
+            },
             "shared_linking": {
                 "anyOf": [
                     {"type": "string", "enum": ["rpath", "runpath"]},
@@ -48,12 +54,12 @@ properties = {
                         ),
                     },
                     {"type": "string"},  # deprecated
-                ],
+                ]
             },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "install_path_scheme": {"type": "string"},  # deprecated
             "build_stage": {
-                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
             },
             "test_stage": {"type": "string"},
             "extensions": {"type": "array", "items": {"type": "string"}},
@@ -61,6 +67,7 @@ properties = {
             "license_dir": {"type": "string"},
             "source_cache": {"type": "string"},
             "misc_cache": {"type": "string"},
+            "environments_root": {"type": "string"},
             "connect_timeout": {"type": "integer", "minimum": 0},
             "verify_ssl": {"type": "boolean"},
             "suppress_gpg_warnings": {"type": "boolean"},
@@ -76,7 +83,7 @@ properties = {
             "concretizer": {"type": "string", "enum": ["original", "clingo"]},
             "db_lock_timeout": {"type": "integer", "minimum": 1},
             "package_lock_timeout": {
-                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}],
+                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
             },
             "allow_sgid": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
@@ -90,7 +97,7 @@ properties = {
             "modules:[module set]:roots and is ignored",
             "error": False,
         },
-    },
+    }
 }
 
 

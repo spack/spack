@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,7 @@ import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
 import spack.hooks
+import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
@@ -232,7 +233,7 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     dep.concretize()
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
-        dep._dependents.add(spack.spec.DependencySpec(pkg.spec, dep, ("build",)))
+        dep._dependents.add(spack.spec.DependencySpec(pkg.spec, dep, deptypes=("build",)))
     packages = [(s.package, False) for s in dep.traverse(order="post", root=False)]
 
     packages.append((dep.package, True))
@@ -363,14 +364,13 @@ def _process_external_package(pkg, explicit):
 
 
 def _process_binary_cache_tarball(
-    pkg, binary_spec, explicit, unsigned, mirrors_for_spec=None, timer=timer.NULL_TIMER
+    pkg, explicit, unsigned, mirrors_for_spec=None, timer=timer.NULL_TIMER
 ):
     """
     Process the binary cache tarball.
 
     Args:
         pkg (spack.package_base.PackageBase): the package being installed
-        binary_spec (spack.spec.Spec): the spec  whose cache has been confirmed
         explicit (bool): the package was explicitly requested by the user
         unsigned (bool): ``True`` if binary package signatures to be checked,
             otherwise, ``False``
@@ -382,30 +382,24 @@ def _process_binary_cache_tarball(
         bool: ``True`` if the package was extracted from binary cache,
             else ``False``
     """
-    timer.start("fetch")
-    download_result = binary_distribution.download_tarball(
-        binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec
-    )
-    timer.stop("fetch")
-    # see #10063 : install from source if tarball doesn't exist
-    if download_result is None:
-        tty.msg("{0} exists in binary cache but with different hash".format(pkg.name))
-        return False
-
-    pkg_id = package_id(pkg)
-    tty.msg("Extracting {0} from binary cache".format(pkg_id))
-
-    # don't print long padded paths while extracting/relocating binaries
-    timer.start("install")
-    with spack.util.path.filter_padding():
-        binary_distribution.extract_tarball(
-            binary_spec, download_result, allow_root=False, unsigned=unsigned, force=False
+    with timer.measure("fetch"):
+        download_result = binary_distribution.download_tarball(
+            pkg.spec, unsigned, mirrors_for_spec
         )
 
-    pkg.installed_from_binary_cache = True
-    spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
-    timer.stop("install")
-    return True
+        if download_result is None:
+            return False
+
+    tty.msg("Extracting {0} from binary cache".format(package_id(pkg)))
+
+    with timer.measure("install"), spack.util.path.filter_padding():
+        binary_distribution.extract_tarball(
+            pkg.spec, download_result, allow_root=False, unsigned=unsigned, force=False
+        )
+
+        pkg.installed_from_binary_cache = True
+        spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+        return True
 
 
 def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=timer.NULL_TIMER):
@@ -419,18 +413,17 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=timer.NU
             otherwise, ``False``
         timer (Timer):
     """
-    pkg_id = package_id(pkg)
-    tty.debug("Searching for binary cache of {0}".format(pkg_id))
-
-    timer.start("search")
-    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
-    timer.stop("search")
-
-    if not matches:
+    # Early exit if no mirrors are configured.
+    if not spack.mirror.MirrorCollection():
         return False
 
+    tty.debug("Searching for binary cache of {0}".format(package_id(pkg)))
+
+    with timer.measure("search"):
+        matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
+
     return _process_binary_cache_tarball(
-        pkg, pkg.spec, explicit, unsigned, mirrors_for_spec=matches, timer=timer
+        pkg, explicit, unsigned, mirrors_for_spec=matches, timer=timer
     )
 
 
@@ -453,11 +446,10 @@ def combine_phase_logs(phase_log_files, log_path):
         phase_log_files (list): a list or iterator of logs to combine
         log_path (str): the path to combine them to
     """
-
-    with open(log_path, "w") as log_file:
+    with open(log_path, "bw") as log_file:
         for phase_log_file in phase_log_files:
-            with open(phase_log_file, "r") as phase_log:
-                log_file.write(phase_log.read())
+            with open(phase_log_file, "br") as phase_log:
+                shutil.copyfileobj(phase_log, log_file)
 
 
 def dump_packages(spec, path):
@@ -793,7 +785,7 @@ class PackageInstaller(object):
                 associated dependents
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
-        for (comp_pkg, is_compiler) in packages:
+        for comp_pkg, is_compiler in packages:
             pkgid = package_id(comp_pkg)
             if pkgid not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
@@ -817,8 +809,7 @@ class PackageInstaller(object):
             key, task = tup
             if task.pkg_id == pkgid:
                 tty.debug(
-                    "Modifying task for {0} to treat it as a compiler".format(pkgid),
-                    level=2,
+                    "Modifying task for {0} to treat it as a compiler".format(pkgid), level=2
                 )
                 setattr(task, attr, value)
                 self.build_pq[i] = (key, task)
@@ -1216,7 +1207,6 @@ class PackageInstaller(object):
 
         install_package = request.install_args.get("install_package")
         if install_package and request.pkg_id not in self.build_tasks:
-
             # Be sure to clear any previous failure
             spack.store.db.clear_failure(request.spec, force=True)
 
@@ -1765,14 +1755,16 @@ class PackageInstaller(object):
                 raise
 
             except binary_distribution.NoChecksumException as exc:
-                if not task.cache_only:
-                    # Checking hash on downloaded binary failed.
-                    err = "Failed to install {0} from binary cache due to {1}:"
-                    err += " Requeueing to install from source."
-                    tty.error(err.format(pkg.name, str(exc)))
-                    task.use_cache = False
-                    self._requeue_task(task)
-                    continue
+                if task.cache_only:
+                    raise
+
+                # Checking hash on downloaded binary failed.
+                err = "Failed to install {0} from binary cache due to {1}:"
+                err += " Requeueing to install from source."
+                tty.error(err.format(pkg.name, str(exc)))
+                task.use_cache = False
+                self._requeue_task(task)
+                continue
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
@@ -1952,11 +1944,7 @@ class BuildProcessInstaller(object):
             # Run post install hooks before build stage is removed.
             spack.hooks.post_install(self.pkg.spec)
 
-        _print_timer(
-            pre=self.pre,
-            pkg_id=self.pkg_id,
-            timer=self.timer,
-        )
+        _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 
         # Send final status that install is successful

@@ -1,9 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 
 from spack.package import *
+
+is_windows = sys.platform == "win32"
 
 
 class Scons(PythonPackage):
@@ -12,7 +15,7 @@ class Scons(PythonPackage):
     homepage = "https://scons.org"
     pypi = "SCons/SCons-4.3.0.tar.gz"
 
-    tags = ["build-tools"]
+    tags = ["build-tools", "windows"]
 
     version("4.3.0", sha256="d47081587e3675cc168f1f54f0d74a69b328a2fc90ec4feb85f728677419b879")
     version("4.2.0", sha256="691893b63f38ad14295f5104661d55cb738ec6514421c6261323351c25432b0a")
@@ -56,4 +59,7 @@ class Scons(PythonPackage):
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
 
     def setup_dependent_package(self, module, dspec):
-        module.scons = Executable(self.spec.prefix.bin.scons)
+        if is_windows:
+            module.scons = Executable(self.spec.prefix.Scripts.scons)
+        else:
+            module.scons = Executable(self.spec.prefix.bin.scons)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,13 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from sys import platform as _platform
+from typing import Callable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, symlink
 
-from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = _platform == "win32"
@@ -83,6 +84,74 @@ __all__ = [
     "visit_directory_tree",
 ]
 
+if sys.version_info < (3, 7, 4):
+    # monkeypatch shutil.copystat to fix PermissionError when copying read-only
+    # files on Lustre when using Python < 3.7.4
+
+    def copystat(src, dst, follow_symlinks=True):
+        """Copy file metadata
+        Copy the permission bits, last access time, last modification time, and
+        flags from `src` to `dst`. On Linux, copystat() also copies the "extended
+        attributes" where possible. The file contents, owner, and group are
+        unaffected. `src` and `dst` are path names given as strings.
+        If the optional flag `follow_symlinks` is not set, symlinks aren't
+        followed if and only if both `src` and `dst` are symlinks.
+        """
+
+        def _nop(args, ns=None, follow_symlinks=None):
+            pass
+
+        # follow symlinks (aka don't not follow symlinks)
+        follow = follow_symlinks or not (os.path.islink(src) and os.path.islink(dst))
+        if follow:
+            # use the real function if it exists
+            def lookup(name):
+                return getattr(os, name, _nop)
+
+        else:
+            # use the real function only if it exists
+            # *and* it supports follow_symlinks
+            def lookup(name):
+                fn = getattr(os, name, _nop)
+                if sys.version_info >= (3, 3):
+                    if fn in os.supports_follow_symlinks:  # novermin
+                        return fn
+                return _nop
+
+        st = lookup("stat")(src, follow_symlinks=follow)
+        mode = stat.S_IMODE(st.st_mode)
+        lookup("utime")(dst, ns=(st.st_atime_ns, st.st_mtime_ns), follow_symlinks=follow)
+
+        # We must copy extended attributes before the file is (potentially)
+        # chmod()'ed read-only, otherwise setxattr() will error with -EACCES.
+        shutil._copyxattr(src, dst, follow_symlinks=follow)
+
+        try:
+            lookup("chmod")(dst, mode, follow_symlinks=follow)
+        except NotImplementedError:
+            # if we got a NotImplementedError, it's because
+            #   * follow_symlinks=False,
+            #   * lchown() is unavailable, and
+            #   * either
+            #       * fchownat() is unavailable or
+            #       * fchownat() doesn't implement AT_SYMLINK_NOFOLLOW.
+            #         (it returned ENOSUP.)
+            # therefore we're out of options--we simply cannot chown the
+            # symlink.  give up, suppress the error.
+            # (which is what shutil always did in this circumstance.)
+            pass
+        if hasattr(st, "st_flags"):
+            try:
+                lookup("chflags")(dst, st.st_flags, follow_symlinks=follow)
+            except OSError as why:
+                for err in "EOPNOTSUPP", "ENOTSUP":
+                    if hasattr(errno, err) and why.errno == getattr(errno, err):
+                        break
+                else:
+                    raise
+
+    shutil.copystat = copystat
+
 
 def getuid():
     if is_windows:
@@ -99,7 +168,9 @@ def getuid():
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     if is_windows:
-        if os.path.exists(dst):
+        # Windows path existence checks will sometimes fail on junctions/links/symlinks
+        # so check for that case
+        if os.path.exists(dst) or os.path.islink(dst):
             os.remove(dst)
     os.rename(src, dst)
 
@@ -114,13 +185,7 @@ def path_contains_subdirectory(path, root):
 @memoized
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
-    try:
-        file_cmd = which("file", required=True)
-    except CommandNotFoundError as e:
-        if is_windows:
-            raise CommandNotFoundError("`file` utility is not available on Windows")
-        else:
-            raise e
+    file_cmd = which("file", required=True)
     for arg in args:
         file_cmd.add_default_arg(arg)
     return file_cmd
@@ -131,7 +196,11 @@ def _get_mime_type():
     """Generate method to call `file` system command to aquire mime type
     for a specified path
     """
-    return file_command("-b", "-h", "--mime-type")
+    if is_windows:
+        # -h option (no-dereference) does not exist in Windows
+        return file_command("-b", "--mime-type")
+    else:
+        return file_command("-b", "-h", "--mime-type")
 
 
 @memoized
@@ -212,7 +281,16 @@ def same_path(path1, path2):
     return norm1 == norm2
 
 
-def filter_file(regex, repl, *filenames, **kwargs):
+def filter_file(
+    regex: str,
+    repl: Union[str, Callable[[Match], str]],
+    *filenames: str,
+    string: bool = False,
+    backup: bool = False,
+    ignore_absent: bool = False,
+    start_at: Optional[str] = None,
+    stop_at: Optional[str] = None,
+) -> None:
     r"""Like sed, but uses python regular expressions.
 
     Filters every line of each file through regex and replaces the file
@@ -224,12 +302,10 @@ def filter_file(regex, repl, *filenames, **kwargs):
     can contain ``\1``, ``\2``, etc. to represent back-substitution
     as sed would allow.
 
-    Parameters:
+    Args:
         regex (str): The regular expression to search for
         repl (str): The string to replace matches with
         *filenames: One or more files to search and replace
-
-    Keyword Arguments:
         string (bool): Treat regex as a plain string. Default it False
         backup (bool): Make backup file(s) suffixed with ``~``. Default is False
         ignore_absent (bool): Ignore any files that don't exist.
@@ -244,17 +320,11 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file is copied verbatim. Default is to filter until the end of the
             file.
     """
-    string = kwargs.get("string", False)
-    backup = kwargs.get("backup", False)
-    ignore_absent = kwargs.get("ignore_absent", False)
-    start_at = kwargs.get("start_at", None)
-    stop_at = kwargs.get("stop_at", None)
-
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
         unescaped = repl.replace(r"\\", "\\")
 
-        def replace_groups_with_groupid(m):
+        def replace_groups_with_groupid(m: Match) -> str:
             def groupid_to_group(x):
                 return m.group(int(x.group(1)))
 
@@ -266,7 +336,6 @@ def filter_file(regex, repl, *filenames, **kwargs):
         regex = re.escape(regex)
     filenames = path_to_os_path(*filenames)
     for filename in filenames:
-
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
         tty.debug(msg.format(filename, regex))
 
@@ -288,12 +357,14 @@ def filter_file(regex, repl, *filenames, **kwargs):
         shutil.copy(filename, tmp_filename)
 
         try:
-            extra_kwargs = {"errors": "surrogateescape"}
-
             # Open as a text file and filter until the end of the file is
-            # reached or we found a marker in the line if it was specified
-            with open(tmp_filename, mode="r", **extra_kwargs) as input_file:
-                with open(filename, mode="w", **extra_kwargs) as output_file:
+            # reached, or we found a marker in the line if it was specified
+            #
+            # To avoid translating line endings (\n to \r\n and vice-versa)
+            # we force os.open to ignore translations and use the line endings
+            # the file comes with
+            with open(tmp_filename, mode="r", errors="surrogateescape", newline="") as input_file:
+                with open(filename, mode="w", errors="surrogateescape", newline="") as output_file:
                     do_filtering = start_at is None
                     # Using iter and readline is a workaround needed not to
                     # disable input_file.tell(), which will happen if we call
@@ -316,10 +387,10 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # If we stopped filtering at some point, reopen the file in
             # binary mode and copy verbatim the remaining part
             if current_position and stop_at:
-                with open(tmp_filename, mode="rb") as input_file:
-                    input_file.seek(current_position)
-                    with open(filename, mode="ab") as output_file:
-                        output_file.writelines(input_file.readlines())
+                with open(tmp_filename, mode="rb") as input_binary_buffer:
+                    input_binary_buffer.seek(current_position)
+                    with open(filename, mode="ab") as output_binary_buffer:
+                        output_binary_buffer.writelines(input_binary_buffer.readlines())
 
         except BaseException:
             # clean up the original file on failure.
@@ -338,8 +409,26 @@ class FileFilter(object):
     def __init__(self, *filenames):
         self.filenames = filenames
 
-    def filter(self, regex, repl, **kwargs):
-        return filter_file(regex, repl, *self.filenames, **kwargs)
+    def filter(
+        self,
+        regex: str,
+        repl: Union[str, Callable[[Match], str]],
+        string: bool = False,
+        backup: bool = False,
+        ignore_absent: bool = False,
+        start_at: Optional[str] = None,
+        stop_at: Optional[str] = None,
+    ) -> None:
+        return filter_file(
+            regex,
+            repl,
+            *self.filenames,
+            string=string,
+            backup=backup,
+            ignore_absent=ignore_absent,
+            start_at=start_at,
+            stop_at=stop_at,
+        )
 
 
 def change_sed_delimiter(old_delim, new_delim, *filenames):
@@ -647,7 +736,13 @@ def resolve_link_target_relative_to_the_link(link):
 
 
 @system_path_filter
-def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
+def copy_tree(
+    src: str,
+    dest: str,
+    symlinks: bool = True,
+    ignore: Optional[Callable[[str], bool]] = None,
+    _permissions: bool = False,
+):
     """Recursively copy an entire directory tree rooted at *src*.
 
     If the destination directory *dest* does not already exist, it will
@@ -705,7 +800,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             abs_src,
             abs_dest,
             order="pre",
-            follow_symlinks=not symlinks,
+            follow_links=not symlinks,
             ignore=ignore,
             follow_nonexisting=True,
         ):
@@ -807,45 +902,32 @@ def chgrp_if_not_world_writable(path, group):
         chgrp(path, group)
 
 
-def mkdirp(*paths, **kwargs):
+def mkdirp(
+    *paths: str,
+    mode: Optional[int] = None,
+    group: Optional[Union[str, int]] = None,
+    default_perms: Optional[str] = None,
+):
     """Creates a directory, as well as parent directories if needed.
 
     Arguments:
-        paths (str): paths to create with mkdirp
-
-    Keyword Aguments:
-        mode (permission bits or None): optional permissions to set
-            on the created directory -- use OS default if not provided
-        group (group name or None): optional group for permissions of
-            final created directory -- use OS default if not provided. Only
-            used if world write permissions are not set
-        default_perms (str or None): one of 'parents' or 'args'. The default permissions
-            that are set for directories that are not themselves an argument
-            for mkdirp. 'parents' means intermediate directories get the
-            permissions of their direct parent directory, 'args' means
-            intermediate get the same permissions specified in the arguments to
+        paths: paths to create with mkdirp
+        mode: optional permissions to set on the created directory -- use OS default
+            if not provided
+        group: optional group for permissions of final created directory -- use OS
+            default if not provided. Only used if world write permissions are not set
+        default_perms: one of 'parents' or 'args'. The default permissions that are set for
+            directories that are not themselves an argument for mkdirp. 'parents' means
+            intermediate directories get the permissions of their direct parent directory,
+            'args' means intermediate get the same permissions specified in the arguments to
             mkdirp -- default value is 'args'
     """
-    mode = kwargs.get("mode", None)
-    group = kwargs.get("group", None)
-    default_perms = kwargs.get("default_perms", "args")
+    default_perms = default_perms or "args"
     paths = path_to_os_path(*paths)
     for path in paths:
         if not os.path.exists(path):
             try:
-                # detect missing intermediate folders
-                intermediate_folders = []
-                last_parent = ""
-
-                intermediate_path = os.path.dirname(path)
-
-                while intermediate_path:
-                    if os.path.exists(intermediate_path):
-                        last_parent = intermediate_path
-                        break
-
-                    intermediate_folders.append(intermediate_path)
-                    intermediate_path = os.path.dirname(intermediate_path)
+                last_parent, intermediate_folders = longest_existing_parent(path)
 
                 # create folders
                 os.makedirs(path)
@@ -879,13 +961,37 @@ def mkdirp(*paths, **kwargs):
                         os.chmod(intermediate_path, intermediate_mode)
                     if intermediate_group is not None:
                         chgrp_if_not_world_writable(intermediate_path, intermediate_group)
-                        os.chmod(intermediate_path, intermediate_mode)  # reset sticky bit after
+                        if intermediate_mode is not None:
+                            os.chmod(
+                                intermediate_path, intermediate_mode
+                            )  # reset sticky bit after
 
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
         elif not os.path.isdir(path):
             raise OSError(errno.EEXIST, "File already exists", path)
+
+
+def longest_existing_parent(path: str) -> Tuple[str, List[str]]:
+    """Return the last existing parent and a list of all intermediate directories
+    to be created for the directory passed as input.
+
+    Args:
+        path: directory to be created
+    """
+    # detect missing intermediate folders
+    intermediate_folders = []
+    last_parent = ""
+    intermediate_path = os.path.dirname(path)
+    while intermediate_path:
+        if os.path.lexists(intermediate_path):
+            last_parent = intermediate_path
+            break
+
+        intermediate_folders.append(intermediate_path)
+        intermediate_path = os.path.dirname(intermediate_path)
+    return last_parent, intermediate_folders
 
 
 @system_path_filter
@@ -901,8 +1007,8 @@ def force_remove(*paths):
 
 @contextmanager
 @system_path_filter
-def working_dir(dirname, **kwargs):
-    if kwargs.get("create", False):
+def working_dir(dirname: str, *, create: bool = False):
+    if create:
         mkdirp(dirname)
 
     orig_dir = os.getcwd()
@@ -1113,7 +1219,16 @@ def can_access(file_name):
 
 
 @system_path_filter
-def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
+def traverse_tree(
+    source_root: str,
+    dest_root: str,
+    rel_path: str = "",
+    *,
+    order: str = "pre",
+    ignore: Optional[Callable[[str], bool]] = None,
+    follow_nonexisting: bool = True,
+    follow_links: bool = False,
+):
     """Traverse two filesystem trees simultaneously.
 
     Walks the LinkTree directory in pre or post order.  Yields each
@@ -1145,16 +1260,11 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
     """
-    follow_nonexisting = kwargs.get("follow_nonexisting", True)
-    follow_links = kwargs.get("follow_link", False)
-
-    # Yield in pre or post order?
-    order = kwargs.get("order", "pre")
     if order not in ("pre", "post"):
         raise ValueError("Order must be 'pre' or 'post'.")
 
     # List of relative paths to ignore under the src root.
-    ignore = kwargs.get("ignore", None) or (lambda filename: False)
+    ignore = ignore or (lambda filename: False)
 
     # Don't descend into ignored directories
     if ignore(rel_path):
@@ -1177,11 +1287,18 @@ def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
         if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
-
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
+                tuples = traverse_tree(
+                    source_root,
+                    dest_root,
+                    rel_child,
+                    order=order,
+                    ignore=ignore,
+                    follow_nonexisting=follow_nonexisting,
+                    follow_links=follow_links,
+                )
                 for t in tuples:
                     yield t
 
@@ -1611,7 +1728,6 @@ def find(root, files, recursive=True):
 
 @system_path_filter
 def _find_recursive(root, search_files):
-
     # The variable here is **on purpose** a defaultdict. The idea is that
     # we want to poke the filesystem as little as possible, but still maintain
     # stability in the order of the answer. Thus we are recording each library
@@ -2278,10 +2394,17 @@ class WindowsSimulatedRPath(object):
         """
         self._addl_rpaths = self._addl_rpaths | set(paths)
 
-    def _link(self, path, dest):
+    def _link(self, path, dest_dir):
+        """Perform link step of simulated rpathing, installing
+        simlinks of file in path to the dest_dir
+        location. This method deliberately prevents
+        the case where a path points to a file inside the dest_dir.
+        This is because it is both meaningless from an rpath
+        perspective, and will cause an error when Developer
+        mode is not enabled"""
         file_name = os.path.basename(path)
-        dest_file = os.path.join(dest, file_name)
-        if os.path.exists(dest):
+        dest_file = os.path.join(dest_dir, file_name)
+        if os.path.exists(dest_dir) and not dest_file == path:
             try:
                 symlink(path, dest_file)
             # For py2 compatibility, we have to catch the specific Windows error code
@@ -2295,7 +2418,7 @@ class WindowsSimulatedRPath(object):
                         "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
                         if already_linked
                         else "library with name %s already exists at location %s."
-                        % (file_name, dest)
+                        % (file_name, dest_dir)
                     )
                     pass
                 else:
@@ -2561,15 +2684,42 @@ def keep_modification_time(*filenames):
 
 
 @contextmanager
-def temporary_dir(*args, **kwargs):
+def temporary_dir(
+    suffix: Optional[str] = None, prefix: Optional[str] = None, dir: Optional[str] = None
+):
     """Create a temporary directory and cd's into it. Delete the directory
     on exit.
 
     Takes the same arguments as tempfile.mkdtemp()
     """
-    tmp_dir = tempfile.mkdtemp(*args, **kwargs)
+    tmp_dir = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
     try:
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
         remove_directory_contents(tmp_dir)
+
+
+def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
+    """Create a small summary of the given file. Does not error
+    when file does not exist.
+
+    Args:
+        print_bytes (int): Number of bytes to print from start/end of file
+
+    Returns:
+        Tuple of size and byte string containing first n .. last n bytes.
+        Size is 0 if file cannot be read."""
+    try:
+        n = print_bytes
+        with open(path, "rb") as f:
+            size = os.fstat(f.fileno()).st_size
+            if size <= 2 * n:
+                short_contents = f.read(2 * n)
+            else:
+                short_contents = f.read(n)
+                f.seek(-n, 2)
+                short_contents += b"..." + f.read(n)
+        return size, short_contents
+    except OSError:
+        return 0, b""

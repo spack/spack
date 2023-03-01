@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ import spack.package_base
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
+from spack.parser import SpecSyntaxError
 from spack.spec import CompilerSpec, Spec
 
 install = SpackCommand("install")
@@ -50,7 +51,6 @@ def noop_install(monkeypatch):
 def test_install_package_and_dependency(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-
     log = "test"
     with tmpdir.as_cwd():
         install("--log-format=junit", "--log-file={0}".format(log), "libdwarf")
@@ -95,7 +95,6 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
 def test_install_package_already_installed(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-
     with tmpdir.as_cwd():
         install("libdwarf")
         install("--log-format=junit", "--log-file=test.xml", "libdwarf")
@@ -241,11 +240,7 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, inst
 
 
 def test_install_overwrite_not_installed(
-    mock_packages,
-    mock_archive,
-    mock_fetch,
-    config,
-    install_mockery,
+    mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec("libdwarf")
@@ -341,11 +336,7 @@ def test_install_overwrite_multiple(
 
 
 @pytest.mark.usefixtures(
-    "mock_packages",
-    "mock_archive",
-    "mock_fetch",
-    "config",
-    "install_mockery",
+    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
 )
 def test_install_conflicts(conflict_spec):
     # Make sure that spec with conflicts raises a SpackError
@@ -354,15 +345,11 @@ def test_install_conflicts(conflict_spec):
 
 
 @pytest.mark.usefixtures(
-    "mock_packages",
-    "mock_archive",
-    "mock_fetch",
-    "config",
-    "install_mockery",
+    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
 )
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
-    with pytest.raises(SpackError, match="Unexpected token"):
+    with pytest.raises(SpecSyntaxError, match="unexpected tokens"):
         install(invalid_spec)
 
 
@@ -377,7 +364,6 @@ def test_install_invalid_spec(invalid_spec):
     ],
 )
 def test_install_from_file(spec, concretize, error_code, tmpdir):
-
     if concretize:
         spec.concretize()
 
@@ -507,7 +493,6 @@ def test_junit_output_with_errors(
     ],
 )
 def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
-
     args = clispecs
 
     for spec in filespecs:
@@ -555,10 +540,7 @@ def test_cdash_report_concretization_error(
             assert "<UpdateReturnStatus>" in content
             # The message is different based on using the
             # new or the old concretizer
-            expected_messages = (
-                "Conflicts in concretized spec",
-                "conflicts with",
-            )
+            expected_messages = ("Conflicts in concretized spec", "conflicts with")
             assert any(x in content for x in expected_messages)
 
 
@@ -649,7 +631,6 @@ def test_cdash_install_from_spec_json(
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-
             spec_json_path = str(tmpdir.join("spec.json"))
 
             pkg_spec = Spec("a")
@@ -1186,3 +1167,16 @@ def test_padded_install_runtests_root(install_mockery_mutable_config, mock_fetch
     spack.config.set("config:install_tree:padded_length", 255)
     output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
     assert output.count("method not implemented") == 1
+
+
+@pytest.mark.regression("35337")
+def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
+    """Test that the temporary file used to write the XML for CDash is not the upload URL"""
+    parser = argparse.ArgumentParser()
+    spack.cmd.install.setup_parser(parser)
+    args = parser.parse_args(
+        ["--cdash-upload-url", "https://blahblah/submit.php?project=debugging", "a"]
+    )
+    _, specs = spack.cmd.install.specs_from_cli(args, {})
+    filename = spack.cmd.install.report_filename(args, specs)
+    assert filename != "https://blahblah/submit.php?project=debugging"

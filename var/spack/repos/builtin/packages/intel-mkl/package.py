@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class IntelMkl(IntelPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
@@ -138,6 +138,10 @@ class IntelMkl(IntelPackage):
     )
 
     depends_on("cpio", type="build")
+
+    conflicts("target=ppc64:", msg="intel-mkl is only available for x86_64")
+    conflicts("target=ppc64le:", msg="intel-mkl is only available for x86_64")
+    conflicts("target=aarch64:", msg="intel-mkl is only available for x86_64")
 
     variant("shared", default=True, description="Builds shared library")
     variant("ilp64", default=False, description="64 bit integers")

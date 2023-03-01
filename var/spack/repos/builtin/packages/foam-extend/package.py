@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,6 +55,7 @@ class FoamExtend(Package):
 
     homepage = "http://www.extend-project.de/"
 
+    version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
     version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
     version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git")
@@ -92,10 +93,7 @@ class FoamExtend(Package):
     assets = []  # type: List[str]
 
     # Some user config settings
-    config = {
-        "label-size": False,  # <- No int32/int64 support
-        "mplib": "USERMPI",  # USERMPI
-    }
+    config = {"label-size": False, "mplib": "USERMPI"}  # <- No int32/int64 support  # USERMPI
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None
@@ -251,9 +249,7 @@ class FoamExtend(Package):
         """
         # Content for etc/prefs.{csh,sh}
         self.etc_prefs = {
-            "000": {  # Sort first
-                "compilerInstall": "System",
-            },
+            "000": {"compilerInstall": "System"},  # Sort first
             "001": {},
             "cmake": {
                 "CMAKE_DIR": spec["cmake"].prefix,
@@ -263,18 +259,9 @@ class FoamExtend(Package):
                 "PYTHON_DIR": spec["python"].home,
                 "PYTHON_BIN_DIR": spec["python"].home.bin,
             },
-            "flex": {
-                "FLEX_SYSTEM": 1,
-                "FLEX_DIR": spec["flex"].prefix,
-            },
-            "bison": {
-                "BISON_SYSTEM": 1,
-                "BISON_DIR": spec["flex"].prefix,
-            },
-            "zlib": {
-                "ZLIB_SYSTEM": 1,
-                "ZLIB_DIR": spec["zlib"].prefix,
-            },
+            "flex": {"FLEX_SYSTEM": 1, "FLEX_DIR": spec["flex"].prefix},
+            "bison": {"BISON_SYSTEM": 1, "BISON_DIR": spec["flex"].prefix},
+            "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib"].prefix},
         }
         # Adjust configuration via prefs - sort second
         self.etc_prefs["001"].update(self.foam_arch.foam_dict())

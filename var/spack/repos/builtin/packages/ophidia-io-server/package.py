@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class OphidiaIoServer(AutotoolsPackage):
 
     homepage = "https://github.com/OphidiaBigData/ophidia-io-server"
     url = "https://github.com/OphidiaBigData/ophidia-io-server/archive/refs/tags/v1.7.2.tar.gz"
-    maintainers = ["eldoo", "SoniaScard"]
+    maintainers("eldoo", "SoniaScard")
     version("1.7.2", sha256="8b203c44e0e5497c00f1fdb2322f0b0a41f36900b62a33d95a4570ae1ccc2971")
 
     depends_on("autoconf", type="build")
