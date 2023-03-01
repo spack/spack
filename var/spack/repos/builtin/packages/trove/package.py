@@ -22,7 +22,7 @@ class Trove(MakefilePackage):
     depends_on("mpi")
     depends_on("intel-oneapi-mkl")
 
-    parallel=False
+    parallel=True
 
     def edit(self, spec, prefix):
 
@@ -31,12 +31,15 @@ class Trove(MakefilePackage):
         env['PREFIX'] = prefix
 
         env['FOR'] = self.fc
+        env['LAPACK'] = "-qmkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64"
         if self.compiler.name == 'intel':
             env['FFLAGS'] = self.compiler.openmp_flag +" -mavx2 -mfma -O3 -ip -Ofast"
-            env['LAPACK'] = "-qmkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64"
+            if 'openmpi' in spec:
+                env['LAPACK'] = "-qmkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64"
         elif self.compiler.name == 'gcc':
             env['FFLAGS'] = self.compiler.openmp_flag +" -ffree-line-length-none -march=native -O3 -fcray-pointer -g3"
-            env['LAPACK'] = "-lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core" # works with openmpi yet
+            if 'openmpi' in spec:
+                env['LAPACK'] = "-lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core"
         else:
             msg  = "The compiler you are building with, "
             msg += "'{0}', is not supported by sphng yet."
