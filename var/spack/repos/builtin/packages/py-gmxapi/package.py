@@ -8,7 +8,7 @@ import spack.build_systems.python
 from spack.package import *
 
 
-class PyGmxapi(spack.build_systems.python.PythonPackage):
+class PyGmxapi(PythonPackage):
     """Python bindings and ensemble workflow management for GROMACS.
 
     The GROMACS C++ API is affected by its package variants. You can
@@ -32,11 +32,11 @@ class PyGmxapi(spack.build_systems.python.PythonPackage):
     depends_on("py-pybind11@2.6:", type="build")
     depends_on("py-pytest", type="test")
 
-    conflicts("gromacs+mdrun_only", msg="gmxapi requires the full GROMACS library installation.")
-    conflicts("gromacs~shared", msg="gmxapi requires the full GROMACS library installation.")
-    conflicts("gromacs@:2022.0", when="@0.4:", msg="Use GROMACS 2022.1 or newer for gmxapi 0.4.")
+    conflicts("^gromacs+mdrun_only", msg="gmxapi requires the full GROMACS library installation.")
+    conflicts("^gromacs~shared", msg="gmxapi requires the full GROMACS library installation.")
+    conflicts("^gromacs@:2022.0", when="@0.4:", msg="Use GROMACS 2022.1 or newer for gmxapi 0.4.")
     conflicts(
-        "gromacs+mpi", when="@:0.3.2", msg="Use gmxapi 0.4 or higher for MPI-enabled GROMACS."
+        "^gromacs+mpi", when="@:0.3.2", msg="Use gmxapi 0.4 or higher for MPI-enabled GROMACS."
     )
 
 
