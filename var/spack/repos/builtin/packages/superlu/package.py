@@ -121,20 +121,8 @@ class Superlu(CMakePackage, Package):
 
         return config_args
 
-    def run_superlu_test(self, test_dir, exe, args):
-        if not self.run_test(
-            "make",
-            options=args,
-            purpose="test: compile {0} example".format(exe),
-            work_dir=test_dir,
-        ):
-            tty.warn("Skipping test: failed to compile example")
-            return
-
-        if not self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir):
-            tty.warn("Skipping test: failed to run example")
-
-    def test(self):
+    def test_example(self):
+        """build and run test example"""
         config_args = self._generate_make_hdr_for_test()
 
         # Write configuration options to make.inc file
@@ -144,18 +132,23 @@ class Superlu(CMakePackage, Package):
                 inc.write("{0}\n".format(option))
 
         args = []
+        test_exe = "superlu"
+        test_src = "{0}.c".format(test_exe)
+
         if self.version < Version("5.2.2"):
             args.append("HEADER=" + self.prefix.include)
-        args.append("superlu")
+        args.append(test_exe)
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
-        exe = "superlu"
+        with working_dir(test_dir):
+            if not os.path.isfile(test_src):
+                raise SkipTest("{0} is missing".format(test_src))
 
-        if not os.path.isfile(join_path(test_dir, "{0}.c".format(exe))):
-            tty.warn("Skipping superlu test:" "missing file {0}.c".format(exe))
-            return
+            make = which("make")
+            make(*args)
 
-        self.run_superlu_test(test_dir, exe, args)
+            superlu = which(test_exe)
+            superlu()
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
