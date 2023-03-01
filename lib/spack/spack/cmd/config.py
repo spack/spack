@@ -508,7 +508,9 @@ def config_require_upstream(args):
 
         # Require string. The conditional formatting for {2} is there to prevent
         # trailing whitespace when there are no non-default variants for a spec.
-        pkg["require"][0]["any_of"].append("@{0} %{1}{2}".format(version, compiler, "" if not variants else " " + variants))
+        pkg["require"][0]["any_of"].append(
+            "@{0} %{1}{2}".format(version, compiler, "" if not variants else " " + variants)
+        )
 
     # Clean up entries so the package listing is a simple
     #       require: "@{version} %{compiler} {variants}"
