@@ -400,10 +400,7 @@ def get_modules(module_type, spec, get_full_path, module_set_name="default", req
         else:
             return [module.use_name]
     elif spec.external_modules:
-        conf = spack.modules.module_config_types[module_type](
-                spec,
-                module_set_name
-            )
+        conf = spack.modules.module_config_types[module_type](spec, module_set_name)
         if conf.excluded:
             if required:
                 tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))

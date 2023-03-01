@@ -10,8 +10,8 @@ include TCL non-hierarchical modules, LUA hierarchical modules, and others.
 from __future__ import absolute_import
 
 from .common import disable_modules
-from .lmod import LmodModulefileWriter, LmodConfiguration
-from .tcl import TclModulefileWriter, TclConfiguration
+from .lmod import LmodConfiguration, LmodModulefileWriter
+from .tcl import TclConfiguration, TclModulefileWriter
 
 __all__ = ["TclModulefileWriter", "LmodModulefileWriter", "disable_modules"]
 
