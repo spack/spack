@@ -157,7 +157,7 @@ class RocmTensile(CMakePackage):
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver + "+openmp")
+        depends_on("rocm-openmp-extras@" + ver, when="@" + ver + "+openmp")
         depends_on("llvm-amdgpu@" + ver + "~openmp", when="@" + ver + "~openmp")
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
 
@@ -191,6 +191,7 @@ class RocmTensile(CMakePackage):
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch("0001-fix-compile-error.patch", when="@3.7.0:3.8.0")
     patch("0002-require-openmp-when-tensile-use-openmp-is-on.patch", when="@3.9.0:4.0.0")
+    patch("0003-require-openmp-extras-when-tensile-use-openmp.patch", when="@5.1.0:")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -211,16 +212,20 @@ class RocmTensile(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("amd_comgr_DIR", self.spec["comgr"].prefix),
+            self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix),
             self.define("Tensile_COMPILER", "hipcc"),
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
             self.define("Boost_USE_STATIC_LIBS", "OFF"),
-            self.define("TENSILE_USE_OPENMP", "OFF"),
             self.define("BUILD_WITH_TENSILE_HOST", "ON" if "@3.7.0:" in self.spec else "OFF"),
         ]
 
         if "@3.7.0:" in self.spec:
             args.append(self.define("Tensile_LIBRARY_FORMAT", "msgpack"))
+        if "@5.1.0:" in self.spec:
+            args.append(self.define("TENSILE_USE_OPENMP", "ON")),
+        else:
+            args.append(self.define("TENSILE_USE_OPENMP", "OFF")),
 
         args.append(self.define("Tensile_ARCHITECTURE", self.get_gpulist_for_tensile_support()))
 
