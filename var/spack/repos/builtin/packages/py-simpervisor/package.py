@@ -17,4 +17,4 @@ class PySimpervisor(PythonPackage):
 
     version("0.4", sha256="cec79e13cdbd6edb04a5c98c1ff8d4bd9713e706c069226909a1ef0e89d393c5")
 
-    depends_on("py-hatchling", type="build")
+    depends_on("py-setuptools", type="build")
