@@ -6,6 +6,6 @@ class Libzmq(BuiltinLibzmq):
 
     def configure_args(self):
         config_args = super().configure_args()
-        if '+libsodium' not in self.spec:
-            config_args.append('--without-libsodium')
+        if "+libsodium" not in self.spec:
+            config_args.append("--without-libsodium")
         return config_args

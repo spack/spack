@@ -13,20 +13,20 @@ class PyNeuroc(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/neuroc"
     git = "ssh://git@bbpgitlab.epfl.ch/nse/neuroc.git"
 
-    version('develop', branch='main')
-    version('0.2.8', tag='neuroc-v0.2.8')
+    version("develop", branch="main")
+    version("0.2.8", tag="neuroc-v0.2.8")
 
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on('py-attrs@19.1.0:', type=('build', 'run'))
-    depends_on('py-tqdm@4.23.4:', type=('build', 'run'))
-    depends_on('py-morph-tool@2.9.0:2.999', type=('build', 'run'))
-    depends_on('py-scikit-learn@0.21.3:', type=('build', 'run'))
-    depends_on('py-morphio@3.0:3.999', type=('build', 'run'))
-    depends_on('py-neurom@3:3.999', type=('build', 'run'))
-    depends_on('py-pandas@1.0.3:', type=('build', 'run'))
-    depends_on('py-click@6.7:', type=('build', 'run'))
-    depends_on('py-numpy@1.15.1:', type=('build', 'run'))
+    depends_on("py-attrs@19.1.0:", type=("build", "run"))
+    depends_on("py-tqdm@4.23.4:", type=("build", "run"))
+    depends_on("py-morph-tool@2.9.0:2.999", type=("build", "run"))
+    depends_on("py-scikit-learn@0.21.3:", type=("build", "run"))
+    depends_on("py-morphio@3.0:3.999", type=("build", "run"))
+    depends_on("py-neurom@3:3.999", type=("build", "run"))
+    depends_on("py-pandas@1.0.3:", type=("build", "run"))
+    depends_on("py-click@6.7:", type=("build", "run"))
+    depends_on("py-numpy@1.15.1:", type=("build", "run"))
     # plotly extra requirements
     # depends_on('py-dash', type=('build', 'run'))
     # depends_on('py-dash-html-components', type=('build', 'run'))

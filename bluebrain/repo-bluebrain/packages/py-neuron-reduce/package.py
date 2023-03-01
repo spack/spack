@@ -13,16 +13,16 @@ class PyNeuronReduce(PythonPackage):
     pypi = "neuron_reduce/neuron_reduce-0.0.6.tar.gz"
     git = "https://github.com/BlueBrain/neuron_reduce.git"
 
-    version('develop', branch='master')
-    version('0.0.9', tag='v0.0.9')
-    version('0.0.8', commit='3aada2ad3606723a6ebbaf39581153e38de24733')
-    version('0.0.7', commit='1bad597f2faa5ff6aa8c94b6f326f86a02e656d7')
-    version('0.0.6', sha256='e75ce138ae049f550d72ec86c5cae4afcada577a2805d9dc50cbe80eff1f2256')
+    version("develop", branch="master")
+    version("0.0.9", tag="v0.0.9")
+    version("0.0.8", commit="3aada2ad3606723a6ebbaf39581153e38de24733")
+    version("0.0.7", commit="1bad597f2faa5ff6aa8c94b6f326f86a02e656d7")
+    version("0.0.6", sha256="e75ce138ae049f550d72ec86c5cae4afcada577a2805d9dc50cbe80eff1f2256")
 
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-numpy@1.14:', type='run')
-    depends_on('neuron+python', type='run')
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-numpy@1.14:", type="run")
+    depends_on("neuron+python", type="run")
 
     def setup_run_environment(self, env):
-        env.unset('PMI_RANK')
-        env.set('NEURON_INIT_MPI', "0")
+        env.unset("PMI_RANK")
+        env.set("NEURON_INIT_MPI", "0")

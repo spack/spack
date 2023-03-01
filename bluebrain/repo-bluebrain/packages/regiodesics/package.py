@@ -7,14 +7,15 @@ from spack.package import *
 
 
 class Regiodesics(CMakePackage):
-    """Vector direction computation
-    """
+    """Vector direction computation"""
 
-    homepage = "https://bbpteam.epfl.ch/project/spaces/display/BBPNSE/Computing+neurons+direction+vectors"
+    homepage = (
+        "https://bbpteam.epfl.ch/project/spaces/display/BBPNSE/Computing+neurons+direction+vectors"
+    )
     git = "ssh://git@bbpgitlab.epfl.ch/nse/archive/regiodesics.git"
 
-    version('develop')
-    version('0.1.3', tag='0.1.3')
+    version("develop")
+    version("0.1.3", tag="0.1.3")
 
-    depends_on('boost+program_options+system@1.70.0:')
-    depends_on('openscenegraph')
+    depends_on("boost+program_options+system@1.70.0:")
+    depends_on("openscenegraph")

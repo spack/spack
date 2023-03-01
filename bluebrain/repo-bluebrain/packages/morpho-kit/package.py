@@ -14,38 +14,38 @@ class MorphoKit(CMakePackage):
 
     submodules = True
 
-    version('develop', branch='main')
-    version('0.3.4', tag='v0.3.4')
-    version('0.3.3', tag='0.3.3')
-    version('0.3.2', tag='v0.3.2')
-    version('0.3.1', tag='v0.3.1')
-    version('0.3.0', tag='v0.3.0')
-    version('0.2.0', tag='v0.2.0')
+    version("develop", branch="main")
+    version("0.3.4", tag="v0.3.4")
+    version("0.3.3", tag="0.3.3")
+    version("0.3.2", tag="v0.3.2")
+    version("0.3.1", tag="v0.3.1")
+    version("0.3.0", tag="v0.3.0")
+    version("0.2.0", tag="v0.2.0")
 
-    depends_on('cmake@3.2:', type='build')
-    depends_on('morphio@2.3.9:')
-    depends_on('cli11', when='@0.3.3:')      # for utilities
-    depends_on('libsonata', when='@0.3.3:')  # for utilities
-    depends_on('highfive@2.4.0:', when='@0.3.3:')  # for utilities
+    depends_on("cmake@3.2:", type="build")
+    depends_on("morphio@2.3.9:")
+    depends_on("cli11", when="@0.3.3:")  # for utilities
+    depends_on("libsonata", when="@0.3.3:")  # for utilities
+    depends_on("highfive@2.4.0:", when="@0.3.3:")  # for utilities
 
     # The HighFive update is needed for paged HDF5 features. Unfortunately, the
     # page buffer is artificially unsupported in pHDF5. Hence, we depend on a
     # particular, patched version of HDF5.
-    depends_on('highfive@2.6.2: +mpi+page_buffer_patch', when='@0.3.5:')
+    depends_on("highfive@2.6.2: +mpi+page_buffer_patch", when="@0.3.5:")
 
     # MPI is needed for the morphology merger.
-    depends_on('mpi', when='@0.3.5:')
+    depends_on("mpi", when="@0.3.5:")
 
-    depends_on('boost', when='@0.2.0')
+    depends_on("boost", when="@0.2.0")
 
-    patch('h5.patch', when='@0.3.2')
+    patch("h5.patch", when="@0.3.2")
 
     def cmake_args(self):
         args = [
-            '-DBUILD_BINDINGS:BOOL=OFF',
+            "-DBUILD_BINDINGS:BOOL=OFF",
         ]
 
-        if self.spec.satisfies('@0.3.5:'):
-            args.append('-DMORPHOKIT_HAS_PATCHED_HDF5:BOOL=ON')
+        if self.spec.satisfies("@0.3.5:"):
+            args.append("-DMORPHOKIT_HAS_PATCHED_HDF5:BOOL=ON")
 
         return args

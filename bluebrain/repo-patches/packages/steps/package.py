@@ -21,10 +21,16 @@ class Steps(CMakePackage):
     version("3.6.0", tag="3.6.0")
     version("3.5.0b", commit="b2be5fe")
 
-    variant("codechecks", default=False,
-            description="Perform additional code checks like "
-                        "code formatting or static analysis")
-    variant("native", default=False if sys.platform == 'darwin' else True, description="Generate non-portable arch-specific code")
+    variant(
+        "codechecks",
+        default=False,
+        description="Perform additional code checks like " "code formatting or static analysis",
+    )
+    variant(
+        "native",
+        default=False if sys.platform == "darwin" else True,
+        description="Generate non-portable arch-specific code",
+    )
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
     variant("distmesh", default=True, description="Add solvers based on distributed mesh")
     variant("petsc", default=True, description="Use PETSc library for parallel E-Field solver")
@@ -32,11 +38,18 @@ class Steps(CMakePackage):
     variant("coverage", default=False, description="Enable code coverage")
     variant("bundle", default=False, description="Use bundled libraries")
     variant("stochtests", default=True, description="Add stochastic tests to ctests")
-    variant("build_type", default="RelWithDebInfo", description="CMake build type",
-            values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel",
-                    "RelWithDebInfoAndAssert"))
-    variant("caliper", default=False, description="Build in caliper support (Instrumentor Interface)")
-    variant("likwid", default=False, description="Build in likwid support (Instrumentor Interface)")
+    variant(
+        "build_type",
+        default="RelWithDebInfo",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel", "RelWithDebInfoAndAssert"),
+    )
+    variant(
+        "caliper", default=False, description="Build in caliper support (Instrumentor Interface)"
+    )
+    variant(
+        "likwid", default=False, description="Build in likwid support (Instrumentor Interface)"
+    )
     variant("vesicle", default=True, when="@5:", description="Add vesicle model")
 
     # Build with `ninja` instead of `make`
@@ -74,19 +87,14 @@ class Steps(CMakePackage):
     depends_on("sundials@:2.99.99+int64", when="~bundle")
     depends_on("caliper", when="+caliper")
     depends_on("likwid", when="+likwid")
-    conflicts("+distmesh~mpi",
-              msg="steps+distmesh requires +mpi")
+    conflicts("+distmesh~mpi", msg="steps+distmesh requires +mpi")
 
-    patch('for_aarch64.patch', when='target=aarch64:')
+    patch("for_aarch64.patch", when="target=aarch64:")
 
     def patch(self):
         # easylogging is a terrible library that requires compilation by
         # its dependents: splice in disabling all errors
-        filter_file(
-            r'(-Wno-double-promotion)',
-            r'-Wno-error \1',
-            'src/steps/util/CMakeLists.txt'
-        )
+        filter_file(r"(-Wno-double-promotion)", r"-Wno-error \1", "src/steps/util/CMakeLists.txt")
         # unittest2 is unmaintained, shan't be used and does not build with modern Python
         filter_file("unittest2", "", "requirements.txt", ignore_absent=True)
 
@@ -95,15 +103,8 @@ class Steps(CMakePackage):
         spec = self.spec
 
         use_bundle = "ON" if "+bundle" in spec else "OFF"
-        bundles = [
-            "EASYLOGGINGPP",
-            "OMEGA_H",
-            "RANDOM123",
-            "SUNDIALS",
-            "SUPERLU_DIST"
-        ]
-        args.extend("-DUSE_BUNDLE_{0}:BOOL={1}".format(bundle, use_bundle)
-                    for bundle in bundles)
+        bundles = ["EASYLOGGINGPP", "OMEGA_H", "RANDOM123", "SUNDIALS", "SUPERLU_DIST"]
+        args.extend("-DUSE_BUNDLE_{0}:BOOL={1}".format(bundle, use_bundle) for bundle in bundles)
 
         if "+native" in spec:
             args.append("-DTARGET_NATIVE_ARCH:BOOL=True")
@@ -156,10 +157,12 @@ class Steps(CMakePackage):
         if "+likwid" in spec:
             args.append("-DSTEPS_USE_LIKWID_PROFILING=ON")
 
-        args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
-        args.append('-DPYTHON_EXECUTABLE='
-                    + spec['python'].prefix.bin.python
-                    + str(spec['python'].version.up_to(1)))
+        args.append("-DBLAS_LIBRARIES=" + spec["blas"].libs.joined(";"))
+        args.append(
+            "-DPYTHON_EXECUTABLE="
+            + spec["python"].prefix.bin.python
+            + str(spec["python"].version.up_to(1))
+        )
         return args
 
     @property
@@ -168,19 +171,18 @@ class Steps(CMakePackage):
         if "+coverage" in self.spec:
             if self.compiler.name != "gcc":
                 raise ValueError(
-                    "Package " + self.name +
-                    " build with coverage enabled requires GCC to build"
+                    "Package " + self.name + " build with coverage enabled requires GCC to build"
                 )
             targets = [
                 "CTEST_OUTPUT_ON_FAILURE=1",
                 "all",  # build
                 "coverage_init",  # initialize coverage counters
                 "test",  # run tests suite
-                "coverage"  # collect coverage counters and build reports
+                "coverage",  # collect coverage counters and build reports
             ]
         return targets
 
     def setup_run_environment(self, env):
         # This recipe exposes a Python package from a C++ CMake project.
         # This hook is required to reproduce what Spack PythonPackage does.
-        env.prepend_path('PYTHONPATH', self.prefix)
+        env.prepend_path("PYTHONPATH", self.prefix)

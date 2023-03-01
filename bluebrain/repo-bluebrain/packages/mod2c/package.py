@@ -13,18 +13,18 @@ class Mod2c(CMakePackage):
     documentation at Yale University."""
 
     homepage = "https://github.com/BlueBrain/mod2c"
-    url      = "https://github.com/BlueBrain/mod2c.git"
+    url = "https://github.com/BlueBrain/mod2c.git"
 
-    version('develop', git=url, preferred=True)
+    version("develop", git=url, preferred=True)
 
-    depends_on('cmake@2.8.12:', type='build')
+    depends_on("cmake@2.8.12:", type="build")
 
     def cmake_args(self):
         spec = self.spec
         options = []
-        if 'bgq' in spec.architecture and '%xl' in spec:
-            options.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+        if "bgq" in spec.architecture and "%xl" in spec:
+            options.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
         return options
 
     def setup_run_environment(self, env):
-        env.set('MODLUNIT', join_path(self.prefix, 'share/nrnunits.lib'))
+        env.set("MODLUNIT", join_path(self.prefix, "share/nrnunits.lib"))

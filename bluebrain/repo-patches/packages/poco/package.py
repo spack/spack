@@ -35,5 +35,5 @@ class Poco(CMakePackage):
             "-DENABLE_ZIP=OFF",
             "-DENABLE_PAGECOMPILER=OFF",
             "-DENABLE_PAGECOMPILER_FILE2PAGE=OFF",
-            "-DBUILD_SHARED_LIBS=ON"
+            "-DBUILD_SHARED_LIBS=ON",
         ]

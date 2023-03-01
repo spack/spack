@@ -7,16 +7,16 @@ class Spark(BuiltinSpark):
 
     url = "https://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-3.2.0.tgz"
 
-    version('3.3.0', sha256='306b550f42ce1b06772d6084c545ef8448414f2bf451e0b1175405488f2a322f')
-    version('3.2.1', sha256='224e058cb0c6fb68b39896427a3ccd11ae2246e9bf465b5e29e4fb192d39a59c')
-    version('3.1.3', sha256='2411de04bec186b8651b27a5f16e4b511103c3c1e3f20fbb98b1f8804e61b77f')
+    version("3.3.0", sha256="306b550f42ce1b06772d6084c545ef8448414f2bf451e0b1175405488f2a322f")
+    version("3.2.1", sha256="224e058cb0c6fb68b39896427a3ccd11ae2246e9bf465b5e29e4fb192d39a59c")
+    version("3.1.3", sha256="2411de04bec186b8651b27a5f16e4b511103c3c1e3f20fbb98b1f8804e61b77f")
 
-    depends_on('hadoop@3.3:', when='@3.2:+hadoop', type=('build', 'run'))
+    depends_on("hadoop@3.3:", when="@3.2:+hadoop", type=("build", "run"))
 
     def url_for_version(self, version):
-        hadoop_version = 'hadoop3.2'
-        if version >= Version('3.3.0'):
-            hadoop_version = 'hadoop3'
+        hadoop_version = "hadoop3.2"
+        if version >= Version("3.3.0"):
+            hadoop_version = "hadoop3"
         url = "http://archive.apache.org/dist/spark/spark-{0}/spark-{0}-bin-{1}.tgz"
         return url.format(version, hadoop_version)
 

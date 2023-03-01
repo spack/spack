@@ -6,8 +6,7 @@ from spack.package import *
 
 
 class PyParseType(PythonPackage):
-    """parse_type extends the parse module (opposite of string.format()).
-    """
+    """parse_type extends the parse module (opposite of string.format())."""
 
     homepage = "https://github.com/jenisys/parse_type"
     pypi = "parse-type/parse_type-0.5.2.tar.gz"

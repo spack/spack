@@ -34,23 +34,29 @@ class Ospray(CMakePackage):
     conflicts("^gcc")
 
     def cmake_args(self):
-        args = [
-            "-DOSPRAY_ENABLE_TUTORIALS=OFF",
-            "-DOSPRAY_MODULE_MPI=ON"
-        ]
-        if self.spec.satisfies('@:1.8.5'):
-            args.append("-DOSPRAY_ENABLE_APPS:BOOL={0}".format(
-                        "ON" if "+apps" in self.spec else "OFF"))
-        elif self.spec.satisfies('@2.9.0:'):
+        args = ["-DOSPRAY_ENABLE_TUTORIALS=OFF", "-DOSPRAY_MODULE_MPI=ON"]
+        if self.spec.satisfies("@:1.8.5"):
+            args.append(
+                "-DOSPRAY_ENABLE_APPS:BOOL={0}".format("ON" if "+apps" in self.spec else "OFF")
+            )
+        elif self.spec.satisfies("@2.9.0:"):
             args.append("-DOSPRAY_MODULE_DENOISER=OFF")
-            args.append("-DOSPRAY_ENABLE_APPS_BENCHMARK={0}".format(
-                        "ON" if "+apps" in self.spec else "OFF"))
-            args.append("-DOSPRAY_ENABLE_APPS_EXAMPLES={0}".format(
-                        "ON" if "+apps" in self.spec else "OFF"))
-            args.append("-DOSPRAY_ENABLE_APPS_TESTING={0}".format(
-                        "ON" if "+apps" in self.spec else "OFF"))
-            args.append("-DOSPRAY_ENABLE_APPS_TUTORIALS={0}".format(
-                        "ON" if "+apps" in self.spec else "OFF"))
+            args.append(
+                "-DOSPRAY_ENABLE_APPS_BENCHMARK={0}".format(
+                    "ON" if "+apps" in self.spec else "OFF"
+                )
+            )
+            args.append(
+                "-DOSPRAY_ENABLE_APPS_EXAMPLES={0}".format("ON" if "+apps" in self.spec else "OFF")
+            )
+            args.append(
+                "-DOSPRAY_ENABLE_APPS_TESTING={0}".format("ON" if "+apps" in self.spec else "OFF")
+            )
+            args.append(
+                "-DOSPRAY_ENABLE_APPS_TUTORIALS={0}".format(
+                    "ON" if "+apps" in self.spec else "OFF"
+                )
+            )
             args.append("-DOSPRAY_APPS_ENABLE_GLM=OFF")
 
         return args

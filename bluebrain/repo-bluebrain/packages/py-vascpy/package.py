@@ -8,7 +8,7 @@ from spack.package import *
 
 class PyVascpy(PythonPackage):
     """Python library for reading, writing, and manipulating large-scale vasculature
-    datasets """
+    datasets"""
 
     homepage = "https://github.com/BlueBrain/vascpy"
     git = "https://github.com/BlueBrain/vascpy.git"

@@ -11,15 +11,15 @@ class PyPythonLibsbml(PythonPackage):
     Markup Language (SBML)."""
 
     homepage = "https://sbml.org/"
-    url      = "https://github.com/sbmlteam/python-libsbml"
-    git      = "https://github.com/sbmlteam/python-libsbml.git"
+    url = "https://github.com/sbmlteam/python-libsbml"
+    git = "https://github.com/sbmlteam/python-libsbml.git"
 
-    version('5.19.5', tag='v5.19.5', submodules=True)
+    version("5.19.5", tag="v5.19.5", submodules=True)
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
 
-    depends_on('swig@2:', type='build')
-    depends_on('cmake', type='build')
-    depends_on('zlib')
-    depends_on('bzip2')
-    depends_on('libxml2')
+    depends_on("swig@2:", type="build")
+    depends_on("cmake", type="build")
+    depends_on("zlib")
+    depends_on("bzip2")
+    depends_on("libxml2")

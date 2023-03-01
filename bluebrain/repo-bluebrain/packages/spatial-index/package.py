@@ -14,18 +14,18 @@ class SpatialIndex(PythonPackage):
 
     submodules = True
 
-    version('develop', branch='main')
-    version('1.2.1', tag="1.2.1")
-    version('1.2.0', tag="1.2.0")
-    version('1.1.0', tag="1.1.0")
-    version('1.0.0', tag="1.0.0")
-    version('0.9.0', tag="0.9.0")
-    version('0.8.3', tag="0.8.3")
-    version('0.8.2', tag="0.8.2")
-    version('0.8.1', tag="0.8.1")
-    version('0.8.0', tag="0.8.0")
-    version('0.7.0', tag="0.7.0")
-    version('0.6.0', tag="0.6.0")
+    version("develop", branch="main")
+    version("1.2.1", tag="1.2.1")
+    version("1.2.0", tag="1.2.0")
+    version("1.1.0", tag="1.1.0")
+    version("1.0.0", tag="1.0.0")
+    version("0.9.0", tag="0.9.0")
+    version("0.8.3", tag="0.8.3")
+    version("0.8.2", tag="0.8.2")
+    version("0.8.1", tag="0.8.1")
+    version("0.8.0", tag="0.8.0")
+    version("0.7.0", tag="0.7.0")
+    version("0.6.0", tag="0.6.0")
 
     depends_on("py-setuptools")
     depends_on("cmake@3.2:", type="build")
@@ -47,6 +47,6 @@ class SpatialIndex(PythonPackage):
     depends_on("mpi", when="@0.5.2:")
     depends_on("py-mpi4py", type=("build", "run"))
 
-    @run_after('install')
+    @run_after("install")
     def install_headers(self):
-        install_tree('include', self.prefix.include)
+        install_tree("include", self.prefix.include)

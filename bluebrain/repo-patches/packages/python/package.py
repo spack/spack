@@ -7,6 +7,6 @@ class Python(BuiltinPython):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         super().setup_dependent_build_environment(env, dependent_spec)
-        if self.spec.satisfies('%intel'):
-            env.set('LDSHARED', '%s -shared' % spack_cc)
-            env.set('LDCXXSHARED', '%s -shared' % spack_cxx)
+        if self.spec.satisfies("%intel"):
+            env.set("LDSHARED", "%s -shared" % spack_cc)
+            env.set("LDCXXSHARED", "%s -shared" % spack_cxx)

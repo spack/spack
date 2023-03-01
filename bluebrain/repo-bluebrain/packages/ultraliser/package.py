@@ -7,15 +7,15 @@ from spack.package import *
 
 
 class Ultraliser(CMakePackage):
-    """Mesh and volume reconstruction of neuroscientific models
-    """
+    """Mesh and volume reconstruction of neuroscientific models"""
+
     homepage = "https://github.com/BlueBrain/Ultraliser"
     git = "https://github.com/BlueBrain/Ultraliser.git"
 
-    version('develop', branch="master")
-    version('0.4.0', tag='v0.4.0')
-    version('0.3.0', tag='v0.3.0')
+    version("develop", branch="master")
+    version("0.4.0", tag="v0.4.0")
+    version("0.3.0", tag="v0.3.0")
 
-    depends_on('libtiff')
-    depends_on('ilmbase')
-    depends_on('hdf5+hl+cxx')
+    depends_on("libtiff")
+    depends_on("ilmbase")
+    depends_on("hdf5+hl+cxx")

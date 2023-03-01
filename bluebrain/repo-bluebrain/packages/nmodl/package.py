@@ -23,9 +23,7 @@ class Nmodl(CMakePackage):
     variant("legacy-unit", default=True, description="Enable legacy units")
     variant("python", default=False, description="Enable python bindings")
     variant("llvm", default=False, description="Enable llvm codegen")
-    variant(
-        "llvm_cuda", default=False, description="Enable llvm codegen with CUDA backend"
-    )
+    variant("llvm_cuda", default=False, description="Enable llvm codegen with CUDA backend")
 
     # Build with `ninja` instead of `make`
     generator = "Ninja"

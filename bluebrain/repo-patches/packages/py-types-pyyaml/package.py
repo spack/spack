@@ -12,6 +12,6 @@ class PyTypesPyyaml(PythonPackage):
     homepage = "https://github.com/python/typeshed"
     pypi = "types-pyyaml/types-PyYAML-5.4.6.tar.gz"
 
-    version('5.4.6', sha256='745dcb4b1522423026bcc83abb9925fba747f1e8602d902f71a4058f9e7fb662')
+    version("5.4.6", sha256="745dcb4b1522423026bcc83abb9925fba747f1e8602d902f71a4058f9e7fb662")
 
-    depends_on('py-setuptools', type=('build'))
+    depends_on("py-setuptools", type=("build"))
