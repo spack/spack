@@ -618,9 +618,10 @@ class BaseFileLayout(object):
 
     @property
     def use_name(self):
-        """Returns a list of the 'use' name of the module i.e. the names you
-        have to type to console to use it. This implementation fits the needs of
-        most non-hierarchical layouts."""
+        """Returns the 'use' name of the module i.e. the name you have to type
+        to console to use it. This implementation fits the needs of most
+        non-hierarchical layouts.
+        """
         projection = proj.get_projection(self.conf.projections, self.spec)
         if not projection:
             projection = self.conf.default_projections["all"]
