@@ -5,6 +5,7 @@
 
 import os
 
+from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
 
@@ -345,8 +346,14 @@ class Esmf(MakefilePackage):
             env.set("ESMF_SHARED_LIB_BUILD", "OFF")
 
     @run_after("install")
-    def install_findesmf(self):
+    def post_install(self):
         install_tree("cmake", self.prefix.cmake)
+        # Several applications using ESMF are affected by CMake capitalization
+        # issue. The following fix allows all apps to use as-is.
+        for prefix in [dso_suffix, stat_suffix]:
+            library_path = os.path.join(self.prefix.lib, "libesmf.%s" % prefix)
+            if os.path.exists(library_path):
+                os.symlink(library_path, os.path.join(self.prefix.lib, "libESMF.%s" % prefix))
 
     def check(self):
         make("check", parallel=False)
