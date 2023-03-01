@@ -122,7 +122,6 @@ class Hip(CMakePackage):
     depends_on("cmake@3.16.8:", type="build", when="@4.5.0:")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
-    depends_on("cmake", type="run")
 
     with when("+rocm"):
         depends_on("gl@4.5:")
@@ -612,46 +611,27 @@ class Hip(CMakePackage):
                 self.spec["hsa-rocr-dev"].prefix,
             ]
         )
-        cc_options = [
-            "-DCMAKE_PREFIX_PATH=" + prefixes,
-            ".",
-        ]
-        # Get top level directories of samples
-        top_subdirs = sorted(
-            [
-                os.path.join(test_dir, o)
-                for o in os.listdir(test_dir)
-                if os.path.isdir(os.path.join(test_dir, o))
-            ]
-        )
+        cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
         failed_tests = []
-        for top_subdir in top_subdirs:
-            # Get the directories of each test
-            bottom_subdirs = sorted(
-                [
-                    os.path.join(top_subdir, o)
-                    for o in os.listdir(top_subdir)
-                    if os.path.isdir(os.path.join(top_subdir, o))
-                ]
-            )
-            for test_dir in bottom_subdirs:
-                with working_dir(test_dir, create=True):
-                    test_name = test_dir.rsplit("/", 1)[1]
+        for root, dirs, files in os.walk(test_dir):
+            dirs.sort()
+            if "CMakeLists.txt" in files or "Makefile" in files:
+                with working_dir(root, create=True):
+                    head, test_name = os.path.split(root)
                     try:
                         print("{:=^80}".format("Configuring test for " + test_name))
-                        if os.path.exists(test_dir + "/CMakeLists.txt"):
+                        if "CMakeLists.txt" in files:
                             self.run_test(cmake_bin, cc_options)
-                        elif os.path.exists(test_dir + "/Makefile"):
-                            print("CMakeLists.txt doesn't exist for this test, running Makefile")
                         else:
-                            print("No CMakeLists.txt or Makefile found, skipping test")
-                            continue
+                            print("CMakeLists.txt doesn't exist for this test, running Makefile")
                         print("Building test " + test_name)
                         make()
-                        exe = os.popen("find . -maxdepth 1 -type f -executable").read()
-                        exe = exe[2:-1]
-                        print("Executing test " + test_name)
-                        self.run_test(exe)
+                        # itterate through the files in dir to find the newly built binary
+                        for file in os.listdir("."):
+                            if (file not in files and os.path.isfile(file) and
+                                    os.access(file, os.X_OK)):
+                                print("Executing test binary: " + file)
+                                self.run_test(file)
                         make("clean")
                     except ProcessError:
                         print("Test Failed\n")
