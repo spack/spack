@@ -11,26 +11,26 @@ class Qulacs(CMakePackage):
 
     homepage = "https://github.com/qulacs/qulacs"
     url = "https://github.com/qulacs/qulacs/archive/refs/tags/v0.5.5.tar.gz"
-    maintainers = ['shigetoshisota','otsukay']
+    maintainers = ["shigetoshisota","otsukay"]
 
-    version('0.5.5', sha256='3a5dbb4a97528b5a33416f6f786e8793292c90bc99869379e45dbdde06e22b98')
+    version("0.5.5", sha256="3a5dbb4a97528b5a33416f6f786e8793292c90bc99869379e45dbdde06e22b98")
 
-    depends_on('boost@1.71.0:', type="build")
-    depends_on('python@3.7.0:', type=("build", "run"))
-    depends_on('cmake@3.0:', type="build")
-    depends_on('eigen@3.3.7', type=("build", "link", "run"))
-    depends_on('cereal@1.3.0', type="build")
+    depends_on("boost@1.71.0:", type="build")
+    depends_on("python@3.7.0:", type=("build", "run"))
+    depends_on("cmake@3.0:", type="build")
+    depends_on("eigen@3.3.7", type=("build", "link", "run"))
+    depends_on("cereal@1.3.0", type="build")
 
-    patch('v0.5.5.patch')
-    patch('v0.5.5-fj.patch', when='%fj')
-    patch('v0.5.5-gcc.patch', when='%gcc')
+    patch("v0.5.5.patch")
+    patch("v0.5.5-fj.patch", when="%fj")
+    patch("v0.5.5-gcc.patch", when="%gcc")
 
     def cmake(self, spec, prefix):
-        bash = which('sh')
+        bash = which("sh")
         if spec.satisfies("%fj"):
-           bash('./script/build_fcc.sh')
+           bash("./script/build_fcc.sh")
         else:
-           bash('./script/build_gcc.sh')
+           bash("./script/build_gcc.sh")
 
     def build(self, spec, prefix):
         return
@@ -48,8 +48,8 @@ class Qulacs(CMakePackage):
         mkdirp(prefix.include.csim)
         mkdirp(prefix.include.gpusim)
         mkdirp(prefix.include.vqcsim)
-        install('lib/*', prefix.lib)
-        install('include/cppsim/*', prefix.include.cppsim)
-        install('include/csim/*', prefix.include.csim)
-        install('include/gpusim/*', prefix.include.gpusim)
-        install('include/vqcsim/*', prefix.include.vqcsim)
+        install("lib/*", prefix.lib)
+        install("include/cppsim/*", prefix.include.cppsim)
+        install("include/csim/*", prefix.include.csim)
+        install("include/gpusim/*", prefix.include.gpusim)
+        install("include/vqcsim/*", prefix.include.vqcsim)
