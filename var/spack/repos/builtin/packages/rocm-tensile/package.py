@@ -157,11 +157,10 @@ class RocmTensile(CMakePackage):
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver + "~openmp", when="@" + ver + "~openmp")
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
 
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
-        depends_on("rocm-openmp-extras@" + ver, when="@" + ver + "+openmp")
+        depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
 
     for ver in ["3.5.0", "3.7.0", "3.8.0", "3.9.0"]:
         depends_on("rocm-smi@" + ver, type="build", when="@" + ver)
@@ -214,7 +213,6 @@ class RocmTensile(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("amd_comgr_DIR", self.spec["comgr"].prefix),
-            self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix),
             self.define("Tensile_COMPILER", "hipcc"),
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
@@ -226,6 +224,9 @@ class RocmTensile(CMakePackage):
             args.append(self.define("Tensile_LIBRARY_FORMAT", "msgpack"))
         if "@5.1.0:" in self.spec:
             args.append(self.define("TENSILE_USE_OPENMP", "ON")),
+            args.append(
+                self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
+            ),
         else:
             args.append(self.define("TENSILE_USE_OPENMP", "OFF")),
 
