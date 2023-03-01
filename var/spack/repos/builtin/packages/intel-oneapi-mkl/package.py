@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from os.path import dirname, isdir
 
 from spack.package import *
 
@@ -153,7 +154,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if "+cluster" in self.spec:
             libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
 
-        return find_libraries(libs, self.component_prefix.lib.intel64, shared=shared)
+        lib_path = self.component_prefix.lib.intel64
+        lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
+
+        return find_libraries(libs, lib_path, shared=shared)
 
     def _xlp64_lib(self, lib):
         return lib + ("_ilp64" if "+ilp64" in self.spec else "_lp64")
