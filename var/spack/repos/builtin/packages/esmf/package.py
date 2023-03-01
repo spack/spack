@@ -5,6 +5,7 @@
 
 import os
 
+from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
 
