@@ -322,31 +322,28 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def test(self):
-        """Perform smoke test on installed HYPRE package."""
+    def test_bigint(self):
+        """build and run bigint tests"""
         if "+mpi" not in self.spec:
-            print("Skipping: HYPRE must be installed with +mpi to run tests")
-            return
+            raise SkipTest("HYPRE must be installed with +mpi")
 
         # Build copied and cached test examples
-        self.run_test(
-            "make",
-            ["HYPRE_DIR={0}".format(self.prefix), "bigint"],
-            purpose="test: building selected examples",
-            work_dir=self._cached_tests_work_dir,
-        )
+        make = which("make")
+        make("HYPRE_DIR={0}".format(self.prefix), "bigint")
 
         # Run the examples built above
-        for exe in ["./ex5big", "./ex15big"]:
-            self.run_test(
-                exe,
-                [],
-                [],
-                installed=False,
-                purpose="test: ensuring {0} runs".format(exe),
-                skip_missing=True,
+        for _bin in ["ex5big", "ex15big"]:
+            with test_part(
+                self,
+                "test_bigint_{0}".format(_bin),
+                purpose="ensuring {0} runs".format(_bin),
                 work_dir=self._cached_tests_work_dir,
-            )
+            ):
+                if not os.path.isfile(_bin):
+                    raise SkipTest("{0} is missing".format(_bin))
+
+                exe = which(_bin)
+                exe()
 
     @property
     def headers(self):
