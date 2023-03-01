@@ -277,7 +277,7 @@ class TestLmod(object):
 
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections["mpileaks"])
-        assert projection in writer.layout.use_names[0]
+        assert projection in writer.layout.use_name
 
     def test_projections_all(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
@@ -292,7 +292,7 @@ class TestLmod(object):
 
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections["all"])
-        assert projection in writer.layout.use_names[0]
+        assert projection in writer.layout.use_name
 
     def test_modules_relative_to_view(
         self, tmpdir, modulefile_content, module_configuration, install_mockery, mock_fetch
