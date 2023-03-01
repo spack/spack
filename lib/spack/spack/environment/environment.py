@@ -39,6 +39,7 @@ import spack.store
 import spack.subprocess_context
 import spack.traverse
 import spack.user_environment as uenv
+import spack.util.atomic_update
 import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
@@ -469,6 +470,9 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
+        if spack.util.atomic_update.use_renameat2():
+            return self.root
+
         if not os.path.islink(self.root):
             return None
 
@@ -486,6 +490,9 @@ class ViewDescriptor(object):
         return os.path.join(root_dir, "._%s" % root_name, content_hash)
 
     def content_hash(self, specs):
+        print("CONTENT_HASH")
+        print("    ", specs)
+        print("    ", self.to_dict())
         d = syaml.syaml_dict(
             [
                 ("descriptor", self.to_dict()),
@@ -493,6 +500,7 @@ class ViewDescriptor(object):
             ]
         )
         contents = sjson.dump(d)
+        print("    ", spack.util.hash.b32_hash(contents))
         return spack.util.hash.b32_hash(contents)
 
     def get_projection_for_spec(self, spec):
@@ -599,6 +607,10 @@ class ViewDescriptor(object):
             tty.debug("View at %s does not need regeneration." % self.root)
             return
 
+        if spack.util.atomic_update.use_renameat2():
+            if os.path.isdir(new_root):
+                shutil.rmtree(new_root)
+
         _error_on_nonempty_view_dir(new_root)
 
         # construct view at new_root
@@ -607,26 +619,15 @@ class ViewDescriptor(object):
 
         view = self.view(new=new_root)
 
-        root_dirname = os.path.dirname(self.root)
-        tmp_symlink_name = os.path.join(root_dirname, "._view_link")
-
         # Create a new view
         try:
             fs.mkdirp(new_root)
             view.add_specs(*specs, with_dependencies=False)
-
-            # create symlink from tmp_symlink_name to new_root
-            if os.path.exists(tmp_symlink_name):
-                os.unlink(tmp_symlink_name)
-            symlink(new_root, tmp_symlink_name)
-
-            # mv symlink atomically over root symlink to old_root
-            fs.rename(tmp_symlink_name, self.root)
+            spack.util.atomic_update.atomic_update(new_root, self.root)
         except Exception as e:
             # Clean up new view and temporary symlink on any failure.
             try:
                 shutil.rmtree(new_root, ignore_errors=True)
-                os.unlink(tmp_symlink_name)
             except (IOError, OSError):
                 pass
 

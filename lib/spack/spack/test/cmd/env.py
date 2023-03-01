@@ -52,6 +52,16 @@ find = SpackCommand("find")
 
 sep = os.sep
 
+if spack.util.atomic_update.use_renameat2():
+    use_renameat2 = [True, False]
+else:
+    use_renameat2 = [False]
+
+@pytest.fixture(params=use_renameat2)
+def atomic_update_implementations(request, monkeypatch):
+    monkeypatch.setattr(spack.util.atomic_update, "use_renameat2", lambda: request.param)
+    yield
+
 
 def check_mpileaks_and_deps_in_view(viewdir):
     """Check that the expected install directories exist."""
@@ -597,7 +607,9 @@ env:
 
 
 @pytest.mark.usefixtures("config")
-def test_env_view_external_prefix(tmpdir_factory, mutable_database, mock_packages):
+def test_env_view_external_prefix(
+    tmpdir_factory, mutable_database, mock_packages, atomic_update_implementations
+):
     fake_prefix = tmpdir_factory.mktemp("a-prefix")
     fake_bin = fake_prefix.join("bin")
     fake_bin.ensure(dir=True)
@@ -1178,7 +1190,9 @@ def test_store_different_build_deps(tmpdir):
         assert x_read["y"].dag_hash() != y_read.dag_hash()
 
 
-def test_env_updates_view_install(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_install(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
@@ -1188,7 +1202,9 @@ def test_env_updates_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+def test_env_view_fails(
+    tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     # We currently ignore file-file conflicts for the prefix merge,
     # so in principle there will be no errors in this test. But
     # the .spack metadata dir is handled separately and is more strict.
@@ -1205,7 +1221,9 @@ def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_m
             install("--fake")
 
 
-def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+def test_env_view_fails_dir_file(
+    tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     # This environment view fails to be created because a file
     # and a dir are in the same path. Test that it mentions the problematic path.
     view_dir = tmpdir.join("view")
@@ -1220,7 +1238,7 @@ def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, 
 
 
 def test_env_view_succeeds_symlinked_dir_file(
-    tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery
+    tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
 ):
     # A symlinked dir and an ordinary dir merge happily
     view_dir = tmpdir.join("view")
@@ -1234,7 +1252,9 @@ def test_env_view_succeeds_symlinked_dir_file(
         assert os.path.exists(os.path.join(x_dir, "file_in_symlinked_dir"))
 
 
-def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_without_view_install(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     # Test enabling a view after installing specs
     env("create", "--without-view", "test")
 
@@ -1255,7 +1275,9 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-def test_env_config_view_default(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_config_view_default(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     # This config doesn't mention whether a view is enabled
     test_config = """\
 env:
@@ -1273,7 +1295,9 @@ env:
     assert os.path.isdir(os.path.join(e.default_view.view()._root, ".spack", "mpileaks"))
 
 
-def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_install_package(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
@@ -1282,7 +1306,9 @@ def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, instal
     assert os.path.exists(str(view_dir.join(".spack/mpileaks")))
 
 
-def test_env_updates_view_add_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_add_concretize(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     install("--fake", "mpileaks")
@@ -1293,7 +1319,9 @@ def test_env_updates_view_add_concretize(tmpdir, mock_stage, mock_fetch, install
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_uninstall(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
@@ -1308,7 +1336,7 @@ def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mock
 
 
 def test_env_updates_view_uninstall_referenced_elsewhere(
-    tmpdir, mock_stage, mock_fetch, install_mockery
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
 ):
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
@@ -1325,24 +1353,30 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
     check_viewdir_removal(view_dir)
 
 
-def test_env_updates_view_remove_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_remove_concretize(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     view_dir = tmpdir.join("view")
+
     env("create", "--with-view=%s" % view_dir, "test")
     install("--fake", "mpileaks")
+
     with ev.read("test"):
         add("mpileaks")
         concretize()
 
     check_mpileaks_and_deps_in_view(view_dir)
 
-    with ev.read("test"):
+    with ev.read("test") as e:
         remove("mpileaks")
         concretize()
 
     check_viewdir_removal(view_dir)
 
 
-def test_env_updates_view_force_remove(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_updates_view_force_remove(
+    tmpdir, mock_stage, mock_fetch, install_mockery, atomic_update_implementations
+):
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
@@ -1889,7 +1923,7 @@ env:
 
 
 def test_stack_combinatorial_view(
-    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
 ):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
@@ -1924,7 +1958,9 @@ env:
             )
 
 
-def test_stack_view_select(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):
+def test_stack_view_select(
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
+):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
     with open(filename, "w") as f:
@@ -1964,7 +2000,9 @@ env:
                 )
 
 
-def test_stack_view_exclude(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):
+def test_stack_view_exclude(
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
+):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
     with open(filename, "w") as f:
@@ -2005,7 +2043,7 @@ env:
 
 
 def test_stack_view_select_and_exclude(
-    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
 ):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
@@ -2047,7 +2085,9 @@ env:
                 )
 
 
-def test_view_link_roots(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):
+def test_view_link_roots(
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
+):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
     with open(filename, "w") as f:
@@ -2091,7 +2131,9 @@ env:
                 )
 
 
-def test_view_link_run(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):
+def test_view_link_run(
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
+):
     yaml = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
     envdir = str(tmpdir)
@@ -2133,7 +2175,13 @@ spack:
 
 @pytest.mark.parametrize("link_type", ["hardlink", "copy", "symlink"])
 def test_view_link_type(
-    link_type, tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery
+    link_type,
+    tmpdir,
+    mock_fetch,
+    mock_packages,
+    mock_archive,
+    install_mockery,
+    atomic_update_implementations
 ):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
@@ -2163,7 +2211,9 @@ env:
             assert os.path.islink(file_to_test) == (link_type == "symlink")
 
 
-def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):
+def test_view_link_all(
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
+):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
     with open(filename, "w") as f:
@@ -2274,7 +2324,7 @@ env:
 
 
 def test_stack_view_multiple_views(
-    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery
+    tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery, atomic_update_implementations
 ):
     filename = str(tmpdir.join("spack.yaml"))
     default_viewdir = str(tmpdir.join("default-view"))
@@ -2843,10 +2893,14 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     assert os.path.samefile(resolved_view, view)
 
 
-def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_environment_view_target_already_exists(
+    tmpdir, mock_stage, mock_fetch, install_mockery, monkeypatch
+):
     """When creating a new view, Spack should check whether
     the new view dir already exists. If so, it should not be
     removed or modified."""
+    # Only works for symlinked atomic views
+    monkeypatch.setattr(spack.util.atomic_update, "use_renameat2", lambda: False)
 
     # Create a new environment
     view = str(tmpdir.join("view"))
