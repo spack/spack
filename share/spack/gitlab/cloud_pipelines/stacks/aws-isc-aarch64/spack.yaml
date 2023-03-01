@@ -125,7 +125,7 @@ spack:
 
   - target:
     - 'target=aarch64'
-    - 'target=graviton2'
+    - 'target=neoverse_n1'
 
 
   specs:
