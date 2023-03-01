@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -12,6 +14,8 @@ class Libbsd(AutotoolsPackage):
     to port projects with strong BSD origins, without needing to embed the
     same code over and over again on each project.
     """
+
+    libraries = ["libbsd.so"]
 
     homepage = "https://libbsd.freedesktop.org/wiki/"
     urls = [
@@ -42,3 +46,9 @@ class Libbsd(AutotoolsPackage):
     conflicts("@0.11.4: %nvhpc")
 
     depends_on("libmd", when="@0.11:")
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"lib\S*\.so\.(\d+\.\d+\.\d+)", lib)
+
+        return match.group(1) if match else None

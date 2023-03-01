@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -14,6 +16,7 @@ class Zstd(MakefilePackage):
     homepage = "https://facebook.github.io/zstd/"
     url = "https://github.com/facebook/zstd/archive/v1.4.3.tar.gz"
     git = "https://github.com/facebook/zstd.git"
+    libraries = ["libzstd.so"]
 
     maintainers("haampie")
 
@@ -88,3 +91,9 @@ class Zstd(MakefilePackage):
                 programs_args.append("HAVE_LZ4=0")
             programs_args.append("install")
             make(*programs_args)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r"lib\S*\.so\.(\d+\.\d+\.\d+)", lib)
+
+        return match.group(1) if match else None
