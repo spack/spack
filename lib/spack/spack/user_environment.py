@@ -4,14 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import sys
-from collections import defaultdict
-from enum import Flag, auto
 
 import spack.build_environment
 import spack.config
 import spack.util.environment as environment
 import spack.util.prefix as prefix
-from spack import traverse
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
@@ -102,130 +99,3 @@ def environment_modifications_for_spec(spec, view=None, set_package_py_globals=T
     spec.package.setup_run_environment(env)
 
     return env
-
-
-class EnvironmentVisitor:
-    def __init__(self, roots: list, context: str):
-        # For the roots (well, marked specs) we follow different edges
-        # than for their deps, depending on the context.
-        self.root_hashes = set(s.dag_hash() for s in roots)
-
-        if context == "build":
-            # Drop direct run deps in build context
-            # We don't really distinguish between install and build time test deps,
-            # so we include them here as build-time test deps.
-            self.root_deptypes = ["build", "test", "link"]
-        elif context == "test":
-            # This is more of an extended run environment
-            self.root_deptypes = ["test", "run", "link"]
-        elif context == "run":
-            self.root_deptypes = ["run", "link"]
-        else:
-            raise ValueError(f"Unknown context {context}. Should be one of build, test, run")
-
-    def neighbors(self, item):
-        spec = item.edge.spec
-        if spec.dag_hash() in self.root_hashes:
-            deptype = self.root_deptypes
-        else:
-            deptype = ("link", "run")
-        return traverse.sort_edges(spec.edges_to_dependencies(deptype=deptype))
-
-
-class Mode(Flag):
-    # Entrypoint spec (a spec to be built; an env root, etc)
-    ROOT = auto()
-
-    # A spec used at runtime, but no executables in PATH
-    RUNTIME = auto()
-
-    # A spec used at runtime, with executables in PATH
-    RUNTIME_EXECUTABLE = auto()
-
-    # A spec that's a direct build or test dep
-    BUILDTIME_DIRECT = auto()
-
-    # A spec that should be visible in search paths in a build env.
-    BUILDTIME = auto()
-
-    # Flag is set when the (node, mode) is finalized
-    ADDED = auto()
-
-
-def effective_deptypes(specs: list, context="build"):
-    """
-    Given a list of input specs and a context, return a list of tuples of
-    all specs that contribute to (environment) modifications, together with
-    a flag specifying in what way they do so. The list is ordered topologically
-    from root to leaf, meaning that environment modifications should be applied
-    in reverse so that dependents override dependencies, not the other way around.
-    """
-    assert context in ("build", "run", "test")
-
-    visitor = traverse.TopoVisitor(
-        EnvironmentVisitor(specs, context), key=lambda x: x.dag_hash(), root=True, all_edges=True
-    )
-    traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges(specs), visitor)
-
-    modes = defaultdict(lambda: Mode(0))
-    nodes_with_type = []
-
-    for edge in visitor.edges:
-        key = edge.spec
-
-        # Mark the starting point
-        if edge.parent is None:
-            modes[key] = Mode.ROOT
-            continue
-
-        mode = modes[edge.parent]
-
-        # Nothing to propagate.
-        if not mode:
-            continue
-
-        # Dependending on the context, include particular deps from the root.
-        if Mode.ROOT in mode:
-            if context == "build":
-                if "build" in edge.deptypes or "test" in edge.deptypes:
-                    modes[key] |= Mode.BUILDTIME_DIRECT
-                if "link" in edge.deptypes:
-                    modes[key] |= Mode.BUILDTIME
-
-            elif context == "test":
-                if "run" in edge.deptypes or "test" in edge.deptypes:
-                    modes[key] |= Mode.RUNTIME_EXECUTABLE
-                elif "link" in edge.deptypes:
-                    modes[key] |= Mode.RUNTIME
-
-            elif context == "run":
-                if "run" in edge.deptypes:
-                    modes[key] |= Mode.RUNTIME_EXECUTABLE
-                elif "link" in edge.deptypes:
-                    modes[key] |= Mode.RUNTIME
-
-        # Propagate RUNTIME and RUNTIME_EXECUTABLE through link and run deps.
-        if (Mode.RUNTIME | Mode.RUNTIME_EXECUTABLE | Mode.BUILDTIME_DIRECT) & mode:
-            if "link" in edge.deptypes:
-                modes[key] |= Mode.RUNTIME
-            if "run" in edge.deptypes:
-                modes[key] |= Mode.RUNTIME_EXECUTABLE
-
-        # Propagate BUILDTIME through link deps.
-        if Mode.BUILDTIME in mode:
-            if "link" in edge.deptypes:
-                modes[key] |= Mode.BUILDTIME
-
-        # Finalize the spec; the invariant is that all in-edges are processed
-        # before out-edges, meaning that edge.parent is done.
-        if Mode.ADDED not in mode:
-            modes[edge.parent] |= Mode.ADDED
-            nodes_with_type.append((edge.parent, mode))
-
-    # Attach the leaf nodes, since we only added nodes
-    # with out-edges. Can this be improved?
-    for spec, mode in modes.items():
-        if mode and Mode.ADDED not in mode:
-            nodes_with_type.append((spec, mode))
-
-    return nodes_with_type

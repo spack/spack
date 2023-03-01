@@ -40,12 +40,15 @@ import re
 import sys
 import traceback
 import types
+from collections import defaultdict
+from enum import Flag, auto
+from itertools import chain
 from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
 from llnl.util.filesystem import join_path
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
@@ -66,6 +69,7 @@ import spack.subprocess_context
 import spack.user_environment
 import spack.util.path
 import spack.util.pattern
+from spack import traverse
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
@@ -813,15 +817,131 @@ def setup_package(pkg, dirty, context="build"):
     return env_base
 
 
-def _make_runnable(pkg, env):
-    # Helper method which prepends a Package's bin/ prefix to the PATH
-    # environment variable
-    prefix = pkg.prefix
+class EnvironmentVisitor:
+    def __init__(self, roots: list, context: str):
+        # For the roots (well, marked specs) we follow different edges
+        # than for their deps, depending on the context.
+        self.root_hashes = set(s.dag_hash() for s in roots)
 
-    for dirname in ["bin", "bin64"]:
-        bin_dir = os.path.join(prefix, dirname)
-        if os.path.isdir(bin_dir):
-            env.prepend_path("PATH", bin_dir)
+        if context == "build":
+            # Drop direct run deps in build context
+            # We don't really distinguish between install and build time test deps,
+            # so we include them here as build-time test deps.
+            self.root_deptypes = ["build", "test", "link"]
+        elif context == "test":
+            # This is more of an extended run environment
+            self.root_deptypes = ["test", "run", "link"]
+        elif context == "run":
+            self.root_deptypes = ["run", "link"]
+        else:
+            raise ValueError(f"Unknown context {context}. Should be one of build, test, run")
+
+    def neighbors(self, item):
+        spec = item.edge.spec
+        if spec.dag_hash() in self.root_hashes:
+            deptype = self.root_deptypes
+        else:
+            deptype = ("link", "run")
+        return traverse.sort_edges(spec.edges_to_dependencies(deptype=deptype))
+
+
+class Mode(Flag):
+    # Entrypoint spec (a spec to be built; an env root, etc)
+    ROOT = auto()
+
+    # A spec used at runtime, but no executables in PATH
+    RUNTIME = auto()
+
+    # A spec used at runtime, with executables in PATH
+    RUNTIME_EXECUTABLE = auto()
+
+    # A spec that's a direct build or test dep
+    BUILDTIME_DIRECT = auto()
+
+    # A spec that should be visible in search paths in a build env.
+    BUILDTIME = auto()
+
+    # Flag is set when the (node, mode) is finalized
+    ADDED = auto()
+
+
+def effective_deptypes(specs: list, context="build"):
+    """
+    Given a list of input specs and a context, return a list of tuples of
+    all specs that contribute to (environment) modifications, together with
+    a flag specifying in what way they do so. The list is ordered topologically
+    from root to leaf, meaning that environment modifications should be applied
+    in reverse so that dependents override dependencies, not the other way around.
+    """
+    assert context in ("build", "run", "test")
+
+    visitor = traverse.TopoVisitor(
+        EnvironmentVisitor(specs, context), key=lambda x: x.dag_hash(), root=True, all_edges=True
+    )
+    traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges(specs), visitor)
+
+    modes = defaultdict(lambda: Mode(0))
+    nodes_with_type = []
+
+    for edge in visitor.edges:
+        key = edge.spec
+
+        # Mark the starting point
+        if edge.parent is None:
+            modes[key] = Mode.ROOT
+            continue
+
+        mode = modes[edge.parent]
+
+        # Nothing to propagate.
+        if not mode:
+            continue
+
+        # Dependending on the context, include particular deps from the root.
+        if Mode.ROOT in mode:
+            if context == "build":
+                if "build" in edge.deptypes or "test" in edge.deptypes:
+                    modes[key] |= Mode.BUILDTIME_DIRECT
+                if "link" in edge.deptypes:
+                    modes[key] |= Mode.BUILDTIME
+
+            elif context == "test":
+                if "run" in edge.deptypes or "test" in edge.deptypes:
+                    modes[key] |= Mode.RUNTIME_EXECUTABLE
+                elif "link" in edge.deptypes:
+                    modes[key] |= Mode.RUNTIME
+
+            elif context == "run":
+                if "run" in edge.deptypes:
+                    modes[key] |= Mode.RUNTIME_EXECUTABLE
+                elif "link" in edge.deptypes:
+                    modes[key] |= Mode.RUNTIME
+
+        # Propagate RUNTIME and RUNTIME_EXECUTABLE through link and run deps.
+        if (Mode.RUNTIME | Mode.RUNTIME_EXECUTABLE | Mode.BUILDTIME_DIRECT) & mode:
+            if "link" in edge.deptypes:
+                modes[key] |= Mode.RUNTIME
+            if "run" in edge.deptypes:
+                modes[key] |= Mode.RUNTIME_EXECUTABLE
+
+        # Propagate BUILDTIME through link deps.
+        if Mode.BUILDTIME in mode:
+            if "link" in edge.deptypes:
+                modes[key] |= Mode.BUILDTIME
+
+        # Finalize the spec; the invariant is that all in-edges are processed
+        # before out-edges, meaning that edge.parent is done.
+        if Mode.ADDED not in mode:
+            modes[edge.parent] |= Mode.ADDED
+            nodes_with_type.append((edge.parent, mode))
+
+    # Attach the leaf nodes, since we only added nodes
+    # with out-edges. Can this be improved?
+    for spec, mode in modes.items():
+        if mode and Mode.ADDED not in mode:
+            nodes_with_type.append((spec, mode))
+
+    return nodes_with_type
 
 
 def modifications_from_dependencies(
@@ -865,104 +985,63 @@ def modifications_from_dependencies(
             package.py files (this may be problematic when using buildcaches that have
             been built on a different but compatible OS)
     """
-    if context not in ["build", "run", "test"]:
-        raise ValueError(
-            "Expecting context to be one of ['build', 'run', 'test'], " "got: {0}".format(context)
-        )
+    if context not in ("build", "run", "test"):
+        raise ValueError(f"Expecting context to be one of build, run, test. Got {context}")
 
     env = EnvironmentModifications()
 
-    # Note: see computation of 'custom_mod_deps' and 'exe_deps' later in this
-    # function; these sets form the building blocks of those collections.
-    build_deps = set(spec.dependencies(deptype=("build", "test")))
-    link_deps = set(spec.traverse(root=False, deptype="link"))
-    build_link_deps = build_deps | link_deps
-    build_and_supporting_deps = set()
-    for build_dep in build_deps:
-        build_and_supporting_deps.update(build_dep.traverse(deptype="run"))
-    run_and_supporting_deps = set(spec.traverse(root=False, deptype=("run", "link")))
-    test_and_supporting_deps = set()
-    for test_dep in set(spec.dependencies(deptype="test")):
-        test_and_supporting_deps.update(test_dep.traverse(deptype="run"))
+    # Reverse so we go from leaf to root
+    specs_with_type = reversed(effective_deptypes([spec], context))
 
-    # All dependencies that might have environment modifications to apply
-    custom_mod_deps = set()
-    if context == "build":
-        custom_mod_deps.update(build_and_supporting_deps)
-        # Tests may be performed after build
-        custom_mod_deps.update(test_and_supporting_deps)
-    else:
-        # test/run context
-        custom_mod_deps.update(run_and_supporting_deps)
-        if context == "test":
-            custom_mod_deps.update(test_and_supporting_deps)
-    custom_mod_deps.update(link_deps)
+    # Split into non-external and extenal
+    external, nonexternal = stable_partition(specs_with_type, lambda t: t[0].external)
 
-    # Determine 'exe_deps': the set of packages with binaries we want to use
-    if context == "build":
-        exe_deps = build_and_supporting_deps | test_and_supporting_deps
-    elif context == "run":
-        exe_deps = set(spec.traverse(deptype="run"))
-    elif context == "test":
-        exe_deps = test_and_supporting_deps
+    should_be_runnable = Mode.BUILDTIME_DIRECT | Mode.RUNTIME_EXECUTABLE
+    should_setup_dependent_build_env = Mode.BUILDTIME | Mode.BUILDTIME_DIRECT
+    should_setup_run_env = Mode.RUNTIME | Mode.RUNTIME_EXECUTABLE
 
-    def default_modifications_for_dep(dep):
-        if dep in build_link_deps and not is_system_path(dep.prefix) and context == "build":
-            prefix = dep.prefix
+    def make_buildtime_detectable(dep, env):
+        if is_system_path(dep.prefix):
+            return
 
-            env.prepend_path("CMAKE_PREFIX_PATH", prefix)
+        env.prepend_path("CMAKE_PREFIX_PATH", dep.prefix)
+        for d in ("lib", "lib64", "share"):
+            pcdir = os.path.join(dep.prefix, d, "pkgconfig")
+            if os.path.isdir(pcdir):
+                env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
-            for directory in ("lib", "lib64", "share"):
-                pcdir = os.path.join(prefix, directory, "pkgconfig")
-                if os.path.isdir(pcdir):
-                    env.prepend_path("PKG_CONFIG_PATH", pcdir)
+    def make_runnable(dep, env):
+        if is_system_path(dep.prefix):
+            return
 
-        if dep in exe_deps and not is_system_path(dep.prefix):
-            _make_runnable(dep, env)
+        for d in ("bin", "bin64"):
+            bin_dir = os.path.join(dep.prefix, d)
+            if os.path.isdir(bin_dir):
+                env.prepend_path("PATH", bin_dir)
 
-    def add_modifications_for_dep(dep):
-        tty.debug("Adding env modifications for {0}".format(dep.name))
-        # Some callers of this function only want the custom modifications.
-        # For callers that want both custom and default modifications, we want
-        # to perform the default modifications here (this groups custom
-        # and default modifications together on a per-package basis).
-        if not custom_mods_only:
-            default_modifications_for_dep(dep)
+    for dspec, flag in chain(external, nonexternal):
+        tty.debug("Adding env modifications for {0}".format(dspec.name))
+        if should_setup_dependent_build_env & flag:
+            if not custom_mods_only:
+                make_buildtime_detectable(dspec, env)
 
-        # Perform custom modifications here (PrependPath actions performed in
-        # the custom method override the default environment modifications
-        # we do to help the build, namely for PATH, CMAKE_PREFIX_PATH, and
-        # PKG_CONFIG_PATH)
-        if dep in custom_mod_deps:
-            dpkg = dep.package
             if set_package_py_globals:
-                set_module_variables_for_package(dpkg)
+                set_module_variables_for_package(dspec.package)
 
             current_module = ModuleChangePropagator(spec.package)
-            dpkg.setup_dependent_package(current_module, spec)
+            dspec.package.setup_dependent_package(current_module, spec)
             current_module.propagate_changes_to_mro()
 
-            if context == "build":
-                builder = spack.builder.create(dpkg)
-                builder.setup_dependent_build_environment(env, spec)
-            else:
-                dpkg.setup_dependent_run_environment(env, spec)
-        tty.debug("Added env modifications for {0}".format(dep.name))
+            builder = spack.builder.create(dspec.package)
+            builder.setup_dependent_build_environment(env, spec)
 
-    # Note that we want to perform environment modifications in a fixed order.
-    # The Spec.traverse method provides this: i.e. in addition to
-    # the post-order semantics, it also guarantees a fixed traversal order
-    # among dependencies which are not constrained by post-order semantics.
-    for dspec in spec.traverse(root=False, order="post"):
-        if dspec.external:
-            add_modifications_for_dep(dspec)
+        if should_be_runnable & flag:
+            if not custom_mods_only:
+                make_runnable(dspec, env)
 
-    for dspec in spec.traverse(root=False, order="post"):
-        # Default env modifications for non-external packages can override
-        # custom modifications of external packages (this can only occur
-        # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
-        if not dspec.external:
-            add_modifications_for_dep(dspec)
+        if should_setup_run_env & flag:
+            dspec.package.setup_dependent_run_environment(env, spec)
+            dspec.package.setup_run_environment(env)
 
     return env
 
