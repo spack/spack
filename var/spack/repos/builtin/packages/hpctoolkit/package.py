@@ -103,10 +103,7 @@ class Hpctoolkit(AutotoolsPackage):
     variant("viewer", default=True, description="Include hpcviewer.")
 
     variant(
-        "python",
-        default=False,
-        description="Support unwinding Python source.",
-        when="@2023.03:",
+        "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
     )
 
     boost_libs = (
@@ -170,7 +167,9 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
 
-    conflicts("^hip@5.3:", when="@:2022.12", msg="rocm 5.3 requires hpctoolkit 2023.03.01 or later")
+    conflicts(
+        "^hip@5.3:", when="@:2022.12", msg="rocm 5.3 requires hpctoolkit 2023.03.01 or later"
+    )
 
     # Fix the build for old revs with gcc 10.x and 11.x.
     patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
