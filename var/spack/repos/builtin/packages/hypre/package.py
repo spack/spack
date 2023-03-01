@@ -320,6 +320,17 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     @run_after("install")
     def cache_test_sources(self):
+        if "+mpi" not in self.spec:
+            print("HYPRE must be installed with +mpi to cache test sources")
+            return
+
+        # Customize the examples makefile before caching it
+        makefile = join_path(self.extra_install_tests, "Makefile")
+        filter_file(r"^HYPRE_DIR\s* =.*", f"HYPRE_DIR = {self.prefix}", makefile)
+        filter_file(r"^CC\s*=.*", f"CC = {os.environ['CC']}", makefile)
+        filter_file(r"^F77\s*=.*", f"F77 = {os.environ['F77']}", makefile)
+        filter_file(r"^CXX\s*=.*", f"CXX = {os.environ['CXX']}", makefile)
+
         self.cache_extra_test_sources(self.extra_install_tests)
 
     @property
@@ -327,31 +338,24 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def test(self):
-        """Perform smoke test on installed HYPRE package."""
+    def test_bigint(self):
+        """build and run bigint tests"""
         if "+mpi" not in self.spec:
-            print("Skipping: HYPRE must be installed with +mpi to run tests")
-            return
+            raise SkipTest("HYPRE must be installed with +mpi")
 
         # Build copied and cached test examples
-        self.run_test(
-            "make",
-            ["HYPRE_DIR={0}".format(self.prefix), "bigint"],
-            purpose="test: building selected examples",
-            work_dir=self._cached_tests_work_dir,
-        )
+        with working_dir(self._cached_tests_work_dir):
+            make = which("make")
+            make("bigint")
 
-        # Run the examples built above
-        for exe in ["./ex5big", "./ex15big"]:
-            self.run_test(
-                exe,
-                [],
-                [],
-                installed=False,
-                purpose="test: ensuring {0} runs".format(exe),
-                skip_missing=True,
-                work_dir=self._cached_tests_work_dir,
-            )
+            # Run the examples built above
+            for _bin in ["ex5big", "ex15big"]:
+                with test_part(self, f"test_bigint_{_bin}", purpose=f"ensuring {_bin} runs"):
+                    if not os.path.isfile(_bin):
+                        raise SkipTest(f"{_bin} is missing")
+
+                    exe = which(_bin)
+                    exe()
 
     @property
     def headers(self):

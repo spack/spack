@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack.package import *
@@ -90,6 +91,10 @@ class HypreCmake(CMakePackage, CudaPackage):
 
     @run_after("install")
     def cache_test_sources(self):
+        if "+mpi" not in self.spec:
+            print("Package must be installed with +mpi to cache test sources")
+            return
+
         self.cache_extra_test_sources(self.extra_install_tests)
 
     @property
@@ -97,31 +102,24 @@ class HypreCmake(CMakePackage, CudaPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def test(self):
-        """Perform smoke test on installed HYPRE package."""
+    def test_bigint(self):
+        """build and run bigint tests"""
         if "+mpi" not in self.spec:
-            print("Skipping: HYPRE must be installed with +mpi to run tests")
-            return
+            raise SkipTest("Package must be installed with +mpi")
 
         # Build copied and cached test examples
-        self.run_test(
-            "make",
-            ["HYPRE_DIR={0}".format(self.prefix), "bigint"],
-            purpose="test: building selected examples",
-            work_dir=self._cached_tests_work_dir,
-        )
+        with working_dir(self._cached_tests_work_dir):
+            make = which("make")
+            make(f"HYPRE_DIR={self.prefix}", "bigint")
 
-        # Run the examples built above
-        for exe in ["./ex5big", "./ex15big"]:
-            self.run_test(
-                exe,
-                [],
-                [],
-                installed=False,
-                purpose="test: ensuring {0} runs".format(exe),
-                skip_missing=True,
-                work_dir=self._cached_tests_work_dir,
-            )
+            # Run the examples built above
+            for _bin in ["ex5big", "ex15big"]:
+                with test_part(self, f"test_bigint_{_bin}", purpose=f"ensuring {_bin} runs"):
+                    if not os.path.isfile(_bin):
+                        raise SkipTest(f"{_bin} is missing")
+
+                    exe = which(_bin)
+                    exe()
 
     @property
     def headers(self):
