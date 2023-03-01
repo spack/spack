@@ -27,6 +27,7 @@ class Hpctoolkit(AutotoolsPackage):
     test_requires_compiler = True
 
     version("develop", branch="develop")
+    version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
     version("2022.05.15", commit="8ac72d9963c4ed7b7f56acb65feb02fbce353479")
     version("2022.04.15", commit="a92fdad29fc180cc522a9087bba9554a829ee002")
@@ -45,17 +46,19 @@ class Hpctoolkit(AutotoolsPackage):
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
-    # version of hpcprof.  Cray needs a separate option because an
-    # external MPI module in packages.yaml doesn't work.
+    # version of hpcprof.  Cray is a separate option for old systems
+    # where an external MPI module doesn't work.
     variant(
-        "cray", default=False, description="Build hpcprof-mpi for Cray systems (requires --dirty)."
+        "cray",
+        default=False,
+        description="Build hpcprof-mpi for Cray systems (may require --dirty).",
     )
 
     variant(
         "cray-static",
         default=False,
         description="Build old rev of hpcprof-mpi statically on Cray systems.",
-        when="@:2022.09",
+        when="@:2022.09+cray",
     )
 
     variant(
@@ -93,13 +96,15 @@ class Hpctoolkit(AutotoolsPackage):
     )
 
     variant("opencl", default=False, description="Support offloading with OpenCL.")
-
     variant("rocm", default=False, description="Support ROCM on AMD GPUs.", when="@2022.04:")
 
     # Other variants.
     variant("debug", default=False, description="Build in debug (develop) mode.")
-
     variant("viewer", default=True, description="Include hpcviewer.")
+
+    variant(
+        "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
+    )
 
     boost_libs = (
         "+atomic +chrono +date_time +filesystem +system +thread +timer"
@@ -121,6 +126,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("libiberty+pic", when="@2022.10:")
     depends_on("libmonitor+hpctoolkit~dlopen", when="@2021.00:")
     depends_on("libmonitor+hpctoolkit+dlopen", when="@:2020")
+    depends_on("libmonitor@2023.02.13:", when="@2023.01:")
     depends_on("libmonitor@2021.11.08:", when="@2022.01:")
     depends_on("libunwind@1.4: +xz+pic")
     depends_on("mbedtls+pic", when="@:2022.03")
@@ -139,9 +145,11 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("memkind", type=("build", "run"), when="@2021.05.01:")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
+    depends_on("mpi", when="+cray")
     depends_on("mpi", when="+mpi")
     depends_on("hpcviewer@2022.10:", type="run", when="@2022.10: +viewer")
     depends_on("hpcviewer", type="run", when="+viewer")
+    depends_on("python@3.10:", type=("build", "run"), when="+python")
 
     # Avoid 'link' dep, we don't actually link, and that adds rpath
     # that conflicts with app.
@@ -159,15 +167,13 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
 
-    # Fix the build for old revs with gcc 10.x.
-    patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
-
-    patch("511afd95b01d743edc5940c84e0079f462b2c23e.patch", when="@2019.08.01:2021.03 %gcc@11.0:")
-
-    # Update configure for rocm 5.3.0
-    patch(
-        "411d62544717873432c49ef45c7cb99cc5de2fb8.patch", when="@2022.04:2022.10 +rocm ^hip@5.3.0:"
+    conflicts(
+        "^hip@5.3:", when="@:2022.12", msg="rocm 5.3 requires hpctoolkit 2023.03.01 or later"
     )
+
+    # Fix the build for old revs with gcc 10.x and 11.x.
+    patch("gcc10-enum.patch", when="@2020.01.01:2020.08 %gcc@10.0:")
+    patch("511afd95b01d743edc5940c84e0079f462b2c23e.patch", when="@2019.08.01:2021.03 %gcc@11.0:")
 
     # Change python to python3 for some old revs that use a script
     # with /usr/bin/env python.
@@ -248,6 +254,10 @@ class Hpctoolkit(AutotoolsPackage):
                     "--with-rocm-profiler=%s" % spec["rocprofiler-dev"].prefix,
                 ]
             )
+
+        if spec.satisfies("+python"):
+            p3config = join_path(spec["python"].prefix, "bin", "python3-config")
+            args.append("--with-python=%s" % p3config)
 
         # MPI options for hpcprof-mpi. +cray supersedes +mpi.
         if spec.satisfies("+cray"):
