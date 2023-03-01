@@ -540,8 +540,7 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
 
-
-def set_module_variables_for_package(pkg):
+def set_module_variables_for_package(pkg, context="build"):
     """Populate the Python module of a package with some useful global names.
     This makes things easier for package writers.
     """
@@ -553,38 +552,40 @@ def set_module_variables_for_package(pkg):
 
     module = ModuleChangePropagator(pkg)
 
-    jobs = determine_number_of_jobs(parallel=pkg.parallel)
-
     m = module
-    m.make_jobs = jobs
 
-    # TODO: make these build deps that can be installed if not found.
-    m.make = MakeExecutable("make", jobs)
-    m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
-    # TODO: johnwparent: add package or builder support to define these build tools
-    # for now there is no entrypoint for builders to define these on their
-    # own
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
-        m.msbuild = Executable("msbuild")
-        # analog to configure for win32
-        m.cscript = Executable("cscript")
+    if context == "build":
+        jobs = determine_number_of_jobs(parallel=pkg.parallel)
+        m.make_jobs = jobs
 
-    # Find the configure script in the archive path
-    # Don't use which for this; we want to find it in the current dir.
-    m.configure = Executable("./configure")
+        # TODO: make these build deps that can be installed if not found.
+        m.make = MakeExecutable("make", jobs)
+        m.gmake = MakeExecutable("gmake", jobs)
+        m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+        # TODO: johnwparent: add package or builder support to define these build tools
+        # for now there is no entrypoint for builders to define these on their
+        # own
+        if sys.platform == "win32":
+            m.nmake = Executable("nmake")
+            m.msbuild = Executable("msbuild")
+            # analog to configure for win32
+            m.cscript = Executable("cscript")
 
-    # Standard CMake arguments
-    m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-    m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-    m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+        # Find the configure script in the archive path
+        # Don't use which for this; we want to find it in the current dir.
+        m.configure = Executable("./configure")
 
-    # Put spack compiler paths in module scope.
-    link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+        # Standard CMake arguments
+        m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+        m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+
+        # Put spack compiler paths in module scope.
+        link_dir = spack.paths.build_env_path
+        m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
+        m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
+        m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
+        m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
@@ -1036,8 +1037,9 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
         # First set our default globals, which are ... mostly really
         # build env things and typically not useful in other contexts,
         # but well.
+        pkg = dspec.package
         if set_package_py_globals and (should_populate_package_py_globals & flag):
-            set_module_variables_for_package(dspec.package)
+            set_module_variables_for_package(pkg, context="run")
 
         # Annoyingly, this setup_dependent_package globals may be used
         # by setup_run_environment, meaning that in practice we may need
@@ -1046,7 +1048,7 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
         if set_package_py_globals:
             for spec in specs:
                 current_module = ModuleChangePropagator(spec.package)
-                dspec.package.setup_dependent_package(current_module, spec)
+                pkg.setup_dependent_package(current_module, spec)
                 current_module.propagate_changes_to_mro()
 
         # Finally do environment variable changes. Here setup_dependent
@@ -1056,7 +1058,7 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
                 make_buildtime_detectable(dspec, env)
 
             for spec in specs:
-                builder = spack.builder.create(dspec.package)
+                builder = spack.builder.create(pkg)
                 builder.setup_dependent_build_environment(env, spec)
 
         if not custom_mods_only and (should_be_runnable & flag):
@@ -1066,8 +1068,8 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
         # dependents.
         if should_setup_run_env & flag:
             for spec in specs:
-                dspec.package.setup_dependent_run_environment(env, spec)
-            dspec.package.setup_run_environment(env)
+                pkg.setup_dependent_run_environment(env, spec)
+            pkg.setup_run_environment(env)
 
     return env
 
