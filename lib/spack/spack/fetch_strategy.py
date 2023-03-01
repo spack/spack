@@ -1515,6 +1515,9 @@ def for_package_version(pkg, version=None):
     check_pkg_attributes(pkg)
 
     if version is not None:
+        assert not pkg.spec.concrete, "concrete specs should not pass the 'version=' argument"
+        # Specs are initialized with the universe range, if no version information is given,
+        # so here we make sure we always match the version passed as argument
         if not isinstance(version, spack.version.VersionBase):
             version = spack.version.Version(version)
 
