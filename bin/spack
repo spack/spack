@@ -11,13 +11,7 @@
 # See https://stackoverflow.com/a/47886254
 """:"
 # preempt python load and natively execute program in $SPACK_ROOT
-run_aliases=("git")
-if [ -n "$1" ] && [ $1 == "run" ]; then
-  shift;
-  run_aliases=("$1" "${run_aliases[@]}")
-fi
-
-if [[ " ${run_aliases[*]} " =~ " $1 " ]]; then
+if [ "$1"x == gitx ]; then
   (cd $SPACK_ROOT && exec $@)
   exit $?
 fi
