@@ -5,13 +5,6 @@
 
 import argparse
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-
-import spack.cmd
-import spack.util.git
-from spack.cmd import spack_is_git_repo
-
 description = "run git inside of the spack repo"
 section = "system"
 level = "short"

@@ -10,7 +10,7 @@
 # Following line is a shell no-op, and starts a multi-line Python comment.
 # See https://stackoverflow.com/a/47886254
 """:"
-# preempt python load and natively execute program in $SPACK_ROOT
+# preempt python load and natively execute git in $SPACK_ROOT
 if [ "$1"x == gitx ]; then
   (cd $SPACK_ROOT && exec $@)
   exit $?
