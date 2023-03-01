@@ -247,7 +247,7 @@ class LmodFileLayout(BaseFileLayout):
         fullname = os.path.join(
             self.arch_dirname,  # root for lmod files on this architecture
             hierarchy_name,  # relative path
-            ".".join([self.use_names[0], self.extension]),  # file name
+            ".".join([self.use_name, self.extension]),  # file name
         )
         return fullname
 
