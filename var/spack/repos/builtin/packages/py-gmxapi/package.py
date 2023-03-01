@@ -21,7 +21,7 @@ class PyGmxapi(PythonPackage):
     pypi = "gmxapi/gmxapi-0.4.0.tar.gz"
     version("0.4.0", sha256="7fd58e6a4b1391043379e8ba55555ebeba255c5b394f5df9d676e6a5571d7eba")
 
-    depends_on("gromacs~mdrun_only+shared")
+    depends_on("gromacs@2022.1:~mdrun_only+shared")
     depends_on("mpi")
     depends_on("py-cmake@3.16:", type="build")
     depends_on("py-importlib-metadata", type="test", when="^python@:3.7")
@@ -33,11 +33,6 @@ class PyGmxapi(PythonPackage):
     depends_on("py-pybind11@2.6:", type="build")
     depends_on("py-pytest@4.6:", type="test")
     depends_on("py-wheel", type="build")
-
-    conflicts("^gromacs@:2022.0", when="@0.4:", msg="Use GROMACS 2022.1 or newer for gmxapi 0.4.")
-    conflicts(
-        "^gromacs+mpi", when="@:0.3.2", msg="Use gmxapi 0.4 or higher for MPI-enabled GROMACS."
-    )
 
     def setup_build_environment(self, env):
         env.set("GROMACS_DIR", self.spec["gromacs"].prefix)
