@@ -24,6 +24,6 @@ class PyIpdb(PythonPackage):
     depends_on("py-ipython@7.17:", type=("build", "run"))
     depends_on("py-toml@0.10.2:", when="@:0.13.9", type=("build", "run"))
 
-    depends_on("py-ipython@7.31.1:", type=("build", "run"))
+    depends_on("py-ipython@7.31.1:", when="@0.13.10:", type=("build", "run"))
     depends_on("py-tomli", when="@0.13.10: ^python@:3.10", type=("build", "run"))
     depends_on("py-decorator", type=("build", "run"))
