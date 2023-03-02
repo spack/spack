@@ -19,7 +19,6 @@ class E3smScorpio(CMakePackage):
     variant("timing", default="False", description="Enable timing")
     variant("mpi", default="True", description="Enable MPI")
 
-    depends_on("cmake", type="build")
     depends_on("gptl", when="+timing")
     depends_on("mpi", when="+mpi")
     depends_on("parallel-netcdf", when="+mpi")
