@@ -927,27 +927,15 @@ class SpackSolverSetup(object):
         msg = "Internal Error: spec with no name occured. Please report to the spack maintainers."
         assert spec.name, msg
 
-        if spec.versions.concrete:
-            if (
-                isinstance(spec.version, spack.version.GitVersion)
-                and spec.version.user_supplied_reference
-            ):
-                hash_ver, _ = str(spec.version).split("=")
-                constraint_version = hash_ver
-            else:
-                constraint_version = spec.version
-        else:
-            constraint_version = spec.versions
-
         if spec.concrete:
-            return [fn.attr("version", spec.name, constraint_version)]
+            return [fn.attr("version", spec.name, spec.version)]
 
         if spec.versions == spack.version.ver(":"):
             return []
 
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
-        return [fn.attr("node_version_satisfies", spec.name, constraint_version)]
+        return [fn.attr("node_version_satisfies", spec.name, spec.versions)]
 
     def target_ranges(self, spec, single_target_fn):
         target = spec.architecture.target
@@ -1907,12 +1895,7 @@ class SpackSolverSetup(object):
             # generate facts for each package constraint and the version
             # that satisfies it
             for v in allowed_versions:
-                if isinstance(v, spack.version.GitVersion) and v.user_supplied_reference:
-                    hash_ver, num_ver = str(v).split("=")
-                    self.gen.fact(fn.version_satisfies(pkg_name, hash_ver, num_ver))
-                    self.gen.fact(fn.version_satisfies(pkg_name, num_ver, hash_ver))
-                else:
-                    self.gen.fact(fn.version_satisfies(pkg_name, versions, v))
+                self.gen.fact(fn.version_satisfies(pkg_name, versions, v))
 
             self.gen.newline()
 
