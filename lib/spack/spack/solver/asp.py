@@ -1889,10 +1889,6 @@ class SpackSolverSetup(object):
                 v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
             ]
 
-            if _asp_debug:
-                possible_versions = list(self.possible_versions[pkg_name])
-                import pdb; pdb.set_trace()
-
             # This is needed to account for a variable number of
             # numbers e.g. if both 1.0 and 1.0.2 are possible versions
             exact_match = [v for v in allowed_versions if v == versions
