@@ -110,9 +110,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         if self.spec.satisfies("@2020.10.00"):
             return
+
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(["examples"])
+        self.cache_extra_test_sources("examples")
 
     def mpi_launcher(self):
         searchpath = [self.spec["mpi"].prefix.bin]
@@ -125,21 +126,20 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     def test(self):
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
-            print("Skipping: stand-alone tests")
-            return
+            raise SkipTest("Test only applies to @2021: +mpi")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
-            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
             deps = "blaspp lapackpp mpi"
             if self.spec.satisfies("+rocm"):
                 deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver"
             prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
-            self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
+
+            cmake = which(self.spec["cmake"].prefix.bin.cmake)
+            cmake("-DCMAKE_PREFIX_PATH=" + prefixes, "..")
+
+            make = which("make")
             make()
-            test_args = ["-n", "4", "./ex05_blas"]
+
             launcher = self.mpi_launcher()
-            if not launcher:
-                raise RuntimeError("Cannot run tests due to absence of MPI launcher")
-            self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
-            make("clean")
+            launcher("-n", "4", "./ex05_blas")
