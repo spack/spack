@@ -3,10 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import socket
-
-import llnl.util.tty as tty
 
 from spack.package import *
 from spack.pkg.builtin.camp import hip_repair_cache
@@ -241,14 +238,20 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         options = []
         return options
 
-    def test(self):
-        """Perform stand-alone checks on the installed package."""
-        if self.spec.satisfies("@:1") or not os.path.isdir(self.prefix.bin):
-            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
-            return
+    def _run_example(self, test_exe, expected):
+        """run and check the outputs of the test example"""
+        if self.spec.satisfies("@:1"):
+            raise SkipTest("Test only applies to versions after 1.")
 
-        # Run a subset of examples PROVIDED installed
-        # tutorials with readily checkable outputs.
+        exe = which(join_path(self.prefix.bin, test_exe))
+        if not exe:
+            raise SkipTest("{0} is not installed".format(test_exe))
+
+        out = exe(output=str.split, error=str.split)
+        check_outputs(expected, out)
+
+    def test_examples(self):
+        """Run potentially installed examples and tutorials"""
         checks = {
             "malloc": ["99 should be 99"],
             "recipe_dynamic_pool_heuristic": ["in the pool", "releas"],
@@ -263,15 +266,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         }
 
         for exe in checks:
-            expected = checks[exe]
-            reason = "test: checking output from {0}".format(exe)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                0,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self.prefix.bin,
-            )
+            with test_part(
+                self,
+                "test_example_{0}".format(exe),
+                purpose="run and check output of {0}".format(exe),
+            ):
+                self._run_test(exe, checks[exe])
