@@ -150,17 +150,12 @@ class OpenpmdApi(CMakePackage):
             # later tests
             ctest("--output-on-failure", "-j1")
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        exes = ["openpmd-ls"]  # in 0.11.1+
-        for exe in exes:
-            spec_vers_str = "{0}".format(self.spec.version)
-            reason = "test version of {0} is {1}".format(exe, spec_vers_str)
-            self.run_test(
-                exe,
-                ["--version"],
-                [spec_vers_str],
-                installed=True,
-                purpose=reason,
-                skip_missing=False,
-            )
+    def test_openpmd_ls(self):
+        """check version of openpmd-ls"""
+        if not self.spec.satisfies("@0.11.1:"):
+            raise SkipTest("Test is only available for version 0.11.1 on")
+
+        openpmd_ls = which(join_path(self.prefix.bin, "openpmd-ls"))
+        out = openpmd_ls("--version", output=str.split, error=str.split)
+        spec_vers_str = "{0}".format(self.spec.version)
+        assert spec_vers_str in out
