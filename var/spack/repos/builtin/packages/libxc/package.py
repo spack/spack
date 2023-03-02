@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
     density-functional theory."""
 
     homepage = "https://tddft.org/programs/libxc/"
-    url = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
+    url = "https://www.tddft.org/programs/libxc/down/2.2.2/libxc-2.2.2.tar.gz"
 
     # Get checksum from latest release package at https://tddft.org/programs/libxc/download/
+    version("6.1.0", sha256="a3aa16915942543031a5d9c4a92c439ce54249bdcda8c91c4e69e65329dc9a54")
     version("6.0.0", sha256="c2ca205a762200dfba2e6c9e8ca2061aaddc6b7cf42048859fe717a7aa07de7c")
     version("5.2.3", sha256="7b7a96d8eeb472c7b8cca7ac38eae27e0a8113ef44dae5359b0eb12592b4bcf2")
     version("5.1.7", sha256="1a818fdfe5c5f74270bc8ef0c59064e8feebcd66b8f642c08aecc1e7d125be34")
@@ -38,6 +39,11 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
     patch("0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch", when="@5.0.0")
     patch("0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch", when="@5.0.0")
+    patch(
+        "https://raw.githubusercontent.com/cp2k/cp2k/d9e473979eaef93bf16d7abafb9f21845af16eb8/tools/toolchain/scripts/stage3/libxc-6.0.0_mgga_xc_b97mv.patch",
+        sha256="938113a697ee14988ccff153e1a8287fdb78072adc4f388a0af434261082fee5",
+        when="@6.0.0",
+    )
 
     patch("nvhpc-configure.patch", when="%nvhpc")
     patch("nvhpc-libtool.patch", when="@develop %nvhpc")
@@ -96,13 +102,9 @@ class Libxc(AutotoolsPackage, CudaPackage):
                 env.append_flags("CFLAGS", "-arch=sm_{0}".format(cuda_arch))
 
     def configure_args(self):
-        spec = self.spec
-
-        args = [
-            "--enable-shared" if "+shared" in spec else "--disable-shared",
-            "--enable-cuda" if "+cuda" in spec else "--disable-cuda",
-        ]
-
+        args = []
+        args += self.enable_or_disable("shared")
+        args += self.enable_or_disable("cuda")
         return args
 
     @run_after("configure")

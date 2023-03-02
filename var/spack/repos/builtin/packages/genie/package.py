@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,7 @@ class Genie(Package):
 
     tags = ["neutrino", "hep"]
 
-    maintainers = [
-        # maintainer of this recipe, not affiliated with the GENIE collaboration
-        "davehadley",
-    ]
+    maintainers("davehadley")
 
     version("master", branch="master")
     version("3.0.6", sha256="ab56ea85d0c1d09029254365bfe75a1427effa717389753b9e0c1b6c2eaa5eaf")
@@ -157,8 +154,4 @@ class Genie(Package):
 
     @property
     def _make_args(self):
-        return [
-            "CC=c++",
-            "CXX=c++",
-            "LD=c++",
-        ]
+        return ["CC=c++", "CXX=c++", "LD=c++"]

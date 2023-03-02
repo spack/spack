@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,10 @@ class FluxCore(AutotoolsPackage):
     git = "https://github.com/flux-framework/flux-core.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["grondo"]
+    maintainers("grondo")
 
     version("master", branch="master")
+    version("0.47.0", sha256="c13c8df3dd3db565ff7a3db727f087b7c1a3946b98c4b945ac43fe44a4c534c3")
     version("0.46.1", sha256="a7873fd49889c11f12e62d59eb992d4a089ddfde8566789f79eca1dfae1a5ffa")
     version("0.45.0", sha256="6550fe682c1686745e1d9c201daf18f9c57691468124565c9252d27823d2fe46")
     version("0.44.0", sha256="6786b258657675ed573907a2a6012f68f2dd5053d7d09eb76b4e7f9943d6d466")
@@ -136,6 +137,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-six@1.9:", when="@:0.24", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-jsonschema@2.3:", type=("build", "run"))
+    depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")

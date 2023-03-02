@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RMemuse(RPackage):
 
     cran = "memuse"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("4.2-2", sha256="63dc2b2ad41da9af5d9b71c1fa9b03f37d1d58db2ed63355c303349d2247b7e5")
     version("4.2-1", sha256="f5e9dbaad4efbbfe219a93f446e318a00cad5b294bfc60ca2146eca894b47cf3")

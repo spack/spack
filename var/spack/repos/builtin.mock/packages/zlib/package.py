@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Zlib(Package):
     homepage = "http://zlib.net"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
+    tags = ["windows"]
 
     version("1.2.11", sha256="c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1")
     # Due to the bug fixes, any installations of 1.2.9 or 1.2.10 should be

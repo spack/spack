@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libfms(CMakePackage):
 
     tags = ["FEM", "Meshes", "Fields", "High-order", "I/O", "Data-exchange"]
 
-    maintainers = ["v-dobrev", "tzanio", "cwsmith"]
+    maintainers("v-dobrev", "tzanio", "cwsmith")
 
     version("develop", branch="master")
     version("0.2.0", tag="v0.2")
@@ -27,11 +27,7 @@ class Libfms(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.extend(
-            [
-                self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            ]
-        )
+        args.extend([self.define_from_variant("BUILD_SHARED_LIBS", "shared")])
         if "+conduit" in self.spec:
             args.extend([self.define("CONDUIT_DIR", self.spec["conduit"].prefix)])
 

@@ -1,10 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import argparse
+import os.path
+import textwrap
 
 from llnl.util.lang import stable_partition
 
@@ -12,6 +14,7 @@ import spack.cmd
 import spack.config
 import spack.dependency as dep
 import spack.environment as ev
+import spack.mirror
 import spack.modules
 import spack.reporters
 import spack.spec
@@ -153,7 +156,6 @@ def _cdash_reporter(namespace):
             site=namespace.cdash_site,
             buildstamp=namespace.cdash_buildstamp,
             track=namespace.cdash_track,
-            ctest_parsing=getattr(namespace, "ctest_parsing", False),
         )
         return spack.reporters.CDash(configuration=configuration)
 
@@ -414,6 +416,40 @@ the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     cdash_subgroup.add_argument("--cdash-buildstamp", default=None, help=cdash_help["buildstamp"])
 
 
+def print_cdash_help():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(
+            """\
+environment variables:
+SPACK_CDASH_AUTH_TOKEN
+                    authentication token to present to CDash
+                    """
+        ),
+    )
+    add_cdash_args(parser, True)
+    parser.print_help()
+
+
+def sanitize_reporter_options(namespace: argparse.Namespace):
+    """Sanitize options that affect generation and configuration of reports, like
+    CDash or JUnit.
+
+    Args:
+        namespace: options parsed from cli
+    """
+    has_any_cdash_option = (
+        namespace.cdash_upload_url or namespace.cdash_build or namespace.cdash_site
+    )
+    if namespace.log_format == "junit" and has_any_cdash_option:
+        raise argparse.ArgumentTypeError("cannot pass any cdash option when --log-format=junit")
+
+    # If any CDash option is passed, assume --log-format=cdash is implied
+    if namespace.log_format is None and has_any_cdash_option:
+        namespace.log_format = "cdash"
+        namespace.reporter = _cdash_reporter(namespace)
+
+
 class ConfigSetAction(argparse.Action):
     """Generic action for setting spack config options from CLI.
 
@@ -552,3 +588,42 @@ def use_buildcache(cli_arg_value):
             dependencies = val
 
     return package, dependencies
+
+
+def mirror_name_or_url(m):
+    # Look up mirror by name or use anonymous mirror with path/url.
+    # We want to guard against typos in mirror names, to avoid pushing
+    # accidentally to a dir in the current working directory.
+
+    # If there's a \ or / in the name, it's interpreted as a path or url.
+    if "/" in m or "\\" in m:
+        return spack.mirror.Mirror(m)
+
+    # Otherwise, the named mirror is required to exist.
+    try:
+        return spack.mirror.require_mirror_name(m)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(
+            str(e) + ". Did you mean {}?".format(os.path.join(".", m))
+        )
+
+
+def mirror_url(url):
+    try:
+        return spack.mirror.Mirror.from_url(url)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_directory(path):
+    try:
+        return spack.mirror.Mirror.from_local_path(path)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+
+def mirror_name(name):
+    try:
+        return spack.mirror.require_mirror_name(name)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))

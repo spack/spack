@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    maintainers = ["kmorel", "vicentebolea"]
+    maintainers("kmorel", "vicentebolea")
 
     url = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
     git = "https://gitlab.kitware.com/vtk/vtk-m.git"

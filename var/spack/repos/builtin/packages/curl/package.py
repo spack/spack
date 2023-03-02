@@ -1,15 +1,19 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
 import re
 import sys
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.nmake import NMakeBuilder
 from spack.package import *
 
 
-class Curl(AutotoolsPackage):
+class Curl(NMakePackage, AutotoolsPackage):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
@@ -18,8 +22,10 @@ class Curl(AutotoolsPackage):
     url = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
     executables = ["^curl$"]
-    tags = ["build-tools"]
+    tags = ["build-tools", "windows"]
 
+    version("7.87.0", sha256="5d6e128761b7110946d1276aff6f0f266f2b726f5e619f7e0a057a474155f307")
+    version("7.86.0", sha256="f5ca69db03eea17fa8705bdfb1a9f58d76a46c9010518109bb38f313137e0a28")
     version("7.85.0", sha256="21a7e83628ee96164ac2b36ff6bf99d467c7b0b621c1f7e317d8f0d96011539c")
     version("7.84.0", sha256="702fb26e73190a3bd77071aa146f507b9817cc4dfce218d2ab87f00cd3bc059d")
     version("7.83.0", sha256="247c7ec7521c4258e65634e529270d214fe32969971cccb72845e7aa46831f96")
@@ -60,6 +66,8 @@ class Curl(AutotoolsPackage):
     default_tls = "openssl"
     if sys.platform == "darwin":
         default_tls = "secure_transport"
+    elif sys.platform == "win32":
+        default_tls = "sspi"
 
     # TODO: add dependencies for other possible TLS backends
     variant(
@@ -78,6 +86,7 @@ class Curl(AutotoolsPackage):
             # 'schannel',
             "secure_transport",
             # 'wolfssl',
+            conditional("sspi", when="platform=windows"),
         ),
         multi=True,
     )
@@ -88,13 +97,17 @@ class Curl(AutotoolsPackage):
     variant("librtmp", default=False, description="enable Rtmp support")
     variant("ldap", default=False, description="enable ldap support")
     variant("libidn2", default=False, description="enable libidn2 support")
-    variant(
-        "libs",
-        default="shared,static",
-        values=("shared", "static"),
-        multi=True,
-        description="Build shared libs, static libs or both",
-    )
+    for plat in ["darwin", "cray", "linux"]:
+        with when("platform=%s" % plat):
+            variant(
+                "libs",
+                default="shared,static",
+                values=("shared", "static"),
+                multi=True,
+                description="Build shared libs, static libs or both",
+            )
+            # curl queries pkgconfig for openssl compilation flags
+            depends_on("pkgconfig", type="build")
 
     conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
@@ -116,6 +129,8 @@ class Curl(AutotoolsPackage):
 
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
+
+    build_system("autotools", conditional("nmake", when="platform=windows"), default="autotools")
 
     @classmethod
     def determine_version(cls, exe):
@@ -150,6 +165,8 @@ class Curl(AutotoolsPackage):
     def command(self):
         return Executable(self.prefix.bin.join("curl-config"))
 
+
+class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -168,13 +185,7 @@ class Curl(AutotoolsPackage):
         # Make gnutls / openssl decide what certs are trusted.
         # TODO: certs for other tls options.
         if spec.satisfies("tls=gnutls") or spec.satisfies("tls=openssl"):
-            args.extend(
-                [
-                    "--without-ca-bundle",
-                    "--without-ca-path",
-                    "--with-ca-fallback",
-                ]
-            )
+            args.extend(["--without-ca-bundle", "--without-ca-path", "--with-ca-fallback"])
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
         # We always disable it explicitly, but the flag is gone in newer
@@ -239,3 +250,54 @@ class Curl(AutotoolsPackage):
                 return "--with-darwinssl"
             else:
                 return "--without-darwinssl"
+
+
+class NMakeBuilder(NMakeBuilder):
+    phases = ["install"]
+
+    def nmake_args(self):
+        args = []
+        mode = "dll" if "libs=dll" in self.spec else "static"
+        args.append("mode=%s" % mode)
+        args.append("WITH_ZLIB=%s" % mode)
+        args.append("ZLIB_PATH=%s" % self.spec["zlib"].prefix)
+        if "+libssh" in self.spec:
+            args.append("WITH_SSH=%s" % mode)
+        if "+libssh2" in self.spec:
+            args.append("WITH_SSH2=%s" % mode)
+            args.append("SSH2_PATH=%s" % self.spec["libssh2"].prefix)
+        if "+nghttp2" in self.spec:
+            args.append("WITH_NGHTTP2=%s" % mode)
+            args.append("NGHTTP2=%s" % self.spec["nghttp2"].prefix)
+        if "tls=openssl" in self.spec:
+            args.append("WITH_SSL=%s" % mode)
+            args.append("SSL_PATH=%s" % self.spec["openssl"].prefix)
+        elif "tls=mbedtls" in self.spec:
+            args.append("WITH_MBEDTLS=%s" % mode)
+            args.append("MBEDTLS_PATH=%s" % self.spec["mbedtls"].prefix)
+        elif "tls=sspi" in self.spec:
+            args.append("ENABLE_SSPI=%s" % mode)
+
+        # The trailing path seperator is REQUIRED for cURL to install
+        # otherwise cURLs build system will interpret the path as a file
+        # and the install will fail with ambiguous errors
+        args.append("WITH_PREFIX=%s" % self.prefix + "\\")
+        return args
+
+    def install(self, spec, prefix):
+        # Spack's env CC and CXX values will cause an error
+        # if there is a path in the space, and escaping with
+        # double quotes raises a syntax issues, instead
+        # cURLs nmake will automatically invoke proper cl.exe if
+        # no env value for CC, CXX is specified
+        # Unset the value to allow for cURLs heuristics (derive via VCVARS)
+        # to derive the proper compiler
+        env = os.environ
+        env["CC"] = ""
+        env["CXX"] = ""
+        winbuild_dir = os.path.join(self.stage.source_path, "winbuild")
+        with working_dir(winbuild_dir):
+            nmake("/f", "Makefile.vc", *self.nmake_args(), ignore_quotes=True)
+        with working_dir(os.path.join(self.stage.source_path, "builds")):
+            install_dir = glob.glob("libcurl-**")[0]
+            install_tree(install_dir, self.prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     homepage = "https://github.com/llvm-doe-org"
     url = "https://github.com/llvm-doe-org/llvm-project/archive/llvmorg-10.0.0.zip"
     git = "https://github.com/llvm-doe-org/llvm-project"
-    maintainers = ["vlkale"]
+    maintainers("vlkale")
 
     tags = ["e4s"]
 
@@ -43,15 +43,9 @@ class LlvmDoe(CMakePackage, CudaPackage):
     # to save space, build with `build_type=Release`.
 
     variant(
-        "clang",
-        default=True,
-        description="Build the LLVM C/C++/Objective-C compiler frontend",
+        "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
     )
-    variant(
-        "flang",
-        default=False,
-        description="Build the LLVM Fortran compiler frontend",
-    )
+    variant("flang", default=False, description="Build the LLVM Fortran compiler frontend")
     variant(
         "omp_debug",
         default=False,
@@ -60,21 +54,13 @@ class LlvmDoe(CMakePackage, CudaPackage):
     variant("lldb", default=False, description="Build the LLVM debugger")
     variant("lld", default=True, description="Build the LLVM linker")
     variant("mlir", default=False, description="Build with MLIR support")
-    variant(
-        "internal_unwind",
-        default=True,
-        description="Build the libcxxabi libunwind",
-    )
+    variant("internal_unwind", default=True, description="Build the libcxxabi libunwind")
     variant(
         "polly",
         default=True,
         description="Build the LLVM polyhedral optimization plugin, " "only builds for 3.7.0+",
     )
-    variant(
-        "libcxx",
-        default=True,
-        description="Build the LLVM C++ standard library",
-    )
+    variant("libcxx", default=True, description="Build the LLVM C++ standard library")
     variant(
         "compiler-rt",
         default=True,
@@ -85,11 +71,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
         default=(sys.platform != "darwin"),
         description="Add support for LTO with the gold linker plugin",
     )
-    variant(
-        "split_dwarf",
-        default=False,
-        description="Build with split dwarf information",
-    )
+    variant("split_dwarf", default=False, description="Build with split dwarf information")
     variant(
         "llvm_dylib",
         default=False,
@@ -113,11 +95,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
         description="CMake build type",
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
-    variant(
-        "omp_tsan",
-        default=False,
-        description="Build with OpenMP capable thread sanitizer",
-    )
+    variant("omp_tsan", default=False, description="Build with OpenMP capable thread sanitizer")
     variant(
         "omp_as_runtime",
         default=True,
@@ -551,7 +529,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
         )
 
         if "+all_targets" not in spec:  # all is default on cmake
-
             targets = ["NVPTX", "AMDGPU"]
             if spec.version < Version("3.9.0"):
                 # Starting in 3.9.0 CppBackend is no longer a target (see

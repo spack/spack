@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -459,7 +459,7 @@ def make_argument_parser(**kwargs):
         dest="env_dir",
         metavar="DIR",
         action="store",
-        help="run with an environment directory (ignore named environments)",
+        help="run with an environment directory (ignore managed environments)",
     )
     env_group.add_argument(
         "-E",

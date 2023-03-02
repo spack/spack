@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,12 +52,7 @@ class Revbayes(CMakePackage):
     def cmake_args(self):
         args = []
         if "+mpi" in self.spec:
-            args.extend(
-                [
-                    self.define("MPI", "ON"),
-                    self.define("RB_EXEC_NAME", "rb-mpi"),
-                ]
-            )
+            args.extend([self.define("MPI", "ON"), self.define("RB_EXEC_NAME", "rb-mpi")])
         return args
 
     @run_before("cmake")

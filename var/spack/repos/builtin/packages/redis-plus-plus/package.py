@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,9 @@ class RedisPlusPlus(CMakePackage):
     homepage = "https://github.com/sewenew/redis-plus-plus"
     url = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.6.tar.gz"
 
-    maintainers = ["lpottier"]
+    maintainers("lpottier")
 
-    variant(
-        "cxxstd",
-        values=("11", "14", "17"),
-        default="14",
-        description="C++ standard used",
-    )
+    variant("cxxstd", values=("11", "14", "17"), default="14", description="C++ standard used")
     variant("shared", default=True, description="Enables the build of a shared library")
     variant("static", default=True, description="Enables the build of a static library")
     variant(
@@ -44,7 +39,6 @@ class RedisPlusPlus(CMakePackage):
     conflicts("+tls", when="+static", msg="Static libraries cannot be built with TLS support.")
 
     def cmake_args(self):
-
         cxxstd = self.spec.variants["cxxstd"].value
         use_fpic = ("+static" in self.spec) and ("+fpic" in self.spec)
 

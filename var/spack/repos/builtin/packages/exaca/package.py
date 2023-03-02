@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Exaca(CMakePackage):
     git = "https://github.com/LLNL/ExaCA.git"
     url = "https://github.com/LLNL/ExaCA/archive/1.0.0.tar.gz"
 
-    maintainers = ["streeve", "MattRolchigo"]
+    maintainers("streeve", "MattRolchigo")
 
     tags = ["ecp"]
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,7 +63,6 @@ class Wannier90(MakefilePackage):
         return abspath
 
     def edit(self, spec, prefix):
-
         lapack = self.spec["lapack"].libs
         blas = self.spec["blas"].libs
         mpi = self.spec["mpi"].libs
@@ -81,9 +80,7 @@ class Wannier90(MakefilePackage):
             filter_file(key, value, self.makefile_name)
 
         if self.spec.satisfies("%gcc@10:"):
-            fflags = [
-                "-fallow-argument-mismatch",
-            ]
+            fflags = ["-fallow-argument-mismatch"]
             filter_file(r"(^FCOPTS=.*)", r"\1 {0}".format(" ".join(fflags)), self.makefile_name)
 
         if "@:2 +shared" in self.spec:

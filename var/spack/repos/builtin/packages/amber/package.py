@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Amber(Package, CudaPackage):
     url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
     manual_download = True
 
-    maintainers = ["hseara"]
+    maintainers("hseara")
 
     version("20", sha256="a4c53639441c8cc85adee397933d07856cc4a723c82c6bea585cd76c197ead75")
     version("18", sha256="2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277")
@@ -201,11 +201,7 @@ class Amber(Package, CudaPackage):
 
         # Base configuration
         conf = Executable("./configure")
-        base_args = [
-            "--skip-python",
-            "--with-netcdf",
-            self.spec["netcdf-fortran"].prefix,
-        ]
+        base_args = ["--skip-python", "--with-netcdf", self.spec["netcdf-fortran"].prefix]
         if self.spec.satisfies("~x11"):
             base_args += ["-noX11"]
 

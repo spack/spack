@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -389,7 +389,7 @@ def test_apple_clang_flags():
     unsupported_flag_test("cxx17_flag", "apple-clang@6.0.0")
     supported_flag_test("cxx17_flag", "-std=c++1z", "apple-clang@6.1.0")
     supported_flag_test("c99_flag", "-std=c99", "apple-clang@6.1.0")
-    unsupported_flag_test("c11_flag", "apple-clang@6.0.0")
+    unsupported_flag_test("c11_flag", "apple-clang@3.0.0")
     supported_flag_test("c11_flag", "-std=c11", "apple-clang@6.1.0")
     supported_flag_test("cc_pic_flag", "-fPIC", "apple-clang@2.0.0")
     supported_flag_test("cxx_pic_flag", "-fPIC", "apple-clang@2.0.0")
@@ -409,7 +409,7 @@ def test_clang_flags():
     supported_flag_test("cxx17_flag", "-std=c++1z", "clang@3.5")
     supported_flag_test("cxx17_flag", "-std=c++17", "clang@5.0")
     supported_flag_test("c99_flag", "-std=c99", "clang@3.3")
-    unsupported_flag_test("c11_flag", "clang@6.0.0")
+    unsupported_flag_test("c11_flag", "clang@2.0")
     supported_flag_test("c11_flag", "-std=c11", "clang@6.1.0")
     supported_flag_test("cc_pic_flag", "-fPIC", "clang@3.3")
     supported_flag_test("cxx_pic_flag", "-fPIC", "clang@3.3")
@@ -715,19 +715,12 @@ fi
     # Add compiler to config
     compiler_info = {
         "spec": "gcc@foo",
-        "paths": {
-            "cc": gcc,
-            "cxx": None,
-            "f77": None,
-            "fc": None,
-        },
+        "paths": {"cc": gcc, "cxx": None, "f77": None, "fc": None},
         "flags": {},
         "operating_system": "fake",
         "target": "fake",
         "modules": ["turn_on"],
-        "environment": {
-            "set": {"CMP_VER": test_version},
-        },
+        "environment": {"set": {"CMP_VER": test_version}},
         "extra_rpaths": [],
     }
     compiler_dict = {"compiler": compiler_info}
@@ -768,19 +761,12 @@ fi
     # Add compiler to config
     compiler_info = {
         "spec": "gcc@foo",
-        "paths": {
-            "cc": gcc,
-            "cxx": None,
-            "f77": None,
-            "fc": None,
-        },
+        "paths": {"cc": gcc, "cxx": None, "f77": None, "fc": None},
         "flags": {},
         "operating_system": "fake",
         "target": "fake",
         "modules": ["turn_on"],
-        "environment": {
-            "set": {"CMP_VER": test_version},
-        },
+        "environment": {"set": {"CMP_VER": test_version}},
         "extra_rpaths": [],
     }
     compiler_dict = {"compiler": compiler_info}
@@ -829,12 +815,7 @@ echo "4.4.4"
     # Add compiler to config
     compiler_info = {
         "spec": "gcc@foo",
-        "paths": {
-            "cc": gcc,
-            "cxx": None,
-            "f77": None,
-            "fc": None,
-        },
+        "paths": {"cc": gcc, "cxx": None, "f77": None, "fc": None},
         "flags": {},
         "operating_system": "fake",
         "target": "fake",

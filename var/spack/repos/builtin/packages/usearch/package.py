@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Usearch(Package):
     https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.drive5.com/usearch/"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     manual_download = True
 

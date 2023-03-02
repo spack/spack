@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,7 @@ import pytest
 
 import spack.paths
 import spack.repo
-from spack.directory_layout import (
-    DirectoryLayout,
-    InvalidDirectoryLayoutParametersError,
-)
+from spack.directory_layout import DirectoryLayout, InvalidDirectoryLayoutParametersError
 from spack.spec import Spec
 from spack.util.path import path_to_os_path
 

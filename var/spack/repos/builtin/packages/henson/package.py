@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,13 @@ class Henson(CMakePackage):
 
     version("master", branch="master")
 
+    maintainers("mrzv")
+
     depends_on("mpi")
 
     variant("python", default=False, description="Build Python bindings")
     extends("python", when="+python")
+    depends_on("py-mpi4py", when="+python", type=("build", "run"))
     variant("mpi-wrappers", default=False, description="Build MPI wrappers (PMPI)")
 
     conflicts("^openmpi", when="+mpi-wrappers")

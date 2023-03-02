@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,6 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 
 base32_alphabet = "abcdefghijklmnopqrstuvwxyz234567"
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +90,6 @@ def test_query_arguments():
 @pytest.mark.db
 @pytest.mark.usefixtures("database", "mock_display")
 def test_tag1(parser, specs):
-
     args = parser.parse_args(["--tag", "tag1"])
     spack.cmd.find.find(parser, args)
 
@@ -131,15 +128,28 @@ def test_namespaces_shown_correctly(database):
 
 @pytest.mark.db
 def test_find_cli_output_format(database, mock_tty_stdout):
+    # Currently logging on Windows detaches stdout
+    # from the terminal so we miss some output during tests
+    # TODO: (johnwparent): Once logging is amended on Windows,
+    # restore this test
     out = find("zmpi")
-    assert out.endswith(
-        dedent(
-            """\
-    zmpi@1.0
-    ==> 1 installed package
-    """
+    if not sys.platform == "win32":
+        assert out.endswith(
+            dedent(
+                """\
+      zmpi@1.0
+      ==> 1 installed package
+      """
+            )
         )
-    )
+    else:
+        assert out.endswith(
+            dedent(
+                """\
+      zmpi@1.0
+      """
+            )
+        )
 
 
 def _check_json_output(spec_list):
@@ -185,12 +195,7 @@ def test_find_json_deps(database):
 @pytest.mark.db
 def test_display_json(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs)
@@ -205,12 +210,7 @@ def test_display_json(database, capsys):
 @pytest.mark.db
 def test_display_json_deps(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs, deps=True)
@@ -226,31 +226,19 @@ def test_display_json_deps(database, capsys):
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-zmpi",
-            "mpileaks-mpich",
-            "mpileaks-mpich2",
-        ]
+        ["mpileaks-zmpi", "mpileaks-mpich", "mpileaks-mpich2"]
     )
 
     output = find("--format", "{name}-{version}-{compiler.name}-{^mpi.name}", "mpileaks")
     assert "installed package" not in output
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-2.3-gcc-zmpi",
-            "mpileaks-2.3-gcc-mpich",
-            "mpileaks-2.3-gcc-mpich2",
-        ]
+        ["mpileaks-2.3-gcc-zmpi", "mpileaks-2.3-gcc-mpich", "mpileaks-2.3-gcc-mpich2"]
     )
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
     assert set(e[:-7] for e in elements) == set(
-        [
-            "mpileaks-zmpi-",
-            "mpileaks-mpich-",
-            "mpileaks-mpich2-",
-        ]
+        ["mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"]
     )
 
     # hashes are in base32
@@ -306,12 +294,7 @@ def test_find_very_long(database, config):
     output = find("-L", "--no-groups", "mpileaks")
 
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     assert set(output.strip().split("\n")) == set(
@@ -349,6 +332,7 @@ def test_find_command_basic_usage(database):
     assert "mpileaks" in output
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
     mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config

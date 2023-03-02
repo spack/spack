@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,9 +35,7 @@ class AprUtil(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ["libaprutil-{0}".format(self.version.up_to(1))],
-            root=self.prefix,
-            recursive=True,
+            ["libaprutil-{0}".format(self.version.up_to(1))], root=self.prefix, recursive=True
         )
 
     def configure_args(self):
@@ -55,12 +53,7 @@ class AprUtil(AutotoolsPackage):
         ]
 
         if "+crypto" in spec:
-            args.extend(
-                [
-                    "--with-crypto",
-                    "--with-openssl={0}".format(spec["openssl"].prefix),
-                ]
-            )
+            args.extend(["--with-crypto", "--with-openssl={0}".format(spec["openssl"].prefix)])
         else:
             args.append("--without-crypto")
 
@@ -77,25 +70,14 @@ class AprUtil(AutotoolsPackage):
         if "+sqlite" in spec:
             if spec.satisfies("^sqlite@3.0:3"):
                 args.extend(
-                    [
-                        "--with-sqlite3={0}".format(spec["sqlite"].prefix),
-                        "--without-sqlite2",
-                    ]
+                    ["--with-sqlite3={0}".format(spec["sqlite"].prefix), "--without-sqlite2"]
                 )
             elif spec.satisfies("^sqlite@2.0:2"):
                 args.extend(
-                    [
-                        "--with-sqlite2={0}".format(spec["sqlite"].prefix),
-                        "--without-sqlite3",
-                    ]
+                    ["--with-sqlite2={0}".format(spec["sqlite"].prefix), "--without-sqlite3"]
                 )
         else:
-            args.extend(
-                [
-                    "--without-sqlite2",
-                    "--without-sqlite3",
-                ]
-            )
+            args.extend(["--without-sqlite2", "--without-sqlite3"])
 
         if "+odbc" in spec:
             args.append("--with-odbc={0}".format(spec["unixodbc"].prefix))
