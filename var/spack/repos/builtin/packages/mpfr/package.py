@@ -13,6 +13,8 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.mpfr.org/"
     gnu_mirror_path = "mpfr/mpfr-4.0.2.tar.bz2"
 
+    version("4.2.0", sha256="691db39178e36fc460c046591e4b0f2a52c8f2b3ee6d750cc2eab25f1eaa999d")
+    version("4.1.1", sha256="85fdf11614cc08e3545386d6b9c8c9035e3db1e506211a45f4e108117fe3c951")
     version("4.1.0", sha256="feced2d430dd5a97805fa289fed3fc8ff2b094c02d05287fd6133e7f1f0ec926")
     version("4.0.2", sha256="c05e3f02d09e0e9019384cdd58e0f19c64e6db1fd6f5ecf77b4b1c61ca253acc")
     version("4.0.1", sha256="a4d97610ba8579d380b384b225187c250ef88cfe1d5e7226b89519374209b86b")
@@ -32,7 +34,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     depends_on("autoconf-archive", when="@4.0.2:", type="build")
-    depends_on("texinfo", when="@4.1.0", type="build")
+    depends_on("texinfo", when="@4.1.0:", type="build")
 
     variant(
         "libs",
