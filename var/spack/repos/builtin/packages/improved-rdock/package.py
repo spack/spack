@@ -59,12 +59,16 @@ class ImprovedRdock(MakefilePackage):
     def setup_run_environment(self, env):
         env.set("RBT_ROOT", self.prefix)
 
-    def test(self):
+    def test_rbcavity(self):
+        """run example"""
         copy(join_path(self.prefix.example, "1sj0", "*"), ".")
         opts = ["-r", "1sj0_rdock.prm", "-was"]
-        self.run_test("rbcavity", options=opts)
+        rbcavity = which("rbcavity")
+        rbcavity(*opts)
 
-        mpiexe = self.spec["mpi"].prefix.bin.mpirun
+    def test_rbdock(self):
+        """run example using mpirun"""
+        mpirun = self.spec["mpi"].prefix.bin.mpirun
         opts = [
             self.prefix.bin.rbdock,
             "-r",
@@ -80,12 +84,19 @@ class ImprovedRdock(MakefilePackage):
             "-s",
             "1",
         ]
-        self.run_test(str(mpiexe), options=opts)
+        mpirun(*opts)
 
+    def test_test_sh(self):
+        """run cached test.sh"""
+        bash = which("bash")
         opts = [join_path(self.test_suite.current_test_data_dir, "test.sh")]
-        self.run_test("bash", options=opts)
+        bash(*opts)
 
-        pythonexe = self.spec["python"].command.path
-        opts = [self.spec.prefix.bin.sdrmsd, "1sj0_ligand.sd", "1sj0_docking_out_sorted.sd"]
-        expected = ["1\t0.55", "100\t7.91"]
-        self.run_test(pythonexe, options=opts, expected=expected)
+    def test_sdrmsd(self):
+        """run installed sdrmsd"""
+        python = self.spec["python"].command
+        opts = [self.prefix.bin.sdrmsd, "1sj0_ligand.sd", "1sj0_docking_out_sorted.sd"]
+        out = python(*opts, output=str.split, error=str.split)
+
+        expected = [r"1\t0.55", r"100\t7.91"]
+        check_outputs(expected, out)
