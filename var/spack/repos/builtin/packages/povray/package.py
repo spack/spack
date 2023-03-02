@@ -146,12 +146,11 @@ class Povray(AutotoolsPackage):
 
         return extra_args
 
-    def test(self):
+    def test_render_sample(self):
+        """check render of sample file"""
         povs = find(self.prefix.share, "biscuit.pov")[0]
         copy(povs, ".")
-        self.run_test(
-            "povray",
-            options=["biscuit.pov"],
-            purpose="test: render sample file",
-            expected=["POV-Ray finished"],
-        )
+
+        povray = which(self.prefix.bin.povray)
+        out = povray("biscuit.pov", output=str.split, error=str.split)
+        assert "POV-Ray finished" in out
