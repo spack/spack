@@ -78,11 +78,11 @@ class CrayMpich(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
-        env.set("MPICH_CC", spack_cc)
-        env.set("MPICH_CXX", spack_cxx)
-        env.set("MPICH_F77", spack_f77)
-        env.set("MPICH_F90", spack_fc)
-        env.set("MPICH_FC", spack_fc)
+        env.set("MPICH_CC", dependent_spec.spack_cc)
+        env.set("MPICH_CXX", dependent_spec.spack_cxx)
+        env.set("MPICH_F77", dependent_spec.spack_f77)
+        env.set("MPICH_F90", dependent_spec.spack_fc)
+        env.set("MPICH_FC", dependent_spec.spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
@@ -92,10 +92,10 @@ class CrayMpich(Package):
             spec.mpifc = join_path(self.prefix.bin, "mpif90")
             spec.mpif77 = join_path(self.prefix.bin, "mpif77")
         else:
-            spec.mpicc = spack_cc
-            spec.mpicxx = spack_cxx
-            spec.mpifc = spack_fc
-            spec.mpif77 = spack_f77
+            spec.mpicc = dependent_spec.spack_cc
+            spec.mpicxx = dependent_spec.spack_cxx
+            spec.mpifc = dependent_spec.spack_fc
+            spec.mpif77 = dependent_spec.spack_f77
 
     def install(self, spec, prefix):
         raise InstallError(
