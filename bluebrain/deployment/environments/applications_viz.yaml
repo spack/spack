@@ -1,16 +1,16 @@
 spack:
   view: false
-  concretization: separately
   modules:
-    tcl:
-      whitelist:
-        - brayns
-        - py-brayns
-        - brion+python
-        - meshball
-        - ultraliser
+    default:
+      tcl:
+        include:
+          - brayns
+          - py-brayns
+          - brion
+          - meshball
+          - ultraliser
   specs:
-    - brayns%gcc ^ospray%intel ^intel-tbb%intel
+    - brayns
     - py-brayns
     - brion +python
     - ultraliser ^hdf5~mpi

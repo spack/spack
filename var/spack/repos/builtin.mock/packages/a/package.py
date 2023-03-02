@@ -1,57 +1,54 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import spack.build_systems.autotools
+from spack.package import *
 
 
 class A(AutotoolsPackage):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', 'abcdef0123456789abcdef0123456789')
-
-    variant(
-        'foo', description='',
-        values=any_combination_of('bar', 'baz', 'fee').with_default('bar'),
-    )
+    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("2.0", "abcdef0123456789abcdef0123456789")
 
     variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
+        "foo",
+        description="",
+        values=any_combination_of("bar", "baz", "fee").with_default("bar"),
     )
 
-    variant('lorem_ipsum', description='', default=False)
+    variant("foobar", values=("bar", "baz", "fee"), default="bar", description="", multi=False)
 
-    variant('bvv', default=True, description='The good old BV variant')
+    variant("lorem_ipsum", description="", default=False)
 
-    depends_on('b', when='foobar=bar')
-    depends_on('test-dependency', type='test')
+    variant("bvv", default=True, description="The good old BV variant")
+
+    depends_on("b", when="foobar=bar")
+    depends_on("test-dependency", type="test")
 
     parallel = False
 
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def with_or_without_fee(self, activated):
         if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
+            return "--no-fee"
+        return "--fee-all-the-time"
 
-    def autoreconf(self, spec, prefix):
+    def autoreconf(self, pkg, spec, prefix):
         pass
 
-    def configure(self, spec, prefix):
+    def configure(self, pkg, spec, prefix):
         pass
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         pass
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # sanity_check_prefix requires something in the install directory
         # Test requires overriding the one provided by `AutotoolsPackage`
         mkdirp(prefix.bin)

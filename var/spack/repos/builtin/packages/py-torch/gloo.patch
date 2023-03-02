@@ -1,0 +1,20 @@
+--- a/third_party/gloo/gloo/transport/tcp/device.cc    2023-01-06 16:21:38.000000000 +0100
++++ b/third_party/gloo/gloo/transport/tcp/device.cc      2023-01-11 11:47:50.358158000 +0100
+@@ -12,6 +12,7 @@
+ #include <netdb.h>
+ #include <netinet/in.h>
+ #include <string.h>
++#include <array>
+
+ #include "gloo/common/linux.h"
+ #include "gloo/common/logging.h"
+--- a/third_party/gloo/gloo/transport/tcp/tls/pair.cc  2023-01-06 16:21:38.000000000 +0100
++++ b/third_party/gloo/gloo/transport/tcp/tls/pair.cc    2023-01-11 11:48:09.169892000 +0100
+@@ -17,6 +17,7 @@
+
+ #include <cstring>
+ #include <poll.h>
++#include <array>
+
+ namespace gloo {
+ namespace transport {

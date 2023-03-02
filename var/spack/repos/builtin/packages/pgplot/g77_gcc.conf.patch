@@ -78,7 +78,7 @@
  
  # Mandatory.
  # On systems that have a ranlib utility, put "ranlib" here. On other
-@@ -108,7 +108,7 @@
+@@ -108,16 +108,16 @@
  # Optional: Needed if SHARED_LIB is set.
  # How to create a shared library from a trailing list of object files.
   
@@ -87,3 +87,13 @@
  
  # Optional:
  # On systems such as Solaris 2.x, that allow specification of the
+ # libraries that a shared library needs to be linked with when a
+ # program that uses it is run, this variable should contain the
+ # library-specification flags used to specify these libraries to
+ # $SHARED_LD
+  
+-   SHARED_LIB_LIBS=""
++   SHARED_LIB_LIBS="@SHARED_LIB_LIBS@"
+ 
+ # Optional:
+ # Compiler name used on Next systems to compile objective-C files.

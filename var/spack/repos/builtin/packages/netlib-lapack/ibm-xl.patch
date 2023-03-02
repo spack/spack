@@ -1,3 +1,14 @@
+Fixes for IBM XL and Cray CCE builds:
+
+* Avoid optimizations that would alter program semantics by changing the
+  qstrict activation threshold from O3 to O2 (XL)
+
+* Don't assume Fortran code is all in fixed source form; disable qfixed (XL)
+
+* Correct path to the fallback configuration used to handle mangling for
+  C++/Fortran compatibility (CCE, XL)
+##############################################################################
+
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -62,7 +62,7 @@

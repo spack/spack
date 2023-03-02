@@ -8,4 +8,4 @@ lmod:
     - openblas
 
   all:
-    autoload: 'direct'
+    autoload: direct

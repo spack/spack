@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class CsaC(AutotoolsPackage):
@@ -12,8 +12,8 @@ class CsaC(AutotoolsPackage):
     a C library and a command line utility csabathy."""
 
     homepage = "https://github.com/sakov/csa-c"
-    git      = "https://github.com/sakov/csa-c.git"
+    git = "https://github.com/sakov/csa-c.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    configure_directory = 'csa'
+    configure_directory = "csa"

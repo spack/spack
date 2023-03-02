@@ -1,0 +1,20 @@
+CalculationMode = gs
+
+Dimensions = 2
+TheoryLevel = independent_particles
+
+BoxShape = parallelepiped
+Lsize = 8
+Spacing = 0.1
+
+%Output
+  wfs | plane_z
+%
+
+%Species
+  "helium" | species_user_defined | potential_formula | "-2/(1+x^2)^(1/2)-2/(1+y^2)^(1/2)+1/(1+(x-y)^2)^(1/2)" | valence | 1
+%
+
+%Coordinates
+  "helium"| 0 | 0
+%

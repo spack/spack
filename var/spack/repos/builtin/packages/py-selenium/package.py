@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PySelenium(PythonPackage):
@@ -15,7 +15,7 @@ class PySelenium(PythonPackage):
     homepage = "https://github.com/SeleniumHQ/selenium/"
     pypi = "selenium/selenium-3.141.0.tar.gz"
 
-    version('3.141.0', sha256='deaf32b60ad91a4611b98d8002757f29e6f2c2d5fcaf202e1c9ad06d6772300d')
+    version("3.141.0", sha256="deaf32b60ad91a4611b98d8002757f29e6f2c2d5fcaf202e1c9ad06d6772300d")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-urllib3', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-urllib3", type=("build", "run"))

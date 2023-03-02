@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyCovCore(PythonPackage):
@@ -12,7 +12,7 @@ class PyCovCore(PythonPackage):
     homepage = "https://github.com/schlamar/cov-core"
     pypi = "cov-core/cov-core-1.15.0.tar.gz"
 
-    version('1.15.0', sha256='4a14c67d520fda9d42b0da6134638578caae1d374b9bb462d8de00587dba764c')
+    version("1.15.0", sha256="4a14c67d520fda9d42b0da6134638578caae1d374b9bb462d8de00587dba764c")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-coverage@3.6:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-coverage@3.6:", type=("build", "run"))

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Perfstubs(CMakePackage):
@@ -19,13 +19,11 @@ class Perfstubs(CMakePackage):
     """
 
     homepage = "https://github.com/khuck/perfstubs"
-    git      = "https://github.com/khuck/perfstubs.git"
+    git = "https://github.com/khuck/perfstubs.git"
 
-    version('master', branch='master')
-    variant('static', default=False, description='Build static executable support')
+    version("master", branch="master")
+    variant("static", default=False, description="Build static executable support")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant('PERFSTUBS_USE_STATIC', 'static')
-        ]
+        args = [self.define_from_variant("PERFSTUBS_USE_STATIC", "static")]
         return args

@@ -14,19 +14,19 @@ class PyMorphoKit(PythonPackage):
 
     submodules = True
 
-    version('develop', branch='main')
-    version('0.3.4', tag='v0.3.4')
-    version('0.3.3', tag='0.3.3')
-    version('0.3.2', tag='v0.3.2')
-    version('0.2.0', tag='v0.2.0')
+    version("develop", branch="main")
+    version("0.3.4", tag="v0.3.4")
+    version("0.3.3", tag="0.3.3")
+    version("0.3.2", tag="v0.3.2")
+    version("0.2.0", tag="v0.2.0")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-setuptools-scm', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools-scm", type="build")
 
-    depends_on('morphio@2.3.9:', type=('build', 'link'))
+    depends_on("morphio@2.3.9:", type=("build", "link"))
 
-    depends_on('cmake@3.2:', type='build')
-    depends_on('py-numpy', type='run')
-    depends_on('boost', when='@0.2.0')
+    depends_on("cmake@3.2:", type="build")
+    depends_on("py-numpy", type="run")
+    depends_on("boost", when="@0.2.0")
 
-    patch('h5.patch', when='@0.3.2')
+    patch("h5.patch", when="@0.3.2")

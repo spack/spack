@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class Damask(BundlePackage):
@@ -21,17 +24,27 @@ class Damask(BundlePackage):
 
     """
 
-    homepage = "https://damask3.mpie.de"
+    homepage = "https://damask.mpie.de"
 
-    maintainers = ['MarDiehl']
+    maintainers = ["MarDiehl"]
 
-    version('3.0.0-alpha4')
-    version('3.0.0-alpha5')
+    version("3.0.0-alpha7")
+    version("3.0.0-alpha6")
+    version("3.0.0-alpha5")
+    version("3.0.0-alpha4")
 
-    depends_on('damask-grid@3.0.0-alpha4', when='@3.0.0-alpha4', type='run')
-    depends_on('damask-mesh@3.0.0-alpha4', when='@3.0.0-alpha4', type='run')
-    depends_on('py-damask@3.0.0-alpha4',   when='@3.0.0-alpha4', type='run')
+    depends_on("damask-grid@3.0.0-alpha7", when="@3.0.0-alpha7", type="run")
+    depends_on("damask-mesh@3.0.0-alpha7", when="@3.0.0-alpha7", type="run")
+    depends_on("py-damask@3.0.0-alpha7", when="@3.0.0-alpha7", type="run")
 
-    depends_on('damask-grid@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
-    depends_on('damask-mesh@3.0.0-alpha5', when='@3.0.0-alpha5', type='run')
-    depends_on('py-damask@3.0.0-alpha5',   when='@3.0.0-alpha5', type='run')
+    depends_on("damask-grid@3.0.0-alpha6", when="@3.0.0-alpha6", type="run")
+    depends_on("damask-mesh@3.0.0-alpha6", when="@3.0.0-alpha6", type="run")
+    depends_on("py-damask@3.0.0-alpha6", when="@3.0.0-alpha6", type="run")
+
+    depends_on("damask-grid@3.0.0-alpha5", when="@3.0.0-alpha5", type="run")
+    depends_on("damask-mesh@3.0.0-alpha5", when="@3.0.0-alpha5", type="run")
+    depends_on("py-damask@3.0.0-alpha5", when="@3.0.0-alpha5", type="run")
+
+    depends_on("damask-grid@3.0.0-alpha4", when="@3.0.0-alpha4", type="run")
+    depends_on("damask-mesh@3.0.0-alpha4", when="@3.0.0-alpha4", type="run")
+    depends_on("py-damask@3.0.0-alpha4", when="@3.0.0-alpha4", type="run")

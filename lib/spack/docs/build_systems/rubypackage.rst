@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _rubypackage:
 
------------
-RubyPackage
------------
+----
+Ruby
+----
 
 Like Perl, Python, and R, Ruby has its own build system for
 installing Ruby gems.
@@ -16,7 +16,7 @@ installing Ruby gems.
 Phases
 ^^^^^^
 
-The ``RubyPackage`` base class provides the following phases that
+The ``RubyBuilder`` and ``RubyPackage`` base classes provide the following phases that
 can be overridden:
 
 #. ``build`` - build everything needed to install

@@ -1,0 +1,90 @@
+diff -ru spack-src/GOURMET/src/java/platform/show.org/JOGLCanvasBase.java spack-src/GOURMET/src/java/platform/show/JOGLCanvasBase.java
+--- spack-src/GOURMET/src/java/platform/show.org/JOGLCanvasBase.java	2022-03-02 10:49:48.000000000 +0900
++++ spack-src/GOURMET/src/java/platform/show/JOGLCanvasBase.java	2022-03-02 10:50:36.000000000 +0900
+@@ -7,24 +7,24 @@
+ package platform.show;
+ 
+ /* JOGL v2.2.4 */
+-import javax.media.opengl.GL;
+-import javax.media.opengl.GLAutoDrawable;
++//import javax.media.opengl.GL;
++//import javax.media.opengl.GLAutoDrawable;
+ // JOGL V1.*
+ //import javax.media.opengl.GLCanvas;
+ // JOGL V2.*
+ //import javax.media.opengl.awt.GLCanvas;
+-import javax.media.opengl.awt.GLJPanel;
++//import javax.media.opengl.awt.GLJPanel;
+ // JOGL V1.* or V2.* 
+-import javax.media.opengl.GLCapabilities;
+-import javax.media.opengl.GLContext;
+-import javax.media.opengl.GLEventListener;
++//import javax.media.opengl.GLCapabilities;
++//import javax.media.opengl.GLContext;
++//import javax.media.opengl.GLEventListener;
+ // JOGL V2.*
+-import javax.media.opengl.GLProfile;
++//import javax.media.opengl.GLProfile;
+ 
+-/* JOGL v2.3.2 *
++/* JOGL v2.3.2 */
+ import com.jogamp.opengl.*;
+ import com.jogamp.opengl.awt.GLJPanel;
+-*/
++
+ /**
+  * Common GLCanvas Class
+  */
+diff -ru spack-src/GOURMET/src/java/platform/show.org/JOGLCanvas.java spack-src/GOURMET/src/java/platform/show/JOGLCanvas.java
+--- spack-src/GOURMET/src/java/platform/show.org/JOGLCanvas.java	2022-03-02 10:49:48.000000000 +0900
++++ spack-src/GOURMET/src/java/platform/show/JOGLCanvas.java	2022-03-02 10:41:56.000000000 +0900
+@@ -15,14 +15,15 @@
+ import java.util.LinkedList;
+ import java.util.List;
+ 
+-/* JOGL v2.2.4 */
++/* JOGL v2.2.4 *
+ import javax.media.opengl.GLAutoDrawable;
+ import javax.media.opengl.GLCapabilities;
++*/
+ 
+-/* JOGL v2.3.2 *
++/* JOGL v2.3.2 */
+ import com.jogamp.opengl.GLAutoDrawable;
+ import com.jogamp.opengl.GLCapabilities;
+-*/
++
+ import platform.util.DataDriver;
+ import platform.util.IndexArraySet;
+ import platform.util.NativeDrawObject;
+diff -ru spack-src/GOURMET/src/java/platform/show.org/PickingCanvas.java spack-src/GOURMET/src/java/platform/show/PickingCanvas.java
+--- spack-src/GOURMET/src/java/platform/show.org/PickingCanvas.java	2022-03-02 10:49:48.000000000 +0900
++++ spack-src/GOURMET/src/java/platform/show/PickingCanvas.java	2022-03-02 10:41:56.000000000 +0900
+@@ -14,12 +14,13 @@
+ import java.awt.event.MouseMotionListener;
+ import java.util.ArrayList;
+ 
+-/* JOGL v2.2.4 */
++/* JOGL v2.2.4 *
+ import javax.media.opengl.GLCapabilities;
++*/
+ 
+-/* JOGL v2.3.2 *
++/* JOGL v2.3.2 */
+ import com.jogamp.opengl.GLCapabilities;
+-*/
++
+ import javax.swing.SwingUtilities;
+ 
+ import platform.util.IndexArraySet;
+--- spack-src/GOURMET/src/java/platform/show/PickingCanvas.java.org	2022-03-02 11:50:02.000000000 +0900
++++ spack-src/GOURMET/src/java/platform/show/PickingCanvas.java	2022-03-02 11:52:57.000000000 +0900
+@@ -341,7 +341,7 @@
+ 		// Begin of drawing process.
+ 		if(!makeCurrent()) return null;
+ 		// for HiDPI display
+-		int[] scale = getCurrentSurfaceScale(new int[2]); /* int -> float in later version */
++		float[] scale = getCurrentSurfaceScale(new float[2]);
+ 		x *= scale[0];
+ 		y *= scale[1];
+ 		////////////////////////////////////////////////////////

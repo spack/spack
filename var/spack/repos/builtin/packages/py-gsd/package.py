@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyGsd(PythonPackage):
@@ -18,8 +18,8 @@ class PyGsd(PythonPackage):
     homepage = "https://gsd.readthedocs.io/en/stable/#"
     pypi = "gsd/gsd-1.9.3.tar.gz"
 
-    version('1.9.3', sha256='c6b37344e69020f69fda2b8d97f894cb41fd720840abeda682edd680d1cff838')
+    version("1.9.3", sha256="c6b37344e69020f69fda2b8d97f894cb41fd720840abeda682edd680d1cff838")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
-    depends_on('py-numpy@1.9.3:19', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cython", type="build")
+    depends_on("py-numpy@1.9.3:19", type=("build", "run"))

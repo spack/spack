@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyArgs(PythonPackage):
@@ -12,6 +12,6 @@ class PyArgs(PythonPackage):
     homepage = "https://github.com/kennethreitz/args"
     pypi = "args/args-0.1.0.tar.gz"
 
-    version('0.1.0', sha256='a785b8d837625e9b61c39108532d95b85274acd679693b71ebb5156848fcf814')
+    version("0.1.0", sha256="a785b8d837625e9b61c39108532d95b85274acd679693b71ebb5156848fcf814")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

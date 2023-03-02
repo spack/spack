@@ -15,25 +15,30 @@ class ModelNeocortex(SimModel):
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/neocortex"
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/neocortex.git"
+    submodules = True
 
-    version('develop', branch='main', submodules=True, clean=False)
-    version('1.10', tag='1.10', submodules=True, clean=False)
-    version('1.9', tag='1.9', submodules=True, clean=False)
-    version('1.1', tag='1.1', submodules=True, clean=False)
-    version('0.3', tag='0.3-1', submodules=True, clean=False)
-    version('0.2', tag='0.2', submodules=True, clean=False)
-    version('0.1', tag='0.1', submodules=True, clean=False)
+    version("develop", branch="main")
+    version("1.10", tag="1.10")
+    version("1.9", tag="1.9")
+    version("1.1", tag="1.1")
+    version("0.3", tag="0.3-1")
+    version("0.2", tag="0.2")
+    version("0.1", tag="0.1")
 
-    variant('v5', default=True, description='Enable support for previous v5 circuits')
-    variant('plasticity', default=False, description="Use optimized ProbAMPANMDA_EMS and ProbGABAAB_EMS")
+    variant("v5", default=True, description="Enable support for previous v5 circuits")
+    variant(
+        "plasticity",
+        default=False,
+        description="Use optimized ProbAMPANMDA_EMS and ProbGABAAB_EMS",
+    )
 
     mech_name = "neocortex"
 
-    @run_before('build')
+    @run_before("build")
     def prepare_mods(self):
-        if self.spec.satisfies('+v5'):
-            copy_all('mod/v5', 'mod', make_link)
-        copy_all('mod/v6', 'mod', make_link)
+        if self.spec.satisfies("+v5"):
+            copy_all("mod/v5", "mod", make_link)
+        copy_all("mod/v6", "mod", make_link)
         # Plasticity
-        if self.spec.satisfies('+plasticity'):
-            copy_all('mod/v6/optimized', 'mod', make_link)
+        if self.spec.satisfies("+plasticity"):
+            copy_all("mod/v6/optimized", "mod", make_link)

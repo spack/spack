@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRuv(RPackage):
-    """Detect and Remove Unwanted Variation using Negative Controls:
+    """Detect and Remove Unwanted Variation using Negative Controls.
 
     Implements the 'RUV' (Remove Unwanted Variation) algorithms. These
     algorithms attempt to adjust for systematic errors of unknown origin in
@@ -22,11 +22,10 @@ class RRuv(RPackage):
     'RUV-rinv', 'RUV-I', and RUV-III', along with various supporting
     algorithms."""
 
-    homepage = "http://www-personal.umich.edu/~johanngb/ruv/"
-    cran     = "ruv"
+    cran = "ruv"
 
-    version('0.9.7.1', sha256='a0c54e56ba3d8f6ae178ae4d0e417a79295abf5dcb68bbae26c4b874734d98d8')
+    version("0.9.7.1", sha256="a0c54e56ba3d8f6ae178ae4d0e417a79295abf5dcb68bbae26c4b874734d98d8")
 
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
-    depends_on('r-gridextra', type=('build', 'run'))
+    depends_on("r-ggplot2", type=("build", "run"))
+    depends_on("r-scales", type=("build", "run"))
+    depends_on("r-gridextra", type=("build", "run"))

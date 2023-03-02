@@ -11,42 +11,48 @@ class Brayns(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/Brayns"
     git = "https://github.com/BlueBrain/Brayns.git"
-    generator = 'Ninja'
+    generator = "Ninja"
     submodules = False
 
-    version('develop', branch='develop')
-    version('3.0.0', tag='3.0.0')
-    version('3.1.0', tag='3.1.0')
+    version("develop", branch="develop")
+    version("3.0.0", tag="3.0.0")
+    version("3.1.0", tag="3.1.0")
 
-    variant('blueconfig', default=True, description='BlueConfig support')
+    variant("blueconfig", default=True, description="BlueConfig support")
 
-    depends_on('cmake@3.15:', type='build')
-    depends_on('ispc@1.18.0:', type='build')
-    depends_on('ninja', type='build')
-    depends_on('git', type='build')
+    depends_on("cmake@3.15:", type="build")
+    depends_on("ispc@1.18.0:", type="build")
+    depends_on("ninja", type="build")
+    depends_on("git", type="build")
 
-    depends_on('brion@3.3.9:', when='+blueconfig')
-    depends_on('libsonata@:0.1.16', when='@:3.1.0')
-    depends_on('libsonata@0.1.17:', when='@3.1.1:')
-    depends_on('morphio@3.3.3:')
-    depends_on('mvdtool@2.4.2:')
-    depends_on('ospray@2.10.0')
-    depends_on('rkcommon@1.10.0')
-    depends_on('spdlog@1.9.2')
-    depends_on('poco@1.11.1')
-    depends_on('glm')
-    depends_on('zlib')
-    depends_on('bzip2')
+    depends_on("brion@3.3.9:", when="+blueconfig")
+    depends_on("libsonata@:0.1.16", when="@:3.1.0")
+    depends_on("libsonata@0.1.17:", when="@3.1.1:")
+    depends_on("morphio@3.3.3:")
+    depends_on("mvdtool@2.4.2:")
+    depends_on("ospray@2.10.0")
+    depends_on("rkcommon@1.10.0")
+    depends_on("spdlog@1.9.2")
+    depends_on("poco@1.11.1")
+    depends_on("glm")
+    depends_on("zlib")
+    depends_on("bzip2")
+
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/1133.patch?full_index=1",
+        sha256="e97840784211f363e3aeea556816422d0b9c5ca8bed8bc62bcce829b543cb86e",
+        when="@3.0.0%gcc@12:",
+    )
 
     def cmake_args(self):
         return [
-            '-DBRAYNS_CIRCUITEXPLORER_ENABLED=ON',
-            '-DBRAYNS_DTI_ENABLED=ON',
-            '-DBRAYNS_ATLASEXPLORER_ENABLED=ON',
-            '-DBRAYNS_CYLINDRICCAMERA_ENABLED=ON',
-            '-DBRAYNS_MOLECULEEXPLORER_ENABLED=ON'
+            "-DBRAYNS_CIRCUITEXPLORER_ENABLED=ON",
+            "-DBRAYNS_DTI_ENABLED=ON",
+            "-DBRAYNS_ATLASEXPLORER_ENABLED=ON",
+            "-DBRAYNS_CYLINDRICCAMERA_ENABLED=ON",
+            "-DBRAYNS_MOLECULEEXPLORER_ENABLED=ON",
         ]
 
     def check(self):
         with working_dir(self.build_directory):
-            ninja('tests')
+            ninja("tests")

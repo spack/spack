@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _mavenpackage:
 
-------------
-MavenPackage
-------------
+-----
+Maven
+-----
 
 Apache Maven is a general-purpose build system that does not rely
 on Makefiles to build software. It is designed for building and
@@ -17,7 +17,7 @@ managing and Java-based project.
 Phases
 ^^^^^^
 
-The ``MavenPackage`` base class comes with the following phases:
+The ``MavenBuilder`` and ``MavenPackage`` base classes come with the following phases:
 
 #. ``build`` - compile code and package into a JAR file
 #. ``install`` - copy to installation prefix

@@ -75,7 +75,7 @@ def configure_pipeline(parser, args):
         spack_package_name = simplify_name(package_name)
         # Check if this package exists
         try:
-            spack.repo.get(spack_package_name)
+            spack.repo.path.get_pkg_class(spack_package_name)
         except spack.repo.UnknownPackageError:
             raise Exception(
                 "Could not find a Spack package corresponding to {}, tried {}".format(
@@ -110,10 +110,8 @@ def configure_pipeline(parser, args):
             else:
                 assert info["ref_type"] == "tag"
                 remote_ref = "refs/tags/" + info["ref"]
-            spack_package = spack.repo.get(spack_package_name)
-            remote_refs = git(
-                "ls-remote", spack_package.git, remote_ref, output=str
-            ).splitlines()
+            spack_package = spack.repo.path.get_pkg_class(spack_package_name)
+            remote_refs = git("ls-remote", spack_package.git, remote_ref, output=str).splitlines()
             assert len(remote_refs) < 2
             if len(remote_refs) == 0:
                 raise Exception(
@@ -137,10 +135,8 @@ def configure_pipeline(parser, args):
 
     # Now modify the Spack recipes of the given packages
     for spack_package_name, info in modifications.items():
-        spack_package = spack.repo.get(spack_package_name)
-        spack_recipe = os.path.join(
-            spack_package.package_dir, spack.repo.package_file_name
-        )
+        spack_package = spack.repo.path.get_pkg_class(spack_package_name)
+        spack_recipe = os.path.join(spack_package.package_dir, spack.repo.package_file_name)
         # Using filter_file seems neater than calling sed, but it is a little
         # more limited. First, remove any existing branch/commit/tag from the
         # develop version.
@@ -152,9 +148,7 @@ def configure_pipeline(parser, args):
             spack_recipe,
         )
         # Second, insert the new commit="sha" part
-        tty.info(
-            '{}@develop: use commit="{}"'.format(spack_package_name, info["commit"])
-        )
+        tty.info('{}@develop: use commit="{}"'.format(spack_package_name, info["commit"]))
         filter_file(
             "version\\('develop'",
             "version('develop', commit='{}'".format(info["commit"]),
@@ -171,14 +165,10 @@ def configure_pipeline(parser, args):
         # Make sure the develop version has an explicit preferred=True.
         if "develop" not in already_preferred:
             tty.info("{}@develop: add preferred=True".format(spack_package_name))
-            filter_file(
-                "version\\('develop'", "version('develop', preferred=True", spack_recipe
-            )
+            filter_file("version\\('develop'", "version('develop', preferred=True", spack_recipe)
         # Make sure no other versions have an explicit preferred=True.
         for other_version in already_preferred - {"develop"}:
-            tty.info(
-                "{}@{}: remove preferred=True".format(spack_package_name, other_version)
-            )
+            tty.info("{}@{}: remove preferred=True".format(spack_package_name, other_version))
             escaped_version = re.escape(other_version)
             filter_file(
                 "version\\s*\\(\\s*(['\"]{1})"

@@ -12,7 +12,7 @@ class PyTess(PythonPackage):
     """
 
     homepage = "https://bbpgitlab.epfl.ch/nse/mirrors/tess"
-    git      = "ssh://git@bbpgitlab.epfl.ch/nse/mirrors/tess.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/nse/mirrors/tess.git"
 
     version("develop", branch="master")
     version("0.3.2", tag="tess-v0.3.2")

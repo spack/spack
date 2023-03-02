@@ -15,11 +15,12 @@ class PyEfel(PythonPackage):
     The user of the library provides a set of traces and selects the
     features to be calculated. The library will then extract the requested
     features and return the values to the user."""
+
     homepage = "https://github.com/BlueBrain/eFEL"
     pypi = "efel/efel-3.0.80.tar.gz"
 
-    version('4.0.4', sha256='258c506776df609edc799338fd773e78f0f0315fd6f3e2f969478bda401a8894')
+    version("4.0.4", sha256="258c506776df609edc799338fd773e78f0f0315fd6f3e2f969478bda401a8894")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type='run')
-    depends_on('py-six', type='run')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type="run")
+    depends_on("py-six", type="run")

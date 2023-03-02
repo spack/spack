@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.util.path
 from spack.error import SpackError
 
 description = "add a spec to an environment's dev-build information"
@@ -17,26 +18,33 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-p', '--path', help='Source location of package')
+    subparser.add_argument("-p", "--path", help="Source location of package")
 
     clone_group = subparser.add_mutually_exclusive_group()
     clone_group.add_argument(
-        '--no-clone', action='store_false', dest='clone', default=None,
-        help='Do not clone. The package already exists at the source path')
+        "--no-clone",
+        action="store_false",
+        dest="clone",
+        default=None,
+        help="Do not clone. The package already exists at the source path",
+    )
     clone_group.add_argument(
-        '--clone', action='store_true', dest='clone', default=None,
-        help='Clone the package even if the path already exists')
+        "--clone",
+        action="store_true",
+        dest="clone",
+        default=None,
+        help="Clone the package even if the path already exists",
+    )
 
     subparser.add_argument(
-        '-f', '--force',
-        help='Remove any files or directories that block cloning source code')
+        "-f", "--force", help="Remove any files or directories that block cloning source code"
+    )
 
-    arguments.add_common_arguments(subparser, ['spec'])
+    arguments.add_common_arguments(subparser, ["spec"])
 
 
 def develop(parser, args):
-    env = spack.cmd.require_active_env(cmd_name='develop')
+    env = spack.cmd.require_active_env(cmd_name="develop")
 
     if not args.spec:
         if args.clone is False:
@@ -44,18 +52,18 @@ def develop(parser, args):
 
         # download all dev specs
         for name, entry in env.dev_specs.items():
-            path = entry.get('path', name)
-            abspath = path if os.path.isabs(path) else os.path.join(
-                env.path, path)
+            path = entry.get("path", name)
+            abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
 
             if os.path.exists(abspath):
-                msg = "Skipping developer download of %s" % entry['spec']
+                msg = "Skipping developer download of %s" % entry["spec"]
                 msg += " because its path already exists."
                 tty.msg(msg)
                 continue
 
-            stage = spack.spec.Spec(entry['spec']).package.stage
-            stage.steal_source(abspath)
+            spec = spack.spec.Spec(entry["spec"])
+            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            pkg_cls(spec).stage.steal_source(abspath)
 
         if not env.dev_specs:
             tty.warn("No develop specs to download")
@@ -72,11 +80,7 @@ def develop(parser, args):
 
     # default path is relative path to spec.name
     path = args.path or spec.name
-
-    # get absolute path to check
-    abspath = path
-    if not os.path.isabs(abspath):
-        abspath = os.path.join(env.path, path)
+    abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
 
     # clone default: only if the path doesn't exist
     clone = args.clone

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyFlexmock(PythonPackage):
@@ -16,10 +16,10 @@ class PyFlexmock(PythonPackage):
     the creation of fake objects as unobtrusive as possible."""
 
     homepage = "https://flexmock.readthedocs.io/en/latest/"
-    pypi     = "flexmock/flexmock-0.10.4.tar.gz"
+    pypi = "flexmock/flexmock-0.10.4.tar.gz"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.10.4', sha256='5033ceb974d6452cf8716c2ff5059074b77e546df5c849fb44a53f98dfe0d82c')
+    version("0.10.4", sha256="5033ceb974d6452cf8716c2ff5059074b77e546df5c849fb44a53f98dfe0d82c")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

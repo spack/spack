@@ -1,48 +1,48 @@
 modules:
-
-  enable::
+  default:
+    enable::
     - tcl
 
-  tcl:
-    verbose: True
-    hash_length: 0
-    blacklist:
+    tcl:
+      verbose: true
+      hash_length: 0
+      projections:
+        all: '{name}/{version}'
+      all:
+        autoload: external
+      gcc:
+        environment:
+          set:
+            MPICC_CC: gcc
+            MPICXX_CXX: g++
+            MPIF90_F90: gfortran
+      intel:
+        environment:
+          set:
+            MPICC_CC: icc
+            MPICXX_CXX: icpc
+            MPIF90_F90: ifort
+      intel-oneapi-compilers:
+        environment:
+          set:
+            MPICC_CC: icc
+            MPICXX_CXX: icpc
+            MPIF90_F90: ifort
+      llvm:
+        environment:
+          set:
+            MPICC_CC: clang
+            MPICXX_CXX: clang++
+            MPIF90_F90: gfortran
+      nvhpc:
+        environment:
+          set:
+            MPICC_CC: nvc
+            MPICXX_CXX: nvc++
+            MPIF90_F90: nvfortran
+      exclude:
       - '%clang'
       - '%gcc'
       - '%intel'
       - '%nvhpc'
       - '%oneapi'
-    projections:
-      all: '{name}/{version}'
-    all:
-      autoload: 'external'
-    gcc:
-      environment:
-        set:
-          MPICC_CC: 'gcc'
-          MPICXX_CXX: 'g++'
-          MPIF90_F90: 'gfortran'
-    intel:
-      environment:
-        set:
-          MPICC_CC: 'icc'
-          MPICXX_CXX: 'icpc'
-          MPIF90_F90: 'ifort'
-    intel-oneapi-compilers:
-      environment:
-        set:
-          MPICC_CC: 'icc'
-          MPICXX_CXX: 'icpc'
-          MPIF90_F90: 'ifort'
-    llvm:
-      environment:
-        set:
-          MPICC_CC: 'clang'
-          MPICXX_CXX: 'clang++'
-          MPIF90_F90: 'gfortran'
-    nvhpc:
-      environment:
-        set:
-          MPICC_CC: 'nvc'
-          MPICXX_CXX: 'nvc++'
-          MPIF90_F90: 'nvfortran'

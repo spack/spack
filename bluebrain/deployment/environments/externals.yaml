@@ -1,54 +1,52 @@
 spack:
   view: false
-  concretization: separately
   modules:
-    tcl:
-      whitelist:
-        - arm-forge
-        - apptainer
-        - bison
-        - blender
-        - ccache
-        - clang-tools
-        - cli-tools
-        - cmake
-        - cuda
-        - cudnn
-        - darshan-runtime
-        - darshan-util
-        - doxygen
-        - environment-modules
-        - flex
-        - ffmpeg
-        - gdb
-        - git
-        - git-lfs
-        - graphviz
-        - hpctoolkit
-        - hpcviewer
-        - hpe-mpi
-        - intel-mpi
-        - intel-oneapi-mkl
-        - ispc
-        - julia
-        - likwid
-        - llvm
-        - mvapich2
-        - ninja
-        - node-js
-        - nvhpc
-        - pgi
-        - python
-        - singularityce
-        - snakemake
-        - stat
-        - totalview
-        - valgrind
-        - virtualgl
-        - freeimage
-        - ilmbase
-        - openblas
-        - openexr
+    default:
+      tcl:
+        include:
+          - arm-forge
+          - apptainer
+          - bison
+          - blender
+          - ccache
+          - clang-tools
+          - cli-tools
+          - cmake
+          - cuda
+          - cudnn
+          - darshan-runtime
+          - darshan-util
+          - doxygen
+          - environment-modules
+          - flex
+          - ffmpeg
+          - gdb
+          - git
+          - git-lfs
+          - gmake
+          - graphviz
+          - hpe-mpi
+          - intel-mpi
+          - intel-oneapi-mkl
+          - ispc
+          - julia
+          - likwid
+          - llvm
+          - mvapich2
+          - ninja
+          - node-js
+          - nvhpc
+          - pgi
+          - python
+          - singularityce
+          - snakemake
+          - stat
+          - totalview
+          - valgrind
+          - virtualgl
+          - ilmbase
+          - openblas
+          - openexr
   packages:
     all:
       providers:
@@ -59,25 +57,20 @@ spack:
     graphviz:
       variants: +pangocairo+expat
     llvm:
-      # The general cuda should be set via the generic packages.yaml!
+      # The general cuda should be set via the generic packages.yaml
       variants: +cuda cuda_arch=70 +omp_tsan +python +link_dylib
     mvapich2:
       variants: fabrics=mrail process_managers=slurm file_systems=gpfs
     pgi:
       variants: +network+nvidia+mpi
   specs:
-    - llvm@13.0.0
-    - llvm@12.0.1
-    - llvm@11.1.0
+    - llvm@14.0.6 ~lldb  # thanks, py-libclang (+lldb fails to link ncurses)
+    - llvm@15.0.4
     # keep the x.y.z versions in sync with the llvm versions that we install
     # and the pN version in sync with the clang-tools recipe
-    - clang-tools@13.0.0p2
-    - clang-tools@12.0.1p2
-    - clang-tools@11.1.0p2
-    - nvhpc@21.11
-    - nvhpc@22.3
+    - clang-tools@15.0.4
     - nvhpc@23.1
-    - arm-forge
+    - arm-forge+accept-eula
     - apptainer
     - bison
     - blender
@@ -87,13 +80,16 @@ spack:
     - cgal
     - cli-tools
     - cmake
-    - cuda@11.0.2
-    # NVHPC 21.11 ships CUDA 11.5 (11.5.20211118 in version.json)
-    - cuda@11.5.1
-    # NVHPC 22.3 ships CUDA 11.6.1 (version.json)
-    - cuda@11.6.1
-    # NVHPC 22.11 ship CUDA 11.8.0 (version.json)
-    - cuda@11.8.0
+    # - cuda@11.0.2
+    # # NVHPC 21.11 ships CUDA 11.5 (11.5.20211118 in version.json)
+    # - cuda@11.5.1
+    # # NVHPC 22.2 ships CUDA 11.6.0 (version.json)
+    # - cuda@11.6.0
+    # # NVHPC 22.3 ships CUDA 11.6.1 (version.json)
+    # - cuda@11.6.1
+    # NVHPC 22.11 ships CUDA 11.8.0 (version.json)
+    - cuda@11.8.0%gcc@11.3.0
+    - cuda@12.0.0
     - cudnn@8.0.3.33-11.0
     - darshan-runtime
     - darshan-util
@@ -106,12 +102,10 @@ spack:
     - git
     - git-lfs
     - glew
-    - gmsh+metis~mpi+oce+openmp+shared
+    - gmake  # Used to parallelize Spack deployment builds
     - graphviz
     - hdf5~mpi@1.10.7
     - help2man
-    - hpctoolkit+mpi
-    - hpcviewer
     - hpe-mpi@2.25.hmpt
     - intel-mkl
     # Leads to issues down the line, where it is preferred over hpe-mpi
@@ -119,14 +113,14 @@ spack:
     # - intel-mpi
     - intel-oneapi-mkl@2021.4.0
     - ispc
-    - julia
+    - julia@1.6  # As requested by Polina S.
     - libxslt
-    - libzmq+libsodium%intel
+    - libzmq+libsodium
     - likwid
     - mvapich2@2.3.7
     - ncurses
     - ninja
-    - node-js  # this is needed for our on-demand jupyter service
+    - node-js
     - openscenegraph  # doesn't like to be built in a spec with LLVM
     # Leads to issues down the line, where it is preferred over intel-mkl
     # #providers
@@ -134,20 +128,17 @@ spack:
     - poppler
     - python
     - qhull
-    - "qt@5:"  # Forcefully avoid qt@4
     - readline
     - singularityce
     - snakemake
     - sqlite
-    - stat
+   # BlueBrain TODO: re-enable and fix
+   #- stat
     - totalview
     - valgrind~mpi
     - virtualgl
-    - vrpn
     - zlib
     # Viz stuff that complicates specs
     - optix
-    # Viz needs; FreeImage should be axed ASAP
-    - freeimage
     - ilmbase
     - openexr

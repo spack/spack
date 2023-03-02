@@ -1,8 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """
 This file contains code for creating spack mirror directories.  A
 mirror is an organized hierarchy containing specially named archive
@@ -11,6 +10,7 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
+import collections
 import operator
 import os
 import os.path
@@ -19,14 +19,9 @@ import traceback
 
 import ruamel.yaml.error as yaml_error
 import six
-from ordereddict_backport import OrderedDict
-
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
 
 import llnl.util.tty as tty
+from llnl.util.compat import Mapping
 from llnl.util.filesystem import mkdirp
 
 import spack.config
@@ -39,6 +34,10 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.util.spack_yaml import syaml_dict
 from spack.version import VersionList
+
+
+def _is_string(url):
+    return isinstance(url, six.string_types)
 
 
 def _display_mirror_entry(size, name, url, type_=None):
@@ -56,13 +55,16 @@ class Mirror(object):
 
     Mirrors have a fetch_url that indicate where and how artifacts are fetched
     from them, and a push_url that indicate where and how artifacts are pushed
-    to them.  These two URLs are usually the same.
+    to them. These two URLs are usually the same.
     """
 
     def __init__(self, fetch_url, push_url=None, name=None):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
+
+    def __eq__(self, other):
+        return self._fetch_url == other._fetch_url and self._push_url == other._push_url
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
@@ -76,85 +78,149 @@ class Mirror(object):
             data = syaml.load(stream)
             return Mirror.from_dict(data, name)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return Mirror.from_dict(d, name)
+        try:
+            d = sjson.load(stream)
+            return Mirror.from_dict(d, name)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror:", str(e)),
+                e,
+            )
 
     def to_dict(self):
         if self._push_url is None:
-            return self._fetch_url
+            return syaml_dict([("fetch", self._fetch_url), ("push", self._fetch_url)])
         else:
-            return syaml_dict([
-                ('fetch', self._fetch_url),
-                ('push', self._push_url)])
+            return syaml_dict([("fetch", self._fetch_url), ("push", self._push_url)])
 
     @staticmethod
     def from_dict(d, name=None):
         if isinstance(d, six.string_types):
             return Mirror(d, name=name)
         else:
-            return Mirror(d['fetch'], d['push'], name)
+            return Mirror(d["fetch"], d["push"], name=name)
 
     def display(self, max_len=0):
         if self._push_url is None:
-            _display_mirror_entry(max_len, self._name, self._fetch_url)
+            _display_mirror_entry(max_len, self._name, self.fetch_url)
         else:
-            _display_mirror_entry(
-                max_len, self._name, self._fetch_url, "fetch")
-            _display_mirror_entry(
-                max_len, self._name, self._push_url, "push")
+            _display_mirror_entry(max_len, self._name, self.fetch_url, "fetch")
+            _display_mirror_entry(max_len, self._name, self.push_url, "push")
 
     def __str__(self):
         name = self._name
         if name is None:
-            name = ''
+            name = ""
         else:
             name = ' "%s"' % name
 
         if self._push_url is None:
             return "[Mirror%s (%s)]" % (name, self._fetch_url)
 
-        return "[Mirror%s (fetch: %s, push: %s)]" % (
-            name, self._fetch_url, self._push_url)
+        return "[Mirror%s (fetch: %s, push: %s)]" % (name, self._fetch_url, self._push_url)
 
     def __repr__(self):
-        return ''.join((
-            'Mirror(',
-            ', '.join(
-                '%s=%s' % (k, repr(v))
-                for k, v in (
-                    ('fetch_url', self._fetch_url),
-                    ('push_url', self._push_url),
-                    ('name', self._name))
-                if k == 'fetch_url' or v),
-            ')'
-        ))
+        return "".join(
+            (
+                "Mirror(",
+                ", ".join(
+                    "%s=%s" % (k, repr(v))
+                    for k, v in (
+                        ("fetch_url", self._fetch_url),
+                        ("push_url", self._push_url),
+                        ("name", self._name),
+                    )
+                    if k == "fetch_url" or v
+                ),
+                ")",
+            )
+        )
 
     @property
     def name(self):
         return self._name or "<unnamed>"
 
+    def get_profile(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get("profile", None)
+            return self._fetch_url.get("profile", None)
+        else:
+            return None
+
+    def set_profile(self, url_type, profile):
+        if url_type == "push":
+            self._push_url["profile"] = profile
+        else:
+            self._fetch_url["profile"] = profile
+
+    def get_access_pair(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get("access_pair", None)
+            return self._fetch_url.get("access_pair", None)
+        else:
+            return None
+
+    def set_access_pair(self, url_type, connection_tuple):
+        if url_type == "push":
+            self._push_url["access_pair"] = connection_tuple
+        else:
+            self._fetch_url["access_pair"] = connection_tuple
+
+    def get_endpoint_url(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get("endpoint_url", None)
+            return self._fetch_url.get("endpoint_url", None)
+        else:
+            return None
+
+    def set_endpoint_url(self, url_type, url):
+        if url_type == "push":
+            self._push_url["endpoint_url"] = url
+        else:
+            self._fetch_url["endpoint_url"] = url
+
+    def get_access_token(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get("access_token", None)
+            return self._fetch_url.get("access_token", None)
+        else:
+            return None
+
+    def set_access_token(self, url_type, connection_token):
+        if url_type == "push":
+            self._push_url["access_token"] = connection_token
+        else:
+            self._fetch_url["access_token"] = connection_token
+
     @property
     def fetch_url(self):
-        return self._fetch_url
+        return self._fetch_url if _is_string(self._fetch_url) else self._fetch_url["url"]
 
     @fetch_url.setter
     def fetch_url(self, url):
-        self._fetch_url = url
+        self._fetch_url["url"] = url
         self._normalize()
 
     @property
     def push_url(self):
         if self._push_url is None:
-            return self._fetch_url
-        return self._push_url
+            return self._fetch_url if _is_string(self._fetch_url) else self._fetch_url["url"]
+        return self._push_url if _is_string(self._push_url) else self._push_url["url"]
 
     @push_url.setter
     def push_url(self, url):
-        self._push_url = url
+        self._push_url["url"] = url
         self._normalize()
 
     def _normalize(self):
@@ -166,11 +232,17 @@ class MirrorCollection(Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):
-        self._mirrors = OrderedDict(
+        self._mirrors = collections.OrderedDict(
             (name, Mirror.from_dict(mirror, name))
             for name, mirror in (
-                mirrors.items() if mirrors is not None else
-                spack.config.get('mirrors', scope=scope).items()))
+                mirrors.items()
+                if mirrors is not None
+                else spack.config.get("mirrors", scope=scope).items()
+            )
+        )
+
+    def __eq__(self, other):
+        return self._mirrors == other._mirrors
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(True), stream)
@@ -185,20 +257,29 @@ class MirrorCollection(Mapping):
             data = syaml.load(stream)
             return MirrorCollection(data)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror collection:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return MirrorCollection(d)
+        try:
+            d = sjson.load(stream)
+            return MirrorCollection(d)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)),
+                e,
+            )
 
     def to_dict(self, recursive=False):
-        return syaml_dict(sorted(
-            (
-                (k, (v.to_dict() if recursive else v))
-                for (k, v) in self._mirrors.items()
-            ), key=operator.itemgetter(0)
-        ))
+        return syaml_dict(
+            sorted(
+                ((k, (v.to_dict() if recursive else v)) for (k, v) in self._mirrors.items()),
+                key=operator.itemgetter(0),
+            )
+        )
 
     @staticmethod
     def from_dict(d):
@@ -242,7 +323,7 @@ def _determine_extension(fetcher):
 
             if ext:
                 # Remove any leading dots
-                ext = ext.lstrip('.')
+                ext = ext.lstrip(".")
             else:
                 msg = """\
 Unable to parse extension from {0}.
@@ -264,7 +345,7 @@ Spack not to expand it with the following syntax:
             ext = None
     else:
         # Otherwise we'll make a .tar.gz ourselves
-        ext = 'tar.gz'
+        ext = "tar.gz"
 
     return ext
 
@@ -282,6 +363,7 @@ class MirrorReference(object):
     this includes names generated by previous naming schemes that are no-longer
     reported by ``storage_path`` or ``cosmetic_path``.
     """
+
     def __init__(self, cosmetic_path, global_path=None):
         self.global_path = global_path
         self.cosmetic_path = cosmetic_path
@@ -304,8 +386,9 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     storage path of the resource associated with the specified ``fetcher``."""
     ext = None
     if spec:
-        versions = spec.package.versions.get(spec.package.version, {})
-        ext = versions.get('extension', None)
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        versions = pkg_cls.versions.get(spec.version, {})
+        ext = versions.get("extension", None)
     # If the spec does not explicitly specify an extension (the default case),
     # then try to determine it automatically. An extension can only be
     # specified for the primary source of the package (e.g. the source code
@@ -318,7 +401,7 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
 
     global_ref = fetcher.mirror_id()
     if global_ref:
-        global_ref = os.path.join('_source-cache', global_ref)
+        global_ref = os.path.join("_source-cache", global_ref)
     if global_ref and ext:
         global_ref += ".%s" % ext
 
@@ -333,18 +416,16 @@ def get_all_versions(specs):
     version, this information will be omitted in the new set; for example; the
     new set of specs will not include variant settings.
     """
-
     version_specs = []
     for spec in specs:
-        pkg = spec.package
-
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
         # Skip any package that has no known versions.
-        if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
+        if not pkg_cls.versions:
+            tty.msg("No safe (checksummed) versions for package %s" % pkg_cls.name)
             continue
 
-        for version in pkg.versions:
-            version_spec = spack.spec.Spec(pkg.name)
+        for version in pkg_cls.versions:
+            version_spec = spack.spec.Spec(pkg_cls.name)
             version_spec.versions = VersionList([version])
             version_specs.append(version_spec)
 
@@ -417,50 +498,48 @@ def create(path, specs, skip_unstable_versions=False):
         * present:  Package specs that were already present.
         * mirrored: Package specs that were successfully mirrored.
         * error:    Package specs that failed to mirror due to some error.
+    """
+    # automatically spec-ify anything in the specs array.
+    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
 
-    This routine iterates through all known package versions, and
-    it creates specs for those versions.  If the version satisfies any spec
-    in the specs list, it is downloaded and added to the mirror.
+    mirror_cache, mirror_stats = mirror_cache_and_stats(path, skip_unstable_versions)
+    for spec in specs:
+        mirror_stats.next_spec(spec)
+        create_mirror_from_package_object(spec.package, mirror_cache, mirror_stats)
+
+    return mirror_stats.stats()
+
+
+def mirror_cache_and_stats(path, skip_unstable_versions=False):
+    """Return both a mirror cache and a mirror stats, starting from the path
+    where a mirror ought to be created.
+
+    Args:
+        path (str): path to create a mirror directory hierarchy in.
+        skip_unstable_versions: if true, this skips adding resources when
+            they do not have a stable archive checksum (as determined by
+            ``fetch_strategy.stable_target``)
     """
     parsed = url_util.parse(path)
     mirror_root = url_util.local_file_path(parsed)
     if not mirror_root:
-        raise spack.error.SpackError(
-            'MirrorCaches only work with file:// URLs')
-
-    # automatically spec-ify anything in the specs array.
-    specs = [
-        s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
-        for s in specs]
-
+        raise spack.error.SpackError("MirrorCaches only work with file:// URLs")
     # Get the absolute path of the root before we start jumping around.
     if not os.path.isdir(mirror_root):
         try:
             mkdirp(mirror_root)
         except OSError as e:
-            raise MirrorError(
-                "Cannot create directory '%s':" % mirror_root, str(e))
-
+            raise MirrorError("Cannot create directory '%s':" % mirror_root, str(e))
     mirror_cache = spack.caches.MirrorCache(
-        mirror_root, skip_unstable_versions=skip_unstable_versions)
+        mirror_root, skip_unstable_versions=skip_unstable_versions
+    )
     mirror_stats = MirrorStats()
-
-    # Iterate through packages and download all safe tarballs for each
-    for spec in specs:
-        if spec.package.has_code:
-            mirror_stats.next_spec(spec)
-            _add_single_spec(spec, mirror_cache, mirror_stats)
-        else:
-            tty.msg("Skipping package {pkg} without code".format(
-                pkg=spec.format("{name}{@version}")
-            ))
-
-    return mirror_stats.stats()
+    return mirror_cache, mirror_stats
 
 
-def add(name, url, scope):
+def add(name, url, scope, args={}):
     """Add a named mirror in the given scope"""
-    mirrors = spack.config.get('mirrors', scope=scope)
+    mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml_dict()
 
@@ -468,14 +547,27 @@ def add(name, url, scope):
         tty.die("Mirror with name %s already exists." % name)
 
     items = [(n, u) for n, u in mirrors.items()]
-    items.insert(0, (name, url))
+    mirror_data = url
+    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
+    # On creation, assume connection data is set for both
+    if any(value for value in key_values if value in args):
+        url_dict = {
+            "url": url,
+            "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
+            "access_token": args.s3_access_token,
+            "profile": args.s3_profile,
+            "endpoint_url": args.s3_endpoint_url,
+        }
+        mirror_data = {"fetch": url_dict, "push": url_dict}
+
+    items.insert(0, (name, mirror_data))
     mirrors = syaml_dict(items)
-    spack.config.set('mirrors', mirrors, scope=scope)
+    spack.config.set("mirrors", mirrors, scope=scope)
 
 
 def remove(name, scope):
     """Remove the named mirror in the given scope"""
-    mirrors = spack.config.get('mirrors', scope=scope)
+    mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml_dict()
 
@@ -483,15 +575,15 @@ def remove(name, scope):
         tty.die("No mirror with name %s" % name)
 
     old_value = mirrors.pop(name)
-    spack.config.set('mirrors', mirrors, scope=scope)
+    spack.config.set("mirrors", mirrors, scope=scope)
 
     debug_msg_url = "url %s"
     debug_msg = ["Removed mirror %s with"]
     values = [name]
 
     try:
-        fetch_value = old_value['fetch']
-        push_value = old_value['push']
+        fetch_value = old_value["fetch"]
+        push_value = old_value["push"]
 
         debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
         values.extend((fetch_value, push_value))
@@ -544,18 +636,29 @@ class MirrorStats(object):
         self.errors.add(self.current_spec)
 
 
-def _add_single_spec(spec, mirror, mirror_stats):
-    tty.msg("Adding package {pkg} to mirror".format(
-        pkg=spec.format("{name}{@version}")
-    ))
+def create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats):
+    """Add a single package object to a mirror.
+
+    The package object is only required to have an associated spec
+    with a concrete version.
+
+    Args:
+        pkg_obj (spack.package_base.PackageBase): package object with to be added.
+        mirror_cache (spack.caches.MirrorCache): mirror where to add the spec.
+        mirror_stats (spack.mirror.MirrorStats): statistics on the current mirror
+
+    Return:
+        True if the spec was added successfully, False otherwise
+    """
+    tty.msg("Adding package {} to mirror".format(pkg_obj.spec.format("{name}{@version}")))
     num_retries = 3
     while num_retries > 0:
         try:
-            with spec.package.stage as pkg_stage:
-                pkg_stage.cache_mirror(mirror, mirror_stats)
-                for patch in spec.package.all_patches():
+            with pkg_obj.stage as pkg_stage:
+                pkg_stage.cache_mirror(mirror_cache, mirror_stats)
+                for patch in pkg_obj.all_patches():
                     if patch.stage:
-                        patch.stage.cache_mirror(mirror, mirror_stats)
+                        patch.stage.cache_mirror(mirror_cache, mirror_stats)
                     patch.clean()
             exception = None
             break
@@ -563,15 +666,46 @@ def _add_single_spec(spec, mirror, mirror_stats):
             exc_tuple = sys.exc_info()
             exception = e
         num_retries -= 1
-
     if exception:
-        if spack.config.get('config:debug'):
+        if spack.config.get("config:debug"):
             traceback.print_exception(file=sys.stderr, *exc_tuple)
         else:
             tty.warn(
-                "Error while fetching %s" % spec.cformat('{name}{@version}'),
-                getattr(exception, 'message', exception))
+                "Error while fetching %s" % pkg_obj.spec.cformat("{name}{@version}"),
+                getattr(exception, "message", exception),
+            )
         mirror_stats.error()
+        return False
+    return True
+
+
+def push_url_from_directory(output_directory):
+    """Given a directory in the local filesystem, return the URL on
+    which to push binary packages.
+    """
+    scheme = url_util.parse(output_directory, scheme="<missing>").scheme
+    if scheme != "<missing>":
+        raise ValueError("expected a local path, but got a URL instead")
+    mirror_url = "file://" + output_directory
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_name(mirror_name):
+    """Given a mirror name, return the URL on which to push binary packages."""
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_name)
+    if mirror.name == "<unnamed>":
+        raise ValueError('no mirror named "{0}"'.format(mirror_name))
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_url(mirror_url):
+    """Given a mirror URL, return the URL on which to push binary packages."""
+    scheme = url_util.parse(mirror_url, scheme="<missing>").scheme
+    if scheme == "<missing>":
+        raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
 
 
 class MirrorError(spack.error.SpackError):

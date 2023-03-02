@@ -5,8 +5,23 @@ from spack.pkg.builtin.py_torch import PyTorch as BuiltinPyTorch
 class PyTorch(BuiltinPyTorch):
     __doc__ = BuiltinPyTorch.__doc__
 
-    # GCC 11 removed thread_id equality, fix other compilation errors
-    patch('gcc_thread_id.patch', when='@1.10.0%gcc@11')
-    patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/66089.patch',
-          sha256='a03a7a55c61e965a75a979328592fb62819cf08bb5f33ff235a4035494dcb620',
-          when='@1.10.0%gcc@11')
+    version("1.13.1", tag="v1.13.1", submodules=True)
+
+    # Dependencies found in requirements.txt
+    depends_on("py-sympy", when="@1.13:", type=("build", "run"))
+    depends_on("py-filelock", when="@1.13:", type=("build", "run"))
+    depends_on("py-networkx", when="@1.13:", type=("build", "run"))
+    depends_on("py-jinja2", when="@1.13:", type=("build", "run"))
+
+    # Build fails without this one marked as a link dependency!
+    depends_on("glog", type=("build", "link", "run"))
+
+    # Brute force for BBP purposes: pin the compiler to something cuda-compatible
+    depends_on("cuda@11.8.0%gcc@:11", when="@1.13:+cuda", type=("build", "link", "run"))
+    depends_on("cudnn@8.4:", when="@1.13:+cudnn", type=("build", "link", "run"))
+
+    def setup_build_environment(self, env):
+        super().setup_build_environment(env)
+
+        # Avoid ImportError: no module named site
+        env.unset("PYTHONHOME")

@@ -1,11 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-from spack import *
+from llnl.util import tty
+
+from spack.package import *
 
 
 class Bolt(CMakePackage):
@@ -20,11 +22,11 @@ class Bolt(CMakePackage):
     OpenMP compiler, and GCC."""
 
     homepage = "https://www.bolt-omp.org/"
-    url      = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
-    git      = "https://github.com/pmodels/bolt.git"
-    maintainers = ['shintaro-iwasaki']
+    url = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
+    git = "https://github.com/pmodels/bolt.git"
+    maintainers = ["shintaro-iwasaki"]
 
-    tags = ['e4s']
+    tags = ["e4s"]
 
     version("main", branch="main")
     version("2.0", sha256="f84b6a525953edbaa5d28748ef3ab172a3b6f6899b07092065ba7d1ccc6eb5ac")
@@ -33,50 +35,53 @@ class Bolt(CMakePackage):
 
     test_requires_compiler = True
 
-    depends_on('argobots')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on("argobots")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
 
     def cmake_args(self):
         spec = self.spec
         options = [
-            '-DLIBOMP_USE_ARGOBOTS=on',
-            '-DLIBOMP_ARGOBOTS_INSTALL_DIR=' + spec['argobots'].prefix
+            "-DLIBOMP_USE_ARGOBOTS=on",
+            "-DLIBOMP_ARGOBOTS_INSTALL_DIR=" + spec["argobots"].prefix,
         ]
 
         return options
 
-    @run_after('install')
+    @run_after("install")
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(['examples'])
+        self.cache_extra_test_sources(["examples"])
 
     def run_sample_nested_example(self):
         """Run stand alone test: sample_nested"""
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples')
+        test_dir = join_path(self.test_suite.current_test_cache_dir, "examples")
+        exe = "sample_nested"
+        source_file = "sample_nested.c"
 
-        if not os.path.exists(test_dir):
-            print('Skipping bolt test')
+        if not os.path.isfile(join_path(test_dir, source_file)):
+            tty.warn("Skipping bolt test:" "{0} does not exist".format(source_file))
             return
 
-        exe = 'sample_nested'
+        self.run_test(
+            exe=os.environ["CXX"],
+            options=[
+                "-L{0}".format(self.prefix.lib),
+                "-I{0}".format(self.prefix.include),
+                "{0}".format(join_path(test_dir, source_file)),
+                "-o",
+                exe,
+                "-lomp",
+                "-lbolt",
+            ],
+            purpose="test: compile {0} example".format(exe),
+            work_dir=test_dir,
+        )
 
-        # TODO: Either change to use self.compiler.cc (so using the build-time compiler)
-        #  or add test parts that compile with the different supported compilers.
-        self.run_test('gcc',
-                      options=['-lomp', '-o', exe,
-                               '-L{0}'.format(join_path(self.prefix, 'lib')),
-                               '{0}'.format(join_path(test_dir, 'sample_nested.c'))],
-                      purpose='test: compile {0} example'.format(exe),
-                      work_dir=test_dir)
-
-        self.run_test(exe,
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+        self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
 
     def test(self):
-        print("Running bolt test")
         self.run_sample_nested_example()

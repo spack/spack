@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class Pangolin(CMakePackage):
@@ -9,15 +12,15 @@ class Pangolin(CMakePackage):
     managing OpenGL display / interaction and abstracting video input."""
 
     homepage = "https://github.com/stevenlovegrove/Pangolin"
-    git      = "https://github.com/stevenlovegrove/Pangolin.git"
+    git = "https://github.com/stevenlovegrove/Pangolin.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     # Required dependencies
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on('gl')
-    depends_on('glew')
-    depends_on('glu', type='link')
+    depends_on("cmake@2.8.12:", type="build")
+    depends_on("gl")
+    depends_on("glew")
+    depends_on("glu", type="link")
 
     # Optional dependencies
-    depends_on('eigen')
+    depends_on("eigen")

@@ -1,24 +1,23 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Tramonto(CMakePackage):
     """Tramonto: Software for Nanostructured Fluids in Materials and Biology"""
 
     homepage = "https://software.sandia.gov/tramonto/"
-    git      = "https://github.com/Tramonto/Tramonto.git"
+    git = "https://github.com/Tramonto/Tramonto.git"
 
-    version('develop', branch='master')
+    version("develop", branch="master")
 
-    depends_on('trilinos@:12+nox')
+    depends_on("trilinos@:12+nox")
 
     def cmake_args(self):
         spec = self.spec
         args = []
-        args.extend(['-DTRILINOS_PATH:PATH=%s/lib/cmake/Trilinos' %
-                     spec['trilinos'].prefix])
+        args.extend(["-DTRILINOS_PATH:PATH=%s/lib/cmake/Trilinos" % spec["trilinos"].prefix])
         return args

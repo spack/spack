@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Optipng(AutotoolsPackage, SourceforgePackage):
@@ -17,6 +17,6 @@ class Optipng(AutotoolsPackage, SourceforgePackage):
     homepage = "http://optipng.sourceforge.net/"
     sourceforge_mirror_path = "optipng/optipng-0.7.7.tar.gz"
 
-    version('0.7.7', sha256='4f32f233cef870b3f95d3ad6428bfe4224ef34908f1b42b0badf858216654452')
+    version("0.7.7", sha256="4f32f233cef870b3f95d3ad6428bfe4224ef34908f1b42b0badf858216654452")
     # See https://github.com/imagemin/optipng-bin/issues/97
-    patch('for_aarch64.patch', when='target=aarch64:')
+    patch("for_aarch64.patch", when="target=aarch64:")

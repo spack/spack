@@ -4,9 +4,10 @@ Generic dylib path manipulation
 
 import re
 
-__all__ = ['dylib_info']
+__all__ = ["dylib_info"]
 
-_DYLIB_RE = re.compile(r"""(?x)
+_DYLIB_RE = re.compile(
+    r"""(?x)
 (?P<location>^.*)(?:^|/)
 (?P<name>
     (?P<shortname>\w+?)
@@ -14,7 +15,8 @@ _DYLIB_RE = re.compile(r"""(?x)
     (?:_(?P<suffix>[^._]+))?
     \.dylib$
 )
-""")
+"""
+)
 
 
 def dylib_info(filename):

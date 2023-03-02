@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyContextvars(PythonPackage):
@@ -11,7 +14,7 @@ class PyContextvars(PythonPackage):
     homepage = "https://github.com/MagicStack/contextvars"
     pypi = "contextvars/contextvars-2.4.tar.gz"
 
-    version('2.4', sha256='f38c908aaa59c14335eeea12abea5f443646216c4e29380d7bf34d2018e2c39e')
+    version("2.4", sha256="f38c908aaa59c14335eeea12abea5f443646216c4e29380d7bf34d2018e2c39e")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-immutables@0.9:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-immutables@0.9:", type=("build", "run"))

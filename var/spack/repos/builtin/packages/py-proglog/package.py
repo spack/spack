@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyProglog(PythonPackage):
@@ -15,7 +15,7 @@ class PyProglog(PythonPackage):
     homepage = "https://pypi.org/project/proglog/"
     pypi = "proglog/proglog-0.1.9.tar.gz"
 
-    version('0.1.9', sha256='d8c4ccbf2138e0c5e3f3fc0d80dc51d7e69dcfe8bfde4cacb566725092a5b18d')
+    version("0.1.9", sha256="d8c4ccbf2138e0c5e3f3fc0d80dc51d7e69dcfe8bfde4cacb566725092a5b18d")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-tqdm', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-tqdm", type=("build", "run"))

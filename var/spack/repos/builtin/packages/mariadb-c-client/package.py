@@ -22,12 +22,16 @@ class MariadbCClient(CMakePackage):
     list_url = "https://downloads.mariadb.com/Connectors/c/"
     list_depth = 1
 
+    version("3.3.2", sha256="7e0722e07d30bb906fac9fe10fb582cde1e148e05a83d9ca7b6fcc884b68fbce")
+    version("3.2.7", sha256="9d7196248e6697c09c73e173fe9b282045f55ec9d7ae743c1ebad08b9ea56dda")
     version("3.2.6", sha256="9c22fff9d18db7ebdcb63979882fb6b68d2036cf2eb62f043eac922cd36bdb91")
+    version("3.1.18", sha256="b01ecacf7531c2f36d90708845488e66462bf63627c58cb5986bd1c0833e4d9c")
     version("3.1.13", sha256="0271a5edfd64b13bca5937267474e4747d832ec62e169fc2589d2ead63746875")
     version("3.1.9", sha256="108d99bf2add434dcb3bd9526ba1d89a2b9a943b62dcd9d0a41fcbef8ffbf2c7")
     version("3.1.6", sha256="d266bb67df83c088c4fb05392713d2504c67be620894cedaf758a9561c116720")
     version("3.1.5", sha256="a9de5fedd1a7805c86e23be49b9ceb79a86b090ad560d51495d7ba5952a9d9d5")
     version("3.1.4", sha256="7a1a72fee00e4c28060f96c3efbbf38aabcbbab17903e82fce85a85002565316")
+    version("3.0.10", sha256="bd9aa1f137ead3dc68ed3165adc53541712076d08949800b6ccebd33da6d0ae8")
     version("3.0.9", sha256="7277c0caba6f50b1d07e1d682baf0b962a63e2e6af9e00e09b8dcf36a7858641")
     version("3.0.8", sha256="2ca368fd79e87e80497a5c9fd18922d8316af8584d87cecb35bd5897cb1efd05")
     version("3.0.7", sha256="f63883c9360675d111646fba5c97feb0d08e0def5873dd189d78bafbb75fa004")

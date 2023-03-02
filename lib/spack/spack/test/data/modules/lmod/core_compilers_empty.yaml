@@ -1,6 +1,8 @@
 enable:
   - lmod
 lmod:
+  all:
+    autoload: none
   core_compilers: []
   hierarchy:
     - mpi

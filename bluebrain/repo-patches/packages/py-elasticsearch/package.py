@@ -10,4 +10,4 @@ from spack.pkg.builtin.py_elasticsearch import PyElasticsearch as BuiltinPyElast
 class PyElasticsearch(BuiltinPyElasticsearch):
     __doc__ = BuiltinPyElasticsearch.__doc__
 
-    version('7.6.0', sha256='d228b2d37ac0865f7631335268172dbdaa426adec1da3ed006dddf05134f89c8')
+    version("7.6.0", sha256="d228b2d37ac0865f7631335268172dbdaa426adec1da3ed006dddf05134f89c8")

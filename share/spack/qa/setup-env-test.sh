@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -200,3 +200,6 @@ despacktivate
 echo "Correct error exit codes for activate and deactivate"
 fails spack env activate nonexisiting_environment
 fails spack env deactivate
+
+echo "Correct error exit codes for unit-test when it fails"
+fails spack unit-test fail

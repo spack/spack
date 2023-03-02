@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Mark(Package):
@@ -23,15 +23,18 @@ class Mark(Package):
     homepage = "http://www.phidot.org/software/mark/index.html"
     manual_download = True
 
-    version('1.0', sha256='5422c9444d5fa6b3b22f4a9f2ce41af2072a1a7283f6f9099dc02cc5282696bc',
-            expand=False)
+    version(
+        "1.0",
+        sha256="5422c9444d5fa6b3b22f4a9f2ce41af2072a1a7283f6f9099dc02cc5282696bc",
+        expand=False,
+    )
 
     def url_for_version(self, version):
         return "file://{0}/mark".format(os.getcwd())
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('mark', prefix.bin)
+        install("mark", prefix.bin)
 
-        chmod = which('chmod')
-        chmod('+x', prefix.bin.mark)
+        chmod = which("chmod")
+        chmod("+x", prefix.bin.mark)

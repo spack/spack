@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMcmcpack(RPackage):
-    """Markov Chain Monte Carlo (MCMC) Package:
+    """Markov Chain Monte Carlo (MCMC) Package.
 
     Contains functions to perform Bayesian inference using posterior simulation
     for a number of statistical models. Most simulation is done in compiled C++
@@ -17,14 +17,18 @@ class RMcmcpack(RPackage):
     number generators for statistical distributions, a general purpose
     Metropolis sampling algorithm, and tools for visualization are provided."""
 
-    homepage = "https://cran.r-project.org/package=MCMCpack"
-    cran     = "MCMCpack"
+    cran = "MCMCpack"
 
-    version('1.5-0', sha256='795ffd3d62bf14d3ecb3f5307bd329cd75798cf4b270ff0e768bc71a35de0ace')
+    version("1.6-3", sha256="cb14ba20690b31fd813b05565484c866425f072a5ad99a5cbf1da63588958db3")
+    version("1.6-0", sha256="b5b9493457d11d4dca12f7732bd1b3eb1443852977c8ee78393126f13deaf29b")
+    version("1.5-0", sha256="795ffd3d62bf14d3ecb3f5307bd329cd75798cf4b270ff0e768bc71a35de0ace")
 
-    depends_on('r@3.6:', type=('build', 'run'))
-    depends_on('r-coda@0.11-3:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-mcmc', type=('build', 'run'))
-    depends_on('r-quantreg', type=('build', 'run'))
+    depends_on("r@3.6:", type=("build", "run"))
+    depends_on("r-coda@0.11-3:", type=("build", "run"))
+    depends_on("r-lattice", type=("build", "run"))
+    depends_on("r-mcmc", type=("build", "run"))
+    depends_on("r-quantreg", type=("build", "run"))
+
+    depends_on("r-mass", type=("build", "run"), when="@:1.6-0")
+
+    conflicts("%gcc@:3")

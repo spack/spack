@@ -1,25 +1,22 @@
 packages:
+  arrow:
+    # for interoperability with Spark
+    require: "+snappy"
   autoconf:
     version: [2.69]
     externals:
     - spec: autoconf@2.69
-      prefix: /usr
-  automake:
-    version: [1.13.4]
-    externals:
-    - spec: automake@1.13.4
       prefix: /usr
   binutils:
     version: [2.37]
     # Merged GCC / LLVM requirements
     variants: +gas+gold+ld+plugins~libiberty
   boost:
-    variants: +pic
-  cmake:
-    version: [3.21.4]
+    variants: +filesystem+pic+test
   cuda:
     # Should match what is provided by NVHPC, too
-    version: [11.8.0]
+    # version: [11.6.1]
+    require: "%gcc"
   curl:
     version: [7.29.0]
     externals:
@@ -34,8 +31,6 @@ packages:
     variants: +binutils+strip
   gmsh:
     variants: ~mmg~fltk
-  hadoop:
-    version: [2.10.1]
   hdf5:
     variants: +cxx+hl
   icu4c:
@@ -51,7 +46,7 @@ packages:
   kokkos:
     variants: +openmp
   libtool:
-    buildable: false  # different versions interact badly with autohell
+    buildable: false  # Different versions interact badly with autohell
     version: [2.4.2]
     externals:
     - spec: libtool@2.4.2
@@ -61,10 +56,42 @@ packages:
     externals:
     - spec: m4@1.4.16
       prefix: /usr
+  model-neocortex:
+    variants: ~gpu
+    require: "%intel"
+      # - one_of: ["%intel", "%nvhpc"]
+  mxnet:
+    version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
+  neurodamus-core:
+    variants: ~~gpu
+    require: "%intel"
+  neurodamus-hippocampus:
+    variants: ~~gpu
+    require: "%intel"
+  neurodamus-model:
+    variants: ~~gpu
+    require: "%intel"
+  neurodamus-mousify:
+    variants: ~~gpu
+    require: "%intel"
+  neurodamus-neocortex:
+    variants: ~~gpu
+    require: "%intel"
+  neurodamus-thalamus:
+    variants: ~~gpu
+    require: "%intel"
+  neuron:
+    require:
+      - one_of: ["%intel", "%nvhpc"]
   omega-h:
     variants: ~kokkos~trilinos
   opencv:
     variants: ~gtk~vtk
+  openssh:
+    version: [9.1p1]
+    externals:
+    - spec: openssh@9.1p1
+      prefix: /usr
   openssl:
     version: [1.0.2k]
     externals:
@@ -76,6 +103,8 @@ packages:
     externals:
     - spec: opengl@4.5
       prefix: /usr
+  ospray:
+    require: "%intel"
   perl:
     version: [5.16.3]
     externals:
@@ -85,24 +114,19 @@ packages:
     variants: ~fortran
   python:
     variants: +tk
-    version: [3.9.7]
+    version: [3.10.8]
   py-numpy:
-    version: [1.19.5]  # thanks, tensorflow!
+    version: [1.22.4]  # bluepye{model,fe}: <1.24, neurondamus: <1.23
   py-setuptools:
-    version: [57.4.0]  # last one to provide use_2to3, required by some software
-  py-six:
-    version: [1.15.0]  # thanks, tensorflow!
-  py-tables:
-    variants: +lzo     # leads to compile errors otherwise
-  py-tensorflow:
-    version: [2.5.1]   # For Python 3.9 compatibility
-  py-tensorflow-addons:
-    version: [0.13.0]  # Matches tensorflow
+    version: [63.0.0]  # required by py-numpy
   qt:
     version: [5.14.2]
     variants: ~ssl~sql~tools
   range-v3:
     variants: ~doc
+  reportinglib:
+    require:
+    - one_of: ["%intel", "%gcc"]
   slurm:
     buildable: false
     version: [21.08.3]
@@ -121,10 +145,9 @@ packages:
   timemory:
     variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
   all:
-    compiler: [gcc@11.2.0]
-    target: [skylake]
+    require: "%gcc@12.2.0 target=skylake"
     providers:
-      mpi: [hpe-mpi, intel-mpi, mvapich2]
-      scalapack:: [intel-mkl]
-      lapack:: [intel-mkl]
-      blas:: [intel-mkl]
+      mpi:: [hpe-mpi]
+      scalapack:: [intel-oneapi-mkl]
+      lapack:: [intel-oneapi-mkl]
+      blas:: [intel-oneapi-mkl]

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyMysqlConnectorPython(PythonPackage):
@@ -13,14 +13,10 @@ class PyMysqlConnectorPython(PythonPackage):
     compliant driver."""
 
     homepage = "https://github.com/mysql/mysql-connector-python"
-    url      = "https://github.com/mysql/mysql-connector-python/archive/8.0.13.tar.gz"
-    git      = "https://github.com/mysql/mysql-connector-python.git"
+    url = "https://github.com/mysql/mysql-connector-python/archive/8.0.13.tar.gz"
+    git = "https://github.com/mysql/mysql-connector-python.git"
 
-    version('8.0.13', sha256='d4c0834c583cdb90c0aeae90b1917d58355a4bf9b0266c16fd58874a5607f9d4')
+    version("8.0.13", sha256="d4c0834c583cdb90c0aeae90b1917d58355a4bf9b0266c16fd58874a5607f9d4")
 
-    # Fix `error: option --single-version-externally-managed not recognized`
-    # https://github.com/mysql/mysql-connector-python/pull/9
-    patch('single-version.patch')
-
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-protobuf@3.0.0:', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-protobuf@3.0.0:", type=("build", "run"))

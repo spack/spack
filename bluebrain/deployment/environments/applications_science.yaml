@@ -1,29 +1,28 @@
 spack:
   view: false
-  concretization: separately
   modules:
-    tcl:
-      whitelist:
-        - py-amici  # BSD-276
-        - py-atlalign
-        - py-atlannot
-        - py-atldld
-        - py-atlinter
-        - py-bba-datafetch
-        - py-bba-data-push
-        - py-bba-webexporter
-        - py-bglibpy
-        - py-bluepyefe
-        - py-bluepyemodel
-        - py-bluepymm
-        - py-bluepyopt
-        - py-bluepyparallel
-        - py-data-integrity-check
-        - py-efel
-        - py-nexusforge
-        - py-nexus-sdk
-        - py-token-fetch
-        - py-visual-cortex-analysis
+    default:
+      tcl:
+        include:
+          - py-amici  # BSD-276
+          - py-atlannot
+          - py-atldld
+          - py-atlinter
+          - py-bba-datafetch
+          - py-bba-data-push
+          - py-bba-webexporter
+          - py-bglibpy
+          - py-bluepyefe
+          - py-bluepyemodel
+          - py-bluepymm
+          - py-bluepyopt
+          - py-bluepyparallel
+          - py-data-integrity-check
+          - py-efel
+          - py-nexusforge
+          - py-nexus-sdk
+          - py-token-fetch
+          - py-visual-cortex-analysis
   packages:
     hdf5:
       variants: ~mpi+hl
@@ -41,20 +40,24 @@ spack:
       variants: ~mpi
     vtk:
       variants: ~mpi~ffmpeg~opengl2
+    py-ipyparallel:
+      # otherwise, 6.3 is picked (cheaper setuptools penalty), and things break
+      require: "@8:"
+    py-torch:
+      require: "@1.13.1"
   specs:
     - py-amici  # BSD-276
-    - py-atlalign
     - py-atlannot
     - py-atldld
     - py-atlinter
     - py-bba-datafetch
     - py-bba-data-push
     - py-bba-webexporter
-    - py-bglibpy%gcc ^py-bluepy%gcc ^neuron%intel
+    - py-bglibpy
     - py-bluepyefe
     - py-bluepyemodel
-    - py-bluepymm%gcc ^neuron%intel
-    - py-bluepyopt%gcc ^neuron%intel
+    - py-bluepymm
+    - py-bluepyopt
     - py-bluepyparallel
     - py-data-integrity-check
     - py-efel

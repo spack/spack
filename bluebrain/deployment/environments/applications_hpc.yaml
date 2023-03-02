@@ -1,64 +1,64 @@
 spack:
   view: false
-  concretization: separately
   modules:
-    tcl:
-      whitelist:
-        - asciitoh5
-        - model-neocortex
-        - nest
-        - neurodamus-core
-        - neurodamus-hippocampus
-        - neurodamus-neocortex
-        - neurodamus-thalamus
-        - neurodamus-mousify
-        - parquet-converters
-        - py-basalt
-        - 'py-mvdtool%gcc'
-        - 'py-neurodamus+all_deps'
-        - py-pytouchreader
-        - reportinglib
-        - spatial-index
-        - spykfunc
-        - steps
-        - 'synapsetool%gcc'
-        - touchdetector
-        - unit-test-translator
-      projections:
-        all: '{name}/{version}'
-        ^neuron+knl: '{name}-knl/{version}'
-        +common: '{name}/{version}-commonmods'
-        +plasticity: '{name}-plasticity/{version}'
-        +ngv+metabolism: '{name}-multiscale/{version}'
+    default:
+      tcl:
+        include:
+          - asciitoh5
+          - model-neocortex
+          - nest
+          - neurodamus-core
+          - neurodamus-hippocampus
+          - neurodamus-neocortex
+          - neurodamus-thalamus
+          - neurodamus-mousify
+          - parquet-converters
+          - py-basalt
+          - py-mvdtool
+          - py-neurodamus+all_deps
+          - py-pytouchreader
+          - reportinglib
+          - spatial-index
+          - spykfunc
+          - steps
+          - synapsetool
+          - touchdetector
+          - unit-test-translator
+        projections:
+          all: '{name}/{version}'
+          ^neuron+knl: '{name}-knl/{version}'
+          +common: '{name}/{version}-commonmods'
+          +plasticity: '{name}-plasticity/{version}'
+          +ngv+metabolism: '{name}-multiscale/{version}'
+  packages:
+    steps:
+      variants: +petsc
+    trilinos:
+      version: [13.0.1]
   specs:
-    - asciitoh5@1.0
-    - neuron%intel+tests+coreneuron
-    - neuron%intel+tests+nmodl+sympy+coreneuron
-    - neuron%nvhpc+coreneuron+tests+gpu
-    - neuron%nvhpc+tests+gpu+openmp+coreneuron
-    - neuron%nvhpc+tests+gpu+openmp+nmodl+sympy+coreneuron
+    - neuron+tests+coreneuron
+    - neuron+tests+nmodl+sympy+coreneuron
+    # - neuron%nvhpc+tests+gpu+openmp+coreneuron
+    # - neuron%nvhpc+tests+gpu+openmp+nmodl+sympy+coreneuron
     - nest@2.20.1
-    - neurodamus-core~common%intel
+    - neurodamus-core~common
     - neurodamus-core+common
-    - neurodamus-hippocampus+coreneuron+caliper%intel
-    - neurodamus-hippocampus+coreneuron+caliper%intel^neuron+knl
-    - neurodamus-mousify+coreneuron+caliper%intel
-    - neurodamus-neocortex+coreneuron+caliper%intel
-    - neurodamus-neocortex+coreneuron+caliper%intel^neuron+knl
-    - neurodamus-neocortex+plasticity+coreneuron+caliper%intel
-    - neurodamus-neocortex+ngv+metabolism+caliper%intel
-    - neurodamus-thalamus+coreneuron+caliper%intel
-    - neurodamus-thalamus+coreneuron+caliper%intel^neuron+knl
-    - neuron%intel+coreneuron build_type=FastDebug
+    - neurodamus-hippocampus+coreneuron+caliper
+    - neurodamus-mousify+coreneuron+caliper
+    - neurodamus-neocortex+coreneuron+caliper
+    - neurodamus-neocortex+plasticity+coreneuron+caliper
+    - neurodamus-neocortex+ngv+metabolism+caliper
+    - neurodamus-thalamus+coreneuron+caliper
+    - neuron+coreneuron build_type=Debug
+    - neuron+coreneuron build_type=FastDebug
     - nmodl
     - parquet-converters
-    - py-basalt@0.2.9
     - py-neurodamus+all_deps
     - py-pytouchreader
-    - reportinglib%intel
+    - reportinglib
     - spatial-index
     - spykfunc
-    - steps+petsc
+    - steps
     - synapsetool
     - touchdetector
     - unit-test-translator

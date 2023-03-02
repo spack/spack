@@ -7,16 +7,15 @@ from spack.package import *
 
 
 class UnitTestTranslator(PythonPackage):
-    """Transforms the XML unit test output from CMake to proper JUnit XML.
-    """
+    """Transforms the XML unit test output from CMake to proper JUnit XML."""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/unit-test-translator"
-    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/unit-test-translator.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/hpc/unit-test-translator.git"
 
-    version('develop', branch='main')
-    version('0.0.2', tag='v0.0.2')
-    version('0.0.1', tag='v0.0.1')
+    version("develop", branch="main")
+    version("0.0.2", tag="v0.0.2")
+    version("0.0.1", tag="v0.0.1")
 
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-setuptools-scm', type=('build', 'run'))
-    depends_on('py-lxml', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools-scm", type=("build", "run"))
+    depends_on("py-lxml", type=("build", "run"))

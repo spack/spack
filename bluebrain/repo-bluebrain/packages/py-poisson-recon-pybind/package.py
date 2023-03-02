@@ -13,13 +13,13 @@ class PyPoissonReconPybind(PythonPackage):
     """
 
     homepage = "https://bbpgitlab.epfl.ch/nse/poisson-recon-pybind"
-    git      = "ssh://git@bbpgitlab.epfl.ch/nse/poisson-recon-pybind.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/nse/poisson-recon-pybind.git"
 
-    version('0.1.2', tag='poisson-recon-pybind-v0.1.2', submodules=True)
-    version('0.1.0', tag='poisson_recon_pybind-v0.1.0', submodules=True)
+    version("0.1.2", tag="poisson-recon-pybind-v0.1.2", submodules=True)
+    version("0.1.0", tag="poisson_recon_pybind-v0.1.0", submodules=True)
 
-    depends_on('py-setuptools', type='build')
-    depends_on('boost@1.50:')
-    depends_on('cmake', type='build')
-    depends_on('eigen')
-    depends_on('py-numpy@1.12:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("boost@1.50:")
+    depends_on("cmake", type="build")
+    depends_on("eigen")
+    depends_on("py-numpy@1.12:", type=("build", "run"))

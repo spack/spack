@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Aeskeyfind(MakefilePackage):
@@ -11,10 +11,10 @@ class Aeskeyfind(MakefilePackage):
     and 256-bit AES keys in a captured memory image."""
 
     homepage = "https://github.com/makomk/aeskeyfind"
-    git      = "https://github.com/makomk/aeskeyfind.git"
+    git = "https://github.com/makomk/aeskeyfind.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('aeskeyfind', prefix.bin)
+        install("aeskeyfind", prefix.bin)

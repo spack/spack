@@ -1,0 +1,31 @@
+diff --git a/cmake/SUNDIALSConfig.cmake.in b/cmake/SUNDIALSConfig.cmake.in
+index 6846c5353..e4c6d32ee 100644
+--- a/cmake/SUNDIALSConfig.cmake.in
++++ b/cmake/SUNDIALSConfig.cmake.in
+@@ -69,7 +69,7 @@ endif()
+ 
+ if(@ENABLE_PETSC@)
+   set(PETSC_LIBRARY_SINGLE "@PETSC_LIBRARY_SINGLE@")
+-  if(${PETSC_LIBRARY_SINGLE})
++  if(PETSC_LIBRARY_SINGLE)
+     foreach(suffix SYS VEC MAT DM KSP SNES TS ALL)
+       if(NOT TARGET SUNDIALS::PETSC_${suffix})
+         add_library(SUNDIALS::PETSC_${suffix} UNKNOWN IMPORTED)
+@@ -78,7 +78,7 @@ if(@ENABLE_PETSC@)
+         set_target_properties(SUNDIALS::PETSC_${suffix} PROPERTIES
+           INTERFACE_LINK_LIBRARIES "@PETSC_LIBRARIES_@")
+         set_target_properties(SUNDIALS::PETSC_${suffix} PROPERTIES
+-          INTERFACE_COMPILE_OPTIONS "@PETSC_DEFINITIONS@")
++          INTERFACE_COMPILE_OPTIONS [=[@PETSC_DEFINITIONS@]=])
+         set_target_properties(SUNDIALS::PETSC_${suffix} PROPERTIES
+           IMPORTED_LOCATION "${PETSC_LIBRARY_SINGLE}")
+       endif()
+@@ -110,7 +110,7 @@ if(@ENABLE_PETSC@)
+         set_target_properties (SUNDIALS::PETSC_${suffix} PROPERTIES
+           INTERFACE_LINK_LIBRARIES "${PETSC_LIBRARIES_${suffix}}")
+         set_target_properties (SUNDIALS::PETSC_${suffix} PROPERTIES
+-          INTERFACE_COMPILE_OPTIONS "${PETSC_DEFINITIONS}")
++          INTERFACE_COMPILE_OPTIONS [=[@PETSC_DEFINITIONS@]=])
+         set_target_properties (SUNDIALS::PETSC_${suffix} PROPERTIES
+           IMPORTED_LOCATION "${PETSC_LIBRARY_${suffix}}")
+       endif()

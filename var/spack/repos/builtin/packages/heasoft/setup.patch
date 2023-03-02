@@ -1,0 +1,55 @@
+--- a/BUILD_DIR/headas-setup.in	2022-02-16 20:15:32.438402875 -0600
++++ b/BUILD_DIR/headas-setup.in	2022-02-16 20:17:16.572726456 -0600
+@@ -136,20 +136,6 @@
+ if [ -d $HEADAS/syspfiles/. ]; then
+   PFCLOBBER=1
+ 
+-  # make sure local parameter file directory exists
+-  if [ ! -w "$HOME/pfiles/." ]; then
+-    if [ ! -d "$HOME/pfiles/." ]; then
+-      mkdir "$HOME/pfiles"
+-      if [ $? -ne 0 ]; then
+-        echo "$headas_error cannot create local pfiles directory $HOME/pfiles" >&2
+-        exit 3
+-      fi
+-    else
+-      echo "$headas_error local pfiles directory $HOME/pfiles exists but is not writable" >&2
+-      exit 3
+-    fi
+-  fi
+-
+   # use PFILES (if set) to set initial values for locpfiles and syspfiles
+   if [ "x$PFILES" != x ]; then
+     syspfiles=`echo $PFILES | sed "s%.*;%%"`
+@@ -340,23 +326,23 @@
+ 
+ # Bourne Shell version, write only for sh flavor initialization
+ if [ $flavor = sh ]; then
+-  rm -f "$headas_config$$.sh"
+-  touch "$headas_config$$.sh"
++  rm -f "$headas_config.sh"
++  touch "$headas_config.sh"
+   for var in $varlist; do
+     eval "if [ \"x\$$var\" != x ]; then
+-            echo \"\$var=\\\"\$$var\\\"; export \$var\" >> \"$headas_config$$.sh\";
++            echo \"\$var=\\\"\$$var\\\"; export \$var\" >> \"$headas_config.sh\";
+           fi"
+   done
+-  echo "$headas_config$$.sh"
++  echo "$headas_config.sh"
+ # C Shell version, write only for csh flavor initialization
+ elif [ $flavor = csh ]; then
+-  rm -f "$headas_config$$.csh"
+-  touch "$headas_config$$.csh"
++  rm -f "$headas_config.csh"
++  touch "$headas_config.csh"
+   for var in $varlist; do
+     eval "if [ \"x\$$var\" != x ]; then
+-            echo setenv \$var \\\"\$$var\\\" >> \"$headas_config$$.csh\";
++            echo setenv \$var \\\"\$$var\\\" >> \"$headas_config.csh\";
+           fi"
+   done
+-  echo "$headas_config$$.csh"
++  echo "$headas_config.csh"
+ fi
+ #-------------------------------------------------------------------------------

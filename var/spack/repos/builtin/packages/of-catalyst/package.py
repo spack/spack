@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class OfCatalyst(CMakePackage):
@@ -25,24 +25,23 @@ class OfCatalyst(CMakePackage):
     homepage = "https://develop.openfoam.com/Community/catalyst"
     git = "https://develop.openfoam.com/Community/catalyst.git"
 
-    version('develop', branch='develop')
-    version('1806', tag='v1806')
+    version("develop", branch="develop")
+    version("1806", tag="v1806")
 
-    variant('full', default=False, description='Build against paraview (full) or catalyst (light)')
+    variant("full", default=False, description="Build against paraview (full) or catalyst (light)")
 
-    depends_on('openfoam@1806', when='@1806', type=('build', 'link', 'run'))
-    depends_on('openfoam@develop', when='@develop', type=('build', 'link', 'run'))
-    depends_on('catalyst@5.5:', when='~full')
-    depends_on('paraview@5.5:+osmesa~qt', when='+full')
+    depends_on("openfoam@1806", when="@1806", type=("build", "link", "run"))
+    depends_on("openfoam@develop", when="@develop", type=("build", "link", "run"))
+    depends_on("catalyst@5.5:", when="~full")
+    depends_on("paraview@5.5:+osmesa~qt", when="+full")
 
-    root_cmakelists_dir = 'src/catalyst'
+    root_cmakelists_dir = "src/catalyst"
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
         cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=%s' % join_path(
-                self.stage.source_path,
-                'spack-build')
+            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=%s"
+            % join_path(self.stage.source_path, "spack-build")
         ]
 
         return cmake_args

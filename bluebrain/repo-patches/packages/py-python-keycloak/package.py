@@ -12,11 +12,12 @@ class PyPythonKeycloak(PythonPackage):
     homepage = "https://python-keycloak.readthedocs.io/en/latest"
     pypi = "python-keycloak/python-keycloak-2.6.0.tar.gz"
 
-    version('2.6.0', sha256='08c530ff86f631faccb8033d9d9345cc3148cb2cf132ff7564f025292e4dbd96')
+    version("2.6.0", sha256="08c530ff86f631faccb8033d9d9345cc3148cb2cf132ff7564f025292e4dbd96")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
 
-    depends_on('py-requests', type='run')
-    depends_on('py-python-jose', type='run')
-    depends_on('py-urllib3', type='run')
-    depends_on('py-requests-toolbelt', type='run')
+    depends_on("py-requests", type="run")
+    depends_on("py-python-jose", type="run")
+    depends_on("py-urllib3", type="run")
+    depends_on("py-requests-toolbelt", type="run")
+    depends_on("py-poetry", type="build")

@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _cmakepackage:
 
-------------
-CMakePackage
-------------
+-----
+CMake
+-----
 
 Like Autotools, CMake is a widely-used build-script generator. Designed
 by Kitware, CMake is the most popular build system for new C, C++, and
@@ -21,7 +21,7 @@ whereas Autotools is Unix-only.
 Phases
 ^^^^^^
 
-The ``CMakePackage`` base class comes with the following phases:
+The ``CMakeBuilder`` and ``CMakePackage`` base classes come with the following phases:
 
 #. ``cmake`` - generate the Makefile
 #. ``build`` - build the package
@@ -130,8 +130,8 @@ Adding flags to cmake
 To add additional flags to the ``cmake`` call, simply override the
 ``cmake_args`` function. The following example defines values for the flags
 ``WHATEVER``, ``ENABLE_BROKEN_FEATURE``, ``DETECT_HDF5``, and ``THREADS`` with
-and without the :meth:`~spack.build_systems.cmake.CMakePackage.define` and
-:meth:`~spack.build_systems.cmake.CMakePackage.define_from_variant` helper functions:
+and without the :meth:`~spack.build_systems.cmake.CMakeBuilder.define` and
+:meth:`~spack.build_systems.cmake.CMakeBuilder.define_from_variant` helper functions:
 
 .. code-block:: python
 
@@ -237,6 +237,7 @@ used as search paths.
    an implementation. When using such libraries, it's best to override the option
    ``-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF`` in ``cmake_args``, so that stub libraries
    are not used at runtime.
+
 
 ^^^^^^^^^^
 Generators

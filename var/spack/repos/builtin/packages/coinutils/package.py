@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Coinutils(AutotoolsPackage):
@@ -12,8 +12,8 @@ class Coinutils(AutotoolsPackage):
     projects."""
 
     homepage = "https://projects.coin-or.org/Coinutils"
-    url      = "https://github.com/coin-or/CoinUtils/archive/releases/2.11.4.tar.gz"
+    url = "https://github.com/coin-or/CoinUtils/archive/releases/2.11.4.tar.gz"
 
-    version('2.11.4', sha256='d4effff4452e73356eed9f889efd9c44fe9cd68bd37b608a5ebb2c58bd45ef81')
+    version("2.11.4", sha256="d4effff4452e73356eed9f889efd9c44fe9cd68bd37b608a5ebb2c58bd45ef81")
 
-    build_directory = 'spack-build'
+    build_directory = "spack-build"

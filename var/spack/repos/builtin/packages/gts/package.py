@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Gts(AutotoolsPackage):
@@ -24,6 +24,6 @@ class Gts(AutotoolsPackage):
     homepage = "http://gts.sourceforge.net/index.html"
     url = "http://gts.sourceforge.net/tarballs/gts-snapshot-121130.tar.gz"
 
-    version('121130', sha256='c23f72ab74bbf65599f8c0b599d6336fabe1ec2a09c19b70544eeefdc069b73b')
+    version("121130", sha256="c23f72ab74bbf65599f8c0b599d6336fabe1ec2a09c19b70544eeefdc069b73b")
 
-    depends_on('glib')
+    depends_on("glib")

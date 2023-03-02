@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _perlpackage:
 
------------
-PerlPackage
------------
+----
+Perl
+----
 
 Much like Octave, Perl has its own language-specific
 build system.
@@ -16,7 +16,7 @@ build system.
 Phases
 ^^^^^^
 
-The ``PerlPackage`` base class comes with 3 phases that can be overridden:
+The ``PerlBuilder`` and ``PerlPackage`` base classes come with 3 phases that can be overridden:
 
 #. ``configure`` - configure the package
 #. ``build`` - build the package

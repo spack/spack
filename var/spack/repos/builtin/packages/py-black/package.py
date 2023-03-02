@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyBlack(PythonPackage):
@@ -13,55 +13,55 @@ class PyBlack(PythonPackage):
     """
 
     homepage = "https://github.com/psf/black"
-    pypi = "black/black-20.8b1.tar.gz"
+    pypi = "black/black-22.1.0.tar.gz"
 
-    version('21.7b0', sha256='c8373c6491de9362e39271630b65b964607bc5c79c83783547d76c839b3aa219')
-    version('21.6b0', sha256='dc132348a88d103016726fe360cb9ede02cecf99b76e3660ce6c596be132ce04')
-    version('21.4b0', sha256='915d916c48646dbe8040d5265cff7111421a60a3dfe7f7e07273176a57c24a34')
-    version('20.8b1', sha256='1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea')
-    version('19.3b0', sha256='68950ffd4d9169716bcb8719a56c07a2f4485354fec061cdd5910aa07369731c')
-    version('18.9b0', sha256='e030a9a28f542debc08acceb273f228ac422798e5215ba2a791a6ddeaaca22a5')
+    maintainers = ["adamjstewart"]
 
-    variant('colorama', default=False, description='enable colorama support')
-    variant('d', default=False, description='enable blackd HTTP server')
-    variant('python2', default=False, description='enable python 2 formatting support')
+    version("22.10.0", sha256="f513588da599943e0cde4e32cc9879e825d58720d6557062d1098c5ad80080e1")
+    version("22.8.0", sha256="792f7eb540ba9a17e8656538701d3eb1afcb134e3b45b71f20b25c77a8db7e6e")
+    version("22.6.0", sha256="6c6d39e28aed379aec40da1c65434c77d75e65bb59a1e1c283de545fb4e7c6c9")
+    version("22.3.0", sha256="35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79")
+    version("22.1.0", sha256="a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5")
 
-    depends_on('python@3.6.0:', type=('build', 'run'))
-    depends_on('python@3.6.2:', when='@21:', type=('build', 'run'))
-    # Needs setuptools at runtime so that `import pkg_resources` succeeds
-    # See #8843 and #8689 for examples of setuptools added as a runtime dep
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-setuptools-scm', when='@19.10:', type='build')
-    # Translated from black's setup.py:
-    # https://github.com/ambv/black/blob/master/setup.py
-    depends_on('py-click@6.5:', type=('build', 'run'))
-    depends_on('py-click@7.1.2:', when='@20.8b1:', type=('build', 'run'))
-    depends_on('py-attrs@18.1.0:', when='@:20.8b0', type=('build', 'run'))
-    depends_on('py-appdirs', type=('build', 'run'))
-    depends_on('py-toml@0.9.4:', when='@:19', type=('build', 'run'))
-    depends_on('py-toml@0.10.1:', when='@20:21.6', type=('build', 'run'))
-    depends_on('py-tomli@0.2.6:1', when='@21.7:', type=('build', 'run'))
-    depends_on('py-typed-ast@1.4.0:', when='@19.10b0:20', type=('build', 'run'))
-    depends_on('py-typed-ast@1.4.2:', when='@21: ^python@:3.7', type=('build', 'run'))
-    depends_on('py-regex@2020.1.8:', when='@20.8b0:', type=('build', 'run'))
-    depends_on('py-pathspec@0.6:0', when='@19.10b0:', type=('build', 'run'))
-    depends_on('py-pathspec@0.8.1:0', when='@21.6:', type=('build', 'run'))
-    depends_on('py-dataclasses@0.6:', when='@20.8b0:^python@:3.6', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.7.4:', when='@20.8b0:20', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.7.4:', when='@21: ^python@:3.7', type=('build', 'run'))
-    depends_on('py-mypy-extensions@0.4.3:', when='@20.8b0:', type=('build', 'run'))
-    depends_on('py-colorama@0.4.3:', when='+colorama', type=('build', 'run'))
-    depends_on('py-aiohttp@3.3.2:', when='+d', type=('build', 'run'))
-    depends_on('py-aiohttp@3.6.0:', when='@21.6: +d', type=('build', 'run'))
-    depends_on('py-aiohttp-cors', when='+d', type=('build', 'run'))
-    depends_on('py-aiohttp-cors@0.4.0:', when='@21.6: +d', type=('build', 'run'))
-    depends_on('py-typed-ast@1.4.2:', when='+python2', type=('build', 'run'))
+    # This is the last v21 release, and it's needed to format for Python 2.7
+    version("21.12b0", sha256="77b80f693a569e2e527958459634f18df9b0ba2625ba4e0c2d5da5be42e6f2b3")
+
+    variant("colorama", default=False, description="enable colorama support")
+    variant("uvloop", default=False, description="enable uvloop support")
+    variant("d", default=False, description="enable blackd HTTP server")
+    variant("jupyter", default=False, description="enable Jupyter support")
+
+    depends_on("py-hatchling@1.8:", when="@22.10:", type="build")
+    depends_on("py-hatch-vcs", when="@22.10:", type="build")
+    depends_on("py-hatch-fancy-pypi-readme", when="@22.10:", type="build")
+    depends_on("py-setuptools@45:", when="@:22.8", type=("build", "run"))
+    depends_on("py-setuptools-scm@6.3.1:+toml", when="@:22.8", type="build")
+    depends_on("python@3.7:", when="@22.10:", type=("build", "run"))
+    depends_on("python@3.6.2:", type=("build", "run"))
+    depends_on("py-click@8:", type=("build", "run"))
+    depends_on("py-mypy-extensions@0.4.3:", type=("build", "run"))
+    depends_on("py-pathspec@0.9:", type=("build", "run"))
+    depends_on("py-platformdirs@2:", type=("build", "run"))
+    depends_on("py-tomli@1.1:", when="@22.8: ^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli@1.1:", when="@21.7:22.6", type=("build", "run"))
+    depends_on("py-typed-ast@1.4.2:", when="^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions@3.10:", when="^python@:3.9", type=("build", "run"))
+    depends_on("py-dataclasses@0.6:", when="^python@:3.6", type=("build", "run"))
+    depends_on("py-colorama@0.4.3:", when="+colorama", type=("build", "run"))
+    depends_on("py-uvloop@0.15.2:", when="+uvloop", type=("build", "run"))
+    depends_on("py-aiohttp@3.7.4:", when="+d", type=("build", "run"))
+    depends_on("py-ipython@7.8:", when="+jupyter", type=("build", "run"))
+    depends_on("py-tokenize-rt@3.2:", when="+jupyter", type=("build", "run"))
+
+    # see: https://github.com/psf/black/issues/2964
+    # note that pip doesn't know this constraint.
+    depends_on("py-click@:8.0", when="@:22.2", type=("build", "run"))
 
     @property
     def import_modules(self):
-        modules = ['blib2to3', 'blib2to3.pgen2', 'black']
+        modules = ["blib2to3", "blib2to3.pgen2", "black"]
 
-        if '+d' in self.spec:
-            modules.append('blackd')
+        if "+d" in self.spec:
+            modules.append("blackd")
 
         return modules

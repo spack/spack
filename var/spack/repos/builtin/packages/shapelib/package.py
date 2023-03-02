@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Shapelib(CMakePackage):
@@ -13,6 +13,6 @@ class Shapelib(CMakePackage):
     """
 
     homepage = "http://shapelib.maptools.org/"
-    url      = "https://github.com/OSGeo/shapelib/archive/v1.5.0.tar.gz"
+    url = "https://github.com/OSGeo/shapelib/archive/v1.5.0.tar.gz"
 
-    version('1.5.0', sha256='48de3a6a8691b0b111b909c0b908af4627635c75322b3a501c0c0885f3558cad')
+    version("1.5.0", sha256="48de3a6a8691b0b111b909c0b908af4627635c75322b3a501c0c0885f3558cad")

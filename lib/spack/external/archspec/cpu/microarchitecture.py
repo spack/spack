@@ -106,7 +106,7 @@ class Microarchitecture(object):
             self.name == other.name
             and self.vendor == other.vendor
             and self.features == other.features
-            and self.ancestors == other.ancestors
+            and self.parents == other.parents  # avoid ancestors here
             and self.compilers == other.compilers
             and self.generation == other.generation
         )

@@ -13,9 +13,9 @@ class PyPdf2image(PythonPackage):
     homepage = "https://pypi.org/project/pdf2image/"
     pypi = "pdf2image/pdf2image-1.12.1.tar.gz"
 
-    version('1.12.1', sha256='a0d9906f5507192210a8d5d7ead63145e9dec4bccc4564b1fb644e923913c31c')
+    version("1.12.1", sha256="a0d9906f5507192210a8d5d7ead63145e9dec4bccc4564b1fb644e923913c31c")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
 
-    depends_on('py-pillow', type='run')
-    depends_on('poppler', type='run')
+    depends_on("py-pillow", type="run")
+    depends_on("poppler", type="run")

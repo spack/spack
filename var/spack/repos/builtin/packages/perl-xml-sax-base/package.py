@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PerlXmlSaxBase(PerlPackage):
@@ -14,6 +14,6 @@ class PerlXmlSaxBase(PerlPackage):
     callback."""
 
     homepage = "https://metacpan.org/pod/XML::SAX::Base"
-    url      = "https://cpan.metacpan.org/authors/id/G/GR/GRANTM/XML-SAX-Base-1.09.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/G/GR/GRANTM/XML-SAX-Base-1.09.tar.gz"
 
-    version('1.09', sha256='66cb355ba4ef47c10ca738bd35999723644386ac853abbeb5132841f5e8a2ad0')
+    version("1.09", sha256="66cb355ba4ef47c10ca738bd35999723644386ac853abbeb5132841f5e8a2ad0")

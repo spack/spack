@@ -1,0 +1,74 @@
+diff --git a/Make.inc b/Make.inc
+index 4719a3d49b..b056dc6c73 100644
+--- a/Make.inc
++++ b/Make.inc
+@@ -54,6 +54,7 @@ USE_SYSTEM_NGHTTP2:=0
+ USE_SYSTEM_CURL:=0
+ USE_SYSTEM_LIBGIT2:=0
+ USE_SYSTEM_PATCHELF:=0
++USE_SYSTEM_LIBWHICH:=0
+ USE_SYSTEM_ZLIB:=0
+ USE_SYSTEM_P7ZIP:=0
+ 
+@@ -1085,6 +1086,12 @@ else
+ PATCHELF := $(build_depsbindir)/patchelf
+ endif
+ 
++ifeq ($(USE_SYSTEM_LIBWHICH), 1)
++LIBWHICH := libwhich
++else
++LIBWHICH := $(build_depsbindir)/libwhich
++endif
++
+ # On aarch64 and powerpc64le, we assume the page size is 64K.  Our binutils linkers
+ # and such already assume this, but `patchelf` seems to be behind the times.  We
+ # explicitly tell it to use this large page size so that when we rewrite rpaths and
+diff --git a/base/Makefile b/base/Makefile
+index 2bef6aab7f..9e8c1abac7 100644
+--- a/base/Makefile
++++ b/base/Makefile
+@@ -170,7 +170,7 @@ endif
+ 
+ define symlink_system_library
+ libname_$2 := $$(notdir $(call versioned_libname,$2,$3))
+-libpath_$2 := $$(shell $$(call spawn,$$(build_depsbindir)/libwhich) -p $$(libname_$2) 2>/dev/null)
++libpath_$2 := $$(shell $$(call spawn,$$(LIBWHICH)) -p $$(libname_$2) 2>/dev/null)
+ symlink_$2: $$(build_private_libdir)/$$(libname_$2)
+ $$(build_private_libdir)/$$(libname_$2):
+ 	@if [ -e "$$(libpath_$2)" ]; then \
+@@ -191,6 +191,19 @@ SYMLINK_SYSTEM_LIBRARIES += symlink_$2
+ endif
+ endef
+ 
++# libexec executables
++symlink_p7zip: $(build_bindir)/7z$(EXE)
++
++ifneq ($(USE_SYSTEM_P7ZIP),0)
++SYMLINK_SYSTEM_LIBRARIES += symlink_p7zip
++7Z_PATH := $(shell which 7z$(EXE))
++endif
++
++$(build_bindir)/7z$(EXE):
++	[ -e "$(7Z_PATH)" ] && \
++	([ ! -e "$@" ] || rm "$@") && \
++	ln -svf "$(7Z_PATH)" "$@"
++
+ # the following excludes: libuv.a, libutf8proc.a
+ 
+ ifneq ($(USE_SYSTEM_LIBM),0)
+diff --git a/deps/Makefile b/deps/Makefile
+index 3d3f795131..50ca806307 100644
+--- a/deps/Makefile
++++ b/deps/Makefile
+@@ -159,9 +159,11 @@ DEP_LIBS += lapack
+ endif
+ endif
+ 
++ifeq ($(USE_SYSTEM_LIBWHICH), 0)
+ ifneq ($(OS), WINNT)
+ DEP_LIBS += libwhich
+ endif
++endif
+ 
+ # unlist targets that have not been converted to use the staged-install
+ DEP_LIBS_STAGED := $(filter-out suitesparse-wrapper,$(DEP_LIBS))

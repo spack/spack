@@ -1,38 +1,32 @@
 spack:
   view: false
-  concretization: separately
   modules:
-    tcl:
-      whitelist:
-        - brainbuilder
-        - circuit-analysis
-        - circuit-build
-        - connectome-tools
-        - emsim
-        - gene-expression-volume
-        - placement-algorithm
-        - psp-validation
-        - py-archngv
-        - py-atlas-building-tools
-        - py-bbp-analysis-framework
-        - py-bbp-workflow
-        - py-bbp-workflow-cli
-        - py-bluepy
-        - py-bluepysnap
-        - py-currentscape
-        - py-entity-management
-        - py-minis-validation
-        - py-morphio
-        - py-morph-tool
-        - py-morphology-repair-workflow
-        - py-region-grower
-        - py-sonata-network-reduction
-        - regiodesics
+    default:
+      tcl:
+        include:
+          - brainbuilder
+          - circuit-analysis
+          - circuit-build
+          - connectome-tools
+          - emsim
+          - placement-algorithm
+          - psp-validation
+          - py-archngv
+          - py-atlas-building-tools
+          - py-bbp-analysis-framework
+          - py-bbp-workflow
+          - py-bbp-workflow-cli
+          - py-bluepy
+          - py-bluepysnap
+          - py-currentscape
+          - py-entity-management
+          - py-minis-validation
+          - py-morphio
+          - py-morph-tool
+          - py-morphology-repair-workflow
+          - py-region-grower
+          - py-sonata-network-reduction
   packages:
-    hdf5:
-      variants: ~mpi+hl
-    highfive:
-      variants: ~mpi
     libsonata:
       variants: ~mpi
     mvdtool:
@@ -50,9 +44,8 @@ spack:
     - circuit-build
     - connectome-tools
     - emsim
-    - gene-expression-volume
     - placement-algorithm
-    - psp-validation%gcc ^neuron%intel
+    - psp-validation
     - py-archngv
     - py-atlas-building-tools
     - py-bbp-analysis-framework
@@ -62,10 +55,9 @@ spack:
     - py-bluepysnap
     - py-currentscape
     - py-entity-management
-    - py-minis-validation%gcc ^neuron%intel
+    - py-minis-validation
     - py-morphio
     - py-morphology-repair-workflow
-    - py-morph-tool%gcc ^neuron%intel
+    - py-morph-tool
     - py-region-grower
-    - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
-    - regiodesics
+    - py-sonata-network-reduction

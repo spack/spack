@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyStsciDistutils(PythonPackage):
@@ -11,9 +11,9 @@ class PyStsciDistutils(PythonPackage):
     package some of STScI's Python projects."""
 
     homepage = "https://github.com/spacetelescope/stsci.distutils"
-    url      = "https://github.com/spacetelescope/stsci.distutils/archive/0.3.8.tar.gz"
+    url = "https://github.com/spacetelescope/stsci.distutils/archive/0.3.8.tar.gz"
 
-    version('0.3.8', sha256='a52f3ec3b392a9cecd98d143b678c27346cbfa8f34c34698821d7e167907edce')
+    version("0.3.8", sha256="a52f3ec3b392a9cecd98d143b678c27346cbfa8f34c34698821d7e167907edce")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-d2to1', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-d2to1", type="build")

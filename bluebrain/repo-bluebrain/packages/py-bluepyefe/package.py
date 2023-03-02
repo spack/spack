@@ -7,27 +7,24 @@ from spack.package import *
 
 
 class PyBluepyefe(PythonPackage):
-    """ Blue Brain Python E-feature extraction"""
+    """Blue Brain Python E-feature extraction"""
 
     homepage = "https://github.com/BlueBrain/BluePyEfe"
     pypi = "bluepyefe/bluepyefe-0.3.13.tar.gz"
     git = "https://github.com/BlueBrain/BluePyEfe.git"
 
-    version('BPE2', branch='BPE2')
+    version("2.2.18", sha256="bfb50c6482433ec2ffb4b65b072d2778bd89ae50d92dd6830969222aabb30275")
 
-    version('0.3.13', sha256='e274780a34e802eae9ba146782f0b9b088734b38bdc2d6da936d79369306b726')
+    depends_on("py-setuptools", type="build")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-efel', type=('build', 'run'))
-    depends_on('py-igor', type=('build', 'run'))
-    depends_on('py-jsonschema', type=('build', 'run'))
-    depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-neo', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-sh', type=('build', 'run'))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-neo", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-efel", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-h5py", type=("build", "run"))
+    depends_on("py-igor", type=("build", "run"))
 
     def setup_run_environment(self, env):
-        env.set('NEURON_INIT_MPI', "0")
-        env.unset('PMI_RANK')
+        env.set("NEURON_INIT_MPI", "0")
+        env.unset("PMI_RANK")

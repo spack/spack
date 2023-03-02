@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Fann(CMakePackage):
@@ -21,6 +21,6 @@ class Fann(CMakePackage):
     """
 
     homepage = "https://leenissen.dk/fann/wp/"
-    url      = "https://github.com/libfann/fann/archive/2.2.0.tar.gz"
+    url = "https://github.com/libfann/fann/archive/2.2.0.tar.gz"
 
-    version('2.2.0', sha256='f31c92c1589996f97d855939b37293478ac03d24b4e1c08ff21e0bd093449c3c')
+    version("2.2.0", sha256="f31c92c1589996f97d855939b37293478ac03d24b4e1c08ff21e0bd093449c3c")

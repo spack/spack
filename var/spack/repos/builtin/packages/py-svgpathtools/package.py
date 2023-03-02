@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class PySvgpathtools(PythonPackage):
@@ -13,8 +13,8 @@ class PySvgpathtools(PythonPackage):
 
     pypi = "svgpathtools/svgpathtools-1.3.3.tar.gz"
 
-    version('1.3.3', sha256='e4b3784ae41b725fbce6a33a8981210967b16d0b557cb5d98c0ed0c81f0f89b9')
+    version("1.3.3", sha256="e4b3784ae41b725fbce6a33a8981210967b16d0b557cb5d98c0ed0c81f0f89b9")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-svgwrite', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-svgwrite", type=("build", "run"))

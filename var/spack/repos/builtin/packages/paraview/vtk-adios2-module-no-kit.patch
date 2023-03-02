@@ -1,0 +1,24 @@
+From 19cd0302104e94421813427071351aa5326e4dbb Mon Sep 17 00:00:00 2001
+From: Ryan Krattiger <ryan.krattiger@kitware.com>
+Date: Thu, 2 Dec 2021 16:58:10 -0600
+Subject: [PATCH] ADIOS2: Move IOADIOS2 to StandAlone kit
+
+---
+ IO/ADIOS2/vtk.module                   |  2 -
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/VTK/IO/ADIOS2/vtk.module b/VTK/IO/ADIOS2/vtk.module
+index 5ee89b9a65e..b89e54d7683 100644
+--- a/VTK/IO/ADIOS2/vtk.module
++++ b/VTK/IO/ADIOS2/vtk.module
+@@ -3,7 +3,5 @@ NAME
+ LIBRARY_NAME
+   vtkIOADIOS2
+-KIT
+-  VTK::IO
+ DEPENDS
+   VTK::CommonCore
+   VTK::CommonExecutionModel
+-- 
+GitLab
+

@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/sh -f
 # shellcheck disable=SC2034  # evals in this script fool shellcheck
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -241,21 +241,21 @@ case "$command" in
         mode=cpp
         debug_flags="-g"
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
+    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe|craycc)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         debug_flags="-g"
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
+    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++|crayCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         debug_flags="-g"
         ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang|crayftn)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
@@ -768,7 +768,9 @@ if [ "$SPACK_DEBUG" = TRUE ]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
     echo "[$mode] $command $input_command" >> "$input_log"
-    echo "[$mode] ${full_command_list}" >> "$output_log"
+    IFS="$lsep"
+    echo "[$mode] "$full_command_list >> "$output_log"
+    unset IFS
 fi
 
 # Execute the full command, preserving spaces with IFS set

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Nnvm(CMakePackage):
@@ -11,21 +11,21 @@ class Nnvm(CMakePackage):
     part to help build deep learning libraries."""
 
     homepage = "https://github.com/dmlc/nnvm"
-    git      = "https://github.com/dmlc/nnvm.git"
+    git = "https://github.com/dmlc/nnvm.git"
 
-    version('master', branch='master')
-    version('20170418', commit='b279286304ac954098d94a2695bca599e832effb')
+    version("master", branch="master")
+    version("20170418", commit="b279286304ac954098d94a2695bca599e832effb")
 
-    variant('shared', default=True, description='Build a shared NNVM lib.')
+    variant("shared", default=True, description="Build a shared NNVM lib.")
 
-    depends_on('dmlc-core')
+    depends_on("dmlc-core")
 
-    patch('cmake.patch')
-    patch('cmake2.patch', when='@20170418')
+    patch("cmake.patch")
+    patch("cmake2.patch", when="@20170418")
 
     def cmake_args(self):
         spec = self.spec
         return [
-            self.define_from_variant('USE_SHARED_NNVM', 'shared'),
-            '-DUSE_STATIC_NNVM=%s' % ('ON' if '~shared' in spec else 'OFF'),
+            self.define_from_variant("USE_SHARED_NNVM", "shared"),
+            "-DUSE_STATIC_NNVM=%s" % ("ON" if "~shared" in spec else "OFF"),
         ]

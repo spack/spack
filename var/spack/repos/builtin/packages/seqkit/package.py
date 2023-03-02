@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Seqkit(Package):
@@ -11,10 +11,12 @@ class Seqkit(Package):
     in Golang."""
 
     homepage = "https://bioinf.shenwei.me/seqkit"
-    url      = "https://github.com/shenwei356/seqkit/releases/download/v0.10.1/seqkit_linux_amd64.tar.gz"
+    url = (
+        "https://github.com/shenwei356/seqkit/releases/download/v0.10.1/seqkit_linux_amd64.tar.gz"
+    )
 
-    version('0.10.1', sha256='82f1c86dc4bd196403a56c2bf3ec063e5674a71777e68d940c4cc3d8411d2e9d')
+    version("0.10.1", sha256="82f1c86dc4bd196403a56c2bf3ec063e5674a71777e68d940c4cc3d8411d2e9d")
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('seqkit', prefix.bin)
+        install("seqkit", prefix.bin)

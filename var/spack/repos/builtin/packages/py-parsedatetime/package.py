@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyParsedatetime(PythonPackage):
@@ -12,6 +12,6 @@ class PyParsedatetime(PythonPackage):
     homepage = "https://github.com/bear/parsedatetime"
     pypi = "parsedatetime/parsedatetime-2.5.tar.gz"
 
-    version('2.5', sha256='d2e9ddb1e463de871d32088a3f3cea3dc8282b1b2800e081bd0ef86900451667')
+    version("2.5", sha256="d2e9ddb1e463de871d32088a3f3cea3dc8282b1b2800e081bd0ef86900451667")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

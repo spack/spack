@@ -15,18 +15,19 @@ class PyRandomaccessbuffer(PythonPackage):
     with their metadata ubt contrary to HDF5 it is very easy to decode,
     even from within a web browser in JS.
     """
+
     homepage = "https://bbpgitlab.epfl.ch/dke/randomaccessbufferpy"
-    git      = "ssh://git@bbpgitlab.epfl.ch/dke/randomaccessbufferpy.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/dke/randomaccessbufferpy.git"
 
-    version('0.1.7', tag='v0.1.7')
+    version("0.1.7", tag="v0.1.7")
 
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-cov', type='test')
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-pytest", type="test")
+    depends_on("py-pytest-cov", type="test")
 
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):
         python("-m", "pytest", "tests")

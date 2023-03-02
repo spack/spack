@@ -16,14 +16,16 @@ level = "short"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-s', '--split', action="store_true",
+        "-s",
+        "--split",
+        action="store_true",
         help="open the original package in a split window (*vim only) "
-             "when creating new packages")
+        "when creating new packages",
+    )
     subparser.add_argument(
-        '-N', '--namespace', default="patches",
-        help="namespace to store the augmented package")
-    subparser.add_argument(
-        'package', default=None, help="package name")
+        "-N", "--namespace", default="patches", help="namespace to store the augmented package"
+    )
+    subparser.add_argument("package", default=None, help="package name")
 
 
 def augment(parser, args):
@@ -41,17 +43,21 @@ def augment(parser, args):
         if os.path.exists(source_path):
             break
     else:
-        tty.die("No package for '{0}' was found.".format(name),
-                "  Use `spack create` to create a new package")
-    spec = Spec(".".join([repo.namespace, name]))
+        tty.die(
+            "No package for '{0}' was found.".format(name),
+            "  Use `spack create` to create a new package",
+        )
 
     if not os.path.exists(target_path):
         mkdirp(os.path.dirname(target_path))
         with open(target_path, "w") as pkg_file:
-            pkg_file.write(PACKAGE_TEMPLATE.format(
-                module=spec.package.fullname.replace('-', '_'),
-                namespace=repo.namespace.capitalize(),
-                cls=mod_to_class(name)))
+            pkg_file.write(
+                PACKAGE_TEMPLATE.format(
+                    module=".".join([repo.namespace, name]).replace("-", "_"),
+                    namespace=repo.namespace.capitalize(),
+                    cls=mod_to_class(name),
+                )
+            )
     if args.split:
         editor("-o", source_path, target_path)
     else:

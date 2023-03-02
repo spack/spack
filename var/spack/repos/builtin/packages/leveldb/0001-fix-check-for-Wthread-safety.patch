@@ -1,0 +1,25 @@
+From cf69e762384b259ea3890274779db0ae1bb51fa6 Mon Sep 17 00:00:00 2001
+From: Matthieu Dorier <mdorier@anl.gov>
+Date: Tue, 24 May 2022 16:28:43 +0000
+Subject: [PATCH] fix check for -Wthread-safety
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1409c06..416978f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -54,7 +54,7 @@ include(CheckCXXSourceCompiles)
+ # https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+ # -Werror is necessary because unknown attributes only generate warnings.
+ set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+-list(APPEND CMAKE_REQUIRED_FLAGS -Werror -Wthread-safety)
++set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror -Wthread-safety")
+ check_cxx_source_compiles("
+ struct __attribute__((lockable)) Lock {
+   void Acquire() __attribute__((exclusive_lock_function()));
+-- 
+2.30.2
+

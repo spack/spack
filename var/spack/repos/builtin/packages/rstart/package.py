@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Rstart(AutotoolsPackage, XorgPackage):
@@ -17,8 +17,8 @@ class Rstart(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/rstart"
     xorg_mirror_path = "app/rstart-1.0.5.tar.gz"
 
-    version('1.0.5', sha256='5271c0c2675b4ad09aace7edddfdd137af10fc754afa6260d8eb5d0bba7098c7')
+    version("1.0.5", sha256="5271c0c2675b4ad09aace7edddfdd137af10fc754afa6260d8eb5d0bba7098c7")
 
-    depends_on('xproto')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyBoltons(PythonPackage):
@@ -14,9 +14,10 @@ class PyBoltons(PythonPackage):
 
     Otherwise known as, "everyone's util.py," but cleaned up and tested.
     """
+
     homepage = "https://boltons.readthedocs.io/"
     pypi = "boltons/boltons-16.5.1.tar.gz"
 
-    version('16.5.1', sha256='fcded58596fa79bd1ada4488178e79fd11c7cb449f29ff9a6532411fb2db19b7')
+    version("16.5.1", sha256="fcded58596fa79bd1ada4488178e79fd11c7cb449f29ff9a6532411fb2db19b7")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

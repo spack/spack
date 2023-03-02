@@ -27,4 +27,4 @@ class Openvkl(CMakePackage):
     depends_on("rkcommon")
 
     def cmake_args(self):
-        return ['-DBUILD_EXAMPLES=OFF']
+        return ["-DBUILD_EXAMPLES=OFF"]

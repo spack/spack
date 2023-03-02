@@ -1,69 +1,60 @@
 spack:
   view: false
-  concretization: separately
   modules:
-    tcl:
-      whitelist:
-        - boost
-        - caliper
-        - gmsh
-        - hdf5+mpi
-        - highfive+mpi
-        - neuron+mpi%intel
-        - omega-h
-        - petsc+int64+mpi
-        - py-cgal-pybind
-        - py-dask-mpi
-        - py-flake8
-        - py-h5py+mpi
-        - py-libsonata
-        - py-mpi4py
-        - py-notebook
-        - py-numpy
-        - py-poisson-recon-pybind
-        - py-rtree
-        - py-scikit-learn
-        - py-scipy
-        - py-tensorflow
-        - python-dev
-        - py-virtualenv
-      projections:
-        all: '{name}/{version}'
-        'omega-h+gmsh': '{name}/{version}-gmsh'
+    default:
+      tcl:
+        include:
+          - boost
+          - caliper
+          - gmsh
+          - hdf5+mpi
+          - highfive+mpi
+          - neuron+mpi
+          - omega-h
+          - petsc+int64+mpi
+          - py-cgal-pybind
+          - py-dask-mpi
+          - py-flake8
+          - py-h5py+mpi
+          - py-libsonata
+          - py-mpi4py
+          - py-notebook
+          - py-numpy
+          - py-poisson-recon-pybind
+          - py-pytest
+          - py-rtree
+          - py-scikit-learn
+          - py-scipy
+          - py-virtualenv
+          - python-dev
+        projections:
+          all: '{name}/{version}'
+          'omega-h+gmsh': '{name}/{version}-gmsh'
   specs:
     - boost+python
     - caliper+cuda cuda_arch=70
-    - gmsh+metis+mpi+oce+openmp+shared
+    - gmsh+metis+mpi+openmp+shared
     - hdf5+mpi
     - highfive+mpi
     - hypre+int64+mpi
     - metis+int64
-    - neuron+mpi%intel
+    - neuron+mpi
     - omega-h+gmsh
     - petsc~int64+mpi
     - petsc+int64+mpi
-    - py-breathe
     - py-cgal-pybind
-    - py-clustershell
-    - py-cmake-format
-    - py-coverage
     - py-dask-mpi
-    - py-docopt
-    - py-exhale
     - py-flake8
     - py-h5py
     - py-libsonata
-    - py-matplotlib
     - py-mpi4py
     - py-notebook
     - py-numpy
-    - py-pip
     - py-poisson-recon-pybind
-    - py-pre-commit
     - py-rtree
     - py-scikit-learn
     - py-scipy
-    - py-tensorflow
+    - py-pytest  # requested by Pramod
     - py-virtualenv
     - python-dev
     - sundials+int64

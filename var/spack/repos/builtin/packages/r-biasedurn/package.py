@@ -1,21 +1,22 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiasedurn(RPackage):
-    """Statistical models of biased sampling in the form of univariate and
-       multivariate noncentral hypergeometric distributions, including
-       Wallenius' noncentral hypergeometric distribution and Fisher's
-       noncentral hypergeometric distribution (also called extended
-       hypergeometric distribution). See vignette("UrnTheory") for
-       explanation of these distributions."""
+    """Biased Urn Model Distributions.
 
-    homepage = "https://www.agner.org/random/"
-    url      = "https://cloud.r-project.org/src/contrib/BiasedUrn_1.07.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/BiasedUrn/"
+    Statistical models of biased sampling in the form of univariate and
+    multivariate noncentral hypergeometric distributions, including Wallenius'
+    noncentral hypergeometric distribution and Fisher's noncentral
+    hypergeometric distribution (also called extended hypergeometric
+    distribution). See vignette("UrnTheory") for explanation of these
+    distributions."""
 
-    version('1.07', sha256='2377c2e59d68e758a566452d7e07e88663ae61a182b9ee455d8b4269dda3228e')
+    cran = "BiasedUrn"
+
+    version("2.0.8", sha256="205e7f8da8fba76fbf4bd9d12a027599b685dedecc818aad39de5c51dc47b856")
+    version("1.07", sha256="2377c2e59d68e758a566452d7e07e88663ae61a182b9ee455d8b4269dda3228e")

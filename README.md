@@ -29,10 +29,10 @@ Official upstream documentation
 
 [![Unit Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
 [![Bootstrapping](https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/bootstrap.yml)
-[![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
 [![Containers](https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/build-containers.yml)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
 
 Spack is a multi-platform package manager that builds and installs
@@ -89,6 +89,7 @@ Resources:
 
 * **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
   To get an invitation, visit [slack.spack.io](https://slack.spack.io).
+* [**Github Discussions**](https://github.com/spack/spack/discussions): not just for discussions, also Q&A.
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
@@ -151,6 +152,9 @@ If you are referencing Spack in a publication, please cite the following paper:
    Adam Moody, Bronis R. de Supinski, and W. Scott Futral.
    [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](https://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
+
+On GitHub, you can copy this citation in APA or BibTeX format via the "Cite this repository"
+button. Or, see the comments in `CITATION.cff` for the raw BibTeX.
 
 License
 ----------------

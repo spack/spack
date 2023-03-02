@@ -71,6 +71,8 @@ from __future__ import division
 import re
 import math
 import multiprocessing
+import sys
+import threading
 import time
 from contextlib import contextmanager
 
@@ -150,8 +152,6 @@ _error_exceptions = [
     ": note",
     "    ok",
     "Note:",
-    "makefile:",
-    "Makefile:",
     ":[ \\t]+Where:",
     "[^ :]:[0-9]+: Warning",
     "------ Build started: .* ------",
@@ -189,8 +189,6 @@ _warning_exceptions = [
     "/usr/.*/X11/XResource\\.h:[0-9]+: war.*: ANSI C\\+\\+ forbids declaration",
     "WARNING 84 :",
     "WARNING 47 :",
-    "makefile:",
-    "Makefile:",
     "warning:  Clock skew detected.  Your build may be incomplete.",
     "/usr/openwin/include/GL/[^:]+:",
     "bind_at_load",
@@ -413,7 +411,12 @@ class CTestLogParser(object):
             pool = multiprocessing.Pool(jobs)
             try:
                 # this is a workaround for a Python bug in Pool with ctrl-C
-                results = pool.map_async(_parse_unpack, args, 1).get(9999999)
+                if sys.version_info >= (3, 2):
+                    max_timeout = threading.TIMEOUT_MAX
+                else:
+                    max_timeout = 9999999
+                results = pool.map_async(_parse_unpack, args, 1).get(max_timeout)
+
                 errors, warnings, timings = zip(*results)
             finally:
                 pool.terminate()

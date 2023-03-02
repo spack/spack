@@ -16,11 +16,11 @@ class PyPipTools(PythonPackage):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('6.3.0', sha256='1835a1848bdfb22b2b6e5d10d630844ff5ee15e24b6c3bf92319c76f205d347f')
+    version("6.3.0", sha256="1835a1848bdfb22b2b6e5d10d630844ff5ee15e24b6c3bf92319c76f205d347f")
 
-    depends_on('py-click@7:')
-    depends_on('py-setuptools@45:', type='build')
-    depends_on('py-setuptools-scm+toml@6.2:', type='build')
-    depends_on('py-pip@20.3:')
-    depends_on('py-build')
-    depends_on('py-wheel')
+    depends_on("py-click@7:")
+    depends_on("py-setuptools@45:", type="build")
+    depends_on("py-setuptools-scm+toml@6.2:", type="build")
+    depends_on("py-pip@20.3:")
+    depends_on("py-build")
+    depends_on("py-wheel")

@@ -1,29 +1,23 @@
 spack:
   view: false
-  concretization: separately
   modules:
-    tcl:
-      all:
-        environment:
-          set:: {}
-        filter:
-          environment_blacklist: ['CPATH', 'LIBRARY_PATH']
-      whitelist:
-        - binutils
-        - gcc
-        - pgi
-        - llvm
-        - intel
-        - intel-oneapi-compilers
-        - nvhpc
+    default:
+      tcl:
+        all:
+          environment:
+            set:: {}
+          filter:
+            exclude_env_vars: ['CPATH', 'LIBRARY_PATH']
+        include:
+          - gcc
+          - intel-oneapi-compilers
   packages:
     all:
-      compiler: [gcc@4.8.5]
+      require: "%gcc@4.8.5"
     intel-parallel-studio:
       variants: +advisor+daal+gdb+inspector+ipp~mkl~mpi+rpath+shared~tbb+vtune
   specs:
-    - binutils
     - gcc@9.4.0
-    - gcc@11.2.0
-    - intel@20.0.4
-    - intel-oneapi-compilers@2021.4.0
+    - gcc@11.3.0
+    - gcc@12.2.0
+    - intel-oneapi-compilers@2022.2.1

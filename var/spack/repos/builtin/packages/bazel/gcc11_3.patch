@@ -1,0 +1,17 @@
+diff --git a/third_party/ijar/mapped_file_unix.cc b/third_party/ijar/mapped_file_unix.cc
+index 6e3a90871844..65179e3290ec 100644
+--- a/third_party/ijar/mapped_file_unix.cc
++++ b/third_party/ijar/mapped_file_unix.cc
+@@ -15,10 +15,11 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <stdio.h>
+-#include <unistd.h>
+ #include <sys/mman.h>
++#include <unistd.h>
+ 
+ #include <algorithm>
++#include <limits>
+ 
+ #include "third_party/ijar/mapped_file.h"
+ 

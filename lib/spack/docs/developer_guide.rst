@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,7 +107,6 @@ with a high level view of Spack's directory structure:
             llnl/          <- some general-use libraries
 
             spack/                <- spack module; contains Python code
-               analyzers/         <- modules to run analysis on installed packages
                build_systems/     <- modules for different build systems
                cmd/               <- each file in here is a spack subcommand
                compilers/         <- compiler description files
@@ -150,11 +149,9 @@ grouped by functionality.
 Package-related modules
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-:mod:`spack.package`
-  Contains the :class:`~spack.package.Package` class, which
-  is the superclass for all packages in Spack.  Methods on ``Package``
-  implement all phases of the :ref:`package lifecycle
-  <package-lifecycle>` and manage the build process.
+:mod:`spack.package_base`
+  Contains the :class:`~spack.package_base.PackageBase` class, which
+  is the superclass for all packages in Spack.
 
 :mod:`spack.util.naming`
   Contains functions for mapping between Spack package names,
@@ -242,22 +239,6 @@ Unit tests
   Implements Spack's test suite.  Add a module and put its name in
   the test suite in ``__init__.py`` to add more unit tests.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Research and Monitoring Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-:mod:`spack.monitor`
-  Contains :class:`~spack.monitor.SpackMonitorClient`. This is accessed from
-  the ``spack install`` and ``spack analyze`` commands to send build and
-  package metadata up to a `Spack Monitor
-  <https://github.com/spack/spack-monitor>`_ server.
-
-
-:mod:`spack.analyzers`
-  A module folder with a :class:`~spack.analyzers.analyzer_base.AnalyzerBase`
-  that provides base functions to run, save, and (optionally) upload analysis
-  results to a `Spack Monitor <https://github.com/spack/spack-monitor>`_ server.
-
 
 ^^^^^^^^^^^^^
 Other Modules
@@ -300,240 +281,6 @@ Most spack commands look something like this:
 
 The information in Package files is used at all stages in this
 process.
-
-Conceptually, packages are overloaded.  They contain:
-
--------------
-Stage objects
--------------
-
-
-.. _writing-analyzers:
-
------------------
-Writing analyzers
------------------
-
-To write an analyzer, you should add a new python file to the
-analyzers module directory at ``lib/spack/spack/analyzers`` .
-Your analyzer should be a subclass of the :class:`AnalyzerBase <spack.analyzers.analyzer_base.AnalyzerBase>`. For example, if you want
-to add an analyzer class ``Myanalyzer`` you would write to
-``spack/analyzers/myanalyzer.py`` and import and
-use the base as follows:
-
-.. code-block:: python
-
-    from .analyzer_base import AnalyzerBase
-
-    class Myanalyzer(AnalyzerBase):
-
-
-Note that the class name is your module file name, all lowercase
-except for the first capital letter. You can  look at other analyzers in
-that analyzer directory for examples. The guide here will tell you about the basic functions needed.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Analyzer Output Directory
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, when you run ``spack analyze run`` an analyzer output directory will
-be created in your spack user directory in your ``$HOME``. The reason we output here
-is because the install directory might not always be writable.
-
-.. code-block:: console
-
-    ~/.spack/
-      analyzers
-
-Result files will be written here, organized in subfolders in the same structure
-as the package, with each analyzer owning it's own subfolder. for example:
-
-
-.. code-block:: console
-
-    $ tree ~/.spack/analyzers/
-    /home/spackuser/.spack/analyzers/
-    └── linux-ubuntu20.04-skylake
-        └── gcc-9.3.0
-            └── zlib-1.2.11-sl7m27mzkbejtkrajigj3a3m37ygv4u2
-                ├── environment_variables
-                │   └── spack-analyzer-environment-variables.json
-                ├── install_files
-                │   └── spack-analyzer-install-files.json
-                └── libabigail
-                    └── lib
-                        └── spack-analyzer-libabigail-libz.so.1.2.11.xml
-
-
-Notice that for the libabigail analyzer, since results are generated per object,
-we honor the object's folder in case there are equivalently named files in
-different folders. The result files are typically written as json so they can be easily read and  uploaded in a future interaction with a monitor.
-
-
-^^^^^^^^^^^^^^^^^
-Analyzer Metadata
-^^^^^^^^^^^^^^^^^
-
-Your analyzer is required to have the class attributes ``name``, ``outfile``,
-and ``description``. These are printed to the user with they use the subcommand
-``spack analyze list-analyzers``.  Here is an example.
-As we mentioned above, note that this analyzer would live in a module named
-``libabigail.py`` in the analyzers folder so that the class can be discovered.
-
-
-.. code-block:: python
-
-    class Libabigail(AnalyzerBase):
-
-        name = "libabigail"
-        outfile = "spack-analyzer-libabigail.json"
-        description = "Application Binary Interface (ABI) features for objects"
-
-
-This means that the name and output file should be unique for your analyzer.
-Note that "all" cannot be the name of an analyzer, as this key is used to indicate
-that the user wants to run all analyzers.
-
-.. _analyzer_run_function:
-
-
-^^^^^^^^^^^^^^^^^^^^^^^^
-An analyzer run Function
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-The core of an analyzer is its ``run()`` function, which should accept no
-arguments. You can assume your analyzer has the package spec of interest at ``self.spec``
-and it's up to the run function to generate whatever analysis data you need,
-and then return the object with a key as the analyzer name. The result data
-should be a list of objects, each with a name, ``analyzer_name``, ``install_file``,
-and one of ``value`` or ``binary_value``. The install file should be for a relative
-path, and not the absolute path. For example, let's say we extract a metric called
-``metric`` for ``bin/wget`` using our analyzer ``thebest-analyzer``.
-We might have data that looks like this:
-
-.. code-block:: python
-
-    result = {"name": "metric", "analyzer_name": "thebest-analyzer", "value": "1", "install_file": "bin/wget"}
-
-
-We'd then return it as follows - note that they key is the analyzer name at ``self.name``.
-
-.. code-block:: python
-
-    return {self.name: result}
-
-This will save the complete result to the analyzer metadata folder, as described
-previously. If you want support for adding a different kind of metadata (e.g.,
-not associated with an install file) then the monitor server would need to be updated
-to support this first.
-
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-An analyzer init Function
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you don't need any extra dependencies or checks, you can skip defining an analyzer
-init function, as the base class will handle it. Typically, it will accept
-a spec, and an optional output directory (if the user does not want the default
-metadata folder for analyzer results). The analyzer init function should call
-it's parent init, and then do any extra checks or validation that are required to
-work. For example:
-
-.. code-block:: python
-
-    def __init__(self, spec, dirname=None):
-        super(Myanalyzer, self).__init__(spec, dirname)
-
-        # install extra dependencies, do extra preparation and checks here
-
-
-At the end of the init, you will have available to you:
-
- - **self.spec**: the spec object
- - **self.dirname**: an optional directory name the user as provided at init to save
- - **self.output_dir**: the analyzer metadata directory, where we save by default
- - **self.meta_dir**: the path to the package metadata directory (.spack) if you need it
-
-And can proceed to write your analyzer.
-
-
-^^^^^^^^^^^^^^^^^^^^^^^
-Saving Analyzer Results
-^^^^^^^^^^^^^^^^^^^^^^^
-
-The analyzer will have ``save_result`` called, with the result object generated
-to save it to the filesystem, and if the user has added the ``--monitor`` flag
-to upload it to a monitor server. If your result follows an accepted result
-format and you don't need to parse it further, you don't need to add this
-function to your class. However, if your result data is large or otherwise
-needs additional parsing, you can define it. If you define the function, it
-is useful to know about the ``output_dir`` property, which you can join
-with your output file relative path of choice:
-
-.. code-block:: python
-
-    outfile = os.path.join(self.output_dir, "my-output-file.txt")
-
-
-The directory will be provided by the ``output_dir`` property but it won't exist,
-so you should create it:
-
-
-.. code::block:: python
-
-    # Create the output directory
-    if not os.path.exists(self._output_dir):
-        os.makedirs(self._output_dir)
-
-
-If you are generating results that match to specific files in the package
-install directory, you should try to maintain those paths in the case that
-there are equivalently named files in different directories that would
-overwrite one another. As an example of an analyzer with a custom save,
-the Libabigail analyzer saves ``*.xml`` files to the analyzer metadata
-folder in ``run()``, as they are either binaries, or as xml (text) would
-usually be too big to pass in one request. For this reason, the files
-are saved during ``run()`` and the filenames added to the result object,
-and then when the result object is passed back into ``save_result()``,
-we skip saving to the filesystem, and instead read the file and send
-each one (separately) to the monitor:
-
-
-.. code-block:: python
-
-    def save_result(self, result, monitor=None, overwrite=False):
-        """ABI results are saved to individual files, so each one needs to be
-        read and uploaded. Result here should be the lookup generated in run(),
-        the key is the analyzer name, and each value is the result file.
-        We currently upload the entire xml as text because libabigail can't
-        easily read gzipped xml, but this will be updated when it can.
-        """
-        if not monitor:
-            return
-
-        name = self.spec.package.name
-
-        for obj, filename in result.get(self.name, {}).items():
-
-            # Don't include the prefix
-            rel_path = obj.replace(self.spec.prefix + os.path.sep, "")
-
-            # We've already saved the results to file during run
-            content = spack.monitor.read_file(filename)
-
-            # A result needs an analyzer, value or binary_value, and name
-            data = {"value": content, "install_file": rel_path, "name": "abidw-xml"}
-            tty.info("Sending result for %s %s to monitor." % (name, rel_path))
-            monitor.send_analyze_metadata(self.spec.package, {"libabigail": [data]})
-
-
-
-Notice that this function, if you define it, requires a result object (generated by
-``run()``, a monitor (if you want to send), and a boolean ``overwrite`` to be used
-to check if a result exists first, and not write to it if the result exists and
-overwrite is False. Also notice that since we already saved these files to the analyzer metadata folder, we return early if a monitor isn't defined, because this function serves to send  results to the monitor. If you haven't saved anything to the analyzer metadata folder
-yet, you might want to do that here. You should also use ``tty.info`` to give
-the user a message of "Writing result to $DIRNAME."
 
 
 .. _writing-commands:
@@ -671,6 +418,13 @@ If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
 
 
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
+
+
 """""""""""""""""""""""""""""""""""""""""""""""
 ``on_phase_success(pkg, phase_name, log_file)``
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -691,23 +445,6 @@ In the case of an error during a phase, we might want to trigger some event
 with a hook, and this is the purpose of this particular hook. Akin to
 ``on_phase_success`` we require the same variables - the package that failed,
 the name of the phase, and the log file where we might find errors.
-
-"""""""""""""""""""""""""""""""""
-``on_analyzer_save(pkg, result)``
-"""""""""""""""""""""""""""""""""
-
-After an analyzer has saved some result for a package, this hook is called,
-and it provides the package that we just ran the analysis for, along with
-the loaded result. Typically, a result is structured to have the name
-of the analyzer as key, and the result object that is defined in detail in
-:ref:`analyzer_run_function`.
-
-.. code-block:: python
-
-    def on_analyzer_save(pkg, result):
-        """given a package and a result...
-        """
-        print('Do something extra with a package analysis result here')
 
 
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -1050,39 +787,39 @@ Release branches
 ^^^^^^^^^^^^^^^^
 
 There are currently two types of Spack releases: :ref:`major releases
-<major-releases>` (``0.13.0``, ``0.14.0``, etc.) and :ref:`point releases
-<point-releases>` (``0.13.1``, ``0.13.2``, ``0.13.3``, etc.). Here is a
+<major-releases>` (``0.17.0``, ``0.18.0``, etc.) and :ref:`point releases
+<point-releases>` (``0.17.1``, ``0.17.2``, ``0.17.3``, etc.). Here is a
 diagram of how Spack release branches work::
 
-    o    branch: develop  (latest version)
+    o    branch: develop  (latest version, v0.19.0.dev0)
     |
-    o    merge v0.14.1 into develop
-    |\
-    | o  branch: releases/v0.14, tag: v0.14.1
-    o |  merge v0.14.0 into develop
-    |\|
-    | o  tag: v0.14.0
+    o
+    | o  branch: releases/v0.18, tag: v0.18.1
+    o |
+    | o  tag: v0.18.0
+    o |
+    | o
     |/
-    o    merge v0.13.2 into develop
-    |\
-    | o  branch: releases/v0.13, tag: v0.13.2
-    o |  merge v0.13.1 into develop
-    |\|
-    | o  tag: v0.13.1
-    o |  merge v0.13.0 into develop
-    |\|
-    | o  tag: v0.13.0
+    o
+    |
+    o
+    | o  branch: releases/v0.17, tag: v0.17.2
+    o |
+    | o  tag: v0.17.1
+    o |
+    | o  tag: v0.17.0
     o |
     | o
     |/
     o
 
 The ``develop`` branch has the latest contributions, and nearly all pull
-requests target ``develop``.
+requests target ``develop``. The ``develop`` branch will report that its
+version is that of the next **major** release with a ``.dev0`` suffix.
 
 Each Spack release series also has a corresponding branch, e.g.
-``releases/v0.14`` has ``0.14.x`` versions of Spack, and
-``releases/v0.13`` has ``0.13.x`` versions. A major release is the first
+``releases/v0.18`` has ``0.18.x`` versions of Spack, and
+``releases/v0.17`` has ``0.17.x`` versions. A major release is the first
 tagged version on a release branch. Minor releases are back-ported from
 develop onto release branches. This is typically done by cherry-picking
 bugfix commits off of ``develop``.
@@ -1093,12 +830,20 @@ packages. They should generally only contain fixes to the Spack core.
 However, sometimes priorities are such that new functionality needs to
 be added to a minor release.
 
-Both major and minor releases are tagged. After each release, we merge
-the release branch back into ``develop`` so that the version bump and any
-other release-specific changes are visible in the mainline. As a
-convenience, we also tag the latest release as ``releases/latest``,
-so that users can easily check it out to get the latest
-stable version. See :ref:`merging-releases` for more details.
+Both major and minor releases are tagged. As a convenience, we also tag
+the latest release as ``releases/latest``, so that users can easily check
+it out to get the latest stable version. See :ref:`updating-latest-release`
+for more details.
+
+.. note::
+
+   Older spack releases were merged **back** into develop so that we could
+   do fancy things with tags, but since tarballs and many git checkouts do
+   not have tags, this proved overly complex and confusing.
+
+   We have since converted to using `PEP 440 <https://peps.python.org/pep-0440/>`_
+   compliant versions.  `See here <https://github.com/spack/spack/pull/25267>`_ for
+   details.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Scheduling work for releases
@@ -1156,10 +901,11 @@ completed, the steps to make the major release are:
    ``releases/vX.Y``. That is, you should create a ``releases/vX.Y``
    branch if you are preparing the ``X.Y.0`` release.
 
-#. Bump the version in ``lib/spack/spack/__init__.py``.
+#. Remove the ``dev0`` development release segment from the version tuple in
+   ``lib/spack/spack/__init__.py``.
 
-   See `this example from 0.13.0
-   <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
+   The version number itself should already be correct and should not be
+   modified.
 
 #. Update ``CHANGELOG.md`` with major highlights in bullet form.
 
@@ -1177,9 +923,20 @@ completed, the steps to make the major release are:
    If CI is not passing, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop`` until CI passes.
 
+#. Make sure the entire documentation is up to date. If documentation
+   is outdated submit pull requests to ``develop`` as normal
+   and keep rebasing the release branch on ``develop``.
+
+#. Bump the major version in the ``develop`` branch.
+
+   Create a pull request targeting the ``develop`` branch, bumping the major
+   version in ``lib/spack/spack/__init__.py`` with a ``dev0`` release segment.
+   For instance when you have just released ``v0.15.0``, set the version
+   to ``(0, 16, 0, 'dev0')`` on ``develop``.
+
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
@@ -1206,8 +963,13 @@ completed, the steps to make the point release are:
 
       $ git checkout releases/v0.15
 
+#. If a pull request to the release branch named ``Backports vX.Y.Z`` is not already
+   in the project, create it. This pull request ought to be created as early as
+   possible when working on a release project, so that we can build the release
+   commits incrementally, and identify potential conflicts at an early stage.
+
 #. Cherry-pick each pull request in the ``Done`` column of the release
-   project board onto the release branch.
+   project board onto the ``Backports vX.Y.Z`` pull request.
 
    This is **usually** fairly simple since we squash the commits from the
    vast majority of pull requests. That means there is only one commit
@@ -1232,7 +994,7 @@ completed, the steps to make the point release are:
 
       It is important to cherry-pick commits in the order they happened,
       otherwise you can get conflicts while cherry-picking. When
-      cherry-picking onto a point release, look at the merge date,
+      cherry-picking look at the merge date,
       **not** the number of the pull request or the date it was opened.
 
       Sometimes you may **still** get merge conflicts even if you have
@@ -1253,18 +1015,19 @@ completed, the steps to make the point release are:
          branch if neither of the above options makes sense, but this can
          require a lot of work. It's seldom the right choice.
 
-#. Bump the version in ``lib/spack/spack/__init__.py``.
+#. When all the commits from the project board are cherry-picked into
+   the ``Backports vX.Y.Z`` pull request, you can push a commit to:
 
-   See `this example from 0.14.1
-   <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
-
-#. Update ``CHANGELOG.md`` with a list of the changes.
+   1. Bump the version in ``lib/spack/spack/__init__.py``.
+   2. Update ``CHANGELOG.md`` with a list of the changes.
 
    This is typically a summary of the commits you cherry-picked onto the
    release branch. See `the changelog from 0.14.1
    <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
 
-#. Push the release branch to GitHub.
+#. Merge the ``Backports vX.Y.Z`` PR with the **Rebase and merge** strategy. This
+   is needed to keep track in the release branch of all the commits that were
+   cherry-picked.
 
 #. Make sure CI passes on the release branch, including:
 
@@ -1279,10 +1042,12 @@ completed, the steps to make the point release are:
 
 #. Follow the steps in :ref:`publishing-releases`.
 
-#. Follow the steps in :ref:`merging-releases`.
+#. Follow the steps in :ref:`updating-latest-release`.
 
 #. Follow the steps in :ref:`announcing-releases`.
 
+#. Submit a PR to update the CHANGELOG in the `develop` branch
+   with the addition of this point release.
 
 .. _publishing-releases:
 
@@ -1340,11 +1105,11 @@ Publishing a release on GitHub
    selectable in the versions menu.
 
 
-.. _merging-releases:
+.. _updating-latest-release:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Updating `releases/latest` and `develop`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating `releases/latest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the new release is the **highest** Spack release yet, you should
 also tag it as ``releases/latest``. For example, suppose the highest
@@ -1367,40 +1132,6 @@ To tag ``releases/latest``, do this:
 
 The ``--force`` argument to ``git tag`` makes ``git`` overwrite the existing
 ``releases/latest`` tag with the new one.
-
-We also merge each release that we tag as ``releases/latest`` into ``develop``.
-Make sure to do this with a merge commit:
-
-.. code-block:: console
-
-   $ git checkout develop
-   $ git merge --no-ff -s ours vX.Y.Z  # vX.Y.Z is the new release's tag
-   $ git push
-
-We merge back to ``develop`` because it:
-
-  * updates the version and ``CHANGELOG.md`` on ``develop``; and
-  * ensures that your release tag is reachable from the head of
-    ``develop``.
-
-We *must* use a real merge commit (via the ``--no-ff`` option) to
-ensure that the release tag is reachable from the tip of ``develop``.
-This is necessary for ``spack -V`` to work properly -- it uses ``git
-describe --tags`` to find the last reachable tag in the repository and
-reports how far we are from it. For example:
-
-.. code-block:: console
-
-   $ spack -V
-   0.14.2-1486-b80d5e74e5
-
-This says that we are at commit ``b80d5e74e5``, which is 1,486 commits
-ahead of the ``0.14.2`` release.
-
-We put this step last in the process because it's best to do it only once
-the release is complete and tagged. If you do it before you've tagged the
-release and later decide you want to tag some later commit, you'll need
-to merge again.
 
 
 .. _announcing-releases:

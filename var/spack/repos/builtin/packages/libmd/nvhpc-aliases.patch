@@ -1,0 +1,28 @@
+From 62be7d51eed4294541f70c2022c7f0ba3868e2e7 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Sat, 2 Apr 2022 23:20:32 +0200
+Subject: [PATCH] nvhpc doesn't support __attribute__ __alias
+
+---
+ src/local-link.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/local-link.h b/src/local-link.h
+index 7560c4f..e8906b9 100644
+--- a/src/local-link.h
++++ b/src/local-link.h
+@@ -40,9 +40,11 @@
+  * maintainable.
+  */
+ #ifndef _MSC_VER
++#ifndef __NVCOMPILER
+ #define libmd_alias(alias, symbol) \
+ 	extern __typeof(symbol) alias __attribute__((__alias__(#symbol)))
+ #endif
++#endif
+ 
+ #ifdef __ELF__
+ #define libmd_symver_default(alias, symbol, version) \
+-- 
+2.25.1
+

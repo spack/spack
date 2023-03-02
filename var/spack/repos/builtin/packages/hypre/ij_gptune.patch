@@ -1,0 +1,440 @@
+diff --git a/src/test/ij.c b/src/test/ij.c
+old mode 100644
+new mode 100755
+index fcda91898..c43dcf477
+--- a/src/test/ij.c
++++ b/src/test/ij.c
+@@ -85,10 +85,81 @@ extern HYPRE_Int hypre_FlexGMRESModifyPCDefault(void *precond_data, HYPRE_Int it
+ #endif
+ #define SECOND_TIME 0
+ 
++
++HYPRE_Int
++hypre_fPrintTiming(FILE* fp, const char     *heading,
++                   MPI_Comm        comm  )
++{
++   HYPRE_Int  ierr = 0;
++
++   HYPRE_Real  local_wall_time;
++   HYPRE_Real  local_cpu_time;
++   HYPRE_Real  wall_time;
++   HYPRE_Real  cpu_time;
++   HYPRE_Real  wall_mflops;
++   HYPRE_Real  cpu_mflops;
++
++   HYPRE_Int     i;
++   HYPRE_Int     myrank;
++
++   if (hypre_global_timing == NULL)
++      return ierr;
++
++   hypre_MPI_Comm_rank(comm, &myrank );
++
++   /* print heading */
++   if (myrank == 0)
++   {
++      hypre_fprintf(fp, "=============================================\n");
++      hypre_fprintf(fp, "%s:\n", heading);
++      hypre_fprintf(fp, "=============================================\n");
++   }
++
++   for (i = 0; i < (hypre_global_timing -> size); i++)
++   {
++      if (hypre_TimingNumRegs(i) > 0)
++      {
++         local_wall_time = hypre_TimingWallTime(i);
++         local_cpu_time  = hypre_TimingCPUTime(i);
++         hypre_MPI_Allreduce(&local_wall_time, &wall_time, 1,
++                       hypre_MPI_REAL, hypre_MPI_MAX, comm);
++         hypre_MPI_Allreduce(&local_cpu_time, &cpu_time, 1,
++                       hypre_MPI_REAL, hypre_MPI_MAX, comm);
++
++         if (myrank == 0)
++         {
++            hypre_fprintf(fp, "%s:\n", hypre_TimingName(i));
++
++            /* print wall clock info */
++            hypre_fprintf(fp, "  wall clock time = %f seconds\n", wall_time);
++            if (wall_time)
++               wall_mflops = hypre_TimingFLOPS(i) / wall_time / 1.0E6;
++            else
++               wall_mflops = 0.0;
++            hypre_fprintf(fp, "  wall MFLOPS     = %f\n", wall_mflops);
++
++            /* print CPU clock info */
++            hypre_fprintf(fp, "  cpu clock time  = %f seconds\n", cpu_time);
++            if (cpu_time)
++               cpu_mflops = hypre_TimingFLOPS(i) / cpu_time / 1.0E6;
++            else
++               cpu_mflops = 0.0;
++            hypre_fprintf(fp, "  cpu MFLOPS      = %f\n\n", cpu_mflops);
++         }
++      }
++   }
++
++   return ierr;
++}
++
++
++
++
+ hypre_int
+ main( hypre_int argc,
+       char *argv[] )
+ {
++   FILE *fplog;
+    HYPRE_Int           arg_index;
+    HYPRE_Int           print_usage;
+    HYPRE_Int           sparsity_known = 0;
+@@ -414,7 +485,9 @@ main( hypre_int argc,
+    size_t mempool_max_cached_bytes = 2000LL * 1024 * 1024;
+ 
+    /* Initialize MPI */
+-   hypre_MPI_Init(&argc, &argv);
++   hypre_MPI_Init(&argc, &argv);MPI_Comm parent; MPI_Comm_get_parent(&parent);
++      
++
+ 
+    hypre_MPI_Comm_size(hypre_MPI_COMM_WORLD, &num_procs );
+    hypre_MPI_Comm_rank(hypre_MPI_COMM_WORLD, &myid );
+@@ -481,6 +554,11 @@ main( hypre_int argc,
+          build_matrix_type      = 3;
+          build_matrix_arg_index = arg_index;
+       }
++      else if ( strcmp(argv[arg_index], "-logfile") == 0 )
++      {
++         arg_index++;
++         fplog = fopen(argv[arg_index++], "w");
++      }      
+       else if ( strcmp(argv[arg_index], "-27pt") == 0 )
+       {
+          arg_index++;
+@@ -2068,7 +2146,7 @@ main( hypre_int argc,
+    HYPRE_Init();
+ 
+    hypre_EndTiming(time_index);
+-   hypre_PrintTiming("Hypre init times", hypre_MPI_COMM_WORLD);
++   hypre_fPrintTiming(fplog, "Hypre init times", hypre_MPI_COMM_WORLD);
+    hypre_FinalizeTiming(time_index);
+    hypre_ClearTiming();
+ 
+@@ -2182,7 +2260,7 @@ main( hypre_int argc,
+       local_num_cols = (HYPRE_Int)(last_local_col - first_local_col + 1);
+    }
+    hypre_EndTiming(time_index);
+-   hypre_PrintTiming("Generate Matrix", hypre_MPI_COMM_WORLD);
++   hypre_fPrintTiming(fplog, "Generate Matrix", hypre_MPI_COMM_WORLD);
+    hypre_FinalizeTiming(time_index);
+    hypre_ClearTiming();
+ 
+@@ -2404,7 +2482,7 @@ main( hypre_int argc,
+       ierr += HYPRE_IJMatrixAssemble( ij_A );
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("IJ Matrix Setup", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "IJ Matrix Setup", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -3032,7 +3110,7 @@ main( hypre_int argc,
+    }
+ 
+    hypre_EndTiming(time_index);
+-   hypre_PrintTiming("IJ Vector Setup", hypre_MPI_COMM_WORLD);
++   hypre_fPrintTiming(fplog, "IJ Vector Setup", hypre_MPI_COMM_WORLD);
+    hypre_FinalizeTiming(time_index);
+    hypre_ClearTiming();
+ 
+@@ -3124,7 +3202,7 @@ main( hypre_int argc,
+ #endif
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("MatVec Test", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "MatVec Test", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -3190,7 +3268,7 @@ main( hypre_int argc,
+       HYPRE_ParCSRHybridSetup(amg_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -3200,7 +3278,7 @@ main( hypre_int argc,
+       HYPRE_ParCSRHybridSolve(amg_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -3422,7 +3500,7 @@ main( hypre_int argc,
+ #endif
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -3448,7 +3526,7 @@ main( hypre_int argc,
+ #endif
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -3638,7 +3716,7 @@ main( hypre_int argc,
+       HYPRE_BoomerAMGSetup(amg_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -3648,7 +3726,7 @@ main( hypre_int argc,
+       HYPRE_BoomerAMGSolve(amg_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -4112,7 +4190,7 @@ main( hypre_int argc,
+       HYPRE_PCGSetup(pcg_solver, (HYPRE_Matrix)parcsr_A,
+                      (HYPRE_Vector)b, (HYPRE_Vector)x);
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -4123,7 +4201,7 @@ main( hypre_int argc,
+                      (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -4140,7 +4218,7 @@ main( hypre_int argc,
+                      (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -4151,7 +4229,7 @@ main( hypre_int argc,
+                      (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ #endif
+@@ -4550,7 +4628,7 @@ main( hypre_int argc,
+           *                     (HYPRE_Vector)b, (HYPRE_Vector)x); */
+ 
+          hypre_EndTiming(time_index);
+-         hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++         hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+          hypre_FinalizeTiming(time_index);
+          hypre_ClearTiming();
+ 
+@@ -4610,7 +4688,7 @@ main( hypre_int argc,
+          HYPRE_LOBPCGSolve(lobpcg_solver, constraints, eigenvectors, eigenvalues );
+ 
+          hypre_EndTiming(time_index);
+-         hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++         hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+          hypre_FinalizeTiming(time_index);
+          hypre_ClearTiming();
+ 
+@@ -4942,7 +5020,7 @@ main( hypre_int argc,
+                                (HYPRE_Vector)x);
+ 
+          hypre_EndTiming(time_index);
+-         hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++         hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+          hypre_FinalizeTiming(time_index);
+          hypre_ClearTiming();
+ 
+@@ -4980,7 +5058,7 @@ main( hypre_int argc,
+          HYPRE_LOBPCGSolve(pcg_solver, constraints, eigenvectors, eigenvalues);
+ 
+          hypre_EndTiming(time_index);
+-         hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++         hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+          hypre_FinalizeTiming(time_index);
+          hypre_ClearTiming();
+ 
+@@ -5490,7 +5568,7 @@ main( hypre_int argc,
+          (pcg_solver, (HYPRE_Matrix)parcsr_A, (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -5501,7 +5579,7 @@ main( hypre_int argc,
+          (pcg_solver, (HYPRE_Matrix)parcsr_A, (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -5723,7 +5801,7 @@ main( hypre_int argc,
+          (pcg_solver, (HYPRE_Matrix)parcsr_A, (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -5734,7 +5812,7 @@ main( hypre_int argc,
+          (pcg_solver, (HYPRE_Matrix)parcsr_A, (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6060,7 +6138,7 @@ main( hypre_int argc,
+          (pcg_solver, (HYPRE_Matrix)parcsr_A, (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6071,7 +6149,7 @@ main( hypre_int argc,
+          (pcg_solver, (HYPRE_Matrix)parcsr_A, (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6397,7 +6475,7 @@ main( hypre_int argc,
+                           (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6408,7 +6486,7 @@ main( hypre_int argc,
+                           (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6723,7 +6801,7 @@ main( hypre_int argc,
+                          (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6734,7 +6812,7 @@ main( hypre_int argc,
+                          (HYPRE_Vector)b, (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6930,7 +7008,7 @@ main( hypre_int argc,
+                       (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -6941,7 +7019,7 @@ main( hypre_int argc,
+                       (HYPRE_Vector)x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -7073,7 +7151,7 @@ main( hypre_int argc,
+       HYPRE_MGRSetup(mgr_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -7084,7 +7162,7 @@ main( hypre_int argc,
+       HYPRE_MGRSolve(mgr_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -7170,7 +7248,7 @@ main( hypre_int argc,
+       HYPRE_ILUSetup(ilu_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Setup phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Setup phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -7181,7 +7259,7 @@ main( hypre_int argc,
+       HYPRE_ILUSolve(ilu_solver, parcsr_A, b, x);
+ 
+       hypre_EndTiming(time_index);
+-      hypre_PrintTiming("Solve phase times", hypre_MPI_COMM_WORLD);
++      hypre_fPrintTiming(fplog, "Solve phase times", hypre_MPI_COMM_WORLD);
+       hypre_FinalizeTiming(time_index);
+       hypre_ClearTiming();
+ 
+@@ -7286,7 +7364,13 @@ main( hypre_int argc,
+    /* Finalize Hypre */
+    HYPRE_Finalize();
+ 
++
++   fflush(fplog);
++   fclose(fplog);
++
+    /* Finalize MPI */
++   if(parent!=MPI_COMM_NULL)
++   MPI_Comm_disconnect(&parent);
+    hypre_MPI_Finalize();
+ 
+    /* when using cuda-memcheck --leak-check full, uncomment this */

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,21 +30,18 @@ def set_permissions(path, perms, group=None):
     # Do not let users create world/group writable suid binaries
     if perms & st.S_ISUID:
         if perms & st.S_IWOTH:
-            raise InvalidPermissionsError(
-                "Attempting to set suid with world writable")
+            raise InvalidPermissionsError("Attempting to set suid with world writable")
         if perms & st.S_IWGRP:
-            raise InvalidPermissionsError(
-                "Attempting to set suid with group writable")
+            raise InvalidPermissionsError("Attempting to set suid with group writable")
     # Or world writable sgid binaries
     if perms & st.S_ISGID:
         if perms & st.S_IWOTH:
-            raise InvalidPermissionsError(
-                "Attempting to set sgid with world writable")
+            raise InvalidPermissionsError("Attempting to set sgid with world writable")
 
     fs.chmod_x(path, perms)
 
     if group:
-        fs.chgrp(path, group)
+        fs.chgrp(path, group, follow_symlinks=False)
 
 
 class InvalidPermissionsError(SpackError):

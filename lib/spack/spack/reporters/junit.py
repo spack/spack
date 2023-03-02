@@ -1,18 +1,16 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import os.path
+import posixpath
 import re
 
-import spack.build_environment
-import spack.fetch_strategy
-import spack.package
+import spack.tengine
 from spack.reporter import Reporter
 
-__all__ = ['JUnit']
+__all__ = ["JUnit"]
 
 
 ANTI_ANSI = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
@@ -23,9 +21,16 @@ class JUnit(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
-        self.template_file = os.path.join('reports', 'junit.xml')
+        # Posixpath is used here to support the underlying template enginge
+        # Jinja2, which expects `/` path separators
+        self.template_file = posixpath.join("reports", "junit.xml")
 
     def build_report(self, filename, report_data):
+        if not (os.path.splitext(filename))[1]:
+            # Ensure the report name will end with the proper extension;
+            # otherwise, it currently defaults to the "directory" name.
+            filename = filename + ".xml"
+
         # Write the report
         with open(filename, 'wb') as fd:
             env = spack.tengine.make_environment()
