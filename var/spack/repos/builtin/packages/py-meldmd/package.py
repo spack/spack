@@ -71,12 +71,14 @@ class PyMeldmd(CMakePackage, PythonPackage, CudaPackage):
             "plugin/platforms/cuda/src/kernels/computeMeld.cu",
             string=True
         )
-        filter_file(
-            "simtk.openmm",
-            "openmm",
-            "plugin/python/meldplugin.i",
-            string=True
-        )
+        # API Change: https://github.com/openmm/openmm/releases/tag/7.6.0
+        if self.spec.satisfies("^openmm@7.6.0:"):
+            filter_file(
+                "simtk.openmm",
+                "openmm",
+                "plugin/python/meldplugin.i",
+                string=True
+            )
 
     def setup_run_environment(self, env):
         env.set("OPENMM_PLUGIN_DIR", self.prefix.lib.plugins)
