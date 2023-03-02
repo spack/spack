@@ -118,22 +118,18 @@ default:
 .generate-base-windows:
   stage: generate
   script:
-    - .\share\spack\setup-env.ps1
-    - spack python -m pip install --user boto3 # spack python ensures we're pip installing with Spack's python
+    - . "./share/spack/setup-env.sh"
     - spack --version
-    - spack compiler find
-    # These should exist in the MSVC installation
-    - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
-    - spack env activate --without-view .\share\spack\gitlab\cloud_pipelines\stacks\$env:SPACK_CI_STACK_NAME
-    - $SPACK_CI_CONFIG_ROOT = ".\share\spack\gitlab\cloud_pipelines\configs"
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - $SPACK_CI_CONFIG_ROOT = "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
     - spack
-      --env-dir .\share\spack\gitlab\cloud_pipelines\stacks\$env:SPACK_CI_STACK_NAME
-      --config-scope $SPACK_CI_CONFIG_ROOT
-      --config-scope $SPACK_CI_CONFIG_ROOT\$env:SPACK_TARGET_PLATFORM
+      --config-scope "$SPACK_CI_CONFIG_ROOT"
+      --config-scope "$SPACK_CI_CONFIG_ROOT/${SPACK_TARGET_PLATFORM}"
       ci generate --check-index-only
-      --buildcache-destination $env:SPACK_BUILDCACHE_DESTINATION
-      --artifacts-root $env:CI_PROJECT_DIR/jobs_scratch_dir
-      --output-file $env:CI_PROJECT_DIR/jobs_scratch_dir/cloud-ci-pipeline.yml
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
@@ -145,8 +141,8 @@ default:
       - always
 
 .generate-win64:
-  extends: [".base-job", ".generate-base-windows" ]
-  tags: ["spack", "protected", "medium", "win64"]
+  extends: [ ".generate-base-windows" ]
+  tags: ["spack", "public", "medium", "win64"]
 
 .generate-base:
   stage: generate
@@ -602,7 +598,13 @@ radiuss-build:
   tags: ["spack", "public", "aws", "medium", "x86_64_v4"]
 
 .tags-win64-msvc2019:
-  tags: ["spack", "protected", "medium", "win64"]
+  tags: ["spack", "protected", "medium", "win64", "msvc2019"]
+
+# Include this AFTER .*-generate in "extends" list
+.radiuss-aws-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 # Include this AFTER .*-generate in "extends" list
 .radiuss-aws-overrides:
@@ -973,4 +975,84 @@ windows-vis-build:
     strategy: depend
   needs:
     - artifacts: True
-      job: windows-vis-generate
+      job: aws-pcluster-generate-icelake
+
+# Skylake_avx512 (one pipeline per target)
+.aws-pcluster-skylake:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster-skylake
+
+aws-pcluster-generate-skylake:
+  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+
+aws-pcluster-build-skylake:
+  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-generate-skylake
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-generate-skylake
+
+# Neoverse_n1 (one pipeline per target)
+.aws-pcluster-neoverse_n1:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster-neoverse_n1
+
+aws-pcluster-generate-neoverse_n1:
+  extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+
+aws-pcluster-build-neoverse_n1:
+  extends: [  ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-generate-neoverse_n1
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-generate-neoverse_n1
+
+# Neoverse_v1 (one pipeline per target)
+.aws-pcluster-neoverse_v1:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster-neoverse_v1
+
+aws-pcluster-generate-neoverse_v1:
+  extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+
+aws-pcluster-build-neoverse_v1:
+  extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-generate-neoverse_v1
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-generate-neoverse_v1
+
+########################################
+# Windows Vis
+########################################
+.windows-vis:
+  extends: [ ".win64-msvc2019", ".tags-win64-msvc2019"]
+  variables:
+    SPACK_CI_STACK_NAME: windows-vis
+
+# Windows CI only runs on protected pipelines
+windows-vis-generate:
+  extends: [ ".generate-win64", ".windows-vis" ]
+
+windows-vis-build:
+  extends: [ ".build", ".windows-vis" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: windows-vis-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: windows-vis-protected-generate

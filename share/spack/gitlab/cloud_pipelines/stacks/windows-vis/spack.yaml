@@ -8,20 +8,26 @@ spack:
   config:
     build_jobs: 32
     install_tree:
+      root: "c:\Program Files\spack"
       padded_length: 0
       projections:
         all: "{name}-{version}-{hash}"
 
   packages:
     all:
-      providers:
-        mpi: [msmpi]
-        gl: [wgl]
-        jpeg: [libjpeg-turbo]
+      target: [x86_64]
     tbb:
       require: "intel-tbb"
-    protobuf:
-      version: [3.21.12] # newer protobuf have broken CMake support on Windows
+    cmake:
+      externals:
+      - spec: cmake@3.19
+        prefix: "c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake"
+      buildable: False
+    ninja:
+      externals:
+      - spec: ninja@1.8.2
+        prefix: "c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja"
+      buildable: False
 
   specs:
   - paraview
