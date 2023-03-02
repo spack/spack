@@ -614,6 +614,8 @@ class GitVersion(VersionBase):
                 return False
             elif self.user_supplied_reference and other.user_supplied_reference:
                 return self.ref_version == other.ref_version
+            elif other.user_supplied_reference:
+                return False
             else:
                 # In this case, neither supplies a version equivalence with "="
                 # and the commit strings are equal
