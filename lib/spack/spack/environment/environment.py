@@ -1692,8 +1692,15 @@ class Environment:
 
     def _env_modifications_for_view(self, view: ViewDescriptor, reverse: bool = False):
         roots = [r for _, r in self.concretized_specs()]
-        mods = uenv.environment_modifications_for_specs(roots, view)
-        return (mods.reversed() if reverse else mods), []
+        try:
+            mods = uenv.environment_modifications_for_specs(roots, view)
+        except Exception as e:
+            # Failing to setup spec-specific changes shouldn't be a hard error.
+            tty.warn(
+                "couldn't load runtime environment due to {}: {}".format((e.__class__.__name__, e))
+            )
+            return []
+        return mods.reversed() if reverse else mods
 
     def add_view_to_env(
         self, env_mod: spack.util.environment.EnvironmentModifications, view: str
@@ -1709,12 +1716,7 @@ class Environment:
             return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor))
-
-        mods, errors = self._env_modifications_for_view(descriptor)
-        env_mod.extend(mods)
-        if errors:
-            for err in errors:
-                tty.warn(*err)
+        env_mod.extend(self._env_modifications_for_view(descriptor))
 
         # deduplicate paths from specs mapped to the same location
         for env_var in env_mod.group_by_name():
@@ -1736,9 +1738,7 @@ class Environment:
             return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
-
-        mods, _ = self._env_modifications_for_view(descriptor, reverse=True)
-        env_mod.extend(mods)
+        env_mod.extend(self._env_modifications_for_view(reverse=True))
 
         return env_mod
 

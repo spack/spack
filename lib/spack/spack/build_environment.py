@@ -43,7 +43,7 @@ import types
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -64,6 +64,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.schema.environment
+import spack.spec
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
@@ -946,44 +947,36 @@ def effective_deptypes(specs: list, context="build"):
     return nodes_with_type
 
 
-def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py_globals=True):
-    """Returns the environment modifications that are required by
-    the dependencies of a spec and also applies modifications
-    to this spec's package at module scope, if need be.
+def modifications_from_dag(
+    specs: Union[spack.spec.Spec, List[spack.spec.Spec]],
+    context,
+    custom_mods_only=True,
+    set_package_py_globals=True,
+):
+    """Returns the environment modifications that are required by the input specs and also
+    applies modifications to this spec's package at module scope, if need be.
 
     Environment modifications include:
 
-    - Updating PATH so that executables can be found
+    - Updating PATH for packages that are required at runtime
     - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
-      tools can find Spack-built dependencies
-    - Running custom package environment modifications
+      tools can find Spack-built dependencies (when context=build)
+    - Running custom package environment modifications (setup_run_environment,
+      setup_dependent_build_environment, setup_dependent_run_environment)
 
-    Custom package modifications can conflict with the default PATH changes
-    we make (specifically for the PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH
-    environment variables), so this applies changes in a fixed order:
-
-    - All modifications (custom and default) from external deps first
-    - All modifications from non-external deps afterwards
-
-    With that order, `PrependPath` actions from non-external default
-    environment modifications will take precedence over custom modifications
-    from external packages.
-
-    A secondary constraint is that custom and default modifications are
-    grouped on a per-package basis: combined with the post-order traversal this
-    means that default modifications of dependents can override custom
-    modifications of dependencies (again, this would only occur for PATH,
-    CMAKE_PREFIX_PATH, or PKG_CONFIG_PATH).
+    The (partial) order imposed on the specs is externals first, then topological
+    from leaf to root. That way externals cannot contribute search paths that would shadow
+    Spack's prefixes, and dependents override variables set by dependencies.
 
     Args:
-        spec (spack.spec.Spec): spec for which we want the modifications
+        specs (list or spack.spec.Spec): specs that induce the dag
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
         custom_mods_only (bool): if True returns only custom modifications, if False
             returns custom and default modifications
         set_package_py_globals (bool): whether or not to set the global variables in the
-            package.py files (this may be problematic when using buildcaches that have
-            been built on a different but compatible OS)
+            package.py files. Warning: never use this, as setup_run_environment and others
+            may depend on package.py globals.
     """
     if context not in ("build", "run", "test"):
         raise ValueError(f"Expecting context to be one of build, run, test. Got {context}")
@@ -992,14 +985,14 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
         specs = [specs]
 
     if context == "build" and not len(specs) == 1:
-        raise ValueError("Cannot setup build env for multiple specs")
+        raise ValueError("Cannot setup build environment for multiple specs")
 
     env = EnvironmentModifications()
 
     # Reverse so we go from leaf to root
     specs_with_type = reversed(effective_deptypes(specs, context))
 
-    # Split into non-external and extenal
+    # Split into non-external and extenal, maintaining topo order per group.
     external, nonexternal = stable_partition(specs_with_type, lambda t: t[0].external)
 
     should_be_runnable = Mode.BUILDTIME_DIRECT | Mode.RUNTIME_EXECUTABLE
@@ -1033,7 +1026,8 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
             if os.path.isdir(bin_dir):
                 env.prepend_path("PATH", bin_dir)
 
-    # First set props
+    # First set props, since they may be used in environment modifications. In particular
+    # this allows setup_dependent_*_env to refer to dependent_spec.prop.
     if set_package_py_globals:
         for dspec, flag in chain(external, nonexternal):
             pkg = dspec.package
