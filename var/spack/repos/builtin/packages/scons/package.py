@@ -32,11 +32,6 @@ class Scons(PythonPackage):
     version("3.0.4", sha256="72c0b56db84f40d3558f351918a0ab98cb4345e8696e879d3e271f4df4a5913c")
     version("3.0.1", sha256="24475e38d39c19683bc88054524df018fe6949d70fbd4c69e298d39a0269f173")
 
-    depends_on("python")
-    # Python 2 support was dropped in SCons 4.0.0
-    depends_on("python@3.5:", when="@4:4.2.0")
-    # Python 3.5 support was dropped in SCons 4.3.0
-    depends_on("python@3.6:", when="@4.3.0:")
     depends_on("py-setuptools", type=("build", "run"))
 
     patch("fjcompiler.patch", when="%fj")
