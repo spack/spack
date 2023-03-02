@@ -492,7 +492,7 @@ def test_env_status_broken_view(
 
 
 def test_env_activate_broken_view(
-    mutable_mock_env_path, mock_archive, mock_fetch, mock_custom_repository, install_mockery, capfd
+    mutable_mock_env_path, mock_archive, mock_fetch, mock_custom_repository, install_mockery
 ):
     with ev.create("test"):
         install("--add", "trivial-install-test-package")
@@ -500,10 +500,14 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
-        env("activate", "--sh", "test")
-        err = capfd.readouterr()[1]
-        assert "Warning: couldn't load runtime environment" in err
-        assert "Unknown namespace: builtin.mock" in err
+        wrong_repo = env("activate", "--sh", "test")
+        assert "Warning: couldn't load runtime environment" in wrong_repo
+        assert "Unknown namespace: builtin.mock" in wrong_repo
+
+    # test replacing repo fixes it
+    normal_repo = env("activate", "--sh", "test")
+    assert "Warning: couldn't load runtime environment" not in normal_repo
+    assert "Unknown namespace: builtin.mock" not in normal_repo
 
 
 def test_to_lockfile_dict():
