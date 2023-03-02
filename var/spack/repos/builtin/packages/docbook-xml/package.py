@@ -26,7 +26,7 @@ class DocbookXml(Package):
 
     @property
     def catalog(self):
-        return join_path(self.prefix, "catalog")
+        return join_path(self.prefix, "xml-catalog")
 
     @run_after("install")
     def config_docbook(self):
