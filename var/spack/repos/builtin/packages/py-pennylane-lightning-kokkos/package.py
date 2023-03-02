@@ -13,15 +13,14 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
     url = (
-        "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.28.0.tar.gz"
+        "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.0.tar.gz"
     )
-    tag = "v0.28.0"
+    tag = "v0.29.0"
 
     maintainers("vincentmr")
 
     version("main", branch="main")
     version("develop", commit="fd6feb9b2c961d6f8d93f31b6015b37e9aeac759")
-    version("0.28.0", sha256="1d6f0ad9658e70cc6875e9df5710d1fa83a0ccbe21c5fc8daf4e76ab3ff59b73")
 
     backends = {
         "cuda": [False, "Whether to build CUDA backend"],
@@ -30,7 +29,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
         "pthread": [False, "Whether to build Pthread backend"],
         "rocm": [False, "Whether to build HIP backend"],
         "serial": [True, "Whether to build serial backend"],
-        # "sycl": [False, "Whether to build the SYCL backend"],
+        "sycl": [False, "Whether to build the SYCL backend"],
     }
 
     for backend in backends:
