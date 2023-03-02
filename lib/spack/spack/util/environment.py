@@ -25,18 +25,23 @@ import spack.spec
 import spack.util.executable as executable
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows = sys.platform == "win32"
+if sys.platform == "win32":
+    SYSTEM_PATHS = [
+        "C:\\",
+        "C:\\Program Files",
+        "C:\\Program Files (x86)",
+        "C:\\Users",
+        "C:\\ProgramData",
+    ]
+    SUFFIXES = []
+else:
+    SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
+    SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
 
-system_paths = (
-    ["/", "/usr", "/usr/local"]
-    if not is_windows
-    else ["C:\\", "C:\\Program Files", "C:\\Program Files (x86)", "C:\\Users", "C:\\ProgramData"]
-)
-suffixes = ["bin", "bin64", "include", "lib", "lib64"] if not is_windows else []
-system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + system_paths
+SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
 
-_shell_set_strings = {
+_SHELL_SET_STRINGS = {
     "sh": "export {0}={1};\n",
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
@@ -44,7 +49,7 @@ _shell_set_strings = {
 }
 
 
-_shell_unset_strings = {
+_SHELL_UNSET_STRINGS = {
     "sh": "unset {0};\n",
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
@@ -52,7 +57,7 @@ _shell_unset_strings = {
 }
 
 
-tracing_enabled = False
+TRACING_ENABLED = False
 
 
 def is_system_path(path):
@@ -65,7 +70,7 @@ def is_system_path(path):
     Returns:
         True or False
     """
-    return path and os.path.normpath(path) in system_dirs
+    return path and os.path.normpath(path) in SYSTEM_DIRS
 
 
 def filter_system_paths(paths):
@@ -381,7 +386,7 @@ class EnvironmentModifications:
             traced (bool): enable or disable stack trace inspection to log the origin
                 of the environment modifications.
         """
-        self.traced = tracing_enabled if traced is None else bool(traced)
+        self.traced = TRACING_ENABLED if traced is None else bool(traced)
         self.env_modifications = []
         if other is not None:
             self.extend(other)
@@ -621,12 +626,12 @@ class EnvironmentModifications:
             old = env.get(name, None)
             if explicit or new != old:
                 if new is None:
-                    cmds += _shell_unset_strings[shell].format(name)
+                    cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
                     if sys.platform != "win32":
-                        cmd = _shell_set_strings[shell].format(name, shlex.quote(new_env[name]))
+                        cmd = _SHELL_SET_STRINGS[shell].format(name, shlex.quote(new_env[name]))
                     else:
-                        cmd = _shell_set_strings[shell].format(name, new_env[name])
+                        cmd = _SHELL_SET_STRINGS[shell].format(name, new_env[name])
                     cmds += cmd
         return cmds
 
