@@ -493,6 +493,9 @@ class VersionBase(object):
             return VersionList()
 
 
+_version_debug = False
+
+
 class GitVersion(VersionBase):
     """Class to represent versions interpreted from git refs.
 
@@ -600,10 +603,28 @@ class GitVersion(VersionBase):
         to satisfy one another and the versions to be an exact match.
         """
 
+        if _version_debug:
+            import pdb; pdb.set_trace()
+
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
-        if other.is_ref:
+        if self.is_ref and other.is_ref:
+            if self.ref != other.ref:
+                return False
+            elif self.user_supplied_reference and other.user_supplied_reference:
+                return self.ref_version == other.ref_version
+            elif self.user_supplied_reference:
+                # If we have declared an equivalence but the other version does
+                # not, then this satisfies the other version
+                return True
+            elif other.user_supplied_reference:
+                return False
+            else:
+                # In this case, neither supplies a version equivalence with "="
+                # and the commit strings are equal
+                return True
+        elif other.is_ref:
             # if other is a ref then satisfaction requires an exact version match
             # i.e. the GitRef must match this.version for satisfaction
             # this creates an asymmetric comparison:
