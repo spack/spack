@@ -5,11 +5,13 @@
 import os
 import sys
 from contextlib import contextmanager
+from typing import List, Union
 
 from llnl.util.lang import nullcontext
 
 import spack.build_environment
 import spack.config
+import spack.spec
 import spack.util.environment as environment
 import spack.util.prefix as prefix
 from spack import traverse
@@ -89,14 +91,16 @@ def get_projection_context_manager(view):
     return lambda specs: temporary_projected_prefix(specs, view.get_projection_for_spec)
 
 
-def environment_modifications_for_specs(specs, view=None, set_package_py_globals=True):
+def environment_modifications_for_specs(
+    specs: Union[spack.spec.Spec, List[spack.spec.Spec]], view=None, set_package_py_globals=True
+):
     """List of environment (shell) modifications to be processed for spec.
 
     This list is specific to the location of the spec or its projection in
     the view.
 
     Args:
-        spec (spack.spec.Spec): spec for which to list the environment modifications
+        specs (list or spack.spec.Spec): spec(s) for which to list the environment modifications
         view: view associated with the spec passed as first argument
         set_package_py_globals (bool): whether or not to set the global variables in the
             package.py files (this may be problematic when using buildcaches that have
@@ -106,26 +110,23 @@ def environment_modifications_for_specs(specs, view=None, set_package_py_globals
         specs = [specs]
 
     env = environment.EnvironmentModifications()
+    topo_ordered = traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
 
     with get_projection_context_manager(view)(specs):
-        # Default ones.
-        for s in reversed(
-            list(traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo"))
-        ):
-            env.extend(
-                environment.inspect_path(
-                    s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
-                )
+        # Static environment changes (prefix inspections)
+        for s in reversed(list(topo_ordered)):
+            static = environment.inspect_path(
+                s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
             )
+            env.extend(static)
 
-        # Do setup_run_env etc.
-        env.extend(
-            spack.build_environment.modifications_from_dag(
-                specs,
-                context="run",
-                set_package_py_globals=set_package_py_globals,
-                custom_mods_only=False,
-            )
+        # Dynamic environment changes (setup_run_environment etc)
+        dynamic = spack.build_environment.modifications_from_dag(
+            specs,
+            context="run",
+            set_package_py_globals=set_package_py_globals,
+            custom_mods_only=False,
         )
+        env.extend(dynamic)
 
     return env
