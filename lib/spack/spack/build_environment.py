@@ -580,12 +580,13 @@ def set_module_variables_for_package(pkg, context="build"):
         m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
         m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-        # Put spack compiler paths in module scope.
-        link_dir = spack.paths.build_env_path
-        m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-        m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-        m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-        m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    # Put spack compiler paths in module scope. (Some packages use it
+    # in setup_run_environment etc, so don't put it context == build)
+    link_dir = spack.paths.build_env_path
+    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
+    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
+    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
+    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
