@@ -30,7 +30,7 @@ class PyGmxapi(PythonPackage):
     depends_on("py-numpy@1.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-pybind11@2.6:", type="build")
+    depends_on("py-pybind11@2.6:", type=("build", "run"))
     depends_on("py-pytest@4.6:", type="test")
     depends_on("py-wheel", type="build")
 
