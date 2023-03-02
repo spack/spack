@@ -209,7 +209,7 @@ packages:
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
 
-    spack.solver.asp._asp_debug = True
+    #spack.solver.asp._asp_debug = True
     s2 = Spec("v@{0}".format(commits[1])).concretized()
     # Note: s2 will not satisfy @2.3 since the command line version overrides
     # the info in the package requirements (effectively discarding the
