@@ -40,16 +40,14 @@ class Papyrus(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([join_path("kv", "tests")])
+        self.cache_extra_test_sources(join_path("kv", "tests"))
 
-    def run_example_tests(self):
+    def test_example(self):
         """Run all c & c++ stand alone test"""
 
-        example_dir = join_path(self.test_suite.current_test_cache_dir, "kv", "tests")
-
+        example_dir = self.test_suite.current_test_cache_dir.kv.tests
         if not os.path.exists(example_dir):
-            print("Skipping all test")
-            return
+            raise SkipTest("Example directory is missing")
 
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
@@ -71,37 +69,32 @@ class Papyrus(CMakePackage):
             "12_free",
         ]
 
+        mpicxx = which(self.spec["mpi"].mpicxx)
+        mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+
         for example in example_list:
-            test_dir = join_path(self.test_suite.current_test_cache_dir, "kv", "tests", example)
-            test_example = "test{0}.c".format(example)
+            with test_part(
+                self,
+                "test_example_{0}".format(example),
+                purpose="build and run {0}".format(test_example),
+            ):
+                test_dir = join_path(example_dir, example)
+                if not os.path.exists(test_dir):
+                    raise SkipTest("{0} does not exist".format(test_example))
 
-            if not os.path.exists(test_dir):
-                print("Skipping {0} test".format(example))
-                continue
+                with working_dir(test_dir):
+                    test_example = "test{0}.c".format(example)
 
-            self.run_test(
-                self.spec["mpi"].mpicxx,
-                options=[
-                    "{0}".format(join_path(test_dir, test_example)),
-                    "-I{0}".format(join_path(self.prefix, "include")),
-                    "-L{0}".format(lib_dir),
-                    "-lpapyruskv",
-                    "-g",
-                    "-o",
-                    example,
-                    "-lpthread",
-                    "-lm",
-                ],
-                purpose="test: compile {0} example".format(example),
-                work_dir=test_dir,
-            )
+                    mpicxx(
+                        "{0}".format(join_path(test_dir, test_example)),
+                        "-I{0}".format(join_path(self.prefix, "include")),
+                        "-L{0}".format(lib_dir),
+                        "-lpapyruskv",
+                        "-g",
+                        "-o",
+                        example,
+                        "-lpthread",
+                        "-lm",
+                    )
 
-            self.run_test(
-                self.spec["mpi"].prefix.bin.mpirun,
-                options=["-np", "4", example],
-                purpose="test: run {0} example".format(example),
-                work_dir=test_dir,
-            )
-
-    def test(self):
-        self.run_example_tests()
+                    mpirun("-np", "4", example)
