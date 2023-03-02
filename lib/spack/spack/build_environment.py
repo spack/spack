@@ -1033,27 +1033,24 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
             if os.path.isdir(bin_dir):
                 env.prepend_path("PATH", bin_dir)
 
+    # First set props
+    if set_package_py_globals:
+        for dspec, flag in chain(external, nonexternal):
+            pkg = dspec.package
+
+            if should_populate_package_py_globals & flag:
+                set_module_variables_for_package(pkg, context="run")
+
+            for spec in dspec.dependents():
+                dependent_module = ModuleChangePropagator(spec.package)
+                pkg.setup_dependent_package(dependent_module, spec)
+                dependent_module.propagate_changes_to_mro()
+
+    # Then collect env changes.
     for dspec, flag in chain(external, nonexternal):
         tty.debug(f"Adding env modifications for {dspec.name}")
-        # First set our default globals, which are ... mostly really
-        # build env things and typically not useful in other contexts,
-        # but well.
         pkg = dspec.package
-        if set_package_py_globals and (should_populate_package_py_globals & flag):
-            set_module_variables_for_package(pkg, context="run")
 
-        # Annoyingly, this setup_dependent_package globals may be used
-        # by setup_run_environment, meaning that in practice we may need
-        # to traverse to *all* dependents... or we should forbid using
-        # opaque globals in setup_run_environment.
-        if set_package_py_globals:
-            for spec in specs:
-                current_module = ModuleChangePropagator(spec.package)
-                pkg.setup_dependent_package(current_module, spec)
-                current_module.propagate_changes_to_mro()
-
-        # Finally do environment variable changes. Here setup_dependent
-        # clearly applies just to the root, no traversal is necessary.
         if should_setup_dependent_build_env & flag:
             if not custom_mods_only:
                 make_buildtime_detectable(dspec, env)
@@ -1065,10 +1062,9 @@ def modifications_from_dag(specs, context, custom_mods_only=True, set_package_py
         if not custom_mods_only and (should_be_runnable & flag):
             make_runnable(dspec, env)
 
-        # This also does not require traversal since it doesn't mutate
-        # dependents.
         if should_setup_run_env & flag:
-            for spec in specs:
+            # TODO: remove setup_dependent_run_environment...
+            for spec in dspec.dependents():
                 pkg.setup_dependent_run_environment(env, spec)
             pkg.setup_run_environment(env)
 
