@@ -654,11 +654,11 @@ For example:
 
 .. code-block:: python
 
-   >>> version = Version('1.2.3')
+   >>> version = Version("1.2.3")
    >>> version.up_to(2).dashed
-   Version('1-2')
+   Version("1-2")
    >>> version.underscored.up_to(2)
-   Version('1_2')
+   Version("1_2")
 
 
 As you can see, order is not important. Just keep in mind that ``up_to()`` and
@@ -929,10 +929,10 @@ file:
 .. code-block:: console
 
    ==> Checksummed new versions of libelf:
-       version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-       version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-       version('0.8.11', 'e931910b6d100f6caa32239849947fbf')
-       version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+       version("0.8.13", "4136d7b4c04df68b686570afa26988ac")
+       version("0.8.12", "e21f8273d9f5f6d43a59878dc274fec7")
+       version("0.8.11", "e931910b6d100f6caa32239849947fbf")
+       version("0.8.10", "9db4d36c283d9790d8fa7df1f4d7b4d9")
 
 By default, Spack will search for new tarball downloads by scraping
 the parent directory of the tarball you gave it.  So, if your tarball
@@ -1508,7 +1508,7 @@ specifies two or more values at the same time:
 
 Another useful note is that *Python's* ``None`` *is not allowed as a default value*
 and therefore it should not be used to denote that no feature was selected.
-Users should instead select another value, like ``'none'``, and handle it explicitly
+Users should instead select another value, like ``"none"``, and handle it explicitly
 within the package recipe if need be:
 
   .. code-block:: python
@@ -2090,7 +2090,7 @@ patches. For example, when ``dealii`` is built with ``boost@1.68.0``, it
 has to patch boost to work correctly.  If you didn't know this, you might
 wonder where the extra boost patches are coming from::
 
-  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
+  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep "\^boost"
       ^boost@1.68.0
           ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
   $ spack resource show b37164268
@@ -5340,11 +5340,11 @@ where only the outputs for the first of each set are shown:
    $ spack test results -l openmpi-4.0.5
    ==> Spack test openmpi-4.0.5
    ==> Testing package openmpi-4.0.5-eygjgve
-   ==> Results for test suite 'openmpi-4.0.5':
+   ==> Results for test suite "openmpi-4.0.5":
    ==>   openmpi-4.0.5-eygjgve PASSED
    ==> Testing package openmpi-4.0.5-eygjgve
    ==> [2021-04-26-17:35:20.259650] test: ensuring version of mpiCC is 8.3.1
-   ==> [2021-04-26-17:35:20.260155] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpiCC' '--version'
+   ==> [2021-04-26-17:35:20.260155] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpiCC" "--version"
    g++ (GCC) 8.3.1 20190311 (Red Hat 8.3.1-3)
    Copyright (C) 2018 Free Software Foundation, Inc.
    This is free software; see the source for copying conditions.  There is NO
@@ -5353,13 +5353,13 @@ where only the outputs for the first of each set are shown:
    PASSED
    ...
    ==> [2021-04-26-17:35:20.493921] test: checking mpirun output
-   ==> [2021-04-26-17:35:20.494461] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-n' '1' 'ls' '..'
+   ==> [2021-04-26-17:35:20.494461] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun" "-n" "1" "ls" ".."
    openmpi-4.0.5-eygjgve           repo     test_suite.lock
    openmpi-4.0.5-eygjgve-test-out.txt  results.txt
    PASSED
    ...
    ==> [2021-04-26-17:35:20.630452] test: ensuring ability to build the examples
-   ==> [2021-04-26-17:35:20.630943] '/usr/bin/make' 'all'
+   ==> [2021-04-26-17:35:20.630943] "/usr/bin/make" "all"
    mpicc -g  hello_c.c  -o hello_c
    mpicc -g  ring_c.c  -o ring_c
    mpicc -g  connectivity_c.c  -o connectivity_c
@@ -5367,19 +5367,19 @@ where only the outputs for the first of each set are shown:
    ...
    PASSED
    ==> [2021-04-26-17:35:23.291214] test: checking hello_c example output and status (0)
-   ==> [2021-04-26-17:35:23.291841] './hello_c'
+   ==> [2021-04-26-17:35:23.291841] "./hello_c"
    Hello, world, I am 0 of 1, (Open MPI v4.0.5, package: Open MPI dahlgren@quartz2300 Distribution, ident: 4.0.5, repo rev: v4.0.5, Aug 26, 2020, 114)
    PASSED
    ...
    ==> [2021-04-26-17:35:24.603152] test: ensuring copied examples cleaned up
-   ==> [2021-04-26-17:35:24.603807] '/usr/bin/make' 'clean'
+   ==> [2021-04-26-17:35:24.603807] "/usr/bin/make" "clean"
    rm -f hello_c hello_cxx hello_mpifh hello_usempi hello_usempif08 hello_oshmem hello_oshmemcxx hello_oshmemfh Hello.class ring_c ring_cxx ring_mpifh ring_usempi ring_usempif08 ring_oshmem ring_oshmemfh Ring.class connectivity_c oshmem_shmalloc oshmem_circular_shift oshmem_max_reduction oshmem_strided_puts oshmem_symmetric_data spc_example *~ *.o
    PASSED
    ==> [2021-04-26-17:35:24.643360] test: mpicc: expect command status in [0]
-   ==> [2021-04-26-17:35:24.643834] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpicc' '-o' 'mpi_hello_c' '$HOME/.spack/test/hyzq5eqlqfog6fawlzxwg3prqy5vjhms/openmpi-4.0.5-eygjgve/data/mpi/mpi_hello.c'
+   ==> [2021-04-26-17:35:24.643834] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpicc" "-o" "mpi_hello_c" "$HOME/.spack/test/hyzq5eqlqfog6fawlzxwg3prqy5vjhms/openmpi-4.0.5-eygjgve/data/mpi/mpi_hello.c"
    PASSED
    ==> [2021-04-26-17:35:24.776765] test: mpirun: expect command status in [0]
-   ==> [2021-04-26-17:35:24.777194] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-np' '1' 'mpi_hello_c'
+   ==> [2021-04-26-17:35:24.777194] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun" "-np" "1" "mpi_hello_c"
    Hello world! From rank 0 of 1
    PASSED
    ...
@@ -5550,7 +5550,7 @@ Filtering functions
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <llnl.util.filesystem.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
-    into directories with, e.g. '@' in the name, because they use
+    into directories with, e.g. "@" in the name, because they use
     hard-coded ``sed`` commands in their build.
 
     ``change_sed_delimiter`` finds all ``sed`` search/replace commands
@@ -5754,7 +5754,7 @@ This allows us, for instance, to keep track of executables that would be named
 differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9``
 instead of just ``gcc``).
 
-.. TODO: we need to gather some more experience on overriding 'prefix'
+.. TODO: we need to gather some more experience on overriding "prefix"
    and other special keywords in extra attributes, but as soon as we are
    confident that this is the way to go we should document the process.
    See https://github.com/spack/spack/pull/16526#issuecomment-653783204
