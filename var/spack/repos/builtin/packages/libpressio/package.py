@@ -372,10 +372,11 @@ class Libpressio(CMakePackage, CudaPackage):
         self.cache_extra_test_sources(srcs)
 
     def test_smoke_tests(self):
-        """build and run smoke tests"""
+        """build, run, and check output of smoke tests"""
         if self.spec.satisfies("@:0.88.2"):
             raise SkipTest("Stand-alone tests require v0.88.3 on")
 
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
         args = self.cmake_args()
         args.append(
             "-S{}".format(join_path(self.test_suite.current_test_cache_dir, "test", "smoke_test"))
@@ -383,15 +384,13 @@ class Libpressio(CMakePackage, CudaPackage):
         args.append(
             "-DCMAKE_PREFIX_PATH={};{}".format(self.spec["libstdcompat"].prefix, self.prefix)
         )
+        # cmake configuration
+        cmake(*args)
 
-        cmake = which(self.spec["cmake"].prefix.bin.cmake)
-        with test_part(self, "test_smoke_tests_cmake_config", purpose="check cmake configuration"):
-            cmake(*args)
+        # cmake build
+        cmake("--build", ".")
 
-        with test_part(self, "test_smoke_tests_cmake_build", purpose="check cmake build works"):
-            cmake("--build", ".")
-
-        with test_part(self, "test_smoke_tests_run", purpose="check cmake build works"):
-            exe = which("pressio_smoke_tests")
-            out = exe(output=str.split, error=str.split)
-            assert "all passed" in out
+        # run and check output of smoke tests
+        exe = which("pressio_smoke_tests")
+        out = exe(output=str.split, error=str.split)
+        assert "all passed" in out
