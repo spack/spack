@@ -176,6 +176,6 @@ class Pgplot(MakefilePackage):
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
         env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")
 
-    def setup_dependent_run_environment(self, env):
+    def setup_dependent_run_environment(self, env, dependent_spec):
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
-        env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")        
+        env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")
