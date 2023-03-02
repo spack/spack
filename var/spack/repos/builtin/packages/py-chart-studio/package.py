@@ -19,3 +19,4 @@ class PyChartStudio(PythonPackage):
     depends_on("py-plotly", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-retrying@1.3.3:", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"))
