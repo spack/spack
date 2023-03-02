@@ -441,7 +441,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # Backport libsanitizer patch for glibc >= 2.36
     # https://reviews.llvm.org/D129471
     patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1.0:5.5.0,6.1.0:6.5.0,7.1.0:7.5.0,8.1.0:8.5.0,9.1.0:9.5.0")
-    patch("glibc-2.36-libsanitizer-gcc-10-12", when="@10.1.0:10.4.0,11.1.0:11.3.0,12.1.0")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1.0:10.4.0,11.1.0:11.3.0,12.1.0")
 
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
