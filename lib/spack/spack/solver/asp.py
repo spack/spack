@@ -128,10 +128,8 @@ class DeclaredVersion(object):
     def __eq__(self, other):
         if not isinstance(other, DeclaredVersion):
             return False
-        n_gitversions = sum(
-            1 for x in [self.version, other.version] if isinstance(x, spack.version.GitVersion)
-        )
-        if n_gitversions == 1:
+        is_git = lambda v: isinstance(v, spack.version.GitVersion)
+        if is_git(self.version) != is_git(other.version):
             # GitVersion(hash=x) and Version(y) compare equal if x == y, but
             # we do not want that to be true for DeclaredVersion, which is
             # tracking how much information is provided: in that sense, the
