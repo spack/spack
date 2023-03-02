@@ -1,13 +1,13 @@
 variables:
   # Used in GitLab rules
-  DEPLOYMENT_DEFAULT_BRANCH: "up-the-stream"
+  DEPLOYMENT_DEFAULT_BRANCH: "develop"
 
 # FIXME revisit whenever GitLab gets their act together and makes it easier
 # to avoid doubled pipelines…
 workflow:
   rules:
     - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
-   #- if: '$CI_COMMIT_BRANCH == $DEPLOYMENT_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOYMENT_DEFAULT_BRANCH'
 
 # This prepares the environment for the rest of the pipeline.  Could have
 # been a simple function in a CI environment with a proper DSL ¯\_(ツ)_/¯
@@ -56,9 +56,8 @@ setup_environment:
       variables:
         DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts/$CI_PIPELINE_IID"
         DEPLOYMENT_BRANCH: "$CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME"
-        # TODO: reactivate
-        # DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID"
-        # DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID/mirror/proprietary"
+        DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID"
+        DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID/mirror/proprietary"
         # Somewhat awkward, but "$DEPLOYMENT_ROOT/modules" is already used.
         MODULE_ROOT: "$DEPLOYMENT_ROOT/config/modules"
       when: always
