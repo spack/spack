@@ -501,7 +501,7 @@ def test_env_activate_broken_view(
     # test that Spack detects the missing package and fails gracefully
     with spack.repo.use_repositories(mock_custom_repository):
         env("activate", "--sh", "test")
-        err = str(capfd.readouterr()[0])
+        err = capfd.readouterr()[1]
         assert "Warning: couldn't load runtime environment" in err
         assert "Unknown namespace: builtin.mock" in err
 
