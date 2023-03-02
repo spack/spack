@@ -56,14 +56,14 @@ class PyNeurodamus(PythonPackage):
     # Note: avoid Neuron/py-mvdtool dependency due to Intel-GCC conflicts.
     depends_on("python@3.4:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-h5py", type="run")
-    depends_on("py-numpy", type="run")
-    depends_on("py-docopt", type="run")
-    depends_on("py-libsonata", type="run", when="@2.5.3:")
-    depends_on("py-morphio", type="run", when="@2.6.0:")
+    depends_on("py-h5py", type=("build", "run"))
+    depends_on("py-numpy@:1.22", type=("build", "run"))
+    depends_on("py-docopt", type=("build", "run"))
+    depends_on("py-libsonata", type=("build", "run"), when="@2.5.3:")
+    depends_on("py-morphio", type=("build", "run"), when="@2.6.0:")
     # Scipy is optional. Latest won't build well %intel, only @1.5.4 will
-    depends_on("py-scipy", type="run", when="+all_deps@2.5.3:")
-    depends_on("py-psutil", type="run", when="@2.12.1:")
+    depends_on("py-scipy", type=("build", "run"), when="+all_deps@2.5.3:")
+    depends_on("py-psutil", type=("build", "run"), when="@2.12.1:")
 
     @run_after("install")
     def install_files(self):
