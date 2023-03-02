@@ -1891,8 +1891,11 @@ class SpackSolverSetup(object):
 
             # This is needed to account for a variable number of
             # numbers e.g. if both 1.0 and 1.0.2 are possible versions
-            exact_match = [v for v in allowed_versions if v == versions
-                           and not isinstance(v, spack.version.GitVersion)]
+            exact_match = [
+                v
+                for v in allowed_versions
+                if v == versions and not isinstance(v, spack.version.GitVersion)
+            ]
             if exact_match:
                 allowed_versions = exact_match
 
