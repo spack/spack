@@ -14,6 +14,7 @@ from llnl.util import lang
 is_windows = _platform == "win32"
 
 if is_windows:
+    from pywintypes import error
     from win32file import CreateHardLink
 
 
@@ -32,9 +33,9 @@ def symlink(real_path, link_path):
         try:
             # Try to use junctions
             _win32_junction(real_path, link_path)
-        except OSError:
+        except error:
             # If all else fails, fall back to copying files
-            shutil.copyfile(real_path, link_path)
+            shutil.copytree(real_path, link_path)
 
 
 def islink(path):
@@ -72,6 +73,7 @@ def _win32_can_symlink():
 
     import llnl.util.filesystem as fs
 
+    fs.mkdirp(dpath)
     fs.touchp(fpath)
 
     try:
