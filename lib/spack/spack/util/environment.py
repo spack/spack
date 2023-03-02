@@ -218,31 +218,40 @@ def set_env(**kwargs):
                 del os.environ[var]
 
 
-class NameModifier(object):
-    def __init__(self, name, **kwargs):
-        self.name = name
-        self.separator = kwargs.get("separator", os.pathsep)
-        self.args = {"name": name, "separator": self.separator}
+class Trace:
+    __slots__ = ("filename", "lineno", "context")
 
-        self.args.update(kwargs)
+    def __init__(self, *, filename, lineno, context):
+        self.filename = filename
+        self.lineno = lineno
+        self.context = context
+
+    def __str__(self):
+        return f"{self.context} at {self.filename}:{self.lineno}"
+
+
+class NameModifier:
+    __slots__ = ("name", "separator", "trace")
+
+    def __init__(self, name, *, separator=os.pathsep, trace=None):
+        self.name = name
+        self.separator = separator
+        self.trace = trace
 
     def __eq__(self, other):
         if not isinstance(other, NameModifier):
             return False
         return self.name == other.name
 
-    def update_args(self, **kwargs):
-        self.__dict__.update(kwargs)
-        self.args.update(kwargs)
 
+class NameValueModifier:
+    __slots__ = ("name", "value", "separator", "trace")
 
-class NameValueModifier(object):
-    def __init__(self, name, value, **kwargs):
+    def __init__(self, name, value, *, separator=os.pathsep, trace=None):
         self.name = name
         self.value = value
-        self.separator = kwargs.get("separator", os.pathsep)
-        self.args = {"name": name, "value": value, "separator": self.separator}
-        self.args.update(kwargs)
+        self.separator = separator
+        self.trace = trace
 
     def __eq__(self, other):
         if not isinstance(other, NameValueModifier):
@@ -253,12 +262,14 @@ class NameValueModifier(object):
             and self.separator == other.separator
         )
 
-    def update_args(self, **kwargs):
-        self.__dict__.update(kwargs)
-        self.args.update(kwargs)
-
 
 class SetEnv(NameValueModifier):
+    __slots__ = ("force",)
+
+    def __init__(self, name, value, *, trace=None, force=False):
+        super().__init__(name, value, trace=trace)
+        self.force = force
+
     def execute(self, env):
         tty.debug("SetEnv: {0}={1}".format(self.name, str(self.value)), level=3)
         env[self.name] = str(self.value)
@@ -349,7 +360,7 @@ class PruneDuplicatePaths(NameModifier):
         env[self.name] = self.separator.join(directories)
 
 
-class EnvironmentModifications(object):
+class EnvironmentModifications:
     """Keeps track of requests to modify the current environment.
 
     Each call to a method to modify the environment stores the extra
@@ -390,11 +401,11 @@ class EnvironmentModifications(object):
         if not isinstance(other, EnvironmentModifications):
             raise TypeError("other must be an instance of EnvironmentModifications")
 
-    def _maybe_trace(self, kwargs):
+    def _maybe_trace(self):
         """Provide the modification with stack trace info so that we can track its
         origin to find issues in packages. This is very slow and expensive."""
         if not self.traced:
-            return
+            return None
 
         stack = inspect.stack()
         try:
@@ -404,20 +415,20 @@ class EnvironmentModifications(object):
             filename = "unknown file"
             lineno = "unknown line"
             context = "unknown context"
-        kwargs.update({"filename": filename, "lineno": lineno, "context": context})
 
-    def set(self, name, value, **kwargs):
+        return Trace(filename=filename, lineno=lineno, context=context)
+
+    def set(self, name, value, *, force=False):
         """Stores a request to set an environment variable.
 
         Args:
             name: name of the environment variable to be set
             value: value of the environment variable
         """
-        self._maybe_trace(kwargs)
-        item = SetEnv(name, value, **kwargs)
+        item = SetEnv(name, value, trace=self._maybe_trace(), force=force)
         self.env_modifications.append(item)
 
-    def append_flags(self, name, value, sep=" ", **kwargs):
+    def append_flags(self, name, value, sep=" "):
         """
         Stores in the current object a request to append to an env variable
 
@@ -426,22 +437,19 @@ class EnvironmentModifications(object):
             value: value to append to the environment variable
         Appends with spaces separating different additions to the variable
         """
-        self._maybe_trace(kwargs)
-        kwargs.update({"separator": sep})
-        item = AppendFlagsEnv(name, value, **kwargs)
+        item = AppendFlagsEnv(name, value, separator=sep, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def unset(self, name, **kwargs):
+    def unset(self, name):
         """Stores a request to unset an environment variable.
 
         Args:
             name: name of the environment variable to be unset
         """
-        self._maybe_trace(kwargs)
-        item = UnsetEnv(name, **kwargs)
+        item = UnsetEnv(name, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def remove_flags(self, name, value, sep=" ", **kwargs):
+    def remove_flags(self, name, value, sep=" "):
         """
         Stores in the current object a request to remove flags from an
         env variable
@@ -451,75 +459,67 @@ class EnvironmentModifications(object):
             value: value to remove to the environment variable
             sep: separator to assume for environment variable
         """
-        self._maybe_trace(kwargs)
-        kwargs.update({"separator": sep})
-        item = RemoveFlagsEnv(name, value, **kwargs)
+        item = RemoveFlagsEnv(name, value, separator=sep, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def set_path(self, name, elements, **kwargs):
+    def set_path(self, name, elements, separator=os.pathsep):
         """Stores a request to set a path generated from a list.
 
         Args:
             name: name o the environment variable to be set.
             elements: elements of the path to set.
         """
-        self._maybe_trace(kwargs)
-        item = SetPath(name, elements, **kwargs)
+        item = SetPath(name, elements, separator=separator, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def append_path(self, name, path, **kwargs):
+    def append_path(self, name, path, separator=os.pathsep):
         """Stores a request to append a path to a path list.
 
         Args:
             name: name of the path list in the environment
             path: path to be appended
         """
-        self._maybe_trace(kwargs)
-        item = AppendPath(name, path, **kwargs)
+        item = AppendPath(name, path, separator=separator, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def prepend_path(self, name, path, **kwargs):
+    def prepend_path(self, name, path, separator=os.pathsep):
         """Same as `append_path`, but the path is pre-pended.
 
         Args:
             name: name of the path list in the environment
             path: path to be pre-pended
         """
-        self._maybe_trace(kwargs)
-        item = PrependPath(name, path, **kwargs)
+        item = PrependPath(name, path, separator=separator, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def remove_path(self, name, path, **kwargs):
+    def remove_path(self, name, path, separator=os.pathsep):
         """Stores a request to remove a path from a path list.
 
         Args:
             name: name of the path list in the environment
             path: path to be removed
         """
-        self._maybe_trace(kwargs)
-        item = RemovePath(name, path, **kwargs)
+        item = RemovePath(name, path, separator=separator, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def deprioritize_system_paths(self, name, **kwargs):
+    def deprioritize_system_paths(self, name, separator=os.pathsep):
         """Stores a request to deprioritize system paths in a path list,
         otherwise preserving the order.
 
         Args:
             name: name of the path list in the environment.
         """
-        self._maybe_trace(kwargs)
-        item = DeprioritizeSystemPaths(name, **kwargs)
+        item = DeprioritizeSystemPaths(name, separator=separator, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
-    def prune_duplicate_paths(self, name, **kwargs):
+    def prune_duplicate_paths(self, name, separator=os.pathsep):
         """Stores a request to remove duplicates from a path list, otherwise
         preserving the order.
 
         Args:
             name: name of the path list in the environment.
         """
-        self._maybe_trace(kwargs)
-        item = PruneDuplicatePaths(name, **kwargs)
+        item = PruneDuplicatePaths(name, separator=separator, trace=self._maybe_trace())
         self.env_modifications.append(item)
 
     def group_by_name(self):
@@ -837,16 +837,16 @@ def set_or_unset_not_first(variable, changes, errstream):
     indexes = [
         ii
         for ii, item in enumerate(changes)
-        if ii != 0 and not item.args.get("force", False) and type(item) in [SetEnv, UnsetEnv]
+        if ii != 0 and isinstance(item, (SetEnv, UnsetEnv)) and not getattr(item, "force", False)
     ]
     if indexes:
-        good = "\t    \t{context} at {filename}:{lineno}"
-        nogood = "\t--->\t{context} at {filename}:{lineno}"
+        good = "\t    \t{}"
+        nogood = "\t--->\t{}"
         message = "Suspicious requests to set or unset '{var}' found"
         errstream(message.format(var=variable))
         for ii, item in enumerate(changes):
             print_format = nogood if ii in indexes else good
-            errstream(print_format.format(**item.args))
+            errstream(print_format.format(item.trace))
 
 
 def validate(env, errstream):
