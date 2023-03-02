@@ -1898,7 +1898,8 @@ class Spec(object):
         if not spec_by_hash._satisfies(self):
             raise InvalidHashError(self, spec_by_hash.abstract_hash)
 
-        self._dup(spec_by_hash)
+        if spec_by_hash != self:
+            self._dup(spec_by_hash)
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -3444,8 +3445,12 @@ class Spec(object):
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
 
         other = self._autospec(other)
-
-        other.lookup_hash()
+        if other.abstract_hash:
+            if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
+                self.abstract_hash = other.abstract_hash
+            elif not self.abstract_hash.startswith(other.abstract_hash):
+                raise InvalidHashError(self, other.abstract_hash)
+        # other.lookup_hash()
 
         if not (self.name == other.name or (not self.name) or (not other.name)):
             raise UnsatisfiableSpecNameError(self.name, other.name)
