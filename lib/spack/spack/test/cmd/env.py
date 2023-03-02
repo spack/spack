@@ -283,7 +283,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
-    assert "Warning: couldn't get environment settings" in err
+    assert "Warning: couldn't load runtime environment" in err
 
 
 def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, monkeypatch):

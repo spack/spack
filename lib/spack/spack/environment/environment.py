@@ -1699,7 +1699,7 @@ class Environment:
             tty.warn(
                 "couldn't load runtime environment due to {}: {}".format(e.__class__.__name__, e)
             )
-            return []
+            return spack.util.environment.EnvironmentModifications()
         return mods.reversed() if reverse else mods
 
     def add_view_to_env(
