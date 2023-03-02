@@ -116,7 +116,7 @@ packages:
     variants: +tk
     version: [3.10.8]
   py-numpy:
-    version: [1.23.5]  # required by bluepye{model,fe}
+    version: [1.22.4]  # bluepye{model,fe}: <1.24, neurondamus: <1.23
   py-setuptools:
     version: [63.0.0]  # required by py-numpy
   qt:
