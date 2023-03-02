@@ -4808,12 +4808,25 @@ def _reconstruct_virtuals_on_edges(spec):
     """Reconstruct virtuals on edges. Used to read from old DB
     and reindex.
     """
-    possible_virtuals = [x for x in spec.package.dependencies if Spec(x).virtual]
+    # Collect all possible virtuals
+    possible_virtuals = set()
+    for node in spec.traverse():
+        try:
+            possible_virtuals.update({x for x in node.package.dependencies if Spec(x).virtual})
+        except Exception as e:
+            warnings.warn(f"cannot reconstruct virtual dependencies on package {node.name}: {e}")
+            continue
+
+    # Assume all incoming edges to provider are marked with virtuals=
     for vspec in possible_virtuals:
-        if vspec in spec:
-            name = spec[vspec].name
-            for edge in spec.edges_to_dependencies(name=name):
-                edge.update_virtuals([vspec])
+        try:
+            provider = spec[vspec]
+        except KeyError:
+            # Virtual not in the DAG
+            continue
+
+        for edge in provider.edges_from_dependents():
+            edge.update_virtuals([vspec])
 
 
 class SpecfileReaderBase:
