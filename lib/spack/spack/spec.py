@@ -1854,7 +1854,7 @@ class Spec(object):
         """Given a spec with an abstract hash, return a copy of the spec with all properties and
         dependencies by looking up the hash in the environment, store, or finally, binary caches.
         This is non-destructive."""
-        if self.concrete:
+        if self.concrete or not any(node.abstract_hash for node in self.traverse()):
             return self
 
         spec = self.copy(deps=False)
@@ -1881,7 +1881,7 @@ class Spec(object):
         # reattach nodes that were not otherwise satisfied by new dependencies
         for node in self.traverse(root=False):
             if not any(n._satisfies(node) for n in spec.traverse()):
-                spec._add_dependency(node, deptypes=())
+                spec._add_dependency(node.copy(), deptypes=())
 
         return spec
 
