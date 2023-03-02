@@ -2294,38 +2294,8 @@ class SpecBuilder(object):
 
         self._specs[pkg].update_variant_validate(name, value)
 
-    def version(self, pkg_name, version):
-        version = spack.version.ver([version])
-
-        cmd_spec = None
-        for spec in self._command_line_specs:
-            if pkg_name == spec.name:
-                cmd_spec = spec
-
-        if (
-            cmd_spec
-            and cmd_spec.versions
-            and cmd_spec.versions.concrete
-            and isinstance(cmd_spec.version, spack.version.GitVersion)
-        ):
-            asp_version_spec = spack.spec.Spec("@{0}".format(str(version)))
-            # If the command line spec defines a git version of the form hash=number
-            # then we want to preserve that info in the final spec (the solver
-            # dissociates the two pieces of information)
-            if not asp_version_spec.satisfies(cmd_spec, strict=False):
-                raise spack.error.SpackError("Internal error")
-
-            version = spack.version.ver([str(cmd_spec.version)])
-        elif pkg_name in self.pkg_to_required_version:
-            # Likewise, if the packages.yaml requirements section encodes a
-            # hash=number version, restore that here.
-            for spec in self.pkg_to_required_version[pkg_name]:
-                req_version = spec.version
-                if isinstance(req_version, spack.version.GitVersion) and req_version == version:
-                    version = spack.version.ver([str(req_version)])
-                    break
-
-        self._specs[pkg_name].versions = version
+    def version(self, pkg, version):
+        self._specs[pkg].versions = spack.version.ver([version])
 
     def node_compiler(self, pkg, compiler):
         self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
