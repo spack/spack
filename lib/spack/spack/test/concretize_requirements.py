@@ -177,8 +177,7 @@ packages:
     s1 = Spec("v").concretized()
     assert s1.satisfies("@{0}".format(a_commit_hash))
 
-from spack.main import SpackCommand
-solve = SpackCommand("solve")
+
 def test_requirement_adds_multiple_new_versions(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):

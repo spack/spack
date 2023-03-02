@@ -118,7 +118,7 @@ version_provenance = collections.namedtuple(  # type: ignore
 
 
 class DeclaredVersion(object):
-    def __init__(self,  version: spack.version.VersionBase, idx, origin):
+    def __init__(self, version: spack.version.VersionBase, idx, origin):
         if not isinstance(version, spack.version.VersionBase):
             raise ValueError("Unexpected type for declared version: {0}".format(type(version)))
         self.version = version
