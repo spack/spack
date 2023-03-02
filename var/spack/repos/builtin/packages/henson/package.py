@@ -14,10 +14,13 @@ class Henson(CMakePackage):
 
     version("master", branch="master")
 
+    maintainers("mrzv")
+
     depends_on("mpi")
 
     variant("python", default=False, description="Build Python bindings")
     extends("python", when="+python")
+    depends_on("py-mpi4py", when="+python", type=("build", "run"))
     variant("mpi-wrappers", default=False, description="Build MPI wrappers (PMPI)")
 
     conflicts("^openmpi", when="+mpi-wrappers")
