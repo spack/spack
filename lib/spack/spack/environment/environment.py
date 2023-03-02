@@ -1697,7 +1697,7 @@ class Environment:
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
             tty.warn(
-                "couldn't load runtime environment due to {}: {}".format((e.__class__.__name__, e))
+                "couldn't load runtime environment due to {}: {}".format(e.__class__.__name__, e)
             )
             return []
         return mods.reversed() if reverse else mods

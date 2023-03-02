@@ -40,7 +40,8 @@ def test_manpath_trailing_colon(
 
 
 def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
-    """Test that `spack load` applies prefix inspections of its required runtime deps in topo-order"""
+    """Test that `spack load` applies prefix inspections of its required runtime deps in
+    topo-order"""
     install("mpileaks")
     mpileaks_spec = spack.spec.Spec("mpileaks").concretized()
 

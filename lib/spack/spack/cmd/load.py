@@ -5,6 +5,8 @@
 
 import sys
 
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.cmd.find
@@ -67,6 +69,14 @@ def setup_parser(subparser):
         dest="load_first",
         help="load the first match if multiple packages match the spec",
     )
+    subparser.add_argument(
+        "--only",
+        default="package,dependencies",
+        dest="things_to_load",
+        choices=["package", "dependencies"],
+        help="deprecated: spack load always applies changes to the environment "
+        "for dependencies to work.",
+    )
 
     subparser.add_argument(
         "--only",
@@ -107,6 +117,11 @@ def load(parser, args):
             "spack load", "    eval `spack load {sh_arg} %s`" % specs_str
         )
         return 1
+
+    if args.things_to_load != "package,dependencies":
+        tty.warn(
+            "The `--only` flag in spack load is deprecated and will be removed in Spack v0.21.0"
+        )
 
     with spack.store.STORE.db.read_transaction():
         env_mod = uenv.environment_modifications_for_specs(specs)
