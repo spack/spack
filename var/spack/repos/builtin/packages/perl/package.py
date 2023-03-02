@@ -494,16 +494,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
 
-    def test(self):
-        """Smoke tests"""
-        exe = self.spec["perl"].command.name
+    def test_version(self):
+        """check version"""
+        perl = self.spec["perl"].command
+        out = perl("--version", output=str.split, error=str.split)
+        expected = ["perl", str(self.spec.version)]
+        for expect in expected:
+            assert expect in out
 
-        reason = "test: checking version is {0}".format(self.spec.version)
-        self.run_test(
-            exe, "--version", ["perl", str(self.spec.version)], installed=True, purpose=reason
-        )
-
-        reason = "test: ensuring perl runs"
+    def test_hello(self):
+        """ensure perl runs hello world"""
         msg = "Hello, World!"
-        options = ["-e", 'use warnings; use strict;\nprint("%s\n");' % msg]
-        self.run_test(exe, options, msg, installed=True, purpose=reason)
+        options = ["-e", "use warnings; use strict;\nprint('%s\n');" % msg]
+
+        perl = self.spec["perl"].command
+        out = perl(*options, output=str.split, error=str.split)
+        assert msg in out
