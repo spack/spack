@@ -31,7 +31,7 @@ class Qthreads(AutotoolsPackage):
 
     url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
     test_requires_compiler = True
-    test_base_path = "test/basics/"
+    test_base_path = join_path("test", "basics")
     test_list = ["hello_world_multi", "hello_world"]
 
     tags = ["e4s"]
@@ -99,41 +99,35 @@ class Qthreads(AutotoolsPackage):
         tests = self.test_list
         relative_test_dir = self.test_base_path
         files_to_cpy = []
-        header = "test/argparsing.h"
+        header = join_path("test", "argparsing.h")
         for test in tests:
             test_path = join_path(relative_test_dir, test + ".c")
             files_to_cpy.append(test_path)
         files_to_cpy.append(header)
         self.cache_extra_test_sources(files_to_cpy)
 
-    def build_tests(self):
+    def test_example(self):
         """Build and run the added smoke (install) test."""
         tests = self.test_list
         relative_test_dir = self.test_base_path
 
         for test in tests:
-            options = [
-                "-I{0}".format(self.prefix.include),
-                "-I{0}".format(self.install_test_root + "/test"),
-                join_path(self.install_test_root, relative_test_dir, test + ".c"),
-                "-o",
-                test,
-                "-L{0}".format(self.prefix.lib),
-                "-lqthread",
-                "{0}{1}".format(self.compiler.cc_rpath_arg, self.prefix.lib),
-            ]
-            reason = "test:{0}: Checking ability to link to the library.".format(test)
-            self.run_test("cc", options, [], installed=False, purpose=reason)
+            test_src = "{0}.c".format(test)
+            with test_part(
+                self, "test_example_{0}".format(test), purpose="build and run {0}".format(test)
+            ):
+                options = [
+                    "-I{0}".format(self.prefix.include),
+                    "-I{0}".format(join_path(self.install_test_root, "test")),
+                    join_path(self.install_test_root, relative_test_dir, test_src),
+                    "-o",
+                    test,
+                    "-L{0}".format(self.prefix.lib),
+                    "-lqthread",
+                    "{0}{1}".format(self.compiler.cc_rpath_arg, self.prefix.lib),
+                ]
+                cc = which(self.compiler.cc)
+                cc(*options)
 
-    def run_tests(self):
-        tests = self.test_list
-        # Now run the program
-        for test in tests:
-            reason = "test:{0}: Checking ability to execute.".format(test)
-            self.run_test(test, [], purpose=reason)
-
-    def test(self):
-        # Build
-        self.build_tests()
-        # Run test programs pulled from the build
-        self.run_tests()
+                exe = which(test)
+                exe()
