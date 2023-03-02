@@ -717,10 +717,17 @@ class BaseContext(tengine.Context):
         )
 
         # Let the extendee/dependency modify their extensions/dependencies
-        # before asking for package-specific modifications
-        env.extend(spack.build_environment.modifications_from_dag(spec, context="run"))
-        # Package specific modifications
-        spack.build_environment.set_module_variables_for_package(spec.package)
+
+        # The only thing we care about is `setup_dependent_run_environment`, but
+        # for that to work, globals have to be set on the package modules, and the
+        # whole chain of setup_dependent_package has to be followed from leaf to spec.
+        # So: just run it here, but don't collect env mods.
+        spack.build_environment.modifications_from_dag(spec, context="run")
+
+        # Then run setup_dependent_run_environment before setup_run_environment.
+        for dep in spec.dependencies(deptype=("link", "run")):
+            dep.package.setup_dependent_run_environment(env, spec)
+        spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
