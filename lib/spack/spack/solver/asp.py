@@ -2249,11 +2249,6 @@ class SpecBuilder(object):
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or {}
 
-        pkg_to_required_version = collections.defaultdict(list)
-        for spec in _get_versioned_specs_from_pkg_requirements():
-            pkg_to_required_version[spec.name].append(spec)
-        self.pkg_to_required_version = pkg_to_required_version
-
     def hash(self, pkg, h):
         if pkg not in self._specs:
             self._specs[pkg] = self._hash_lookup[h]
