@@ -21,31 +21,32 @@ class Daos(SConsPackage):
         "debug", default=False, description="Enable debugging info and strict compile warnings"
     )
 
-    depends_on("argobots")
+    depends_on("argobots@1.1:")
     depends_on("boost@develop+python", type="build")
     depends_on("cmocka", type="build")
     depends_on("dpdk@22.11:")
     depends_on("go", type="build")
     depends_on("hwloc")
-    depends_on("isa-l")
-    depends_on("isa-l_crypto")
-    depends_on("libfabric")
+    depends_on("isa-l@2.30.0:")
+    depends_on("isa-l-crypto@2.23.0:")
+    depends_on("libfabric@1.15.1:")
     depends_on("libfuse@3.6.1:")
     depends_on("libuuid")
     depends_on("libunwind")
     depends_on("libyaml")
-    depends_on("mercury+boostsys")
+    depends_on("mercury@2.2.0:+boostsys")
     depends_on("mpich")
     depends_on("openssl")
-    depends_on("pmdk")
-    depends_on("protobuf-c")
+    depends_on("pmdk@1.12.1:")
+    depends_on("protobuf-c@1.3.3:")
     depends_on("py-distro")
     depends_on("readline")
     depends_on("scons@4.4.0:")
-    depends_on("spdk@23.01:+shared+rdma")
+    depends_on("spdk@22.01.1:+shared+rdma")
+    depends_on("ucx@1.12.1:")
 
     def build_args(self, spec, prefix):
-        args = ["PREFIX={0}".format(prefix), "--build-deps=yes"]
+        args = ["PREFIX={0}".format(prefix), "USE_INSTALLED=all"]
 
         if "+debug" in spec:
             args.append("--debug=explain,findlibs,includes")
@@ -69,6 +70,7 @@ class Daos(SConsPackage):
             format(spec["pmdk"].prefix),
             format(spec["protobuf-c"].prefix),
             format(spec["spdk"].prefix),
+            format(spec["ucx"].prefix),
         ]
         alt_prefix_clean = []
         for i in alt_prefix:
