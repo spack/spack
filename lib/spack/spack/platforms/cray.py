@@ -37,7 +37,7 @@ _xc_craype_dir = "/opt/cray/pe/cdt"
 
 
 def slingshot_network():
-    return os.path.exists("/lib64/libcxi.so")
+    return os.path.exists("/opt/cray/pe") and os.path.exists("/lib64/libcxi.so")
 
 
 def _target_name_from_craype_target_name(name):
