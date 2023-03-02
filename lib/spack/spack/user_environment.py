@@ -69,7 +69,7 @@ def unconditional_environment_modifications(view):
 
 
 @contextmanager
-def temporary_projected_prefix(specs, projection):
+def projected_prefix(specs, projection):
     prefixes = dict()
     for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
         if s.external:
@@ -81,14 +81,6 @@ def temporary_projected_prefix(specs, projection):
 
     for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
         s.prefix = prefixes.get(s.dag_hash(), s.prefix)
-
-
-def get_projection_context_manager(view):
-    # If we have a view, project prefixes to the view
-    if not view:
-        return lambda specs: nullcontext()
-
-    return lambda specs: temporary_projected_prefix(specs, view.get_projection_for_spec)
 
 
 def environment_modifications_for_specs(
@@ -112,7 +104,7 @@ def environment_modifications_for_specs(
     env = environment.EnvironmentModifications()
     topo_ordered = traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
 
-    with get_projection_context_manager(view)(specs):
+    with projected_prefix(specs, view.get_projection_for_spec) if view else nullcontext():
         # Static environment changes (prefix inspections)
         for s in reversed(list(topo_ordered)):
             static = environment.inspect_path(
