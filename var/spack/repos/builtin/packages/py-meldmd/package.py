@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class PyMeldmd(CMakePackage, PythonPackage, CudaPackage):
+class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
     """MELD is a tool for inferring the structure of
     biomolecules from sparse, ambiguous, or noisy data."""
 
@@ -25,6 +25,8 @@ class PyMeldmd(CMakePackage, PythonPackage, CudaPackage):
     depends_on("amber")
     depends_on("openmm+cuda")
     depends_on("py-netcdf4", type=("build", "run"))
+    # Meld uses np.bool, deprecated in py-numpy@1.24.0
+    # https://numpy.org/devdocs/release/1.24.0-notes.html
     depends_on("py-numpy@:1.23", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
@@ -34,7 +36,7 @@ class PyMeldmd(CMakePackage, PythonPackage, CudaPackage):
     depends_on("py-pip", type="build")
 
     # C++ / CUDA
-    depends_on("eigen", type=("build", "run"))
+    depends_on("eigen", type="link")
     depends_on("swig@4.0", type="build")
 
     def cmake_args(self):
@@ -65,6 +67,8 @@ class PyMeldmd(CMakePackage, PythonPackage, CudaPackage):
             "plugin/python/CMakeLists.txt",
             string=True
         )
+        # Fixed, but not versioned yet:
+        # https://github.com/maccallumlab/meld/commit/afe4b0c199e3562d112af7825f8839e76067039c
         filter_file(
             "MAXFLOAT",
             "FLT_MAX",
@@ -84,5 +88,6 @@ class PyMeldmd(CMakePackage, PythonPackage, CudaPackage):
         env.set("OPENMM_PLUGIN_DIR", self.prefix.lib.plugins)
 
     @run_after("install")
+    @on_package_attributes(run_tests=True)
     def install_test(self):
         python("-m", "meld.test_install")
