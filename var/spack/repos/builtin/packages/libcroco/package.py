@@ -1,7 +1,8 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack.package import *
 
@@ -20,11 +21,30 @@ class Libcroco(AutotoolsPackage):
     depends_on("glib")
     depends_on("libxml2")
     depends_on("gtk-doc", type="build", when="+doc")
+    depends_on("docbook-xml", type="build", when="+doc")
+    depends_on("docbook-xsl", type="build", when="+doc")
+    depends_on("py-pygments", type="build", when="+doc")
     depends_on("pkgconfig", type="build")
 
     def configure_args(self):
-        args = ["--enable-gtk-doc=" + ("yes" if self.spec.variants["doc"].value else "no")]
+        config_args = []
+        if "+doc" in self.spec:
+            config_args.extend(
+                [
+                    "--enable-gtk-doc",
+                    "--enable-gtk-doc-html",
+                    # PDF not supported in gtk-doc
+                    "--disable-gtk-doc-pdf",
+                ]
+            )
+        else:
+            config_args.extend(
+                ["--disable-gtk-doc", "--disable-gtk-doc-html", "--disable-gtk-doc-pdf"]
+            )
+
         # macOS ld does not support this flag
         # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/libcroco.rb
-        args.append("--disable-Bsymbolic")
-        return args
+        if self.spec.satisfies("platform=darwin"):
+            config_args.append("--disable-Bsymbolic")
+
+        return config_args

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -205,13 +205,14 @@ def install_sbang():
         fs.set_install_permissions(sbang_bin_dir)
 
     # set group on sbang_bin_dir if not already set (only if set in configuration)
-    if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
+    # TODO: after we drop python2 support, use shutil.chown to avoid gid lookups that
+    # can fail for remote groups
+    if group_name and os.stat(sbang_bin_dir).st_gid != grp.getgrnam(group_name).gr_gid:
         os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path),
-        ".%s.tmp" % os.path.basename(sbang_path),
+        os.path.dirname(sbang_path), ".%s.tmp" % os.path.basename(sbang_path)
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 

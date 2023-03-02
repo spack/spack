@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Aspect(CMakePackage):
     url = "https://github.com/geodynamics/aspect/releases/download/v2.1.0/aspect-2.1.0.tar.gz"
     git = "https://github.com/geodynamics/aspect.git"
 
-    maintainers = ["tjhei"]
+    maintainers("tjhei")
 
     version("develop", branch="main")
     version("2.3.0", sha256="d97885e502e99ca22af3933c3b1c0b30b0b5e4dc0421e7f6e4d6b378e997faf8")

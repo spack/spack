@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Asio(AutotoolsPackage):
     homepage = "https://think-async.com/Asio/"
     url = "https://github.com/chriskohlhoff/asio/archive/asio-1-18-2.tar.gz"
     git = "https://github.com/chriskohlhoff/asio.git"
-    maintainers = ["msimberg"]
+    maintainers("msimberg")
 
     version("1.21.0", sha256="5d2d2dcb7bfb39bff941cabbfc8c27ee322a495470bf0f3a7c5238648cf5e6a9")
     version("1.20.0", sha256="34a8f07be6f54e3753874d46ecfa9b7ab7051c4e3f67103c52a33dfddaea48e6")
@@ -42,17 +42,9 @@ class Asio(AutotoolsPackage):
         description="Use the specified C++ standard when building.",
     )
 
-    variant(
-        "separate_compilation",
-        default=False,
-        description="Compile Asio sources separately",
-    )
+    variant("separate_compilation", default=False, description="Compile Asio sources separately")
 
-    variant(
-        "boost_coroutine",
-        default=False,
-        description="Enable support for Boost.Coroutine.",
-    )
+    variant("boost_coroutine", default=False, description="Enable support for Boost.Coroutine.")
     depends_on("boost +context +coroutine", when="+boost_coroutine")
 
     variant("boost_regex", default=False, description="Enable support for Boost.Regex.")
@@ -64,9 +56,7 @@ class Asio(AutotoolsPackage):
     def configure_args(self):
         variants = self.spec.variants
 
-        args = [
-            "CXXFLAGS=-std=c++{0}".format(variants["cxxstd"].value),
-        ]
+        args = ["CXXFLAGS=-std=c++{0}".format(variants["cxxstd"].value)]
 
         if variants["separate_compilation"].value:
             args.append("--enable-separate-compilation")

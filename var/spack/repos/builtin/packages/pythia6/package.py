@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class Pythia6(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["gartung", "chissg"]
+    maintainers("gartung", "greenc-FNAL")
 
     version(
         "6.4.28",
@@ -153,4 +153,6 @@ class Pythia6(CMakePackage):
 
     def cmake_args(self):
         args = ["-DPYTHIA6_VERSION={0}".format(self.version.dotted)]
+        if self.spec.satisfies("platform=darwin"):
+            args.append(self.define("CMAKE_MACOSX_RPATH", True))
         return args

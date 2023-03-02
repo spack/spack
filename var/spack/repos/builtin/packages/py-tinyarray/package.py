@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PyTinyarray(PythonPackage):
 
     # Add a list of GitHub accounts to notify when the
     # package is updated
-    maintainers = ["payerle"]
+    maintainers("payerle")
 
     version("1.2.3", sha256="47a06f801ed4b3d438f4f7098e244cd0c6d7db09428b1bc5ee813e52234dee9f")
     version("1.2.2", sha256="660d6d8532e1db5efbebae2861e5733a7082486fbdeb47d57d84b8f477d697e4")

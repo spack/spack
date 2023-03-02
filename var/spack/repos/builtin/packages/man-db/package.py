@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,10 @@ class ManDb(AutotoolsPackage):
     depends_on("flex")
     depends_on("gdbm")
     depends_on("groff", type=("build", "link", "run"))
+
+    # gnulib bug introduced in commit cbdb5ea63cb5348d9ead16dc46bedda77a4c3d7d.
+    # fix is from commit 84863a1c4dc8cca8fb0f6f670f67779cdd2d543b
+    patch("gnulib.patch", when="@2.10.2", working_dir="gl")
 
     # TODO: add gzip support via a new package.
     # man pages are typically compressed, include all available

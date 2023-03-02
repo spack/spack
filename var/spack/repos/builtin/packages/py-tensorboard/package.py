@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,13 @@ class PyTensorboard(PythonPackage):
     url = "https://files.pythonhosted.org/packages/py3/t/tensorboard/tensorboard-2.9.1-py3-none-any.whl"
     list_url = "https://pypi.org/simple/tensorboard/"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
+    version(
+        "2.10.0",
+        sha256="76c91a5e8959cd2208cc32cb17a0cb002badabb66a06ac2af02a7810f49a59e3",
+        expand=False,
+    )
     version(
         "2.9.1",
         sha256="baa727f791776f9e5841d347127720ceed4bbd59c36b40604b95fb2ae6029276",
@@ -87,5 +92,4 @@ class PyTensorboard(PythonPackage):
     depends_on("py-werkzeug@0.11.15:", type=("build", "run"))
     depends_on("py-werkzeug@1.0.1:", type=("build", "run"), when="@2.9:")
     depends_on("py-wheel@0.26:", type="build")
-    depends_on("py-futures@3.1.1:", type=("build", "run"), when="^python@:2")
     depends_on("py-six@1.10.0:", type=("build", "run"), when="@:2.4")

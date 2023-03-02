@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,9 +22,10 @@ class Axl(CMakePackage):
     git = "https://github.com/ecp-veloc/axl.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
+    version("0.7.1", sha256="526a055c072c85cc989beca656717e06b128f148fda8eb19d1d9b43a3325b399")
     version("0.7.0", sha256="840ef61eadc9aa277d128df08db4cdf6cfa46b8fcf47b0eee0972582a61fbc50")
     version("0.6.0", sha256="86edb35f99b63c0ffb9dd644a019a63b062923b4efc95c377e92a1b13e79f537")
     version("0.5.0", sha256="9f3bbb4de563896551bdb68e889ba93ea1984586961ad8c627ed766bff020acf")
@@ -45,7 +46,7 @@ class Axl(CMakePackage):
     depends_on("zlib", type="link")
 
     depends_on("kvtree@main", when="@main")
-    depends_on("kvtree@1.3.0", when="@0.6.0")
+    depends_on("kvtree@1.3.0", when="@0.6.0:")
 
     variant(
         "async_api",

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    maintainers = ["hppritcha", "naughtont3"]
+    maintainers("hppritcha", "naughtont3")
 
     executables = ["^ompi_info$"]
 
@@ -42,10 +42,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
-    )  # libmpi.so.40.30.4
+        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
+    )  # libmpi.so.40.30.5
 
     # Still supported
+    version(
+        "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
+    )  # libmpi.so.40.30.4
     version(
         "4.1.3", sha256="3d81d04c54efb55d3871a465ffb098d8d72c1f48ff1cbaf2580eb058567c0a3b"
     )  # libmpi.so.40.30.3
@@ -382,14 +385,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("btl_vader.patch", when="@3.0.1:3.0.2")
     patch("btl_vader.patch", when="@3.1.0:3.1.2")
 
-    # Make NAG compiler pass the -pthread option to the linker:
-    # https://github.com/open-mpi/ompi/pull/6378
-    # We support only versions based on Libtool 2.4.6.
-    patch("nag_pthread/2.1.4_2.1.999_3.0.1_4.patch", when="@2.1.4:2.1,3.0.1:4%nag")
-    patch("nag_pthread/2.1.2_2.1.3_3.0.0.patch", when="@2.1.2:2.1.3,3.0.0%nag")
-    patch("nag_pthread/2.0.0_2.1.1.patch", when="@2.0.0:2.1.1%nag")
-    patch("nag_pthread/1.10.4_1.10.999.patch", when="@1.10.4:1.10%nag")
-
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
     # support "IGNORE TKR" functionality (e.g. NAG).
     # The issue has been resolved upstream in two steps:
@@ -474,6 +469,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("lustre", default=False, description="Lustre filesystem library support")
     variant("romio", default=True, description="Enable ROMIO support")
     variant("rsh", default=True, description="Enable rsh (openssh) process lifecycle management")
+    variant(
+        "orterunprefix",
+        default=False,
+        description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
+    )
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -928,6 +928,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if spec.satisfies("~rsh"):
             config_args.append("--enable-mca-no-build=plm-rsh")
 
+        # Useful for ssh-based environments
+        if spec.satisfies("@1.3:"):
+            if spec.satisfies("+orterunprefix"):
+                config_args.append("--enable-orterun-prefix-by-default")
+
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
         # https://github.com/open-mpi/ompi/issues/6114#issuecomment-446279495
@@ -950,11 +955,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         config_args.extend(self.enable_or_disable("memchecker"))
         if spec.satisfies("+memchecker", strict=True):
-            config_args.extend(
-                [
-                    "--enable-debug",
-                ]
-            )
+            config_args.extend(["--enable-debug"])
 
         # Package dependencies
         for dep in ["libevent", "lustre", "pmix", "singularity", "valgrind", "zlib"]:
@@ -1053,8 +1054,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         return config_args
 
-    @when("+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="+wrapper-rpath")
     def filter_rpaths(self):
         def filter_lang_rpaths(lang_tokens, rpath_arg):
             if self.compiler.cc_rpath_arg == rpath_arg:
@@ -1086,8 +1086,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         filter_lang_rpaths(["c++", "CC", "cxx"], self.compiler.cxx_rpath_arg)
         filter_lang_rpaths(["fort", "f77", "f90"], self.compiler.fc_rpath_arg)
 
-    @when("@:3.0.4+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="@:3.0.4+wrapper-rpath")
     def filter_pc_files(self):
         files = find(self.spec.prefix.lib.pkgconfig, "*.pc")
         x = FileFilter(*[f for f in files if not os.path.islink(f)])

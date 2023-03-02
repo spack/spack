@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,10 @@ class Ucx(AutotoolsPackage, CudaPackage):
     url = "https://github.com/openucx/ucx/releases/download/v1.3.1/ucx-1.3.1.tar.gz"
     git = "https://github.com/openucx/ucx.git"
 
-    maintainers = ["hppritcha"]
+    maintainers("hppritcha")
 
     # Current
+    version("1.13.1", sha256="efc37829b68e131d2acc82a3fd4334bfd611156a756837ffeb650ab9a9dd3828")
     version("1.13.0", sha256="8a3881f21fe2788113789f5bae1c8174e931f7542de0a934322a96ef354e5e3d")
     version("1.12.1", sha256="40b447c8e7da94a253f2828001b2d76021eb4ad39647107d433d62d61e18ae8e")
     version("1.12.0", sha256="93e994de2d1a4df32381ea92ba4c98a249010d1720eb0f6110dc72c9a7d25db6")
@@ -130,6 +131,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
     conflicts("+rocm", when="+gdrcopy", msg="gdrcopy > 2.0 does not support rocm")
 
     configure_abs_path = "contrib/configure-release"
+
+    # See https://github.com/openucx/ucx/pull/8629, wrong int type
+    patch("commit-2523555.patch", when="@1.13.1")
 
     @when("@1.9-dev")
     def autoreconf(self, spec, prefix):

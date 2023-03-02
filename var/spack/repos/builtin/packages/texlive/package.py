@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -235,18 +235,9 @@ class Texlive(AutotoolsPackage):
         releases = cls.releases
         releases.extend(
             [
-                {
-                    "version": "20180414",
-                    "year": "2018",
-                },
-                {
-                    "version": "20170524",
-                    "year": "2017",
-                },
-                {
-                    "version": "20130530",
-                    "year": "2013",
-                },
+                {"version": "20180414", "year": "2018"},
+                {"version": "20170524", "year": "2017"},
+                {"version": "20130530", "year": "2013"},
             ]
         )
         # tex indicates the year only

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,9 @@ class Itk(CMakePackage):
     homepage = "https://itk.org/"
     url = "https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.tar.gz"
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
+    version("5.3.0", sha256="57a4471133dc8f76bde3d6eb45285c440bd40d113428884a1487472b7b71e383")
     version("5.3rc02", sha256="163aaf4a6cecd5b70ff718c1a986c746581797212fd1b629fa81f12ae4756d14")
     version(
         "5.2.1",
@@ -62,29 +63,27 @@ class Itk(CMakePackage):
     depends_on("jpeg")
     depends_on("libpng")
     depends_on("libtiff")
+    depends_on("mpi")
     depends_on("zlib")
 
     def cmake_args(self):
-        force = CMakePackage.define
-        from_variant = self.define_from_variant
         use_mkl = "^mkl" in self.spec
-
         args = [
-            force("BUILD_SHARED_LIBS", True),
-            force("ITK_USE_SYSTEM_LIBRARIES", True),
-            force("ITK_USE_MKL", use_mkl),
-            from_variant("Module_ITKReview", "review"),
-            from_variant("Module_RTK", "rtk"),
-            from_variant("Module_ITKIOMINC", "minc"),
-            from_variant("Module_ITKIOTransformMINC", "minc"),
+            self.define("BUILD_SHARED_LIBS", True),
+            self.define("ITK_USE_SYSTEM_LIBRARIES", True),
+            self.define("ITK_USE_MKL", use_mkl),
+            self.define_from_variant("Module_ITKReview", "review"),
+            self.define_from_variant("Module_RTK", "rtk"),
+            self.define_from_variant("Module_ITKIOMINC", "minc"),
+            self.define_from_variant("Module_ITKIOTransformMINC", "minc"),
         ]
 
         if not use_mkl:
             args.extend(
                 [
-                    force("USE_FFTWD", True),
-                    force("USE_FFTWF", True),
-                    force("USE_SYSTEM_FFTW", True),
+                    self.define("USE_FFTWD", True),
+                    self.define("USE_FFTWF", True),
+                    self.define("USE_SYSTEM_FFTW", True),
                 ]
             )
 

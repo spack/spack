@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,50 @@ from spack.package import *
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 
+preferred_ver = "11.8.0"
 _versions = {
+    "12.0.0": {
+        "Linux-aarch64": (
+            "cd13e9c65d4c8f895a968706f46064d536be09f9706bce081cc864b7e4fa4544",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "905e9b9516900839fb76064719db752439f38b8cb730b49335d8bd53ddfad392",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "117fe045c71668e45d41c6119b6f27875370c78e33fc56795b6fe014c796ec60",
+            "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux_ppc64le.run",
+        ),
+    },
+    "11.8.0": {
+        "Linux-aarch64": (
+            "e6e9a8d31163c9776b5e313fd7590877c5684e1ecddee741154f95704d4ed27c",
+            "https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "9223c4af3aebe4a7bbed9abd9b163b03a1b34b855fbc2b4a0d1b706ac09a5a16",
+            "https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f917fb7617033223938543ad3ae923190d99507acc08a399d752a2868e87349d",
+            "https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux_ppc64le.run",
+        ),
+    },
+    "11.7.1": {
+        "Linux-aarch64": (
+            "1607b98c30cb8efa52b9c8f564ec92d26ee1922cb677740aafacce313e544ecd",
+            "https://developer.download.nvidia.com/compute/cuda/11.7.1/local_installers/cuda_11.7.1_515.65.01_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "52286a29706549b7d0feeb0e7e3eca1b15287c436a69fa880ad385b1be3e04db",
+            "https://developer.download.nvidia.com/compute/cuda/11.7.1/local_installers/cuda_11.7.1_515.65.01_linux.run",
+        ),
+        "Linux-ppc64le": (
+            "f59fc381cbd903da55bfea9f81534bd4d20e3db716c332be3d2c4804efc2ec6b",
+            "https://developer.download.nvidia.com/compute/cuda/11.7.1/local_installers/cuda_11.7.1_515.65.01_linux_ppc64le.run",
+        ),
+    },
     "11.7.0": {
         "Linux-aarch64": (
             "e777839a618ca9a3d5ad42ded43a1b6392af2321a7327635a4afcc986876a21b",
@@ -406,14 +449,17 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
-    maintainers = ["ax3l", "Rombur"]
+    maintainers("ax3l", "Rombur")
     executables = ["^nvcc$"]
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            version(ver, sha256=pkg[0], url=pkg[1], expand=False)
+            if ver == preferred_ver:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False, preferred=True)
+            else:
+                version(ver, sha256=pkg[0], url=pkg[1], expand=False)
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
@@ -464,6 +510,14 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+
+    @property
+    def cmake_prefix_paths(self):
+        cmake_prefix_paths = [self.prefix]
+        if self.spec.satisfies("target=x86_64:"):
+            cub_path = self.prefix.targets + "/x86_64-linux/lib/cmake"
+            cmake_prefix_paths.append(cub_path)
+        return cmake_prefix_paths
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
@@ -547,3 +601,6 @@ class Cuda(Package):
             if "compat" not in parts and "stubs" not in parts:
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)
+
+    # Avoid binding stub libraries by absolute path
+    non_bindable_shared_objects = ["stubs"]

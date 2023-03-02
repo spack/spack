@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,7 @@ dag_hash = SpecHashDescriptor(deptype=("build", "link", "run"), package_hash=Tru
 
 #: Hash descriptor used only to transfer a DAG, as is, across processes
 process_hash = SpecHashDescriptor(
-    deptype=("build", "link", "run", "test"), package_hash=False, name="process_hash"
+    deptype=("build", "link", "run", "test"), package_hash=True, name="process_hash"
 )
 
 

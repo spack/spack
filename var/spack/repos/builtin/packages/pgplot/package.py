@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Pgplot(MakefilePackage):
     homepage = "https://sites.astro.caltech.edu/~tjp/pgplot/"
     url = "ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version(
         "5.2.2",
@@ -49,10 +49,9 @@ class Pgplot(MakefilePackage):
     depends_on("libpng", when="+png")
 
     def edit(self, spec, prefix):
-
         libs = ""
         if "+X" in spec:
-            libs += " " + self.spec["X11"].libs.ld_flags
+            libs += " " + self.spec["libx11"].libs.ld_flags
         if "+png" in spec:
             libs += " " + self.spec["libpng"].libs.ld_flags
 
@@ -64,10 +63,10 @@ class Pgplot(MakefilePackage):
                 "@CCOMPL@": spack_cc,
                 "@CFLAGC@": "-Wall -fPIC -DPG_PPU -O -std=c89 "
                 + "-Wno-error=implicit-function-declaration",
-                "@CFLAGD@": "-O2",
+                "@CFLAGD@": "-O2 -fPIC",
                 "@FCOMPL@": spack_fc,
                 "@FFLAGC@": "-Wall -fPIC -O -ffixed-line-length-none" + fib,
-                "@FFLAGD@": libs + " -fno-backslash",
+                "@FFLAGD@": "-fPIC " + libs + " -fno-backslash",
                 "@LIBS@": libs + " -lgfortran",
                 "@SHARED_LD@": spack_cc + " -shared -o $SHARED_LIB",
                 "@SHARED_LIB_LIBS@": libs + " -lgfortran",
@@ -120,7 +119,7 @@ class Pgplot(MakefilePackage):
 
     def setup_build_environment(self, env):
         if "+X" in self.spec:
-            env.append_flags("LIBS", self.spec["X11"].libs.ld_flags)
+            env.append_flags("LIBS", self.spec["libx11"].libs.ld_flags)
         if "+png" in self.spec:
             env.append_flags("LIBS", self.spec["libpng"].libs.ld_flags)
 
@@ -161,12 +160,18 @@ class Pgplot(MakefilePackage):
         install("libpgplot.a", prefix.lib)
         install("libpgplot.so", prefix.lib)
         install("grfont.dat", prefix.include)
+        mkdirp(prefix.lib + "/pgplot5")
+        install("rgb.txt", prefix.lib + "/pgplot5")
 
     @property
     def libs(self):
         shared = "+shared" in self.spec
-        return find_libraries("lib*pgplot", root=self.prefix, shared=shared, recursive=True)
+        if shared:
+            libnames = ["libpgplot"]
+        else:
+            libnames = ["libcpgplot", "libpgplot"]
+        return find_libraries(libnames, root=self.prefix, shared=shared, recursive=True)
 
     def setup_run_environment(self, env):
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
-        env.set("PGPLOT_DIR", self.prefix)
+        env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Libcint(CMakePackage):
 
     homepage = "https://github.com/sunqm/libcint"
     url = "https://github.com/sunqm/libcint/archive/v3.0.4.tar.gz"
-    maintainers = ["mfherbst"]
+    maintainers("mfherbst")
 
     #
     # Versions
@@ -34,6 +34,11 @@ class Libcint(CMakePackage):
     variant(
         "coulomb_erf", default=True, description="Enable attenuated coulomb operator integrals."
     )
+    variant(
+        "pypzpx",
+        default=False,
+        description="Enforce PYPZPX ordering of p-orbitals " "instead of PXPYPZ.",
+    )
     variant("test", default=False, description="Build test programs")
     variant("shared", default=True, description="Build the shared library")
 
@@ -54,7 +59,8 @@ class Libcint(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            "-DWITH_COULOMB_ERF=" + str("+coulomb_erf" in spec),
+            "-DWITH_RANGE_COULOMB=" + str("+coulomb_erf" in spec),
+            "-DPYPZPX=" + str("+pypzpx" in spec),
             "-DWITH_F12=" + str("+f12" in spec),
             "-DBUILD_SHARED_LIBS=" + str("+shared" in spec),
             "-DENABLE_TEST=" + str("+test" in spec),

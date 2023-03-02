@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,6 +91,7 @@ class Gmsh(CMakePackage):
     depends_on("zlib", when="+compression")
     depends_on("metis", when="+metis+external")
     depends_on("cgns", when="+cgns")
+    depends_on("cgns~scoping", when="+cgns @:4.7.1")
     with when("+petsc"):
         depends_on("petsc~int64")
         depends_on("petsc+mpi", when="+mpi")

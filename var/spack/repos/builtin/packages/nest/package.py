@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Nest(CMakePackage):
     version("3.0", sha256="d481ea67f3251fe3aadf5252ab0a999172f0cd5536c5985366d271d772e686e6")
     version("2.20.1", sha256="df3d32b5899d5d444f708037b290f889ac6ff8eae6b7be9e9faee2c0d660d8e5")
 
-    maintainers = ["ikitayama"]
+    maintainers("ikitayama")
 
     variant("python", default=False, description="Build the PyNest interface")
     variant("mpi", default=False, description="Build with MPI bindings")

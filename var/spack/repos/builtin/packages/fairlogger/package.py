@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 #   Spack Project Developers. See the top-level COPYRIGHT file for details.
 # Copyright 2020 GSI Helmholtz Centre for Heavy Ion Research GmbH,
 #   Darmstadt, Germany
@@ -15,7 +15,7 @@ class Fairlogger(CMakePackage):
     homepage = "https://github.com/FairRootGroup/FairLogger"
     url = "https://github.com/FairRootGroup/FairLogger/archive/v1.2.0.tar.gz"
     git = "https://github.com/FairRootGroup/FairLogger.git"
-    maintainers = ["dennisklein", "ChristianTackeGSI"]
+    maintainers("dennisklein", "ChristianTackeGSI")
     # generator = 'Ninja'
 
     version("develop", branch="dev", get_full_repo=True)

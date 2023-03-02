@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     across the hardware and software stack."""
 
     homepage = "https://icl.cs.utk.edu/papi/index.html"
-    maintainers = ["G-Ragghianti"]
+    maintainers("G-Ragghianti")
 
     tags = ["e4s"]
 
@@ -82,6 +82,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
         when="@5.4.0:5.6%gcc@8:",
     )
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
+    patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
 
     configure_directory = "src"
 
@@ -105,8 +106,18 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set("HSA_TOOLS_LIB", "unset")
         if "+rocm_smi" in spec:
             env.append_flags("CFLAGS", "-I%s/rocm_smi" % spec["rocm-smi-lib"].prefix.include)
+        #
+        # Intel OneAPI LLVM cannot compile papi unless the DBG enviroment variable is cleared
+        #
+        if spec.satisfies("%oneapi"):
+            env.set("DBG", "")
 
     setup_run_environment = setup_build_environment
+
+    @when("@6.0.0:%oneapi")
+    def autoreconf(self, spec, prefix):
+        bash = which("bash")
+        bash("-c", "cd src && autoreconf -ivf")
 
     def configure_args(self):
         spec = self.spec

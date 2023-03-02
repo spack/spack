@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,4 +30,3 @@ class PyPint(PythonPackage):
     depends_on("py-setuptools-scm", type=("build"))
     depends_on("py-packaging", type=("build", "run"), when="@0.17:")
     depends_on("py-importlib-metadata", type=("build", "run"), when="@0.17: ^python@:3.7")
-    depends_on("py-importlib-resources", type=("build", "run"), when="@0.17: ^python@:3.6")

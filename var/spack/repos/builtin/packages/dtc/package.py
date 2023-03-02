@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,3 +27,7 @@ class Dtc(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
         makefile.filter("PREFIX =.*", "PREFIX = %s" % prefix)
+        if self.spec.satisfies("%clang") or self.spec.satisfies("%fj"):
+            makefile.filter(
+                r"WARNINGS = -Wall", "WARNINGS = -Wall -Wno-unused-command-line-argument"
+            )

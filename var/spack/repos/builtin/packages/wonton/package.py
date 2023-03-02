@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Wonton(CMakePackage):
     git = "https://github.com/laristra/wonton.git"
     url = "https://github.com/laristra/wonton/releases/download/1.2.11/wonton-1.2.11.tar.gz"
 
-    maintainers = ["raovgarimella"]
+    maintainers("raovgarimella")
 
     version("1.3.2", sha256="a03f00cd95290c2dbe8724d430de19537ea644b75161614ed4ac918376fcf64d")
     version("1.2.11", sha256="613436c799b392a99355db1cbf1062f1da39f3287eed665a5cd43bb65364d926")
@@ -75,6 +75,11 @@ class Wonton(CMakePackage):
     # Kokkos with appropriate option
     depends_on("kokkos +openmp", when="+kokkos +openmp")
     depends_on("kokkos +cuda", when="+kokkos +cuda")
+
+    # Wonton-provided CMake config files contain some settings that
+    # can break host codes; these patches fix that
+    patch("fix-cmake-config.patch", when="@1.2.0:1.3.3")
+    patch("fix-cmake-config-r3d.patch", when="@1.3.0:1.3.3")
 
     def cmake_args(self):
         options = []

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,14 @@ class Podio(CMakePackage):
     url = "https://github.com/AIDASoft/podio/archive/v00-09-02.tar.gz"
     git = "https://github.com/AIDASoft/podio.git"
 
-    maintainers = ["vvolkl", "drbenmorgan"]
+    maintainers("vvolkl", "drbenmorgan")
 
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.16.2", sha256="faf7167290faf322f23c734adff19904b10793b5ab14e1dfe90ce257c225114b")
+    version("0.16.1", sha256="23cd8dfd00f9cd5ae0b473ae3279fa2c22a2d90fb6c07b37d56e63a80dd76ab2")
+    version("0.16", sha256="4e149c2c9be9f9ca3a6d863498bb0f642dda1a43a19ac1afe7f99854ded5c510")
     version("0.15", sha256="6c1520877ba1bce250e35a2a56c0a3da89fae0916c5ed7d5548d658237e067d9")
     version("0.14.3", sha256="2a7a405dedc7f6980a0aad7df87b427a1f43bcf6d923a9bcce1698fd296359f7")
     version(
@@ -78,6 +81,13 @@ class Podio(CMakePackage):
         deprecated=True,
     )
 
+    variant(
+        "cxxstd",
+        default="17",
+        values=("17", conditional("20", when="@0.15:")),
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
     variant("sio", default=False, description="Build the SIO I/O backend")
 
     # cpack config throws an error on some systems
@@ -85,7 +95,8 @@ class Podio(CMakePackage):
     patch("dictloading.patch", when="@0.10.0")
     patch("python-tests.patch", when="@:0.14.0")
 
-    depends_on("root@6.08.06: cxxstd=17")
+    depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
+    depends_on("root@6.25.02: cxxstd=20", when="cxxstd=20")
 
     depends_on("cmake@3.8:", type="build")
     depends_on("python", type=("build", "run"))
@@ -99,6 +110,7 @@ class Podio(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
+            self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
         return args
@@ -106,6 +118,14 @@ class Podio(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.python)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
+        if "+sio" in self.spec and self.version >= Version("0.16"):
+            # sio needs to be on LD_LIBRARY_PATH for ROOT to be able to
+            # dynamicaly load the python bindings library
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["sio"].libs.directories[0])
+
+        if self.spec.satisfies("@0.16.1:"):
+            # Frame header needs to be available for python bindings
+            env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("PYTHONPATH", self.prefix.python)

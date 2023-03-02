@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
+    tags = ["windows"]
 
     executables = [r"^perl(-?\d+.*)?$"]
 
@@ -47,45 +48,18 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # Maintenance releases (even numbers, recommended)
     version(
-        "5.34.1",
-        sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1",
+        "5.36.0",
+        sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a",
         preferred=True,
     )
-    version(
-        "5.34.0",
-        sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a",
-        preferred=True,
-    )
-    version(
-        "5.32.1",
-        sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c",
-        preferred=True,
-    )
-    version(
-        "5.32.0",
-        sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4",
-        preferred=True,
-    )
-    version(
-        "5.30.3",
-        sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f",
-        preferred=True,
-    )
-    version(
-        "5.30.2",
-        sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689",
-        preferred=True,
-    )
-    version(
-        "5.30.1",
-        sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964",
-        preferred=True,
-    )
-    version(
-        "5.30.0",
-        sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2",
-        preferred=True,
-    )
+    version("5.34.1", sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1")
+    version("5.34.0", sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a")
+    version("5.32.1", sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c")
+    version("5.32.0", sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4")
+    version("5.30.3", sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f")
+    version("5.30.2", sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689")
+    version("5.30.1", sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964")
+    version("5.30.0", sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2")
 
     # End of life releases
     version("5.28.0", sha256="7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8")
@@ -103,8 +77,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     if not is_windows:
+        depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
-        depends_on("gdbm@:1.19")
+        depends_on("gdbm@:1.19", when="@:5.35")
         # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
         depends_on("gdbm@:1.14.1", when="@:5.28.0")
         depends_on("berkeley-db")
@@ -161,10 +136,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # having it in core increases the "energy of activation" for doing
     # things cleanly.
     variant("cpanm", default=True, description="Optionally install cpanm with the core packages.")
-
     variant("shared", default=True, description="Build a shared libperl.so library")
-
     variant("threads", default=True, description="Build perl with threads support")
+    variant("open", default=True, description="Support open.pm")
 
     resource(
         name="cpanm",
@@ -213,6 +187,16 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 variants += "+cpanm"
             else:
                 variants += "~cpanm"
+            # this is just to detect incomplete installs
+            # normally perl installs open.pm
+            perl(
+                "-e",
+                "use open OUT => qw(:raw)",
+                output=os.devnull,
+                error=os.devnull,
+                fail_on_error=False,
+            )
+            variants += "+open" if perl.returncode == 0 else "~open"
             return variants
 
     # On a lustre filesystem, patch may fail when files
@@ -231,7 +215,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
-            args.append("CCTYPE=%s" % self.compiler.msvc_version)
+            args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
         args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
@@ -357,12 +341,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec, deptypes):
+    def _setup_dependent_env(self, env, dependent_spec, deptype):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptypes):
+        for d in dependent_spec.traverse(deptype=deptype):
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
         if perl_lib_dirs:
@@ -372,10 +356,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=("build", "run", "test"))
+        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=("run",))
+        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -386,7 +370,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # If system perl is used through packages.yaml
         # there cannot be extensions.
         if dependent_spec.package.is_extension:
-
             # perl extension builds can have a global perl
             # executable function
             module.perl = self.spec["perl"].command
@@ -483,28 +466,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         patterns = [r"perllocal\.pod$"]
 
         return match_predicate(ignore_arg, patterns)
-
-    def activate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).activate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        exts[ext_pkg.name] = ext_pkg.spec
-
-    def deactivate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).deactivate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        # Make deactivate idempotent
-        if ext_pkg.name in exts:
-            del exts[ext_pkg.name]
 
     @property
     def command(self):

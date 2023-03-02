@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,29 +9,33 @@ from spack.package import *
 
 
 class Gromacs(CMakePackage):
-    """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
-    dynamics package primarily designed for simulations of proteins, lipids
-    and nucleic acids. It was originally developed in the Biophysical
-    Chemistry department of University of Groningen, and is now maintained
-    by contributors in universities and research centers across the world.
+    """GROMACS is a molecular dynamics package primarily designed for simulations
+    of proteins, lipids and nucleic acids. It was originally developed in
+    the Biophysical Chemistry department of University of Groningen, and is now
+    maintained by contributors in universities and research centers across the world.
 
     GROMACS is one of the fastest and most popular software packages
     available and can run on CPUs as well as GPUs. It is free, open source
-    released under the GNU General Public License. Starting from version 4.6,
-    GROMACS is released under the GNU Lesser General Public License.
+    released under the GNU Lesser General Public License. Before the version 4.6,
+    GROMACS was released under the GNU General Public License.
     """
 
     homepage = "https://www.gromacs.org"
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers = ["junghans", "marvinbernhardt"]
+    maintainers("junghans", "marvinbernhardt")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
+    version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
+    version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
+    version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
     version("2022.2", sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf")
     version("2022.1", sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450")
     version("2022", sha256="fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68")
+    version("2021.7", sha256="4db7bbbfe5424de48373686ec0e8c5bfa7175d5cd74290ef1c1e840e6df67f06")
     version("2021.6", sha256="52df2c1d7586fd028d9397985c68bd6dd26e6e905ead382b7e6c473d087902c3")
     version("2021.5", sha256="eba63fe6106812f72711ef7f76447b12dd1ee6c81b3d8d4d0e3098cd9ea009b6")
     version("2021.4", sha256="cb708a3e3e83abef5ba475fdb62ef8d42ce8868d68f52dafdb6702dc9742ba1d")
@@ -139,10 +143,19 @@ class Gromacs(CMakePackage):
         when="+cp2k",
         msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
     )
+    conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
+    conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
+    conflicts(
+        "intel-oneapi-mkl@:2021.2",
+        when="@2023:",
+        msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
+    )
 
     depends_on("mpi", when="+mpi")
 
+    # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
     # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs 2021.5, 2020.6, 2019.6
     # Plumed 2.7.4 needs Gromacs 2021.4, 2020.6, 2019.6
     # Plumed 2.7.3 needs Gromacs 2021.4, 2020.6, 2019.6
     # Plumed 2.7.2 needs Gromacs 2021,   2020.6, 2019.6
@@ -170,6 +183,14 @@ class Gromacs(CMakePackage):
 
     depends_on("plumed+mpi", when="+plumed+mpi")
     depends_on("plumed~mpi", when="+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2022.3+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2022.3+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2021.6+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2021.6+plumed~mpi")
+    depends_on("plumed@2.8.1+mpi", when="@2020.7+plumed+mpi")
+    depends_on("plumed@2.8.1~mpi", when="@2020.7+plumed~mpi")
+    depends_on("plumed@2.7.5+mpi", when="@2021.5+plumed+mpi")
+    depends_on("plumed@2.7.5~mpi", when="@2021.5+plumed~mpi")
     depends_on("plumed@2.7.3:2.8.0+mpi", when="@2021.4+plumed+mpi")
     depends_on("plumed@2.7.3:2.8.0~mpi", when="@2021.4+plumed~mpi")
     depends_on("plumed@2.7.1:2.7.2+mpi", when="@2021+plumed+mpi")
@@ -182,8 +203,8 @@ class Gromacs(CMakePackage):
     depends_on("plumed@2.6.2:2.7.0~mpi", when="@2020.4+plumed~mpi")
     depends_on("plumed@2.6.1+mpi", when="@2020.2+plumed+mpi")
     depends_on("plumed@2.6.1~mpi", when="@2020.2+plumed~mpi")
-    depends_on("plumed@2.6.1:2.8.0+mpi", when="@2019.6+plumed+mpi")
-    depends_on("plumed@2.6.1:2.8.0~mpi", when="@2019.6+plumed~mpi")
+    depends_on("plumed@2.6.1:2.8.1+mpi", when="@2019.6+plumed+mpi")
+    depends_on("plumed@2.6.1:2.8.1~mpi", when="@2019.6+plumed~mpi")
     depends_on("plumed@2.5.3:2.6.0+mpi", when="@2019.4+plumed+mpi")
     depends_on("plumed@2.5.3:2.6.0~mpi", when="@2019.4+plumed~mpi")
     depends_on("plumed@2.5.2+mpi", when="@2019.2+plumed+mpi")
@@ -203,8 +224,9 @@ class Gromacs(CMakePackage):
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
     depends_on("cmake@3.9.6:3", type="build", when="@2020")
-    depends_on("cmake@3.13.0:3", type="build", when="@2021:")
-    depends_on("cmake@3.16.0:3", type="build", when="@master")
+    depends_on("cmake@3.13.0:3", type="build", when="@2021")
+    depends_on("cmake@3.16.3:3", type="build", when="@2022:")
+    depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
@@ -251,6 +273,15 @@ class Gromacs(CMakePackage):
                 "#include <queue>\n#include <limits>",
                 "src/gromacs/modularsimulator/modularsimulator.h",
             )
+        # Ref: https://gitlab.com/gromacs/gromacs/-/merge_requests/3504
+        if self.spec.satisfies("@2023"):
+            filter_file(
+                "        if (std::filesystem::equivalent(searchPath, buildBinPath))",
+                "        if (std::error_code c; std::filesystem::equivalent(searchPath,"
+                " buildBinPath, c))",
+                "src/gromacs/commandline/cmdlineprogramcontext.cpp",
+                string=True,
+            )
 
         if "+plumed" in self.spec:
             self.spec["plumed"].package.apply_patch(self)
@@ -296,7 +327,6 @@ class Gromacs(CMakePackage):
                 )
 
     def cmake_args(self):
-
         options = []
 
         if "+mpi" in self.spec:
@@ -368,14 +398,13 @@ class Gromacs(CMakePackage):
         else:
             if "+cuda" in self.spec or "+opencl" in self.spec:
                 options.append("-DGMX_GPU:BOOL=ON")
+                if "+opencl" in self.spec:
+                    options.append("-DGMX_USE_OPENCL=ON")
             else:
                 options.append("-DGMX_GPU:BOOL=OFF")
 
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
-
-        if "+opencl" in self.spec:
-            options.append("-DGMX_USE_OPENCL=on")
 
         if "+lapack" in self.spec:
             options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
@@ -399,7 +428,10 @@ class Gromacs(CMakePackage):
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= "zen2":
+        if target >= "zen4":
+            # AMD Family 17h (EPYC Genoa)
+            options.append("-DGMX_SIMD=AVX_512")
+        elif target >= "zen2":
             # AMD Family 17h (EPYC Rome)
             options.append("-DGMX_SIMD=AVX2_256")
         elif target >= "zen":
@@ -489,6 +521,18 @@ class Gromacs(CMakePackage):
                 options.append(
                     "-DFFTWF_LIBRARIES={0}".format(self.spec["amdfftw"].libs.joined(";"))
                 )
+            elif "^armpl-gcc" in self.spec:
+                options.append(
+                    "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["armpl-gcc"].headers.directories[0])
+                )
+                options.append(
+                    "-DFFTWF_LIBRARY={0}".format(self.spec["armpl-gcc"].libs.joined(";"))
+                )
+            elif "^acfl" in self.spec:
+                options.append(
+                    "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["acfl"].headers.directories[0])
+                )
+                options.append("-DFFTWF_LIBRARY={0}".format(self.spec["acfl"].libs.joined(";")))
 
         # Ensure that the GROMACS log files report how the code was patched
         # during the build, so that any problems are easier to diagnose.

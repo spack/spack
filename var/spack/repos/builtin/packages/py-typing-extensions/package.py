@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,5 +33,3 @@ class PyTypingExtensions(PythonPackage):
     # typing-extensions 3 uses setuptools
     depends_on("python@2.7:2.8,3.4:", when="@:3", type=("build", "run"))
     depends_on("py-setuptools", when="@:3", type="build")
-    depends_on("py-typing@3.7.4:", when="@3.7:3 ^python@:3.4", type=("build", "run"))
-    depends_on("py-typing@3.6.2:", when="@:3.6 ^python@:3.4", type=("build", "run"))

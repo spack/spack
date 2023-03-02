@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_
 import spack.paths
 import spack.stage
 import spack.util.executable
+import spack.util.url as url_util
 from spack.resource import Resource
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
@@ -40,10 +41,6 @@ _readme_contents = "hello world!\n"
 _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
-
-_file_prefix = "file://"
-if sys.platform == "win32":
-    _file_prefix += "/"
 
 
 # Mock fetch directories are expected to appear as follows:
@@ -201,6 +198,7 @@ def tmp_build_stage_dir(tmpdir, clear_stage_root):
 @pytest.fixture
 def mock_stage_archive(tmp_build_stage_dir):
     """Create the directories and files for the staged mock archive."""
+
     # Mock up a stage area that looks like this:
     #
     # tmpdir/                test_files_dir
@@ -218,7 +216,7 @@ def mock_stage_archive(tmp_build_stage_dir):
         # Create the archive directory and associated file
         archive_dir = tmpdir.join(_archive_base)
         archive = tmpdir.join(_archive_fn)
-        archive_url = _file_prefix + str(archive)
+        archive_url = url_util.path_to_file_url(str(archive))
         archive_dir.ensure(dir=True)
 
         # Create the optional files as requested and make sure expanded
@@ -283,7 +281,7 @@ def mock_expand_resource(tmpdir):
 
     archive_name = "resource.tar.gz"
     archive = tmpdir.join(archive_name)
-    archive_url = _file_prefix + str(archive)
+    archive_url = url_util.path_to_file_url(str(archive))
 
     filename = "resource-file.txt"
     test_file = resource_dir.join(filename)
@@ -388,7 +386,6 @@ def check_stage_dir_perms(prefix, path):
 
 @pytest.mark.usefixtures("mock_packages")
 class TestStage(object):
-
     stage_name = "spack-test-stage"
 
     def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
@@ -414,7 +411,7 @@ class TestStage(object):
         property of the stage should refer to the path of that file.
         """
         test_noexpand_fetcher = spack.fetch_strategy.from_kwargs(
-            url=_file_prefix + mock_noexpand_resource, expand=False
+            url=url_util.path_to_file_url(mock_noexpand_resource), expand=False
         )
         with Stage(test_noexpand_fetcher) as stage:
             stage.fetch()
@@ -432,7 +429,7 @@ class TestStage(object):
 
         resource_dst_name = "resource-dst-name.sh"
         test_resource_fetcher = spack.fetch_strategy.from_kwargs(
-            url=_file_prefix + mock_noexpand_resource, expand=False
+            url=url_util.path_to_file_url(mock_noexpand_resource), expand=False
         )
         test_resource = Resource("test_resource", test_resource_fetcher, resource_dst_name, None)
         resource_stage = ResourceStage(test_resource_fetcher, root_stage, test_resource)
@@ -447,7 +444,6 @@ class TestStage(object):
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_expand_resource(self, composite_stage_with_expanding_resource):
-
         (
             composite_stage,
             root_stage,

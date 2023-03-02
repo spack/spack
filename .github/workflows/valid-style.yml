@@ -8,7 +8,7 @@ on:
         type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 
@@ -18,33 +18,33 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         cache: 'pip'
     - name: Install Python Packages
       run: |
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv var/spack/repos
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip six setuptools types-six click==8.0.2 'black==21.12b0' mypy isort clingo flake8
+        python3 -m pip install --upgrade pip six setuptools types-six black==23.1.0 mypy isort clingo flake8
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -53,30 +53,8 @@ jobs:
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
-  # Run audits on all the packages in the built-in repository
-  package-audits:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
-      with:
-        python-version: '3.10'
-    - name: Install Python packages
-      run: |
-        pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2
-    - name: Package audits (with coverage)
-      if: ${{ inputs.with_coverage == 'true' }}
-      run: |
-          . share/spack/setup-env.sh
-          coverage run $(which spack) audit packages
-          coverage combine
-          coverage xml
-    - name: Package audits (without coverage)
-      if: ${{ inputs.with_coverage == 'false' }}
-      run: |
-          . share/spack/setup-env.sh
-          $(which spack) audit packages
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
-      if: ${{ inputs.with_coverage == 'true' }}
-      with:
-        flags: unittests,linux,audits
+  audit:
+    uses: ./.github/workflows/audit.yaml
+    with:
+      with_coverage: ${{ inputs.with_coverage }}
+      python_version: '3.11'

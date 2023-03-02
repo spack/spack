@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,9 @@ class Gl2ps(CMakePackage):
             self.define("OPENGL_egl_LIBRARY", "IGNORE"),
             self.define("OPENGL_glu_LIBRARY", "IGNORE"),
         ]
+        if spec.satisfies("platform=darwin"):
+            options.append(self.define("CMAKE_MACOSX_RPATH", True))
+
         if "~doc" in spec:
             # Make sure we don't look.
             options.append(self.define("CMAKE_DISABLE_FIND_PACKAGE_LATEX", True))

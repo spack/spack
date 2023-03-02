@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,9 @@ class PyKubernetes(PythonPackage):
     git = "https://github.com/kubernetes-client/python.git"
     pypi = "kubernetes/kubernetes-17.17.0.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
+    version("25.3.0", sha256="213befbb4e5aed95f94950c7eed0c2322fc5a2f8f40932e58d28fdd42d90836c")
     version("21.7.0", sha256="c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977")
     version("20.13.0", sha256="ce5e881c13dc56f21a243804f90bc3c507af93c380f505c00e392c823968e4de")
     version("19.15.0", sha256="08c93f300a9837104282ecc81458b903a56444c5c1ec3d990d237557312af47f")
@@ -36,7 +37,6 @@ class PyKubernetes(PythonPackage):
     depends_on("py-pyyaml@3.12:", when="@:18.19", type=("build", "run"))
     depends_on("py-pyyaml@5.4.1:", when="@18.20.0:", type=("build", "run"))
     depends_on("py-google-auth@1.0.1:", type=("build", "run"))
-    depends_on("py-ipaddress@1.0.17:", when="^python@:2.8", type=("build", "run"))
     depends_on("py-websocket-client@0.32:0.39,0.43:", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-requests-oauthlib", type=("build", "run"))
