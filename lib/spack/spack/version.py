@@ -602,6 +602,7 @@ class GitVersion(VersionBase):
         a suitable compiler. In the case of two GitVersions we require the ref_versions
         to satisfy one another and the versions to be an exact match.
         """
+
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 

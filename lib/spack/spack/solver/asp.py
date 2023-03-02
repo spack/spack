@@ -821,9 +821,6 @@ class PyclingoDriver(object):
         return result, timer, self.control.statistics
 
 
-_asp_debug = False
-
-
 class SpackSolverSetup(object):
     """Class to set up and run a Spack concretization solve."""
 

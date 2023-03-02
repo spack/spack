@@ -177,7 +177,8 @@ packages:
     s1 = Spec("v").concretized()
     assert s1.satisfies("@{0}".format(a_commit_hash))
 
-
+from spack.main import SpackCommand
+solve = SpackCommand("solve")
 def test_requirement_adds_multiple_new_versions(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
@@ -204,10 +205,8 @@ packages:
     assert s1.satisfies("@2.2")
 
     s2 = Spec("v@{0}".format(commits[1])).concretized()
-    # Note: s2 will not satisfy @2.3 since the command line version overrides
-    # the info in the package requirements (effectively discarding the
-    # equivalence described between the hash and numbered versions)
     assert s2.satisfies("@{0}".format(commits[1]))
+    assert s2.satisfies("@2.3")
 
 
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):
