@@ -545,12 +545,6 @@ def set_module_variables_for_package(pkg, context="build"):
     """Populate the Python module of a package with some useful global names.
     This makes things easier for package writers.
     """
-    # Put a marker on this module so that it won't execute the body of this
-    # function again, since it is not needed
-    marker = "_set_run_already_called"
-    if getattr(pkg.module, marker, False):
-        return
-
     module = ModuleChangePropagator(pkg)
 
     m = module
@@ -606,9 +600,6 @@ def set_module_variables_for_package(pkg, context="build"):
 
     m.static_to_shared_library = static_to_shared_library
 
-    # Put a marker on this module so that it won't execute the body of this
-    # function again, since it is not needed
-    setattr(m, marker, True)
     module.propagate_changes_to_mro()
 
 
