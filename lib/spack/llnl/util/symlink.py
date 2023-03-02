@@ -14,8 +14,8 @@ from llnl.util import lang
 is_windows = _platform == "win32"
 
 if is_windows:
-    from win32file import CreateHardLink
     from pywintypes import error
+    from win32file import CreateHardLink
 
 
 def symlink(real_path, link_path):
