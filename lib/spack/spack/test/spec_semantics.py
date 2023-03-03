@@ -23,16 +23,6 @@ from spack.variant import (
 )
 
 
-def check_constrain_changed(spec, constraint):
-    spec = Spec(spec)
-    assert spec.constrain(constraint)
-
-
-def check_constrain_not_changed(spec, constraint):
-    spec = Spec(spec)
-    assert not spec.constrain(constraint)
-
-
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestSpecSemantics(object):
     """Test satisfies(), intersects(), constrain() and other semantic operations on specs."""
@@ -554,69 +544,67 @@ class TestSpecSemantics(object):
         for spec in [s, s_mpich, s_mpich2, s_zmpi]:
             assert "mpi" in spec
 
-    # ========================================================================
-    # Constraints
-    # ========================================================================
-    def test_constrain_changed(self):
-        check_constrain_changed("libelf", "@1.0")
-        check_constrain_changed("libelf", "@1.0:5.0")
-        check_constrain_changed("libelf", "%gcc")
-        check_constrain_changed("libelf%gcc", "%gcc@4.5")
-        check_constrain_changed("libelf", "+debug")
-        check_constrain_changed("libelf", "debug=*")
-        check_constrain_changed("libelf", "~debug")
-        check_constrain_changed("libelf", "debug=2")
-        check_constrain_changed("libelf", 'cppflags="-O3"')
-        check_constrain_changed("libelf", 'cppflags=="-O3"')
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("libelf", "@1.0"),
+            ("libelf", "@1.0:5.0"),
+            ("libelf", "%gcc"),
+            ("libelf%gcc", "%gcc@4.5"),
+            ("libelf", "+debug"),
+            ("libelf", "debug=*"),
+            ("libelf", "~debug"),
+            ("libelf", "debug=2"),
+            ("libelf", 'cppflags="-O3"'),
+            ("libelf", 'cppflags=="-O3"'),
+            ("libelf^foo", "libelf^foo@1.0"),
+            ("libelf^foo", "libelf^foo@1.0:5.0"),
+            ("libelf^foo", "libelf^foo%gcc"),
+            ("libelf^foo%gcc", "libelf^foo%gcc@4.5"),
+            ("libelf^foo", "libelf^foo+debug"),
+            ("libelf^foo", "libelf^foo~debug"),
+            ("libelf", "^foo"),
+        ],
+    )
+    def test_lhs_is_changed_when_constraining(self, lhs, rhs):
+        lhs, rhs = Spec(lhs), Spec(rhs)
 
-        platform = spack.platforms.host()
-        check_constrain_changed("libelf", "target=" + platform.target("default_target").name)
-        check_constrain_changed("libelf", "os=" + platform.operating_system("default_os").name)
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+        assert not lhs.satisfies(rhs)
 
-    def test_constrain_not_changed(self):
-        check_constrain_not_changed("libelf", "libelf")
-        check_constrain_not_changed("libelf@1.0", "@1.0")
-        check_constrain_not_changed("libelf@1.0:5.0", "@1.0:5.0")
-        check_constrain_not_changed("libelf%gcc", "%gcc")
-        check_constrain_not_changed("libelf%gcc@4.5", "%gcc@4.5")
-        check_constrain_not_changed("libelf+debug", "+debug")
-        check_constrain_not_changed("libelf~debug", "~debug")
-        check_constrain_not_changed("libelf debug=2", "debug=2")
-        check_constrain_not_changed("libelf debug=2", "debug=*")
-        check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
-        check_constrain_not_changed('libelf cppflags=="-O3"', 'cppflags=="-O3"')
+        assert lhs.constrain(rhs) is True
+        assert lhs.satisfies(rhs)
 
-        platform = spack.platforms.host()
-        default_target = platform.target("default_target").name
-        check_constrain_not_changed("libelf target=" + default_target, "target=" + default_target)
-
-    def test_constrain_dependency_changed(self):
-        check_constrain_changed("libelf^foo", "libelf^foo@1.0")
-        check_constrain_changed("libelf^foo", "libelf^foo@1.0:5.0")
-        check_constrain_changed("libelf^foo", "libelf^foo%gcc")
-        check_constrain_changed("libelf^foo%gcc", "libelf^foo%gcc@4.5")
-        check_constrain_changed("libelf^foo", "libelf^foo+debug")
-        check_constrain_changed("libelf^foo", "libelf^foo~debug")
-        check_constrain_changed("libelf", "^foo")
-
-        platform = spack.platforms.host()
-        default_target = platform.target("default_target").name
-        check_constrain_changed("libelf^foo", "libelf^foo target=" + default_target)
-
-    def test_constrain_dependency_not_changed(self):
-        check_constrain_not_changed("libelf^foo@1.0", "libelf^foo@1.0")
-        check_constrain_not_changed("libelf^foo@1.0:5.0", "libelf^foo@1.0:5.0")
-        check_constrain_not_changed("libelf^foo%gcc", "libelf^foo%gcc")
-        check_constrain_not_changed("libelf^foo%gcc@4.5", "libelf^foo%gcc@4.5")
-        check_constrain_not_changed("libelf^foo+debug", "libelf^foo+debug")
-        check_constrain_not_changed("libelf^foo~debug", "libelf^foo~debug")
-        check_constrain_not_changed('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
-
-        platform = spack.platforms.host()
-        default_target = platform.target("default_target").name
-        check_constrain_not_changed(
-            "libelf^foo target=" + default_target, "libelf^foo target=" + default_target
-        )
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("libelf", "libelf"),
+            ("libelf@1.0", "@1.0"),
+            ("libelf@1.0:5.0", "@1.0:5.0"),
+            ("libelf%gcc", "%gcc"),
+            ("libelf%gcc@4.5", "%gcc@4.5"),
+            ("libelf+debug", "+debug"),
+            ("libelf~debug", "~debug"),
+            ("libelf debug=2", "debug=2"),
+            ("libelf debug=2", "debug=*"),
+            ('libelf cppflags="-O3"', 'cppflags="-O3"'),
+            ('libelf cppflags=="-O3"', 'cppflags=="-O3"'),
+            ("libelf^foo@1.0", "libelf^foo@1.0"),
+            ("libelf^foo@1.0:5.0", "libelf^foo@1.0:5.0"),
+            ("libelf^foo%gcc", "libelf^foo%gcc"),
+            ("libelf^foo%gcc@4.5", "libelf^foo%gcc@4.5"),
+            ("libelf^foo+debug", "libelf^foo+debug"),
+            ("libelf^foo~debug", "libelf^foo~debug"),
+            ('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"'),
+        ],
+    )
+    def test_lhs_is_not_changed_when_constraining(self, lhs, rhs):
+        lhs, rhs = Spec(lhs), Spec(rhs)
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+        assert lhs.satisfies(rhs)
+        assert lhs.constrain(rhs) is False
 
     def test_exceptional_paths_for_constructor(self):
         with pytest.raises(TypeError):
