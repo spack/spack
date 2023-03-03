@@ -10,9 +10,16 @@ from typing import Optional
 import llnl.util.filesystem as fs
 from llnl.util.symlink import symlink
 
+# Magic numbers from linux headers
+RENAME_EXCHANGE = 2
+AT_FDCWD = -100
+
 libc: Optional[ctypes.CDLL] = None
 try:
-    libc = ctypes.CDLL("/lib64/libc.so.6", 0x04)  # 0x04 is RTLD_NOLOAD
+    # CDLL(None) returns the python process
+    # python links against libc, so we can treat this as a libc handle
+    # we could also use CDLL("libc.so.6") but this is (irrelevantly) more future proof
+    libc = ctypes.CDLL(None)
 except BaseException:
     pass
 
@@ -35,33 +42,28 @@ def atomic_update(oldpath, newpath):
         return atomic_update_symlink(oldpath, newpath)
 
 
-@contextmanager
-def open_safely(path):
-    fd = os.open(path, os.O_CLOEXEC | os.O_PATH)
-    try:
-        yield fd
-    finally:
-        os.close(fd)
-
-
 def atomic_update_renameat2(src, dest):
-    dest_exists = os.path.exists(dest)
+    # Ensure a directory that is a symlink will not be read as symlink in libc
+    src = src.rstrip(os.path.sep)
+    dest = dest.rstrip(os.path.sep)
+
+    dest_exists = os.path.lexists(dest)
     if not dest_exists:
         fs.touch(dest)
-    with open_safely(src) as srcfd:
-        with open_safely(dest) as destfd:
-            try:
-                libc.renameat2(
-                    srcfd, src.encode(), destfd, dest.encode(), 2
-                )  # 2 is RENAME_EXCHANGE
-                if not dest_exists:
-                    os.unlink(src)
-            except Exception:
-                if not dest_exists:
-                    os.unlink(dest)
-                # Some filesystems don't support this
-                # fail over to symlink method
-                atomic_update_symlink(src, dest)
+    try:
+        rc = libc.renameat2(
+            AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE
+        )
+        if rc:
+            raise OSError(f"renameat2 failed to exchange {src} and {dest}")
+        if not dest_exists:
+            os.unlink(src)
+    except (OSError, IOError):
+        if not dest_exists:
+            os.unlink(dest)
+        # Some filesystems don't support this
+        # fail over to symlink method
+        atomic_update_symlink(src, dest)
 
 
 def atomic_update_symlink(src, dest):
