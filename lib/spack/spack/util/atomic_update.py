@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import ctypes
 import os
-from contextlib import contextmanager
 from typing import Optional
 
 import llnl.util.filesystem as fs
@@ -51,9 +50,7 @@ def atomic_update_renameat2(src, dest):
     if not dest_exists:
         fs.touch(dest)
     try:
-        rc = libc.renameat2(
-            AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE
-        )
+        rc = libc.renameat2(AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE)
         if rc:
             raise OSError(f"renameat2 failed to exchange {src} and {dest}")
         if not dest_exists:
