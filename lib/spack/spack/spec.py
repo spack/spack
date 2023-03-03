@@ -3451,25 +3451,38 @@ class Spec(object):
             return spec_like
         return Spec(spec_like)
 
-    def satisfies(self, other, deps=True, strict=False, strict_deps=False):
+    def satisfies(self, other, deps=True, strict=False):
         """Determine if this spec satisfies all constraints of another.
 
-        There are two senses for satisfies:
+        There are two senses for satisfies, depending on the ``strict``
+        argument.
 
-          * `loose` (default): the absence of a constraint in self
-            implies that it *could* be satisfied by other, so we only
-            check that there are no conflicts with other for
-            constraints that this spec actually has.
+          * ``strict=False``: the left-hand side and right-hand side have
+            non-empty intersection. For example ``zlib`` satisfies
+            ``zlib@1.2.3`` and ``zlib@1.2.3`` satisfies ``zlib``. In this
+            sense satisfies is a commutative operation: ``x.satisfies(y)``
+            if and only if ``y.satisfies(x)``.
 
-          * `strict`: strict means that we *must* meet all the
-            constraints specified on other.
+          * ``strict=True``: the left-hand side is a subset of the right-hand
+            side. For example ``zlib@1.2.3`` satisfies ``zlib``, but ``zlib``
+            does not satisfy ``zlib@1.2.3``. In this sense satisfies is not
+            commutative: the left-hand side should be at least as constrained
+            as the right-hand side.
         """
 
         other = self._autospec(other)
 
-        # The only way to satisfy a concrete spec is to match its hash exactly.
+        # Optimizations for right-hand side concrete:
+        # 1. For subset (strict=True) tests this means the left-hand side must
+        # be the same singleton with identical hash. Notice that package hashes
+        # can be different for otherwise indistinguishable concrete Spec objects.
+        # 2. For non-empty intersection (strict=False) we only have a fast path
+        # when the left-hand side is also concrete.
         if other.concrete:
-            return self.concrete and self.dag_hash() == other.dag_hash()
+            if strict:
+                return self.concrete and self.dag_hash() == other.dag_hash()
+            elif self.concrete:
+                return self.dag_hash() == other.dag_hash()
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
