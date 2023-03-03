@@ -90,14 +90,22 @@ class Pinentry(AutotoolsPackage):
 
         return args
 
-    def test(self):
-        kwargs = {
-            "exe": self.prefix.bin.pinentry,
-            "options": ["--version"],
-            "expected": [str(self.version)],
-        }
-        self.run_test(**kwargs)
+    def test_version(self):
+        """check pinentry version"""
+        pinentry = which(self.prefix.bin.pinentry)
+        out = pinentry("--version", output=str.split, error=str.split)
+        assert str(self.version) in out
+
+    def test_gui(self):
+        """check versions of supported guis"""
+        vers = str(self.version)
         for gui in self.supported_guis:
-            if "gui=" + gui in self.spec:
-                kwargs["exe"] = self.prefix.bin.pinentry + "-" + gui
-                self.run_test(**kwargs)
+            with test_part(
+                self, "test_gui_{0}".format(gui), purpose="check version of {0}".format(gui)
+            ):
+                if "gui=" + gui not in self.spec:
+                    raise SkipTest("Test requires build with gui={0}".format(gui))
+
+                gui = which(self.prefix.bin.pinentry + "-" + gui)
+                out = gui("--version", output=str.split, error=str.split)
+                assert vers in out
