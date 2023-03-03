@@ -996,7 +996,9 @@ def modifications_from_dag(
 
     # I guess everything that calls setup_run_environemnt and setup_dependent_* should have our
     # horrible globals available too.
-    should_populate_package_py_globals = should_setup_dependent_build_env | should_setup_run_env | Mode.ROOT
+    should_populate_package_py_globals = (
+        should_setup_dependent_build_env | should_setup_run_env | Mode.ROOT
+    )
 
     def make_buildtime_detectable(dep, env):
         if is_system_path(dep.prefix):
