@@ -240,6 +240,8 @@ spack:
           - llvm
           - llvm-amdgpu
           - rocblas
+          - paraview
+          - visit
         runner-attributes:
           tags: [ "spack", "huge", "ppc64le" ]
           variables:
