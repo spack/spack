@@ -1681,6 +1681,13 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(dep.version)
+                if (isinstance(dep.version, spack.version.GitVersion) and
+                    dep.version.user_supplied_reference):
+                    defined_version = spack.version.Version(dep.version.ref_version_str)
+                    self.declared_versions[dep.name].append(
+                        DeclaredVersion(version=defined_version, idx=0, origin=origin)
+                    )
+                    self.possible_versions[dep.name].add(defined_version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.

@@ -140,7 +140,6 @@ def test_requirement_adds_new_version(
 packages:
   v:
     require: "@{0}=2.2"
-    version: ["2.2"]
 """.format(
         a_commit_hash
     )
@@ -194,7 +193,6 @@ packages:
   v:
     require:
     - one_of: ["@{0}=2.2", "@{1}=2.3"]
-    version: ["2.2", "2.3"]
 """.format(
         commits[0], commits[1]
     )
