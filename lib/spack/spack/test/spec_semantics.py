@@ -24,14 +24,6 @@ from spack.variant import (
 )
 
 
-def check_constrain(expected, spec, constraint):
-    exp = Spec(expected)
-    spec = Spec(spec)
-    constraint = Spec(constraint)
-    spec.constrain(constraint)
-    assert exp == spec
-
-
 def check_constrain_changed(spec, constraint):
     spec = Spec(spec)
     assert spec.constrain(constraint)
@@ -64,6 +56,9 @@ class TestSpecSemantics(object):
             ("^mpi", Spec(), "^mpi"),
             ("+debug", Spec(), "+debug"),
             ("@3:", Spec(), "@3:"),
+            # Versions
+            ("libelf@0:2.5", "libelf@2.1:3", "libelf@2.1:2.5"),
+            ("libelf@0:2.5%gcc@2:4.6", "libelf@2.1:3%gcc@4.5:4.7", "libelf@2.1:2.5%gcc@4.5:4.6"),
             # Namespaces
             ("builtin.mpich", "mpich", "builtin.mpich"),
             ("builtin.mock.mpich", "mpich", "builtin.mock.mpich"),
@@ -85,6 +80,8 @@ class TestSpecSemantics(object):
             ("foo%pgi@4.5", "%pgi@4.4:4.6", "foo%pgi@4.5"),
             ("foo@2.0%pgi@4.5", "@1:3%pgi@4.4:4.6", "foo@2.0%pgi@4.5"),
             ("foo %gcc@4.7.3", "%gcc@4.7", "foo %gcc@4.7.3"),
+            ("libelf %gcc@4.4.7", "libelf %gcc@4.4.7", "libelf %gcc@4.4.7"),
+            ("libelf", "libelf %gcc@4.4.7", "libelf %gcc@4.4.7"),
             # Architecture
             ("foo platform=test", "platform=test", "foo platform=test"),
             ("foo platform=linux", "platform=linux", "foo platform=linux"),
@@ -123,6 +120,11 @@ class TestSpecSemantics(object):
                 "foo platform=test target=backend os=backend",
                 "platform=test target=backend os=backend",
                 "foo platform=test target=backend os=backend",
+            ),
+            (
+                "libelf target=default_target os=default_os",
+                "libelf target=default_target os=default_os",
+                "libelf target=default_target os=default_os",
             ),
             # Dependencies
             ("mpileaks ^mpich", "^mpich", "mpileaks ^mpich"),
@@ -188,6 +190,28 @@ class TestSpecSemantics(object):
             ("mpich~foo", "mpich", "mpich~foo"),
             ("mpich foo=1", "mpich", "mpich foo=1"),
             ("mpich", "mpich++foo", "mpich+foo"),
+            ("libelf+debug", "libelf+foo", "libelf+debug+foo"),
+            ("libelf+debug", "libelf+debug+foo", "libelf+debug+foo"),
+            ("libelf debug=2", "libelf foo=1", "libelf debug=2 foo=1"),
+            ("libelf debug=2", "libelf debug=2 foo=1", "libelf debug=2 foo=1"),
+            ("libelf+debug", "libelf~foo", "libelf+debug~foo"),
+            ("libelf+debug", "libelf+debug~foo", "libelf+debug~foo"),
+            ("libelf++debug", "libelf+debug+foo", "libelf++debug++foo"),
+            ("libelf debug==2", "libelf foo=1", "libelf debug==2 foo==1"),
+            ("libelf debug==2", "libelf debug=2 foo=1", "libelf debug==2 foo==1"),
+            ("libelf++debug", "libelf++debug~foo", "libelf++debug~~foo"),
+            ("libelf foo=bar,baz", "libelf foo=*", "libelf foo=bar,baz"),
+            ("libelf foo=*", "libelf foo=bar,baz", "libelf foo=bar,baz"),
+            (
+                'multivalue-variant foo="bar"',
+                'multivalue-variant foo="baz"',
+                'multivalue-variant foo="bar,baz"',
+            ),
+            (
+                'multivalue-variant foo="bar,barbaz"',
+                'multivalue-variant foo="baz"',
+                'multivalue-variant foo="bar,baz,barbaz"',
+            ),
             # Flags
             ("mpich ", 'mpich cppflags="-O3"', 'mpich cppflags="-O3"'),
             (
@@ -196,6 +220,26 @@ class TestSpecSemantics(object):
                 'mpich cppflags="-O3 -Wall"',
             ),
             ('mpich cppflags=="-O3"', 'mpich cppflags=="-O3"', 'mpich cppflags=="-O3"'),
+            (
+                'libelf cflags="-O3"',
+                'libelf cppflags="-Wall"',
+                'libelf cflags="-O3" cppflags="-Wall"',
+            ),
+            (
+                'libelf cflags="-O3"',
+                'libelf cppflags=="-Wall"',
+                'libelf cflags="-O3" cppflags=="-Wall"',
+            ),
+            (
+                'libelf cflags=="-O3"',
+                'libelf cppflags=="-Wall"',
+                'libelf cflags=="-O3" cppflags=="-Wall"',
+            ),
+            (
+                'libelf cflags="-O3"',
+                'libelf cflags="-O3" cppflags="-Wall"',
+                'libelf cflags="-O3" cppflags="-Wall"',
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -514,80 +558,6 @@ class TestSpecSemantics(object):
     # ========================================================================
     # Constraints
     # ========================================================================
-    def test_constrain_variants(self):
-        check_constrain("libelf@2.1:2.5", "libelf@0:2.5", "libelf@2.1:3")
-        check_constrain(
-            "libelf@2.1:2.5%gcc@4.5:4.6", "libelf@0:2.5%gcc@2:4.6", "libelf@2.1:3%gcc@4.5:4.7"
-        )
-        check_constrain("libelf+debug+foo", "libelf+debug", "libelf+foo")
-        check_constrain("libelf+debug+foo", "libelf+debug", "libelf+debug+foo")
-        check_constrain("libelf debug=2 foo=1", "libelf debug=2", "libelf foo=1")
-        check_constrain("libelf debug=2 foo=1", "libelf debug=2", "libelf debug=2 foo=1")
-
-        check_constrain("libelf+debug~foo", "libelf+debug", "libelf~foo")
-        check_constrain("libelf+debug~foo", "libelf+debug", "libelf+debug~foo")
-
-        check_constrain("libelf++debug++foo", "libelf++debug", "libelf+debug+foo")
-        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf foo=1")
-        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf debug=2 foo=1")
-
-        check_constrain("libelf++debug~~foo", "libelf++debug", "libelf++debug~foo")
-
-    def test_constrain_multi_value_variant(self):
-        check_constrain(
-            'multivalue-variant foo="bar,baz"',
-            'multivalue-variant foo="bar"',
-            'multivalue-variant foo="baz"',
-        )
-
-        check_constrain(
-            'multivalue-variant foo="bar,baz,barbaz"',
-            'multivalue-variant foo="bar,barbaz"',
-            'multivalue-variant foo="baz"',
-        )
-
-        check_constrain("libelf foo=bar,baz", "libelf foo=bar,baz", "libelf foo=*")
-        check_constrain("libelf foo=bar,baz", "libelf foo=*", "libelf foo=bar,baz")
-
-    def test_constrain_compiler_flags(self):
-        check_constrain(
-            'libelf cflags="-O3" cppflags="-Wall"',
-            'libelf cflags="-O3"',
-            'libelf cppflags="-Wall"',
-        )
-        check_constrain(
-            'libelf cflags="-O3" cppflags="-Wall"',
-            'libelf cflags="-O3"',
-            'libelf cflags="-O3" cppflags="-Wall"',
-        )
-
-        check_constrain(
-            'libelf cflags="-O3" cppflags=="-Wall"',
-            'libelf cppflags=="-Wall"',
-            'libelf cflags="-O3"',
-        )
-        check_constrain(
-            'libelf cflags=="-O3" cppflags=="-Wall"',
-            'libelf cflags=="-O3"',
-            'libelf cflags=="-O3" cppflags=="-Wall"',
-        )
-
-    def test_constrain_architecture(self):
-        check_constrain(
-            "libelf target=default_target os=default_os",
-            "libelf target=default_target os=default_os",
-            "libelf target=default_target os=default_os",
-        )
-        check_constrain(
-            "libelf target=default_target os=default_os",
-            "libelf",
-            "libelf target=default_target os=default_os",
-        )
-
-    def test_constrain_compiler(self):
-        check_constrain("libelf %gcc@4.4.7", "libelf %gcc@4.4.7", "libelf %gcc@4.4.7")
-        check_constrain("libelf %gcc@4.4.7", "libelf", "libelf %gcc@4.4.7")
-
     def test_invalid_constraint(self):
         check_invalid_constraint("libelf@0:2.0", "libelf@2.1:3")
         check_invalid_constraint("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7")
