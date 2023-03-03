@@ -115,13 +115,6 @@ the dependencies""",
         action="store_true",
         help="if a partial install is detected, don't delete prior state",
     )
-    subparser.add_argument(
-        "--cmake-external-stage",
-        action="store",
-        dest="cmake_external_stage",
-        help="""Path to root directory where CMake should build relevant
-                projects external to Spack's stage (no impact on non Windows systems)""",
-    )
     cache_group = subparser.add_mutually_exclusive_group()
     cache_group.add_argument(
         "--use-cache",
