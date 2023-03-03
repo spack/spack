@@ -30,7 +30,6 @@ class Sperr(CMakePackage):
     variant("openmp", description="use openmp in 3D inputs", default=True)
     variant("utilities", description="build SPERR CLI utilities", default=True)
 
-
     def cmake_args(self):
         # ensure the compiler supports OpenMP if it is used
         if "+openmp" in self.spec:
