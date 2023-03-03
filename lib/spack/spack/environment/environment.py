@@ -488,9 +488,6 @@ class ViewDescriptor(object):
         return os.path.join(root_dir, "._%s" % root_name, content_hash)
 
     def content_hash(self, specs):
-        print("CONTENT_HASH")
-        print("    ", specs)
-        print("    ", self.to_dict())
         d = syaml.syaml_dict(
             [
                 ("descriptor", self.to_dict()),
@@ -498,7 +495,6 @@ class ViewDescriptor(object):
             ]
         )
         contents = sjson.dump(d)
-        print("    ", spack.util.hash.b32_hash(contents))
         return spack.util.hash.b32_hash(contents)
 
     def get_projection_for_spec(self, spec):

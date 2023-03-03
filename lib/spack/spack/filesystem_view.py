@@ -772,22 +772,6 @@ class SimpleFilesystemView(FilesystemView):
         p = spack.projections.get_projection(self.projections, spec)
         return spec.format(p) if p else ""
 
-    def get_all_specs(self):
-        md_dirs = []
-        for root, dirs, files in os.walk(self._root):
-            if spack.store.layout.metadata_dir in dirs:
-                md_dirs.append(os.path.join(root, spack.store.layout.metadata_dir))
-
-        specs = []
-        for md_dir in md_dirs:
-            if os.path.exists(md_dir):
-                for name_dir in os.listdir(md_dir):
-                    filename = os.path.join(md_dir, name_dir, spack.store.layout.spec_file_name)
-                    spec = get_spec_from_file(filename)
-                    if spec:
-                        specs.append(spec)
-        return specs
-
     def get_projection_for_spec(self, spec):
         """
         Return the projection for a spec in this view.
