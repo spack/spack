@@ -93,11 +93,7 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    variant(
-        "build_type",
-        default="dmpar",
-        values=("serial", "smpar", "dmpar", "dm+sm"),
-    )
+    variant("build_type", default="dmpar", values=("serial", "smpar", "dmpar", "dm+sm"))
     variant(
         "nesting",
         default="basic",
@@ -121,11 +117,7 @@ class Wrf(Package):
             "em_scm_xy",
         ),
     )
-    variant(
-        "pnetcdf",
-        default=True,
-        description="Parallel IO support through Pnetcdf library",
-    )
+    variant("pnetcdf", default=True, description="Parallel IO support through Pnetcdf library")
     variant("chem", default=False, description="Enable WRF-Chem", when="@4:")
     variant("netcdf_classic", default=False, description="Use NetCDF without HDF5 compression")
 
@@ -237,7 +229,10 @@ class Wrf(Package):
         env.set("JASPERINC", self.spec["jasper"].prefix.include)
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
-        if self.spec.satisfies("%gcc@10:"):
+        # These flags should be used also in v3, but FCFLAGS/FFLAGS aren't used
+        # consistently in that version of WRF, so we have to force them through
+        # `flag_handler` below.
+        if self.spec.satisfies("@4.0: %gcc@10:"):
             args = "-w -O2 -fallow-argument-mismatch -fallow-invalid-boz"
             env.set("FCFLAGS", args)
             env.set("FFLAGS", args)
@@ -247,6 +242,13 @@ class Wrf(Package):
             env.set("HDF5", self.spec["hdf5"].prefix)
             env.prepend_path("PATH", ancestor(self.compiler.cc))
 
+    def flag_handler(self, name, flags):
+        # Same flags as FCFLAGS/FFLAGS above, but forced through the compiler
+        # wrapper when compiling v3.9.1.1.
+        if self.spec.satisfies("@3.9.1.1 %gcc@10:") and name == "fflags":
+            flags.extend(["-w", "-O2", "-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        return (flags, None, None)
+
     def patch(self):
         # Let's not assume csh is intalled in bin
         files = glob.glob("*.csh")
@@ -255,7 +257,6 @@ class Wrf(Package):
         filter_file("^#!/bin/csh", "#!/usr/bin/env csh", *files)
 
     def answer_configure_question(self, outputbuf):
-
         # Platform options question:
         if "Please select from among the following" in outputbuf:
             options = collect_platform_options(outputbuf)
@@ -323,7 +324,6 @@ class Wrf(Package):
             config.filter("^DM_CC.*mpicc", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
     def configure(self, spec, prefix):
-
         # Remove broken default options...
         self.do_configure_fixup()
 
@@ -403,7 +403,6 @@ class Wrf(Package):
         return False
 
     def build(self, spec, prefix):
-
         result = self.run_compile_script()
 
         if not result:

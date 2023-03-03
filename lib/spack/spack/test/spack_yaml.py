@@ -31,7 +31,6 @@ config_file:
 
 
 def test_parse(data):
-
     expected = {
         "config_file": syaml.syaml_dict(
             [
@@ -52,7 +51,6 @@ def test_parse(data):
 
 
 def test_dict_order(data):
-
     expected_order = ["x86_64", "some_list", "another_list", "some_key"]
     assert list(data["config_file"].keys()) == expected_order
 

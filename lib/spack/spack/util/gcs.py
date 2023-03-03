@@ -160,7 +160,6 @@ class GCSBlob(object):
     """
 
     def __init__(self, url, client=None):
-
         self.url = url
         if url.scheme != "gs":
             raise ValueError(

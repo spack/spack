@@ -39,7 +39,6 @@ class Serenity(CMakePackage):
     extends("python", when="+python")
 
     def patch(self):
-
         filter_file(
             "include(CMakeParseArguments)",
             'message(FATAL_ERROR "Tried to download a dependency")',

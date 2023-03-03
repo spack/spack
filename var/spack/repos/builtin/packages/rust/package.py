@@ -183,9 +183,7 @@ class Rust(Package):
             {"platform": "cray", "target": "aarch64:"},
         ],
         "x86_64-apple-darwin": [{"platform": "darwin", "target": "x86_64:"}],
-        "aarch64-apple-darwin": [
-            {"platform": "darwin", "target": "aarch64:"},
-        ],
+        "aarch64-apple-darwin": [{"platform": "darwin", "target": "aarch64:"}],
     }
 
     # Specifies the strings which represent a pre-release Rust version. These
