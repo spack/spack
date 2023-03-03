@@ -10,9 +10,7 @@ class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url = (
-        "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.38.4-py3-none-any.whl"
-    )
+    url = "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.38.4-py3-none-any.whl"
     list_url = "https://pypi.org/simple/wheel/"
 
     version(
@@ -83,6 +81,7 @@ class PyWheel(Package, PythonExtension):
             python = "py3"
         else:
             python = "py2.py3"
+
     return url.format(python, version)
 
     def install(self, spec, prefix):
