@@ -90,6 +90,7 @@ properties = {
             "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
+            "cmake_ext_build": {"type": "string"},
         },
         "deprecatedProperties": {
             "properties": ["module_roots"],
