@@ -981,10 +981,12 @@ def modifications_from_dag(
     env = EnvironmentModifications()
 
     # Reverse so we go from leaf to root
-    specs_with_type = reversed(effective_deptypes(specs, context))
+    specs_with_type = effective_deptypes(specs, context)
+
+    nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
 
     # Split into non-external and extenal, maintaining topo order per group.
-    external, nonexternal = stable_partition(specs_with_type, lambda t: t[0].external)
+    external, nonexternal = stable_partition(reversed(specs_with_type), lambda t: t[0].external)
 
     should_be_runnable = Mode.BUILDTIME_DIRECT | Mode.RUNTIME_EXECUTABLE
     should_setup_dependent_build_env = Mode.BUILDTIME | Mode.BUILDTIME_DIRECT
@@ -1027,6 +1029,8 @@ def modifications_from_dag(
                 set_module_variables_for_package(pkg, context="run")
 
             for spec in dspec.dependents():
+                if id(spec) not in nodes_in_subdag:
+                    continue
                 dependent_module = ModuleChangePropagator(spec.package)
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
@@ -1050,7 +1054,8 @@ def modifications_from_dag(
         if should_setup_run_env & flag:
             # TODO: remove setup_dependent_run_environment...
             for spec in dspec.dependents(deptype=("run")):
-                pkg.setup_dependent_run_environment(env, spec)
+                if id(spec) in nodes_in_subdag:
+                    pkg.setup_dependent_run_environment(env, spec)
             pkg.setup_run_environment(env)
 
     return env
