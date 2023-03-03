@@ -3417,7 +3417,7 @@ class Spec(object):
         if deps:
             changed |= self._constrain_dependencies(other)
 
-        if other.concrete and not self.concrete:
+        if other.concrete and not self.concrete and other.satisfies(self):
             self._finalize_concretization()
 
         return changed

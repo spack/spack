@@ -21,24 +21,7 @@ from spack.variant import (
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
     UnknownVariantError,
-    substitute_abstract_variants,
 )
-
-
-def make_spec(spec_like, concrete):
-    spec = Spec(spec_like)
-    if concrete:
-        spec._mark_concrete()
-        substitute_abstract_variants(spec)
-    return spec
-
-
-def check_cannot_constrain(target_spec, constraint_spec):
-    target = make_spec(target_spec, True)
-    constraint = Spec(constraint_spec)
-
-    with pytest.raises(UnsatisfiableSpecError):
-        constraint.copy().constrain(target)
 
 
 def check_constrain(expected, spec, constraint):
@@ -302,6 +285,41 @@ class TestSpecSemantics(object):
         with pytest.raises(UnsatisfiableSpecError):
             rhs.constrain(lhs)
 
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("mpich", "mpich +foo"),
+            ("mpich", "mpich~foo"),
+            ("mpich", "mpich foo=1"),
+            ("mpich", "mpich++foo"),
+            ("mpich", "mpich~~foo"),
+            ("mpich", "mpich foo==1"),
+            # Flags semantics is currently different from other variant
+            pytest.param("mpich", 'mpich cppflags="-O3"', marks=pytest.mark.xfail),
+            pytest.param(
+                "multivalue-variant foo=bar", "multivalue-variant +foo", marks=pytest.mark.xfail
+            ),
+            pytest.param(
+                "multivalue-variant foo=bar", "multivalue-variant ~foo", marks=pytest.mark.xfail
+            ),
+        ],
+    )
+    def test_concrete_specs_which_do_not_satisfy_abstract(
+        self, lhs, rhs, default_mock_concretization
+    ):
+        lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
+
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+        assert not lhs.satisfies(rhs)
+        assert not rhs.satisfies(lhs)
+
+        with pytest.raises(UnsatisfiableSpecError):
+            assert lhs.constrain(rhs)
+
+        with pytest.raises(UnsatisfiableSpecError):
+            assert rhs.constrain(lhs)
+
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
@@ -400,36 +418,6 @@ class TestSpecSemantics(object):
         # multiple values set
         with pytest.raises(MultipleValuesInExclusiveVariantError):
             a.concretize()
-
-    def test_unsatisfiable_variant_types(self):
-        # These should fail due to incompatible types
-
-        # FIXME: these needs to be checked as the new relaxed
-        # FIXME: semantic makes them fail (constrain does not raise)
-        # check_unsatisfiable('multivalue-variant +foo',
-        #                     'multivalue-variant foo="bar"')
-        # check_unsatisfiable('multivalue-variant ~foo',
-        #                     'multivalue-variant foo="bar"')
-
-        check_cannot_constrain(
-            target_spec='multivalue-variant foo="bar"', constraint_spec="multivalue-variant +foo"
-        )
-
-        check_cannot_constrain(
-            target_spec='multivalue-variant foo="bar"', constraint_spec="multivalue-variant ~foo"
-        )
-
-    def test_unsatisfiable_variants(self):
-        # 'mpich' is concrete:
-        check_cannot_constrain("mpich", "mpich+foo")
-        check_cannot_constrain("mpich", "mpich~foo")
-        check_cannot_constrain("mpich", "mpich foo=1")
-        check_cannot_constrain("mpich", "mpich++foo")
-        check_cannot_constrain("mpich", "mpich~~foo")
-        check_cannot_constrain("mpich", "mpich foo==1")
-
-    def test_unsatisfiable_compiler_flag(self):
-        check_cannot_constrain("mpich", 'mpich cppflags="-O3"')
 
     def test_copy_satisfies_transitive(self):
         spec = Spec("dttop")
