@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os.path
 import re
 import sys
@@ -19,7 +20,7 @@ class Mvapich(AutotoolsPackage):
     url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-3.0a.tar.gz"
     list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
-    maintainers("natshineman", "harisubramoni", "ndcontini")
+    maintainers("natshineman", "harisubramoni", "MatthewLieber")
 
     executables = ["^mpiname$", "^mpichversion$"]
 
@@ -284,6 +285,11 @@ class Mvapich(AutotoolsPackage):
         else:
             args.append("--disable-registration-cache")
 
+        ld = ""
+        for path in itertools.chain(self.compiler.extra_rpaths, self.compiler.implicit_rpaths()):
+            ld += "-Wl,-rpath," + path + " "
+        if ld != "":
+            args.append("LDFLAGS=" + ld)
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
         args.extend(self.file_system_options)
