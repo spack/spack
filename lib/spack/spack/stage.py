@@ -752,16 +752,14 @@ class CMakeBuildStage:
 
     dispatch: Dict[str, str] = {}
 
-    def __init__(self, hash, name, root=None, keep=False):
+    def __init__(self, hash, name, keep=False):
         # Users can override external cmake build dir, default is %USERPROFILE%
         # overrides can come from command line or config, command line will override all
         self._hash = hash
         self._path = Path(get_stage_root(), name)
         self._remote_stage = None
         self.keep = keep
-        if not root:
-            fallback_path = Path(os.environ["USERPROFILE"], ".sp-stage")
-            self._root = Path(spack.config.get("config:cmake_ext_build_stage_dir", fallback_path))
+        self._root = Path(spack.config.get("config:cmake_ext_build"))
 
     def __enter__(self):
         self.create()
