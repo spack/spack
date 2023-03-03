@@ -730,8 +730,6 @@ def setup_package(pkg, dirty, context="build"):
     if context not in ["build", "test"]:
         raise ValueError("'context' must be one of ['build', 'test'] - got: {0}".format(context))
 
-    set_module_variables_for_package(pkg)
-
     # Keep track of env changes from packages separately, since we want to
     # issue warnings when packages make "suspicious" modifications.
     env_base = EnvironmentModifications() if dirty else clean_environment()
@@ -1026,7 +1024,9 @@ def modifications_from_dag(
             pkg = dspec.package
 
             if should_populate_package_py_globals & flag:
-                set_module_variables_for_package(pkg, context="run")
+                set_module_variables_for_package(
+                    pkg, context="build" if Mode.ROOT in flag and context == "build" else "run"
+                )
 
             for spec in dspec.dependents():
                 if id(spec) not in nodes_in_subdag:
