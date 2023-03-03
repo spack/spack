@@ -1367,7 +1367,7 @@ def test_env_updates_view_remove_concretize(
 
     check_mpileaks_and_deps_in_view(view_dir)
 
-    with ev.read("test") as e:
+    with ev.read("test"):
         remove("mpileaks")
         concretize()
 
