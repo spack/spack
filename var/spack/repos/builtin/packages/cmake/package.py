@@ -442,3 +442,19 @@ class Cmake(Package):
                 purpose=reason,
                 skip_missing=True,
             )
+
+    @property
+    def libs(self):
+        """CMake has no libraries, so if you ask for `spec['cmake'].libs`
+        (which happens automatically for packages that depend on CMake as
+        a link dependency) the default implementation of ``.libs` will
+        search the entire root prefix recursively before failing.
+
+        The longer term solution is for all dependents of CMake to change
+        their deptype. For now, this returns an empty set of libraries.
+        """
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])
