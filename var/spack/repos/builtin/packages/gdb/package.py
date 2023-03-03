@@ -87,7 +87,15 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     build_directory = "spack-build"
 
     def configure_args(self):
-        args = ["--with-system-gdbinit={0}".format(self.prefix.etc.gdbinit)]
+        args = [
+            "--with-system-gdbinit={0}".format(self.prefix.etc.gdbinit),
+            *self.enable_or_disable("lto"),
+            *self.with_or_without("quad"),
+            *self.enable_or_disable("gold"),
+            *self.enable_or_disable("ld"),
+            *self.enable_or_disable("tui"),
+            *self.with_or_without("debuginfod"),
+        ]
 
         if self.spec.version >= Version("11.1"):
             args.append("--with-gmp={0}".format(self.spec["gmp"].prefix))
@@ -95,24 +103,6 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
         if "+python" in self.spec:
             args.append("--with-python={0}".format(self.spec["python"].command))
             args.append("LDFLAGS={0}".format(self.spec["python"].libs.ld_flags))
-
-        if "+lto" in self.spec:
-            args.append("--enable-lto")
-
-        if "+quad" in self.spec:
-            args.append("--with-quad")
-
-        if "+gold" in self.spec:
-            args.append("--enable-gold")
-
-        if "+ld" in self.spec:
-            args.append("--enable-ld")
-
-        if "+tui" in self.spec:
-            args.append("--enable-tui")
-
-        if "+debuginfod" in self.spec:
-            args.append("--with-debuginfod")
 
         return args
 
