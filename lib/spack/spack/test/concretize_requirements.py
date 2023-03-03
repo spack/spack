@@ -133,16 +133,13 @@ def test_git_user_supplied_reference_satisfaction(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
 
-    specs = [
-        "v@{commit0}=2.2",
-        "v@{commit0}",
-        "v@2.2",
-        "v@{commit0}=2.3"
-    ]
+    specs = ["v@{commit0}=2.2", "v@{commit0}", "v@2.2", "v@{commit0}=2.3"]
 
     format_info = {"commit0": commits[0]}
 
-    hash_eq_ver, just_hash, just_ver, hash_eq_other_ver = [Spec(x.format(**format_info)) for x in specs]
+    hash_eq_ver, just_hash, just_ver, hash_eq_other_ver = [
+        Spec(x.format(**format_info)) for x in specs
+    ]
 
     assert hash_eq_ver.satisfies(just_hash)
     assert not just_hash.satisfies(hash_eq_ver)
