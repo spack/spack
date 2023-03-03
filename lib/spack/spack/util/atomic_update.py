@@ -3,13 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
+
 import llnl.util.filesystem as fs
 from llnl.util.symlink import symlink
 
 try:
     from ctypes import CDLL
+
     libc = CDLL("/lib64/libc.so.6", 0x04)  # 0x04 is RTLD_NOLOAD
 except BaseException:
     libc = None
@@ -49,7 +51,9 @@ def atomic_update_renameat2(src, dest):
     with open_safely(src) as srcfd:
         with open_safely(dest) as destfd:
             try:
-                libc.renameat2(srcfd, src.encode(), destfd, dest.encode(), 2)  # 2 is RENAME_EXCHANGE
+                libc.renameat2(
+                    srcfd, src.encode(), destfd, dest.encode(), 2
+                )  # 2 is RENAME_EXCHANGE
                 if not dest_exists:
                     os.unlink(src)
             except Exception:
