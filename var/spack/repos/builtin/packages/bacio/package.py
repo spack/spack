@@ -13,9 +13,12 @@ class Bacio(CMakePackage):
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-bacio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-bacio/archive/refs/tags/v2.4.1.tar.gz"
+    git = "https://github.com/NOAA-EMC/NCEPLIBS-bacio"
 
     maintainers("t-brown", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
+    version("develop", branch="develop")
+    version("2.6.0", sha256="03fef581e1bd3710fb8d2f2659a6c3e01a0437c1350ba53958d2ff1ffef47bcb")
     version("2.5.0", sha256="540a0ed73941d70dbf5d7b21d5d0a441e76fad2bfe37dfdfea0db3e98fc0fbfb")
 
     # Prefer version 2.4.1 because the library and include directory
@@ -29,9 +32,11 @@ class Bacio(CMakePackage):
     )
 
     variant("pic", default=True, description="Build with position-independent-code")
+    variant("shared", default=False, description="Build shared library", when="@2.6.0:")
 
     def cmake_args(self):
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         return args
 
