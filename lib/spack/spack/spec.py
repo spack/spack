@@ -3510,7 +3510,6 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        # Optimizations concrete specs
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
@@ -3556,7 +3555,6 @@ class Spec(object):
             if not self.versions.intersects(other.versions):
                 return False
 
-        # None indicates no constraints when not strict.
         if self.compiler and other.compiler:
             if not self.compiler.intersects(other.compiler):
                 return False
@@ -3564,8 +3562,6 @@ class Spec(object):
         if not self.variants.intersects(other.variants):
             return False
 
-        # Architecture satisfaction is currently just string equality.
-        # If not strict, None means unconstrained.
         if self.architecture and other.architecture:
             if not self.architecture.intersects(other.architecture):
                 return False
@@ -3625,13 +3621,10 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        # Optimizations for right-hand side concrete:
-        # 1. For subset (strict=True) tests this means the left-hand side must
-        # be the same singleton with identical hash. Notice that package hashes
-        # can be different for otherwise indistinguishable concrete Spec objects.
-        # 2. For non-empty intersection (strict=False) we only have a fast path
-        # when the left-hand side is also concrete.
         if other.concrete:
+            # The left-hand side must be the same singleton with identical hash. Notice that
+            # package hashes can be different for otherwise indistinguishable concrete Spec
+            # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
 
         # If the names are different, we need to consider virtuals
@@ -3667,7 +3660,6 @@ class Spec(object):
         elif self.versions or other.versions:
             return False
 
-        # None indicates no constraints when not strict.
         if self.compiler and other.compiler:
             if not self.compiler.satisfies(other.compiler):
                 return False
@@ -3677,8 +3669,6 @@ class Spec(object):
         if not self.variants.satisfies(other.variants):
             return False
 
-        # Architecture satisfaction is currently just string equality.
-        # If not strict, None means unconstrained.
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):
                 return False
