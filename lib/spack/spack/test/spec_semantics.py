@@ -33,11 +33,9 @@ def make_spec(spec_like, concrete):
     return spec
 
 
-def check_cannot_constrain(target_spec, constraint_spec, target_concrete=False):
-    target = make_spec(target_spec, target_concrete)
+def check_cannot_constrain(target_spec, constraint_spec):
+    target = make_spec(target_spec, True)
     constraint = Spec(constraint_spec)
-
-    assert not target.intersects(constraint) or target_concrete
 
     with pytest.raises(UnsatisfiableSpecError):
         constraint.copy().constrain(target)
@@ -232,11 +230,9 @@ class TestSpecSemantics(object):
         assert c1 == c2
         assert c1 == expected
 
-    @pytest.mark.parametrize('lhs,rhs', [
-        ("libelf", Spec()),
-        ("libelf", "@0:1"),
-        ("libelf", "@0:1 %gcc"),
-    ])
+    @pytest.mark.parametrize(
+        "lhs,rhs", [("libelf", Spec()), ("libelf", "@0:1"), ("libelf", "@0:1 %gcc")]
+    )
     def test_concrete_specs_which_satisfies_abstract(self, lhs, rhs, default_mock_concretization):
         """Test that constraining an abstract spec by a compatible concrete one makes the
         abstract spec concrete, and equal to the one it was constrained with.
@@ -256,49 +252,55 @@ class TestSpecSemantics(object):
         assert rhs.satisfies(lhs)
         assert lhs == rhs
 
-    def test_satisfies_namespace(self):
-        check_cannot_constrain("builtin.mock.mpich", "builtin.mpich")
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("foo platform=linux", "platform=test os=redhat6 target=x86"),
+            ("foo os=redhat6", "platform=test os=debian6 target=x86_64"),
+            ("foo target=x86_64", "platform=test os=redhat6 target=x86"),
+            ("foo arch=test-frontend-frontend", "platform=test os=frontend target=backend"),
+            ("foo%intel", "%gcc"),
+            ("foo%intel", "%pgi"),
+            ("foo%pgi@4.3", "%pgi@4.4:4.6"),
+            ("foo@4.0%pgi", "@1:3%pgi"),
+            ("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6"),
+            ("builtin.mock.mpich", "builtin.mpich"),
+            ("mpileaks ^builtin.mock.mpich", "^builtin.mpich"),
+            ("mpileaks^mpich", "^zmpi"),
+            ("mpileaks^zmpi", "^mpich"),
+            ("mpileaks^mpich@1.2", "^mpich@2.0"),
+            ("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6"),
+            ("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
+            ("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
+            ("mpileaks^mpich", "^zmpi"),
+            ("mpileaks^mpi@3", "^mpi@1.2:1.6"),
+            ("mpileaks^mpi@3:", "^mpich2@1.4"),
+            ("mpileaks^mpi@3:", "^mpich2"),
+            ("mpileaks^mpi@3:", "^mpich@1.0"),
+            ("mpich~foo", "mpich+foo"),
+            ("mpich+foo", "mpich~foo"),
+            ("mpich foo=True", "mpich foo=False"),
+            ("mpich~~foo", "mpich++foo"),
+            ("mpich++foo", "mpich~~foo"),
+            ("mpich foo==True", "mpich foo==False"),
+            ('mpich cppflags="-O3"', 'mpich cppflags="-O2"'),
+            ('mpich cppflags="-O3"', 'mpich cppflags=="-O3"'),
+        ],
+    )
+    def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
+        """Check that two abstract specs with an empty intersection cannot be constrained
+        with each other.
+        """
+        lhs, rhs = Spec(lhs), Spec(rhs)
 
-    def test_satisfies_namespaced_dep(self):
-        """Ensure spec from same or unspecified namespace satisfies namespace
-        constraint."""
-        check_cannot_constrain("mpileaks ^builtin.mock.mpich", "^builtin.mpich")
+        assert not lhs.intersects(rhs)
+        assert not rhs.intersects(lhs)
 
-    def test_satisfies_compiler(self):
-        check_cannot_constrain("foo%intel", "%gcc")
-        check_cannot_constrain("foo%intel", "%pgi")
+        with pytest.raises(UnsatisfiableSpecError):
+            lhs.constrain(rhs)
 
-    def test_satisfies_compiler_version(self):
-        check_cannot_constrain("foo%pgi@4.3", "%pgi@4.4:4.6")
-        check_cannot_constrain("foo@4.0%pgi", "@1:3%pgi")
-        check_cannot_constrain("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6")
-
-    def test_satisfies_architecture(self):
-        check_cannot_constrain("foo platform=linux", "platform=test os=redhat6 target=x86")
-        check_cannot_constrain("foo os=redhat6", "platform=test os=debian6 target=x86_64")
-        check_cannot_constrain("foo target=x86_64", "platform=test os=redhat6 target=x86")
-        check_cannot_constrain(
-            "foo arch=test-frontend-frontend", "platform=test os=frontend target=backend"
-        )
-
-    def test_satisfies_dependencies(self):
-        check_cannot_constrain("mpileaks^mpich", "^zmpi")
-        check_cannot_constrain("mpileaks^zmpi", "^mpich")
-
-    def test_satisfies_dependency_versions(self):
-        check_cannot_constrain("mpileaks^mpich@1.2", "^mpich@2.0")
-        check_cannot_constrain("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6")
-        check_cannot_constrain("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6")
-        check_cannot_constrain("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6")
-
-    def test_satisfies_virtual_dependencies(self):
-        check_cannot_constrain("mpileaks^mpich", "^zmpi")
-
-    def test_satisfies_virtual_dependency_versions(self):
-        check_cannot_constrain("mpileaks^mpi@3", "^mpi@1.2:1.6")
-        check_cannot_constrain("mpileaks^mpi@3:", "^mpich2@1.4")
-        check_cannot_constrain("mpileaks^mpi@3:", "^mpich2")
-        check_cannot_constrain("mpileaks^mpi@3:", "^mpich@1.0")
+        with pytest.raises(UnsatisfiableSpecError):
+            rhs.constrain(lhs)
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
@@ -410,42 +412,24 @@ class TestSpecSemantics(object):
         #                     'multivalue-variant foo="bar"')
 
         check_cannot_constrain(
-            target_spec='multivalue-variant foo="bar"',
-            constraint_spec="multivalue-variant +foo",
-            target_concrete=True,
+            target_spec='multivalue-variant foo="bar"', constraint_spec="multivalue-variant +foo"
         )
 
         check_cannot_constrain(
-            target_spec='multivalue-variant foo="bar"',
-            constraint_spec="multivalue-variant ~foo",
-            target_concrete=True,
+            target_spec='multivalue-variant foo="bar"', constraint_spec="multivalue-variant ~foo"
         )
 
     def test_unsatisfiable_variants(self):
         # 'mpich' is concrete:
-        check_cannot_constrain("mpich", "mpich+foo", True)
-        check_cannot_constrain("mpich", "mpich~foo", True)
-        check_cannot_constrain("mpich", "mpich foo=1", True)
-        check_cannot_constrain("mpich", "mpich++foo", True)
-        check_cannot_constrain("mpich", "mpich~~foo", True)
-        check_cannot_constrain("mpich", "mpich foo==1", True)
-
-    def test_unsatisfiable_variant_mismatch(self):
-        # No matchi in specs
-        check_cannot_constrain("mpich~foo", "mpich+foo")
-        check_cannot_constrain("mpich+foo", "mpich~foo")
-        check_cannot_constrain("mpich foo=True", "mpich foo=False")
-        check_cannot_constrain("mpich~~foo", "mpich++foo")
-        check_cannot_constrain("mpich++foo", "mpich~~foo")
-        check_cannot_constrain("mpich foo==True", "mpich foo==False")
+        check_cannot_constrain("mpich", "mpich+foo")
+        check_cannot_constrain("mpich", "mpich~foo")
+        check_cannot_constrain("mpich", "mpich foo=1")
+        check_cannot_constrain("mpich", "mpich++foo")
+        check_cannot_constrain("mpich", "mpich~~foo")
+        check_cannot_constrain("mpich", "mpich foo==1")
 
     def test_unsatisfiable_compiler_flag(self):
-        # This case is different depending on whether the specs are concrete.
-
-        # 'mpich' is not concrete:
-
-        # 'mpich' is concrete:
-        check_cannot_constrain("mpich", 'mpich cppflags="-O3"', True)
+        check_cannot_constrain("mpich", 'mpich cppflags="-O3"')
 
     def test_copy_satisfies_transitive(self):
         spec = Spec("dttop")
@@ -454,11 +438,6 @@ class TestSpecSemantics(object):
         for s in spec.traverse():
             assert s.satisfies(copy[s.name])
             assert copy[s.name].satisfies(s)
-
-    def test_unsatisfiable_compiler_flag_mismatch(self):
-        # No match in specs
-        check_cannot_constrain('mpich cppflags="-O3"', 'mpich cppflags="-O2"')
-        check_cannot_constrain('mpich cppflags="-O3"', 'mpich cppflags=="-O3"')
 
     def test_satisfies_virtual(self):
         # Don't use check_satisfies: it checks constrain() too, and
