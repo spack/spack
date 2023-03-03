@@ -82,7 +82,7 @@ class PyWheel(Package, PythonExtension):
         else:
             python = "py2.py3"
 
-    return url.format(python, version)
+        return url.format(python, version)
 
     def install(self, spec, prefix):
         # To build wheel from source, you need setuptools and wheel already installed.
