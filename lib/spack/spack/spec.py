@@ -3654,10 +3654,8 @@ class Spec(object):
             and self.namespace != other.namespace
         ):
             return False
-        if self.versions and other.versions:
-            if not self.versions.satisfies(other.versions):
-                return False
-        elif self.versions or other.versions:
+
+        if not self.versions.satisfies(other.versions):
             return False
 
         if self.compiler and other.compiler:
