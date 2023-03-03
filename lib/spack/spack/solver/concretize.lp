@@ -16,12 +16,12 @@
 literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
 
 % If concretize_everything() is a fact, then we cannot have unsolved specs
-:- literal_not_solved(ID), concretize_everything.
+:- literal_not_solved(ID), concretize_everything, internal_error("spec unsolved").
 
 % Make a problem with "zero literals solved" unsat. This is to trigger
 % looking for solutions to the ASP problem with "errors", which results
 % in better reporting for users. See #30669 for details.
-1 { literal_solved(ID) : literal(ID) }.
+1 { literal_solved(ID) : literal(ID) } :- internal_error("nothing installed").
 
 opt_criterion(300, "number of input specs not concretized").
 #minimize{ 0@300: #true }.
@@ -126,7 +126,8 @@ possible_version_weight(Package, Weight)
 
 1 { version_weight(Package, Weight) : version_declared(Package, Version, Weight) } 1
   :- attr("version", Package, Version),
-     attr("node", Package).
+     attr("node", Package),
+     internal_error("cannot find unique version weight").
 
 % node_version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -140,7 +141,8 @@ possible_version_weight(Package, Weight)
 % bound on the choice rule to avoid false positives with the error below
 1 { attr("version", Package, Version) : version_satisfies(Package, Constraint, Version) }
   :- attr("node_version_satisfies", Package, Constraint),
-     version_satisfies(Package, Constraint, _).
+     version_satisfies(Package, Constraint, _),
+     internal_error("cannot find a satisfying version").
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
@@ -996,7 +998,8 @@ node_flag_inherited(Dependency, FlagType, Flag)
 % Ensure propagation
 :- node_flag_inherited(Package, FlagType, Flag),
     can_inherit_flags(Package, Dependency, FlagType),
-    attr("node_flag_propagate", Package, FlagType).
+    attr("node_flag_propagate", Package, FlagType),
+    internal_error("failed flag propagation").
 
 error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
   depends_on(Source1, Package),
@@ -1049,12 +1052,12 @@ attr("no_flags", Package, FlagType)
  :- attr("node", Package), internal_error("Package must resolve to at most one hash").
 
 % you can't choose an installed hash for a dev spec
-:- attr("hash", Package, Hash), attr("variant_value", Package, "dev_path", _).
+:- attr("hash", Package, Hash), attr("variant_value", Package, "dev_path", _), internal_error("reused dev package").
 
 % You can't install a hash, if it is not installed
-:- attr("hash", Package, Hash), not installed_hash(Package, Hash).
+:- attr("hash", Package, Hash), not installed_hash(Package, Hash), internal_error("Package resolved to invalid hash").
 % This should be redundant given the constraint above
-:- attr("hash", Package, Hash1), attr("hash", Package, Hash2), Hash1 != Hash2.
+:- attr("hash", Package, Hash1), attr("hash", Package, Hash2), Hash1 != Hash2, internal_error("Package resolved to multiple hashes").
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- attr("hash", Package, Hash).
@@ -1097,7 +1100,8 @@ build_priority(Package, 0)   :- attr("node", Package), not optimize_for_reuse().
 :- attr("version", Package, Version),
    version_weight(Package, Weight),
    version_declared(Package, Version, Weight, "installed"),
-   not optimize_for_reuse().
+   not optimize_for_reuse(),
+   internal_error("Chose reuse weight for package while not reusing packages").
 
 #defined installed_hash/2.
 
