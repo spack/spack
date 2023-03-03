@@ -21,7 +21,6 @@ import spack.platforms
 import spack.repo
 import spack.variant as vt
 from spack.concretize import find_spec
-from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.version import ver
 
