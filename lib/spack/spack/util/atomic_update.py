@@ -2,19 +2,19 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import ctypes
 import os
 from contextlib import contextmanager
+from typing import Optional
 
 import llnl.util.filesystem as fs
 from llnl.util.symlink import symlink
 
+libc: Optional[ctypes.CDLL] = None
 try:
-    from ctypes import CDLL
-
-    libc = CDLL("/lib64/libc.so.6", 0x04)  # 0x04 is RTLD_NOLOAD
+    libc = ctypes.CDLL("/lib64/libc.so.6", 0x04)  # 0x04 is RTLD_NOLOAD
 except BaseException:
-    libc = None
+    pass
 
 
 def use_renameat2():
