@@ -319,31 +319,28 @@ class TestSpecSemantics(object):
             rhs.constrain(lhs)
 
     @pytest.mark.parametrize(
-        "lhs,rhs",
+        "lhs,rhs,intersection_expected",
         [
-            ("mpich", "mpich +foo"),
-            ("mpich", "mpich~foo"),
-            ("mpich", "mpich foo=1"),
-            ("mpich", "mpich++foo"),
-            ("mpich", "mpich~~foo"),
-            ("mpich", "mpich foo==1"),
+            ("mpich", "mpich +foo", True),
+            ("mpich", "mpich~foo", True),
+            ("mpich", "mpich foo=1", True),
+            ("mpich", "mpich++foo", True),
+            ("mpich", "mpich~~foo", True),
+            ("mpich", "mpich foo==1", True),
             # Flags semantics is currently different from other variant
-            pytest.param("mpich", 'mpich cppflags="-O3"', marks=pytest.mark.xfail),
-            pytest.param(
-                "multivalue-variant foo=bar", "multivalue-variant +foo", marks=pytest.mark.xfail
-            ),
-            pytest.param(
-                "multivalue-variant foo=bar", "multivalue-variant ~foo", marks=pytest.mark.xfail
-            ),
+            # ("mpich", 'mpich cppflags="-O3"', False),
+            ("multivalue-variant foo=bar", "multivalue-variant +foo", False),
+            ("multivalue-variant foo=bar", "multivalue-variant ~foo", False),
+            ("multivalue-variant fee=bar", "multivalue-variant fee=baz", False),
         ],
     )
     def test_concrete_specs_which_do_not_satisfy_abstract(
-        self, lhs, rhs, default_mock_concretization
+        self, lhs, rhs, intersection_expected, default_mock_concretization
     ):
         lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
 
-        assert lhs.intersects(rhs)
-        assert rhs.intersects(lhs)
+        assert lhs.intersects(rhs) is intersection_expected
+        assert rhs.intersects(lhs) is intersection_expected
         assert not lhs.satisfies(rhs)
         assert not rhs.satisfies(lhs)
 

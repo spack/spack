@@ -348,9 +348,10 @@ class AbstractVariant(object):
         # (`foo=bar` will never satisfy `baz=bar`)
         return other.name == self.name
 
-    @implicit_variant_conversion
     def intersects(self, other):
         """Returns True if there are variant matching both self and other, False otherwise."""
+        if isinstance(other, (SingleValuedVariant, BoolValuedVariant)):
+            return other.intersects(self)
         return other.name == self.name
 
     def compatible(self, other):
