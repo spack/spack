@@ -5,8 +5,12 @@
 import copy
 import os
 import os.path
+import sys
 
+import spack.platforms
 import spack.util.environment
+import spack.util.executable
+from spack.build_environment import dso_suffix
 from spack.package import *
 
 
@@ -874,8 +878,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
             args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
 
-        if "fftw" in spec:
-            args += ["-DCP2K_USE_FFTW=ON"]
+        args += ["-DCP2K_USE_FFTW3=ON"]
 
         if spec.satisfies("smm=libxsmm"):
             args += ["-DCP2K_USE_LIBXSMM=ON"]
@@ -885,19 +888,34 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         lapack = spec["lapack"]
         blas = spec["blas"]
 
-        args.extend(
-            [
-                self.define("CP2K_LAPACK_FOUND", "true"),
-                self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
-                self.define("CP2K_BLAS_FOUND", "true"),
-                self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
-                self.define("CP2K_SCALAPACK_FOUND", "true"),
-                self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
-                self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
-                self.define("CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")),
-            ]
-        )
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio"]:
+            args += ["-DCP2K_BLAS_VENDOR=MKL"]
+            if sys.platform == "darwin":
+                args += [
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            else:
+                args += ["-DCP2K_SCALAPACK_VENDOR=MKL"]
+        else:
+            args.extend(
+                [
+                    self.define("CP2K_LAPACK_FOUND", "true"),
+                    self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
+                    self.define("CP2K_BLAS_FOUND", "true"),
+                    self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
+                    self.define("CP2K_SCALAPACK_FOUND", "true"),
+                    self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
+                    self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
+                    self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
+                    self.define(
+                        "CP2K_SCALAPACK_LINK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
+                ]
+            )
 
         return args
 
